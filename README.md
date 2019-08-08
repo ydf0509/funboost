@@ -58,6 +58,7 @@ consumer.start_consuming_message()
 
  ```
  
-
+#运行中截图
 ![Image text](http://chuantu.xyz/t6/702/1565261117x1033347913.png)
+#控频功能证明
 ![Image text](http://chuantu.xyz/t6/702/1565260798x1031866013.png)

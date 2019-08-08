@@ -58,4 +58,6 @@ consumer.start_consuming_message()
 
  ```
  
- ![Image text](https://img-blog.csdn.net/20180906223358493?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzI2NDQwODAz/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+![Image text](http://chuantu.xyz/t6/702/1565261117x1033347913.png)
+![Image text](http://chuantu.xyz/t6/702/1565260798x1031866013.png)

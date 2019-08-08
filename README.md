@@ -17,23 +17,23 @@ import time
 from function_scheduling_distributed_framework import patch_frame_config, show_frame_config,get_consumer
 
 
-def do_patch_frame_config():
-    patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:27016/admin',
 
-                       RABBITMQ_USER='silxxxx',
-                       RABBITMQ_PASS='Fr3Mxxxxx',
-                       RABBITMQ_HOST='1xx.90.89.xx',
-                       RABBITMQ_PORT=5672,
-                       RABBITMQ_VIRTUAL_HOST='test_host',
+patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:27016/admin',
 
-                       REDIS_HOST='1xx.90.89.xx',
-                       REDIS_PASSWORD='yxxxxxxR',
-                       REDIS_PORT=6543,
-                       REDIS_DB=7, )
+                   RABBITMQ_USER='silxxxx',
+                   RABBITMQ_PASS='Fr3Mxxxxx',
+                   RABBITMQ_HOST='1xx.90.89.xx',
+                   RABBITMQ_PORT=5672,
+                   RABBITMQ_VIRTUAL_HOST='test_host',
 
-    show_frame_config()
+                   REDIS_HOST='1xx.90.89.xx',
+                   REDIS_PASSWORD='yxxxxxxR',
+                   REDIS_PORT=6543,
+                   REDIS_DB=7, )
 
-# 主要的消费函数，演示做加法需要花10秒钟。
+show_frame_config()
+
+# 主要的消费函数，演示做加法，假设需要花10秒钟。
 def f2(a, b):
     print(f'消费此消息 {a} + {b} ,结果是  {a + b}')
     time.sleep(10)  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。

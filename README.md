@@ -17,7 +17,7 @@ import time
 from function_scheduling_distributed_framework import patch_frame_config, show_frame_config,get_consumer
 
 
-
+# 初次接触使用，可以不安装任何中间件，使用本地持久化队列。正式墙裂推荐安装rabbitmq。
 patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:27016/admin',
 
                    RABBITMQ_USER='silxxxx',
@@ -42,6 +42,7 @@ def f2(a, b):
 # 把消费的函数名传给consuming_function，就这么简单。
 # 通过设置broker_kind，一键切换中间件为mq或redis等7种中间件或包。
 # 额外参数支持超过10种控制功能，celery支持的控制方式，都全部支持。
+# 这里演示使用本地持久化队列，本机多个脚本之间可以共享任务，无需安装任何中间件，降低初次使用门槛。
 consumer = get_consumer('queue_test2', consuming_function=f2, broker_kind=6)  
 
 

@@ -9,6 +9,7 @@ import persistqueue
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
 
 
+# noinspection PyProtectedMember
 class PersistQueuePublisher(AbstractPublisher):
     """
     使用persistqueue实现的本地持久化队列。
@@ -40,7 +41,6 @@ class PersistQueuePublisher(AbstractPublisher):
         # noinspection PyTypeChecker
         self.queue.put(msg)
 
-    # noinspection PyProtectedMember
     def clear(self):
         sql = f'{"DELETE"}  {"FROM"} ack_queue_{self._queue_name}'
         self.logger.info(sql)
@@ -49,7 +49,7 @@ class PersistQueuePublisher(AbstractPublisher):
         self.logger.warning(f'清除 本地持久化队列 {self._queue_name} 中的消息成功')
 
     def get_message_count(self):
-        return self.queue.qsize()
+        return self.queue._count()
 
     def close(self):
         pass

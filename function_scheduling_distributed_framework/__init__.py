@@ -1,7 +1,7 @@
 import copy
 
 from function_scheduling_distributed_framework import frame_config
-from function_scheduling_distributed_framework.consumers.base_consumer import ExceptionForRequeue,ExceptionForRetry
+from function_scheduling_distributed_framework.consumers.base_consumer import ExceptionForRequeue,ExceptionForRetry,AbstractConsumer
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
 from function_scheduling_distributed_framework.factories.consumer_factory import get_consumer
 from function_scheduling_distributed_framework.utils import nb_print
@@ -25,7 +25,7 @@ def show_frame_config():
     for var_name in dir(frame_config):
         if var_name.isupper():
             var_value = getattr(frame_config, var_name)
-            if 'PASS' in var_name and len(var_value) > 3:
+            if 'PASS' in var_name and len(var_value) > 3:  # 对密码打*
                 nb_print(f'{var_name}:                {var_value[0]}{"*" * (len(var_value) - 2)}{var_value[-1]}')
             else:
                 nb_print(f'{var_name}:                {var_value}')

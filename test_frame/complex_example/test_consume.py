@@ -35,4 +35,4 @@ def multi_processing_consume():
 
 
 if __name__ == '__main__':
-    [Process(target=multi_processing_consume).start() for _ in range(4)]
+    [Process(target=multi_processing_consume).start() for _ in range(1)]

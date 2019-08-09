@@ -2,27 +2,28 @@
 
 from setuptools import setup, find_packages
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-
+# with open("README.md", "r",encoding='utf8') as fh:
+#     long_description = fh.read()
 
 setup(
-    name='multiprocessing_log_manager',  # '<项目的名称>',
-    version="0.2.2",
+    name='function_scheduling_distributed_framework',  #
+    version="0.6",
     description=(
         'function scheduling distributed framework'
     ),
-    long_description=open('README.md', 'r').read(),
+    # long_description=open('README.md', 'r',encoding='utf8').read(),
+    long_description='see github     https://github.com/ydf0509/distributed_framework',
     long_description_content_type="text/markdown",
     author='bfzs',
     author_email='909686719@qq.com',
     maintainer='ydf',
     maintainer_email='909686719@qq.com',
     license='BSD License',
-    # packages=['douban'], # 发布的包名
-    packages=find_packages(),
+    # packages=['douban'], #
+    # packages=find_packages(),
+    packages=['function_scheduling_distributed_framework'],
     platforms=["all"],
-    url='https://baike.baidu.com/item/%E9%82%93%E4%B8%BD%E5%90%9B/27007?fr=aladdin',
+    url='https://github.com/ydf0509/distributed_framework',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Operating System :: OS Independent',
@@ -34,6 +35,21 @@ setup(
         'Topic :: Software Development :: Libraries'
     ],
     install_requires=[
-        'pymongo',
+        'eventlet==0.24.1',
+        'gevent',
+        'pymongo==3.5.1',
+        'AMQPStorm==2.7.1',
+        'pika==0.12.0',
+        'rabbitpy==1.0.0',
+        'decorator==4.4.0',
+        'pysnooper==0.0.11',
+        'Flask',
+        'tomorrow3==1.1.0',
+        'concurrent-log-handler==0.9.9',
+        'redis==2.10.6',
+        'mongo-mq==0.0.1',
+        'persist-queue==0.4.2'
     ]
 )
+
+# python setup.py sdist upload -r pypi

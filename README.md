@@ -79,3 +79,5 @@ consumer.start_consuming_message()
 ![Image text](http://chuantu.xyz/t6/702/1565270169x1031866013.png)
 ### 控频功能证明，由于截图是外网调度rabbitmq的消息有延迟，没有精确到函数每秒运行10次。
 ![Image text](http://chuantu.xyz/t6/702/1565260798x1031866013.png)
+
+

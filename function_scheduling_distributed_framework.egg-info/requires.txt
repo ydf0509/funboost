@@ -1,0 +1,14 @@
+eventlet==0.24.1
+gevent
+pymongo==3.5.1
+AMQPStorm==2.7.1
+pika==0.12.0
+rabbitpy==1.0.0
+decorator==4.4.0
+pysnooper==0.0.11
+Flask
+tomorrow3==1.1.0
+concurrent-log-handler==0.9.9
+redis==2.10.6
+mongo-mq==0.0.1
+persist-queue==0.4.2

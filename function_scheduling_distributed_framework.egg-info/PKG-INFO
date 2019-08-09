@@ -1,0 +1,21 @@
+Metadata-Version: 2.1
+Name: function-scheduling-distributed-framework
+Version: 0.6
+Summary: function scheduling distributed framework
+Home-page: https://github.com/ydf0509/distributed_framework
+Author: bfzs
+Author-email: 909686719@qq.com
+Maintainer: ydf
+Maintainer-email: 909686719@qq.com
+License: BSD License
+Description: see github     https://github.com/ydf0509/distributed_framework
+Platform: all
+Classifier: Development Status :: 4 - Beta
+Classifier: Operating System :: OS Independent
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: Implementation
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: Software Development :: Libraries
+Description-Content-Type: text/markdown

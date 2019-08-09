@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version="1.3",
+    version="1.5",
     description=(
         'function scheduling distributed framework'
     ),
@@ -37,10 +37,10 @@ setup(
     ],
     install_requires=[
         'eventlet==0.25.0',
-        'gevent',
+        'gevent==1.4.0',
         'pymongo==3.5.1',
         'AMQPStorm==2.7.1',
-        'pika==1.1.0',
+        'pika==0.12.0',
         'rabbitpy==2.0.1',
         'decorator==4.4.0',
         'pysnooper==0.0.11',
@@ -58,4 +58,5 @@ python setup.py sdist upload -r pypi
 
 最快的下载方式，上传立即可安装。阿里云源同步间隔要等很久。
 ./pip install function_scheduling_distributed_framework==1.3 -i https://pypi.org/simple  
+./pip install function_scheduling_distributed_framework --upgrade -i https://pypi.org/simple 
 """

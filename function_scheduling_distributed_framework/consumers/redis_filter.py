@@ -9,6 +9,9 @@ from function_scheduling_distributed_framework.utils import RedisMixin
 
 
 class RedisFilter(RedisMixin):
+    """
+    基于函数参数的任务过滤。
+    """
     def __init__(self, redis_key_name):
         self._redis_key_name = redis_key_name
 

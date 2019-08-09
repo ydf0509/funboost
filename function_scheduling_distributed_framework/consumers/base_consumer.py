@@ -311,8 +311,8 @@ class ConcurrentModeDispatcher(LoggerMixin):
 
         pool_type = None  # 是按照ThreadpoolExecutor写的三个鸭子类，公有方法名和功能写成完全一致，可以互相替换。
         if self._concurrent_mode == 1:
-            # pool_type = CustomThreadPoolExecutor
-            pool_type = BoundedThreadPoolExecutor
+            pool_type = CustomThreadPoolExecutor
+            # pool_type = BoundedThreadPoolExecutor
             check_not_monkey()
         elif self._concurrent_mode == 2:
             pool_type = GeventPoolExecutor

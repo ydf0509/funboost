@@ -3,17 +3,11 @@
 # @Time    : 2019/8/8 0008 14:57
 import time
 
-from test_frame.best_simple_example.test_consume import consumer
+from function_scheduling_distributed_framework import get_publisher
+from test_frame.my_patch_frame_config import do_patch_frame_config
 
-consumer.publisher_of_same_queue.clear()
-# 这里的publisher_of_same_queue 也可以使用get_publisher函数得到发布者，但需要手动确保消费者的队列名字与发布者的队列名字一致，并且中间件种类一致。用法如下。
-# pb = get_publisher('queue_test2',broker_kind=6)
-# pb.publish({'a': i, 'b': 2 * i})
-
-
-
-# [consumer.publisher_of_same_queue.publish({'a': i, 'b': 2 * i}) for i in range(100)]
+do_patch_frame_config()
+pb = get_publisher('task1_queue', broker_kind=2)
 
 for i in range(10000):
-    time.sleep(0.05)
-    consumer.publisher_of_same_queue.publish({'a': i, 'b': 2 * i})
+    pb.publish({'x':i,'y':i * 2})

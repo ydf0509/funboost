@@ -49,7 +49,7 @@ class PersistQueuePublisher(AbstractPublisher):
         self.logger.warning(f'清除 本地持久化队列 {self._queue_name} 中的消息成功')
 
     def get_message_count(self):
-        return self.queue._count()
+        return self.queue.qsize()
 
     def close(self):
         pass

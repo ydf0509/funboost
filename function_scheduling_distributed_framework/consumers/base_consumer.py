@@ -14,6 +14,7 @@ import eventlet
 import gevent
 from pymongo.errors import PyMongoError
 
+from function_scheduling_distributed_framework.concurrent_pool.bounded_threadpoolexcutor import BoundedThreadPoolExecutor
 from function_scheduling_distributed_framework.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco, check_evenlet_monkey_patch, CustomEventletPoolExecutor
 from function_scheduling_distributed_framework.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_deco, GeventPoolExecutor, check_gevent_monkey_patch
 from function_scheduling_distributed_framework.concurrent_pool.custom_threadpool_executor import CustomThreadPoolExecutor, check_not_monkey
@@ -310,7 +311,8 @@ class ConcurrentModeDispatcher(LoggerMixin):
 
         pool_type = None  # 是按照ThreadpoolExecutor写的三个鸭子类，公有方法名和功能写成完全一致，可以互相替换。
         if self._concurrent_mode == 1:
-            pool_type = CustomThreadPoolExecutor
+            # pool_type = CustomThreadPoolExecutor
+            pool_type = BoundedThreadPoolExecutor
             check_not_monkey()
         elif self._concurrent_mode == 2:
             pool_type = GeventPoolExecutor

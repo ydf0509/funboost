@@ -39,7 +39,7 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
     :param is_do_not_run_by_specify_time_effect :是否使不运行的时间段生效
     :param do_not_run_by_specify_time   :不运行的时间段
     :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
-    :param broker_kind:中间件种类,，不要设置为1。 0 使用pika链接mq，2使用redis，3使用python内置Queue
+    :param broker_kind:中间件种类,。 0 使用pika链接mq，2使用redis，3使用python内置Queue,5使用mongo，6使用sqlite。
     :return
     """
     all_kwargs = copy.copy(locals())

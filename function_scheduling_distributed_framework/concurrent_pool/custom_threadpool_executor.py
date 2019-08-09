@@ -63,7 +63,7 @@ class CustomThreadPoolExecutor(LoggerMixin, LoggerLevelSetterMixin):
         :param thread_name_prefix:
         """
         self._max_workers = max_workers or 4
-        self._min_workers = 5
+        self._min_workers = 10
         self._thread_name_prefix = thread_name_prefix
         self.work_queue = queue.Queue(max_workers)
         # self._threads = set()

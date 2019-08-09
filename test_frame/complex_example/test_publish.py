@@ -9,5 +9,5 @@ from test_frame.my_patch_frame_config import do_patch_frame_config
 do_patch_frame_config()
 pb = get_publisher('task1_queue', broker_kind=2)
 
-for i in range(10000):
+for i in range(100):
     pb.publish({'x':i,'y':i * 2})

@@ -2,7 +2,7 @@
 ```
 python分布式函数调度框架。适用场景范围超级广泛。
 
-#支持python内置Queue对象作为当前解释器下的消息队列。
+支持python内置Queue对象作为当前解释器下的消息队列。
 支持sqlite3作为本机持久化消息队列。
 支持pika包实现的使用rabbitmq作为分布式消息队列。
 支持rabbitpy包实现的使用rabbitmq作为分布式消息队列。

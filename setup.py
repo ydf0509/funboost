@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version="0.9",
+    version="1.3",
     description=(
         'function scheduling distributed framework'
     ),
@@ -21,7 +21,7 @@ setup(
     license='BSD License',
     # packages=['douban'], #
     packages=find_packages(),
-    # packages=['function_scheduling_distributed_framework'],
+    # packages=['function_scheduling_distributed_framework'], # 这样内层级文件夹的没有打包进去。
     include_package_data=True,
     platforms=["all"],
     url='https://github.com/ydf0509/distributed_framework',
@@ -36,12 +36,12 @@ setup(
         'Topic :: Software Development :: Libraries'
     ],
     install_requires=[
-        'eventlet==0.24.1',
+        'eventlet==0.25.0',
         'gevent',
         'pymongo==3.5.1',
         'AMQPStorm==2.7.1',
-        'pika==0.12.0',
-        'rabbitpy==1.0.0',
+        'pika==1.1.0',
+        'rabbitpy==2.0.1',
         'decorator==4.4.0',
         'pysnooper==0.0.11',
         'Flask',
@@ -52,5 +52,10 @@ setup(
         'persist-queue==0.4.2'
     ]
 )
+"""
+打包上传
+python setup.py sdist upload -r pypi
 
-# python setup.py sdist upload -r pypi
+最快的下载方式，上传立即可安装。阿里云源同步间隔要等很久。
+./pip install function_scheduling_distributed_framework==1.3 -i https://pypi.org/simple  
+"""

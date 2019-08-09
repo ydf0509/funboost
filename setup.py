@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version="0.7",
+    version="0.9",
     description=(
         'function scheduling distributed framework'
     ),
@@ -20,8 +20,9 @@ setup(
     maintainer_email='909686719@qq.com',
     license='BSD License',
     # packages=['douban'], #
-    # packages=find_packages(),
-    packages=['function_scheduling_distributed_framework'],
+    packages=find_packages(),
+    # packages=['function_scheduling_distributed_framework'],
+    include_package_data=True,
     platforms=["all"],
     url='https://github.com/ydf0509/distributed_framework',
     classifiers=[

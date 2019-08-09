@@ -73,7 +73,7 @@ class CustomThreadPoolExecutor(LoggerMixin, LoggerLevelSetterMixin):
         self._shutdown = False
         self._shutdown_lock = threading.Lock()
 
-    def set_min_workers(self, min_workers=5):
+    def set_min_workers(self, min_workers=10):
         self._min_workers = min_workers
         return self
 

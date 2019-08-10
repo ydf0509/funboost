@@ -20,8 +20,7 @@ from function_scheduling_distributed_framework.concurrent_pool.custom_gevent_poo
 from function_scheduling_distributed_framework.concurrent_pool.custom_threadpool_executor import CustomThreadPoolExecutor, check_not_monkey
 from function_scheduling_distributed_framework.consumers.redis_filter import RedisFilter
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
-from function_scheduling_distributed_framework.utils import LoggerLevelSetterMixin, LogManager, decorators, nb_print, LoggerMixin
-from function_scheduling_distributed_framework.utils import time_util
+from function_scheduling_distributed_framework.utils import LoggerLevelSetterMixin, LogManager, decorators, nb_print, LoggerMixin, time_util
 
 
 def delete_keys_and_return_new_dict(dictx: dict, keys: list):
@@ -234,8 +233,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                   f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是 【 {kw["body"]} 】   \n 原因是 {type(e)} {e} ', exc_info=self._is_print_detail_exception)
                 self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times + 1)
         else:
-            self.logger.critical(f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._max_retry_times} 后,仍然失败， 入参是 【 {kw["body"]} 】')  # 错得超过指定的次数了，就确认消费了。
-            self._confirm_consume(kw)
+            self.logger.critical(f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._max_retry_times} 后,仍然失败， 入参是 【 {kw["body"]} 】')
+            self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
 
     @abc.abstractmethod
     def _confirm_consume(self, kw):
@@ -289,7 +288,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
     def __init__(self, consumerx: AbstractConsumer):
         self.consumer = consumerx
         if self.__class__.concurrent_mode is not None and self.consumer._concurrent_mode != self.__class__.concurrent_mode:
-            raise ValueError('同一解释器中不可以设置两种并发类型')
+            raise ValueError('由于猴子补丁的原因，同一解释器中不可以设置两种并发类型')
         self._concurrent_mode = self.__class__.concurrent_mode = self.consumer._concurrent_mode
         concurrent_name = ''
         self.timeout_deco = None

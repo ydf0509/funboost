@@ -1,4 +1,4 @@
-# distributed_framework
+# 1.distributed_framework
 ```
 python分布式函数调度框架。适用场景范围超级广泛。
 
@@ -27,7 +27,7 @@ python分布式函数调度框架。适用场景范围超级广泛。
 
 
 
-##  具体更详细的用法可以看test_frame文件夹里面的几个示例。
+# 2.具体更详细的用法可以看test_frame文件夹里面的几个示例。
  ```python
 import time
 
@@ -75,16 +75,16 @@ consumer.start_consuming_message()
 
  ```
  
-### 运行中截图
+### 3.1运行中截图
 ![Image text](https://i.niupic.com/images/2019/08/09/_477.png)
 
-### 控频功能证明，由于截图是外网调度rabbitmq的消息有延迟，没有精确到函数每秒运行10次。
+### 3.2控频功能证明，由于截图是外网调度rabbitmq的消息有延迟，没有精确到函数每秒运行10次。
 
 ![Image text](https://i.niupic.com/images/2019/08/09/_462.png)
 
 
-## celery和这个框架比，存储的内容差异
-### celery的
+## 4.celery和这个框架比，存储的内容差异
+### 4.1celery的
  ```
  {
   "body": "W1szLCA2XSwge30sIHsiY2FsbGJhY2tzIjogbnVsbCwgImVycmJhY2tzIjogbnVsbCwgImNoYWluIjogbnVsbCwgImNob3JkIjogbnVsbH1d",
@@ -124,7 +124,7 @@ consumer.start_consuming_message()
 }
   ```
 
-### 此框架的消息很短，就是一个字典，内容的键值对和函数入参一一对应。
+### 4.2 此框架的消息很短，就是一个字典，内容的键值对和函数入参一一对应。
 额外控制参数如重试、超时kill，由代码决定，
 不需要存到中间件里面去。例如函数运行超时大小在本地代码修改后，立即生效。
 

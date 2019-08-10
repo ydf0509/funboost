@@ -12,15 +12,15 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
 
     def concrete_realization_of_publish(self, msg):
         # noinspection PyTypeChecker
-        self.redis_db7.rpush(self._queue_name, msg)
+        self.redis_db_frame.rpush(self._queue_name, msg)
 
     def clear(self):
-        self.redis_db7.delete(self._queue_name)
+        self.redis_db_frame.delete(self._queue_name)
         self.logger.warning(f'清除 {self._queue_name} 队列中的消息成功')
 
     def get_message_count(self):
         # nb_print(self.redis_db7,self._queue_name)
-        return self.redis_db7.llen(self._queue_name)
+        return self.redis_db_frame.llen(self._queue_name)
 
     def close(self):
         # self.redis_db7.connection_pool.disconnect()

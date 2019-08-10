@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version="1.5",
+    version="1.6",
     description=(
         'function scheduling distributed framework'
     ),
@@ -56,7 +56,7 @@ setup(
 打包上传
 python setup.py sdist upload -r pypi
 
-最快的下载方式，上传立即可安装。阿里云源同步间隔要等很久。
+最快的下载方式，上传立即可安装。阿里云源同步官网pypi间隔要等很久。
 ./pip install function_scheduling_distributed_framework==1.3 -i https://pypi.org/simple  
 ./pip install function_scheduling_distributed_framework --upgrade -i https://pypi.org/simple 
 """

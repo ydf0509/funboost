@@ -17,7 +17,7 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
     def _shedual_task(self):
         while True:
             t_start = time.time()
-            task_bytes = self.redis_db7.blpop(self._queue_name)[1]  # 使用db7
+            task_bytes = self.redis_db_frame.blpop(self._queue_name)[1]
             if task_bytes:
                 self.logger.debug(f'取出的任务时间是 {round(time.time() - t_start, 4)}    消息是：  {task_bytes.decode()}  ')
                 task_dict = json.loads(task_bytes)
@@ -28,4 +28,4 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
         pass  # redis没有确认消费的功能。
 
     def _requeue(self, kw):
-        self.redis_db7.rpush(self._queue_name, json.dumps(kw['body']))
+        self.redis_db_frame.rpush(self._queue_name, json.dumps(kw['body']))

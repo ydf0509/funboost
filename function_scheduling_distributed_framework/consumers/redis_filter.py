@@ -26,7 +26,7 @@ class RedisFilter(RedisMixin):
         return json.dumps(ordered_dict)
 
     def add_a_value(self, value: typing.Union[str, dict]):
-        self.redis_db7.sadd(self._redis_key_name, self._get_ordered_str(value))
+        self.redis_db_frame.sadd(self._redis_key_name, self._get_ordered_str(value))
 
     def check_value_exists(self, value):
-        return self.redis_db7.sismember(self._redis_key_name, self._get_ordered_str(value))
+        return self.redis_db_frame.sismember(self._redis_key_name, self._get_ordered_str(value))

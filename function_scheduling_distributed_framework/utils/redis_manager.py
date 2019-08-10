@@ -41,5 +41,10 @@ class RedisMixin(object):
 
     @property
     @decorators.cached_method_result
-    def redis_db7(self):
-        return RedisManager(host=frame_config.REDIS_HOST, port=frame_config.REDIS_PORT, password=frame_config.REDIS_PASSWORD, db=7).get_redis()
+    def redis_db8(self):
+        return RedisManager(host=frame_config.REDIS_HOST, port=frame_config.REDIS_PORT, password=frame_config.REDIS_PASSWORD, db=8).get_redis()
+
+    @property
+    @decorators.cached_method_result
+    def redis_db_frame(self):
+        return RedisManager(host=frame_config.REDIS_HOST, port=frame_config.REDIS_PORT, password=frame_config.REDIS_PASSWORD, db=frame_config.REDIS_DB).get_redis()

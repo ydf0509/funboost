@@ -16,4 +16,4 @@ RABBITMQ_VIRTUAL_HOST = 'rabbitmq_virtual_host'
 REDIS_HOST = '127.0.0.1'
 REDIS_PASSWORD = 'redis_password'
 REDIS_PORT = 6379
-REDIS_DB = 7    # 框架固定在了db7，不需要配置这里。
+REDIS_DB = 7

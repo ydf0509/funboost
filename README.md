@@ -83,4 +83,54 @@ consumer.start_consuming_message()
 ![Image text](https://i.niupic.com/images/2019/08/09/_462.png)
 
 
+## celery和这个框架比，存储的内容差异
+### celery的
+ ```
+ {
+  "body": "W1szLCA2XSwge30sIHsiY2FsbGJhY2tzIjogbnVsbCwgImVycmJhY2tzIjogbnVsbCwgImNoYWluIjogbnVsbCwgImNob3JkIjogbnVsbH1d",
+   "content-encoding":  "utf-8",
+   "content-type":  "application/json",
+   "headers":  {
+    "lang":  "py",
+     "task":  "test_task\u554a",
+     "id":  "39198371-8e6a-4994-9f6b-0335fe2e9b92",
+     "shadow":  null,
+     "eta":  null,
+     "expires":  null,
+     "group":  null,
+     "retries":  0,
+     "timelimit":  [
+      null,
+       null
+    ],
+     "root_id":  "39198371-8e6a-4994-9f6b-0335fe2e9b92",
+     "parent_id":  null,
+     "argsrepr":  "(3, 6)",
+     "kwargsrepr":  "{}",
+     "origin":  "gen22848@FQ9H7TVDZLJ4RBT"
+  },
+   "properties":  {
+    "correlation_id":  "39198371-8e6a-4994-9f6b-0335fe2e9b92",
+     "reply_to":  "3ef38b98-1417-3f3d-995b-89e8e15849fa",
+     "delivery_mode":  2,
+     "delivery_info":  {
+      "exchange":  "",
+       "routing_key":  "test_a"
+    },
+     "priority":  0,
+     "body_encoding":  "base64",
+     "delivery_tag":  "59e39055-2086-4be8-a801-993061fee443"
+  }
+}
+  ```
+
+### 此框架的消息很短，就是一个支点，内容的键值对和函数入参一一对应。
+额外控制参数如重试、超时kill，由代码决定，
+不需要存到中间件里面去。例如函数运行超时大小在本地代码修改后，立即生效。
+
+不由中间件里面的配置来决定。
+ ```
+{"a":3,"b":6}
+  ```
+  
 

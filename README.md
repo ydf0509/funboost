@@ -318,7 +318,7 @@ while 1：
    ```
     答：先写自己的函数（类）来实现业务逻辑需求，不需要思考怎么导入框架。
         写好函数后把 函数和队列名字绑定传给消费框架就可以了。一行代码就能启动分布式消费。
-        RedisConsmer('queue_name',consuming_function=your_function).start_consuming_message
+        RedisConsmer('queue_name',consuming_function=your_function).start_consuming_message()
         所以即使你不想用这个框架了，你写的your_function函数代码并没有作废。
         所以不管是引入这个框架 、废弃使用这个框架、 换成celery框架，你项目的99%行的业务代码都还是有用的，并没有成为废物。
   ```

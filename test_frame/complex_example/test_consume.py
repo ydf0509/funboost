@@ -19,7 +19,7 @@ pb2 = get_publisher('task2_queue', broker_kind=2)
 def task1(x, y):
     logger.info(f'消费此消息 {x} - {y} ,结果是  {x - y}')
     for i in range(10):
-        pb2.publish({'n':x * 100 + i})  # 消费时候发布任务到别的队列或自己的队列。可以边消费边推送。
+        pb2.publish({'n': x * 100 + i})  # 消费时候发布任务到别的队列或自己的队列。可以边消费边推送。
     time.sleep(10)  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
 
 
@@ -35,4 +35,4 @@ def multi_processing_consume():
 
 
 if __name__ == '__main__':
-    [Process(target=multi_processing_consume).start() for _ in range(1)]
+    [Process(target=multi_processing_consume).start() for _ in range(4)]

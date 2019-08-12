@@ -25,3 +25,4 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
     def close(self):
         # self.redis_db7.connection_pool.disconnect()
         pass
+

@@ -7,4 +7,4 @@ from test_frame.my_patch_frame_config import do_patch_frame_config
 
 do_patch_frame_config()
 
-print(RedisMixin().redis_db7.keys())
+print(RedisMixin().redis_db_frame.keys())

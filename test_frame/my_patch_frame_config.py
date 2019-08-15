@@ -7,16 +7,16 @@ from function_scheduling_distributed_framework import patch_frame_config, show_f
 
 
 def do_patch_frame_config():
-    patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdmin:8mwTdy1klnSYepNo@112.90.89.16:27016/admin',
+    patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:27016/admin',
 
-                       RABBITMQ_USER='silktest',
-                       RABBITMQ_PASS='Fr3M3j@lXZLF*iMB',
-                       RABBITMQ_HOST='112.90.89.16',
+                       RABBITMQ_USER='silxxxx',
+                       RABBITMQ_PASS='Fr3Mxxxxx',
+                       RABBITMQ_HOST='1xx.90.89.xx',
                        RABBITMQ_PORT=5672,
-                       RABBITMQ_VIRTUAL_HOST='crawlers_host',
+                       RABBITMQ_VIRTUAL_HOST='test_host',
 
-                       REDIS_HOST='112.90.89.16',
-                       REDIS_PASSWORD='yMxsueZD9yx0AkfR',
+                       REDIS_HOST='1xx.90.89.xx',
+                       REDIS_PASSWORD='yxxxxxxR',
                        REDIS_PORT=6543,
                        REDIS_DB=7, )
 

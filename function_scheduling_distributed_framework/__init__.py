@@ -17,7 +17,8 @@ def patch_frame_config(MONGO_CONNECT_URL: str = None, RABBITMQ_USER: str = None,
     """
     kw = copy.copy(locals())
     for var_name, var_value in kw.items():
-        setattr(frame_config, var_name, var_value)
+        if var_value is not None:
+            setattr(frame_config, var_name, var_value)
 
 
 def show_frame_config():

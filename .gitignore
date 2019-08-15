@@ -16,3 +16,4 @@ node_modules/
 hotelApi/
 my_patch_frame_config0000.py
 my_patch_frame_config_beifen.py
+test_frame/my_patch_frame_config.py

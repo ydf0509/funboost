@@ -21,3 +21,5 @@ def do_patch_frame_config():
                        REDIS_DB=7, )
 
     show_frame_config()
+
+

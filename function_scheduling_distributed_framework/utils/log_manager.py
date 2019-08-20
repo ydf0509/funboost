@@ -943,11 +943,11 @@ class LogManager(object):
                                          log_filename=None,
                                          log_file_size=100, mongo_url=None, is_add_elastic_handler=False, is_add_kafka_handler=False,
                                          ding_talk_token=DING_TALK_TOKEN, ding_talk_time_interval=60,
-                                         formatter_template=5, mailhost: tuple = EMAIL_HOST,  # ('smtpdm.aliyun.com', 465), # 公司邮箱有频率限制影响业务
-                                         fromaddr: str = EMAIL_FROMADDR,  # 'matafyhotel-techl@matafy.com',
+                                         formatter_template=5, mailhost: tuple = EMAIL_HOST,
+                                         fromaddr: str = EMAIL_FROMADDR,
                                          toaddrs: tuple = EMAIL_TOADDRS,
                                          subject: str = '马踏飞燕日志报警测试',
-                                         credentials: tuple = EMAIL_CREDENTIALS,  # ('matafyhotel-techl@matafy.com', 'DDMkXzmlZtlNXB81YrYH'),
+                                         credentials: tuple = EMAIL_CREDENTIALS,
                                          secure=None, timeout=5.0, is_use_ssl=True, mail_time_interval=60):
 
         if log_filename is None:

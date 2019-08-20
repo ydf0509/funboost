@@ -1323,6 +1323,9 @@ class _Test(unittest.TestCase):
         # logger = LogManager('helloMongo', is_pycharm_2019=False).get_logger_and_add_handlers(mongo_url=app_config.connect_url, formatter_template=5)
         logging.error('xxxx')
         logger = LogManager('helloMongo', is_pycharm_2019=False).get_logger_and_add_handlers(formatter_template=5)
+        logger.addHandler(ColorHandler())    # 由于打了强大的猴子补丁，无惧反复添加同种handler。
+        logger.addHandler(ColorHandler())
+        logger.addHandler(ColorHandler())
         for i in range(1000000):
             time.sleep(0.1)
             logger.debug('一个debug级别的日志。' * 5)

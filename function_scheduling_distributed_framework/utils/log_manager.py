@@ -11,27 +11,25 @@ concurrent_log_handler的ConcurrentRotatingFileHandler解决了logging模块自�
 4、对相同命名空间的logger可以无限添加同种类型的handlers，不会重复使用同种handler记录日志。不需要用户自己去判断。
 
 """
-import json
-import traceback
-from queue import Queue
-
 import socket
-
 import datetime
 import sys
 import os
-
-from elasticsearch import Elasticsearch, helpers
-from threading import Lock, Thread
+import json
+import traceback
 import unittest
 import time
 from collections import OrderedDict
+from queue import Queue
+from kafka import KafkaProducer
+from elasticsearch import Elasticsearch, helpers
+from threading import Lock, Thread
 import pymongo
 import requests
 import logging
 from logging import handlers
 from concurrent_log_handler import ConcurrentRotatingFileHandler  # 需要安装。concurrent-log-handler==0.9.1
-from kafka import KafkaProducer
+
 
 os_name = os.name
 

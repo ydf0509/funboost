@@ -49,7 +49,7 @@ KAFKA_BOOTSTRAP_SERVERS = ['192.xx.xx.202:9092']
 ALWAYS_ADD_KAFKA_HANDLER_IN_TEST_ENVIRONENT = True
 
 
-class app_config:  # 模拟模块级的配置，实际代码不是这样。
+class app_config:  # 由于日志引用导入了app.config模块，此处模拟模块级的配置，实际代码不是这样。
     env = 'production'
     connect_url = 'mongo://xxx'  # mongo连接
 

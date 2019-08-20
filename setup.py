@@ -49,7 +49,10 @@ setup(
         'concurrent-log-handler==0.9.9',
         'redis==2.10.6',
         'mongo-mq==0.0.1',
-        'persist-queue==0.4.2'
+        'persist-queue==0.4.2',
+        'elasticsearch',
+        'kafka-python==1.4.6',
+        'requests'
     ]
 )
 """

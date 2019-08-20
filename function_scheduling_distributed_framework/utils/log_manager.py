@@ -1,6 +1,6 @@
 # coding=utf8
 """
-日志管理，支持日志打印到控制台或写入切片文件或mongodb或email
+日志管理，支持日志打印到控制台和写入切片文件和mongodb和email和钉钉机器人和elastic和kafka。
 使用方式为  logger = LogManager('logger_name').get_and_add_handlers(log_level_int=1, is_add_stream_handler=True, log_path=None, log_filename=None, log_file_size=10,mongo_url=None,formatter_template=2)
 或者 logger = LogManager('logger_name').get_without_handlers(),此种没有handlers不立即记录日志，之后可以在单独统一的总闸处对所有日志根据loggerame进行get_and_add_handlers添加相关的各种handlers
 创建一个邮件日志的用法为 logger = LogManager.bulid_a_logger_with_mail_handler('mail_logger_name', mail_time_interval=10, toaddrs=('909686xxx@qq.com', 'yangxx4508@dingtalk.com',subject='你的主题)),使用了独立的创建方式
@@ -11,30 +11,53 @@ concurrent_log_handler的ConcurrentRotatingFileHandler解决了logging模块自�
 4、对相同命名空间的logger可以无限添加同种类型的handlers，不会重复使用同种handler记录日志。不需要用户自己去判断。
 
 """
+import json
+import traceback
+from queue import Queue
+
+import socket
+
+import datetime
 import sys
 import os
-from threading import Lock
+
+from elasticsearch import Elasticsearch, helpers
+from threading import Lock, Thread
 import unittest
 import time
 from collections import OrderedDict
 import pymongo
+import requests
 import logging
 from logging import handlers
-from concurrent_log_handler import ConcurrentRotatingFileHandler  # 需要安装。concurrent-log-handler==0.9.9
+from concurrent_log_handler import ConcurrentRotatingFileHandler  # 需要安装。concurrent-log-handler==0.9.1
+from kafka import KafkaProducer
 
 os_name = os.name
-DING_TALK_TOKEN = 'xxxxxxxxxxxxxxxxxxx'  # 钉钉报警机器人
+
+DING_TALK_TOKEN = '3dd0ee497f0xxx'  # 钉钉报警机器人
 
 EMAIL_HOST = ('smtp.sohu.com', 465)
-EMAIL_FROMADDR = 'xxxxxx@sohu.com'  # 'matafyhotel-techl@matafy.com',
-EMAIL_TOADDRS = ('xxxxx@xxxx.com', 'zzzzzz@xxxxxx.com',)
-EMAIL_CREDENTIALS = ('rrrrrr@sohu.com', '********')  # ('matafyhotel-techl@matafy.com', 'DDMkXzmlZtlNXB81YrYH'),
+EMAIL_FROMADDR = 'ydxxx@sohu.com'
+EMAIL_TOADDRS = ('chaxxx@silkxx.com', 'yaxxx8@dingtalk.com',)
+EMAIL_CREDENTIALS = ('xxx@sohu.com', 'acrdd123')
+
+ELASTIC_HOST = '1xx.xx.89.1x'
+ELASTIC_PORT = 9200
+
+KAFKA_BOOTSTRAP_SERVERS = ['192.xx.xx.202:9092']
+ALWAYS_ADD_KAFKA_HANDLER_IN_TEST_ENVIRONENT = True
+
+
+class app_config:  # 模拟模块级的配置，实际代码不是这样。
+    env = 'production'
+    connect_url = 'mongo://xxx'  # mongo连接
 
 
 # noinspection PyProtectedMember,PyUnusedLocal,PyIncorrectDocstring
 def very_nb_print(*args, sep=' ', end='\n', file=None):
     """
-    超流弊的print补丁
+    超流弊的print补丁,
     :param x:
     :return:
     """
@@ -46,6 +69,55 @@ def very_nb_print(*args, sep=' ', end='\n', file=None):
     args = (str(arg) for arg in args)  # REMIND 防止是数字不能被join
     sys.stdout.write(f'"{file_name}:{line}"  {time.strftime("%H:%M:%S")}  \033[0;94m{"".join(args)}\033[0m\n')  # 36  93 96 94
 
+
+def revision_call_handlers(self, record):  # 对logging标准模块打猴子补丁。主要是使父命名空间的handler不重复记录当前命名空间日志已有种类的handler。
+    """
+    重要。这可以使同名logger或父logger随意添加同种类型的handler，确保不会重复打印。
+
+    :param self:
+    :param record:
+    :return:
+    """
+
+    """
+    Pass a record to all relevant handlers.
+
+    Loop through all handlers for this logger and its parents in the
+    logger hierarchy. If no handler was found, output a one-off error
+    message to sys.stderr. Stop searching up the hierarchy whenever a
+    logger with the "propagate" attribute set to zero is found - that
+    will be the last logger whose handlers are called.
+    """
+    c = self
+    found = 0
+    hdlr_type_set = set()
+
+    while c:
+        for hdlr in c.handlers:
+            hdlr_type = type(hdlr)
+            if hdlr_type == ColorHandler:
+                hdlr_type = logging.StreamHandler
+            found = found + 1
+            if record.levelno >= hdlr.level:
+                if hdlr_type not in hdlr_type_set:
+                    hdlr.handle(record)
+                hdlr_type_set.add(hdlr_type)
+        if not c.propagate:
+            c = None  # break out
+        else:
+            c = c.parent
+    # noinspection PyRedundantParentheses
+    if (found == 0):
+        if logging.lastResort:
+            if record.levelno >= logging.lastResort.level:
+                logging.lastResort.handle(record)
+        elif logging.raiseExceptions and not self.manager.emittedNoHandlerWarning:
+            sys.stderr.write("No handlers could be found for logger"
+                             " \"%s\"\n" % self.name)
+            self.manager.emittedNoHandlerWarning = True
+
+
+logging.Logger.callHandlers = revision_call_handlers  # 打猴子补丁。
 
 # noinspection PyShadowingBuiltins
 # print = very_nb_print
@@ -137,7 +209,312 @@ class MongoHandler(logging.Handler):
             self.handleError(record)
 
 
-class ColorHandler0(logging.Handler):
+class KafkaHandler(logging.Handler):
+    """
+    日志批量写入kafka中。
+    """
+    ES_INTERVAL_SECONDS = 0.5
+
+    host_name = socket.gethostname()
+    host_process = f'{host_name} -- {os.getpid()}'
+
+    script_name = sys.argv[0].split('/')[-1]
+
+    task_queue = Queue()
+    last_es_op_time = time.time()
+    has_start_do_bulk_op = False
+    has_start_check_size_and_clear = False
+
+    kafka_producer = None
+    es_index_prefix = 'pylog-'
+
+    def __init__(self, bootstrap_servers, **configs):
+        """
+        :param elastic_hosts:  es的ip地址，数组类型
+        :param elastic_port：  es端口
+        :param index_prefix: index名字前缀。
+        """
+        logging.Handler.__init__(self)
+        if not self.__class__.kafka_producer:
+            very_nb_print('实例化kafka producer')
+            self.__class__.kafka_producer = KafkaProducer(bootstrap_servers=bootstrap_servers, **configs)
+
+        t = Thread(target=self._do_bulk_op)
+        t.setDaemon(True)
+        t.start()
+
+    @classmethod
+    def __add_task_to_bulk(cls, task):
+        cls.task_queue.put(task)
+
+    # noinspection PyUnresolvedReferences
+    @classmethod
+    def __clear_bulk_task(cls):
+        cls.task_queue.queue.clear()
+
+    @classmethod
+    def _check_size_and_clear(cls):
+        """
+        如果是外网传输日志到测试环境风险很大，测试环境网络经常打满，传输不了会造成日志队列堆积，会造成内存泄漏，所以需要清理。
+        :return:
+        """
+        if cls.has_start_check_size_and_clear:
+            return
+        cls.has_start_check_size_and_clear = True
+
+        def __check_size_and_clear():
+            while 1:
+                size = cls.task_queue.qsize()
+                if size > 1000:
+                    very_nb_print(f'kafka防止意外日志积累太多了,达到 {size} 个，为防止内存泄漏，清除队列')
+                    cls.__clear_bulk_task()
+                time.sleep(0.1)
+
+        t = Thread(target=__check_size_and_clear)
+        t.setDaemon(True)
+        t.start()
+
+    @classmethod
+    def _do_bulk_op(cls):
+        if cls.has_start_do_bulk_op:
+            return
+
+        cls.has_start_do_bulk_op = True
+        # very_nb_print(cls.kafka_producer)
+        while 1:
+            try:
+                # noinspection PyUnresolvedReferences
+                tasks = list(cls.task_queue.queue)
+                cls.__clear_bulk_task()
+                for task in tasks:
+                    topic = (cls.es_index_prefix + task['name']).replace('.', '').replace('_', '').replace('-', '')
+                    # very_nb_print(topic)
+                    cls.kafka_producer.send(topic, json.dumps(task).encode())
+                cls.last_es_op_time = time.time()
+            except Exception as e:
+                very_nb_print(e)
+            finally:
+                time.sleep(cls.ES_INTERVAL_SECONDS)
+
+    def emit(self, record):
+        # noinspection PyBroadException, PyPep8
+        try:
+            level_str = None
+            if record.levelno == 10:
+                level_str = 'DEBUG'
+            elif record.levelno == 20:
+                level_str = 'INFO'
+            elif record.levelno == 30:
+                level_str = 'WARNING'
+            elif record.levelno == 40:
+                level_str = 'ERROR'
+            elif record.levelno == 50:
+                level_str = 'CRITICAL'
+            log_info_dict = OrderedDict()
+            log_info_dict['@timestamp'] = datetime.datetime.utcfromtimestamp(record.created).isoformat()
+            log_info_dict['time'] = time.strftime('%Y-%m-%d %H:%M:%S')
+            log_info_dict['name'] = record.name
+            log_info_dict['host'] = self.host_name
+            log_info_dict['host_process'] = self.host_process
+            # log_info_dict['file_path'] = record.pathname
+            log_info_dict['file_name'] = record.filename
+            log_info_dict['func_name'] = record.funcName
+            # log_info_dict['line_no'] = record.lineno
+            log_info_dict['log_place'] = f'{record.pathname}:{record.lineno}'
+            log_info_dict['log_level'] = level_str
+            log_info_dict['msg'] = str(record.msg)
+            log_info_dict['script'] = self.script_name
+            log_info_dict['es_index'] = f'{self.es_index_prefix}{record.name.lower()}'
+            self.__add_task_to_bulk(log_info_dict)
+
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception:
+            self.handleError(record)
+
+
+class ElasticHandler000(logging.Handler):
+    """
+    日志批量写入es中。
+    """
+    ES_INTERVAL_SECONDS = 2
+    host_name = socket.gethostname()
+
+    def __init__(self, elastic_hosts: list, elastic_port, index_prefix='pylog-'):
+        """
+        :param elastic_hosts:  es的ip地址，数组类型
+        :param elastic_port：  es端口
+        :param index_prefix: index名字前缀。
+        """
+        logging.Handler.__init__(self)
+        self._es_client = Elasticsearch(elastic_hosts, port=elastic_port)
+        self._index_prefix = index_prefix
+        self._task_list = []
+        self._task_queue = Queue()
+        self._last_es_op_time = time.time()
+        t = Thread(target=self._do_bulk_op)
+        t.setDaemon(True)
+        t.start()
+
+    def __add_task_to_bulk(self, task):
+        self._task_queue.put(task)
+
+    def __clear_bulk_task(self):
+        # noinspection PyUnresolvedReferences
+        self._task_queue.queue.clear()
+
+    def _do_bulk_op(self):
+        while 1:
+            try:
+                if self._task_queue.qsize() > 10000:
+                    very_nb_print('防止意外日志积累太多了，不插入es了。')
+                    self.__clear_bulk_task()
+                    return
+                # noinspection PyUnresolvedReferences
+                tasks = list(self._task_queue.queue)
+                self.__clear_bulk_task()
+                helpers.bulk(self._es_client, tasks)
+
+                self._last_es_op_time = time.time()
+            except Exception as e:
+                very_nb_print(e)
+            finally:
+                time.sleep(1)
+
+    def emit(self, record):
+        # noinspection PyBroadException, PyPep8
+        try:
+            level_str = None
+            if record.levelno == 10:
+                level_str = 'DEBUG'
+            elif record.levelno == 20:
+                level_str = 'INFO'
+            elif record.levelno == 30:
+                level_str = 'WARNING'
+            elif record.levelno == 40:
+                level_str = 'ERROR'
+            elif record.levelno == 50:
+                level_str = 'CRITICAL'
+            log_info_dict = OrderedDict()
+            log_info_dict['@timestamp'] = datetime.datetime.utcfromtimestamp(record.created).isoformat()
+            log_info_dict['time'] = time.strftime('%Y-%m-%d %H:%M:%S')
+            log_info_dict['name'] = record.name
+            log_info_dict['host'] = self.host_name
+            log_info_dict['file_path'] = record.pathname
+            log_info_dict['file_name'] = record.filename
+            log_info_dict['func_name'] = record.funcName
+            log_info_dict['line_no'] = record.lineno
+            log_info_dict['log_level'] = level_str
+            log_info_dict['msg'] = str(record.msg)
+            self.__add_task_to_bulk({
+                "_index": f'{self._index_prefix}{record.name.lower()}',
+                "_type": f'{self._index_prefix}{record.name.lower()}',
+                "_source": log_info_dict
+            })
+
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception:
+            self.handleError(record)
+
+
+# noinspection PyUnresolvedReferences
+class ElasticHandler(logging.Handler):
+    """
+    日志批量写入es中。
+    """
+    ES_INTERVAL_SECONDS = 0.5
+
+    host_name = socket.gethostname()
+    host_process = f'{host_name} -- {os.getpid()}'
+
+    script_name = sys.argv[0]
+
+    task_queue = Queue()
+    last_es_op_time = time.time()
+    has_start_do_bulk_op = False
+
+    def __init__(self, elastic_hosts: list, elastic_port, index_prefix='pylog-'):
+        """
+        :param elastic_hosts:  es的ip地址，数组类型
+        :param elastic_port：  es端口
+        :param index_prefix: index名字前缀。
+        """
+        logging.Handler.__init__(self)
+        self._es_client = Elasticsearch(elastic_hosts, port=elastic_port)
+        self._index_prefix = index_prefix
+        t = Thread(target=self._do_bulk_op)
+        t.setDaemon(True)
+        t.start()
+
+    @classmethod
+    def __add_task_to_bulk(cls, task):
+        cls.task_queue.put(task)
+
+    # noinspection PyUnresolvedReferences
+    @classmethod
+    def __clear_bulk_task(cls):
+        cls.task_queue.queue.clear()
+
+    def _do_bulk_op(self):
+        if self.__class__.has_start_do_bulk_op:
+            return
+        self.__class__.has_start_do_bulk_op = True
+        while 1:
+            try:
+                if self.__class__.task_queue.qsize() > 10000:
+                    very_nb_print('防止意外日志积累太多了，不插入es了。')
+                    self.__clear_bulk_task()
+                    return
+                tasks = list(self.__class__.task_queue.queue)
+                self.__clear_bulk_task()
+                helpers.bulk(self._es_client, tasks)
+                self.__class__.last_es_op_time = time.time()
+            except Exception as e:
+                very_nb_print(e)
+            finally:
+                time.sleep(self.ES_INTERVAL_SECONDS)
+
+    def emit(self, record):
+        # noinspection PyBroadException, PyPep8
+        try:
+            level_str = None
+            if record.levelno == 10:
+                level_str = 'DEBUG'
+            elif record.levelno == 20:
+                level_str = 'INFO'
+            elif record.levelno == 30:
+                level_str = 'WARNING'
+            elif record.levelno == 40:
+                level_str = 'ERROR'
+            elif record.levelno == 50:
+                level_str = 'CRITICAL'
+            log_info_dict = OrderedDict()
+            log_info_dict['@timestamp'] = datetime.datetime.utcfromtimestamp(record.created).isoformat()
+            log_info_dict['time'] = time.strftime('%Y-%m-%d %H:%M:%S')
+            log_info_dict['name'] = record.name
+            log_info_dict['host'] = self.host_name
+            log_info_dict['host_process'] = self.host_process
+            log_info_dict['file_path'] = record.pathname
+            log_info_dict['file_name'] = record.filename
+            log_info_dict['func_name'] = record.funcName
+            log_info_dict['line_no'] = record.lineno
+            log_info_dict['log_level'] = level_str
+            log_info_dict['msg'] = str(record.msg)
+            log_info_dict['script'] = self.script_name
+            self.__add_task_to_bulk({
+                "_index": f'{self._index_prefix}{record.name.lower()}',
+                "_type": f'{self._index_prefix}{record.name.lower()}',
+                "_source": log_info_dict
+            })
+
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception:
+            self.handleError(record)
+
+
+class ColorHandler000(logging.Handler):
     """彩色日志handler，根据不同级别的日志显示不同颜色"""
     bule = 96 if os_name == 'nt' else 36
     yellow = 93 if os_name == 'nt' else 33
@@ -344,6 +721,7 @@ class ColorHandler(logging.Handler):
         """
         # noinspection PyBroadException
         try:
+            # very_nb_print(record)
             msg = self.format(record)
             stream = self.stream
             msg1, msg2 = self.__spilt_msg(record.levelno, msg)
@@ -368,8 +746,10 @@ class ColorHandler(logging.Handler):
             stream.write(msg_color)
             stream.write(self.terminator)
             self.flush()
-        except Exception:
-            self.handleError(record)
+        except Exception as e:
+            very_nb_print(e)
+            very_nb_print(traceback.format_exc())
+            # self.handleError(record)
 
     @staticmethod
     def __spilt_msg(log_level, msg: str):
@@ -508,7 +888,6 @@ class DingTalkHandler(logging.Handler):
                 very_nb_print(f' 此次离上次发送钉钉消息时间间隔不足 {self._time_interval} 秒，此次不发送这个钉钉内容： {record.msg}    ')
 
     def __emit(self, record):
-        import requests
         message = self.format(record)
         data = {"msgtype": "text", "text": {"content": message, "title": '这里的标题能起作用吗？？'}}
         try:
@@ -562,7 +941,7 @@ class LogManager(object):
     def bulid_a_logger_with_mail_handler(cls, logger_name, log_level_int=10, *, is_add_stream_handler=True,
                                          do_not_use_color_handler=False, log_path=get_logs_dir_by_disk_root(),
                                          log_filename=None,
-                                         log_file_size=100, mongo_url=None,
+                                         log_file_size=100, mongo_url=None, is_add_elastic_handler=False, is_add_kafka_handler=False,
                                          ding_talk_token=DING_TALK_TOKEN, ding_talk_time_interval=60,
                                          formatter_template=5, mailhost: tuple = EMAIL_HOST,  # ('smtpdm.aliyun.com', 465), # 公司邮箱有频率限制影响业务
                                          fromaddr: str = EMAIL_FROMADDR,  # 'matafyhotel-techl@matafy.com',
@@ -570,37 +949,17 @@ class LogManager(object):
                                          subject: str = '马踏飞燕日志报警测试',
                                          credentials: tuple = EMAIL_CREDENTIALS,  # ('matafyhotel-techl@matafy.com', 'DDMkXzmlZtlNXB81YrYH'),
                                          secure=None, timeout=5.0, is_use_ssl=True, mail_time_interval=60):
-        """
-        创建一个附带邮件handler的日志
-        :param logger_name:
-        :param log_level_int: 可以用1 2  3  4 5 ，用可以用官方logging模块的正规的10 20 30 40 50,兼容。
-        :param is_add_stream_handler:
-        :param do_not_use_color_handler:
-        :param log_path:
-        :param log_filename:
-        :param log_file_size:
-        :param mongo_url:
-        :param ding_talk_token:钉钉机器人token
-        :param ding_talk_time_interval : 时间间隔，少于这个时间不发送钉钉消息
-        :param formatter_template:
-        :param mailhost:
-        :param fromaddr:
-        :param toaddrs:
-        :param subject:
-        :param credentials:
-        :param secure:
-        :param timeout:
-        :param is_use_ssl:
-        :param mail_time_interval: 邮件的频率控制，为0不限制，如果为100，代表100秒内相同内容的邮件最多发送一次邮件
-        :return:
-        """
+
         if log_filename is None:
             log_filename = f'{logger_name}.log'
         logger = cls(logger_name).get_logger_and_add_handlers(log_level_int=log_level_int,
                                                               is_add_stream_handler=is_add_stream_handler,
                                                               do_not_use_color_handler=do_not_use_color_handler,
                                                               log_path=log_path, log_filename=log_filename,
-                                                              log_file_size=log_file_size, mongo_url=mongo_url, ding_talk_token=ding_talk_token, ding_talk_time_interval=ding_talk_time_interval,
+                                                              log_file_size=log_file_size, mongo_url=mongo_url,
+                                                              is_add_elastic_handler=is_add_elastic_handler,
+                                                              is_add_kafka_handler=is_add_kafka_handler, ding_talk_token=ding_talk_token,
+                                                              ding_talk_time_interval=ding_talk_time_interval,
                                                               formatter_template=formatter_template, )
         smtp_handler = CompatibleSMTPSSLHandler(mailhost, fromaddr,
                                                 toaddrs,
@@ -614,14 +973,7 @@ class LogManager(object):
         log_level_int = log_level_int * 10 if log_level_int < 10 else log_level_int
         smtp_handler.setLevel(log_level_int)
         smtp_handler.setFormatter(formatter_dict[formatter_template])
-        if not cls.__judge_logger_contain_handler_class(logger, CompatibleSMTPSSLHandler):
-            if logger.name == 'root':
-                for logger_x in cls.logger_list:
-                    for hdlr in logger_x.handlers:
-                        if isinstance(hdlr, CompatibleSMTPSSLHandler):
-                            logger_x.removeHandler(hdlr)
-            logger.addHandler(smtp_handler)
-
+        logger.addHandler(smtp_handler)
         return logger
 
     # 加*是为了强制在调用此方法时候使用关键字传参，如果以位置传参强制报错，因为此方法后面的参数中间可能以后随时会增加更多参数，造成之前的使用位置传参的代码参数意义不匹配。
@@ -629,7 +981,7 @@ class LogManager(object):
     def get_logger_and_add_handlers(self, log_level_int: int = 10, *, is_add_stream_handler=True,
                                     do_not_use_color_handler=False, log_path=get_logs_dir_by_disk_root(),
                                     log_filename=None, log_file_size=100,
-                                    mongo_url=None, ding_talk_token=None, ding_talk_time_interval=60, formatter_template=5):
+                                    mongo_url=None, is_add_elastic_handler=False, is_add_kafka_handler=False, ding_talk_token=None, ding_talk_time_interval=60, formatter_template=5):
         """
        :param log_level_int: 日志输出级别，设置为 1 2 3 4 5，分别对应原生logging.DEBUG(10)，logging.INFO(20)，logging.WARNING(30)，logging.ERROR(40),logging.CRITICAL(50)级别，现在可以直接用10 20 30 40 50了，兼容了。
        :param is_add_stream_handler: 是否打印日志到控制台
@@ -638,6 +990,8 @@ class LogManager(object):
        :param log_filename: 日志的名字，仅当log_path和log_filename都不为None时候才写入到日志文件。
        :param log_file_size :日志大小，单位M，默认10M
        :param mongo_url : mongodb的连接，为None时候不添加mongohandler
+       :param is_add_elastic_handler: 是否记录到es中。
+       :param is_add_kafka_handler: 日志是否发布到kafka。
        :param ding_talk_token:钉钉机器人token
        :param ding_talk_time_interval : 时间间隔，少于这个时间不发送钉钉消息
        :param formatter_template :日志模板，1为formatter_dict的详细模板，2为简要模板,5为最好模板
@@ -655,13 +1009,15 @@ class LogManager(object):
         self._log_filename = log_filename
         self._log_file_size = log_file_size
         self._mongo_url = mongo_url
+        self._is_add_elastic_handler = is_add_elastic_handler
+        self._is_add_kafka_handler = is_add_kafka_handler
         self._ding_talk_token = ding_talk_token
         self._ding_talk_time_interval = ding_talk_time_interval
         self._formatter = formatter_dict[formatter_template]
-        self.__set_logger_level()
+        self.logger.setLevel(self._logger_level)
         self.__add_handlers()
-        self.logger_name_list.append(self._logger_name)
-        self.logger_list.append(self.logger)
+        # self.logger_name_list.append(self._logger_name)
+        # self.logger_list.append(self.logger)
         return self.logger
 
     def get_logger_without_handlers(self):
@@ -682,98 +1038,66 @@ class LogManager(object):
         :param handler_class:logging.StreamHandler,ColorHandler,MongoHandler,ConcurrentRotatingFileHandler,MongoHandler,CompatibleSMTPSSLHandler的一种
         :return:
         """
-        if handler_class not in (logging.StreamHandler, ColorHandler, MongoHandler, ConcurrentRotatingFileHandler, MongoHandler, CompatibleSMTPSSLHandler):
+        if handler_class not in (logging.StreamHandler, ColorHandler, MongoHandler, ConcurrentRotatingFileHandler, MongoHandler, CompatibleSMTPSSLHandler, ElasticHandler, DingTalkHandler, KafkaHandler):
             raise TypeError('设置的handler类型不正确')
         for handler in self.logger.handlers:
             if isinstance(handler, handler_class):
                 self.logger.removeHandler(handler)
 
-    def __set_logger_level(self):
-        self.logger.setLevel(self._logger_level)
-
-    def __remove_handlers_from_other_logger_when_logger_name_is_none(self, handler_class):
-        """
-        当logger name为None时候需要移出其他logger的handler，否则重复记录日志
-        :param handler_class: handler类型
-        :return:
-        """
-        if self._logger_name is None:
-            for logger in self.logger_list:
-                for hdlr in logger.handlers:
-                    if isinstance(hdlr, handler_class):
-                        logger.removeHandler(hdlr)
-
-    @staticmethod
-    def __judge_logger_contain_handler_class(logger: logging.Logger, handler_class):
-        for h in logger.handlers + logging.getLogger().handlers:
-            if isinstance(h, (handler_class,)):
-                return True
+    def __add_a_hanlder(self, handlerx: logging.Handler):
+        for hdlr in self.logger.handlers:
+            if type(hdlr) == type(handlerx):
+                return
+        handlerx.setLevel(10)
+        handlerx.setFormatter(self._formatter)
+        self.logger.addHandler(handlerx)
 
     def __add_handlers(self):
+        pass
+
+        # REMIND 添加控制台日志
         if self._is_add_stream_handler:
-            if not self.__judge_logger_contain_handler_class(self.logger,
-                                                             ColorHandler):  # 主要是阻止给logger反复添加同种类型的handler造成重复记录
-                self.__remove_handlers_from_other_logger_when_logger_name_is_none(ColorHandler)
-                self.__add_stream_handler()
+            handler = ColorHandler(is_pycharm_2019=self._is_pycharm_2019) if not self._do_not_use_color_handler else logging.StreamHandler()  # 不使用streamhandler，使用自定义的彩色日志
+            # handler = logging.StreamHandler()
+            self.__add_a_hanlder(handler)
 
+        # REMIND 添加多进程安全切片的文件日志
         if all([self._log_path, self._log_filename]):
-            if not self.__judge_logger_contain_handler_class(self.logger, ConcurrentRotatingFileHandler):
-                self.__remove_handlers_from_other_logger_when_logger_name_is_none(ConcurrentRotatingFileHandler)
-                self.__add_file_handler()
+            if not os.path.exists(self._log_path):
+                os.makedirs(self._log_path)
+            log_file = os.path.join(self._log_path, self._log_filename)
+            rotate_file_handler = None
+            if os_name == 'nt':
+                # windows下用这个，非进程安全
+                rotate_file_handler = ConcurrentRotatingFileHandler(log_file, maxBytes=self._log_file_size * 1024 * 1024,
+                                                                    backupCount=3,
+                                                                    encoding="utf-8")
+            if os_name == 'posix':
+                # linux下可以使用ConcurrentRotatingFileHandler，进程安全的日志方式
+                rotate_file_handler = ConcurrentRotatingFileHandler(log_file, maxBytes=self._log_file_size * 1024 * 1024,
+                                                                    backupCount=3, encoding="utf-8")
+            self.__add_a_hanlder(rotate_file_handler)
 
+        # REMIND 添加mongo日志。
         if self._mongo_url:
-            if not self.__judge_logger_contain_handler_class(self.logger, MongoHandler):
-                self.__remove_handlers_from_other_logger_when_logger_name_is_none(MongoHandler)
-                self.__add_mongo_handler()
+            self.__add_a_hanlder(MongoHandler(self._mongo_url))
 
+        # REMIND 添加es日志。
+        # if app_config.env == 'test' and self._is_add_elastic_handler:
+        if app_config.env == 'testxxx':  # 使用kafka。不直接es。
+            """
+            生产环境使用阿里云 oss日志，不使用这个。
+            """
+            self.__add_a_hanlder(ElasticHandler([ELASTIC_HOST], ELASTIC_PORT))
+
+        # REMIND 添加kafka日志。
+        # if self._is_add_kafka_handler:
+        if app_config.env == 'test' and ALWAYS_ADD_KAFKA_HANDLER_IN_TEST_ENVIRONENT:
+            self.__add_a_hanlder(KafkaHandler(KAFKA_BOOTSTRAP_SERVERS, ))
+
+        # REMIND 添加钉钉日志。
         if self._ding_talk_token:
-            if not self.__judge_logger_contain_handler_class(self.logger, DingTalkHandler):
-                self.__remove_handlers_from_other_logger_when_logger_name_is_none(DingTalkHandler)
-                self.__add_ding_talk_handler()
-
-    def __add_ding_talk_handler(self):
-        handler = DingTalkHandler(self._ding_talk_token, self._ding_talk_time_interval)
-        handler.setLevel(self._logger_level)
-        handler.setFormatter(self._formatter)
-        self.logger.addHandler(handler)
-
-    def __add_mongo_handler(self):
-        """写入日志到mongodb"""
-        mongo_handler = MongoHandler(self._mongo_url)
-        mongo_handler.setLevel(self._logger_level)
-        mongo_handler.setFormatter(self._formatter)
-        self.logger.addHandler(mongo_handler)
-
-    def __add_stream_handler(self):
-        """
-        日志显示到控制台
-        """
-        # stream_handler = logging.StreamHandler()
-        stream_handler = ColorHandler(is_pycharm_2019=self._is_pycharm_2019) if not self._do_not_use_color_handler else logging.StreamHandler()  # 不使用streamhandler，使用自定义的彩色日志
-        stream_handler.setLevel(self._logger_level)
-        stream_handler.setFormatter(self._formatter)
-        self.logger.addHandler(stream_handler)
-
-    def __add_file_handler(self):
-        """
-        日志写入日志文件
-        """
-        if not os.path.exists(self._log_path):
-            os.makedirs(self._log_path)
-        log_file = os.path.join(self._log_path, self._log_filename)
-        rotate_file_handler = None
-        if os_name == 'nt':
-            # windows下用这个，非进程安全
-            rotate_file_handler = ConcurrentRotatingFileHandler(log_file, maxBytes=self._log_file_size * 1024 * 1024,
-                                                                backupCount=3,
-                                                                encoding="utf-8")
-        if os_name == 'posix':
-            # linux下可以使用ConcurrentRotatingFileHandler，进程安全的日志方式
-            rotate_file_handler = ConcurrentRotatingFileHandler(log_file, maxBytes=self._log_file_size * 1024 * 1024,
-                                                                backupCount=3, encoding="utf-8")
-        rotate_file_handler.setLevel(self._logger_level)
-        rotate_file_handler.setFormatter(self._formatter)
-        self.logger.addHandler(rotate_file_handler)
+            self.__add_a_hanlder(DingTalkHandler(self._ding_talk_token, self._ding_talk_time_interval))
 
 
 def get_logger(log_name):
@@ -823,10 +1147,9 @@ class LoggerMixin(object):
 
     @property
     def logger_with_file_mongo(self):
-        from function_scheduling_distributed_framework import frame_config
         logger_name_key = self.logger_full_name + '3'
         if logger_name_key not in self.subclass_logger_dict:
-            logger_var = LogManager(self.logger_full_name).get_logger_and_add_handlers(log_filename=self.logger_full_name + '.log', log_file_size=50, mongo_url=frame_config.MONGO_CONNECT_URL)
+            logger_var = LogManager(self.logger_full_name).get_logger_and_add_handlers(log_filename=self.logger_full_name + '.log', log_file_size=50, mongo_url=app_config.connect_url)
             self.subclass_logger_dict[logger_name_key] = logger_var
             return logger_var
         else:
@@ -995,14 +1318,18 @@ class _Test(unittest.TestCase):
     # @unittest.skip
     def test_color_and_mongo_hanlder(self):
         """测试彩色日志和日志写入mongodb"""
-        from function_scheduling_distributed_framework import frame_config
         very_nb_print('测试颜色和mongo')
-        logger = LogManager('helloMongo', is_pycharm_2019=False).get_logger_and_add_handlers(mongo_url=frame_config.MONGO_CONNECT_URL, formatter_template=5)
-        logger.debug('一个debug级别的日志。' * 5)
-        logger.info('一个info级别的日志。' * 5)
-        logger.warning('一个warning级别的日志。' * 5)
-        logger.error('一个error级别的日志。' * 5)
-        logger.critical('一个critical级别的日志。' * 5)
+
+        # logger = LogManager('helloMongo', is_pycharm_2019=False).get_logger_and_add_handlers(mongo_url=app_config.connect_url, formatter_template=5)
+        logging.error('xxxx')
+        logger = LogManager('helloMongo', is_pycharm_2019=False).get_logger_and_add_handlers(formatter_template=5)
+        for i in range(1000000):
+            time.sleep(0.1)
+            logger.debug('一个debug级别的日志。' * 5)
+            logger.info('一个info级别的日志。' * 5)
+            logger.warning('一个warning级别的日志。' * 5)
+            logger.error('一个error级别的日志。' * 5)
+            logger.critical('一个critical级别的日志。' * 5)
 
 
 if __name__ == "__main__":

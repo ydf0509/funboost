@@ -13,3 +13,6 @@ redis==2.10.6
 PyWin32    # windows need
 mongo-mq==0.0.1
 persist-queue==0.4.2
+elasticsearch
+kafka-python==1.4.6
+requests

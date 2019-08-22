@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2019/8/19 0008 12:12
-import time
 
 from gnsq import Producer, NsqdHTTPClient
 from gnsq.errors import NSQHttpError
-
-from function_scheduling_distributed_framework.utils import nb_print
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
 from function_scheduling_distributed_framework import frame_config
+
 
 class NsqPublisher(AbstractPublisher, ):
     """
@@ -29,7 +27,7 @@ class NsqPublisher(AbstractPublisher, ):
         try:
             self._nsqd_cleint.empty_topic(self._queue_name)
         except NSQHttpError as e:
-            self.logger.exception(e)   # 不能清除一个不存在的topoc会报错，和其他消息队列中间件不同。
+            self.logger.exception(e)  # 不能清除一个不存在的topoc会报错，和其他消息队列中间件不同。
         self.logger.warning(f'清除 {self._queue_name} topic中的消息成功')
 
     def get_message_count(self):
@@ -37,12 +35,3 @@ class NsqPublisher(AbstractPublisher, ):
 
     def close(self):
         self._producer.close()
-
-
-if __name__ == '__main__':
-    pb = NsqPublisher('topic666')
-    for i in range(1000000):
-        time.sleep(0.1)
-        pb.publish({'a': i, 'b': 2 * i})
-    nb_print(pb.get_message_count())
-    # pb.clear()

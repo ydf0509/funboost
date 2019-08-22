@@ -6,8 +6,10 @@ import json
 from pika.exceptions import AMQPError
 
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
+from function_scheduling_distributed_framework.utils import LogManager
 from function_scheduling_distributed_framework.utils.rabbitmq_factory import RabbitMqFactory
 
+LogManager('pika').get_logger_and_add_handlers(20)
 
 class RabbitmqConsumer(AbstractConsumer):
     """

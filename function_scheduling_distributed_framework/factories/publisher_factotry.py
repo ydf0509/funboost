@@ -3,8 +3,10 @@
 # @Time    : 2019/8/8 0008 13:16
 import copy
 
+from function_scheduling_distributed_framework.publishers.kafka_publisher import KafkaPublisher
 from function_scheduling_distributed_framework.publishers.local_python_queue_publisher import LocalPythonQueuePublisher
 from function_scheduling_distributed_framework.publishers.mongomq_publisher import MongoMqPublisher
+from function_scheduling_distributed_framework.publishers.nsq_publisher import NsqPublisher
 from function_scheduling_distributed_framework.publishers.persist_queue_publisher import PersistQueuePublisher
 from function_scheduling_distributed_framework.publishers.rabbitmq_amqpstorm_publisher import RabbitmqPublisherUsingAmqpStorm
 from function_scheduling_distributed_framework.publishers.rabbitmq_pika_publisher import RabbitmqPublisher
@@ -39,5 +41,9 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
         return MongoMqPublisher(**all_kwargs)
     elif broker_kind == 6:
         return PersistQueuePublisher(**all_kwargs)
+    elif broker_kind == 7:
+        return NsqPublisher(**all_kwargs)
+    elif broker_kind == 8:
+        return KafkaPublisher(**all_kwargs)
     else:
         raise ValueError('设置的中间件种类数字不正确')

@@ -4,8 +4,10 @@
 import copy
 from collections import Callable
 
+from function_scheduling_distributed_framework.consumers.kafka_consumer import KafkaConsumer
 from function_scheduling_distributed_framework.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
 from function_scheduling_distributed_framework.consumers.mongomq_consumer import MongoMqConsumer
+from function_scheduling_distributed_framework.consumers.nsq_consumer import NsqConsumer
 from function_scheduling_distributed_framework.consumers.persist_queue_consumer import PersistQueueConsumer
 from function_scheduling_distributed_framework.consumers.rabbitmq_amqpstorm_consumer import RabbitmqConsumerAmqpStorm
 from function_scheduling_distributed_framework.consumers.rabbitmq_pika_consumer import RabbitmqConsumer
@@ -39,7 +41,7 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
     :param is_do_not_run_by_specify_time_effect :是否使不运行的时间段生效
     :param do_not_run_by_specify_time   :不运行的时间段
     :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
-    :param broker_kind:中间件种类,。 0 使用pika链接mq，2使用redis，3使用python内置Queue,5使用mongo，6使用sqlite。
+    :param broker_kind:中间件种类,。 0 使用pika链接mq，2使用redis，3使用python内置Queue,5使用mongo，6使用sqlite。7使用nsq，8使用kafka。
     :return
     """
     all_kwargs = copy.copy(locals())
@@ -58,5 +60,9 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
         return MongoMqConsumer(**all_kwargs)
     elif broker_kind == 6:
         return PersistQueueConsumer(**all_kwargs)
+    elif broker_kind == 7:
+        return NsqConsumer(**all_kwargs)
+    elif broker_kind == 8:
+        return KafkaConsumer(**all_kwargs)
     else:
         raise ValueError('设置的中间件种类数字不正确')

@@ -18,7 +18,14 @@ def do_patch_frame_config():
                        REDIS_HOST='1xx.90.89.xx',
                        REDIS_PASSWORD='yxxxxxxR',
                        REDIS_PORT=6543,
-                       REDIS_DB=7, )
+                       REDIS_DB=7,
+
+                       NSQD_TCP_ADDRESSES=['xx.112.34.56:4150'],
+                       NSQD_HTTP_CLIENT_HOST='12.34.56.78',
+                       NSQD_HTTP_CLIENT_PORT=4151,
+
+                       KAFKA_BOOTSTRAP_SERVERS=['12.34.56.78:9092'],
+                       )
 
     show_frame_config()
 

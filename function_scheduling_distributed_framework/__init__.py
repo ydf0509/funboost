@@ -1,7 +1,7 @@
 import copy
 
 from function_scheduling_distributed_framework import frame_config
-from function_scheduling_distributed_framework.consumers.base_consumer import ExceptionForRequeue,ExceptionForRetry,AbstractConsumer
+from function_scheduling_distributed_framework.consumers.base_consumer import ExceptionForRequeue, ExceptionForRetry, AbstractConsumer
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
 from function_scheduling_distributed_framework.factories.consumer_factory import get_consumer
 from function_scheduling_distributed_framework.utils import nb_print
@@ -10,9 +10,15 @@ from function_scheduling_distributed_framework.utils import nb_print
 # noinspection PyPep8Naming
 def patch_frame_config(MONGO_CONNECT_URL: str = None, RABBITMQ_USER: str = None,
                        RABBITMQ_PASS: str = None, RABBITMQ_HOST: str = None,
-                       RABBITMQ_PORT: int = None, RABBITMQ_VIRTUAL_HOST: str = None, REDIS_HOST: str = None, REDIS_PASSWORD: str = None, REDIS_PORT: int = None, REDIS_DB: int = None):
+                       RABBITMQ_PORT: int = None, RABBITMQ_VIRTUAL_HOST: str = None, REDIS_HOST: str = None, REDIS_PASSWORD: str = None, REDIS_PORT: int = None, REDIS_DB: int = None,
+                       NSQD_TCP_ADDRESSES: list = None,
+                       NSQD_HTTP_CLIENT_HOST: str = None,
+                       NSQD_HTTP_CLIENT_PORT: int = None,
+KAFKA_BOOTSTRAP_SERVERS:list = None
+
+                       ):
     """
-    对框架的配置使用猴子补丁的方式进行更改。利用了模块天然是单利的特性。
+    对框架的配置使用猴子补丁的方式进行更改。利用了模块天然是单利的特性。格式参考frame_config.py
     :return:
     """
     kw = copy.copy(locals())

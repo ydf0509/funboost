@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version="2.2",
+    version="2.3",
     description=(
         'function scheduling distributed framework'
     ),
@@ -52,7 +52,8 @@ setup(
         'persist-queue==0.4.2',
         'elasticsearch',
         'kafka-python==1.4.6',
-        'requests'
+        'requests',
+        'gnsq==1.0.1',
     ]
 )
 """

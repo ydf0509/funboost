@@ -2,6 +2,7 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 11:57
 import abc
+import atexit
 import json
 import time
 import typing
@@ -41,7 +42,8 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.logger.info(f'{self.__class__} 被实例化了')
         self.publish_msg_num_total = 0
         self._is_add_publish_time = is_add_publish_time
-        # atexit.register(self.__at_exit)
+        self.__init_time = time.time()
+        atexit.register(self.__at_exit)
         if clear_queue_within_init:
             self.clear()
 
@@ -97,7 +99,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.logger.warning(f'with中自动关闭publisher连接，累计推送了 {self.publish_msg_num_total} 条消息 ')
 
     def __at_exit(self):
-        self.logger.warning(f'程序关闭前，累计推送了 {self.publish_msg_num_total} 条消息 到 {self._queue_name} 中')
+        self.logger.warning(f'程序关闭前，{round(time.time() - self.__init_time)} 秒内，累计推送了 {self.publish_msg_num_total} 条消息 到 {self._queue_name} 中')
 
 
 def deco_mq_conn_error(f):

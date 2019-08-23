@@ -5,5 +5,5 @@ from test_frame.test_frame_using_thread.test_consume import consumer
 
 pb = consumer.publisher_of_same_queue
 pb.clear()
-[pb.publish({'a': i, 'b': 2 * i}) for i in range(50000)]
+[pb.publish({'a': i, 'b': 2 * i}) for i in range(500)]
 

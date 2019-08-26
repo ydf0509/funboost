@@ -145,10 +145,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._publisher_of_same_queue = None
 
+        self.custom_init()
+
+
     @property
     @decorators.synchronized
     def threadpool(self):
         return self._concurrent_mode_dispatcher.build_pool()
+
+    def custom_init(self):
+        pass
 
     def keep_circulating(self, time_sleep=0.001, exit_if_function_run_sucsess=False, is_display_detail_exception=True):
         """间隔一段时间，一直循环运行某个方法的装饰器

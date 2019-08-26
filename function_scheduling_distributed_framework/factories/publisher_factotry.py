@@ -45,5 +45,7 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
         return NsqPublisher(**all_kwargs)
     elif broker_kind == 8:
         return KafkaPublisher(**all_kwargs)
+    elif broker_kind == 9:
+        return RedisPublisher(**all_kwargs)
     else:
         raise ValueError('设置的中间件种类数字不正确')

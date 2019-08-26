@@ -13,6 +13,7 @@ from function_scheduling_distributed_framework.consumers.rabbitmq_amqpstorm_cons
 from function_scheduling_distributed_framework.consumers.rabbitmq_pika_consumer import RabbitmqConsumer
 from function_scheduling_distributed_framework.consumers.rabbitmq_rabbitpy_consumer import RabbitmqConsumerRabbitpy
 from function_scheduling_distributed_framework.consumers.redis_consumer import RedisConsumer
+from function_scheduling_distributed_framework.consumers.redis_consumer_ack_able import RedisConsumerAckAble
 
 
 def get_consumer(queue_name, *, consuming_function: Callable = None, function_timeout=0, threads_num=50, specify_threadpool=None, concurrent_mode=1,
@@ -64,5 +65,7 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
         return NsqConsumer(**all_kwargs)
     elif broker_kind == 8:
         return KafkaConsumer(**all_kwargs)
+    elif broker_kind == 9:
+        return RedisConsumerAckAble(**all_kwargs)
     else:
         raise ValueError('设置的中间件种类数字不正确')

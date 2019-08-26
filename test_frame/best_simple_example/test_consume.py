@@ -14,8 +14,9 @@ logger = LogManager('f2').get_logger_and_add_handlers()
 
 
 def f2(a, b):
-    logger.info(f'消费此消息 {a} + {b} ,结果是  {a + b}')
+    logger.info(f'消费此消息 {a} + {b} 中。。。。。')
     time.sleep(10)  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
+    logger.info(f'计算 {a} + {b} 得到的结果是  {a + b}')
 
 
 # 把消费的函数名传给consuming_function，就这么简单。

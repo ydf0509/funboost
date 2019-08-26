@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 14:57
-from test_frame.test_frame_using_thread.test_consume import consumer
+import time
 
-pb = consumer.publisher_of_same_queue
+from test_frame.test_frame_using_thread.test_consume import consumer_add,consumer_sub
+
+pb = consumer_add.publisher_of_same_queue
 pb.clear()
-[pb.publish({'a': i, 'b': 2 * i}) for i in range(500)]
+
+for i in range(1000000):
+    time.sleep(0.1)
+    pb.publish({'a': i, 'b': 2 * i})
+    consumer_sub.publisher_of_same_queue.publish({'x':i,'y':i * 6})

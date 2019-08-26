@@ -362,4 +362,34 @@ while 1：
   ```
    
 
-  
+# 6.更新记录。
+## 6.1 新增第十种Consumer，以redis为中间件，但增加了消费确认，是RedisConsumerAckAble类。
+```
+支持运行过程中，随意关闭和启动python程序。无惧反复关闭python和 突然断电导致任务丢失几百个。
+
+之前开100线程/协程的话，随意重启python和断电会导致极大概率丢失200个任务。
+
+官方Threadpoolexecutor是无界队列。使用这个会导致丢失无数个任务，
+因为他会迅速把redis的消息全部取出来，添加到自己的queue队列慢慢消费。
+因为这个原因所以需要自定义写BoundedThreadpoolexecutor和CustomThreadpoolexecutor。
+
+改版的CustomThreadpoolexecutor修改成了queue最大长度是max_works，自己内部存储100个，
+运行中100个，突然关闭python会丢失200个任务。如果queue设置大小为0，则只会丢失100个运行中的任务。
+
+巧妙的使用redis zset结构作为任务缓冲，value为消息，score为时间戳，具有很好的按时间范围查询和删除功能。
+600秒内还没确认重回队列，时间可以配置，左右类似于rabbitmq和nsq的heartbeat_interval作用。
+
+RedisConsumerAckAble类比RedisConsumer会有一丝丝性能损耗。
+k8s生产环境一般不需要随意反复重启和随意断电。但还是要写这个类。
+redis要是能作为mq使用，redis早就一统天下了，哪里还不断有几十种mq出来。
+所以直接基于redis list的必须改进。
+```
+
+## 6.2 新增基于以redis为消息中间件时候的页面管理和消费速度显示。
+```
+使用redisboard，但对redis的list模拟mq功能，进行优化，
+加黄显示正在运行中的队列和每10秒的消费速度。
+
+rabbitmq nsq都有官方自带速率显示。
+```
+![Image text](https://i.niupic.com/images/2019/08/26/_122.png)

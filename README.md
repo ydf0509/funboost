@@ -381,7 +381,7 @@ while 1：
 
 RedisConsumerAckAble类比RedisConsumer会有一丝丝性能损耗。
 k8s生产环境一般不需要随意反复重启和随意断电。但还是要写这个类。
-redis要是能作为mq使用，redis早就一统天下了，哪里还不断有几十种mq出来。
+redis要是能直接作为mq使用，redis早就一统天下了，哪里还不断有几十种mq出来。
 所以直接基于redis list的必须改进。
 ```
 
@@ -389,6 +389,9 @@ redis要是能作为mq使用，redis早就一统天下了，哪里还不断有�
 ```
 使用redisboard，但对redis的list模拟mq功能，进行优化，
 加黄显示正在运行中的队列和每10秒的消费速度。
+
+由于实时发布和消费，例如10秒内发布20个，消费50个，页面只能显示大小降低了20个，
+这个只有专业的mq才能分别显示出来，redis list只是数组。
 
 rabbitmq nsq都有官方自带速率显示。
 ```

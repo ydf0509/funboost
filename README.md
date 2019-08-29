@@ -46,6 +46,7 @@ python分布式函数调度框架。适用场景范围超级广泛。
 每一行日志都可以鼠标点击自动精确跳转到日志发生的代码地方）、
 多进程安全切片的文件日志、日志发邮件、日志发钉钉、日志发elasticsearch、日志发kafka、日志发mongo，
 可以按需使用其中的n种日志handler功能，因为是使用的观察者模式。
+from function_scheduling_distributed_framework.utils.log_manager import LogManager就可以使用。
 ```
 
 # 手机版git上点击下方 view all of README.md

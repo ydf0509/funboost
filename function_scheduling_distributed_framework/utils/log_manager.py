@@ -10,6 +10,7 @@ concurrent_log_handler的ConcurrentRotatingFileHandler解决了logging模块自�
 3、支持pycharm点击日志跳转到对应代码文件的对应行。
 4、对相同命名空间的logger可以无限添加同种类型的handlers，不会重复使用同种handler记录日志。不需要用户自己去判断。
 
+
 """
 import socket
 import datetime
@@ -65,7 +66,7 @@ def very_nb_print(*args, sep=' ', end='\n', file=None):
     # 获取被调用函数所在模块文件名
     file_name = sys._getframe(1).f_code.co_filename
     # sys.stdout.write(f'"{__file__}:{sys._getframe().f_lineno}"    {x}\n')
-    args = (str(arg) for arg in args)  # REMIND 防止是数字不能被join
+    args = (str(arg) for arg in args)  # REMIND 防止是数字或其他类型对象不能被join
     sys.stdout.write(f'"{file_name}:{line}"  {time.strftime("%H:%M:%S")}  \033[0;94m{"".join(args)}\033[0m\n')  # 36  93 96 94
 
 

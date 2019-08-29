@@ -276,7 +276,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.threadpool.submit(self._run_consuming_function_with_confirm_and_retry, kw)
         time.sleep(self._msg_schedule_time_intercal)
 
-    @decorators.FunctionResultCacher.cached_function_result_for_a_time(60)
+    @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)
     def _judge_is_daylight(self):
         if self._is_do_not_run_by_specify_time_effect and self._do_not_run_by_specify_time[0] < time_util.DatetimeConverter().time_str < self._do_not_run_by_specify_time[1]:
             self.logger.warning(f'现在时间是 {time_util.DatetimeConverter()} ，现在时间是在 {self._do_not_run_by_specify_time} 之间，不运行')

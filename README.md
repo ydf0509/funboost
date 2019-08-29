@@ -43,7 +43,7 @@ python分布式函数调度框架。适用场景范围超级广泛。
 # 1.1  pip安装方式
 pip install function_scheduling_distributed_framework --upgrade -i https://pypi.org/simple 
 
-# 手机上点击下方 view all of README.md
+# 手机版git上点击下方 view all of README.md
 # 2.具体更详细的用法可以看test_frame文件夹里面的几个示例。
 
 

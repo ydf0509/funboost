@@ -21,6 +21,7 @@ import unittest
 import time
 from collections import OrderedDict
 from queue import Queue
+# noinspection PyPackageRequirements
 from kafka import KafkaProducer
 from elasticsearch import Elasticsearch, helpers
 from threading import Lock, Thread
@@ -29,7 +30,6 @@ import requests
 import logging
 from logging import handlers
 from concurrent_log_handler import ConcurrentRotatingFileHandler  # 需要安装。concurrent-log-handler==0.9.1
-
 
 os_name = os.name
 
@@ -47,7 +47,8 @@ KAFKA_BOOTSTRAP_SERVERS = ['192.xx.xx.202:9092']
 ALWAYS_ADD_KAFKA_HANDLER_IN_TEST_ENVIRONENT = True
 
 
-class app_config:  # 由于日志引用导入了app.config as app_config，此处模拟模块级的配置，实际代码不是这样。
+# noinspection PyPep8Naming
+class app_config:  # 由于日志引用导入了app.config as app_config，此处模拟模块级的配置，实际代码不是这样。类名用了小写是为了不想修改多个地方兼容。
     env = 'production'
     connect_url = 'mongo://xxx'  # mongo连接
 
@@ -67,6 +68,8 @@ def very_nb_print(*args, sep=' ', end='\n', file=None):
     args = (str(arg) for arg in args)  # REMIND 防止是数字不能被join
     sys.stdout.write(f'"{file_name}:{line}"  {time.strftime("%H:%M:%S")}  \033[0;94m{"".join(args)}\033[0m\n')  # 36  93 96 94
 
+
+# print = very_nb_print
 
 def revision_call_handlers(self, record):  # 对logging标准模块打猴子补丁。主要是使父命名空间的handler不重复记录当前命名空间日志已有种类的handler。
     """
@@ -118,7 +121,6 @@ def revision_call_handlers(self, record):  # 对logging标准模块打猴子补�
 logging.Logger.callHandlers = revision_call_handlers  # 打猴子补丁。
 
 # noinspection PyShadowingBuiltins
-# print = very_nb_print
 formatter_dict = {
     1: logging.Formatter(
         '日志时间【%(asctime)s】 - 日志名称【%(name)s】 - 文件【%(filename)s】 - 第【%(lineno)d】行 - 日志等级【%(levelname)s】 - 日志信息【%(message)s】',
@@ -1321,7 +1323,7 @@ class _Test(unittest.TestCase):
         # logger = LogManager('helloMongo', is_pycharm_2019=False).get_logger_and_add_handlers(mongo_url=app_config.connect_url, formatter_template=5)
         logging.error('xxxx')
         logger = LogManager('helloMongo', is_pycharm_2019=False).get_logger_and_add_handlers(formatter_template=5)
-        logger.addHandler(ColorHandler())    # 由于打了强大的猴子补丁，无惧反复添加同种handler。
+        logger.addHandler(ColorHandler())  # 由于打了强大的猴子补丁，无惧反复添加同种handler。
         logger.addHandler(ColorHandler())
         logger.addHandler(ColorHandler())
         for i in range(1000000):

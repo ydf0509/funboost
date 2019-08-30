@@ -2,6 +2,7 @@
 ```
 1.0.1 
 python分布式函数调度框架。适用场景范围超级广泛。
+可以分布式并发调度起一切任何老代码的旧函数和新项目的新函数，并提供数十种函数控制功能。
 
 1.0.2
 支持python内置Queue对象作为当前解释器下的消息队列。
@@ -15,6 +16,8 @@ python分布式函数调度框架。适用场景范围超级广泛。
 支持nsq中间件作为分布式消息队列。
 支持kafka中间件作为分布式消息队列。
 新增支持redis为中间件，但支持消费确认的功能，不会由于随意关闭和断电每次导致丢失几百个任务。
+
+切换任意中间件，代码都不需要做任何变化，不需要关注如何使用中间件的细节。
 
 1.0.3    
 源码实现思路100%遵守了oop的6个设计原则，很容易扩展中间件。
@@ -386,7 +389,7 @@ while 1：
 
 官方Threadpoolexecutor是无界队列。使用这个会导致丢失无数个任务，
 因为他会迅速把redis的消息全部取出来，添加到自己的queue队列慢慢消费。
-因为这个原因所以需要自定义写BoundedThreadpoolexecutor和CustomThreadpoolexecutor。
+因为这个原因所以需要自定义写BoundedThreadpoolexecutor和CustomThreadpoolexecutor。 v       
 
 改版的CustomThreadpoolexecutor修改成了queue最大长度是max_works，自己内部存储100个，
 运行中100个，突然关闭python会丢失200个任务。如果queue设置大小为0，则只会丢失100个运行中的任务。

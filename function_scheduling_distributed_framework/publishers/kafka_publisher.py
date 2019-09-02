@@ -16,7 +16,7 @@ from function_scheduling_distributed_framework.publishers.base_publisher import 
 
 class KafkaPublisher(AbstractPublisher, ):
     """
-    使用nsq作为中间件
+    使用kafka作为中间件
     """
 
     # noinspection PyAttributeOutsideInit

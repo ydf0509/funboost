@@ -37,5 +37,6 @@ consumer_sub = get_consumer('queue_test55', consuming_function=sub, threads_num=
                             broker_kind=2, concurrent_mode=2)  # 通过设置
 
 if __name__ == '__main__':
+    AbstractConsumer.show_all_consumer_info()
     consumer_add.start_consuming_message()
     consumer_sub.start_consuming_message()

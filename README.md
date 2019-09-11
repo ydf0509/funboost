@@ -123,7 +123,7 @@ consumer.start_consuming_message()
 ### 3.1.1 windows运行中截图
 ![Image text](https://i.niupic.com/images/2019/08/09/_477.png)
 
-### 3.1.2 linux运行中截图
+### 3.1.2 linux运行中截图,使用gevent模式。
 ![Image text](https://raw.githubusercontent.com/ydf0509/distributed_framework/master/test_frame/test_frame_using_thread/linux上运行使用gevent模式的截图2.png)
 
 ### 3.2控频功能证明，由于截图是外网调度rabbitmq的消息有延迟，没有精确到函数每秒运行10次。

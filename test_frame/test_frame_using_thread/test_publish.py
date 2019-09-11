@@ -8,7 +8,7 @@ from test_frame.test_frame_using_thread.test_consume import consumer_add,consume
 pb = consumer_add.publisher_of_same_queue
 pb.clear()
 
-for i in range(10):
+for i in range(10000):
     time.sleep(0.1)
     pb.publish({'a': i, 'b': 2 * i})
     consumer_sub.publisher_of_same_queue.publish({'x':i,'y':i * 6})

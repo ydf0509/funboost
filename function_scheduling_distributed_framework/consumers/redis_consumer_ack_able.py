@@ -18,11 +18,11 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractConsu
     def _shedual_task(self):
         while True:
             t_start = time.time()
-            result = self.redis_db_frame.blpop(self._queue_name,timeout=60)
+            result = self.redis_db_frame.blpop(self._queue_name, timeout=60)
             # task_bytes = self.redis_db_frame.lpop(self._queue_name)
             if result:
                 task_str = result[1].decode()
-                self._add_task_str_to_unack_zset(task_str,)
+                self._add_task_str_to_unack_zset(task_str, )
                 self.logger.debug(f'取出的任务时间是 {round(time.time() - t_start, 4)}    消息是：  {task_str}  ')
                 task_dict = json.loads(task_str)
                 kw = {'body': task_dict, 'task_str': task_str}

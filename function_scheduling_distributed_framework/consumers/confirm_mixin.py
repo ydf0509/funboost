@@ -19,7 +19,10 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
         self._unack_zset_name = f'{self._queue_name}__unack'
+
+    def start_consuming_message(self):
         Thread(target=self.keep_circulating(60)(self.__requeue_tasks_which_unconfirmed_timeout)).start()
+        super().start_consuming_message()
 
     def _add_task_str_to_unack_zset(self, task_str, ):
         self.redis_db_frame.zadd(self._unack_zset_name, task_str, time.time())
@@ -34,4 +37,4 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
             self._requeue({'body': json.loads(value)})
             self.redis_db_frame.zrem(self._unack_zset_name, value)
         self.logger.info(f'{self._unack_zset_name} 中有待确认消费任务的数量是'
-                            f' {self.redis_db_frame.zcard(self._unack_zset_name)}')
+                         f' {self.redis_db_frame.zcard(self._unack_zset_name)}')

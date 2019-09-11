@@ -29,11 +29,11 @@ def sub(x, y):
 # 把消费的函数名传给consuming_function，就这么简单。
 consumer_add = get_consumer('queue_test54', consuming_function=add, threads_num=80, msg_schedule_time_intercal=0.01, log_level=10, logger_prefix='zz平台消费',
                             function_timeout=80, is_print_detail_exception=True,
-                            msg_expire_senconds=3600, broker_kind=6, concurrent_mode=1)  # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等9种中间件或包。
+                            msg_expire_senconds=3600, broker_kind=2, concurrent_mode=2)  # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等9种中间件或包。
 
 consumer_sub = get_consumer('queue_test55', consuming_function=sub, threads_num=50, msg_schedule_time_intercal=0.2, log_level=10, logger_prefix='xxxxx平台消费',
                             function_timeout=80, is_print_detail_exception=True,
-                            broker_kind=9, concurrent_mode=2)  # 通过设置
+                            broker_kind=2, concurrent_mode=2)  # 通过设置
 
 if __name__ == '__main__':
     consumer_add.start_consuming_message()

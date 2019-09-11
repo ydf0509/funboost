@@ -26,8 +26,7 @@ class LocalPythonQueueConsumer(AbstractConsumer):
             if isinstance(task, str):
                 task = json.loads(task)
             self.logger.debug(f'取出的任务时间是 {round(time.time() - t_start, 4)}    消息是：  {json.dumps(task)}  ')
-            task_dict = task
-            kw = {'body': task_dict}
+            kw = {'body': task}
             self._submit_task(kw)
 
     def _confirm_consume(self, kw):

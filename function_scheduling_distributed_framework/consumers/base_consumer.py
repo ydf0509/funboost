@@ -4,6 +4,8 @@
 import abc
 import atexit
 import copy
+import json
+
 import time
 import traceback
 from collections import Callable
@@ -42,6 +44,7 @@ class ExceptionForRequeue(Exception):
 
 
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
+    consumers_queue__info_map = dict()
     time_interval_for_check_do_not_run_time = 60
     BROKER_KIND = None
 
@@ -73,6 +76,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         ConcurrentModeDispatcher.join()
 
+    @classmethod
+    def show_all_consumer_info(cls):
+        nb_print(f'所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}')
+
     def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0, threads_num=50, specify_threadpool=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True, msg_schedule_time_intercal=0.0, msg_expire_senconds=0,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False, is_consuming_function_use_multi_params=True,
@@ -96,6 +103,18 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param do_not_run_by_specify_time   :不运行的时间段
         :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
         """
+        self.__class__.consumers_queue__info_map[queue_name] = current_queue__info_dict = copy.copy(locals())
+        current_queue__info_dict['consuming_function'] = str(consuming_function)  # consuming_function.__name__
+        current_queue__info_dict.pop('self')
+        current_queue__info_dict['broker_kind'] = self.__class__.BROKER_KIND
+        current_queue__info_dict['class_name'] = self.__class__.__name__
+        if concurrent_mode == 1:
+            current_queue__info_dict['concurrent_mode_name'] = 'threading'
+        elif concurrent_mode == 2:
+            current_queue__info_dict['concurrent_mode_name'] = 'gevent'
+        elif concurrent_mode == 3:
+            current_queue__info_dict['concurrent_mode_name'] = 'eventlet'
+
         self._queue_name = queue_name
         self.queue_name = queue_name  # 可以换成公有的，免得外部访问有警告。
         self.consuming_function = consuming_function
@@ -127,6 +146,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._redis_filter = RedisFilter(self._redis_filter_key_name)
 
         self._is_consuming_function_use_multi_params = is_consuming_function_use_multi_params
+
         self._lock_for_pika = Lock()
 
         self._execute_task_times_every_minute = 0  # 每分钟执行了多少次任务。
@@ -146,7 +166,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._publisher_of_same_queue = None
 
         self.custom_init()
-
 
     @property
     @decorators.synchronized
@@ -295,7 +314,9 @@ class ConcurrentModeDispatcher(LoggerMixin):
     def __init__(self, consumerx: AbstractConsumer):
         self.consumer = consumerx
         if self.__class__.concurrent_mode is not None and self.consumer._concurrent_mode != self.__class__.concurrent_mode:
-            raise ValueError('由于猴子补丁的原因，同一解释器中不可以设置两种并发类型')
+            AbstractConsumer.show_all_consumer_info()
+            raise ValueError('由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，'
+                             '搜索 concurrent_mode 关键字，确保所有消费者的并发模式只有一种')
         self._concurrent_mode = self.__class__.concurrent_mode = self.consumer._concurrent_mode
         concurrent_name = ''
         self.timeout_deco = None

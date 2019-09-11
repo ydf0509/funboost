@@ -1,4 +1,5 @@
 import copy
+import re
 
 from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.consumers.base_consumer import ExceptionForRequeue, ExceptionForRetry, AbstractConsumer
@@ -14,7 +15,7 @@ def patch_frame_config(MONGO_CONNECT_URL: str = None, RABBITMQ_USER: str = None,
                        NSQD_TCP_ADDRESSES: list = None,
                        NSQD_HTTP_CLIENT_HOST: str = None,
                        NSQD_HTTP_CLIENT_PORT: int = None,
-KAFKA_BOOTSTRAP_SERVERS:list = None
+                       KAFKA_BOOTSTRAP_SERVERS: list = None
 
                        ):
     """
@@ -32,6 +33,13 @@ def show_frame_config():
     for var_name in dir(frame_config):
         if var_name.isupper():
             var_value = getattr(frame_config, var_name)
+            if var_name == 'MONGO_CONNECT_URL':
+                if re.match('mongodb://.*?:.*?@.*?/.*', var_value):
+                    mongo_pass = re.search('mongodb://.*?:(.*?)@', var_value).group(1)
+                    mongo_pass_encryption = f'{"*" * (len(mongo_pass) - 2)}{mongo_pass[-1]}' if len(mongo_pass) > 3 else mongo_pass
+                    var_value_encryption = re.sub(r':(\w+)@', f':{mongo_pass_encryption}@', var_value)
+                    nb_print(f'{var_name}:             {var_value_encryption}')
+                    continue
             if 'PASS' in var_name and len(var_value) > 3:  # 对密码打*
                 nb_print(f'{var_name}:                {var_value[0]}{"*" * (len(var_value) - 2)}{var_value[-1]}')
             else:

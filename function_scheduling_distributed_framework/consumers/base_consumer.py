@@ -316,7 +316,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
         if self.__class__.concurrent_mode is not None and self.consumer._concurrent_mode != self.__class__.concurrent_mode:
             AbstractConsumer.show_all_consumer_info()
             raise ValueError('由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，'
-                             '搜索 concurrent_mode 关键字，确保所有消费者的并发模式只有一种')
+                             '搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种')
         self._concurrent_mode = self.__class__.concurrent_mode = self.consumer._concurrent_mode
         concurrent_name = ''
         self.timeout_deco = None

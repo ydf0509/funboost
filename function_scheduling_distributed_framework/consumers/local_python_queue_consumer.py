@@ -25,7 +25,7 @@ class LocalPythonQueueConsumer(AbstractConsumer):
             task = self.local_python_queue.get()
             if isinstance(task, str):
                 task = json.loads(task)
-            self.logger.debug(f'取出的任务时间是 {round(time.time() - t_start, 4)}    消息是：  {json.dumps(task)}  ')
+            self.logger.debug(f'从当前python解释器内部的 [{self._queue_name}] 队列中 取出的消息是：  {json.dumps(task)}  ')
             kw = {'body': task}
             self._submit_task(kw)
 

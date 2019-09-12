@@ -19,7 +19,7 @@ class MongoMqConsumer(AbstractConsumer, MongoMixin):
             t_start = time.time()
             job = mp.queue.next()
             if job is not None:
-                self.logger.debug(f'取出的任务时间是 {round(time.time() - t_start, 4)}    消息是：  {job.payload}  ')
+                self.logger.debug(f'从mongo的 [{self._queue_name}] 队列中 取出的消息是：   消息是：  {job.payload}  ')
                 kw = {'body': job.payload, 'job': job}
                 self._submit_task(kw)
             else:

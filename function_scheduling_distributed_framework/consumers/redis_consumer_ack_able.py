@@ -23,7 +23,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractConsu
             if result:
                 task_str = result[1].decode()
                 self._add_task_str_to_unack_zset(task_str, )
-                self.logger.debug(f'取出的任务时间是 {round(time.time() - t_start, 4)}    消息是：  {task_str}  ')
+                self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：     {task_str}  ')
                 task_dict = json.loads(task_str)
                 kw = {'body': task_dict, 'task_str': task_str}
                 self._submit_task(kw)

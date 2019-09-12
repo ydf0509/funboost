@@ -19,7 +19,7 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
             t_start = time.time()
             result = self.redis_db_frame.blpop(self._queue_name,timeout=60)
             if result:
-                self.logger.debug(f'取出的任务时间是 {round(time.time() - t_start, 4)}    消息是：  {result[1].decode()}  ')
+                self.logger.debug(f'从redis取出的消息是：  {result[1].decode()}  ')
                 task_dict = json.loads(result[1])
                 kw = {'body': task_dict}
                 self._submit_task(kw)

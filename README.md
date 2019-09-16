@@ -124,7 +124,7 @@ consumer.start_consuming_message()
 ![Image text](https://i.niupic.com/images/2019/08/09/_477.png)
 
 ### 3.1.2 linux运行中截图,使用gevent模式，减法消费控频更厉害，所以执行次数更少。
-![Image text](https://github.com/ydf0509/distributed_framework/blob/master/test_frame/test_frame_using_thread/linuxgevent.png)
+![Image text](https://i.niupic.com/images/2019/09/16/_222.png)
 
 ### 3.2控频功能证明，由于截图是外网调度rabbitmq的消息有延迟，没有精确到函数每秒运行10次。
 

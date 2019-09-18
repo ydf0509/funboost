@@ -26,8 +26,9 @@ def evenlet_timeout_deco(timeout_t):
         def __evenlet_timeout_deco(*args, **kwargs):
             timeout = Timeout(timeout_t, )
             # timeout.start()  # 与gevent不一样,直接start了。
+            result = None
             try:
-                f(*args, **kwargs)
+                result = f(*args, **kwargs)
             except Timeout as t:
                 logger_evenlet_timeout_deco.error(f'函数 {f} 运行超过了 {timeout_t} 秒')
                 if t is not timeout:
@@ -35,6 +36,7 @@ def evenlet_timeout_deco(timeout_t):
                     # raise  # not my timeout
             finally:
                 timeout.cancel()
+                return result
 
         return __evenlet_timeout_deco
 

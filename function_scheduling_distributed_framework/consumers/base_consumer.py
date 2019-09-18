@@ -4,7 +4,11 @@
 import abc
 import atexit
 import copy
+import datetime
 import json
+import sys
+import socket
+import os
 
 import time
 import traceback
@@ -14,8 +18,10 @@ import threading
 from threading import Lock, Thread
 import eventlet
 import gevent
+from pymongo import IndexModel
 from pymongo.errors import PyMongoError
 
+# noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.concurrent_pool.bounded_threadpoolexcutor import BoundedThreadPoolExecutor
 from function_scheduling_distributed_framework.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco, check_evenlet_monkey_patch, CustomEventletPoolExecutor
 from function_scheduling_distributed_framework.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_deco, GeventPoolExecutor, check_gevent_monkey_patch
@@ -23,6 +29,7 @@ from function_scheduling_distributed_framework.concurrent_pool.custom_threadpool
 from function_scheduling_distributed_framework.consumers.redis_filter import RedisFilter
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
 from function_scheduling_distributed_framework.utils import LoggerLevelSetterMixin, LogManager, decorators, nb_print, LoggerMixin, time_util
+from function_scheduling_distributed_framework.utils.mongo_util import MongoMixin
 
 
 def delete_keys_and_return_new_dict(dictx: dict, keys: list):
@@ -41,6 +48,65 @@ class ExceptionForRetry(Exception):
 
 class ExceptionForRequeue(Exception):
     """框架检测到此错误，重新放回队列中"""
+
+
+class FunctionResultStatus:
+    host_name = socket.gethostname()
+    host_process = f'{host_name} -- {os.getpid()}'
+    script_name_long = sys.argv[0]
+    script_name = script_name_long.split('/')[-1]
+
+    def __init__(self, queue_name, fucntion_name, params):
+        self.queue_name = queue_name
+        self.function = fucntion_name
+        if 'publish_time' in params:
+            self.publish_time_str = time_util.DatetimeConverter(params['publish_time']).datetime_str
+        function_params = delete_keys_and_return_new_dict(params, ['publish_time', 'publish_time_format'])
+        self.params = function_params
+        self.params_str = json.dumps(function_params)
+        self.result = None
+        self.run_times = 0
+        self.exception = None
+        self.time_start = time.time()
+        self.time_cost = None
+        self.success = False
+        self.current_thread = ConcurrentModeDispatcher.get_concurrent_info()
+        self.total_thread = threading.active_count()
+
+    def get_status_dict(self):
+        self.time_cost = round(time.time() - self.time_start, 4)
+        item = self.__dict__
+        item['host_name'] = self.host_name
+        item['host_process'] = self.host_process
+        item['script_name'] = self.script_name
+        item['script_name_long'] = self.script_name_long
+        item.pop('time_start')
+        datetime_str = time_util.DatetimeConverter().datetime_str
+        try:
+            json.dumps(item['result'])  # 不希望存不可json序列化的复杂类型。麻烦。存这种类型的结果是伪需求。
+        except TypeError:
+            item['result'] = str(item['result'])[:1000]
+        item.update({'insert_time': datetime.datetime.now(),
+                     'insert_time_str': datetime_str,
+                     'insert_minutes': datetime_str[:-3],
+                     'utime': datetime.datetime.utcnow(),
+                     })
+        return item
+
+
+class ResultPersistenceHelper(MongoMixin):
+    def __init__(self, is_store_function_result_status, queue_name):
+        self._is_store_function_result_status = is_store_function_result_status
+        if self._is_store_function_result_status:
+            self._task_status_col = self.mongo_db_task_status.get_collection(f'{queue_name}_task_status')
+            self._task_status_col.create_indexes([IndexModel([("insert_time_str", -1)]), IndexModel([("insert_minutes", -1)]),
+                                                  IndexModel([("params", -1)]), IndexModel([("params_str", -1)])
+                                                  ], )
+            self._task_status_col.create_index([("utime", 1)], expireAfterSeconds=7 * 24 * 3600)  # 只保留7天。
+
+    def save_function_result_to_mongo(self, function_result_status: FunctionResultStatus):
+        if self._is_store_function_result_status:
+            self._task_status_col.insert_one(function_result_status.get_status_dict())
 
 
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
@@ -83,7 +149,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0, threads_num=50, specify_threadpool=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True, msg_schedule_time_intercal=0.0, msg_expire_senconds=0,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False, is_consuming_function_use_multi_params=True,
-                 is_do_not_run_by_specify_time_effect=False, do_not_run_by_specify_time=('10:00:00', '22:00:00'), schedule_tasks_on_main_thread=False):
+                 is_do_not_run_by_specify_time_effect=False, do_not_run_by_specify_time=('10:00:00', '22:00:00'),
+                 schedule_tasks_on_main_thread=False, is_store_function_result_status=True):
         """
         :param queue_name:
         :param consuming_function: 处理消息的函数。
@@ -102,6 +169,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param is_do_not_run_by_specify_time_effect :是否使不运行的时间段生效
         :param do_not_run_by_specify_time   :不运行的时间段
         :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
+        :is_store_function_result_status   :是否保存函数的入参，运行结果和运行状态到mongodb。这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
         """
         self.__class__.consumers_queue__info_map[queue_name] = current_queue__info_dict = copy.copy(locals())
         current_queue__info_dict['consuming_function'] = str(consuming_function)  # consuming_function.__name__
@@ -160,6 +228,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._is_do_not_run_by_specify_time_effect = is_do_not_run_by_specify_time_effect
         self._do_not_run_by_specify_time = do_not_run_by_specify_time  # 可以设置在指定的时间段不运行。
         self._schedule_tasks_on_main_thread = schedule_tasks_on_main_thread
+
+        self._is_store_function_result_status = is_store_function_result_status
+        self._result_persistence_helper = ResultPersistenceHelper(is_store_function_result_status, queue_name)
 
         self.stop_flag = False
 
@@ -232,16 +303,18 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     f'才能执行完成 {self._msg_num_in_broker}个剩余的任务 ')
                 self._current_time_for_execute_task_times_every_minute = time.time()
                 self._execute_task_times_every_minute = 0
-
+        # self.logger.critical(kw)
+        function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'])
         if current_retry_times < self._max_retry_times + 1:
+            function_result_status.run_times += 1
             # noinspection PyBroadException
             t_start = time.time()
             try:
                 function_run = self.consuming_function if self._function_timeout == 0 else self._concurrent_mode_dispatcher.timeout_deco(self._function_timeout)(self.consuming_function)
                 if self._is_consuming_function_use_multi_params:  # 消费函数使用传统的多参数形式
-                    function_run(**delete_keys_and_return_new_dict(kw['body'], ['publish_time', 'publish_time_format']))
+                    function_result_status.result = function_run(**delete_keys_and_return_new_dict(kw['body'], ['publish_time', 'publish_time_format']))
                 else:
-                    function_run(delete_keys_and_return_new_dict(kw['body'], ['publish_time', 'publish_time_format']))  # 消费函数使用单个参数，参数自身是一个字典，由键值对表示各个参数。
+                    function_result_status.result = function_run(delete_keys_and_return_new_dict(kw['body'], ['publish_time', 'publish_time_format']))  # 消费函数使用单个参数，参数自身是一个字典，由键值对表示各个参数。
                 self._confirm_consume(kw)
                 if self._do_task_filtering:
                     self._redis_filter.add_a_value(kw['body'])  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
@@ -250,16 +323,19 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 #                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {kw["body"]} 】')
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {kw["body"]} 】。  {self._concurrent_mode_dispatcher.get_concurrent_info()}')
+                function_result_status.success = True
             except Exception as e:
                 if isinstance(e, (PyMongoError, ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
                     self.logger.critical(f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}')
                     return self._requeue(kw)
                 self.logger.error(f'函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次发生错误，'
                                   f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是 【 {kw["body"]} 】   \n 原因是 {type(e)} {e} ', exc_info=self._is_print_detail_exception)
+                function_result_status.exception = f'{type(e)}    {str(e)}'
                 self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times + 1)
         else:
             self.logger.critical(f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._max_retry_times} 后,仍然失败， 入参是 【 {kw["body"]} 】')
             self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
+        self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
 
     @abc.abstractmethod
     def _confirm_consume(self, kw):
@@ -391,13 +467,14 @@ class ConcurrentModeDispatcher(LoggerMixin):
                     nb_print(g)
                     g.wait()
 
-    def get_concurrent_info(self):
+    @classmethod
+    def get_concurrent_info(cls):
         concurrent_info = ''
-        if self._concurrent_mode == 1:
+        if cls.concurrent_mode == 1:
             concurrent_info = f'[{threading.current_thread()}  {threading.active_count()}]'
-        elif self._concurrent_mode == 2:
+        elif cls.concurrent_mode == 2:
             concurrent_info = f'[{gevent.getcurrent()}  {threading.active_count()}]'
-        elif self._concurrent_mode == 3:
+        elif cls.concurrent_mode == 3:
             # noinspection PyArgumentList
             concurrent_info = f'[{eventlet.getcurrent()}  {threading.active_count()}]'
         return concurrent_info

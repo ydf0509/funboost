@@ -54,6 +54,7 @@ setup(
         'kafka-python==1.4.6',
         'requests',
         'gnsq==1.0.1',
+        'psutil',
     ]
 )
 """

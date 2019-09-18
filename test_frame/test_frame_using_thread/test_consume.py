@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 14:57
-import gevent.monkey;gevent.monkey.patch_all()
+import gevent.monkey;
+
+gevent.monkey.patch_all()
 import time
 import random
 
@@ -19,6 +21,7 @@ def add(a, b):
     logger.info(f'消费此消息 {a} + {b} 中。。。。。')
     time.sleep(random.randint(30, 50))  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
     logger.info(f'计算 {a} + {b} 得到的结果是  {a + b}')
+    return a + b
 
 
 def sub(x, y):

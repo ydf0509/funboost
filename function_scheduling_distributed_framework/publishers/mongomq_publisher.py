@@ -2,25 +2,10 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 12:23
 import json
-
-import pymongo
 from mongomq import MongoQueue
-
-from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
-from function_scheduling_distributed_framework.utils import decorators, time_util
-
-
-class MongoMixin:
-    """
-    mixin类被继承，也可以直接实例化。
-    """
-
-    @property
-    @decorators.cached_method_result
-    def mongo_client(self):
-        mongo_var = pymongo.MongoClient(frame_config.MONGO_CONNECT_URL, connect=False)  # connect等于False原因见注释
-        return mongo_var
+from function_scheduling_distributed_framework.utils import time_util
+from function_scheduling_distributed_framework.utils.mongo_util import MongoMixin
 
 
 class MongoMqPublisher(AbstractPublisher, MongoMixin):

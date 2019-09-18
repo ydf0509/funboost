@@ -30,8 +30,9 @@ def gevent_timeout_deco(timeout_t):
         def __gevent_timeout_deceo(*args, **kwargs):
             timeout = gevent.Timeout(timeout_t, )
             timeout.start()
+            result = None
             try:
-                f(*args, **kwargs)
+                result = f(*args, **kwargs)
             except gevent.Timeout as t:
                 logger_gevent_timeout_deco.error(f'函数 {f} 运行超过了 {timeout_t} 秒')
                 if t is not timeout:
@@ -39,6 +40,7 @@ def gevent_timeout_deco(timeout_t):
                     # raise  # not my timeout
             finally:
                 timeout.close()
+                return result
 
         return __gevent_timeout_deceo
 

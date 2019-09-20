@@ -9,7 +9,7 @@ import json
 import sys
 import socket
 import os
-
+import uuid
 import time
 import traceback
 from collections import Callable
@@ -50,7 +50,10 @@ class ExceptionForRequeue(Exception):
     """框架检测到此错误，重新放回队列中"""
 
 
-class FunctionResultStatus:
+
+
+
+class FunctionResultStatus(LoggerMixin):
     host_name = socket.gethostname()
     host_process = f'{host_name} -- {os.getpid()}'
     script_name_long = sys.argv[0]
@@ -80,7 +83,7 @@ class FunctionResultStatus:
         item['host_process'] = self.host_process
         item['script_name'] = self.script_name
         item['script_name_long'] = self.script_name_long
-        item.pop('time_start')
+        # item.pop('time_start')
         datetime_str = time_util.DatetimeConverter().datetime_str
         try:
             json.dumps(item['result'])  # 不希望存不可json序列化的复杂类型。麻烦。存这种类型的结果是伪需求。
@@ -91,6 +94,8 @@ class FunctionResultStatus:
                      'insert_minutes': datetime_str[:-3],
                      'utime': datetime.datetime.utcnow(),
                      })
+        item['_id'] = uuid.uuid4()
+        self.logger.warning(item)
         return item
 
 
@@ -98,7 +103,7 @@ class ResultPersistenceHelper(MongoMixin):
     def __init__(self, is_store_function_result_status, queue_name):
         self._is_store_function_result_status = is_store_function_result_status
         if self._is_store_function_result_status:
-            self._task_status_col = self.mongo_db_task_status.get_collection(f'{queue_name}_task_status')
+            self._task_status_col = self.mongo_db_task_status.get_collection(queue_name)
             self._task_status_col.create_indexes([IndexModel([("insert_time_str", -1)]), IndexModel([("insert_minutes", -1)]),
                                                   IndexModel([("params", -1)]), IndexModel([("params_str", -1)])
                                                   ], )
@@ -289,7 +294,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _shedual_task(self):
         raise NotImplementedError
 
-    def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times=0, ):
+    def _run(self, kw: dict, ):
         if self._do_task_filtering and self._redis_filter.check_value_exists(kw['body']):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
             self.logger.info(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
             self._confirm_consume(kw)
@@ -303,9 +308,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     f'才能执行完成 {self._msg_num_in_broker}个剩余的任务 ')
                 self._current_time_for_execute_task_times_every_minute = time.time()
                 self._execute_task_times_every_minute = 0
-        # self.logger.critical(kw)
-        function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'])
-        if current_retry_times < self._max_retry_times + 1:
+        self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times=0, function_result_status=FunctionResultStatus(
+            self.queue_name, self.consuming_function.__name__, kw['body']))
+
+    def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times, function_result_status: FunctionResultStatus):
+        if current_retry_times < self._max_retry_times :
             function_result_status.run_times += 1
             # noinspection PyBroadException
             t_start = time.time()
@@ -315,15 +322,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     function_result_status.result = function_run(**delete_keys_and_return_new_dict(kw['body'], ['publish_time', 'publish_time_format']))
                 else:
                     function_result_status.result = function_run(delete_keys_and_return_new_dict(kw['body'], ['publish_time', 'publish_time_format']))  # 消费函数使用单个参数，参数自身是一个字典，由键值对表示各个参数。
+                function_result_status.success = True
                 self._confirm_consume(kw)
                 if self._do_task_filtering:
                     self._redis_filter.add_a_value(kw['body'])  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
-
-                # self.logger.debug(f'{self._concurrent_mode_dispatcher.get_concurrent_info()}  函数 {self.consuming_function.__name__}  '
-                #                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {kw["body"]} 】')
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {kw["body"]} 】。  {self._concurrent_mode_dispatcher.get_concurrent_info()}')
-                function_result_status.success = True
+
             except Exception as e:
                 if isinstance(e, (PyMongoError, ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
                     self.logger.critical(f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}')
@@ -331,7 +336,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self.logger.error(f'函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次发生错误，'
                                   f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是 【 {kw["body"]} 】   \n 原因是 {type(e)} {e} ', exc_info=self._is_print_detail_exception)
                 function_result_status.exception = f'{type(e)}    {str(e)}'
-                self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times + 1)
+                self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times + 1, function_result_status)
         else:
             self.logger.critical(f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._max_retry_times} 后,仍然失败， 入参是 【 {kw["body"]} 】')
             self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
@@ -368,7 +373,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                 f'超过了指定的 {self._msg_expire_senconds} 秒，丢弃任务')
             self._confirm_consume(kw)
             return 0
-        self.threadpool.submit(self._run_consuming_function_with_confirm_and_retry, kw)
+        self.threadpool.submit(self._run, kw)
         time.sleep(self._msg_schedule_time_intercal)
 
     @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)

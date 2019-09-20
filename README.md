@@ -130,7 +130,8 @@ consumer.start_consuming_message()
 
 ![Image text](https://i.niupic.com/images/2019/08/09/_462.png)
 
-### 3.1.3 函数执行结果及状态搜索查看(需要设置结果持久化为True才支持此项功能)。
+### 3.1.3 函数执行结果及状态搜索查看(需要设置函数状态持久化为True才支持此项功能，
+默认不开启，使用的是自动批量聚合插入mongo的方式，需要安装mongodb)。
 ![Image text](https://i.niupic.com/images/2019/09/20/_331.png)
 
 ### 3.1.4 我开发时候的状态和使用的工具和测试。

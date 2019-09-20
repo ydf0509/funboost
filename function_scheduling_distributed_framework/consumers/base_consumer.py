@@ -29,6 +29,7 @@ from function_scheduling_distributed_framework.concurrent_pool.custom_threadpool
 from function_scheduling_distributed_framework.consumers.redis_filter import RedisFilter
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
 from function_scheduling_distributed_framework.utils import LoggerLevelSetterMixin, LogManager, decorators, nb_print, LoggerMixin, time_util
+from function_scheduling_distributed_framework.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
 from function_scheduling_distributed_framework.utils.mongo_util import MongoMixin
 
 
@@ -105,10 +106,12 @@ class ResultPersistenceHelper(MongoMixin):
                                                   IndexModel([("params", -1)]), IndexModel([("params_str", -1)])
                                                   ], )
             self._task_status_col.create_index([("utime", 1)], expireAfterSeconds=7 * 24 * 3600)  # 只保留7天。
+            self._mongo_bulk_write_helper = MongoBulkWriteHelper(self._task_status_col, 100, 2)
 
     def save_function_result_to_mongo(self, function_result_status: FunctionResultStatus):
         if self._is_store_function_result_status:
-            self._task_status_col.insert_one(function_result_status.get_status_dict())
+            self._mongo_bulk_write_helper.add_task(InsertOne(function_result_status.get_status_dict()))  # 自动批量聚合方式。
+            # self._task_status_col.insert_one(function_result_status.get_status_dict())
 
 
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):

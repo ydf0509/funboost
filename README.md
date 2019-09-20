@@ -133,6 +133,9 @@ consumer.start_consuming_message()
 ### 3.1.3 函数执行结果及状态搜索查看(需要设置结果持久化为True才支持此项功能)。
 ![Image text](https://i.niupic.com/images/2019/09/20/_331.png)
 
+### 3.1.4 我开发时候的状态和使用的工具和测试。
+![Image text](http://i2.tiimg.com/699839/d0df7dda607bac79.png)
+
 ## 4.celery和这个框架比，存储的内容差异
 ### 4.1celery的
  ```

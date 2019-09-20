@@ -9,7 +9,7 @@ pb = consumer_add.publisher_of_same_queue
 pb.clear()
 
 for i in range(1000000000):
-    time.sleep(0.002)
+    time.sleep(0.2)
     pb.publish({'a': i, 'b': 2 * i})
     consumer_sub.publisher_of_same_queue.publish({'x':i,'y':i * 6})
 

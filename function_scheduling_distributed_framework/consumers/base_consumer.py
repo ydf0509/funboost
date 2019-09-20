@@ -50,9 +50,6 @@ class ExceptionForRequeue(Exception):
     """框架检测到此错误，重新放回队列中"""
 
 
-
-
-
 class FunctionResultStatus(LoggerMixin):
     host_name = socket.gethostname()
     host_process = f'{host_name} -- {os.getpid()}'
@@ -312,7 +309,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.queue_name, self.consuming_function.__name__, kw['body']))
 
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times, function_result_status: FunctionResultStatus):
-        if current_retry_times < self._max_retry_times :
+        if current_retry_times < self._max_retry_times:
             function_result_status.run_times += 1
             # noinspection PyBroadException
             t_start = time.time()

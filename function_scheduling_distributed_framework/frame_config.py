@@ -3,7 +3,7 @@
 # @Time    : 2019/8/8 0008 9:51
 
 
-# 你需要使用打猴子补丁的方式修改这里的配置就可以了，很简单。不需要去改这里，但也可以改这里。
+# 你需要使用patch_frame_config函数打猴子补丁的方式修改这里的配置就可以了，很简单。不需要去改这里，但也可以改这里。
 
 MONGO_CONNECT_URL = f'mongodb://yourname:yourpassword@127.0.01:27017/admin'
 
@@ -22,5 +22,4 @@ NSQD_TCP_ADDRESSES = ['127.0.0.1:4150']
 NSQD_HTTP_CLIENT_HOST = '127.0.0.1'
 NSQD_HTTP_CLIENT_PORT = 4151
 
-
-KAFKA_BOOTSTRAP_SERVERS=['127.0.0.1:9092']
+KAFKA_BOOTSTRAP_SERVERS = ['127.0.0.1:9092']

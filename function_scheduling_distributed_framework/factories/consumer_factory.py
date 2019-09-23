@@ -4,6 +4,7 @@
 import copy
 from collections import Callable
 
+from function_scheduling_distributed_framework.consumers.base_consumer import FunctionResultStatusPersistanceConfig
 from function_scheduling_distributed_framework.consumers.kafka_consumer import KafkaConsumer
 from function_scheduling_distributed_framework.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
 from function_scheduling_distributed_framework.consumers.mongomq_consumer import MongoMqConsumer
@@ -20,7 +21,8 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
                  max_retry_times=3, log_level=10, is_print_detail_exception=True, msg_schedule_time_intercal=0.0, msg_expire_senconds=0,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False, is_consuming_function_use_multi_params=True,
                  is_do_not_run_by_specify_time_effect=False, do_not_run_by_specify_time=('10:00:00', '22:00:00'),
-                 schedule_tasks_on_main_thread=False, broker_kind=0):
+                 schedule_tasks_on_main_thread=False,
+                 function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600), broker_kind=0):
     """
     使用工厂模式再包一层，通过设置数字来生成基于不同中间件或包的consumer。
     :param queue_name:
@@ -42,6 +44,8 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
     :param is_do_not_run_by_specify_time_effect :是否使不运行的时间段生效
     :param do_not_run_by_specify_time   :不运行的时间段
     :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
+    :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。这一步用于后续的参数追溯，
+        任务统计和web展示，需要安装mongo。
     :param broker_kind:中间件种类,。 0 使用pika链接mq，2使用redis，3使用python内置Queue,5使用mongo，6使用sqlite。7使用nsq，8使用kafka。
     :return
     """

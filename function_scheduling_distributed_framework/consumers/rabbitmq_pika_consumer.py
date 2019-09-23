@@ -11,6 +11,7 @@ from function_scheduling_distributed_framework.utils.rabbitmq_factory import Rab
 
 LogManager('pika').get_logger_and_add_handlers(20)
 
+
 class RabbitmqConsumer(AbstractConsumer):
     """
     使用pika包实现的。

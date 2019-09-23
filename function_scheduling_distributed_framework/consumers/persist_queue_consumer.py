@@ -17,7 +17,6 @@ class PersistQueueConsumer(AbstractConsumer):
     def _shedual_task(self):
         pub = PersistQueuePublisher(self.queue_name)
         while True:
-            t_start = time.time()
             item = pub.queue.get()
             self.logger.debug(f'从本地持久化sqlite的 [{self._queue_name}] 队列中 取出的消息是：    消息是：  {item}  ')
             kw = {'body': json.loads(item), 'q': pub.queue, 'item': item}

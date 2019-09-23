@@ -131,10 +131,28 @@ consumer.start_consuming_message()
 ![Image text](https://i.niupic.com/images/2019/08/09/_462.png)
 
 ### 3.1.3 函数执行结果及状态搜索查看(需要设置函数状态持久化为True才支持此项功能，
-默认不开启，使用的是自动批量聚合插入mongo的方式，需要安装mongodb)。
+默认不开启函数状态结果持久化，使用的是自动批量聚合插入mongo的方式，需要安装mongodb)。
+实测在进行阻塞式任务时候，性能略超过celery。
+
+高并发
 ![Image text](https://i.niupic.com/images/2019/09/20/_331.png)
 
+函数结果和运行次数和错误异常查看。使用的测试函数如下。
+def add(a, b):
+    logger.info(f'消费此消息 {a} + {b} 中。。。。。')
+    time.sleep(random.randint(3, 5))  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
+    if random.randint(4, 6) == 5:
+        raise RandomError('演示随机出错')
+    logger.info(f'计算 {a} + {b} 得到的结果是  {a + b}')
+    return a + b
+
+![Image text](http://i2.tiimg.com/699839/4385fed60c454659.png)
+
+任务统计图形曲线。
+![Image text](http://i2.tiimg.com/699839/62e857fb050fc67d.png)
+
 ### 3.1.4 我开发时候的状态和使用的工具和测试。
+pycahrm的code编辑区域的滚动条0个黄色，和使用alt + shift + i检查，符合极致的pep8规则。
 ![Image text](http://i2.tiimg.com/699839/d0df7dda607bac79.png)
 
 ## 4.celery和这个框架比，存储的内容差异

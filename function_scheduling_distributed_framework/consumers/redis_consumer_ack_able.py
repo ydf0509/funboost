@@ -17,7 +17,6 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractConsu
 
     def _shedual_task(self):
         while True:
-            t_start = time.time()
             result = self.redis_db_frame.blpop(self._queue_name, timeout=60)
             # task_bytes = self.redis_db_frame.lpop(self._queue_name)
             if result:

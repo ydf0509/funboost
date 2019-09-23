@@ -134,10 +134,10 @@ consumer.start_consuming_message()
 默认不开启函数状态结果持久化，使用的是自动批量聚合插入mongo的方式，需要安装mongodb)。
 实测在进行阻塞式任务时候，性能略超过celery。
 
-高并发
+1)高并发
 ![Image text](https://i.niupic.com/images/2019/09/20/_331.png)
 
-函数结果和运行次数和错误异常查看。使用的测试函数如下。
+2)函数结果和运行次数和错误异常查看。使用的测试函数如下。
 ```
 def add(a, b):
     logger.info(f'消费此消息 {a} + {b} 中。。。。。')
@@ -149,7 +149,7 @@ def add(a, b):
 ```
 ![Image text](http://i2.tiimg.com/699839/e9fdcb247fee663d.png)
 
-任务统计图形曲线。
+3)任务统计图形曲线。
 ![Image text](http://i2.tiimg.com/699839/62e857fb050fc67d.png)
 
 ### 3.1.4 我开发时候的状态和使用的是pycahrm工具和测试。

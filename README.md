@@ -152,8 +152,9 @@ def add(a, b):
 任务统计图形曲线。
 ![Image text](http://i2.tiimg.com/699839/62e857fb050fc67d.png)
 
-### 3.1.4 我开发时候的状态和使用的工具和测试。
-pycahrm的code编辑区域的滚动条0个黄色，和使用alt + shift + i检查，符合极致的pep8规则。
+### 3.1.4 我开发时候的状态和使用的是pycahrm工具和测试。
+在修改为每行最大240个字符后，其余的任何警告级别都保持默认的情况下，
+所有文件任意一行在pycahrm的code编辑区域的滚动条做到了0个黄色，和使用alt + shift + i检查，符合极致的pep8规则。
 ![Image text](http://i2.tiimg.com/699839/d0df7dda607bac79.png)
 
 ## 4.celery和这个框架比，存储的内容差异

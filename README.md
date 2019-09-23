@@ -147,7 +147,7 @@ def add(a, b):
     logger.info(f'计算 {a} + {b} 得到的结果是  {a + b}')
     return a + b
 ```
-![Image text](http://i2.tiimg.com/699839/4385fed60c454659.png)
+![Image text](http://i2.tiimg.com/699839/e9fdcb247fee663d.png)
 
 任务统计图形曲线。
 ![Image text](http://i2.tiimg.com/699839/62e857fb050fc67d.png)

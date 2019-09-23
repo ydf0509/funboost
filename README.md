@@ -153,7 +153,7 @@ def add(a, b):
 ```
 ![Image text](http://i2.tiimg.com/699839/e9fdcb247fee663d.png)
 
-3)任务统计图形曲线。
+3)任务消费统计曲线。
 ![Image text](http://i2.tiimg.com/699839/62e857fb050fc67d.png)
 
 ### 3.1.4 我开发时候的状态和使用的是pycharm工具和测试。

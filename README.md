@@ -138,6 +138,7 @@ consumer.start_consuming_message()
 ![Image text](https://i.niupic.com/images/2019/09/20/_331.png)
 
 函数结果和运行次数和错误异常查看。使用的测试函数如下。
+```
 def add(a, b):
     logger.info(f'消费此消息 {a} + {b} 中。。。。。')
     time.sleep(random.randint(3, 5))  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
@@ -145,7 +146,7 @@ def add(a, b):
         raise RandomError('演示随机出错')
     logger.info(f'计算 {a} + {b} 得到的结果是  {a + b}')
     return a + b
-
+```
 ![Image text](http://i2.tiimg.com/699839/4385fed60c454659.png)
 
 任务统计图形曲线。

@@ -130,11 +130,13 @@ consumer.start_consuming_message()
 
 ![Image text](https://i.niupic.com/images/2019/08/09/_462.png)
 
-### 3.1.3 函数执行结果及状态搜索查看(需要设置函数状态持久化为True才支持此项功能，
-默认不开启函数状态结果持久化，使用的是自动批量聚合插入mongo的方式，需要安装mongodb)。
-实测在进行阻塞式任务时候，性能略超过celery。
+### 3.1.3 函数执行结果及状态搜索查看
+(需要设置函数状态持久化为True才支持此项功能，默认不开启函数状态结果持久化，
+使用的是自动批量聚合插入mongo的方式，需要安装mongodb)。
 
 ![Image text](http://i1.fuimg.com/699839/bebd8cddb9ac1260.png)
+
+实测在进行阻塞式任务时候，性能略超过celery。
 1)高并发
 ![Image text](https://i.niupic.com/images/2019/09/20/_331.png)
 

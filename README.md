@@ -137,6 +137,7 @@ consumer.start_consuming_message()
 ![Image text](http://i1.fuimg.com/699839/bebd8cddb9ac1260.png)
 
 实测在进行阻塞式任务时候，性能略超过celery。
+
 1)高并发
 ![Image text](https://i.niupic.com/images/2019/09/20/_331.png)
 

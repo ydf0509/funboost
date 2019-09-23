@@ -134,6 +134,7 @@ consumer.start_consuming_message()
 默认不开启函数状态结果持久化，使用的是自动批量聚合插入mongo的方式，需要安装mongodb)。
 实测在进行阻塞式任务时候，性能略超过celery。
 
+![Image text](http://i1.fuimg.com/699839/bebd8cddb9ac1260.png)
 1)高并发
 ![Image text](https://i.niupic.com/images/2019/09/20/_331.png)
 

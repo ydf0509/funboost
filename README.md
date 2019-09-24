@@ -118,8 +118,8 @@ def f2(a, b):
     :param specify_threadpool:使用指定的线程池（协程池），可以多个消费者共使用一个线程池，不为None时候。threads_num失效
     :param concurrent_mode:并发模式，1线程 2gevent 3eventlet
     :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
-           可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。主动抛出ExceptionForRequeue异常，
-    则当前消息会重返中间件。
+           可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。
+           主动抛出ExceptionForRequeue异常，则当前消息会重返中间件。
     :param log_level:框架的日志级别。
     :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
     :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频的关键。

@@ -112,7 +112,7 @@ def f2(a, b):
     使用工厂模式再包一层，通过设置数字来生成基于不同中间件或包的consumer。
     :param queue_name: 队列名字。
     :param consuming_function: 处理消息的函数。  指定队列名字和指定消费函数这两个参数是必传，必须指定，
-           这2个是这个消费框架的本质核心参数，其他参数都是可选的。
+           这2个是这个消费框架的本质核心参数，其他参数都是可选的,有默认值。
     :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
     :param threads_num:并发数量，协程或线程。由concurrent_mode决定并发种类。
     :param specify_threadpool:使用指定的线程池（协程池），可以多个消费者共使用一个线程池，不为None时候。threads_num失效

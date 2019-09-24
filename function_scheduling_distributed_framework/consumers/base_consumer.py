@@ -182,10 +182,9 @@ class FunctionResultStatusPersistanceConfig(LoggerMixin):
             self.logger.warning(f'你设置的过期时间为 {expire_seconds} ,设置的时间过长。 ')
         self.expire_seconds = expire_seconds
 
-
     def to_dict(self):
-        return {"is_save_status":self.is_save_status,'is_save_result':
-            self.is_save_result,'expire_seconds':self.expire_seconds}
+        return {"is_save_status": self.is_save_status,
+                'is_save_result': self.is_save_result, 'expire_seconds': self.expire_seconds}
 
 
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):

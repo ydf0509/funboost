@@ -72,6 +72,8 @@ from function_scheduling_distributed_framework import patch_frame_config, show_f
 
 
 # 初次接触使用，可以不安装任何中间件，使用本地持久化队列。正式墙裂推荐安装rabbitmq。
+# 使用打猴子补丁的方式修改框架配置。这里为了演示，列举了所有中间件的参数，
+# 实际是只需要对使用到的中间件的配置进行赋值即可。
 patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:27016/admin',
 
                        RABBITMQ_USER='silxxxx',
@@ -105,7 +107,36 @@ def f2(a, b):
 # 通过设置broker_kind，一键切换中间件为mq或redis等7种中间件或包。
 # 额外参数支持超过10种控制功能，celery支持的控制方式，都全部支持。
 # 这里演示使用本地持久化队列，本机多个脚本之间可以相互通信共享任务，无需安装任何中间件，降低初次使用门槛。
+# 框架使用很简单，全部源码的函数和类都不需要深入了解，只需要看懂get_consumer这一个函数的参数就可以就可以。
+"""
+    使用工厂模式再包一层，通过设置数字来生成基于不同中间件或包的consumer。
+    :param queue_name:
+    :param consuming_function: 处理消息的函数。
+    :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
+    :param threads_num:并发数量，协程或线程。由concurrent_mode决定并发种类。
+    :param specify_threadpool:使用指定的线程池（协程池），可以多个消费者共使用一个线程池，不为None时候。threads_num失效
+    :param concurrent_mode:并发模式，1线程 2gevent 3eventlet
+    :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
+    可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。 主动抛出ExceptionForRequeue异常，则当前消息会重返中间件。
+    :param log_level:框架的日志级别。
+    :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
+    :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频的关键。
+    :param msg_expire_senconds:消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
+    :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
+    :param create_logger_file : 是否创建文件日志
+    :param do_task_filtering :是否执行基于函数参数的任务过滤
+    :param is_consuming_function_use_multi_params  函数的参数是否是传统的多参数，不为单个body字典表示多个参数。
+    :param is_do_not_run_by_specify_time_effect :是否使不运行的时间段生效
+    :param do_not_run_by_specify_time   :不运行的时间段
+    :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
+    :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。
+           这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
+    :param broker_kind:中间件种类,。 0 使用pika链接mq，2使用redis，3使用python内置Queue,5使用mongo，
+           6使用sqlite。7使用nsq，8使用kafka,9使用最新的可确认消费的redis方式。
+    :return AbstractConsumer
+"""
 consumer = get_consumer('queue_test2', consuming_function=f2, broker_kind=6)  
+
 
 
 
@@ -119,6 +150,10 @@ consumer.publisher_of_same_queue.clear()
 consumer.start_consuming_message()
 
  ```
+
+### 2.2 windows运行中截图
+ 
+ 
  
 ### 3.1.1 windows运行中截图
 ![Image text](https://i.niupic.com/images/2019/08/09/_477.png)

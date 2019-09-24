@@ -1,7 +1,7 @@
 # 1.distributed_framework
 ```
 1.0.1 
-python分布式函数调度框架。适用场景范围超级广泛。
+python万能分布式函数调度框架。适用场景范围超级广泛。
 可以一行代码分布式并发调度起一切任何老代码的旧函数和新项目的新函数，并提供数十种函数控制功能。
 
 关于稳定性和性能，一句话概括就是直面百万c端用户（包括app和小程序），
@@ -136,8 +136,6 @@ def f2(a, b):
     :return AbstractConsumer
 """
 consumer = get_consumer('queue_test2', consuming_function=f2, broker_kind=6)  
-
-
 
 
 # 推送需要消费的任务，可以变消费边推送。发布的内容字典需要和函数所能接收的参数一一对应，

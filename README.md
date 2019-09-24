@@ -110,8 +110,9 @@ def f2(a, b):
 # 框架使用很简单，全部源码的函数和类都不需要深入了解，只需要看懂get_consumer这一个函数的参数就可以就可以。
 """
     使用工厂模式再包一层，通过设置数字来生成基于不同中间件或包的consumer。
-    :param queue_name:
-    :param consuming_function: 处理消息的函数。
+    :param queue_name: 队列名字。
+    :param consuming_function: 处理消息的函数。  指定队列名字和指定消费函数这两个参数是必传，必须指定，
+           这2个是这个消费框架的本质核心参数，其他参数都是可选的。
     :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
     :param threads_num:并发数量，协程或线程。由concurrent_mode决定并发种类。
     :param specify_threadpool:使用指定的线程池（协程池），可以多个消费者共使用一个线程池，不为None时候。threads_num失效
@@ -129,10 +130,10 @@ def f2(a, b):
     :param is_do_not_run_by_specify_time_effect :是否使不运行的时间段生效
     :param do_not_run_by_specify_time   :不运行的时间段
     :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
-    :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。
-           这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
-    :param broker_kind:中间件种类,。 0 使用pika链接mq，2使用redis，3使用python内置Queue,5使用mongo，
-           6使用sqlite。7使用nsq，8使用kafka,9使用最新的可确认消费的redis方式。
+    :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。这一步用于后续的参数追溯，
+           任务统计和web展示，需要安装mongo。
+    :param broker_kind:中间件种类,。 0 使用pika链接rabbitmqmq，1使用rabbitpy包实现的操作rabbitmnq，2使用redis，3使用python内置Queue,
+           4使用amqpstorm包实现的操作rabbitmq，5使用mongo，6使用sqlite。7使用nsq，8使用kafka，9也是使用redis但支持消费确认。
     :return AbstractConsumer
 """
 consumer = get_consumer('queue_test2', consuming_function=f2, broker_kind=6)  

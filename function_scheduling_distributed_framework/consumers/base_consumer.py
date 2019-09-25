@@ -54,7 +54,7 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
     host_name = socket.gethostname()
     host_process = f'{host_name} - {os.getpid()}'
     script_name_long = sys.argv[0]
-    script_name = script_name_long.split('/')[-1]
+    script_name = script_name_long.split('/')[-1].split('\\')[-1]
 
     def __init__(self, queue_name, fucntion_name, params):
         self.queue_name = queue_name

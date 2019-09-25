@@ -9,7 +9,7 @@ pysnooper==0.0.11
 Flask
 tomorrow3==1.1.0
 concurrent-log-handler==0.9.9
-redis==2.10.6
+redis
 mongo-mq==0.0.1
 persist-queue==0.4.2
 elasticsearch

@@ -16,7 +16,6 @@ class MongoMqConsumer(AbstractConsumer, MongoMixin):
     def _shedual_task(self):
         mp = MongoMqPublisher(self.queue_name)
         while True:
-            t_start = time.time()
             job = mp.queue.next()
             if job is not None:
                 self.logger.debug(f'从mongo的 [{self._queue_name}] 队列中 取出的消息是：   消息是：  {job.payload}  ')

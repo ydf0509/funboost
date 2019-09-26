@@ -119,7 +119,7 @@ class MongoBulkWriteHelper(BaseBulkHelper):
             if request_list:
                 self.base_object.bulk_write(request_list, ordered=False)
             if self._is_print_log:
-                mongo_col_str = re.sub("document_class=dict, tz_aware=False, connect=True\),", "", str(self.base_object))
+                mongo_col_str = re.sub(r"document_class=dict, tz_aware=False, connect=True\),", "", str(self.base_object))
                 self.logger.info(f'【{mongo_col_str}】  批量插入的任务数量是 {count} 消耗的时间是 {round(time.time() - t_start, 6)}')
             self._current_time = time.time()
 

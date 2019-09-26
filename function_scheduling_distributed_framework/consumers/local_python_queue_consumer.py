@@ -21,7 +21,6 @@ class LocalPythonQueueConsumer(AbstractConsumer):
 
     def _shedual_task(self):
         while True:
-            t_start = time.time()
             task = self.local_python_queue.get()
             if isinstance(task, str):
                 task = json.loads(task)

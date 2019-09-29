@@ -76,6 +76,7 @@ python万能分布式函数调度框架。适用场景范围超级广泛。
 关于稳定性和性能，一句话概括就是直面百万c端用户（包括app和小程序），
 已经连续超过两个季度稳定高效运行无事故。
 
+```
 ### 1.0.2
 
 支持python内置Queue对象作为当前解释器下的消息队列。
@@ -145,7 +146,7 @@ python万能分布式函数调度框架。适用场景范围超级广泛。
 多进程安全切片的文件日志、日志发邮件、日志发钉钉、日志发elasticsearch、日志发kafka、日志发mongo，
 可以按需使用其中的n种日志handler功能，因为是使用的观察者模式。
 from function_scheduling_distributed_framework import LogManager就可以使用。
-
+```
 
 # 手机版git上点击下方 view all of README.md
 

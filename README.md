@@ -201,7 +201,9 @@ def f2(a, b):
     :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
     :param create_logger_file : 是否创建文件日志
     :param do_task_filtering :是否执行基于函数参数的任务过滤
-    :param is_consuming_function_use_multi_params  函数的参数是否是传统的多参数，不为单个body字典表示多个参数。
+    :param is_consuming_function_use_multi_params  函数的参数是否是传统的多参数，不为单个body字典
+           表示多个参数。现在基本可以无视指定这个值了，因为现在默认用的是**{}来解包，第一版时候没想好，
+           第一版时候函数的参数有且只能有一个并且入参本身是1个字典。为了兼容以前的调用方式，保留这个参数。
     :param is_do_not_run_by_specify_time_effect :是否使不运行的时间段生效
     :param do_not_run_by_specify_time   :不运行的时间段
     :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。

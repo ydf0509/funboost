@@ -5,7 +5,7 @@ from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.consumers.base_consumer import ExceptionForRequeue, ExceptionForRetry, AbstractConsumer
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
 from function_scheduling_distributed_framework.factories.consumer_factory import get_consumer
-from function_scheduling_distributed_framework.utils import nb_print
+from function_scheduling_distributed_framework.utils import nb_print, LogManager
 
 
 # noinspection PyPep8Naming

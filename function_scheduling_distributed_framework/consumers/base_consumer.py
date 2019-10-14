@@ -3,6 +3,8 @@
 # @Time    : 2019/8/8 0008 13:11
 import abc
 import copy
+from multiprocessing import Process
+
 import datetime
 import json
 import sys
@@ -351,13 +353,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def start_consuming_message(self):
         self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
-        # self.threadpool.submit(decorators.keep_circulating(20)(self.check_heartbeat_and_message_count))
         self.threadpool.submit(self.keep_circulating(20)(self.check_heartbeat_and_message_count))
         if self._schedule_tasks_on_main_thread:
-            # decorators.keep_circulating(1)(self._shedual_task)()
             self.keep_circulating(1)(self._shedual_task)()
         else:
-            # t = Thread(target=decorators.keep_circulating(1)(self._shedual_task))
             self._concurrent_mode_dispatcher.schedulal_task_with_no_block()
 
     @abc.abstractmethod

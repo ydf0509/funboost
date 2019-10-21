@@ -12,6 +12,7 @@ concurrent_log_handler的ConcurrentRotatingFileHandler解决了logging模块自�
 
 
 """
+import atexit
 import socket
 import datetime
 import sys
@@ -21,7 +22,7 @@ import traceback
 import unittest
 import time
 from collections import OrderedDict
-from queue import Queue
+from queue import Queue, Empty
 # noinspection PyPackageRequirements
 from kafka import KafkaProducer
 from elasticsearch import Elasticsearch, helpers
@@ -776,6 +777,127 @@ class ColorHandler(logging.Handler):
         return '<%s %s(%s)>' % (self.__class__.__name__, name, level)
 
 
+class ConcurrentRotatingFileHandlerWithBufferPassivity(ConcurrentRotatingFileHandler):
+    """
+    ConcurrentRotatingFileHandler 解决了多进程下文件切片问题，但频繁操作文件锁，带来程序性能巨大下降。
+    反复测试极限日志写入频次，在windows上比不切片的写入性能降低100倍。在linux上比不切片性能降低10倍。
+    所以此类使用缓存1秒钟内的日志为一个长字符串再插入，大幅度地降低了文件加锁和解锁的次数，速度和不做多进程安全切片的文件写入速度几乎一样。
+    被动触发方式，最后一条记录有可能要过很久才会记录到文件中。
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._buffer_msgs = ''
+        self._last_write_time = time.time()
+        atexit.register(self.__when_exit)  # 如果程序属于立马就能结束的，需要在程序结束前执行这个钩子，防止不到最后一秒的日志没记录到。
+
+    def __when_exit(self):
+        try:
+            self._do_lock()
+            self.do_write(self._buffer_msgs)
+        finally:
+            self._do_unlock()
+
+    def emit(self, record):
+        """
+        emit已经在logger的handle方法中加了锁，所以这里的重置上次写入时间和清除buffer_msgs不需要加锁了。
+        :param record:
+        :return:
+        """
+        # noinspection PyBroadException
+        try:
+            msg = self.format(record)
+            self._buffer_msgs += msg + '\n'
+            if time.time() - self._last_write_time > 1:
+                try:
+                    self._do_lock()
+                    try:
+                        if self.shouldRollover(record):
+                            self.doRollover()
+                    except Exception as e:
+                        self._console_log("Unable to do rollover: %s" % (e,), stack=True)
+                        # Continue on anyway
+                    self.do_write(self._buffer_msgs)
+                finally:
+                    self._do_unlock()
+                    self._buffer_msgs = ''
+                    self._last_write_time = time.time()
+
+        except Exception:
+            self.handleError(record)
+
+
+class ConcurrentRotatingFileHandlerWithBufferInitiative(ConcurrentRotatingFileHandler):
+    """
+    ConcurrentRotatingFileHandler 解决了多进程下文件切片问题，但频繁操作文件锁，带来程序性能巨大下降。
+    反复测试极限日志写入频次，在windows上比不切片的写入性能降低100倍。在linux上比不切片性能降低10倍。
+    所以此类使用缓存1秒钟内的日志为一个长字符串再插入，大幅度地降低了文件加锁和解锁的次数，速度和不做多进程安全切片的文件写入速度几乎一样。
+    主动触发写入文件，改进版。
+    """
+    file_handler_list = []
+    has_start_emit_all_file_handler = False
+
+    @classmethod
+    def _emit_all_file_handler(cls):
+        while True:
+            for hr in cls.file_handler_list:
+                # very_nb_print(hr.buffer_msgs_queue.qsize())
+                hr.rollover_and_do_write()
+            time.sleep(1)
+
+    @classmethod
+    def start_emit_all_file_handler(cls):
+        pass
+        Thread(target=cls._emit_all_file_handler, daemon=True).start()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.buffer_msgs_queue = Queue()
+        atexit.register(self.__when_exit)  # 如果程序属于立马就能结束的，需要在程序结束前执行这个钩子，防止不到最后一秒的日志没记录到。
+        self.file_handler_list.append(self)
+        if not self.has_start_emit_all_file_handler:
+            self.start_emit_all_file_handler()
+            self.__class__.has_start_emit_all_file_handler = True
+
+    def __when_exit(self):
+        self.rollover_and_do_write()
+
+    def emit(self, record):
+        """
+        emit已经在logger的handle方法中加了锁，所以这里的重置上次写入时间和清除buffer_msgs不需要加锁了。
+        :param record:
+        :return:
+        """
+        # noinspection PyBroadException
+        try:
+            msg = self.format(record)
+            self.buffer_msgs_queue.put(msg)
+        except Exception:
+            self.handleError(record)
+
+    def rollover_and_do_write(self, ):
+        very_nb_print(self.buffer_msgs_queue.qsize())
+        buffer_msgs = ''
+        while True:
+            try:
+                msg = self.buffer_msgs_queue.get(block=False)
+                buffer_msgs += msg + '\n'
+            except Empty:
+                break
+        if buffer_msgs:
+            try:
+                self._do_lock()
+                try:
+                    if self.shouldRollover(None):
+                        self.doRollover()
+                except Exception as e:
+                    self._console_log("Unable to do rollover: %s" % (e,), stack=True)
+                # very_nb_print(len(self._buffer_msgs))
+                self.do_write(buffer_msgs)
+            finally:
+                self._do_unlock()
+
+
 class CompatibleSMTPSSLHandler(handlers.SMTPHandler):
     """
     官方的SMTPHandler不支持SMTP_SSL的邮箱，这个可以两个都支持,并且支持邮件发送频率限制
@@ -1069,14 +1191,25 @@ class LogManager(object):
             log_file = os.path.join(self._log_path, self._log_filename)
             rotate_file_handler = None
             if os_name == 'nt':
-                # windows下用这个，非进程安全
-                rotate_file_handler = ConcurrentRotatingFileHandler(log_file, maxBytes=self._log_file_size * 1024 * 1024,
-                                                                    backupCount=3,
-                                                                    encoding="utf-8")
-            if os_name == 'posix':
-                # linux下可以使用ConcurrentRotatingFileHandler，进程安全的日志方式
-                rotate_file_handler = ConcurrentRotatingFileHandler(log_file, maxBytes=self._log_file_size * 1024 * 1024,
-                                                                    backupCount=3, encoding="utf-8")
+                # 在win下使用这个ConcurrentRotatingFileHandler可以解决多进程安全切片，但性能损失惨重。
+                # 10进程各自写入10万条记录到同一个文件消耗15分钟。比不切片写入速度降低100倍。
+                rotate_file_handler = ConcurrentRotatingFileHandlerWithBufferInitiative(log_file, maxBytes=self._log_file_size * 1024 * 1024,
+                                                                                        backupCount=3,
+                                                                                        encoding="utf-8")
+
+                # windows下用这个，多进程安全，但不能切片，自己手动删除，要确保每天剩余磁盘空间很大。
+                # rotate_file_handler = logging.FileHandler(log_file,encoding="utf-8")
+
+                # windows下用这个，多进程不安全，多进程写入同一个文件切片瞬间时候100%会出错，导致程序出错。
+                # rotate_file_handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=self._log_file_size * 1024 * 1024,
+                #                                                            backupCount=3,
+                #                                                            encoding="utf-8")
+
+            elif os_name == 'posix':
+                # linux下可以使用ConcurrentRotatingFileHandler，进程安全的日志方式。
+                # 10进程各自写入10万条记录到同一个文件消耗100秒，还是比不切片写入速度降低10倍。因为每次检查切片大小和文件锁的原因。
+                rotate_file_handler = ConcurrentRotatingFileHandlerWithBufferPassivity(log_file, maxBytes=self._log_file_size * 1024 * 1024,
+                                                                                       backupCount=3, encoding="utf-8")
             self.__add_a_hanlder(rotate_file_handler)
 
         # REMIND 添加mongo日志。

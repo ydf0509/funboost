@@ -573,3 +573,5 @@ redis要是能直接作为mq使用，redis早就一统天下了，哪里还不�
 rabbitmq nsq都有官方自带速率显示。
 ```
 ![Image text](https://i.niupic.com/images/2019/08/26/_122.png)
+
+## 6.3 更新日志，大幅度提高多进程安全切片的文件日志写入性能。windows下提高100倍，linux提高10倍。

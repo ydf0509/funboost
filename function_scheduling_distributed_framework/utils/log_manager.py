@@ -1469,6 +1469,17 @@ class _Test(unittest.TestCase):
             logger.critical('一个critical级别的日志。' * 5)
 
 
+def test_multiprocess_file_handler():
+    logger = LogManager('abcd').get_logger_and_add_handlers(is_add_stream_handler=False, log_filename='amulti_test6.log', log_file_size=100)
+    for i in range(100000, 200000):
+        # time.sleep(0.000001)
+        logger.debug(f'{i}a')
+        if i % 10000 == 0:
+            very_nb_print(i)
+
+
 if __name__ == "__main__":
-    unittest.main()
-    # raise Exception
+    # unittest.main()
+    from multiprocessing import Process
+
+    [Process(target=test_multiprocess_file_handler).start() for _ in range(10)]

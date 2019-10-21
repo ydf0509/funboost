@@ -876,7 +876,7 @@ class ConcurrentRotatingFileHandlerWithBufferInitiative(ConcurrentRotatingFileHa
             self.handleError(record)
 
     def rollover_and_do_write(self, ):
-        very_nb_print(self.buffer_msgs_queue.qsize())
+        # very_nb_print(self.buffer_msgs_queue.qsize())
         buffer_msgs = ''
         while True:
             try:

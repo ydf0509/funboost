@@ -24,7 +24,7 @@ class RandomError(Exception):
 
 def add(a, b):
     logger.info(f'消费此消息 {a} + {b} 中。。。。。')
-    time.sleep(random.randint(10, 15))  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
+    time.sleep(10)  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
     # if random.randint(4, 6) == 5:
     #     raise RandomError('演示随机出错')
     logger.info(f'计算 {a} + {b} 得到的结果是  {a + b}')
@@ -40,11 +40,11 @@ def sub(x, y):
 
 
 # 把消费的函数名传给consuming_function，就这么简单。
-consumer_add = get_consumer('queue_test56', consuming_function=add, threads_num=5000, max_retry_times=2,
-                            msg_schedule_time_intercal=0, log_level=10, logger_prefix='zz平台消费',
+consumer_add = get_consumer('queue_test569', consuming_function=add, threads_num=5000, max_retry_times=2,
+                            msg_schedule_time_intercal=0, log_level=20, logger_prefix='zz平台消费',
                             function_timeout=0, is_print_detail_exception=False,
                             msg_expire_senconds=3600,
-                            function_result_status_persistance_conf= FunctionResultStatusPersistanceConfig(True, True, 7 * 24 * 3600),
+                            function_result_status_persistance_conf= FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600),
                             broker_kind=2, concurrent_mode=2,)  # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等9种中间件或包。
 
 # consumer_sub = get_consumer('queue_test57', consuming_function=sub, threads_num=50, msg_schedule_time_intercal=0.2, log_level=10, logger_prefix='xxxxx平台消费',

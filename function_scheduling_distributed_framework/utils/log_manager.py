@@ -780,7 +780,7 @@ class ColorHandler(logging.Handler):
 class ConcurrentRotatingFileHandlerWithBufferPassivity(ConcurrentRotatingFileHandler):
     """
     ConcurrentRotatingFileHandler 解决了多进程下文件切片问题，但频繁操作文件锁，带来程序性能巨大下降。
-    反复测试极限日志写入频次，在windows上比不切片的写入性能降低100倍。在linux上比不切片性能降低10倍。
+    反复测试极限日志写入频次，在windows上比不切片的写入性能降低100倍。在linux上比不切片性能降低10倍。多进程切片文件锁在windows使用pywin32，在linux上还是要fcntl实现。
     所以此类使用缓存1秒钟内的日志为一个长字符串再插入，大幅度地降低了文件加锁和解锁的次数，速度和不做多进程安全切片的文件写入速度几乎一样。
     被动触发方式，最后一条记录有可能要过很久才会记录到文件中。
     """
@@ -827,15 +827,15 @@ class ConcurrentRotatingFileHandlerWithBufferPassivity(ConcurrentRotatingFileHan
             self.handleError(record)
 
 
-class ConcurrentRotatingFileHandlerWithBufferInitiative(ConcurrentRotatingFileHandler):
+class ConcurrentRotatingFileHandlerWithBufferInitiativeWindwos(ConcurrentRotatingFileHandler):
     """
     ConcurrentRotatingFileHandler 解决了多进程下文件切片问题，但频繁操作文件锁，带来程序性能巨大下降。
-    反复测试极限日志写入频次，在windows上比不切片的写入性能降低100倍。在linux上比不切片性能降低10倍。
+    反复测试极限日志写入频次，在windows上比不切片的写入性能降低100倍。在linux上比不切片性能降低10倍。多进程切片文件锁在windows使用pywin32，在linux上还是要fcntl实现。
     所以此类使用缓存1秒钟内的日志为一个长字符串再插入，大幅度地降低了文件加锁和解锁的次数，速度和不做多进程安全切片的文件写入速度几乎一样。
-    主动触发写入文件，改进版。
+    主动触发写入文件。
     """
     file_handler_list = []
-    has_start_emit_all_file_handler = False
+    has_start_emit_all_file_handler = False  # 只能在windwos运行正常，windwos是多进程每个进程的变量has_start_emit_all_file_handler是独立的。linux是共享的。
 
     @classmethod
     def _emit_all_file_handler(cls):
@@ -853,13 +853,14 @@ class ConcurrentRotatingFileHandlerWithBufferInitiative(ConcurrentRotatingFileHa
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.buffer_msgs_queue = Queue()
-        atexit.register(self.__when_exit)  # 如果程序属于立马就能结束的，需要在程序结束前执行这个钩子，防止不到最后一秒的日志没记录到。
+        atexit.register(self._when_exit)  # 如果程序属于立马就能结束的，需要在程序结束前执行这个钩子，防止不到最后一秒的日志没记录到。
         self.file_handler_list.append(self)
         if not self.has_start_emit_all_file_handler:
             self.start_emit_all_file_handler()
             self.__class__.has_start_emit_all_file_handler = True
 
-    def __when_exit(self):
+    def _when_exit(self):
+        pass
         self.rollover_and_do_write()
 
     def emit(self, record):
@@ -877,6 +878,9 @@ class ConcurrentRotatingFileHandlerWithBufferInitiative(ConcurrentRotatingFileHa
 
     def rollover_and_do_write(self, ):
         # very_nb_print(self.buffer_msgs_queue.qsize())
+        self._rollover_and_do_write()
+
+    def _rollover_and_do_write(self):
         buffer_msgs = ''
         while True:
             try:
@@ -896,6 +900,32 @@ class ConcurrentRotatingFileHandlerWithBufferInitiative(ConcurrentRotatingFileHa
                 self.do_write(buffer_msgs)
             finally:
                 self._do_unlock()
+
+
+class ConcurrentRotatingFileHandlerWithBufferInitiativeLinux(ConcurrentRotatingFileHandlerWithBufferInitiativeWindwos):
+    """
+    ConcurrentRotatingFileHandler 解决了多进程下文件切片问题，但频繁操作文件锁，带来程序性能巨大下降。
+    反复测试极限日志写入频次，在windows上比不切片的写入性能降低100倍。在linux上比不切片性能降低10倍。多进程切片文件锁在windows使用pywin32，在linux上还是要fcntl实现。
+    所以此类使用缓存1秒钟内的日志为一个长字符串再插入，大幅度地降低了文件加锁和解锁的次数，速度和不做多进程安全切片的文件写入速度几乎一样。
+    主动触发写入文件。
+    """
+    file_handler_list = []
+    has_start_emit_all_file_handler_process_id_set = set()  # 这个linux和windwos都兼容，windwos是多进程每个进程的变量has_start_emit_all_file_handler是独立的。linux是共享的。
+    __lock_for_rotate = Lock()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.buffer_msgs_queue = Queue()
+        atexit.register(self._when_exit)  # 如果程序属于立马就能结束的，需要在程序结束前执行这个钩子，防止不到最后一秒的日志没记录到。
+        self.file_handler_list.append(self)
+        if os.getpid() not in self.has_start_emit_all_file_handler_process_id_set:
+            self.start_emit_all_file_handler()
+            self.__class__.has_start_emit_all_file_handler_process_id_set.add(os.getpid())
+
+    def rollover_and_do_write(self, ):
+        # very_nb_print(self.buffer_msgs_queue.qsize())
+        with self.__lock_for_rotate:
+            self._rollover_and_do_write()
 
 
 class CompatibleSMTPSSLHandler(handlers.SMTPHandler):
@@ -1193,9 +1223,9 @@ class LogManager(object):
             if os_name == 'nt':
                 # 在win下使用这个ConcurrentRotatingFileHandler可以解决多进程安全切片，但性能损失惨重。
                 # 10进程各自写入10万条记录到同一个文件消耗15分钟。比不切片写入速度降低100倍。
-                rotate_file_handler = ConcurrentRotatingFileHandlerWithBufferInitiative(log_file, maxBytes=self._log_file_size * 1024 * 1024,
-                                                                                        backupCount=3,
-                                                                                        encoding="utf-8")
+                rotate_file_handler = ConcurrentRotatingFileHandlerWithBufferInitiativeWindwos(log_file, maxBytes=self._log_file_size * 1024 * 1024,
+                                                                                               backupCount=3,
+                                                                                               encoding="utf-8")
 
                 # windows下用这个，多进程安全，但不能切片，自己手动删除，要确保每天剩余磁盘空间很大。
                 # rotate_file_handler = logging.FileHandler(log_file,encoding="utf-8")
@@ -1208,8 +1238,8 @@ class LogManager(object):
             elif os_name == 'posix':
                 # linux下可以使用ConcurrentRotatingFileHandler，进程安全的日志方式。
                 # 10进程各自写入10万条记录到同一个文件消耗100秒，还是比不切片写入速度降低10倍。因为每次检查切片大小和文件锁的原因。
-                rotate_file_handler = ConcurrentRotatingFileHandlerWithBufferPassivity(log_file, maxBytes=self._log_file_size * 1024 * 1024,
-                                                                                       backupCount=3, encoding="utf-8")
+                rotate_file_handler = ConcurrentRotatingFileHandlerWithBufferInitiativeLinux(log_file, maxBytes=self._log_file_size * 1024 * 1024,
+                                                                                             backupCount=3, encoding="utf-8")
             self.__add_a_hanlder(rotate_file_handler)
 
         # REMIND 添加mongo日志。
@@ -1470,16 +1500,18 @@ class _Test(unittest.TestCase):
 
 
 def test_multiprocess_file_handler():
-    logger = LogManager('abcd').get_logger_and_add_handlers(is_add_stream_handler=False, log_filename='amulti_test6.log', log_file_size=100)
-    for i in range(100000, 200000):
+    logger = LogManager('abcd').get_logger_and_add_handlers(is_add_stream_handler=False, log_filename='amulti_test9.log', log_file_size=100)
+    t1 = time.time()
+    for i in range(100, 200):
         # time.sleep(0.000001)
         logger.debug(f'{i}a')
         if i % 10000 == 0:
             very_nb_print(i)
+    very_nb_print(time.time() - t1)
+    time.sleep(10)
 
 
 if __name__ == "__main__":
     # unittest.main()
     from multiprocessing import Process
-
     [Process(target=test_multiprocess_file_handler).start() for _ in range(10)]

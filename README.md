@@ -326,7 +326,7 @@ def add(a, b):
 {"a":3,"b":6}
   ```
   
-## 4.2 性能对比,celery推送慢5倍，消费慢15%
+## 4.2 性能对比,celery推送慢5倍，消费慢15%。测试的消费基准函数为阻塞10s的求和函数。
 ### 4.2.1 celery测试基准代码,消费
 ~~~python
 celery_app.config_from_object(Config2)

@@ -326,7 +326,7 @@ def add(a, b):
 {"a":3,"b":6}
   ```
   
-## 4.2 性能对比,celery推送慢5倍，消费慢15%。测试的消费基准函数为阻塞10s的求和函数。
+## 4.2 性能对比,celery推送慢5倍，消费慢15%。测试的消费基准函数为阻塞10s的求和函数，两个框架都推送和消费10000次。都使用gevent并发模型，相同并发数量 相同的linux机器内网连接中间件下反复测试的。
 ### 4.2.1 celery测试基准代码,消费
 ~~~python
 celery_app.config_from_object(Config2)
@@ -335,7 +335,7 @@ celery_app.config_from_object(Config2)
 @celery_app.task(name='求和啊',)  # REMIND rate_limit在这里写，也可以在调用时候写test_task.apply_async(args=(1,2),expires=3)
 def add(a, b):
     print(f'消费此消息 {a} + {b} 中。。。。。')
-    time.sleep(10,) # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
+    time.sleep(10) # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
     print(f'计算 {a} + {b} 得到的结果是  {a + b}')
     return a + b
 
@@ -363,7 +363,7 @@ def add(a, b):
 consumer_add = get_consumer('queue_test569', consuming_function=add, threads_num=1000, max_retry_times=2,
                             msg_schedule_time_intercal=0, log_level=10, logger_prefix='zz平台消费',
                             function_timeout=0, is_print_detail_exception=False,
-                            msg_expire_senconds=3600,)  # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等9种中间件或包。
+                            msg_expire_senconds=3600,broker_kind=2, concurrent_mode=2,)  # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等9种中间件或包。
 
 
 if __name__ == '__main__':

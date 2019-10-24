@@ -223,7 +223,7 @@ consumer = get_consumer('queue_test2', consuming_function=f2, broker_kind=6)
 # 推送需要消费的任务，可以变消费边推送。发布的内容字典需要和函数所能接收的参数一一对应，
 # 并且函数参数需要能被json序列化，不要把自定义的类型作为消费函数的参数。
 consumer.publisher_of_same_queue.clear()
-[consumer.publisher_of_same_queue.publish({'a': i, 'b': 2 * i}) for i in range(100)]
+[consumer.publisher_of_same_queue.publish(dict(a=i,b=i * 2)) for i in range(100)]
 
 
 # 开始从中间件循环取出任务，使用指定的函数消费中间件里面的消息。

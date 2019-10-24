@@ -10,7 +10,7 @@ pb.clear()
 
 for i in range(10000):
     # time.sleep(0.2)
-    pb.publish({'a': i, 'b': 2 * i})
+    pb.publish(dict(a=1,b=2))
     # consumer_sub.publisher_of_same_queue.publish({'x':i,'y':i * 6})
 
 

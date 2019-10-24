@@ -224,7 +224,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0,
                  threads_num=50, specify_threadpool=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True,
-                 msg_schedule_time_intercal=0.0, msg_expire_senconds=0,
+                 msg_schedule_time_intercal=0.0, qps=0, msg_expire_senconds=0,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False,
                  is_consuming_function_use_multi_params=True,
                  is_do_not_run_by_specify_time_effect=False, do_not_run_by_specify_time=('10:00:00', '22:00:00'),
@@ -241,6 +241,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param log_level:
         :param is_print_detail_exception:
         :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频
+        :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，一会废弃msg_schedule_time_intercal这个参数。
         :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
         :param create_logger_file : 是否创建文件日志
         :param do_task_filtering :是否执行基于函数参数的任务过滤
@@ -270,6 +271,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._concurrent_mode = concurrent_mode
         self._max_retry_times = max_retry_times
         self._is_print_detail_exception = is_print_detail_exception
+        if qps != 0:
+            msg_schedule_time_intercal = 1.0 / qps   # 使用qps覆盖消息调度间隔，以qps为准，以后废弃msg_schedule_time_intercal这个参数。
         self._msg_schedule_time_intercal = msg_schedule_time_intercal if msg_schedule_time_intercal > 0.001 else 0.001
         self._msg_expire_senconds = msg_expire_senconds
 

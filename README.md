@@ -199,7 +199,7 @@ def f2(a, b):
            主动抛出ExceptionForRequeue异常，则当前消息会重返中间件。
     :param log_level:框架的日志级别。
     :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
-    :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频的关键。
+    :param qps:用于控频，精确指定1秒钟运行几次函数。
     :param msg_expire_senconds:消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
     :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
     :param create_logger_file : 是否创建文件日志

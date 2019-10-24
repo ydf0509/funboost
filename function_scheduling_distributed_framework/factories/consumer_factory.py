@@ -18,7 +18,7 @@ from function_scheduling_distributed_framework.consumers.redis_consumer_ack_able
 
 
 def get_consumer(queue_name, *, consuming_function: Callable = None, function_timeout=0, threads_num=50, specify_threadpool=None, concurrent_mode=1,
-                 max_retry_times=3, log_level=10, is_print_detail_exception=True, msg_schedule_time_intercal=0.0, msg_expire_senconds=0,
+                 max_retry_times=3, log_level=10, is_print_detail_exception=True, msg_schedule_time_intercal=0.0, qps=0, msg_expire_senconds=0,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False, is_consuming_function_use_multi_params=True,
                  is_do_not_run_by_specify_time_effect=False, do_not_run_by_specify_time=('10:00:00', '22:00:00'),
                  schedule_tasks_on_main_thread=False,
@@ -38,6 +38,7 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
     :param log_level:框架的日志级别。
     :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
     :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频的关键。
+    :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，以后废弃msg_schedule_time_intercal这个参数。
     :param msg_expire_senconds:消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
     :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
     :param create_logger_file : 是否创建文件日志

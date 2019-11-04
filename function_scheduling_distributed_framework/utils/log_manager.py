@@ -1,14 +1,19 @@
 # coding=utf8
 """
 日志管理，支持日志打印到控制台和写入切片文件和mongodb和email和钉钉机器人和elastic和kafka。
+建造者模式一键创建返回添加了各种好用的handler的原生官方Logger对象，兼容性扩展性极强。
+使用观察者模式按照里面的例子可以扩展各种有趣的handler。
 使用方式为  logger = LogManager('logger_name').get_and_add_handlers(log_level_int=1, is_add_stream_handler=True, log_path=None, log_filename=None, log_file_size=10,mongo_url=None,formatter_template=2)
 或者 logger = LogManager('logger_name').get_without_handlers(),此种没有handlers不立即记录日志，之后可以在单独统一的总闸处对所有日志根据loggerame进行get_and_add_handlers添加相关的各种handlers
 创建一个邮件日志的用法为 logger = LogManager.bulid_a_logger_with_mail_handler('mail_logger_name', mail_time_interval=10, toaddrs=('909686xxx@qq.com', 'yangxx4508@dingtalk.com',subject='你的主题)),使用了独立的创建方式
 concurrent_log_handler的ConcurrentRotatingFileHandler解决了logging模块自带的RotatingFileHandler多进程切片错误，此ConcurrentRotatingFileHandler在win和linux多进程场景下log文件切片都ok.
+
 1、根据日志级别，使用coolorhanlder代替straemhandler打印5种颜色的日志，一目了然哪里是严重的日志。
 2、带有多种handler，邮件 mongo stream file的。
 3、支持pycharm点击日志跳转到对应代码文件的对应行。
 4、对相同命名空间的logger可以无限添加同种类型的handlers，不会重复使用同种handler记录日志。不需要用户自己去判断。
+5、更新文件日志性能，基于ConcurrentRotatingFileHandler继承重写，使用缓存1秒内的消息成批量的方式插入，
+使极限多进程安全切片的文件日志写入性能在win下提高100倍，linux下提高10倍。
 
 
 """
@@ -98,8 +103,8 @@ def revision_call_handlers(self, record):  # 对logging标准模块打猴子补�
     while c:
         for hdlr in c.handlers:
             hdlr_type = type(hdlr)
-            if hdlr_type == ColorHandler:
-                hdlr_type = logging.StreamHandler
+            if hdlr_type == logging.StreamHandler:  # REMIND 因为很多handler都是继承自StreamHandler，包括filehandler，直接判断会逻辑出错。
+                hdlr_type = ColorHandler
             found = found + 1
             if record.levelno >= hdlr.level:
                 if hdlr_type not in hdlr_type_set:
@@ -120,7 +125,36 @@ def revision_call_handlers(self, record):  # 对logging标准模块打猴子补�
             self.manager.emittedNoHandlerWarning = True
 
 
+# noinspection PyProtectedMember
+def revision_add_handler(self, hdlr):  # 从添加源头阻止同一个logger添加同类型的handler。
+    """
+    Add the specified handler to this logger.
+    """
+    logging._acquireLock()
+
+    try:
+        """ 官方的
+        if not (hdlr in self.handlers):
+            self.handlers.append(hdlr)
+        """
+        hdlrx_type_set = set()
+        for hdlrx in self.handlers:
+            hdlrx_type = type(hdlrx)
+            if hdlrx_type == logging.StreamHandler:  # REMIND 因为很多handler都是继承自StreamHandler，包括filehandler，直接判断会逻辑出错。
+                hdlrx_type = ColorHandler
+            hdlrx_type_set.add(hdlrx_type)
+
+        hdlr_type = type(hdlr)
+        if hdlr_type == logging.StreamHandler:
+            hdlr_type = ColorHandler
+        if hdlr_type not in hdlrx_type_set:
+            self.handlers.append(hdlr)
+    finally:
+        logging._releaseLock()
+
+
 logging.Logger.callHandlers = revision_call_handlers  # 打猴子补丁。
+logging.Logger.addHandler = revision_add_handler  # 打猴子补丁。
 
 # noinspection PyShadowingBuiltins
 formatter_dict = {
@@ -1114,6 +1148,8 @@ class LogManager(object):
                                                               is_add_kafka_handler=is_add_kafka_handler, ding_talk_token=ding_talk_token,
                                                               ding_talk_time_interval=ding_talk_time_interval,
                                                               formatter_template=formatter_template, )
+        if cls._judge_logger_has_handler_type(logger, CompatibleSMTPSSLHandler):
+            return logger
         smtp_handler = CompatibleSMTPSSLHandler(mailhost, fromaddr,
                                                 toaddrs,
                                                 subject,
@@ -1198,24 +1234,27 @@ class LogManager(object):
                 self.logger.removeHandler(handler)
 
     def __add_a_hanlder(self, handlerx: logging.Handler):
-        for hdlr in self.logger.handlers:
-            if type(hdlr) == type(handlerx):
-                return
         handlerx.setLevel(10)
         handlerx.setFormatter(self._formatter)
         self.logger.addHandler(handlerx)
+
+    @staticmethod
+    def _judge_logger_has_handler_type(logger, handler_type: type):
+        for hr in logger.handlers:
+            if isinstance(hr, handler_type):
+                return True
 
     def __add_handlers(self):
         pass
 
         # REMIND 添加控制台日志
-        if self._is_add_stream_handler:
+        if not (self._judge_logger_has_handler_type(self.logger, ColorHandler) or self._judge_logger_has_handler_type(self.logger, logging.StreamHandler)) and self._is_add_stream_handler:
             handler = ColorHandler(is_pycharm_2019=self._is_pycharm_2019) if not self._do_not_use_color_handler else logging.StreamHandler()  # 不使用streamhandler，使用自定义的彩色日志
             # handler = logging.StreamHandler()
             self.__add_a_hanlder(handler)
 
         # REMIND 添加多进程安全切片的文件日志
-        if all([self._log_path, self._log_filename]):
+        if not self._judge_logger_has_handler_type(self.logger, ConcurrentRotatingFileHandler) and all([self._log_path, self._log_filename]):
             if not os.path.exists(self._log_path):
                 os.makedirs(self._log_path)
             log_file = os.path.join(self._log_path, self._log_filename)
@@ -1243,12 +1282,12 @@ class LogManager(object):
             self.__add_a_hanlder(rotate_file_handler)
 
         # REMIND 添加mongo日志。
-        if self._mongo_url:
+        if not self._judge_logger_has_handler_type(self.logger, MongoHandler) and self._mongo_url:
             self.__add_a_hanlder(MongoHandler(self._mongo_url))
 
         # REMIND 添加es日志。
         # if app_config.env == 'test' and self._is_add_elastic_handler:
-        if app_config.env == 'testxxx':  # 使用kafka。不直接es。
+        if not self._judge_logger_has_handler_type(self.logger, ElasticHandler) and app_config.env == 'testxxx':  # 使用kafka。不直接es。
             """
             生产环境使用阿里云 oss日志，不使用这个。
             """
@@ -1256,11 +1295,11 @@ class LogManager(object):
 
         # REMIND 添加kafka日志。
         # if self._is_add_kafka_handler:
-        if app_config.env == 'test' and ALWAYS_ADD_KAFKA_HANDLER_IN_TEST_ENVIRONENT:
+        if not self._judge_logger_has_handler_type(self.logger, KafkaHandler) and app_config.env == 'test' and ALWAYS_ADD_KAFKA_HANDLER_IN_TEST_ENVIRONENT:
             self.__add_a_hanlder(KafkaHandler(KAFKA_BOOTSTRAP_SERVERS, ))
 
         # REMIND 添加钉钉日志。
-        if self._ding_talk_token:
+        if not self._judge_logger_has_handler_type(self.logger, DingTalkHandler) and self._ding_talk_token:
             self.__add_a_hanlder(DingTalkHandler(self._ding_talk_token, self._ding_talk_time_interval))
 
 
@@ -1479,7 +1518,7 @@ class _Test(unittest.TestCase):
         a.logger.debug('这句话不能被显示')  # 这句话不能被打印
         a.logger.error('这句话可以显示')
 
-    # @unittest.skip
+    @unittest.skip
     def test_color_and_mongo_hanlder(self):
         """测试彩色日志和日志写入mongodb"""
         very_nb_print('测试颜色和mongo')
@@ -1499,11 +1538,13 @@ class _Test(unittest.TestCase):
             logger.critical('一个critical级别的日志。' * 5)
 
 
+
+
 def test_multiprocess_file_handler():
-    logger = LogManager('abcd').get_logger_and_add_handlers(is_add_stream_handler=False, log_filename='amulti_test9.log', log_file_size=100)
+    logger = LogManager('abcd').get_logger_and_add_handlers(is_add_stream_handler=False, log_filename='amulti_test91.log', log_file_size=100)
     t1 = time.time()
-    for i in range(100, 200):
-        # time.sleep(0.000001)
+    for i in range(100000, 200000):
+        time.sleep(0.000001)
         logger.debug(f'{i}a')
         if i % 10000 == 0:
             very_nb_print(i)
@@ -1512,6 +1553,7 @@ def test_multiprocess_file_handler():
 
 
 if __name__ == "__main__":
-    # unittest.main()
-    from multiprocessing import Process
-    [Process(target=test_multiprocess_file_handler).start() for _ in range(10)]
+    unittest.main()
+    # from multiprocessing import Process
+    #
+    # [Process(target=test_multiprocess_file_handler, ).start() for _ in range(10)]

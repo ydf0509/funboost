@@ -52,6 +52,6 @@ consumer_add = get_consumer('queue_test569', consuming_function=add, threads_num
 #                             broker_kind=2, concurrent_mode=2)  # 通过设置
 
 if __name__ == '__main__':
-    ConsumersManager.show_all_consumer_info()
+    # ConsumersManager.show_all_consumer_info()
     consumer_add.start_consuming_message()
     # consumer_sub.start_consuming_message()

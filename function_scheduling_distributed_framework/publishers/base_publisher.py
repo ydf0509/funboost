@@ -4,6 +4,7 @@
 import abc
 import atexit
 import json
+import uuid
 import time
 import typing
 from functools import wraps
@@ -11,19 +12,50 @@ from threading import Lock
 import amqpstorm
 from pika.exceptions import AMQPError as PikaAMQPError
 
-from function_scheduling_distributed_framework.utils import LoggerLevelSetterMixin, LogManager, decorators
+from function_scheduling_distributed_framework.utils import LoggerLevelSetterMixin, LogManager, decorators, RedisMixin
+
+
+class RedisAsyncResult(RedisMixin):
+    def __init__(self, task_id, timeout=120):
+        self.task_id = task_id
+        self.timeout = timeout
+        self._has_pop = False
+        self._status_and_result = None
+
+    def set_timeout(self, timeout=60):
+        self.timeout = timeout
+        return self
+
+    @property
+    def status_and_result(self):
+        if not self._has_pop:
+            self._status_and_result = json.loads(self.redis_db_frame.blpop(self.task_id, self.timeout)[1])
+            self._has_pop = True
+        return self._status_and_result
+
+    def get(self):
+        return self.status_and_result['result']
+
+    @property
+    def result(self):
+        return self.get()
+
+    def is_success(self):
+        return self.status_and_result['success']
 
 
 class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     has_init_broker = 0
 
-    def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True, clear_queue_within_init=False, is_add_publish_time=True, ):
+    def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True, clear_queue_within_init=False, is_add_publish_time=True, is_using_rpc_mode=False):
         """
         :param queue_name:
         :param log_level_int:
         :param logger_prefix:
         :param is_add_file_handler:
         :param clear_queue_within_init:
+        :param is_add_publish_time:是否添加发布时间，以后废弃，都添加。
+        :param is_using_rpc_mode:是否使用rpc模式，发布端将可以获取消费端的结果。需要安装redis和额外的性能。
         """
         self._queue_name = queue_name
         if logger_prefix != '':
@@ -42,6 +74,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.logger.info(f'{self.__class__} 被实例化了')
         self.publish_msg_num_total = 0
         self._is_add_publish_time = is_add_publish_time
+        self._is_using_rpc_mode = is_using_rpc_mode
         self.__init_time = time.time()
         atexit.register(self.__at_exit)
         if clear_queue_within_init:
@@ -49,6 +82,10 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def set_is_add_publish_time(self, is_add_publish_time=True):
         self._is_add_publish_time = is_add_publish_time
+        return self
+
+    def set_is_using_rpc_mode(self, is_using_rpc_mode=True):
+        self._is_using_rpc_mode = is_using_rpc_mode
         return self
 
     def _init_count(self):
@@ -62,9 +99,9 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def publish(self, msg: typing.Union[str, dict]):
         if isinstance(msg, str):
             msg = json.loads(msg)
-        if self._is_add_publish_time:
-            # msg.update({'publish_time': time.time(), 'publish_time_format': time_util.DatetimeConverter().datetime_str})
-            msg.update({'publish_time': round(time.time(), 4), })
+        task_id = f'{self._queue_name}_result:{uuid.uuid4()}'
+        msg['extra'] = extra_params = {'is_using_rpc_mode': self._is_using_rpc_mode, 'task_id': task_id}
+        extra_params['publish_time'] = round(time.time(), 4)
         t_start = time.time()
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(self.concrete_realization_of_publish)(json.dumps(msg))
         self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg}')
@@ -74,6 +111,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if time.time() - self._current_time > 10:
             self.logger.info(f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 中')
             self._init_count()
+        return RedisAsyncResult(task_id)
 
     @abc.abstractmethod
     def concrete_realization_of_publish(self, msg):

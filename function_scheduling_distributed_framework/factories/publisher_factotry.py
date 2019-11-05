@@ -14,14 +14,15 @@ from function_scheduling_distributed_framework.publishers.rabbitmq_rabbitpy_publ
 from function_scheduling_distributed_framework.publishers.redis_publisher import RedisPublisher
 
 
-def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=False, clear_queue_within_init=False, is_add_publish_time=False, broker_kind=0):
+def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=True, clear_queue_within_init=False, is_add_publish_time=True, is_using_rpc_mode=False, broker_kind=0):
     """
     :param queue_name:
     :param log_level_int:
     :param logger_prefix:
     :param is_add_file_handler:
     :param clear_queue_within_init:
-    :param is_add_publish_time:是否添加发布时间到中间件，如果设置了过期时间不为0，需要设为True
+    :param is_add_publish_time:是否添加发布时间，以后废弃，都添加。
+    :param is_using_rpc_mode:是否使用rpc模式，发布端将可以获取消费端的结果。需要安装redis和额外的性能。
     :param broker_kind: 中间件或使用包的种类。
     :return:
     """

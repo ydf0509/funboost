@@ -29,7 +29,7 @@ from function_scheduling_distributed_framework.concurrent_pool.custom_gevent_poo
 from function_scheduling_distributed_framework.concurrent_pool.custom_threadpool_executor import CustomThreadPoolExecutor, check_not_monkey
 from function_scheduling_distributed_framework.consumers.redis_filter import RedisFilter
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
-from function_scheduling_distributed_framework.utils import LoggerLevelSetterMixin, LogManager, decorators, nb_print, LoggerMixin, time_util
+from function_scheduling_distributed_framework.utils import LoggerLevelSetterMixin, LogManager, decorators, nb_print, LoggerMixin, time_util, RedisMixin
 from function_scheduling_distributed_framework.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
 from function_scheduling_distributed_framework.utils.mongo_util import MongoMixin
 
@@ -52,6 +52,10 @@ class ExceptionForRequeue(Exception):
     """框架检测到此错误，重新放回队列中"""
 
 
+def _get_publish_time(paramsx):
+    return paramsx.get('extra', {}).get('publish_time', None) or paramsx.get('publish_time', None)
+
+
 class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
     host_name = socket.gethostname()
     host_process = f'{host_name} - {os.getpid()}'
@@ -61,9 +65,10 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
     def __init__(self, queue_name, fucntion_name, params):
         self.queue_name = queue_name
         self.function = fucntion_name
-        if 'publish_time' in params:
-            self.publish_time_str = time_util.DatetimeConverter(params['publish_time']).datetime_str
-        function_params = delete_keys_and_return_new_dict(params, ['publish_time', 'publish_time_format'])
+        publish_time = _get_publish_time(params)
+        if publish_time:
+            self.publish_time_str = time_util.DatetimeConverter(publish_time).datetime_str
+        function_params = delete_keys_and_return_new_dict(params, ['publish_time', 'publish_time_format', 'extra'])
         self.params = function_params
         self.params_str = json.dumps(function_params)
         self.result = ''
@@ -76,7 +81,7 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         self.total_thread = threading.active_count()
         self.set_log_level(20)
 
-    def get_status_dict(self):
+    def get_status_dict(self, without_datetime_obj=False):
         self.time_cost = round(time.time() - self.time_start, 3)
         item = self.__dict__
         item['host_name'] = self.host_name
@@ -89,11 +94,13 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
             json.dumps(item['result'])  # 不希望存不可json序列化的复杂类型。麻烦。存这种类型的结果是伪需求。
         except TypeError:
             item['result'] = str(item['result'])[:1000]
-        item.update({'insert_time': datetime.datetime.now(),
-                     'insert_time_str': datetime_str,
+        item.update({'insert_time_str': datetime_str,
                      'insert_minutes': datetime_str[:-3],
-                     'utime': datetime.datetime.utcnow(),
                      })
+        if not without_datetime_obj:
+            item.update({'insert_time': datetime.datetime.now(),
+                         'utime': datetime.datetime.utcnow(),
+                         })
         item['_id'] = str(uuid.uuid4())
         self.logger.debug(item)
         return item
@@ -202,6 +209,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._publisher_of_same_queue.set_is_add_publish_time()
         return self._publisher_of_same_queue
 
+    def bulid_a_new_publisher_of_same_queue(self):
+        return get_publisher(self._queue_name, broker_kind=self.BROKER_KIND)
+
     @classmethod
     def join_shedual_task_thread(cls):
         """
@@ -272,7 +282,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._max_retry_times = max_retry_times
         self._is_print_detail_exception = is_print_detail_exception
         if qps != 0:
-            msg_schedule_time_intercal = 1.0 / qps   # 使用qps覆盖消息调度间隔，以qps为准，以后废弃msg_schedule_time_intercal这个参数。
+            msg_schedule_time_intercal = 1.0 / qps  # 使用qps覆盖消息调度间隔，以qps为准，以后废弃msg_schedule_time_intercal这个参数。
         self._msg_schedule_time_intercal = msg_schedule_time_intercal if msg_schedule_time_intercal > 0.001 else 0.001
         self._msg_expire_senconds = msg_expire_senconds
 
@@ -391,9 +401,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             try:
                 function_run = self.consuming_function if self._function_timeout == 0 else self._concurrent_mode_dispatcher.timeout_deco(self._function_timeout)(self.consuming_function)
                 if self._is_consuming_function_use_multi_params:  # 消费函数使用传统的多参数形式
-                    function_result_status.result = function_run(**delete_keys_and_return_new_dict(kw['body'], ['publish_time', 'publish_time_format']))
+                    function_result_status.result = function_run(**delete_keys_and_return_new_dict(kw['body'], ['publish_time', 'publish_time_format', 'extra']))
                 else:
-                    function_result_status.result = function_run(delete_keys_and_return_new_dict(kw['body'], ['publish_time', 'publish_time_format']))  # 消费函数使用单个参数，参数自身是一个字典，由键值对表示各个参数。
+                    function_result_status.result = function_run(delete_keys_and_return_new_dict(kw['body'], ['publish_time', 'publish_time_format', 'extra']))  # 消费函数使用单个参数，参数自身是一个字典，由键值对表示各个参数。
                 function_result_status.success = True
                 self._confirm_consume(kw)
                 if self._do_task_filtering:
@@ -413,13 +423,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.logger.critical(f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._max_retry_times} 后,仍然失败， 入参是 【 {kw["body"]} 】')
             self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
         self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
+        if kw['body'].get('extra', {}).get('is_using_rpc_mode', False):
+            RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
+            RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
 
     @abc.abstractmethod
     def _confirm_consume(self, kw):
         """确认消费"""
         raise NotImplementedError
-
-        # noinspection PyUnusedLocal
 
     def check_heartbeat_and_message_count(self):
         self._msg_num_in_broker = self.publisher_of_same_queue.get_message_count()
@@ -440,8 +451,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
             return
-        if self._msg_expire_senconds != 0 and time.time() - self._msg_expire_senconds > kw['body']['publish_time']:
-            self.logger.warning(f'消息发布时戳是 {kw["body"]["publish_time"]} {kw["body"].get("publish_time_format", "")},距离现在 {round(time.time() - kw["body"]["publish_time"], 4)} 秒 ,'
+        publish_time = _get_publish_time(kw['body'])
+        if self._msg_expire_senconds != 0 and time.time() - self._msg_expire_senconds > publish_time:
+            self.logger.warning(f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(time.time() - publish_time, 4)} 秒 ,'
                                 f'超过了指定的 {self._msg_expire_senconds} 秒，丢弃任务')
             self._confirm_consume(kw)
             return 0

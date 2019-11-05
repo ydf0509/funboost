@@ -249,7 +249,7 @@ consumer.start_consuming_message()
 (需要设置函数状态持久化为True才支持此项功能，默认不开启函数状态结果持久化，
 使用的是自动批量聚合插入mongo的方式，需要安装mongodb)。
 
-![Image text](http://i1.fuimg.com/699839/bebd8cddb9ac1260.png)
+![Image text](https://i.niupic.com/images/2019/11/05/_476.png)
 
 实测在进行阻塞式任务时候，性能略超过celery。
 
@@ -266,15 +266,15 @@ def add(a, b):
     logger.info(f'计算 {a} + {b} 得到的结果是  {a + b}')
     return a + b
 ```
-![Image text](http://i2.tiimg.com/699839/e9fdcb247fee663d.png)
+![Image text](https://i.niupic.com/images/2019/11/05/_495.png)
 
 3)任务消费统计曲线。
-![Image text](http://i2.tiimg.com/699839/62e857fb050fc67d.png)
+![Image text](https://i.niupic.com/images/2019/11/05/_496.png)
 
 ### 3.1.4 我开发时候的状态和使用的是pycharm工具和测试。
 在修改为每行最大240个字符后，其余的任何警告级别都保持默认的情况下，
 所有文件任意一行在pycahrm的code编辑区域的滚动条做到了0个黄色，和使用alt + shift + i检查，符合极致的pep8规则。
-![Image text](http://i2.tiimg.com/699839/d0df7dda607bac79.png)
+![Image text](https://i.niupic.com/images/2019/11/05/_498.png)
 
 ## 4.celery和这个框架比，存储的内容差异
 ### 4.1celery的

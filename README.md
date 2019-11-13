@@ -620,6 +620,9 @@ rabbitmq nsq都有官方自带速率显示。
 ~~~
 对比concurrent_log_handler包的 ConcurrentRotatingFileHandler ，windows下性能提高100倍，linux提高10倍。
 ~~~
+默默改变多进程文件切片日志，steramhanlder不变。
+![Image text](https://i.niupic.com/images/2019/11/13/_1785.png)
+
 
 ## 6.4 在utils增加一个工具，基于pysnooper 0.2.8版本以非猴子补丁方式修改后的pysnoper。
 ~~~

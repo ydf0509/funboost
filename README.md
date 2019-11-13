@@ -620,3 +620,15 @@ rabbitmq nsq都有官方自带速率显示。
 ~~~
 对比concurrent_log_handler包的 ConcurrentRotatingFileHandler ，windows下性能提高100倍，linux提高10倍。
 ~~~
+
+## 6.4 在utils增加一个工具，基于pysnooper 0.2.8版本以非猴子补丁方式修改后的pysnoper。
+~~~
+主要在原来基础上实现汉化 彩色 可点击跳转功能。只是放在里面，功能与此框架完全无关。
+用法见test_pysnooper.py文件。
+
+可以用来查看执行了哪些代码行 逻辑分支走向，也可以用来度量程序性能，能精确显示运行了多少行python代码。
+例如这个可以发现redis.set命令需要执行1000行py代码，
+requests.get("https://www.baidu.com")需要执行3万行代码，如果不用工具是万万想不到到底执行了多少行python代码的。
+~~~
+
+![Image text](https://i.niupic.com/images/2019/11/13/_1672.png)

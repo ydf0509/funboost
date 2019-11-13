@@ -29,13 +29,14 @@ logger = LogManager('test_pysnoop').get_logger_and_add_handlers(log_filename='te
 @pysnooper_ydf.snoop(depth=300)
 def main():
     try:
-        logger.info('测试pysnoop')
+        # logger.info('测试pysnoop')
         for i in range(5):
             print(i)
-        # resp = requests.get('http://www.baidu.com')
+        j = 333
+        # resp = requests.get('https://www.baidu.com')  # 测试深层次跳转下的代码轨迹自动跟踪效果。
         # logger.debug(resp.text)
-        # print(RedisMixin().redis_db_frame.keys())
-        # bar()
+        # print(RedisMixin().redis_db_frame.set('key_test','1'))
+        bar()
     except:
         pass
 

@@ -12,7 +12,7 @@ for i in range(10000):
     # time.sleep(0.2)
     async_result = pb_add.publish(dict(a=i, b=2 * i))
     # print(async_result.status_and_result)
-    # print('结果', async_result.result)
+    print('结果', async_result.result)
     # consumer_sub.publisher_of_same_queue.publish({'x':i,'y':i * 6})
 
 """

@@ -618,7 +618,8 @@ rabbitmq nsq都有官方自带速率显示。
 
 ## 6.3 更新日志，大幅度提高多进程安全切片的文件日志写入性能。
 ~~~
-对比concurrent_log_handler包的 ConcurrentRotatingFileHandler ，windows下性能提高100倍，linux提高10倍，不信的可以测试对比原三方版。
+对比concurrent_log_handler包的 ConcurrentRotatingFileHandler ，
+windows下性能提高100倍，linux提高10倍，不信的可以测试对比原三方版。
 ~~~
 日志用法不变。默默改变多进程文件切片日志，steramhanlder不变，任然是五彩可点击跳转。
 ![Image text](https://i.niupic.com/images/2019/11/13/_1785.png)

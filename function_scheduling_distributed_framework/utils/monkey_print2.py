@@ -2,7 +2,8 @@
 # @Author  : ydf
 # @Time    : 2019/5/9 19:02
 """
-不直接给print打补丁，自己重新赋值。
+对内置print函数打猴子补丁。使项目中任意print自动变化成可点击跳转形式。
+如果项目太大，有人疯狂print无前缀提示的变量，由于不能使用全局字母前缀搜索，很难找出print是从哪里冒出来的，打这个猴子补丁后，能够轻松找出来是哪里print的。
 
 """
 import sys
@@ -27,8 +28,32 @@ def nb_print(*args, sep=' ', end='\n', file=None):
 
 # print = nb_print
 
+
+def patch_print(only_effect_on_current_module=False):
+    """
+    Python有几个namespace，分别是
+
+    locals
+
+    globals
+
+    builtin
+
+    其中定义在函数内声明的变量属于locals，而模块内定义的函数属于globals。
+
+    :param only_effect_on_current_module:
+    :return:
+    """
+    if only_effect_on_current_module:
+        # noinspection PyShadowingNames,PyUnusedLocal,PyShadowingBuiltins
+        print = nb_print  # REMIND 这样做只能对当前模块生效，要使项目所有文件的任意print自动变化，需要 __builtins__.print = nb_print
+    else:
+        __builtins__.print = nb_print
+
+
 if __name__ == '__main__':
+    print('before patch')
+    patch_print()
     print(0)
-    nb_print(123, 'abc')
-    print = nb_print
+    print(123, 'abc')
     print(456, 'def')

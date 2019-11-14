@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 """
+基于0.0.11版本，对其打猴子补丁改进的。现在推荐使用pysnooper_ydf里面的，不需要用这里。
 DeBug Python代码全靠print函数？换用这个一天2K+Star的工具吧
 对最火热的github库，进行了三点改造。
 1、由于部署一般是linux，开发是windows，所以可以自动使其在linux上失效，调试会消耗性能。

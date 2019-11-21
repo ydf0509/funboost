@@ -2,12 +2,13 @@
 # @Author  : ydf
 # @Time    : 2019/5/9 19:02
 """
-对内置print函数打猴子补丁。使项目中任意print自动变化成可点击跳转形式。
-如果项目太大，有人疯狂print无前缀提示的变量，由于不能使用全局字母前缀搜索，很难找出print是从哪里冒出来的，打这个猴子补丁后，能够轻松找出来是哪里print的。
+不直接给print打补丁，自己重新赋值。
 
 """
+import logging
 import sys
 import time
+import traceback
 
 
 # noinspection PyProtectedMember,PyUnusedLocal,PyIncorrectDocstring
@@ -26,10 +27,34 @@ def nb_print(*args, sep=' ', end='\n', file=None):
     sys.stdout.write(f'"{file_name}:{line}"  {time.strftime("%H:%M:%S")}  \033[0;94m{"".join(args)}\033[0m\n')  # 36  93 96 94
 
 
+# noinspection PyPep8,PyUnusedLocal
+def print_exception(etype, value, tb, limit=None, file=None, chain=True):
+    """
+    避免每行有两个可跳转的，导致第二个可跳转的不被ide识别。
+    主要是针对print_exception，logging.exception里面会调用这个函数。
+
+    :param etype:
+    :param value:
+    :param tb:
+    :param limit:
+    :param file:
+    :param chain:
+    :return:
+    """
+    if file is None:
+        file = sys.stderr
+    for line in traceback.TracebackException(
+            type(value), value, tb, limit=limit).format(chain=chain):
+        # print(line, file=file, end="")
+        if file != sys.stderr:
+            sys.stderr.write(f'{line} \n')
+        else:
+            print(line, file=file, end="")
+
+
 # print = nb_print
 
-
-def patch_print(only_effect_on_current_module=False):
+def patch_print():
     """
     Python有几个namespace，分别是
 
@@ -41,19 +66,24 @@ def patch_print(only_effect_on_current_module=False):
 
     其中定义在函数内声明的变量属于locals，而模块内定义的函数属于globals。
 
-    :param only_effect_on_current_module:
     :return:
     """
-    if only_effect_on_current_module:
-        # noinspection PyShadowingNames,PyUnusedLocal,PyShadowingBuiltins
-        print = nb_print  # REMIND 这样做只能对当前模块生效，要使项目所有文件的任意print自动变化，需要 __builtins__.print = nb_print
-    else:
+    try:
         __builtins__.print = nb_print
+    except AttributeError:
+        """
+        <class 'AttributeError'>
+        'dict' object has no attribute 'print'
+        """
+        # noinspection PyUnresolvedReferences
+        __builtins__['print'] = nb_print
+    traceback.print_exception = print_exception
 
 
 if __name__ == '__main__':
     print('before patch')
     patch_print()
     print(0)
-    print(123, 'abc')
+    nb_print(123, 'abc')
+    print = nb_print
     print(456, 'def')

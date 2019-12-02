@@ -306,8 +306,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._is_consuming_function_use_multi_params = is_consuming_function_use_multi_params
 
-        self._lock_for_pika = Lock()
-
         self._execute_task_times_every_minute = 0  # 每分钟执行了多少次任务。
         self._lock_for_count_execute_task_times_every_minute = Lock()
         self._current_time_for_execute_task_times_every_minute = time.time()

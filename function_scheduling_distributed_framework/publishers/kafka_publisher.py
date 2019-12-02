@@ -5,9 +5,11 @@
 # noinspection PyPackageRequirements
 import atexit
 
+# noinspection PyPackageRequirements
 from kafka import KafkaProducer, KafkaAdminClient
 # noinspection PyPackageRequirements
 from kafka.admin import NewTopic
+# noinspection PyPackageRequirements
 from kafka.errors import TopicAlreadyExistsError
 
 from function_scheduling_distributed_framework import frame_config

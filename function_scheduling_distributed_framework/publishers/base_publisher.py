@@ -65,7 +65,6 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # self.rabbit_client = RabbitMqFactory(is_use_rabbitpy=is_use_rabbitpy).get_rabbit_cleint()
         # self.channel = self.rabbit_client.creat_a_channel()
         # self.queue = self.channel.queue_declare(queue=queue_name, durable=True)
-        self._lock_for_pika = Lock()
         self._lock_for_count = Lock()
         self._current_time = None
         self.count_per_minute = None
@@ -101,6 +100,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             msg = json.loads(msg)
         task_id = f'{self._queue_name}_result:{uuid.uuid4()}'
         msg['extra'] = extra_params = {'is_using_rpc_mode': self._is_using_rpc_mode, 'task_id': task_id}
+        # noinspection PyTypeChecker
         extra_params['publish_time'] = round(time.time(), 4)
         t_start = time.time()
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(self.concrete_realization_of_publish)(json.dumps(msg))

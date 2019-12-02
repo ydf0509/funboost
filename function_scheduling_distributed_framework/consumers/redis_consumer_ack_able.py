@@ -12,6 +12,7 @@ from function_scheduling_distributed_framework.utils import RedisMixin
 class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractConsumer, ):
     """
     redis作为中间件实现的。将取出来的消息同时放入一个set中，代表unack消费状态。以支持对机器和python进程的随意关闭和断电。
+    和celery的配置  task_reject_on_worker_lost = True task_acks_late = True后，处理逻辑几乎不约而同相似。
     """
     BROKER_KIND = 9
 

@@ -2,6 +2,7 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 13:27
 import json
+from threading import Lock
 
 from pika.exceptions import AMQPError
 
@@ -17,6 +18,10 @@ class RabbitmqConsumer(AbstractConsumer):
     使用pika包实现的。
     """
     BROKER_KIND = 0
+
+    # noinspection PyAttributeOutsideInit
+    def custom_init(self):
+        self._lock_for_pika = Lock()
 
     def _shedual_task(self):
         channel = RabbitMqFactory(is_use_rabbitpy=0).get_rabbit_cleint().creat_a_channel()

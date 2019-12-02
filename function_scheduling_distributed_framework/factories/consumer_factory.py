@@ -17,12 +17,16 @@ from function_scheduling_distributed_framework.consumers.redis_consumer import R
 from function_scheduling_distributed_framework.consumers.redis_consumer_ack_able import RedisConsumerAckAble
 
 
-def get_consumer(queue_name, *, consuming_function: Callable = None, function_timeout=0, threads_num=50, specify_threadpool=None, concurrent_mode=1,
-                 max_retry_times=3, log_level=10, is_print_detail_exception=True, msg_schedule_time_intercal=0.0, qps=0, msg_expire_senconds=0,
-                 logger_prefix='', create_logger_file=True, do_task_filtering=False, is_consuming_function_use_multi_params=True,
+def get_consumer(queue_name, *, consuming_function: Callable = None, function_timeout=0, threads_num=50,
+                 specify_threadpool=None, concurrent_mode=1,
+                 max_retry_times=3, log_level=10, is_print_detail_exception=True, msg_schedule_time_intercal=0.0,
+                 qps=0, msg_expire_senconds=0,
+                 logger_prefix='', create_logger_file=True, do_task_filtering=False,
+                 is_consuming_function_use_multi_params=True,
                  is_do_not_run_by_specify_time_effect=False, do_not_run_by_specify_time=('10:00:00', '22:00:00'),
                  schedule_tasks_on_main_thread=False,
-                 function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600), broker_kind=0):
+                 function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600),
+                 broker_kind=0):
     """
     使用工厂模式再包一层，通过设置数字来生成基于不同中间件或包的consumer。
     :param queue_name: 队列名字。

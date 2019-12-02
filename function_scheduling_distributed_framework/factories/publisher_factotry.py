@@ -14,7 +14,9 @@ from function_scheduling_distributed_framework.publishers.rabbitmq_rabbitpy_publ
 from function_scheduling_distributed_framework.publishers.redis_publisher import RedisPublisher
 
 
-def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=True, clear_queue_within_init=False, is_add_publish_time=True, is_using_rpc_mode=False, broker_kind=0):
+def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=True,
+                  clear_queue_within_init=False, is_add_publish_time=True, is_using_rpc_mode=False,
+                  broker_kind=0):
     """
     :param queue_name:
     :param log_level_int:

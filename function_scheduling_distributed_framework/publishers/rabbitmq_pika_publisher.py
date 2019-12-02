@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 12:03
+from threading import Lock
+
 from pika import BasicProperties
 
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher, deco_mq_conn_error
@@ -11,6 +13,10 @@ class RabbitmqPublisher(AbstractPublisher):
     """
     使用pika实现的。
     """
+
+    # noinspection PyAttributeOutsideInit
+    def custom_init(self):
+        self._lock_for_pika = Lock()
 
     # noinspection PyAttributeOutsideInit
     def init_broker(self):

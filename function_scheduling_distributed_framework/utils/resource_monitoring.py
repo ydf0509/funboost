@@ -58,6 +58,7 @@ print(psutil.virtual_memory())
 
 
 class ResourceMonitor(LoggerMixin, LoggerLevelSetterMixin, MongoMixin):
+    # ResourceMonitor(is_save_info_to_mongo=True).set_log_level(20).start_build_info_loop_on_daemon_thread(60)
     cpu_count = psutil.cpu_count()
     host_name = socket.gethostname()
 

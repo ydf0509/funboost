@@ -34,7 +34,7 @@ def add(a, b):
 def sub(x, y):
     logger.info(f'消费此消息 {x} - {y} 中。。。。。')
     time.sleep(0.4)  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
-    if random.randint(1, 10) == 4:
+    if random.randint(1, 10) == 4000:
         raise ValueError('4444')
     logger.info(f'计算 {x} - {y} 得到的结果是  {x - y}')
 
@@ -47,11 +47,11 @@ consumer_add = get_consumer('queue_test569', consuming_function=add, threads_num
                             function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600),
                             broker_kind=2, concurrent_mode=2, )  # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等9种中间件或包。
 
-consumer_sub = get_consumer('queue_test57', consuming_function=sub, threads_num=50, qps=5, log_level=10, logger_prefix='xxxxx平台消费',
+consumer_sub = get_consumer('queue_test57', consuming_function=sub, threads_num=500, qps=108, log_level=10, logger_prefix='xxxxx平台消费',
                             function_timeout=80, is_print_detail_exception=True,
-                            broker_kind=2, concurrent_mode=2)  # 通过设置
+                            broker_kind=0, concurrent_mode=2)  # 通过设置
 
 if __name__ == '__main__':
     # ConsumersManager.show_all_consumer_info()
-    consumer_add.start_consuming_message()
+    # consumer_add.start_consuming_message()
     consumer_sub.start_consuming_message()

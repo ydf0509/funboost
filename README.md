@@ -241,9 +241,10 @@ consumer.start_consuming_message()
 ### 3.1.2 linux运行中截图,使用gevent模式，减法消费控频更厉害，所以执行次数更少。
 ![Image text](https://i.niupic.com/images/2019/09/16/_222.png)
 
-### 3.2控频功能证明，由于截图是外网调度rabbitmq的消息有延迟，没有精确到函数每秒运行10次。
+### 3.2控频功能证明，使用内网连接broker，设置每秒运行100次需要消耗任意随机时长的函数，能够做到持续精确控频，频率误差小。如果设置每秒精确运行超过5000次以上的固定频率，前提是cpu够强。
 
-![Image text](https://i.niupic.com/images/2019/08/09/_462.png)
+![Image text](https://i.niupic.com/images/2019/12/16/69QI.png
+)
 
 ### 3.1.3 函数执行结果及状态搜索查看
 (需要设置函数状态持久化为True才支持此项功能，默认不开启函数状态结果持久化，

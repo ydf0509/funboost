@@ -1,3 +1,6 @@
+"""
+主要用用来测试相同基准下的celery和此框架的性能对比。
+"""
 import time
 import celery
 from celery import platforms
@@ -31,6 +34,7 @@ class Config2:
         '求和啊': {"queue": "queue_add", },
         # 'test_frame.test_frame_using_thread.test_celery.test_celery_app.sub': {"queue": 'queue_sub'},
         'sub': {"queue": 'queue_sub'},
+        'f1': {"queue": 'queue_f1'},
     }
 
     # task_reject_on_worker_lost = True #配置这两项可以随意停止
@@ -55,14 +59,20 @@ def sub(x, y):
     print(f'计算 {x} - {y} 得到的结果是  {x - y}')
     return x - y
 
+
 print(sub)
 
 if __name__ == '__main__':
+    """
+     Pool implementation: prefork (default), eventlet,
+                        gevent or solo.
+    """
     """
     celery_app.worker_main(
         argv=['worker', '--pool=gevent', '--concurrency=100', '-n', 'worker1@%h', '--loglevel=debug',
               '--queues=queue_add', '--detach','--logfile=/pythonlogs/celery_add.log'])
     """
+    # queue_add,queue_sub,queue_f1
     celery_app.worker_main(
-        argv=['worker', '--pool=gevent', '--concurrency=5000', '-n', 'worker1@%h', '--loglevel=debug',
-              '--queues=queue_add,queue_sub', '--detach', ])
+        argv=['worker', '--pool=gevent', '--concurrency=5', '-n', 'worker1@%h', '--loglevel=debug',
+              '--queues=queue_f1', '--detach', ])

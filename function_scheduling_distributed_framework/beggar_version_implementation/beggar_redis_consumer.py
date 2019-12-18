@@ -46,7 +46,7 @@ class BeggarRedisConsumer:  # 保持和完整版差不多的代码形态。如�
 
 def start_consuming_message(queue_name, consume_function, threads_num):
     """
-    看不懂有类的代码，一看到类头脑发晕的人，不用看上面那个，看这个函数，10行代码实现分布式函数执行框架。
+    看不懂有类的代码，一看到类头脑发晕的人，不用看上面那个，看这个函数，10行代码的函数实现乞丐版分布式函数执行框架。
     """
     pool = ThreadPoolExecutor(threads_num)
     while True:

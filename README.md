@@ -639,7 +639,7 @@ requests.get("https://www.baidu.com")需要执行3万行代码，如果不用工
 
 ![Image text](https://i.niupic.com/images/2019/11/13/_1672.png)
 
-## 6.5 新增一个10行代码的函数的最精简乞丐版实现的分布式函数执行框架。
+## 6.5 新增一个10行代码的函数的最精简乞丐版实现的分布式函数执行框架，演示最本质实现原理。
 
 beggar_redis_consumer.py文件的 start_consuming_message函数。
 ~~~python
@@ -663,5 +663,5 @@ def start_consuming_message(queue_name, consume_function, threads_num):
             print(e)
 ~~~
 
-看完整版代码很长很多，是由于控制功能太多，中间件类型多，并发模式多。
+看完整版代码很长很多，是由于控制功能太多，中间件类型多，并发模式多，
 所以加入一个最精简版，精简版的本质实现原理和完整版相同。

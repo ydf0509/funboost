@@ -69,10 +69,10 @@ if __name__ == '__main__':
     """
     """
     celery_app.worker_main(
-        argv=['worker', '--pool=gevent', '--concurrency=100', '-n', 'worker1@%h', '--loglevel=debug',
+        argv=['worker', '--pool=prefork', '--concurrency=100', '-n', 'worker1@%h', '--loglevel=debug',
               '--queues=queue_add', '--detach','--logfile=/pythonlogs/celery_add.log'])
     """
     # queue_add,queue_sub,queue_f1
     celery_app.worker_main(
-        argv=['worker', '--pool=gevent', '--concurrency=5', '-n', 'worker1@%h', '--loglevel=debug',
+        argv=['worker', '--pool=thread', '--concurrency=5', '-n', 'worker1@%h', '--loglevel=debug',
               '--queues=queue_f1', '--detach', ])

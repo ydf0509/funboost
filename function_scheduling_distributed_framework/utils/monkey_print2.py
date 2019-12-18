@@ -87,3 +87,4 @@ if __name__ == '__main__':
     nb_print(123, 'abc')
     print = nb_print
     print(456, 'def')
+

@@ -6,7 +6,6 @@ import time
 
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
 from function_scheduling_distributed_framework.consumers.confirm_mixin import ConsumerConfirmMixinWithTheHelpOfRedis
-from function_scheduling_distributed_framework.utils import RedisMixin
 
 
 class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractConsumer, ):
@@ -30,3 +29,4 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractConsu
 
     def _requeue(self, kw):
         self.redis_db_frame.rpush(self._queue_name, json.dumps(kw['body']))
+

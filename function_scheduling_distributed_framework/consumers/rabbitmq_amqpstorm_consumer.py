@@ -38,3 +38,5 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
 
     def _requeue(self, kw):
         kw['amqpstorm_message'].nack(requeue=True)
+
+

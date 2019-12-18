@@ -28,3 +28,4 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
 
     def _requeue(self, kw):
         self.redis_db_frame.rpush(self._queue_name, json.dumps(kw['body']))
+

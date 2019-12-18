@@ -54,7 +54,7 @@ def start_consuming_message(queue_name, consume_function, threads_num):
             redis_task = RedisMixin().redis_db_frame.blpop(queue_name, timeout=60)
             if redis_task:
                 task_str = redis_task[1].decode()
-                print(f'从redis的 [{queue_name}] 队列中 取出的消息是： {task_str}')
+                print(f'从redis的 {queue_name} 队列中 取出的消息是： {task_str}')
                 pool.submit(consume_function, **json.loads(task_str))
             else:
                 print(f'redis的 {queue_name} 队列中没有任务')

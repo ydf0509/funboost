@@ -14,16 +14,19 @@
 完整版支持10种消息队列中间件，这里只演示大家喜欢的redis作为中间件。
 """
 import json
-from redis import RedisError
+import redis
 from concurrent.futures import ThreadPoolExecutor
-from function_scheduling_distributed_framework.utils import RedisMixin
 from test_frame.my_patch_frame_config import do_patch_frame_config
-from function_scheduling_distributed_framework import patch_print
+from function_scheduling_distributed_framework import patch_print, frame_config
 
 patch_print()
+do_patch_frame_config()
+redis_db_frame = redis.Redis(host=frame_config.REDIS_HOST, password=frame_config.REDIS_PASSWORD, port=frame_config.REDIS_PORT, db=frame_config.REDIS_DB)
 
 
-class BeggarRedisConsumer:  # 保持和完整版差不多的代码形态。如果仅仅是像这里的十分简化的版本，一个函数实现也可以了。例如下面的函数。
+class BeggarRedisConsumer:
+    """保持和完整版差不多的代码形态。如果仅仅是像这里的十分简化的版本，一个函数实现也可以了。例如下面的函数。"""
+
     def __init__(self, queue_name, consume_function, threads_num):
         self.pool = ThreadPoolExecutor(threads_num)
         self.consume_function = consume_function
@@ -32,7 +35,7 @@ class BeggarRedisConsumer:  # 保持和完整版差不多的代码形态。如�
     def start_consuming_message(self):
         while True:
             try:
-                redis_task = RedisMixin().redis_db_frame.blpop(self.queue_name, timeout=60)
+                redis_task = redis_db_frame.blpop(self.queue_name, timeout=60)
                 if redis_task:
                     task_str = redis_task[1].decode()
                     print(f'从redis的 [{self.queue_name}] 队列中 取出的消息是： {task_str}  ')
@@ -40,7 +43,7 @@ class BeggarRedisConsumer:  # 保持和完整版差不多的代码形态。如�
                     self.pool.submit(self.consume_function, **task_dict)
                 else:
                     print(f'redis的 {self.queue_name} 队列中没有任务')
-            except RedisError as e:
+            except redis.RedisError as e:
                 print(e)
 
 
@@ -51,14 +54,14 @@ def start_consuming_message(queue_name, consume_function, threads_num):
     pool = ThreadPoolExecutor(threads_num)
     while True:
         try:
-            redis_task = RedisMixin().redis_db_frame.blpop(queue_name, timeout=60)
+            redis_task = redis_db_frame.blpop(queue_name, timeout=60)
             if redis_task:
                 task_str = redis_task[1].decode()
                 print(f'从redis的 {queue_name} 队列中 取出的消息是： {task_str}')
                 pool.submit(consume_function, **json.loads(task_str))
             else:
                 print(f'redis的 {queue_name} 队列中没有任务')
-        except RedisError as e:
+        except redis.RedisError as e:
             print(e)
 
 
@@ -71,12 +74,9 @@ if __name__ == '__main__':
         print(f'{x} + {y} 的结果是 {x + y}')
 
 
-    do_patch_frame_config()
-
     # 推送任务
     for i in range(1000):
-        RedisMixin().redis_db_frame.lpush('test_beggar_redis_consumer_queue', json.dumps(dict(x=i, y=i * 2)))
-
+        redis_db_frame.lpush('test_beggar_redis_consumer_queue', json.dumps(dict(x=i, y=i * 2)))
 
     # 消费任务
     # consumer = BeggarRedisConsumer('test_beggar_redis_consumer_queue', consume_function=add, threads_num=100)

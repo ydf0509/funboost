@@ -49,12 +49,12 @@ class BeggarRedisConsumer:
 
 def start_consuming_message(queue_name, consume_function, threads_num):
     """
-    看不懂有类的代码，一看到类头脑发晕的人，不用看上面那个，看这个函数，使用一个10行代码的函数实现乞丐版分布式函数执行框架。
+    看不懂有类的代码，一看到类头脑发晕的人，不用看上面那个类，看这个函数就可以，使用一个10行代码的函数实现乞丐版分布式函数执行框架。
     """
     pool = ThreadPoolExecutor(threads_num)
     while True:
         try:
-            redis_task = redis_db_frame.blpop(queue_name, timeout=60)
+            redis_task = redis_db_frame.brpop(queue_name, timeout=60)
             if redis_task:
                 task_str = redis_task[1].decode()
                 print(f'从redis的 {queue_name} 队列中 取出的消息是： {task_str}')

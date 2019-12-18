@@ -638,3 +638,30 @@ requests.get("https://www.baidu.com")需要执行3万行代码，如果不用工
 ~~~
 
 ![Image text](https://i.niupic.com/images/2019/11/13/_1672.png)
+
+## 6.5 新增一个10行代码的函数的最精简乞丐版实现的分布式函数执行框架。
+
+beggar_redis_consumer.py文件的 start_consuming_message函数。
+~~~python
+
+def start_consuming_message(queue_name, consume_function, threads_num):
+    """
+    看不懂有类的代码，一看到类头脑发晕的人，不用看上面那个类，
+    看这个函数就可以，使用一个10行代码的函数实现乞丐版分布式函数执行框架。
+    """
+    pool = ThreadPoolExecutor(threads_num)
+    while True:
+        try:
+            redis_task = redis_db_frame.brpop(queue_name, timeout=60)
+            if redis_task:
+                task_str = redis_task[1].decode()
+                print(f'从redis的 {queue_name} 队列中 取出的消息是： {task_str}')
+                pool.submit(consume_function, **json.loads(task_str))
+            else:
+                print(f'redis的 {queue_name} 队列中没有任务')
+        except redis.RedisError as e:
+            print(e)
+~~~
+
+看完整版代码很长很多，是由于控制功能太多，中间件类型多，并发模式多。
+所以加入一个最精简版，精简版的本质实现原理和完整版相同。

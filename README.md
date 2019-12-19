@@ -571,7 +571,7 @@ while 1：
   #### 5.11 怎么写框架？
    ```
     答： 需要学习真oop和36种设计模式。唯有oop编程思想和设计模式，才能持续设计开发出新的好用的包甚至框架。
-        如果有杠精不信不服这句话的，你觉得可以使用纯函数编程，使用0个类来实现这样的框架。
+        如果有不信这句话的，你觉得可以使用纯函数编程，使用0个类来实现这样的框架。
         
         如果完全不理会设计模式，实现threding gevent evenlet 3种并发模式，加上10种中间件类型，实现分布式消费流程，
         需要反复复制粘贴扣字30次。代码绝对比你这个多。例如基于nsq消息队列实现任务队列框架，加空格只用了80行。
@@ -639,16 +639,12 @@ requests.get("https://www.baidu.com")需要执行3万行代码，如果不用工
 
 ![Image text](https://i.niupic.com/images/2019/11/13/_1672.png)
 
-## 6.5 新增一个10行代码的函数的最精简乞丐版实现的分布式函数执行框架，演示最本质实现原理。
+## 6.5 新增一个10行代码的函数的最精简乞丐版实现的分布式函数执行框架，演示最本质实现原理，不要亲自这么使用。
 
 beggar_redis_consumer.py文件的 start_consuming_message函数。
 ~~~python
 
 def start_consuming_message(queue_name, consume_function, threads_num):
-    """
-    看不懂有类的代码，一看到类头脑发晕的人，不用看上面那个类，
-    看这个函数就可以，使用一个10行代码的函数实现乞丐版分布式函数执行框架。
-    """
     pool = ThreadPoolExecutor(threads_num)
     while True:
         try:
@@ -661,7 +657,23 @@ def start_consuming_message(queue_name, consume_function, threads_num):
                 print(f'redis的 {queue_name} 队列中没有任务')
         except redis.RedisError as e:
             print(e)
+
+def add(x, y):
+    time.sleep(5)
+    print(f'{x} + {y} 的结果是 {x + y}')
+    
+
+# 推送任务
+for i in range(100):
+    redis_db_frame.lpush('test_beggar_redis_consumer_queue', json.dumps(dict(x=i, y=i * 2)))
+
+# 消费任务 
+start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add, threads_num=10)
+
 ~~~
 
 看完整版代码很长很多，是由于控制功能太多，中间件类型多，并发模式多，
 所以加入一个最精简版，精简版的本质实现原理和完整版相同。
+
+
+

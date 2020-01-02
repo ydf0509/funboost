@@ -21,11 +21,12 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
                  specify_threadpool=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True, msg_schedule_time_intercal=0.0,
                  qps=0, msg_expire_senconds=0,
-                 logger_prefix='', create_logger_file=True, do_task_filtering=False,
+                 logger_prefix='', create_logger_file=True, do_task_filtering=False, task_filtering_expire_seconds=0,
                  is_consuming_function_use_multi_params=True,
                  is_do_not_run_by_specify_time_effect=False, do_not_run_by_specify_time=('10:00:00', '22:00:00'),
                  schedule_tasks_on_main_thread=False,
                  function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600),
+                 is_using_rpc_mode=False,
                  broker_kind=0):
     """
     使用工厂模式再包一层，通过设置数字来生成基于不同中间件或包的consumer。
@@ -47,12 +48,16 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
     :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
     :param create_logger_file : 是否创建文件日志
     :param do_task_filtering :是否执行基于函数参数的任务过滤
+    :param task_filtering_expire_seconds:任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ，
+           30分钟前发布过1 + 2 的任务，现在仍然执行，
+           如果是30分钟以内发布过这个任务，则不执行1 + 2，现在把这个逻辑集成到框架，一般用于接口价格缓存。
     :param is_consuming_function_use_multi_params  函数的参数是否是传统的多参数，不为单个body字典表示多个参数。
     :param is_do_not_run_by_specify_time_effect :是否使不运行的时间段生效
     :param do_not_run_by_specify_time   :不运行的时间段
     :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
     :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。
            这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
+    :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能。
     :param broker_kind:中间件种类,。 0 使用pika链接rabbitmqmq，1使用rabbitpy包实现的操作rabbitmnq，2使用redis，
            3使用python内置Queue,4使用amqpstorm包实现的操作rabbitmq，5使用mongo，6使用sqlite。
            7使用nsq，8使用kafka，9也是使用redis但支持消费确认。

@@ -15,6 +15,9 @@ concurrent_log_handler的ConcurrentRotatingFileHandler解决了logging模块自�
 5、更新文件日志性能，基于ConcurrentRotatingFileHandler继承重写，使用缓存1秒内的消息成批量的方式插入，
 使极限多进程安全切片的文件日志写入性能在win下提高100倍，linux下提高10倍。
 
+强烈建议使用pycharm的 monokai主题颜色，这样日志的颜色符合常规的交通信号灯颜色指示，色彩也非常饱和鲜艳。
+设置方式为 打开pycharm的settings -> Editor -> Color Scheme -> Console Font 选择monokai
+
 
 """
 import atexit

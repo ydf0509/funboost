@@ -592,7 +592,7 @@ while 1：
 
 官方Threadpoolexecutor是无界队列。使用这个会导致丢失无数个任务，
 因为他会迅速把redis的消息全部取出来，添加到自己的queue队列慢慢消费。
-因为这个原因所以需要自定义写BoundedThreadpoolexecutor和CustomThreadpoolexecutor。 v       
+因为这个原因所以需要自定义写BoundedThreadpoolexecutor和CustomThreadpoolexecutor。       
 
 改版的CustomThreadpoolexecutor修改成了queue最大长度是max_works，自己内部存储100个，
 运行中100个，突然关闭python会丢失200个任务。如果queue设置大小为0，则只会丢失100个运行中的任务。

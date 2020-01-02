@@ -95,34 +95,41 @@ def handle_exception(retry_times=0, error_detail_level=0, is_throw_error=False, 
     return _handle_exception
 
 
-def keep_circulating(time_sleep=0.001, exit_if_function_run_sucsess=False, is_display_detail_exception=True):
+def keep_circulating(time_sleep=0.001, exit_if_function_run_sucsess=False, is_display_detail_exception=True, block=True):
     """间隔一段时间，一直循环运行某个方法的装饰器
     :param time_sleep :循环的间隔时间
     :param exit_if_function_run_sucsess :如果成功了就退出循环
     :param is_display_detail_exception
+    :param block :是否阻塞主主线程，False时候开启一个新的线程运行while 1。
     """
     if not hasattr(keep_circulating, 'keep_circulating_log'):
         keep_circulating.log = LogManager('keep_circulating').get_logger_and_add_handlers()
 
     def _keep_circulating(func):
-        # noinspection PyBroadException
         @wraps(func)
         def __keep_circulating(*args, **kwargs):
-            while 1:
-                try:
-                    result = func(*args, **kwargs)
-                    if exit_if_function_run_sucsess:
-                        return result
-                except Exception as e:
-                    msg = func.__name__ + '   运行出错\n ' + traceback.format_exc(limit=10) if is_display_detail_exception else str(e)
-                    keep_circulating.log.error(msg)
-                finally:
-                    time.sleep(time_sleep)
+
+            # noinspection PyBroadException
+            def ___keep_circulating():
+                while 1:
+                    try:
+                        result = func(*args, **kwargs)
+                        if exit_if_function_run_sucsess:
+                            return result
+                    except Exception as e:
+                        msg = func.__name__ + '   运行出错\n ' + traceback.format_exc(limit=10) if is_display_detail_exception else str(e)
+                        keep_circulating.log.error(msg)
+                    finally:
+                        time.sleep(time_sleep)
+
+            if block:
+                return ___keep_circulating()
+            else:
+                threading.Thread(target=___keep_circulating, ).start()
 
         return __keep_circulating
 
     return _keep_circulating
-
 
 def synchronized(func):
     """线程锁装饰器，可以加在单例模式上"""

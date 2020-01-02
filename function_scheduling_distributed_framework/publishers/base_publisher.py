@@ -44,10 +44,30 @@ class RedisAsyncResult(RedisMixin):
         return self.status_and_result['success']
 
 
+class IndependenceFuctionConsumingControlConfig:
+    """
+    为每个独立的任务设置控制参数，喝函数尝试一起发布到中间件。可能有少数时候有这种需求。
+    例如消费为add函数，可以每个独立的任务设置不同的超时时间，不同的重试次数，是否使用rpc模式。这里的配置优先，可以覆盖生成消费者时候的配置。
+    """
+
+    def __init__(self, function_timeout: float = None, max_retry_times: int = None,
+                 is_print_detail_exception: bool = None,
+                 msg_expire_senconds: int = None,
+                 is_using_rpc_mode: bool = None):
+        self.function_timeout = function_timeout
+        self.max_retry_times = max_retry_times
+        self.is_print_detail_exception = is_print_detail_exception
+        self.msg_expire_senconds = msg_expire_senconds
+        self.is_using_rpc_mode = is_using_rpc_mode
+
+    def to_dict(self):
+        return self.__dict__
+
+
 class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     has_init_broker = 0
 
-    def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True, clear_queue_within_init=False, is_add_publish_time=True, is_using_rpc_mode=False):
+    def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True, clear_queue_within_init=False, is_add_publish_time=True, ):
         """
         :param queue_name:
         :param log_level_int:
@@ -55,7 +75,6 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param is_add_file_handler:
         :param clear_queue_within_init:
         :param is_add_publish_time:是否添加发布时间，以后废弃，都添加。
-        :param is_using_rpc_mode:是否使用rpc模式，发布端将可以获取消费端的结果。需要安装redis和额外的性能。
         """
         self._queue_name = queue_name
         if logger_prefix != '':
@@ -73,7 +92,6 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.logger.info(f'{self.__class__} 被实例化了')
         self.publish_msg_num_total = 0
         self._is_add_publish_time = is_add_publish_time
-        self._is_using_rpc_mode = is_using_rpc_mode
         self.__init_time = time.time()
         atexit.register(self.__at_exit)
         if clear_queue_within_init:
@@ -81,10 +99,6 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def set_is_add_publish_time(self, is_add_publish_time=True):
         self._is_add_publish_time = is_add_publish_time
-        return self
-
-    def set_is_using_rpc_mode(self, is_using_rpc_mode=True):
-        self._is_using_rpc_mode = is_using_rpc_mode
         return self
 
     def _init_count(self):
@@ -95,13 +109,14 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def custom_init(self):
         pass
 
-    def publish(self, msg: typing.Union[str, dict]):
+    def publish(self, msg: typing.Union[str, dict],
+                independence_control_config: IndependenceFuctionConsumingControlConfig = None):
         if isinstance(msg, str):
             msg = json.loads(msg)
         task_id = f'{self._queue_name}_result:{uuid.uuid4()}'
-        msg['extra'] = extra_params = {'is_using_rpc_mode': self._is_using_rpc_mode, 'task_id': task_id}
-        # noinspection PyTypeChecker
-        extra_params['publish_time'] = round(time.time(), 4)
+        msg['extra'] = extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4), 'publish_time_publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
+        if independence_control_config:
+            extra_params.update(independence_control_config.to_dict())
         t_start = time.time()
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(self.concrete_realization_of_publish)(json.dumps(msg))
         self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg}')

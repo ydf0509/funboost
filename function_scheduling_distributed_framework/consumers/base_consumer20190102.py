@@ -7,7 +7,8 @@
 """
 import abc
 import copy
-# from multiprocessing import Process
+from multiprocessing import Process
+
 import datetime
 import json
 import sys
@@ -55,7 +56,7 @@ class ExceptionForRequeue(Exception):
     """框架检测到此错误，重新放回队列中"""
 
 
-def _get_publish_time(paramsx: dict):
+def _get_publish_time(paramsx):
     """
     原来存放控制参数的位置没想好，建议所有控制参数放到extra键的字典值里面。
     :param paramsx:
@@ -251,9 +252,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                  is_do_not_run_by_specify_time_effect=False,
                  do_not_run_by_specify_time=('10:00:00', '22:00:00'),
                  schedule_tasks_on_main_thread=False,
-                 function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(
-                     False, False, 7 * 24 * 3600),
-                 is_using_rpc_mode=False):
+                 function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600)):
         """
         :param queue_name:
         :param consuming_function: 处理消息的函数。
@@ -276,9 +275,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param is_do_not_run_by_specify_time_effect :是否使不运行的时间段生效
         :param do_not_run_by_specify_time   :不运行的时间段
         :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
-        :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。
-               这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
-        :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能。
+        :function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。这一步用于后续的参数追溯，
+        任务统计和web展示，需要安装mongo。
         """
         ConsumersManager.consumers_queue__info_map[queue_name] = current_queue__info_dict = copy.copy(locals())
         current_queue__info_dict['consuming_function'] = str(consuming_function)  # consuming_function.__name__
@@ -331,6 +329,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         sys.stdout.write(f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;30;44m此行 实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
 
         self._do_task_filtering = do_task_filtering
+
         self._redis_filter_key_name = f'filter_zset:{queue_name}' if task_filtering_expire_seconds else f'filter_set:{queue_name}'
         filter_class = RedisFilter if task_filtering_expire_seconds == 0 else RedisImpermanencyFilter
         self._redis_filter = filter_class(self._redis_filter_key_name, task_filtering_expire_seconds)
@@ -350,8 +349,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._schedule_tasks_on_main_thread = schedule_tasks_on_main_thread
 
         self._result_persistence_helper = ResultPersistenceHelper(function_result_status_persistance_conf, queue_name)
-
-        self._is_using_rpc_mode = is_using_rpc_mode
 
         self.stop_flag = False
 
@@ -419,8 +416,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         raise NotImplementedError
 
     def _run(self, kw: dict, ):
-        do_task_filtering_priority = self.__get_priority_conf(kw, 'do_task_filtering')
-        if do_task_filtering_priority and self._redis_filter.check_value_exists(kw['body']):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
+        if self._do_task_filtering and self._redis_filter.check_value_exists(kw['body']):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
             self.logger.info(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
             self._confirm_consume(kw)
             return
@@ -434,47 +430,39 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._current_time_for_execute_task_times_every_minute = time.time()
                 self._execute_task_times_every_minute = 0
         self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times=0, function_result_status=FunctionResultStatus(
-            self.queue_name, self.consuming_function.__name__, kw['body']), do_task_filtering_priority=do_task_filtering_priority)
+            self.queue_name, self.consuming_function.__name__, kw['body']))
 
-    def __get_priority_conf(self, kw: dict, broker_task_config_key: str):
-        broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)
-        if broker_task_config is None:
-            return getattr(self, f'_{broker_task_config_key}')
-        else:
-            return broker_task_config
-
-    def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times, function_result_status: FunctionResultStatus, do_task_filtering_priority):
-        function_only_params = delete_keys_and_return_new_dict(kw['body'], ['publish_time', 'publish_time_format', 'extra'])
-        if current_retry_times < self.__get_priority_conf(kw, 'max_retry_times'):
+    def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times, function_result_status: FunctionResultStatus):
+        if current_retry_times < self._max_retry_times:
             function_result_status.run_times += 1
             # noinspection PyBroadException
             t_start = time.time()
             try:
-                function_run = self.consuming_function if self._function_timeout == 0 else self._concurrent_mode_dispatcher.timeout_deco(self.__get_priority_conf(kw, 'function_timeout'))(self.consuming_function)
+                function_run = self.consuming_function if self._function_timeout == 0 else self._concurrent_mode_dispatcher.timeout_deco(self._function_timeout)(self.consuming_function)
                 if self._is_consuming_function_use_multi_params:  # 消费函数使用传统的多参数形式
-                    function_result_status.result = function_run(**function_only_params)
+                    function_result_status.result = function_run(**delete_keys_and_return_new_dict(kw['body'], ['publish_time', 'publish_time_format', 'extra']))
                 else:
-                    function_result_status.result = function_run(function_only_params)  # 消费函数使用单个参数，参数自身是一个字典，由键值对表示各个参数。
+                    function_result_status.result = function_run(delete_keys_and_return_new_dict(kw['body'], ['publish_time', 'publish_time_format', 'extra']))  # 消费函数使用单个参数，参数自身是一个字典，由键值对表示各个参数。
                 function_result_status.success = True
                 self._confirm_consume(kw)
-                if do_task_filtering_priority:
-                    self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
+                if self._do_task_filtering:
+                    self._redis_filter.add_a_value(kw['body'])  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
-                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。  {ConsumersManager.get_concurrent_info()}')
+                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {kw["body"]} 】。  {ConsumersManager.get_concurrent_info()}')
 
             except Exception as e:
                 if isinstance(e, (PyMongoError, ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
                     self.logger.critical(f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}')
                     return self._requeue(kw)
                 self.logger.error(f'函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次发生错误，'
-                                  f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是 【 {function_only_params} 】   \n 原因是 {type(e)} {e} ', exc_info=self.__get_priority_conf(kw, 'is_print_detail_exception'))
+                                  f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是 【 {kw["body"]} 】   \n 原因是 {type(e)} {e} ', exc_info=self._is_print_detail_exception)
                 function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
-                self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times + 1, function_result_status, do_task_filtering_priority)
+                self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times + 1, function_result_status)
         else:
-            self.logger.critical(f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是 【 {function_only_params} 】')
+            self.logger.critical(f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._max_retry_times} 后,仍然失败， 入参是 【 {kw["body"]} 】')
             self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
         self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
-        if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
+        if kw['body'].get('extra', {}).get('is_using_rpc_mode', False):
             RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
             RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
 
@@ -503,10 +491,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             time.sleep(self.time_interval_for_check_do_not_run_time)
             return
         publish_time = _get_publish_time(kw['body'])
-        msg_expire_senconds_priority = self.__get_priority_conf(kw, 'msg_expire_senconds')
-        if msg_expire_senconds_priority != 0 and time.time() - msg_expire_senconds_priority > publish_time:
+        if self._msg_expire_senconds != 0 and time.time() - self._msg_expire_senconds > publish_time:
             self.logger.warning(f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(time.time() - publish_time, 4)} 秒 ,'
-                                f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
+                                f'超过了指定的 {self._msg_expire_senconds} 秒，丢弃任务')
             self._confirm_consume(kw)
             return 0
         self.threadpool.submit(self._run, kw)

@@ -2,8 +2,6 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 13:35
 import json
-import time
-
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
 from function_scheduling_distributed_framework.publishers.persist_queue_publisher import PersistQueuePublisher
 

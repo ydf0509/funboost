@@ -50,6 +50,7 @@ class BeggarRedisConsumer:
 def start_consuming_message(queue_name, consume_function, threads_num):
     """
     看不懂有类的代码，不用看上面那个类，看这个函数就可以，使用一个10行代码的函数实现乞丐版分布式函数执行框架。
+
     """
     pool = ThreadPoolExecutor(threads_num)
     while True:
@@ -74,8 +75,9 @@ if __name__ == '__main__':
         print(f'{x} + {y} 的结果是 {x + y}')
 
     # 推送任务
-    for i in range(100):
-        redis_db_frame.lpush('test_beggar_redis_consumer_queue', json.dumps(dict(x=i, y=i * 2)))
+    # for i in range(100):
+    #     print(i)
+    #     redis_db_frame.lpush('test_beggar_redis_consumer_queue', json.dumps(dict(x=i, y=i * 2)))
 
     # 消费任务
     # consumer = BeggarRedisConsumer('test_beggar_redis_consumer_queue', consume_function=add, threads_num=100)

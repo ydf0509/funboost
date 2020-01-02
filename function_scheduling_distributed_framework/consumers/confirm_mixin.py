@@ -2,7 +2,6 @@
 # @Author  : ydf
 # @Time    : 2019/8/23 0023 21:10
 import time
-from threading import Thread
 import json
 from function_scheduling_distributed_framework.utils import RedisMixin
 
@@ -21,7 +20,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
         self._unack_zset_name = f'{self._queue_name}__unack'
 
     def start_consuming_message(self):
-        Thread(target=self.keep_circulating(60)(self.__requeue_tasks_which_unconfirmed_timeout)).start()
+        self.keep_circulating(60, block=False)(self.__requeue_tasks_which_unconfirmed_timeout)
         super().start_consuming_message()
 
     def _add_task_str_to_unack_zset(self, task_str, ):

@@ -2,7 +2,6 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 13:36
 import json
-import time
 from queue import Queue
 
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer

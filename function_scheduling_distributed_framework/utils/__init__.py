@@ -5,3 +5,7 @@ from function_scheduling_distributed_framework.utils.monkey_print2 import nb_pri
 from function_scheduling_distributed_framework.utils.log_manager import (LogManager, get_logs_dir_by_folder_name, simple_logger, defaul_logger, file_logger, LoggerMixin, LoggerLevelSetterMixin, LoggerMixinDefaultWithFileHandler)
 
 from function_scheduling_distributed_framework.utils.redis_manager import RedisMixin
+
+
+#################以下为打猴子补丁#####################
+patch_print()

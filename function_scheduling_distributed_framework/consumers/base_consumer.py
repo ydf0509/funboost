@@ -193,6 +193,12 @@ class ConsumersManager:
 
 class FunctionResultStatusPersistanceConfig(LoggerMixin):
     def __init__(self, is_save_status: bool, is_save_result: bool, expire_seconds: int):
+        """
+        :param is_save_status:
+        :param is_save_result:
+        :param expire_seconds: 设置统计的过期时间，在mongo里面自动会移除这些过期的执行记录。
+        """
+
         if not is_save_status and is_save_result:
             raise ValueError(f'你设置的是不保存函数运行状态但保存函数运行结果。不允许你这么设置')
         self.is_save_status = is_save_status

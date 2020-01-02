@@ -57,7 +57,7 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
     :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
     :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。
            这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
-    :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能。
+    :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。。
     :param broker_kind:中间件种类,。 0 使用pika链接rabbitmqmq，1使用rabbitpy包实现的操作rabbitmnq，2使用redis，
            3使用python内置Queue,4使用amqpstorm包实现的操作rabbitmq，5使用mongo，6使用sqlite。
            7使用nsq，8使用kafka，9也是使用redis但支持消费确认。

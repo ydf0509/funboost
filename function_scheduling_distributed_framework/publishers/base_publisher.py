@@ -114,7 +114,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if isinstance(msg, str):
             msg = json.loads(msg)
         task_id = f'{self._queue_name}_result:{uuid.uuid4()}'
-        msg['extra'] = extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4), 'publish_time_publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
+        msg['extra'] = extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4), 'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
         if independence_control_config:
             extra_params.update(independence_control_config.to_dict())
         t_start = time.time()

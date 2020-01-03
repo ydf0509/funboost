@@ -26,3 +26,4 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
         # self.redis_db7.connection_pool.disconnect()
         pass
 
+

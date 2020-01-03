@@ -3,7 +3,7 @@
 # @Time    : 2019/8/8 0008 9:51
 
 
-# 你需要使用patch_frame_config函数打猴子补丁的方式修改这里的配置就可以了，很简单。不需要去改这里，但也可以改这里。
+# 你需要使用patch_frame_config函数打猴子补丁的方式修改这里的配置就可以了，很简单。最好不要去改框架源码这里，但也可以改这里。
 
 MONGO_CONNECT_URL = f'mongodb://yourname:yourpassword@127.0.01:27017/admin'
 

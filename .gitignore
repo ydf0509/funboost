@@ -18,5 +18,5 @@ my_patch_frame_config0000.py
 my_patch_frame_config_beifen.py
 test_frame/my_patch_frame_config.py
 function_result_web/
-redis_queue_admin/
 test_frame/my/
+redis_queue_web/

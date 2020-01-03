@@ -44,9 +44,9 @@ class RedisAsyncResult(RedisMixin):
         return self.status_and_result['success']
 
 
-class IndependenceFuctionConsumingControlConfig:
+class PriorityConsumingControlConfig:
     """
-    为每个独立的任务设置控制参数，喝函数尝试一起发布到中间件。可能有少数时候有这种需求。
+    为每个独立的任务设置控制参数，和函数参数一起发布到中间件。可能有少数时候有这种需求。
     例如消费为add函数，可以每个独立的任务设置不同的超时时间，不同的重试次数，是否使用rpc模式。这里的配置优先，可以覆盖生成消费者时候的配置。
     """
 
@@ -110,13 +110,13 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         pass
 
     def publish(self, msg: typing.Union[str, dict],
-                independence_control_config: IndependenceFuctionConsumingControlConfig = None):
+                priority_control_config: PriorityConsumingControlConfig = None):
         if isinstance(msg, str):
             msg = json.loads(msg)
         task_id = f'{self._queue_name}_result:{uuid.uuid4()}'
         msg['extra'] = extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4), 'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
-        if independence_control_config:
-            extra_params.update(independence_control_config.to_dict())
+        if priority_control_config:
+            extra_params.update(priority_control_config.to_dict())
         t_start = time.time()
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(self.concrete_realization_of_publish)(json.dumps(msg))
         self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg}')

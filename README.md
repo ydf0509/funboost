@@ -193,7 +193,7 @@ def f2(a, b):
     :param consuming_function: 处理消息的函数。  指定队列名字和指定消费函数这两个参数是必传，必须指定，
            这2个是这个消费框架的本质核心参数，其他参数都是可选的,有默认值。
     :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
-    :param threads_num:并发数量，协程或线程。由concurrent_mode决定并发种类。
+    :param concurrent_num:并发数量，协程或线程。由concurrent_mode决定并发种类。
     :param specify_threadpool:使用指定的线程池（协程池），可以多个消费者共使用一个线程池，不为None时候。threads_num失效
     :param concurrent_mode:并发模式，1线程 2gevent 3eventlet
     :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊
@@ -205,7 +205,8 @@ def f2(a, b):
     :param msg_expire_senconds:消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
     :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
     :param create_logger_file : 是否创建文件日志
-    :param do_task_filtering :是否执行基于函数参数的任务过滤
+    :param do_task_filtering :是否执行基于函数参数的任务过滤。支持永久过滤和限时过滤，限时过滤意思是例如10分钟
+           之前执行过，现在仍然执行，10分钟之内执行过则不执行。
     :param is_consuming_function_use_multi_params  函数的参数是否是传统的多参数，不为单个body字典
            表示多个参数。现在基本可以无视指定这个值了，因为现在默认用的是**{}来解包，第一版时候没想好，
            第一版时候函数的参数有且只能有一个并且入参本身是1个字典。为了兼容以前的调用方式，保留这个参数。

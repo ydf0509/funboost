@@ -40,14 +40,14 @@ def sub(x, y):
 
 
 # 把消费的函数名传给consuming_function，就这么简单。
-consumer_add = get_consumer('queue_test569', consuming_function=add, threads_num=5000, max_retry_times=2,
+consumer_add = get_consumer('queue_test569', consuming_function=add, concurrent_num=5000, max_retry_times=2,
                             qps=2, log_level=10, logger_prefix='zz平台消费',
                             function_timeout=0, is_print_detail_exception=False,
                             msg_expire_senconds=3600,
                             function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600),
                             broker_kind=2, concurrent_mode=2, )  # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等9种中间件或包。
 
-consumer_sub = get_consumer('queue_test57', consuming_function=sub, threads_num=500, qps=108, log_level=10, logger_prefix='xxxxx平台消费',
+consumer_sub = get_consumer('queue_test57', consuming_function=sub, concurrent_num=500, qps=108, log_level=10, logger_prefix='xxxxx平台消费',
                             function_timeout=80, is_print_detail_exception=True,
                             broker_kind=2, concurrent_mode=2)  # 通过设置
 

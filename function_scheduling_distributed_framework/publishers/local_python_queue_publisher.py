@@ -10,7 +10,7 @@ local_pyhton_queue_name__local_pyhton_queue_obj_map = dict()  # 使local queue�
 
 class LocalPythonQueuePublisher(AbstractPublisher):
     """
-    使用redis作为中间件
+    使用python内置queue对象作为中间件。方便测试，每个中间件的消费者类是鸭子类，多态可以互相替换。
     """
 
     # noinspection PyAttributeOutsideInit

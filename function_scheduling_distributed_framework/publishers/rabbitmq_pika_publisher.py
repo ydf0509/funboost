@@ -53,3 +53,4 @@ class RabbitmqPublisher(AbstractPublisher):
         self.channel.close()
         self.rabbit_client.connection.close()
         self.logger.warning('关闭pika包 链接')
+

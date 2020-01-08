@@ -6,7 +6,7 @@
 测试改版的pysnooper装饰器。
 '''
 import requests
-from function_scheduling_distributed_framework.utils import RedisMixin, pysnooper_ydf,LogManager
+from function_scheduling_distributed_framework.utils import RedisMixin, pysnooper_ydf, LogManager
 
 from test_frame.my_patch_frame_config import do_patch_frame_config
 
@@ -24,7 +24,9 @@ def bar():
         str(1)
         raise
 
+
 logger = LogManager('test_pysnoop').get_logger_and_add_handlers(log_filename='test_pysnoop.log')
+
 
 @pysnooper_ydf.snoop(depth=300)
 def main():
@@ -33,10 +35,11 @@ def main():
         for i in range(5):
             print(i)
         j = 333
-        # resp = requests.get('https://www.baidu.com')  # 测试深层次跳转下的代码轨迹自动跟踪效果。
-        # logger.debug(resp.text)
-        # print(RedisMixin().redis_db_frame.set('key_test','1'))
+        resp = requests.get('https://www.baidu.com')  # 测试深层次跳转下的代码轨迹自动跟踪效果。
+        logger.debug(resp.text)
+        print(RedisMixin().redis_db_frame.set('key_test', '1'))
         bar()
+
     except:
         pass
 

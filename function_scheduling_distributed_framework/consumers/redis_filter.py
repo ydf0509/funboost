@@ -131,9 +131,9 @@ if __name__ == '__main__':
 
     do_patch_frame_config()
     # filter = RedisFilter('filter_set:abcdefgh', 120)
-    # filter = RedisImpermanencyFilter('filter_zset:abcdef', 120)
-    params_filter = RedisImpermanencyFilterUsingRedisKey('filter_dir', 300)
-    for i in range(1000000):
+    params_filter = RedisImpermanencyFilter('filter_zset:abcdef', 120)
+    # params_filter = RedisImpermanencyFilterUsingRedisKey('filter_dir', 300)
+    for i in range(10):
         params_filter.add_a_value({'x': i, 'y': i * 2})
 
     params_filter.manual_delete_a_value({'a': 1, 'b': 2})

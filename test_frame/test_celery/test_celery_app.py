@@ -9,18 +9,17 @@ from test_frame.my_patch_frame_config import do_patch_frame_config
 
 do_patch_frame_config()
 platforms.C_FORCE_ROOT = True
+# celery_app = celery.Celery('test_frame.test_celery.test_celery_app')
 celery_app = celery.Celery()
-
-
 class Config2:
-    broker_url = f'redis://:{frame_config.REDIS_PASSWORD}@{frame_config.REDIS_HOST}:{frame_config.REDIS_PORT}/7'  # 使用redis
+    broker_url = f'redis://:{frame_config.REDIS_PASSWORD}@{frame_config.REDIS_HOST}:{frame_config.REDIS_PORT}/10'  # 使用redis
     result_backend = f'redis://:{frame_config.REDIS_PASSWORD}@{frame_config.REDIS_HOST}:{frame_config.REDIS_PORT}/14'  # 使用redis
     broker_connection_max_retries = 150  # 默认是100
     # result_serializer = 'json'
     task_default_queue = 'default'  # 默认celery
     # task_default_rate_limit = '101/s'
     task_default_routing_key = 'default'
-    task_eager_propagates = False  # 默认disable
+    # task_eager_propagates = False  # 默认disable
     task_ignore_result = False
     # task_serializer = 'json'
     # task_time_limit = 70
@@ -31,9 +30,8 @@ class Config2:
     # worker_redirect_stdouts_level = 'WARNING'
     # worker_timer_precision = 0.1  # 默认1秒
     task_routes = {
-        '求和啊': {"queue": "queue_add", },
-        # 'test_frame.test_frame_using_thread.test_celery.test_celery_app.sub': {"queue": 'queue_sub'},
-        'sub': {"queue": 'queue_sub'},
+        '求和啊': {"queue": "queue_add2", },
+        'sub啊': {"queue": 'queue_sub2'},
         'f1': {"queue": 'queue_f1'},
     }
 
@@ -52,7 +50,7 @@ def add(a, b):
     return a + b
 
 
-@celery_app.task(name='sub')
+@celery_app.task(name='sub啊')
 def sub(x, y):
     print(f'消费此消息 {x} - {y} 中。。。。。')
     time.sleep(100, )  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
@@ -74,5 +72,5 @@ if __name__ == '__main__':
     """
     # queue_add,queue_sub,queue_f1
     celery_app.worker_main(
-        argv=['worker', '--pool=thread', '--concurrency=5', '-n', 'worker1@%h', '--loglevel=debug',
-              '--queues=queue_f1', '--detach', ])
+        argv=['worker', '--pool=gevent', '--concurrency=5', '-n', 'worker1@%h', '--loglevel=debug',
+              '--queues=queue_f1,queue_add2,queue_sub2', '--detach', ])

@@ -37,8 +37,9 @@ from function_scheduling_distributed_framework.utils.bulk_operation import Mongo
 from function_scheduling_distributed_framework.utils.mongo_util import MongoMixin
 
 
-def delete_keys_and_return_new_dict(dictx: dict, keys: list):
+def delete_keys_and_return_new_dict(dictx: dict, keys: list = None):
     dict_new = copy.copy(dictx)  # 主要是去掉一级键 publish_time，浅拷贝即可。
+    keys = ['publish_time', 'publish_time_format', 'extra'] if keys is None else keys
     for dict_key in keys:
         try:
             dict_new.pop(dict_key)
@@ -76,9 +77,9 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         publish_time = _get_publish_time(params)
         if publish_time:
             self.publish_time_str = time_util.DatetimeConverter(publish_time).datetime_str
-        function_params = delete_keys_and_return_new_dict(params, ['publish_time', 'publish_time_format', 'extra'])
+        function_params = delete_keys_and_return_new_dict(params,)
         self.params = function_params
-        self.params_str = json.dumps(function_params)
+        self.params_str = json.dumps(function_params,ensure_ascii=False)
         self.result = ''
         self.run_times = 0
         self.exception = ''
@@ -109,6 +110,8 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
             item.update({'insert_time': datetime.datetime.now(),
                          'utime': datetime.datetime.utcnow(),
                          })
+        else:
+            item = delete_keys_and_return_new_dict(item,['insert_time','utime'])
         item['_id'] = str(uuid.uuid4())
         self.logger.debug(item)
         return item
@@ -249,7 +252,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     # noinspection PyProtectedMember
     def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0,
-                 threads_num=50, specify_threadpool=None, concurrent_mode=1,
+                 threads_num=50,concurrent_num = 50,specify_threadpool=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True,
                  msg_schedule_time_intercal=0.0, qps=0, msg_expire_senconds=0,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False,
@@ -265,6 +268,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param consuming_function: 处理消息的函数。
         :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
         :param threads_num:线程或协程并发数量
+        :param concurrent_num:并发数量，这个覆盖threads_num。以后会废弃threads_num参数，因为表达的意思不太准确，不一定是线程模式并发。
         :param specify_threadpool:使用指定的线程池/携程池，可以多个消费者共使用一个线程池，不为None时候。threads_num失效
         :param concurrent_mode:并发模式，暂时支持 线程 、gevent、eventlet三种模式。  1线程  2 gevent 3 evenlet
         :param max_retry_times:
@@ -310,7 +314,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.queue_name = queue_name  # 可以换成公有的，免得外部访问有警告。
         self.consuming_function = consuming_function
         self._function_timeout = function_timeout
-        self._threads_num = threads_num
+        self._threads_num = concurrent_num if threads_num == 50 else threads_num  # concurrent参数优先，以后废弃threads_num参数。
         self._specify_threadpool = specify_threadpool
         self._threadpool = None  # 单独加一个检测消息数量和心跳的线程
         self._concurrent_mode = concurrent_mode
@@ -426,7 +430,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _run(self, kw: dict, ):
         do_task_filtering_priority = self.__get_priority_conf(kw, 'do_task_filtering')
-        if do_task_filtering_priority and self._redis_filter.check_value_exists(kw['body']):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
+        function_only_params = delete_keys_and_return_new_dict(kw['body'],)
+        if do_task_filtering_priority and self._redis_filter.check_value_exists(function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
             self.logger.info(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
             self._confirm_consume(kw)
             return
@@ -450,7 +455,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             return broker_task_config
 
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times, function_result_status: FunctionResultStatus, do_task_filtering_priority):
-        function_only_params = delete_keys_and_return_new_dict(kw['body'], ['publish_time', 'publish_time_format', 'extra'])
+        function_only_params = delete_keys_and_return_new_dict(kw['body'])
         if current_retry_times < self.__get_priority_conf(kw, 'max_retry_times'):
             function_result_status.run_times += 1
             # noinspection PyBroadException
@@ -481,6 +486,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
         self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
         if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
+            # print(function_result_status.get_status_dict(without_datetime_obj=True))
             RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
             RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
 

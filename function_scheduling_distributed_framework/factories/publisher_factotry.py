@@ -2,6 +2,7 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 13:16
 import copy
+from typing import Callable
 
 from function_scheduling_distributed_framework.publishers.kafka_publisher import KafkaPublisher
 from function_scheduling_distributed_framework.publishers.local_python_queue_publisher import LocalPythonQueuePublisher
@@ -15,7 +16,7 @@ from function_scheduling_distributed_framework.publishers.redis_publisher import
 
 
 def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=True,
-                  clear_queue_within_init=False, is_add_publish_time=True,
+                  clear_queue_within_init=False, is_add_publish_time=True,consuming_function: Callable = None,
                   broker_kind=0):
     """
     :param queue_name:
@@ -25,6 +26,8 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
     :param clear_queue_within_init:
     :param is_add_publish_time:是否添加发布时间，以后废弃，都添加。
     :param is_using_rpc_mode:是否使用rpc模式，发布端将可以获取消费端的结果。需要安装redis和额外的性能。
+    :param consuming_function:消费函数，为了做发布时候的函数入参校验用的，如果不传则不做发布任务的校验，
+               例如add 函数接收x，y入参，你推送{"x":1,"z":3}就是不正确的，函数不接受z参数。
     :param broker_kind: 中间件或使用包的种类。
     :return:
     """

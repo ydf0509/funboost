@@ -77,9 +77,9 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         publish_time = _get_publish_time(params)
         if publish_time:
             self.publish_time_str = time_util.DatetimeConverter(publish_time).datetime_str
-        function_params = delete_keys_and_return_new_dict(params,)
+        function_params = delete_keys_and_return_new_dict(params, )
         self.params = function_params
-        self.params_str = json.dumps(function_params,ensure_ascii=False)
+        self.params_str = json.dumps(function_params, ensure_ascii=False)
         self.result = ''
         self.run_times = 0
         self.exception = ''
@@ -111,7 +111,7 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
                          'utime': datetime.datetime.utcnow(),
                          })
         else:
-            item = delete_keys_and_return_new_dict(item,['insert_time','utime'])
+            item = delete_keys_and_return_new_dict(item, ['insert_time', 'utime'])
         item['_id'] = str(uuid.uuid4())
         self.logger.debug(item)
         return item
@@ -223,7 +223,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     @decorators.synchronized
     def publisher_of_same_queue(self):
         if not self._publisher_of_same_queue:
-            self._publisher_of_same_queue = get_publisher(self._queue_name, broker_kind=self.BROKER_KIND)
+            self._publisher_of_same_queue = get_publisher(self._queue_name, consuming_function=self.consuming_function,
+                                                          broker_kind=self.BROKER_KIND)
             if self._msg_expire_senconds:
                 self._publisher_of_same_queue.set_is_add_publish_time()
         return self._publisher_of_same_queue
@@ -252,7 +253,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     # noinspection PyProtectedMember
     def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0,
-                 threads_num=50,concurrent_num = 50,specify_threadpool=None, concurrent_mode=1,
+                 threads_num=50, concurrent_num=50, specify_threadpool=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True,
                  msg_schedule_time_intercal=0.0, qps=0, msg_expire_senconds=0,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False,
@@ -430,7 +431,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _run(self, kw: dict, ):
         do_task_filtering_priority = self.__get_priority_conf(kw, 'do_task_filtering')
-        function_only_params = delete_keys_and_return_new_dict(kw['body'],)
+        function_only_params = delete_keys_and_return_new_dict(kw['body'], )
         if do_task_filtering_priority and self._redis_filter.check_value_exists(function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
             self.logger.info(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
             self._confirm_consume(kw)

@@ -2,6 +2,7 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 11:57
 import abc
+import inspect
 import atexit
 import json
 import uuid
@@ -12,7 +13,7 @@ from threading import Lock
 import amqpstorm
 from pika.exceptions import AMQPError as PikaAMQPError
 
-from function_scheduling_distributed_framework.utils import LoggerLevelSetterMixin, LogManager, decorators, RedisMixin
+from function_scheduling_distributed_framework.utils import LoggerLevelSetterMixin, LogManager, decorators, RedisMixin, LoggerMixin
 
 
 class RedisAsyncResult(RedisMixin):
@@ -64,10 +65,36 @@ class PriorityConsumingControlConfig:
         return self.__dict__
 
 
+class PublishParamsChecker(LoggerMixin):
+    """
+    发布的任务的函数参数检查，使发布的任务不会出现错误。
+    """
+    def __init__(self, func: typing.Callable):
+        print(func)
+        spec = inspect.getfullargspec(func)
+        self.all_arg_name_set = set(spec.args)
+        if spec.defaults:
+            len_deafult_args = len(spec.defaults)
+            self.position_arg_name_set = set(spec.args[0:len_deafult_args])
+            self.keyword_arg_name_set = set(spec.args[-len_deafult_args:])
+        else:
+            self.position_arg_name_set = set(spec.args)
+            self.keyword_arg_name_set = set()
+        self.logger.info(f'{func} 函数的入参要求是 全字段 {self.all_arg_name_set} ,必须字段为 {self.position_arg_name_set} ')
+
+    def check_params(self, publish_params: dict):
+        publish_params_keys_set = set(publish_params.keys())
+        if publish_params_keys_set.issubset(self.all_arg_name_set) and publish_params_keys_set.issuperset(self.position_arg_name_set):
+            return True
+        else:
+            raise ValueError(f'你发布的参数不正确，你发布的任务的所有键是 {publish_params_keys_set}， '
+                             f'必须是 {self.all_arg_name_set} 的子集， 必须是 {self.position_arg_name_set} 的超集')
+
+
 class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     has_init_broker = 0
 
-    def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True, clear_queue_within_init=False, is_add_publish_time=True, ):
+    def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True, clear_queue_within_init=False, is_add_publish_time=True, consuming_function: callable = None):
         """
         :param queue_name:
         :param log_level_int:
@@ -75,12 +102,15 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param is_add_file_handler:
         :param clear_queue_within_init:
         :param is_add_publish_time:是否添加发布时间，以后废弃，都添加。
+        :param consuming_function:消费函数，为了做发布时候的函数入参校验用的，如果不传则不做发布任务的校验，
+               例如add 函数接收x，y入参，你推送{"x":1,"z":3}就是不正确的，函数不接受z参数。
         """
         self._queue_name = queue_name
         if logger_prefix != '':
             logger_prefix += '--'
         logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}'
         self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level_int, log_filename=f'{logger_name}.log' if is_add_file_handler else None)  #
+        self.publish_params_checker = PublishParamsChecker(consuming_function) if consuming_function else None
         # self.rabbit_client = RabbitMqFactory(is_use_rabbitpy=is_use_rabbitpy).get_rabbit_cleint()
         # self.channel = self.rabbit_client.creat_a_channel()
         # self.queue = self.channel.queue_declare(queue=queue_name, durable=True)
@@ -113,12 +143,14 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 priority_control_config: PriorityConsumingControlConfig = None):
         if isinstance(msg, str):
             msg = json.loads(msg)
+        if self.publish_params_checker:
+            self.publish_params_checker.check_params(msg)
         task_id = f'{self._queue_name}_result:{uuid.uuid4()}'
         msg['extra'] = extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4), 'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
         if priority_control_config:
             extra_params.update(priority_control_config.to_dict())
         t_start = time.time()
-        decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(self.concrete_realization_of_publish)(json.dumps(msg,ensure_ascii=False))
+        decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(self.concrete_realization_of_publish)(json.dumps(msg, ensure_ascii=False))
         self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg}')
         with self._lock_for_count:
             self.count_per_minute += 1

@@ -14,7 +14,7 @@ python万能分布式函数调度框架。适用场景范围广泛。
 包括：
      
      分布式：
-        支持数十种最负盛名的消息中间件
+        支持数十种最负盛名的消息中间件.(除了常规mq，还包括用不同形式的如 数据库 磁盘 redis等来模拟消息队列)
 
      并发：
         支持threading gevent eventlet三种并发模式 + 多进程
@@ -95,6 +95,7 @@ python万能分布式函数调度框架。适用场景范围广泛。
 支持nsq中间件作为分布式消息队列。
 支持kafka中间件作为分布式消息队列。
 新增支持使用redis作为中间件，但支持消费确认的功能，设置中间件类型为9，不会由于随意关闭和断电每次导致丢失几百个任务。
+支持sqlachemy配置的engine url作为下婆媳中间件，支持mysql sqlite oracle postgre sqlserver5种数据库。
 
 切换任意中间件，代码都不需要做任何变化，不需要关注如何使用中间件的细节。
 
@@ -217,9 +218,10 @@ def f2(a, b):
            到mongodb。这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
     :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能,并且阻塞住当前线程，
            使用async_result.result时候会等待结果阻塞住当前线程。
-    :param broker_kind:中间件种类,。 0 使用pika链接rabbitmqmq，1使用rabbitpy包实现的操作rabbitmnq，
-           2使用redis，3使用python内置Queue,4使用amqpstorm包实现的操作rabbitmq，5使用mongo，
-           6使用sqlite。7使用nsq，8使用kafka，9也是使用redis但支持消费确认。
+    :param broker_kind:中间件种类,。 0 使用pika链接rabbitmqmq，1使用rabbitpy包实现的操作rabbitmnq，2使用redis，
+           3使用python内置Queue,4使用amqpstorm包实现的操作rabbitmq，5使用mongo，6使用本机磁盘持久化。
+           7使用nsq，8使用kafka，9也是使用redis但支持消费确认。
+           10为sqlachemy，支持mysql sqlite postgre oracel sqlserver
     :return AbstractConsumer
 """
 consumer = get_consumer('queue_test2', consuming_function=f2, broker_kind=6)  
@@ -679,4 +681,7 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 所以加入一个最精简版，精简版的本质实现原理和完整版相同。
 
 
+## 6.6 新增sqlachemy 支持的数据库作为消息中间件，包括sqlserver mysql postgre oracle sqlite
+
+![Image text](https://i.niupic.com/images/2020/01/11/6gZr.png)
 

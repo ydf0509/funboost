@@ -21,4 +21,5 @@ flask_bootstrap
 flask_wtf
 wtforms
 flask_login
+sqlalchemy
 PyWin32    # windows need because of concurrent-log-handler

@@ -15,6 +15,7 @@ from function_scheduling_distributed_framework.consumers.rabbitmq_pika_consumer 
 from function_scheduling_distributed_framework.consumers.rabbitmq_rabbitpy_consumer import RabbitmqConsumerRabbitpy
 from function_scheduling_distributed_framework.consumers.redis_consumer import RedisConsumer
 from function_scheduling_distributed_framework.consumers.redis_consumer_ack_able import RedisConsumerAckAble
+from function_scheduling_distributed_framework.consumers.sqlachemy_consumer import SqlachemyConsumer
 
 
 def get_consumer(queue_name, *, consuming_function: Callable = None, function_timeout=0, threads_num=50,
@@ -60,8 +61,8 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
            这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
     :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。。
     :param broker_kind:中间件种类,。 0 使用pika链接rabbitmqmq，1使用rabbitpy包实现的操作rabbitmnq，2使用redis，
-           3使用python内置Queue,4使用amqpstorm包实现的操作rabbitmq，5使用mongo，6使用sqlite。
-           7使用nsq，8使用kafka，9也是使用redis但支持消费确认。
+           3使用python内置Queue,4使用amqpstorm包实现的操作rabbitmq，5使用mongo，6使用本机磁盘持久化。
+           7使用nsq，8使用kafka，9也是使用redis但支持消费确认。10为sqlachemy，支持mysql sqlite postgre oracel sqlserver
     :return AbstractConsumer
     """
     all_kwargs = copy.copy(locals())
@@ -86,5 +87,7 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
         return KafkaConsumer(**all_kwargs)
     elif broker_kind == 9:
         return RedisConsumerAckAble(**all_kwargs)
+    elif broker_kind == 10:
+        return SqlachemyConsumer(**all_kwargs)
     else:
         raise ValueError('设置的中间件种类数字不正确')

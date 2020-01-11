@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 
 import sqlalchemy
-from sqlalchemy import Column, func
+from sqlalchemy import Column, func, or_, and_
 from sqlalchemy import Integer
 from sqlalchemy import String, DateTime
 from sqlalchemy import create_engine
@@ -36,13 +36,15 @@ class SqlaBase(Base):
     job_id = Column(Integer, primary_key=True, autoincrement=True)
     body = Column(String(10240))
     publish_timestamp = Column(DateTime, default=datetime.datetime.now, comment='发布时间')
-    status = Column(String(20))
+    status = Column(String(20), index=True, nullable=True)
+    consume_start_timestamp = Column(DateTime, default=None, comment='消费时间', index=True)
 
-    def __init__(self, job_id=None, body=None, publish_timestamp=None, status=None):
+    def __init__(self, job_id=None, body=None, publish_timestamp=None, status=None, consume_start_timestamp=None):
         self.job_id = job_id
         self.body = body
         self.publish_timestamp = publish_timestamp
         self.status = status
+        self.consume_start_timestamp = consume_start_timestamp
 
     def __str__(self):
         return f'{self.__class__} {self.__dict__}'
@@ -98,12 +100,17 @@ class SqlaQueue:
         with SessionContext(self.Session()) as ss:
             # print(ss)
             while True:
+                ten_minitues_ago_datetime = datetime.datetime.now() + datetime.timedelta(minutes=-10)
                 # task = ss.query(self.SqlaQueueTable).filter_by(status=TaskStatus.TO_BE_CONSUMED).first()
-                query = ss.query(self.SqlaQueueTable).filter(self.SqlaQueueTable.status.in_([TaskStatus.TO_BE_CONSUMED, TaskStatus.REQUEUE]))
-                # print(str(query))  # 打印原始语句。
+                # query = ss.query(self.SqlaQueueTable).filter(self.SqlaQueueTable.status.in_([TaskStatus.TO_BE_CONSUMED, TaskStatus.REQUEUE]))
+                query = ss.query(self.SqlaQueueTable).filter(or_(self.SqlaQueueTable.status.in_([TaskStatus.TO_BE_CONSUMED, TaskStatus.REQUEUE]),
+                                                                 and_(self.SqlaQueueTable.status == TaskStatus.PENGDING,
+                                                                      self.SqlaQueueTable.consume_start_timestamp < ten_minitues_ago_datetime)))
+                print(str(query))  # 打印原始语句。
                 task = query.first()
                 if task:
                     task.status = task.status = TaskStatus.PENGDING
+                    task.consume_start_timestamp = datetime.datetime.now()
                     return task
                 else:
                     time.sleep(0.2)
@@ -147,15 +154,15 @@ class SqlaQueue:
 
 
 if __name__ == '__main__':
-    queue = SqlaQueue('queue7', 'sqlite:////sqlachemy_queues/queues.db')
+    queue = SqlaQueue('queue17', 'sqlite:////sqlachemy_queues/queues.db')
     print()
-    for i in range(20000):
+    for i in range(20):
         queue.push(queue.SqlaQueueTable(body=json.dumps({'a': i, 'b': 2 * i}), status=TaskStatus.TO_BE_CONSUMED))
 
     taskx = queue.get()
     print(taskx.to_dict())
 
-    queue = SqlaQueue('queue8', 'sqlite:////sqla/test2.db')
+    queue = SqlaQueue('queue18', 'sqlite:////sqlachemy_queues/queues.db')
     for i in range(20):
         queue.push(queue.SqlaQueueTable(None, json.dumps({'a': i, 'b': 2 * i}), None, TaskStatus.TO_BE_CONSUMED))
     taskx = queue.get()

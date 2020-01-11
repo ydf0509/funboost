@@ -2,7 +2,7 @@ import copy
 import re
 
 from function_scheduling_distributed_framework import frame_config
-from function_scheduling_distributed_framework.consumers.base_consumer import ExceptionForRequeue, ExceptionForRetry, AbstractConsumer, ConsumersManager,FunctionResultStatusPersistanceConfig
+from function_scheduling_distributed_framework.consumers.base_consumer import ExceptionForRequeue, ExceptionForRetry, AbstractConsumer, ConsumersManager, FunctionResultStatusPersistanceConfig
 from function_scheduling_distributed_framework.publishers.base_publisher import PriorityConsumingControlConfig
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
 from function_scheduling_distributed_framework.factories.consumer_factory import get_consumer
@@ -21,7 +21,9 @@ def patch_frame_config(MONGO_CONNECT_URL: str = None,
                        NSQD_TCP_ADDRESSES: list = None,
                        NSQD_HTTP_CLIENT_HOST: str = None,
                        NSQD_HTTP_CLIENT_PORT: int = None,
-                       KAFKA_BOOTSTRAP_SERVERS: list = None
+                       KAFKA_BOOTSTRAP_SERVERS: list = None,
+
+                       SQLACHEMY_ENGINE_URL='sqlite:////sqlachemy_queues/queues.db'
 
                        ):
     """

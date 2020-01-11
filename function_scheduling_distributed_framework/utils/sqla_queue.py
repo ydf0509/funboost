@@ -16,7 +16,7 @@ from sqlalchemy import String, DateTime
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
-from function_scheduling_distributed_framework import utils
+from function_scheduling_distributed_framework.utils import nb_print
 
 Base = declarative_base()  # type: sqlalchemy.ext.declarative.api.Base
 print(Base)
@@ -72,7 +72,7 @@ class SqlaQueue:
 
         class SqlaQueueTable(SqlaBase):
             __tablename__ = self.queue_name
-            __table_args__ = {'extend_existing':True}  #"useexisting": True
+            __table_args__ = {'extend_existing': True}  # "useexisting": True
 
         engine = create_engine(sqla_conn_url, echo=False,
                                # max_overflow=30,  # 超过连接池大小外最多创建的连接
@@ -148,11 +148,12 @@ class SqlaQueue:
 
 if __name__ == '__main__':
     queue = SqlaQueue('queue7', 'sqlite:////sqlachemy_queues/queues.db')
-    for i in range(2000):
+    print()
+    for i in range(20000):
         queue.push(queue.SqlaQueueTable(body=json.dumps({'a': i, 'b': 2 * i}), status=TaskStatus.TO_BE_CONSUMED))
-    while 1:
-        taskx = queue.get()
-        print(taskx.to_dict())
+
+    taskx = queue.get()
+    print(taskx.to_dict())
 
     queue = SqlaQueue('queue8', 'sqlite:////sqla/test2.db')
     for i in range(20):
@@ -162,4 +163,4 @@ if __name__ == '__main__':
     queue.set_success(taskx)
     print(queue.total_count)
     # queue.clear_queue()
-    print(queue.to_be_consumed_count)
+    nb_print(queue.to_be_consumed_count)

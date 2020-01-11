@@ -630,6 +630,9 @@ windows下性能提高100倍，linux提高10倍，不信的可以测试对比原
 ~~~
 日志用法不变。默默改变多进程文件切片日志，steramhanlder不变，任然是五彩可点击跳转。
 ![Image text](https://i.niupic.com/images/2019/11/13/_1785.png)
+强烈建议使用pycharm的 monokai主题颜色，这样日志的颜色符合常规的交通信号灯颜色指示，色彩也非常饱和鲜艳。
+设置方式为 打开pycharm的settings -> Editor -> Color Scheme -> Console Font 选择monokai
+
 
 
 ## 6.4 在utils增加一个工具，基于pysnooper 0.2.8版本以非猴子补丁方式修改后的pysnoper。

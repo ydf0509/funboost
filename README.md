@@ -99,7 +99,7 @@ windows和linux行为100%一致，不会像celery一样，相同代码前提下�
 支持nsq中间件作为分布式消息队列。
 支持kafka中间件作为分布式消息队列。
 新增支持使用redis作为中间件，但支持消费确认的功能，设置中间件类型为9，不会由于随意关闭和断电每次导致丢失几百个任务。
-支持sqlachemy配置的engine url作为下婆媳中间件，支持mysql sqlite oracle postgre sqlserver5种数据库。
+支持sqlachemy配置的engine url作为下消息中间件，支持mysql sqlite oracle postgre sqlserver5种数据库。
 
 切换任意中间件，代码都不需要做任何变化，不需要关注如何使用中间件的细节。
 总体来说首选rabbitmq，这也是不指定broker_kind参数时候的默认的方式。

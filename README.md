@@ -699,3 +699,11 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 
 ![Image text](https://i.niupic.com/images/2020/01/11/6gZr.png)
 
+## 6.7 新增一个默认的猴子补丁，这个猴子补丁是直接改变了python中最最常用的内置对象print。
+~~~
+只要导入了此框架，那么你的项目里面所有print的行为都会直接发生改变。
+
+控制台彩色和可点击跳转很重要，原来是必须使用我框架带的日志才能变成五彩可点击，
+或者需要使用框架里面的nb_print函数来打印，才能使打印变成彩色可点击。现在则直接改变项目所有直接使用print的地方。
+~~~
+

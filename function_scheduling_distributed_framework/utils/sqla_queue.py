@@ -61,8 +61,8 @@ class SqlaBaseMixin:
     job_id = Column(Integer, primary_key=True, autoincrement=True)
     body = Column(String(10240))
     publish_timestamp = Column(DateTime, default=datetime.datetime.now, comment='发布时间')
-    status = Column(String(20), index=True, nullable=True)
-    consume_start_timestamp = Column(DateTime, default=None, comment='消费时间', index=True)
+    status = Column(String(20), index=False, nullable=True)
+    consume_start_timestamp = Column(DateTime, default=None, comment='消费时间', index=False)
 
     def __init__(self, job_id=None, body=None, publish_timestamp=None, status=None, consume_start_timestamp=None):
         self.job_id = job_id
@@ -120,7 +120,8 @@ class SqlaQueue(LoggerMixin, LoggerLevelSetterMixin):
 
             class SqlaQueueTable(SqlaBaseMixin, Base, ):
                 __tablename__ = self.queue_name
-                # __table_args__ = {'extend_existing': True}  # "useexisting": True
+                # __table_args__ = {'extend_existing': True， "mysql_engine": "MyISAM",
+                #                     "mysql_charset": "utf8"}  # "useexisting": True
 
             SqlaQueueTable.metadata.create_all(engine, )
             self.Session = sessionmaker(bind=engine, expire_on_commit=False)

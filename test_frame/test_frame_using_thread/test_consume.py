@@ -47,7 +47,7 @@ consumer_add = get_consumer('queue_test569', consuming_function=add, concurrent_
                             function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600),
                             broker_kind=2, concurrent_mode=2, )  # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等9种中间件或包。
 
-consumer_sub = get_consumer('queue_test58', consuming_function=sub, concurrent_num=500, qps=108, log_level=10, logger_prefix='xxxxx平台消费',
+consumer_sub = get_consumer('queue_test83', consuming_function=sub, concurrent_num=500, qps=108, log_level=10, logger_prefix='xxxxx平台消费',
                             is_print_detail_exception=True,
                             broker_kind=10, concurrent_mode=2)  # 通过设置
 

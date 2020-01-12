@@ -18,7 +18,7 @@ class SqlachemyConsumer(AbstractConsumer):
         self.queue = sqla_queue.SqlaQueue(self._queue_name, frame_config.SQLACHEMY_ENGINE_URL)
         while True:
             sqla_task_dict = self.queue.get()
-            self.logger.debug(f'从数据库 {frame_config.SQLACHEMY_ENGINE_URL[:20]} 的 [{self._queue_name}] 队列中 取出的消息是：   消息是：  {sqla_task_dict}')
+            self.logger.debug(f'从数据库 {frame_config.SQLACHEMY_ENGINE_URL[:25]}。。 的 [{self._queue_name}] 队列中 取出的消息是：   消息是：  {sqla_task_dict}')
             kw = {'body': json.loads(sqla_task_dict['body']), 'sqla_task_dict': sqla_task_dict}
             self._submit_task(kw)
 

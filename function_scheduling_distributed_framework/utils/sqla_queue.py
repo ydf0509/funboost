@@ -19,7 +19,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.pool import StaticPool
 from sqlalchemy_utils import database_exists, create_database
-from function_scheduling_distributed_framework.utils import nb_print, LoggerMixin, decorators, LoggerLevelSetterMixin
+from function_scheduling_distributed_framework.utils import  LoggerMixin, decorators, LoggerLevelSetterMixin
 
 
 class TaskStatus:
@@ -158,7 +158,7 @@ class SqlaQueue(LoggerMixin, LoggerLevelSetterMixin):
         """
         queue = SqlaQueue('queue37', 'sqlite:////sqlachemy_queues/queues.db')
         queue.bulk_push([queue.SqlaQueueTable(body=json.dumps({'a': i, 'b': 2 * i}), status=TaskStatus.TO_BE_CONSUMED) for i in range(10000)])
-        :param sqla_task_list:
+        :param sqla_task_dict_list:
         :return:
         """
         with SessionContext(self.Session()) as ss:
@@ -193,10 +193,12 @@ class SqlaQueue(LoggerMixin, LoggerLevelSetterMixin):
             if is_delete_the_task:
                 sqla_task = ss.query(self.SqlaQueueTable).filter_by(job_id=sqla_task_dict['job_id']).first()
                 # print(sqla_task)
-                ss.delete(sqla_task)
+                if sqla_task:   # REMIND 如果中途把表清空了，则不会查找到。
+                    ss.delete(sqla_task)
             else:
-                task = ss.query(self.SqlaQueueTable).filter(self.SqlaQueueTable.job_id == sqla_task_dict['job_id']).first()
-                task.status = TaskStatus.SUCCESS
+                sqla_task = ss.query(self.SqlaQueueTable).filter(self.SqlaQueueTable.job_id == sqla_task_dict['job_id']).first()
+                if sqla_task:
+                    sqla_task.status = TaskStatus.SUCCESS
 
     def set_failed(self, sqla_task_dict):
         with SessionContext(self.Session()) as ss:

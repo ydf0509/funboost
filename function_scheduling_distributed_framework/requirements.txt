@@ -22,4 +22,5 @@ flask_wtf
 wtforms
 flask_login
 sqlalchemy
+sqlalchemy_utils
 PyWin32    # windows need because of concurrent-log-handler

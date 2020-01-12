@@ -17,7 +17,7 @@ for i in range(1000000):
     # print(async_result.status_and_result)
     # print('结果', async_result.result)
     async_result = consumer_sub.publisher_of_same_queue.publish({'x': i, 'y': i * 6},
-                                                                priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True))
+                                                                priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=False))
     # print('同步结果', async_result.result)
 
 """

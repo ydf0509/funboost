@@ -5,6 +5,7 @@
 使用sqlachemy来使5种关系型数据库模拟消息队列。
 """
 import datetime
+import json
 import time
 from pathlib import Path
 
@@ -16,7 +17,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
-from function_scheduling_distributed_framework.utils import nb_print, LoggerMixin, decorators
+from sqlalchemy.pool import StaticPool
+from sqlalchemy_utils import database_exists, create_database
+from function_scheduling_distributed_framework.utils import nb_print, LoggerMixin, decorators, LoggerLevelSetterMixin
 
 
 class TaskStatus:
@@ -27,28 +30,31 @@ class TaskStatus:
     REQUEUE = 'requeue'
 
 
-# class SqlaBase(Base):
-#     __abstract__ = True
-#     job_id = Column(Integer, primary_key=True, autoincrement=True)
-#     body = Column(String(10240))
-#     publish_timestamp = Column(DateTime, default=datetime.datetime.now, comment='发布时间')
-#     status = Column(String(20), index=True, nullable=True)
-#     consume_start_timestamp = Column(DateTime, default=None, comment='消费时间', index=True)
-#
-#     def __init__(self, job_id=None, body=None, publish_timestamp=None, status=None, consume_start_timestamp=None):
-#         self.job_id = job_id
-#         self.body = body
-#         self.publish_timestamp = publish_timestamp
-#         self.status = status
-#         self.consume_start_timestamp = consume_start_timestamp
-#
-#     def __str__(self):
-#         return f'{self.__class__} {self.__dict__}'
-#
-#     def to_dict(self):
-#         # return {'job_id':self.job_id,'body':self.body,'publish_timestamp':self.publish_timestamp,'status':self.status}
-#         # noinspection PyUnresolvedReferences
-#         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+"""
+class SqlaBase(Base):
+    __abstract__ = True
+    job_id = Column(Integer, primary_key=True, autoincrement=True)
+    body = Column(String(10240))
+    publish_timestamp = Column(DateTime, default=datetime.datetime.now, comment='发布时间')
+    status = Column(String(20), index=True, nullable=True)
+    consume_start_timestamp = Column(DateTime, default=None, comment='消费时间', index=True)
+
+    def __init__(self, job_id=None, body=None, publish_timestamp=None, status=None, consume_start_timestamp=None):
+        self.job_id = job_id
+        self.body = body
+        self.publish_timestamp = publish_timestamp
+        self.status = status
+        self.consume_start_timestamp = consume_start_timestamp
+
+    def __str__(self):
+        return f'{self.__class__} {self.__dict__}'
+
+    def to_dict(self):
+        # return {'job_id':self.job_id,'body':self.body,'publish_timestamp':self.publish_timestamp,'status':self.status}
+        # noinspection PyUnresolvedReferences
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+"""
+
 
 class SqlaBaseMixin:
     # __abstract__ = True
@@ -83,24 +89,31 @@ class SessionContext:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.ss.commit()
-        # self.ss.close()
+        self.ss.close()
 
 
 @decorators.flyweight
-class SqlaQueue(LoggerMixin):
+class SqlaQueue(LoggerMixin, LoggerLevelSetterMixin):
     # noinspection PyPep8Naming
     @decorators.where_is_it_called
     def __init__(self, queue_name: str, sqla_conn_url: str):
+        self.logger.setLevel(20)
         self.queue_name = queue_name
         self._sqla_conn_url = sqla_conn_url
-        self.__create_sqlite_dir_if_using_sqlite()
+        self.__auto_create_database()
 
-        engine = create_engine(sqla_conn_url, echo=False,
-                               # max_overflow=30,  # 超过连接池大小外最多创建的连接
-                               # pool_size=20,  # 连接池大小
-                               # pool_timeout=300,  # 池中没有线程最多等待的时间，否则报错
-                               # pool_recycle=-1  # 多久之后对线程池中的线程进行一次连接的回收（重置）
-                               )
+        if sqla_conn_url.startswith('sqlite'):
+            engine = create_engine(sqla_conn_url,
+                                   connect_args={'check_same_thread': False},
+                                   # poolclass=StaticPool
+                                   )
+        else:
+            engine = create_engine(sqla_conn_url, echo=False,
+                                   max_overflow=30,  # 超过连接池大小外最多创建的连接
+                                   pool_size=20,  # 连接池大小
+                                   pool_timeout=300,  # 池中没有线程最多等待的时间，否则报错
+                                   pool_recycle=-1  # 多久之后对线程池中的线程进行一次连接的回收（重置）
+                                   )
 
         try:
             Base = declarative_base()  # type: sqlalchemy.ext.declarative.api.Base
@@ -113,7 +126,7 @@ class SqlaQueue(LoggerMixin):
             self.Session = sessionmaker(bind=engine, expire_on_commit=False)
             self.SqlaQueueTable = SqlaQueueTable
         except Exception as e:
-            self.logger.exception(e)
+            self.logger.warning(e)
             Base = automap_base()
 
             class SqlaQueueTable(SqlaBaseMixin, Base, ):
@@ -124,18 +137,34 @@ class SqlaQueue(LoggerMixin):
             self.Session = sessionmaker(bind=engine, expire_on_commit=False)
             self.SqlaQueueTable = SqlaQueueTable
 
-        self.ss = self.Session()
+        self._to_be_publish_task_list = []
 
-    def __create_sqlite_dir_if_using_sqlite(self):
+    def __auto_create_database(self):
         # 'sqlite:////sqlachemy_queues/queues.db'
         if self._sqla_conn_url.startswith('sqlite:'):
             if not Path('/sqlachemy_queues').exists():
                 Path('/sqlachemy_queues').mkdir()
+        else:
+            if not database_exists(self._sqla_conn_url):
+                create_database(self._sqla_conn_url)
 
-    def push(self, sqla_task):
-        # with SessionContext(self.Session()) as ss:
-        #     ss.add(sqla_task)
-        self.ss.add(sqla_task)
+    def push(self, sqla_task_dict):
+        with SessionContext(self.Session()) as ss:
+            # sqla_task = ss.merge(sqla_task)
+            self.logger.debug(sqla_task_dict)
+            ss.add(self.SqlaQueueTable(**sqla_task_dict))
+
+    def bulk_push(self, sqla_task_dict_list: list):
+        """
+        queue = SqlaQueue('queue37', 'sqlite:////sqlachemy_queues/queues.db')
+        queue.bulk_push([queue.SqlaQueueTable(body=json.dumps({'a': i, 'b': 2 * i}), status=TaskStatus.TO_BE_CONSUMED) for i in range(10000)])
+        :param sqla_task_list:
+        :return:
+        """
+        with SessionContext(self.Session()) as ss:
+            self.logger.debug(sqla_task_dict_list)
+            sqla_task_list = [self.SqlaQueueTable(**sqla_task_dict) for sqla_task_dict in sqla_task_dict_list]
+            ss.add_all(sqla_task_list)
 
     def get(self):
         # print(ss)
@@ -153,29 +182,36 @@ class SqlaQueue(LoggerMixin):
                 if task:
                     task.status = task.status = TaskStatus.PENGDING
                     task.consume_start_timestamp = datetime.datetime.now()
-                    return task
+                    return task.to_dict()
                 else:
                     time.sleep(0.2)
 
-    def set_success(self, sqla_task):
+    def set_success(self, sqla_task_dict, is_delete_the_task=True):
         with SessionContext(self.Session()) as ss:
             # sqla_task = ss.merge(sqla_task)
-            task = ss.query(self.SqlaQueueTable).filter(self.SqlaQueueTable.job_id == sqla_task.job_id).first()
-            task.status = TaskStatus.SUCCESS
+            # print(sqla_task_dict)
+            if is_delete_the_task:
+                sqla_task = ss.query(self.SqlaQueueTable).filter_by(job_id=sqla_task_dict['job_id']).first()
+                # print(sqla_task)
+                ss.delete(sqla_task)
+            else:
+                task = ss.query(self.SqlaQueueTable).filter(self.SqlaQueueTable.job_id == sqla_task_dict['job_id']).first()
+                task.status = TaskStatus.SUCCESS
 
-    def set_failed(self, sqla_task):
+    def set_failed(self, sqla_task_dict):
         with SessionContext(self.Session()) as ss:
             # sqla_task = ss.merge(sqla_task)
-            task = ss.query(self.SqlaQueueTable).filter_by(job_id=sqla_task.job_id).first()
+            task = ss.query(self.SqlaQueueTable).filter_by(job_id=sqla_task_dict['job_id']).first()
             task.status = TaskStatus.FAILED
 
-    def set_task_status(self, sqla_task, status: str):
+    def set_task_status(self, sqla_task_dict, status: str):
         with SessionContext(self.Session()) as ss:
-            task = ss.query(self.SqlaQueueTable).filter(self.SqlaQueueTable.job_id == sqla_task.job_id).first()
+            # sqla_task = ss.merge(sqla_task)
+            task = ss.query(self.SqlaQueueTable).filter(self.SqlaQueueTable.job_id == sqla_task_dict['job_id']).first()
             task.status = status
 
-    def requeue_task(self, sqla_task):
-        self.set_task_status(sqla_task, TaskStatus.REQUEUE)
+    def requeue_task(self, sqla_task_dict):
+        self.set_task_status(sqla_task_dict, TaskStatus.REQUEUE)
 
     def clear_queue(self):
         with SessionContext(self.Session()) as ss:
@@ -196,20 +232,11 @@ class SqlaQueue(LoggerMixin):
 
 
 if __name__ == '__main__':
-    queue = SqlaQueue('queue27', 'sqlite:////sqlachemy_queues/queues.db')
+    queue = SqlaQueue('queue37', 'sqlite:////sqlachemy_queues/queues.db').set_log_level(10)
     print()
-    # for i in range(20):
-    #     queue.push(queue.SqlaQueueTable(body=json.dumps({'a': i, 'b': 2 * i}), status=TaskStatus.TO_BE_CONSUMED))
-    #
-    # taskx = queue.get()
-    # print(taskx.to_dict())
-    #
-    # queue = SqlaQueue('queue18', 'sqlite:////sqlachemy_queues/queues.db')
-    # for i in range(20):
-    #     queue.push(queue.SqlaQueueTable(None, json.dumps({'a': i, 'b': 2 * i}), None, TaskStatus.TO_BE_CONSUMED))
-    # taskx = queue.get()
-    # print(taskx.to_dict())
-    # queue.set_success(taskx)
-    # print(queue.total_count)
-    # # queue.clear_queue()
-    # nb_print(queue.to_be_consumed_count)
+    queue.bulk_push([dict(body=json.dumps({'a': i, 'b': 2 * i}), status=TaskStatus.TO_BE_CONSUMED) for i in range(10000)])
+    print()
+    for i in range(1000):
+        queue.push(dict(body=json.dumps({'a': i, 'b': 2 * i}), status=TaskStatus.TO_BE_CONSUMED))
+    task_dictx = queue.get()
+    print(task_dictx)

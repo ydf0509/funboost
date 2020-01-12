@@ -17,7 +17,7 @@ class SqlachemyQueuePublisher(AbstractPublisher):
         self.queue = sqla_queue.SqlaQueue(self._queue_name,frame_config.SQLACHEMY_ENGINE_URL)
 
     def concrete_realization_of_publish(self, msg):
-        self.queue.push(sqla_task=self.queue.SqlaQueueTable(body=msg,status=sqla_queue.TaskStatus.TO_BE_CONSUMED))
+        self.queue.push(dict(body=msg,status=sqla_queue.TaskStatus.TO_BE_CONSUMED))
 
     def clear(self):
         self.queue.clear_queue()

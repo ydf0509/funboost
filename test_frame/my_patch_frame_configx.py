@@ -25,6 +25,9 @@ def do_patch_frame_config():
                        NSQD_HTTP_CLIENT_PORT=4151,
 
                        KAFKA_BOOTSTRAP_SERVERS=['12.34.56.78:9092'],
+
+                       # SQLACHEMY_ENGINE_URL='mysql+pymysql://root:123456@127.0.0.1:3306/sqlachemy_queues?charset=utf8',
+                       SQLACHEMY_ENGINE_URL='sqlite:////sqlachemy_queues/queues.db'
                        )
 
     show_frame_config()

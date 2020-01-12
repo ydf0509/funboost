@@ -17,15 +17,15 @@ class SqlachemyConsumer(AbstractConsumer):
     def _shedual_task(self):
         self.queue = sqla_queue.SqlaQueue(self._queue_name, frame_config.SQLACHEMY_ENGINE_URL)
         while True:
-            sqla_task = self.queue.get()
-            self.logger.debug(f'从数据库 {frame_config.SQLACHEMY_ENGINE_URL[:20]} 的 [{self._queue_name}] 队列中 取出的消息是：   消息是：  {sqla_task.body}')
-            kw = {'body': json.loads(sqla_task.body), 'sqla_task': sqla_task}
+            sqla_task_dict = self.queue.get()
+            self.logger.debug(f'从数据库 {frame_config.SQLACHEMY_ENGINE_URL[:20]} 的 [{self._queue_name}] 队列中 取出的消息是：   消息是：  {sqla_task_dict}')
+            kw = {'body': json.loads(sqla_task_dict['body']), 'sqla_task_dict': sqla_task_dict}
             self._submit_task(kw)
 
     def _confirm_consume(self, kw):
-        self.queue.set_success(kw['sqla_task'])
+        self.queue.set_success(kw['sqla_task_dict'])
 
     def _requeue(self, kw):
-        self.queue.set_task_status(kw['sqla_task'], sqla_queue.TaskStatus.REQUEUE)
+        self.queue.set_task_status(kw['sqla_task_dict'], sqla_queue.TaskStatus.REQUEUE)
 
 

@@ -60,37 +60,6 @@ class GeventPoolExecutor(gevent_pool.Pool):
         self.join()
 
 
-class GeventPoolExecutor2(LoggerMixin):
-    def __init__(self, max_works, ):
-        check_gevent_monkey_patch()
-        self._q = JoinableQueue(maxsize=max_works)
-        # self._q = Queue(maxsize=max_works)
-        for _ in range(max_works):
-            # self.logger.debug('yyyyyy')
-            gevent.spawn(self.__worker)
-        atexit.register(self.__atexit)
-
-    def __worker(self):
-        while True:
-            fn, args, kwargs = self._q.get()
-            # noinspection PyBroadException
-            try:
-                fn(*args, **kwargs)
-            except Exception as exc:
-                self.logger.exception(f'函数 {fn.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
-            finally:
-                pass
-                self._q.task_done()
-
-    def submit(self, fn: Callable, *args, **kwargs):
-        # self.logger.debug(self._q.qsize())
-        self._q.put((fn, args, kwargs))
-
-    def __atexit(self):
-        self.logger.critical('想即将退出程序。')
-        self._q.join()
-
-
 if __name__ == '__main__':
     monkey.patch_all()
 

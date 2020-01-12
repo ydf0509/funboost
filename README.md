@@ -81,8 +81,9 @@ python万能分布式函数调度框架。适用场景范围广泛。
 关于稳定性和性能，一句话概括就是直面百万c端用户（包括app和小程序），
 已经连续超过两个季度稳定高效运行无事故。
 
-```
+
 ### 1.0.2
+```
 支持python内置Queue对象作为当前解释器下的消息队列。
 支持sqlite3作为本机持久化消息队列。
 支持pika包实现的使用rabbitmq作为分布式消息队列。
@@ -98,8 +99,10 @@ python万能分布式函数调度框架。适用场景范围广泛。
 支持sqlachemy配置的engine url作为下婆媳中间件，支持mysql sqlite oracle postgre sqlserver5种数据库。
 
 切换任意中间件，代码都不需要做任何变化，不需要关注如何使用中间件的细节。
+```
 
 ### 1.0.3    
+```
 源码实现思路基本90%遵守了oop的6个设计原则，很容易扩展中间件。
 1、单一职责原则——SRP
 2、开闭原则——OCP
@@ -110,9 +113,10 @@ python万能分布式函数调度框架。适用场景范围广泛。
 
 最主要是大量使用了模板模式、工厂模式、策略模式、鸭子类。
 可以仿照源码中实现中间件的例子，只需要继承发布者、消费者基类后实现几个抽象方法即可添加新的中间件。
-
+```
 
 ### 1.0.4
+```
 
 将函数名和队列名绑定，即可开启自动消费。
 
@@ -126,9 +130,9 @@ python万能分布式函数调度框架。适用场景范围广泛。
 没有严格的目录结构，代码可以在各个文件夹层级到处移动，脚本名字可以随便改。不使用令人讨厌的cmd命令行启动。
 没有大量使用元编程，使代码性能提高，减少代码拼错概率和降低调用难度。
 并且所有重要公有方法和函数设计都不使用*args，**kwargs方式，全部都能使ide智能提示补全参数，一切为了ide智能补全。
-
+```
 ### 1.0.5
-
+```
 框架附带一个超强漂亮可以跳转的日志，可以独立使用。实现了彩色控制台日志（根据日志严重级别，显示不同颜色，
 每一行日志都可以鼠标点击自动精确跳转到日志发生的代码地方）、
 多进程安全切片的文件日志、日志发邮件、日志发钉钉、日志发elasticsearch、日志发kafka、日志发mongo，
@@ -339,7 +343,7 @@ def add(a, b):
 celery_app.config_from_object(Config2)
 
 
-@celery_app.task(name='求和啊',)  # REMIND rate_limit在这里写，也可以在调用时候写test_task.apply_async(args=(1,2),expires=3)
+@celery_app.task(name='求和啊',)  
 def add(a, b):
     print(f'消费此消息 {a} + {b} 中。。。。。')
     time.sleep(10) # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
@@ -370,7 +374,8 @@ def add(a, b):
 consumer_add = get_consumer('queue_test569', consuming_function=add, threads_num=1000, max_retry_times=2,
                             qps=0, log_level=10, logger_prefix='zz平台消费',
                             function_timeout=0, is_print_detail_exception=False,
-                            msg_expire_senconds=3600,broker_kind=2, concurrent_mode=2,)  # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等9种中间件或包。
+                            msg_expire_senconds=3600,concurrent_mode=2,  
+                            broker_kind=2, ) # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等数十种中间件或包。
 
 
 if __name__ == '__main__':

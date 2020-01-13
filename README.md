@@ -714,9 +714,11 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 ## 6.6 新增sqlachemy 支持的数据库作为消息中间件，包括sqlserver mysql postgre oracle sqlite
 
 每个队列是一张表模拟的。
+
 ![Image text](https://i.niupic.com/images/2020/01/13/6hkO.png)
 
 每个任务是表里面的一行记录。
+
 ![Image text](https://i.niupic.com/images/2020/01/11/6gZr.png)
 
 ## 6.7 新增一个默认的猴子补丁，这个猴子补丁是直接改变了python中最最常用的内置对象print。

@@ -713,6 +713,10 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 
 ## 6.6 新增sqlachemy 支持的数据库作为消息中间件，包括sqlserver mysql postgre oracle sqlite
 
+每个队列是一张表模拟的。
+![Image text](https://i.niupic.com/images/2020/01/13/6hkO.png)
+
+每个任务是表里面的一行记录。
 ![Image text](https://i.niupic.com/images/2020/01/11/6gZr.png)
 
 ## 6.7 新增一个默认的猴子补丁，这个猴子补丁是直接改变了python中最最常用的内置对象print。
@@ -720,6 +724,24 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 只要导入了此框架，那么你的项目里面所有print的行为都会直接发生改变。
 
 控制台彩色和可点击跳转很重要，原来是必须使用我框架带的日志才能变成五彩可点击，
-或者需要使用框架里面的nb_print函数来打印，才能使打印变成彩色可点击。现在则直接改变项目所有直接使用print的地方。
+或者需要使用框架里面的nb_print函数来打印，才能使打印变成彩色可点击。
+现在则直接改变项目所有直接使用print的地方。
 ~~~
+
+1)没有导入框架时候，print是普通白色的，没有时间和代码行号。
+![Image text](https://i.niupic.com/images/2020/01/13/6hlc.png)
+
+2)任意文件导入一次框架后，项目里面任意模块的print自动发生变化。添加了时间、可点击跳转的代码行号、文字变成天蓝色
+![Image text](https://i.niupic.com/images/2020/01/13/6hkX.png)
+
+
+3)使print自动变化的最重要意义是：
+
+有的人在项目中疯狂的例如  print(x),结果项目运行一层一层的调用，很难找到当时是哪里打印的a，几乎不可能找得到的。
+
+除非他是这么写代码  print("x的值是：",x)   ，只有这样才有可能通过ide的全局搜索找得到print的地方。
+
+4) 至于有人担心，这样使print性能降低，杞人忧天了。一秒钟print 10万次，顶多从1秒变成1.1秒。
+
+再说代码里面疯狂频繁print本来就不是好的习惯，谁让你那么频繁的print呢。
 

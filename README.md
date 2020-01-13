@@ -741,7 +741,7 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 
 除非他是这么写代码  print("x的值是：",x)   ，只有这样才有可能通过ide的全局搜索找得到print的地方。
 
-4) 至于有人担心，这样使print性能降低，杞人忧天了。一秒钟print 10万次，顶多从1秒变成1.1秒。
+4) 至于有人担心，这样使print性能降低，杞人忧天了。一秒钟print 10万次，顶多从原来1秒变成1.1秒。
 
 再说代码里面疯狂频繁print本来就不是好的习惯，谁让你那么频繁的print呢。
 

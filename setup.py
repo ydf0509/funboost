@@ -55,6 +55,9 @@ setup(
         'requests',
         'gnsq==1.0.1',
         'psutil',
+        'sqlalchemy',
+        'sqlalchemy_utils==0.36.1',
+        'apscheduler'
     ]
 )
 """

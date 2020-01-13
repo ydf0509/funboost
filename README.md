@@ -729,9 +729,11 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 ~~~
 
 1)没有导入框架时候，print是普通白色的，没有时间和代码行号。
+
 ![Image text](https://i.niupic.com/images/2020/01/13/6hlc.png)
 
 2)任意文件导入一次框架后，项目里面任意模块的print自动发生变化。添加了时间、可点击跳转的代码行号、文字变成天蓝色
+
 ![Image text](https://i.niupic.com/images/2020/01/13/6hkX.png)
 
 

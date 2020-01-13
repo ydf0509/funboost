@@ -1,5 +1,6 @@
 import copy
 import re
+import apscheduler
 
 from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.consumers.base_consumer import ExceptionForRequeue, ExceptionForRetry, AbstractConsumer, ConsumersManager, FunctionResultStatusPersistanceConfig
@@ -13,10 +14,15 @@ from function_scheduling_distributed_framework.utils import nb_print, patch_prin
 def patch_frame_config(MONGO_CONNECT_URL: str = None,
 
                        RABBITMQ_USER: str = None,
-                       RABBITMQ_PASS: str = None, RABBITMQ_HOST: str = None,
-                       RABBITMQ_PORT: int = None, RABBITMQ_VIRTUAL_HOST: str = None,
+                       RABBITMQ_PASS: str = None,
+                       RABBITMQ_HOST: str = None,
+                       RABBITMQ_PORT: int = None,
+                       RABBITMQ_VIRTUAL_HOST: str = None,
 
-                       REDIS_HOST: str = None, REDIS_PASSWORD: str = None, REDIS_PORT: int = None, REDIS_DB: int = None,
+                       REDIS_HOST: str = None,
+                       REDIS_PASSWORD: str = None,
+                       REDIS_PORT: int = None,
+                       REDIS_DB: int = None,
 
                        NSQD_TCP_ADDRESSES: list = None,
                        NSQD_HTTP_CLIENT_HOST: str = None,

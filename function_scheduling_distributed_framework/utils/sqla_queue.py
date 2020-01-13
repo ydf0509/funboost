@@ -72,7 +72,7 @@ class SqlaBaseMixin:
         self.consume_start_timestamp = consume_start_timestamp
 
     def __str__(self):
-        return f'{self.__class__} {self.__dict__}'
+        return f'{self.__class__} {self.to_dict()}'
 
     def to_dict(self):
         # return {'job_id':self.job_id,'body':self.body,'publish_timestamp':self.publish_timestamp,'status':self.status}

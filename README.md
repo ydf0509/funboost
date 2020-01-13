@@ -756,7 +756,7 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 
 ##### 6.7.3 使print自动变化的最重要意义是：
 
-有的人在项目中疯狂的例如  print(x),结果项目运行一层一层的调用，很难找到当时是哪里打印的a，几乎不可能找得到的。
+有的人在项目中疯狂的例如  print(x),结果项目运行一层一层的调用，很难找到当时是哪里打印的x，几乎不可能找得到的。
 
 除非他是这么写代码  print("x的值是：",x)   ，只有这样才有可能通过ide的全局搜索找得到print的地方。
 

@@ -35,3 +35,7 @@ class NsqPublisher(AbstractPublisher, ):
 
     def close(self):
         self._producer.close()
+
+
+
+

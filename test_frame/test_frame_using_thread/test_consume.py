@@ -45,11 +45,11 @@ consumer_add = get_consumer('queue_test569', consuming_function=add, concurrent_
                             function_timeout=0, is_print_detail_exception=False,
                             msg_expire_senconds=3600,
                             function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600),
-                            broker_kind=10, concurrent_mode=1, )  # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等9种中间件或包。
+                            broker_kind=9, concurrent_mode=1, )  # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等9种中间件或包。
 
-consumer_sub = get_consumer('queue_test86', consuming_function=sub, concurrent_num=2000, qps=108, log_level=10, logger_prefix='xxxxx平台消费',
+consumer_sub = get_consumer('queue_test86', consuming_function=sub, concurrent_num=200, qps=108, log_level=10, logger_prefix='xxxxx平台消费',
                             is_print_detail_exception=True,
-                            broker_kind=10, concurrent_mode=1)  # 通过设置
+                            broker_kind=9, concurrent_mode=1)  # 通过设置
 
 if __name__ == '__main__':
     ConsumersManager.show_all_consumer_info()

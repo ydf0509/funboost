@@ -118,25 +118,25 @@ class SqlaQueue(LoggerMixin, LoggerLevelSetterMixin):
         try:
             Base = declarative_base()  # type: sqlalchemy.ext.declarative.api.Base
 
-            class SqlaQueueTable(SqlaBaseMixin, Base, ):
+            class SqlaQueueModel(SqlaBaseMixin, Base, ):
                 __tablename__ = self.queue_name
                 # __table_args__ = {'extend_existing': True， "mysql_engine": "MyISAM",
                 #                     "mysql_charset": "utf8"}  # "useexisting": True
 
-            SqlaQueueTable.metadata.create_all(engine, )
+            SqlaQueueModel.metadata.create_all(engine, )
             self.Session = sessionmaker(bind=engine, expire_on_commit=False)
-            self.SqlaQueueTable = SqlaQueueTable
+            self.SqlaQueueModel = SqlaQueueModel
         except Exception as e:
             self.logger.warning(e)
             Base = automap_base()
 
-            class SqlaQueueTable(SqlaBaseMixin, Base, ):
+            class SqlaQueueModel(SqlaBaseMixin, Base, ):
                 __tablename__ = self.queue_name
                 # __table_args__ = {'extend_existing': True}  # "useexisting": True
 
             Base.prepare(engine, reflect=True)
             self.Session = sessionmaker(bind=engine, expire_on_commit=False)
-            self.SqlaQueueTable = SqlaQueueTable
+            self.SqlaQueueModel = SqlaQueueModel
 
         self._to_be_publish_task_list = []
 
@@ -153,18 +153,18 @@ class SqlaQueue(LoggerMixin, LoggerLevelSetterMixin):
         with SessionContext(self.Session()) as ss:
             # sqla_task = ss.merge(sqla_task)
             self.logger.debug(sqla_task_dict)
-            ss.add(self.SqlaQueueTable(**sqla_task_dict))
+            ss.add(self.SqlaQueueModel(**sqla_task_dict))
 
     def bulk_push(self, sqla_task_dict_list: list):
         """
         queue = SqlaQueue('queue37', 'sqlite:////sqlachemy_queues/queues.db')
-        queue.bulk_push([queue.SqlaQueueTable(body=json.dumps({'a': i, 'b': 2 * i}), status=TaskStatus.TO_BE_CONSUMED) for i in range(10000)])
+        queue.bulk_push([queue.SqlaQueueModel(body=json.dumps({'a': i, 'b': 2 * i}), status=TaskStatus.TO_BE_CONSUMED) for i in range(10000)])
         :param sqla_task_dict_list:
         :return:
         """
         with SessionContext(self.Session()) as ss:
             self.logger.debug(sqla_task_dict_list)
-            sqla_task_list = [self.SqlaQueueTable(**sqla_task_dict) for sqla_task_dict in sqla_task_dict_list]
+            sqla_task_list = [self.SqlaQueueModel(**sqla_task_dict) for sqla_task_dict in sqla_task_dict_list]
             ss.add_all(sqla_task_list)
 
     def get(self):
@@ -172,12 +172,12 @@ class SqlaQueue(LoggerMixin, LoggerLevelSetterMixin):
         while True:
             with SessionContext(self.Session()) as ss:
                 ten_minitues_ago_datetime = datetime.datetime.now() + datetime.timedelta(minutes=-10)
-                # task = ss.query(self.SqlaQueueTable).filter_by(status=TaskStatus.TO_BE_CONSUMED).first()
-                # query = ss.query(self.SqlaQueueTable).filter(self.SqlaQueueTable.status.in_([TaskStatus.TO_BE_CONSUMED, TaskStatus.REQUEUE]))
+                # task = ss.query(self.SqlaQueueModel).filter_by(status=TaskStatus.TO_BE_CONSUMED).first()
+                # query = ss.query(self.SqlaQueueModel).filter(self.SqlaQueueModel.status.in_([TaskStatus.TO_BE_CONSUMED, TaskStatus.REQUEUE]))
                 # noinspection PyUnresolvedReferences
-                query = ss.query(self.SqlaQueueTable).filter(or_(self.SqlaQueueTable.status.in_([TaskStatus.TO_BE_CONSUMED, TaskStatus.REQUEUE]),
-                                                                 and_(self.SqlaQueueTable.status == TaskStatus.PENGDING,
-                                                                      self.SqlaQueueTable.consume_start_timestamp < ten_minitues_ago_datetime)))
+                query = ss.query(self.SqlaQueueModel).filter(or_(self.SqlaQueueModel.status.in_([TaskStatus.TO_BE_CONSUMED, TaskStatus.REQUEUE]),
+                                                                 and_(self.SqlaQueueModel.status == TaskStatus.PENGDING,
+                                                                      self.SqlaQueueModel.consume_start_timestamp < ten_minitues_ago_datetime)))
                 # print(str(query))  # 打印原始语句。
                 task = query.first()
                 if task:
@@ -192,25 +192,25 @@ class SqlaQueue(LoggerMixin, LoggerLevelSetterMixin):
             # sqla_task = ss.merge(sqla_task)
             # print(sqla_task_dict)
             if is_delete_the_task:
-                sqla_task = ss.query(self.SqlaQueueTable).filter_by(job_id=sqla_task_dict['job_id']).first()
+                sqla_task = ss.query(self.SqlaQueueModel).filter_by(job_id=sqla_task_dict['job_id']).first()
                 # print(sqla_task)
                 if sqla_task:   # REMIND 如果中途把表清空了，则不会查找到。
                     ss.delete(sqla_task)
             else:
-                sqla_task = ss.query(self.SqlaQueueTable).filter(self.SqlaQueueTable.job_id == sqla_task_dict['job_id']).first()
+                sqla_task = ss.query(self.SqlaQueueModel).filter(self.SqlaQueueModel.job_id == sqla_task_dict['job_id']).first()
                 if sqla_task:
                     sqla_task.status = TaskStatus.SUCCESS
 
     def set_failed(self, sqla_task_dict):
         with SessionContext(self.Session()) as ss:
             # sqla_task = ss.merge(sqla_task)
-            task = ss.query(self.SqlaQueueTable).filter_by(job_id=sqla_task_dict['job_id']).first()
+            task = ss.query(self.SqlaQueueModel).filter_by(job_id=sqla_task_dict['job_id']).first()
             task.status = TaskStatus.FAILED
 
     def set_task_status(self, sqla_task_dict, status: str):
         with SessionContext(self.Session()) as ss:
             # sqla_task = ss.merge(sqla_task)
-            task = ss.query(self.SqlaQueueTable).filter(self.SqlaQueueTable.job_id == sqla_task_dict['job_id']).first()
+            task = ss.query(self.SqlaQueueModel).filter(self.SqlaQueueModel.job_id == sqla_task_dict['job_id']).first()
             task.status = status
 
     def requeue_task(self, sqla_task_dict):
@@ -218,16 +218,16 @@ class SqlaQueue(LoggerMixin, LoggerLevelSetterMixin):
 
     def clear_queue(self):
         with SessionContext(self.Session()) as ss:
-            ss.query(self.SqlaQueueTable).delete(synchronize_session=False)
+            ss.query(self.SqlaQueueModel).delete(synchronize_session=False)
 
     def get_count_by_status(self, status):
         with SessionContext(self.Session()) as ss:
-            return ss.query(func.count(self.SqlaQueueTable.job_id)).filter(self.SqlaQueueTable.status == status).scalar()
+            return ss.query(func.count(self.SqlaQueueModel.job_id)).filter(self.SqlaQueueModel.status == status).scalar()
 
     @property
     def total_count(self):
         with SessionContext(self.Session()) as ss:
-            return ss.query(func.count(self.SqlaQueueTable.job_id)).scalar()
+            return ss.query(func.count(self.SqlaQueueModel.job_id)).scalar()
 
     @property
     def to_be_consumed_count(self):

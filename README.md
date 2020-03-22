@@ -760,7 +760,9 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 
 ##### 日志和print一起演示。
 
+
 ![Image text](https://i.niupic.com/images/2020/03/22/74yD.png)
+
 
 
 ##### 6.7.3 使print自动变化的最重要意义是：

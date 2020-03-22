@@ -758,7 +758,7 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 
 ![Image text](https://i.niupic.com/images/2020/01/13/6hkX.png)
 
-##### 日志和print一起演示。
+##### 日志和print一起演示
 
 ![Image text](https://i.niupic.com/images/2020/03/22/74yL.png)
 

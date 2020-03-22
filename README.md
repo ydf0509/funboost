@@ -678,6 +678,7 @@ windows下性能提高100倍，linux提高10倍，不信的可以测试对比原
 ![Image text](https://i.niupic.com/images/2019/11/13/_1785.png)
 强烈建议使用pycharm的 monokai主题颜色，这样日志的颜色符合常规的交通信号灯颜色指示，色彩也非常饱和鲜艳。
 设置方式为 打开pycharm的settings -> Editor -> Color Scheme -> Console Font 选择monokai
+(顺便把ANSi Color的Bright Blue 调成为深蓝色，可以为6.7中说明的print猴子补丁设置更好的底色)
 
 
 
@@ -756,6 +757,8 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 ##### 6.7.2  任意文件导入一次框架后，项目里面任意模块的print自动发生变化。添加了时间、可点击跳转的代码行号、文字变成天蓝色
 
 ![Image text](https://i.niupic.com/images/2020/01/13/6hkX.png)
+
+![Image text](https://i.niupic.com/images/2020/03/22/74yD.png)
 
 
 ##### 6.7.3 使print自动变化的最重要意义是：

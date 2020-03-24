@@ -3,6 +3,7 @@
 日志管理，支持日志打印到控制台和写入切片文件和mongodb和email和钉钉机器人和elastic和kafka。
 建造者模式一键创建返回添加了各种好用的handler的原生官方Logger对象，兼容性扩展性极强。
 使用观察者模式按照里面的例子可以扩展各种有趣的handler。
+
 使用方式为  logger = LogManager('logger_name').get_and_add_handlers(log_level_int=1, is_add_stream_handler=True, log_path=None, log_filename=None, log_file_size=10,mongo_url=None,formatter_template=2)
 或者 logger = LogManager('logger_name').get_without_handlers(),此种没有handlers不立即记录日志，之后可以在单独统一的总闸处对所有日志根据loggerame进行get_and_add_handlers添加相关的各种handlers
 创建一个邮件日志的用法为 logger = LogManager.bulid_a_logger_with_mail_handler('mail_logger_name', mail_time_interval=10, toaddrs=('909686xxx@qq.com', 'yangxx4508@dingtalk.com',subject='你的主题)),使用了独立的创建方式
@@ -766,19 +767,20 @@ class ColorHandler(logging.Handler):
             msg1, msg2 = self.__spilt_msg(record.levelno, msg)
             if record.levelno == 10:
                 # msg_color = ('\033[0;32m%s\033[0m' % msg)  # 绿色
-                msg_color = f'\033[0;32m{msg1}\033[0m \033[7;32m{msg2}\033[0m'  # 绿色
+                # print(msg1)
+                msg_color = f'\033[0;32m{msg1}\033[0m \033[0;30;42m{msg2}\033[0m'  # 绿色
             elif record.levelno == 20:
                 # msg_color = ('\033[%s;%sm%s\033[0m' % (self._display_method, self.bule, msg))  # 青蓝色 36    96
-                msg_color = f'\033[0;{self.bule}m{msg1}\033[0m \033[7;{self.bule}m{msg2}\033[0m'
+                msg_color = f'\033[0;36m{msg1}\033[0m \033[0;30;46m{msg2}\033[0m'
             elif record.levelno == 30:
                 # msg_color = ('\033[%s;%sm%s\033[0m' % (self._display_method, self.yellow, msg))
-                msg_color = f'\033[0;{self.yellow}m{msg1}\033[0m \033[7;{self.yellow}m{msg2}\033[0m'
+                msg_color = f'\033[0;33m{msg1}\033[0m \033[0;30;43m{msg2}\033[0m'
             elif record.levelno == 40:
                 # msg_color = ('\033[%s;35m%s\033[0m' % (self._display_method, msg))  # 紫红色
-                msg_color = f'\033[0;35m{msg1}\033[0m \033[7;35m{msg2}\033[0m'
+                msg_color = f'\033[0;35m{msg1}\033[0m \033[0;30;45m{msg2}\033[0m'
             elif record.levelno == 50:
                 # msg_color = ('\033[%s;31m%s\033[0m' % (self._display_method, msg))  # 血红色
-                msg_color = f'\033[0;31m{msg1}\033[0m \033[7;31m{msg2}\033[0m'
+                msg_color = f'\033[0;31m{msg1}\033[0m \033[0;30;41m{msg2}\033[0m'
             else:
                 msg_color = msg
             # print(msg_color,'***************')

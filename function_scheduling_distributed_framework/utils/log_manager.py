@@ -701,7 +701,7 @@ class ColorHandler(logging.Handler):
         self.stream = stream
         self._is_pycharm_2019 = is_pycharm_2019
         self._display_method = 7 if os_name == 'posix' else 0
-        self._word_color = 37 if os_name == 'posix' else 30
+        self._word_color = 30 if os_name == 'posix' else 30
 
     def flush(self):
         """

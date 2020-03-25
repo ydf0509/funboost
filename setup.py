@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version="4.6",
+    version="4.7",
     description=(
         'function scheduling distributed framework'
     ),
@@ -57,7 +57,7 @@ setup(
         'psutil',
         'sqlalchemy',
         'sqlalchemy_utils==0.36.1',
-        'apscheduler'
+        'apscheduler',
     ]
 )
 """

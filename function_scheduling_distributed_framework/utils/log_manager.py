@@ -701,6 +701,7 @@ class ColorHandler(logging.Handler):
         self.stream = stream
         self._is_pycharm_2019 = is_pycharm_2019
         self._display_method = 7 if os_name == 'posix' else 0
+        self._word_color = 37 if os_name == 'posix' else 30
 
     def flush(self):
         """
@@ -768,19 +769,19 @@ class ColorHandler(logging.Handler):
             if record.levelno == 10:
                 # msg_color = ('\033[0;32m%s\033[0m' % msg)  # 绿色
                 # print(msg1)
-                msg_color = f'\033[0;32m{msg1}\033[0m \033[0;30;42m{msg2}\033[0m'  # 绿色
+                msg_color = f'\033[0;32m{msg1}\033[0m \033[0;{self._word_color};42m{msg2}\033[0m'  # 绿色
             elif record.levelno == 20:
                 # msg_color = ('\033[%s;%sm%s\033[0m' % (self._display_method, self.bule, msg))  # 青蓝色 36    96
-                msg_color = f'\033[0;36m{msg1}\033[0m \033[0;30;46m{msg2}\033[0m'
+                msg_color = f'\033[0;36m{msg1}\033[0m \033[0;{self._word_color};46m{msg2}\033[0m'
             elif record.levelno == 30:
                 # msg_color = ('\033[%s;%sm%s\033[0m' % (self._display_method, self.yellow, msg))
-                msg_color = f'\033[0;33m{msg1}\033[0m \033[0;30;43m{msg2}\033[0m'
+                msg_color = f'\033[0;33m{msg1}\033[0m \033[0;{self._word_color};43m{msg2}\033[0m'
             elif record.levelno == 40:
                 # msg_color = ('\033[%s;35m%s\033[0m' % (self._display_method, msg))  # 紫红色
-                msg_color = f'\033[0;35m{msg1}\033[0m \033[0;30;45m{msg2}\033[0m'
+                msg_color = f'\033[0;35m{msg1}\033[0m \033[0;{self._word_color};45m{msg2}\033[0m'
             elif record.levelno == 50:
                 # msg_color = ('\033[%s;31m%s\033[0m' % (self._display_method, msg))  # 血红色
-                msg_color = f'\033[0;31m{msg1}\033[0m \033[0;30;41m{msg2}\033[0m'
+                msg_color = f'\033[0;31m{msg1}\033[0m \033[0;{self._word_color};41m{msg2}\033[0m'
             else:
                 msg_color = msg
             # print(msg_color,'***************')

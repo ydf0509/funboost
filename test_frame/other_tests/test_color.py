@@ -11,9 +11,9 @@ print('导入utils_ydf后,自动打了print猴子补丁，此行颜色i你该发
 logger = LogManager('lalala').get_logger_and_add_handlers()
 
 for i in range(3):
-    logger.debug(f'在console里面设置为monokai主题下测试颜色{i}')
-    logger.info(f'在console里面设置为monokai主题下测试颜色{i}')
-    logger.warning(f'在console里面设置为monokai主题下测试颜色{i}')
-    logger.error(f'在console里面设置为monokai主题下测试颜色{i}')
-    logger.critical(f'在console里面设置为monokai主题下测试颜色{i}')
+    logger.debug(f'在console里面设置为monokai主题下测试debug颜色{i}')
+    logger.info(f'在console里面设置为monokai主题下测试info颜色{i}')
+    logger.warning(f'在console里面设置为monokai主题下测试warning颜色{i}')
+    logger.error(f'在console里面设置为monokai主题下测试error颜色{i}')
+    logger.critical(f'在console里面设置为monokai主题下测试 严重错误 颜色{i}')
     print(f'直接print也会变色和可自动跳转，因为打了猴子补丁{i}')

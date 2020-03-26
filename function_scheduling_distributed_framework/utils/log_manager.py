@@ -16,8 +16,11 @@ concurrent_log_handler的ConcurrentRotatingFileHandler解决了logging模块自�
 5、更新文件日志性能，基于ConcurrentRotatingFileHandler继承重写，使用缓存1秒内的消息成批量的方式插入，
 使极限多进程安全切片的文件日志写入性能在win下提高100倍，linux下提高10倍。
 
-强烈建议使用pycharm的 monokai主题颜色，这样日志的颜色符合常规的交通信号灯颜色指示，色彩也非常饱和鲜艳。
-设置方式为 打开pycharm的settings -> Editor -> Color Scheme -> Console Font 选择monokai
+使用pycharm时候，建议重新自定义设置pycharm的console里面的主题颜色。
+设置方式为 打开pycharm的settings -> Editor -> Color Scheme -> Console Colors 选择monokai，
+并重新修改自定义6个颜色，设置Blue为1585FF，Cyan为06B8B8，Green 为 07E85E，Magenta为 ff1cd5,red为FF0207，yellow为FFB009。
+
+使用xshell或finashell工具连接linux也可以自定义主题颜色，默认使用shell连接工具的颜色也可以。
 
 
 """
@@ -77,10 +80,20 @@ def very_nb_print(*args, sep=' ', end='\n', file=None):
     file_name = sys._getframe(1).f_code.co_filename
     # sys.stdout.write(f'"{__file__}:{sys._getframe().f_lineno}"    {x}\n')
     args = (str(arg) for arg in args)  # REMIND 防止是数字或其他类型对象不能被join
-    sys.stdout.write(f'"{file_name}:{line}"  {time.strftime("%H:%M:%S")}  \033[0;94m{"".join(args)}\033[0m\n')  # 36  93 96 94
+    sys.stdout.write(f'\033[0;34m{time.strftime("%H:%M:%S")}\033[0m  "{file_name}:{line}"   \033[0;30;44m{"".join(args)}\033[0m\n')
 
 
-# print = very_nb_print
+# print = very_nb_print # 更精确的print的猴子补丁有另一个模块monkey_print2中独立提供，不再在日志中默认就打真正的全局print猴子补丁。
+# 修改python最核心的内置函数的猴子补丁与常规猴子补丁不一样，具体看monkey_print2.py文件。
+
+very_nb_print(
+"""
+使用pycharm时候，建议重新自定义设置pycharm的console里面的主题颜色。
+设置方式为 打开pycharm的settings -> Editor -> Color Scheme -> Console Colors 选择monokai，
+并重新修改自定义6个颜色，设置Blue为1585FF，Cyan为06B8B8，Green 为 07E85E，Magenta为 ff1cd5,red为FF0207，yellow为FFB009。
+
+使用xshell或finashell工具连接linux也可以自定义主题颜色，默认使用shell连接工具的颜色也可以。
+""")
 
 def revision_call_handlers(self, record):  # 对logging标准模块打猴子补丁。主要是使父命名空间的handler不重复记录当前命名空间日志已有种类的handler。
     """

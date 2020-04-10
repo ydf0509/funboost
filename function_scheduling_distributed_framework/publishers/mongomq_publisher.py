@@ -2,7 +2,7 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 12:23
 import json
-from mongomq import MongoQueue
+from function_scheduling_distributed_framework.utils.dependency_packages.mongomq import MongoQueue
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
 from function_scheduling_distributed_framework.utils import time_util
 from function_scheduling_distributed_framework.utils.mongo_util import MongoMixin

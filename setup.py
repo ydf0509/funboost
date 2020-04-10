@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version="5.0",
+    version="5.5",
     description=(
         'function scheduling distributed framework'
     ),
@@ -48,14 +48,13 @@ setup(
         'tomorrow3==1.1.0',
         'concurrent-log-handler==0.9.9',
         'redis',
-        'mongo-mq==0.0.1',
         'persist-queue==0.4.2',
         'elasticsearch',
         'kafka-python==1.4.6',
         'requests',
         'gnsq==1.0.1',
         'psutil',
-        'sqlalchemy',
+        'sqlalchemy==1.3.10',
         'sqlalchemy_utils==0.36.1',
         'apscheduler',
     ]

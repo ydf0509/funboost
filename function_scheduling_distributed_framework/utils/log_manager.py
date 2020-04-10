@@ -1308,7 +1308,7 @@ class LogManager(object):
 
         # REMIND 添加es日志。
         # if app_config.env == 'test' and self._is_add_elastic_handler:
-        if not self._judge_logger_has_handler_type(self.logger, ElasticHandler) and app_config.env == 'testxxx':  # 使用kafka。不直接es。
+        if not self._judge_logger_has_handler_type(self.logger, ElasticHandler) and app_config.env == 'testxxxxxx':  # 使用kafka。不直接es。
             """
             生产环境使用阿里云 oss日志，不使用这个。
             """

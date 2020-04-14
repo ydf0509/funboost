@@ -85,7 +85,7 @@ def read_config_form_distributed_frame_config_module():
     内容例子如下，distributed_frame_config模块需要按需必须包含以下变量，需要按需重新设置要使用到的中间件的键和值，例如没有使用rabbitmq而是使用redis做中间件，则不需要配置rabbitmq。
     
     
-    \033[0;94;102m
+    \033[0;97;40m
     MONGO_CONNECT_URL = f'mongodb://yourname:yourpassword@127.0.01:27017/admin'
     
     RABBITMQ_USER = 'rabbitmq_user'
@@ -114,7 +114,7 @@ def read_config_form_distributed_frame_config_module():
     如果你没有在项目根目录下建立 distributed_frame_config.py 这个文件，也可以使用第二种配置方式，调用 patch_frame_config 函数进行框架配置设置
     \033[0m
     
-    \033[0;94;102m
+    \033[0;97;40m
     from function_scheduling_distributed_framework import patch_frame_config, show_frame_config
     # 初次接触使用，可以不安装任何中间件，使用本地持久化队列。正式墙裂推荐安装rabbitmq。
     # 使用打猴子补丁的方式修改框架配置。这里为了演示，列举了所有中间件的参数，

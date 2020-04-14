@@ -124,6 +124,8 @@ patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:2
 
 """
 
+# 以下为配置，请您按需修改。
+
 # MONGO_CONNECT_URL = f'mongodb://yourname:yourpassword@127.0.01:27017/admin'
 # 
 # RABBITMQ_USER = 'rabbitmq_user'
@@ -144,7 +146,6 @@ patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:2
 # KAFKA_BOOTSTRAP_SERVERS = ['127.0.0.1:9092']
 # 
 # SQLACHEMY_ENGINE_URL ='sqlite:////sqlachemy_queues/queues.db'
-
 '''
 
 def auto_creat_config_file_to_project_root_path():

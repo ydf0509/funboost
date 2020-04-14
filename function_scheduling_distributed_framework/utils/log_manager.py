@@ -89,7 +89,7 @@ def very_nb_print(*args, sep=' ', end='\n', file=None):
 very_nb_print(
 """
 1)使用pycharm时候，建议重新自定义设置pycharm的console里面的主题颜色。
-设置方式为 打开pycharm的settings -> Editor -> Color Scheme -> Console Colors 选择monokai，
+设置方式为 打开pycharm的 File -> settings -> Editor -> Color Scheme -> Console Colors 选择monokai，
 并重新修改自定义6个颜色，设置Blue为1585FF，Cyan为06B8B8，Green 为 07E85E，Magenta为 ff1cd5,red为FF0207，yellow为FFB009。
 
 2)使用xshell或finashell工具连接linux也可以自定义主题颜色，默认使用shell连接工具的颜色也可以。

@@ -155,7 +155,7 @@ def read_config_form_distributed_frame_config_module():
         # import distributed_frame_config
         m = importlib.import_module('distributed_frame_config')
         # nb_print(m.__dict__)
-        nb_print(f'分布式函数调度框架 成功读取到\n "{m.__file__}:1" 文件里面的配置了')
+        nb_print(f'分布式函数调度框架 成功读取到\n "{m.__file__}:1" 文件里面的配置了,使用这些变量做框架的配置\n')
         for var_namex, var_valuex in m.__dict__.items():
             if var_namex.isupper():
                 setattr(frame_config, var_namex, var_valuex)
@@ -163,7 +163,7 @@ def read_config_form_distributed_frame_config_module():
         nb_print(f'''分布式函数调度框架检测到 你的项目根目录 {project_root_path} 和当前文件夹 {consumer_path}  下没有 distributed_frame_config.py 文件，
                  无法使用第一种方式做配置。
                  请你务必使用第二种方式，调用 patch_frame_config 函数打猴子补丁进行框架的配置进行设置，
-                 patch_frame_config 函数要放在生成消费者 发布者之前运行''')
+                 patch_frame_config 函数要放在生成消费者 发布者之前运行\n\n''')
 
 
 read_config_form_distributed_frame_config_module()

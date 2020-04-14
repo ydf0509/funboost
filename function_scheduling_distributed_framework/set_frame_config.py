@@ -76,12 +76,14 @@ def show_frame_config():
 
 
 def read_config_form_distributed_frame_config_module():
-    inspect_msg = """
+    consumer_path = sys.path[0].replace('\\','/')
+    project_root_path = sys.path[1].replace('\\','/')
+    inspect_msg = f"""
     分布式函数调度框架，设置配置有两种方式。两种方式的目的相同，就是使用猴子补丁的方式修改此框架的frame_config模中块的变量。
     
     1)第一种方式，自动读取配置文件方式
-    分布式函数调度框架会尝试自动导入distributed_frame_config
-    请在你的python当前项目的根目录下创建一个名为 distributed_frame_config.py 的文件，并在文件中定义例子里面的python常量。
+    分布式函数调度框架会尝试自动导入distributed_frame_config模块
+    请在你的python当前项目的根目录下 {project_root_path} 或 当前文件夹 {consumer_path} 文件夹下，创建一个名为 distributed_frame_config.py 的文件，并在文件中定义例子里面的python常量。
     内容例子如下，distributed_frame_config模块需要按需必须包含以下变量，需要按需重新设置要使用到的中间件的键和值，例如没有使用rabbitmq而是使用redis做中间件，则不需要配置rabbitmq。
     
     
@@ -111,7 +113,7 @@ def read_config_form_distributed_frame_config_module():
     
     \033[0;93;100m
     2)第二种方式,手动调用猴子补丁函数的方式
-    如果你没有在项目根目录下建立 distributed_frame_config.py 这个文件，也可以使用第二种配置方式，调用 patch_frame_config 函数进行框架配置设置
+    如果你没有在python当前项目的根目录下 {project_root_path} 或 当前文件夹 {consumer_path} 文件夹下建立 distributed_frame_config.py 这个文件，也可以使用第二种配置方式，调用 patch_frame_config 函数进行框架配置设置
     \033[0m
     
     \033[0;97;40m
@@ -152,12 +154,13 @@ def read_config_form_distributed_frame_config_module():
         # noinspection PyUnresolvedReferences
         # import distributed_frame_config
         m = importlib.import_module('distributed_frame_config')
-        nb_print('分布式函数调度框架 成功读取到 distributed_frame_config.py 文件里面的配置了')
+        # nb_print(m.__dict__)
+        nb_print(f'分布式函数调度框架 成功读取到\n "{m.__file__}:1" 文件里面的配置了')
         for var_namex, var_valuex in m.__dict__.items():
             if var_namex.isupper():
                 setattr(frame_config, var_namex, var_valuex)
     except ModuleNotFoundError:
-        nb_print('''分布式函数调度框架检测到 你的项目根目录下没有 distributed_frame_config.py 文件，
+        nb_print(f'''分布式函数调度框架检测到 你的项目根目录 {project_root_path} 和当前文件夹 {consumer_path}  下没有 distributed_frame_config.py 文件，
                  无法使用第一种方式做配置。
                  请你务必使用第二种方式，调用 patch_frame_config 函数打猴子补丁进行框架的配置进行设置，
                  patch_frame_config 函数要放在生成消费者 发布者之前运行''')

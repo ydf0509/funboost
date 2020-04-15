@@ -148,7 +148,7 @@ class _CustomThread(threading.Thread, LoggerMixin, LoggerLevelSetterMixin):
                 # break
                 if self._executorx.threads_free_count > self._executorx._min_workers:
                     self._remove_thread(f'当前线程超过60秒没有任务，线程池中不在工作状态中的线程数量是 {self._executorx.threads_free_count}，超过了指定的数量 {self._executorx._min_workers}')
-                    break
+                    break   # 退出while 1，即是结束。这里才是决定线程结束销毁，_remove_thread只是个名字而已，不是由那个来销毁线程。
                 else:
                     continue
 

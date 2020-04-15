@@ -18,7 +18,7 @@ concurrent_log_handler的ConcurrentRotatingFileHandler解决了logging模块自�
 
 使用pycharm时候，建议重新自定义设置pycharm的console里面的主题颜色。
 设置方式为 打开pycharm的settings -> Editor -> Color Scheme -> Console Colors 选择monokai，
-并重新修改自定义6个颜色，设置Blue为1585FF，Cyan为06B8B8，Green 为 05A53F，Magenta为 ff1cd5,red为FF0207，yellow为FFB009。
+并重新修改自定义6个颜色，设置Blue为1585FF，Cyan为06B8B8，Green 为 07E85E，Magenta为 ff1cd5,red为FF0207，yellow为FFB009。
 
 使用xshell或finashell工具连接linux也可以自定义主题颜色，默认使用shell连接工具的颜色也可以。
 
@@ -80,22 +80,24 @@ def very_nb_print(*args, sep=' ', end='\n', file=None):
     file_name = sys._getframe(1).f_code.co_filename
     # sys.stdout.write(f'"{__file__}:{sys._getframe().f_lineno}"    {x}\n')
     args = (str(arg) for arg in args)  # REMIND 防止是数字或其他类型对象不能被join
-    sys.stdout.write(f'\033[0;34m{time.strftime("%H:%M:%S")}\033[0m  "{file_name}:{line}"   \033[0;30;44m{"".join(args)}\033[0m\n')
+    sys.stdout.write(
+        f'\033[0;34m{time.strftime("%H:%M:%S")}\033[0m  "{file_name}:{line}"   \033[0;30;44m{"".join(args)}\033[0m\n')
 
 
 # print = very_nb_print # 更精确的print的猴子补丁有另一个模块monkey_print2中独立提供，不再在日志中默认就打真正的全局print猴子补丁。
 # 修改python最核心的内置函数的猴子补丁与常规猴子补丁不一样，具体看monkey_print2.py文件。
 
 very_nb_print(
-"""
-1)使用pycharm时候，建议重新自定义设置pycharm的console里面的主题颜色。
-设置方式为 打开pycharm的settings -> Editor -> Color Scheme -> Console Colors 选择monokai，
-并重新修改自定义6个颜色，设置Blue为1585FF，Cyan为06B8B8，Green 为 05A53F，Magenta为 ff1cd5,red为FF0207，yellow为FFB009。
+    """
+    1)使用pycharm时候，建议重新自定义设置pycharm的console里面的主题颜色，以适应当前的自动彩色打印方案。
+    设置方式为 打开pycharm的 File -> settings -> Editor -> Color Scheme -> Console Colors 选择monokai，
+    并重新修改自定义6个颜色，设置Blue为1585FF，Cyan为06B8B8，Green 为 07E85E，Magenta为 ff1cd5,red为FF0207，yellow为FFB009。
+    
+    2)使用xshell或finashell工具连接linux也可以自定义主题颜色，默认使用shell连接工具的颜色也可以。
+    
+    颜色效果如连接 https://i.niupic.com/images/2020/03/24/76zi.png
+    """)
 
-2)使用xshell或finashell工具连接linux也可以自定义主题颜色，默认使用shell连接工具的颜色也可以。
-
-颜色效果如连接 https://i.niupic.com/images/2020/03/24/76zi.png
-""")
 
 def revision_call_handlers(self, record):  # 对logging标准模块打猴子补丁。主要是使父命名空间的handler不重复记录当前命名空间日志已有种类的handler。
     """
@@ -746,7 +748,8 @@ class ColorHandler(logging.Handler):
             stream = self.stream
             if record.levelno == 10:
                 # msg_color = ('\033[0;32m%s\033[0m' % msg)  # 绿色
-                msg_color = ('\033[%s;%sm%s\033[0m' % (self._display_method, 34 if self._is_pycharm_2019 else 32, msg))  # 绿色
+                msg_color = ('\033[%s;%sm%s\033[0m' % (
+                self._display_method, 34 if self._is_pycharm_2019 else 32, msg))  # 绿色
             elif record.levelno == 20:
                 msg_color = ('\033[%s;%sm%s\033[0m' % (self._display_method, self.bule, msg))  # 青蓝色 36    96
             elif record.levelno == 30:
@@ -1149,7 +1152,8 @@ class LogManager(object):
     def bulid_a_logger_with_mail_handler(cls, logger_name, log_level_int=10, *, is_add_stream_handler=True,
                                          do_not_use_color_handler=False, log_path=get_logs_dir_by_disk_root(),
                                          log_filename=None,
-                                         log_file_size=100, mongo_url=None, is_add_elastic_handler=False, is_add_kafka_handler=False,
+                                         log_file_size=100, mongo_url=None, is_add_elastic_handler=False,
+                                         is_add_kafka_handler=False,
                                          ding_talk_token=DING_TALK_TOKEN, ding_talk_time_interval=60,
                                          formatter_template=5, mailhost: tuple = EMAIL_HOST,
                                          fromaddr: str = EMAIL_FROMADDR,
@@ -1166,7 +1170,8 @@ class LogManager(object):
                                                               log_path=log_path, log_filename=log_filename,
                                                               log_file_size=log_file_size, mongo_url=mongo_url,
                                                               is_add_elastic_handler=is_add_elastic_handler,
-                                                              is_add_kafka_handler=is_add_kafka_handler, ding_talk_token=ding_talk_token,
+                                                              is_add_kafka_handler=is_add_kafka_handler,
+                                                              ding_talk_token=ding_talk_token,
                                                               ding_talk_time_interval=ding_talk_time_interval,
                                                               formatter_template=formatter_template, )
         if cls._judge_logger_has_handler_type(logger, CompatibleSMTPSSLHandler):
@@ -1191,7 +1196,8 @@ class LogManager(object):
     def get_logger_and_add_handlers(self, log_level_int: int = 10, *, is_add_stream_handler=True,
                                     do_not_use_color_handler=False, log_path=get_logs_dir_by_disk_root(),
                                     log_filename=None, log_file_size=100,
-                                    mongo_url=None, is_add_elastic_handler=False, is_add_kafka_handler=False, ding_talk_token=None, ding_talk_time_interval=60, formatter_template=5):
+                                    mongo_url=None, is_add_elastic_handler=False, is_add_kafka_handler=False,
+                                    ding_talk_token=None, ding_talk_time_interval=60, formatter_template=5):
         """
        :param log_level_int: 日志输出级别，设置为 1 2 3 4 5，分别对应原生logging.DEBUG(10)，logging.INFO(20)，logging.WARNING(30)，logging.ERROR(40),logging.CRITICAL(50)级别，现在可以直接用10 20 30 40 50了，兼容了。
        :param is_add_stream_handler: 是否打印日志到控制台
@@ -1248,7 +1254,9 @@ class LogManager(object):
         :param handler_class:logging.StreamHandler,ColorHandler,MongoHandler,ConcurrentRotatingFileHandler,MongoHandler,CompatibleSMTPSSLHandler的一种
         :return:
         """
-        if handler_class not in (logging.StreamHandler, ColorHandler, MongoHandler, ConcurrentRotatingFileHandler, MongoHandler, CompatibleSMTPSSLHandler, ElasticHandler, DingTalkHandler, KafkaHandler):
+        if handler_class not in (
+        logging.StreamHandler, ColorHandler, MongoHandler, ConcurrentRotatingFileHandler, MongoHandler,
+        CompatibleSMTPSSLHandler, ElasticHandler, DingTalkHandler, KafkaHandler):
             raise TypeError('设置的handler类型不正确')
         for handler in self.logger.handlers:
             if isinstance(handler, handler_class):
@@ -1269,13 +1277,16 @@ class LogManager(object):
         pass
 
         # REMIND 添加控制台日志
-        if not (self._judge_logger_has_handler_type(self.logger, ColorHandler) or self._judge_logger_has_handler_type(self.logger, logging.StreamHandler)) and self._is_add_stream_handler:
-            handler = ColorHandler(is_pycharm_2019=self._is_pycharm_2019) if not self._do_not_use_color_handler else logging.StreamHandler()  # 不使用streamhandler，使用自定义的彩色日志
+        if not (self._judge_logger_has_handler_type(self.logger, ColorHandler) or self._judge_logger_has_handler_type(
+                self.logger, logging.StreamHandler)) and self._is_add_stream_handler:
+            handler = ColorHandler(
+                is_pycharm_2019=self._is_pycharm_2019) if not self._do_not_use_color_handler else logging.StreamHandler()  # 不使用streamhandler，使用自定义的彩色日志
             # handler = logging.StreamHandler()
             self.__add_a_hanlder(handler)
 
         # REMIND 添加多进程安全切片的文件日志
-        if not self._judge_logger_has_handler_type(self.logger, ConcurrentRotatingFileHandler) and all([self._log_path, self._log_filename]):
+        if not self._judge_logger_has_handler_type(self.logger, ConcurrentRotatingFileHandler) and all(
+                [self._log_path, self._log_filename]):
             if not os.path.exists(self._log_path):
                 os.makedirs(self._log_path)
             log_file = os.path.join(self._log_path, self._log_filename)
@@ -1283,7 +1294,8 @@ class LogManager(object):
             if os_name == 'nt':
                 # 在win下使用这个ConcurrentRotatingFileHandler可以解决多进程安全切片，但性能损失惨重。
                 # 10进程各自写入10万条记录到同一个文件消耗15分钟。比不切片写入速度降低100倍。
-                rotate_file_handler = ConcurrentRotatingFileHandlerWithBufferInitiativeWindwos(log_file, maxBytes=self._log_file_size * 1024 * 1024,
+                rotate_file_handler = ConcurrentRotatingFileHandlerWithBufferInitiativeWindwos(log_file,
+                                                                                               maxBytes=self._log_file_size * 1024 * 1024,
                                                                                                backupCount=3,
                                                                                                encoding="utf-8")
 
@@ -1298,8 +1310,10 @@ class LogManager(object):
             elif os_name == 'posix':
                 # linux下可以使用ConcurrentRotatingFileHandler，进程安全的日志方式。
                 # 10进程各自写入10万条记录到同一个文件消耗100秒，还是比不切片写入速度降低10倍。因为每次检查切片大小和文件锁的原因。
-                rotate_file_handler = ConcurrentRotatingFileHandlerWithBufferInitiativeLinux(log_file, maxBytes=self._log_file_size * 1024 * 1024,
-                                                                                             backupCount=3, encoding="utf-8")
+                rotate_file_handler = ConcurrentRotatingFileHandlerWithBufferInitiativeLinux(log_file,
+                                                                                             maxBytes=self._log_file_size * 1024 * 1024,
+                                                                                             backupCount=3,
+                                                                                             encoding="utf-8")
             self.__add_a_hanlder(rotate_file_handler)
 
         # REMIND 添加mongo日志。
@@ -1308,7 +1322,8 @@ class LogManager(object):
 
         # REMIND 添加es日志。
         # if app_config.env == 'test' and self._is_add_elastic_handler:
-        if not self._judge_logger_has_handler_type(self.logger, ElasticHandler) and app_config.env == 'testxxxxxx':  # 使用kafka。不直接es。
+        if not self._judge_logger_has_handler_type(self.logger,
+                                                   ElasticHandler) and app_config.env == 'testxxxxxx':  # 使用kafka。不直接es。
             """
             生产环境使用阿里云 oss日志，不使用这个。
             """
@@ -1316,7 +1331,8 @@ class LogManager(object):
 
         # REMIND 添加kafka日志。
         # if self._is_add_kafka_handler:
-        if not self._judge_logger_has_handler_type(self.logger, KafkaHandler) and app_config.env == 'test' and ALWAYS_ADD_KAFKA_HANDLER_IN_TEST_ENVIRONENT:
+        if not self._judge_logger_has_handler_type(self.logger,
+                                                   KafkaHandler) and app_config.env == 'test' and ALWAYS_ADD_KAFKA_HANDLER_IN_TEST_ENVIRONENT:
             self.__add_a_hanlder(KafkaHandler(KAFKA_BOOTSTRAP_SERVERS, ))
 
         # REMIND 添加钉钉日志。
@@ -1363,7 +1379,8 @@ class LoggerMixin(object):
     def logger_with_file(self):
         logger_name_key = self.logger_full_name + '2'
         if logger_name_key not in self.subclass_logger_dict:
-            logger_var = LogManager(self.logger_full_name).get_logger_and_add_handlers(log_filename=self.logger_full_name + '.log', log_file_size=50)
+            logger_var = LogManager(self.logger_full_name).get_logger_and_add_handlers(
+                log_filename=self.logger_full_name + '.log', log_file_size=50)
             self.subclass_logger_dict[logger_name_key] = logger_var
             return logger_var
         else:
@@ -1373,7 +1390,8 @@ class LoggerMixin(object):
     def logger_with_file_mongo(self):
         logger_name_key = self.logger_full_name + '3'
         if logger_name_key not in self.subclass_logger_dict:
-            logger_var = LogManager(self.logger_full_name).get_logger_and_add_handlers(log_filename=self.logger_full_name + '.log', log_file_size=50, mongo_url=app_config.connect_url)
+            logger_var = LogManager(self.logger_full_name).get_logger_and_add_handlers(
+                log_filename=self.logger_full_name + '.log', log_file_size=50, mongo_url=app_config.connect_url)
             self.subclass_logger_dict[logger_name_key] = logger_var
             return logger_var
         else:
@@ -1387,7 +1405,8 @@ class LoggerMixinDefaultWithFileHandler(LoggerMixin):
     def logger(self):
         logger_name_key = self.logger_full_name + '3'
         if logger_name_key not in self.subclass_logger_dict:
-            logger_var = LogManager(self.logger_full_name).get_logger_and_add_handlers(log_filename=self.logger_full_name + '.log', log_file_size=50)
+            logger_var = LogManager(self.logger_full_name).get_logger_and_add_handlers(
+                log_filename=self.logger_full_name + '.log', log_file_size=50)
             self.subclass_logger_dict[logger_name_key] = logger_var
             return logger_var
         else:
@@ -1503,7 +1522,8 @@ class _Test(unittest.TestCase):
 
     @unittest.skip
     def test_ding_talk(self):
-        logger = LogManager('testdinding').get_logger_and_add_handlers(ding_talk_token=DING_TALK_TOKEN, ding_talk_time_interval=10)
+        logger = LogManager('testdinding').get_logger_and_add_handlers(ding_talk_token=DING_TALK_TOKEN,
+                                                                       ding_talk_time_interval=10)
         logger.debug('啦啦啦德玛西亚1')
         logger.debug('啦啦啦德玛西亚2')
         time.sleep(10)
@@ -1559,10 +1579,9 @@ class _Test(unittest.TestCase):
             logger.critical('一个critical级别的日志。' * 5)
 
 
-
-
 def test_multiprocess_file_handler():
-    logger = LogManager('abcd').get_logger_and_add_handlers(is_add_stream_handler=False, log_filename='amulti_test91.log', log_file_size=100)
+    logger = LogManager('abcd').get_logger_and_add_handlers(is_add_stream_handler=False,
+                                                            log_filename='amulti_test91.log', log_file_size=100)
     t1 = time.time()
     for i in range(100000, 200000):
         time.sleep(0.000001)

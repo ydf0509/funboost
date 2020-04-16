@@ -158,10 +158,6 @@ class _CustomThread(threading.Thread, LoggerMixin, LoggerLevelSetterMixin):
                 work_item.run()
                 del work_item
                 self._executorx.change_threads_free_count(1)
-                self._run_times += 1
-                if self._run_times == 50:
-                    self._remove_thread(f'运行超过了50次，销毁线程')
-                    break
                 continue
             if _shutdown or self._executorx._shutdown:
                 self._executorx.work_queue.put(None)

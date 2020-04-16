@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version="5.5",
+    version="5.9",
     description=(
         'function scheduling distributed framework'
     ),

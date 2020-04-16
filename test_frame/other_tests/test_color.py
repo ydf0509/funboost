@@ -17,3 +17,11 @@ for i in range(3):
     logger.error(f'在console里面设置为monokai主题下测试error颜色{i}')
     logger.critical(f'在console里面设置为monokai主题下测试 严重错误 颜色{i}')
     print(f'直接print也会变色和可自动跳转，因为打了猴子补丁{i}')
+
+
+
+# print('''File "D:/coding2/distributed_framework/test_frame/other_tests/test_color.py", line ''')
+#
+# print('''"D:/coding2/distributed_framework/test_frame/other_tests/test_color.py"''')
+#
+# raise Exception('aaaaaaaa')

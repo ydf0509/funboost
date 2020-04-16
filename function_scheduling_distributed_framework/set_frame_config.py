@@ -78,11 +78,12 @@ def show_frame_config():
                     var_value_encryption = re.sub(r':(\w+)@', f':{mongo_pass_encryption}@', var_value)
                     nb_print(f'{var_name}:             {var_value_encryption}')
                     continue
-            if 'PASS' in var_name and len(var_value) > 3:  # 对密码打*
+            if 'PASS' in var_name and var_value is not None and len(var_value) > 3:  # 对密码打*
                 nb_print(f'{var_name}:                {var_value[0]}{"*" * (len(var_value) - 2)}{var_value[-1]}')
             else:
                 nb_print(f'{var_name}:                {var_value}')
     print('\n')
+
 
 config_file_content = '''# -*- coding: utf-8 -*-
 """
@@ -95,11 +96,11 @@ config_file_content = '''# -*- coding: utf-8 -*-
 
 2）也可以使用 patch_frame_config函数进行配置的覆盖和指定。
 用法为：
+
 from function_scheduling_distributed_framework import patch_frame_config, show_frame_config
 # 初次接触使用，可以不安装任何中间件，使用本地持久化队列。正式墙裂推荐安装rabbitmq。
 # 使用打猴子补丁的方式修改框架配置。这里为了演示，列举了所有中间件的参数，
 # 实际是只需要对使用到的中间件的配置进行赋值即可。
-
 patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:27016/admin',
 
                    RABBITMQ_USER='silxxxx',
@@ -123,6 +124,8 @@ patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:2
                    )
 
 """
+
+
 
 # 以下为配置，请您按需修改。
 
@@ -148,15 +151,11 @@ patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:2
 # SQLACHEMY_ENGINE_URL ='sqlite:////sqlachemy_queues/queues.db'
 '''
 
-def auto_creat_config_file_to_project_root_path():
-    with (Path(sys.path[1]) / Path('distributed_frame_config.py')).open(mode='w', encoding='utf8') as f:
-        f.write(config_file_content)
-
 
 def use_config_form_distributed_frame_config_module():
     """
     自动读取配置。会优先读取启动脚本的目录的distributed_frame_config.py文件。没有则读取项目根目录下的distributed_frame_config.py
-    :return: 
+    :return:
     """
     current_script_path = sys.path[0].replace('\\', '/')
     project_root_path = sys.path[1].replace('\\', '/')
@@ -258,4 +257,15 @@ def use_config_form_distributed_frame_config_module():
     show_frame_config()
 
 
+def auto_creat_config_file_to_project_root_path():
+    # print(Path(sys.path[1]).as_posix())
+    # print((Path(__file__).parent.parent).absolute().as_posix())
+    if Path(sys.path[1]).as_posix() in (Path(__file__).parent.parent).absolute().as_posix():
+        nb_print('不希望在本项目里面创建')
+        return
+    with (Path(sys.path[1]) / Path('distributed_frame_config.py')).open(mode='w', encoding='utf8') as f:
+        f.write(config_file_content)
+
+
 use_config_form_distributed_frame_config_module()
+

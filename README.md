@@ -189,6 +189,7 @@ patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:2
                        )
 
 show_frame_config()
+# 也可以按照6.8更新说明中的以py文件作为配置，不需要手动调用patch_frame_config这个函数。
 
 # 主要的消费函数，演示做加法，假设需要花10秒钟。
 def f2(a, b):
@@ -774,3 +775,20 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 
 再说代码里面疯狂频繁print本来就不是好的习惯，谁让你那么频繁的print呢。
 
+
+## 6.8 新增一种给框架中间件配置赋值的方式。
+~~~
+原来是需要手动调用patch_frame_config函数来设置框架中间件配置，现在新增一种方式。
+
+用户运行一次任意导入了function_scheduling_distributed_framework框架的文件，
+框架自动寻找用户的项目根目录，并在用户的项目的根目录下生成一个 distributed_frame_config.py的文件。
+生成的distributed_frame_config.py文件 中包含了所有默认配置项，但以 # 做了注释。
+用户需要按需修改用到的中间件的值。框架自动读取distributed_frame_config.py文件中变量的值作为框架的配置。
+
+也可以将distributed_frame_config.py文件移到你的python文件运行起点所在的目录，
+框架会优先读取python文件运行起点所在的目录中的distributed_frame_config.py 作为配置，
+没找到则读取项目根目录下的distributed_frame_config.py作为配置。同时兼容以最后一次手动调用patch_frame_config函数作为追踪配置。
+
+~~~
+##### 自动生成的python配置文件，需要按需修改。
+![Image text](https://i.niupic.com/images/2020/04/20/7szW.png)

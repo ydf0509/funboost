@@ -488,8 +488,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
         if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
             # print(function_result_status.get_status_dict(without_datetime_obj=True))
-            RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
-            RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
+            with RedisMixin().redis_db_frame.pipeline() as p:
+                # RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
+                # RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
+                p.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
+                p.expire(kw['body']['extra']['task_id'], 600)
+                p.execute()
 
     @abc.abstractmethod
     def _confirm_consume(self, kw):

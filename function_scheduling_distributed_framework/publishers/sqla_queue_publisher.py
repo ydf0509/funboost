@@ -21,7 +21,7 @@ class SqlachemyQueuePublisher(AbstractPublisher):
 
     def clear(self):
         self.queue.clear_queue()
-        self.logger.warning(f'清除 本地持久化队列 {self._queue_name} 中的消息成功')
+        self.logger.warning(f'清除 sqlalchemy 数据库队列 {self._queue_name} 中的消息成功')
 
     def get_message_count(self):
         return self.queue.to_be_consumed_count

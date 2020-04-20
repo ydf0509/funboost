@@ -233,6 +233,7 @@ def use_config_form_distributed_frame_config_module():
     
     """
     # sys.stdout.write(f'\033[0;33m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;30;43m{inspect_msg}\033[0m\n')
+    # noinspection PyProtectedMember
     sys.stdout.write(
         f'\033[0;93m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;93;100m{inspect_msg}\033[0m\n')
 
@@ -260,7 +261,7 @@ def use_config_form_distributed_frame_config_module():
 def auto_creat_config_file_to_project_root_path():
     # print(Path(sys.path[1]).as_posix())
     # print((Path(__file__).parent.parent).absolute().as_posix())
-    if Path(sys.path[1]).as_posix() in (Path(__file__).parent.parent).absolute().as_posix():
+    if Path(sys.path[1]).as_posix() in Path(__file__).parent.parent.absolute().as_posix():
         nb_print('不希望在本项目里面创建')
         return
     with (Path(sys.path[1]) / Path('distributed_frame_config.py')).open(mode='w', encoding='utf8') as f:
@@ -268,4 +269,3 @@ def auto_creat_config_file_to_project_root_path():
 
 
 use_config_form_distributed_frame_config_module()
-

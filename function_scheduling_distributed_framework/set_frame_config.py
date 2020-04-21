@@ -17,7 +17,7 @@ from function_scheduling_distributed_framework import frame_config
 # noinspection PyProtectedMember,PyUnusedLocal,PyIncorrectDocstring
 def nb_print(*args, sep=' ', end='\n', file=None):
     """
-    超流弊的print补丁
+    超流弊的print补丁，
     :param x:
     :return:
     """

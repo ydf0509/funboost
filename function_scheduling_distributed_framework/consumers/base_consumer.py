@@ -477,6 +477,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             except Exception as e:
                 if isinstance(e, (PyMongoError, ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
                     self.logger.critical(f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}')
+                    time.sleep(1)  # 防止快速无限出错入队出队，导致cpu和中间件忙
                     return self._requeue(kw)
                 self.logger.error(f'函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次发生错误，'
                                   f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是 【 {function_only_params} 】   \n 原因是 {type(e)} {e} ', exc_info=self.__get_priority_conf(kw, 'is_print_detail_exception'))

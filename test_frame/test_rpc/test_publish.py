@@ -18,7 +18,7 @@ for i in range(10000000):
     b = i * 2
     async_result = pb.publish({'a': a, 'b': b})
     print(f'{a}  {b} 之和是 {async_result.result}')
-
+    
 
 
 

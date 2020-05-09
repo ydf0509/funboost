@@ -37,7 +37,7 @@ setup(
     ],
     install_requires=[
         'eventlet==0.25.0',
-        'gevent',
+        'gevent==1.4.0',
         'pymongo==3.5.1',
         'AMQPStorm==2.7.1',
         'pika==1.1.0',

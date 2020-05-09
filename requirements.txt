@@ -26,3 +26,5 @@ sqlalchemy_utils==0.36.1
 apscheduler
 PyWin32    # windows need because of concurrent-log-handler
 # pip install -r requirements.text -i http://mirrors.aliyun.com/pypi/simple/
+pikav0
+pikav1

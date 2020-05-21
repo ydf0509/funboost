@@ -8,7 +8,7 @@ from kafka import KafkaConsumer as OfficialKafkaConsumer, KafkaProducer
 
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
 from function_scheduling_distributed_framework import frame_config
-from function_scheduling_distributed_framework.utils import LogManager
+from nb_log import LogManager
 
 LogManager('kafka').get_logger_and_add_handlers(20)
 
@@ -39,3 +39,4 @@ class KafkaConsumer(AbstractConsumer):
 
     def _requeue(self, kw):
         self._producer.send(self._queue_name, json.dumps(kw['body']).encode())
+

@@ -7,7 +7,7 @@ from threading import Lock
 from pikav0.exceptions import AMQPError
 
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
-from function_scheduling_distributed_framework.utils import LogManager
+from nb_log import LogManager
 from function_scheduling_distributed_framework.utils.rabbitmq_factory import RabbitMqFactory
 
 LogManager('pikav0').get_logger_and_add_handlers(20)

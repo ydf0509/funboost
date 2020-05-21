@@ -11,24 +11,10 @@ import time
 import re
 import importlib
 from pathlib import Path
+from nb_log import nb_print
 from function_scheduling_distributed_framework import frame_config
 
 
-# noinspection PyProtectedMember,PyUnusedLocal,PyIncorrectDocstring
-def nb_print(*args, sep=' ', end='\n', file=None):
-    """
-    超流弊的print补丁，
-    :param x:
-    :return:
-    """
-    # 获取被调用函数在被调用时所处代码行数
-    line = sys._getframe().f_back.f_lineno
-    # 获取被调用函数所在模块文件名
-    file_name = sys._getframe(1).f_code.co_filename
-    # sys.stdout.write(f'"{__file__}:{sys._getframe().f_lineno}"    {x}\n')
-    args = (str(arg) for arg in args)  # REMIND 防止是数字不能被join
-    sys.stdout.write(
-        f'\033[0;34m{time.strftime("%H:%M:%S")}\033[0m  "{file_name}:{line}"   \033[0;30;44m{"".join(args)}\033[0m\n')  # 36  93 96 94
 
 
 # noinspection PyPep8Naming

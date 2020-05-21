@@ -792,3 +792,8 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 ~~~
 ##### 自动生成的python配置文件，需要按需修改。
 ![Image text](https://i.niupic.com/images/2020/04/20/7szW.png)
+
+
+## 6.9 日志改为导入独立包nb_log，支持用户配置文件自定义日志配置。
+
+例如设置默认需不需要彩色，需不需要大背景彩色色块，需不需要自动拦截转化python内置的print

@@ -81,7 +81,7 @@ class BaseBulkHelper(LoggerMixin, metaclass=abc.ABCMeta):
             if self._main_thread_has_exit and self._to_be_request_queue.qsize() == 0:
                 pass
                 # break
-            time.sleep(10 ** -4)
+            time.sleep(10 ** -2)
 
     @decorators.keep_circulating(60)
     def __check_queue_size(self):

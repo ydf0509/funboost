@@ -13,7 +13,8 @@ from threading import Lock
 import amqpstorm
 from pika.exceptions import AMQPError as PikaAMQPError
 
-from function_scheduling_distributed_framework.utils import LoggerLevelSetterMixin, LogManager, decorators, RedisMixin, LoggerMixin
+from nb_log import LoggerLevelSetterMixin, LogManager, LoggerMixin
+from function_scheduling_distributed_framework.utils import decorators, RedisMixin
 
 
 class RedisAsyncResult(RedisMixin):
@@ -69,6 +70,7 @@ class PublishParamsChecker(LoggerMixin):
     """
     发布的任务的函数参数检查，使发布的任务不会出现错误。
     """
+
     def __init__(self, func: typing.Callable):
         print(func)
         spec = inspect.getfullargspec(func)
@@ -84,7 +86,8 @@ class PublishParamsChecker(LoggerMixin):
 
     def check_params(self, publish_params: dict):
         publish_params_keys_set = set(publish_params.keys())
-        if publish_params_keys_set.issubset(self.all_arg_name_set) and publish_params_keys_set.issuperset(self.position_arg_name_set):
+        if publish_params_keys_set.issubset(self.all_arg_name_set) and publish_params_keys_set.issuperset(
+                self.position_arg_name_set):
             return True
         else:
             raise ValueError(f'你发布的参数不正确，你发布的任务的所有键是 {publish_params_keys_set}， '
@@ -94,7 +97,8 @@ class PublishParamsChecker(LoggerMixin):
 class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     has_init_broker = 0
 
-    def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True, clear_queue_within_init=False, is_add_publish_time=True, consuming_function: callable = None):
+    def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True,
+                 clear_queue_within_init=False, is_add_publish_time=True, consuming_function: callable = None):
         """
         :param queue_name:
         :param log_level_int:
@@ -109,7 +113,8 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if logger_prefix != '':
             logger_prefix += '--'
         logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}'
-        self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level_int, log_filename=f'{logger_name}.log' if is_add_file_handler else None)  #
+        self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level_int,
+                                                                          log_filename=f'{logger_name}.log' if is_add_file_handler else None)  #
         self.publish_params_checker = PublishParamsChecker(consuming_function) if consuming_function else None
         # self.rabbit_client = RabbitMqFactory(is_use_rabbitpy=is_use_rabbitpy).get_rabbit_cleint()
         # self.channel = self.rabbit_client.creat_a_channel()
@@ -146,17 +151,20 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if self.publish_params_checker:
             self.publish_params_checker.check_params(msg)
         task_id = f'{self._queue_name}_result:{uuid.uuid4()}'
-        msg['extra'] = extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4), 'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
+        msg['extra'] = extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
+                                       'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
         if priority_control_config:
             extra_params.update(priority_control_config.to_dict())
         t_start = time.time()
-        decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(self.concrete_realization_of_publish)(json.dumps(msg, ensure_ascii=False))
+        decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
+            self.concrete_realization_of_publish)(json.dumps(msg, ensure_ascii=False))
         self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg}')
         with self._lock_for_count:
             self.count_per_minute += 1
             self.publish_msg_num_total += 1
         if time.time() - self._current_time > 10:
-            self.logger.info(f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 中')
+            self.logger.info(
+                f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 中')
             self._init_count()
         return RedisAsyncResult(task_id)
 
@@ -184,7 +192,8 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.logger.warning(f'with中自动关闭publisher连接，累计推送了 {self.publish_msg_num_total} 条消息 ')
 
     def __at_exit(self):
-        self.logger.warning(f'程序关闭前，{round(time.time() - self.__init_time)} 秒内，累计推送了 {self.publish_msg_num_total} 条消息 到 {self._queue_name} 中')
+        self.logger.warning(
+            f'程序关闭前，{round(time.time() - self.__init_time)} 秒内，累计推送了 {self.publish_msg_num_total} 条消息 到 {self._queue_name} 中')
 
 
 def deco_mq_conn_error(f):

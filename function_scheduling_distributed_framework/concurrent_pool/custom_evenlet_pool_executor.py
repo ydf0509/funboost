@@ -6,7 +6,7 @@ import time
 import warnings
 from eventlet import greenpool, monkey_patch, patcher, Timeout
 
-from function_scheduling_distributed_framework.utils import LogManager, nb_print
+from nb_log import LogManager, nb_print
 
 
 def check_evenlet_monkey_patch(raise_exc=True):

@@ -1,5 +1,5 @@
 eventlet==0.25.0
-gevent==1.4.0
+gevent
 pymongo==3.5.1
 AMQPStorm==2.7.1
 pika==1.1.0
@@ -21,3 +21,4 @@ sqlalchemy_utils==0.36.1
 apscheduler
 pikav0
 pikav1
+nb_log

@@ -10,7 +10,7 @@ from gevent import pool as gevent_pool
 from gevent import monkey
 from gevent.queue import JoinableQueue
 
-from function_scheduling_distributed_framework.utils import LoggerMixin, nb_print, LogManager
+from nb_log import LoggerMixin, nb_print, LogManager
 
 
 def check_gevent_monkey_patch(raise_exc=True):

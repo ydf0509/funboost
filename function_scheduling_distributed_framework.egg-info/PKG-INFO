@@ -1,12 +1,12 @@
 Metadata-Version: 2.1
 Name: function-scheduling-distributed-framework
-Version: 6.0
+Version: 6.3
 Summary: function scheduling distributed framework
 Home-page: https://github.com/ydf0509/distributed_framework
 Author: bfzs
-Author-email: 909686719@qq.com
+Author-email: m13148804508@163.com
 Maintainer: ydf
-Maintainer-email: 909686719@qq.com
+Maintainer-email: m13148804508@163.com
 License: BSD License
 Description: see github     https://github.com/ydf0509/distributed_framework
 Platform: all

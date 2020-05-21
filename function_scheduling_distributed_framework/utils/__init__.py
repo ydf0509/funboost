@@ -4,8 +4,7 @@
 import json
 from datetime import datetime as _datetime
 from datetime import date as _date
-from function_scheduling_distributed_framework.utils.monkey_print2 import nb_print, patch_print
-from function_scheduling_distributed_framework.utils.log_manager import (LogManager, get_logs_dir_by_folder_name, simple_logger, defaul_logger, file_logger, LoggerMixin, LoggerLevelSetterMixin, LoggerMixinDefaultWithFileHandler)
+from nb_log import (LogManager, simple_logger, defaul_logger, LoggerMixin, LoggerLevelSetterMixin, LoggerMixinDefaultWithFileHandler,nb_print,patch_print,reverse_patch_print)
 
 from function_scheduling_distributed_framework.utils.redis_manager import RedisMixin
 

@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version="6.0",
+    version="6.3",
     description=(
         'function scheduling distributed framework'
     ),
@@ -58,10 +58,16 @@ setup(
         'sqlalchemy_utils==0.36.1',
         'apscheduler',
         'pikav0',
-        'pikav1'
+        'pikav1',
+        'nb_log'
     ]
 )
 """
+官方 https://pypi.org/simple
+清华 https://pypi.tuna.tsinghua.edu.cn/simple
+豆瓣 https://pypi.douban.com/simple/ 
+阿里云 https://mirrors.aliyun.com/pypi/simple/
+
 打包上传
 python setup.py sdist upload -r pypi
 

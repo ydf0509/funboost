@@ -6,7 +6,7 @@ from gnsq import Consumer, Message
 
 from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
-from function_scheduling_distributed_framework.utils import LogManager
+from nb_log import LogManager
 
 LogManager('gnsq').get_logger_and_add_handlers(20)
 

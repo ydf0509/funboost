@@ -11,7 +11,8 @@ import time
 from collections import OrderedDict
 import typing
 
-from function_scheduling_distributed_framework.utils import RedisMixin, decorators, LoggerMixinDefaultWithFileHandler
+from function_scheduling_distributed_framework.utils import RedisMixin, decorators
+from nb_log import LoggerMixinDefaultWithFileHandler
 
 
 class RedisFilter(RedisMixin, LoggerMixinDefaultWithFileHandler):

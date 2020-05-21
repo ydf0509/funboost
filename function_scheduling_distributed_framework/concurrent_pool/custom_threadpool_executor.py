@@ -14,7 +14,7 @@ import threading
 import time
 import weakref
 
-from function_scheduling_distributed_framework.utils import LoggerMixin, nb_print, LoggerLevelSetterMixin, LogManager
+from nb_log import LoggerMixin, nb_print, LoggerLevelSetterMixin, LogManager
 from function_scheduling_distributed_framework.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch
 from function_scheduling_distributed_framework.concurrent_pool.custom_gevent_pool_executor import check_gevent_monkey_patch
 

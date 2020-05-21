@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, Future
 # noinspection PyProtectedMember
 from concurrent.futures.thread import _WorkItem
 
-from function_scheduling_distributed_framework.utils.log_manager import LogManager
+from nb_log import LogManager
 
 logger = LogManager('BoundedThreadPoolExecutor').get_logger_and_add_handlers()
 

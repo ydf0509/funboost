@@ -26,13 +26,18 @@ from pymongo import IndexModel
 from pymongo.errors import PyMongoError
 
 # noinspection PyUnresolvedReferences
-from function_scheduling_distributed_framework.concurrent_pool.bounded_threadpoolexcutor import BoundedThreadPoolExecutor
-from function_scheduling_distributed_framework.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco, check_evenlet_monkey_patch, CustomEventletPoolExecutor
-from function_scheduling_distributed_framework.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_deco, GeventPoolExecutor, check_gevent_monkey_patch
-from function_scheduling_distributed_framework.concurrent_pool.custom_threadpool_executor import CustomThreadPoolExecutor, check_not_monkey
+from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin
+from function_scheduling_distributed_framework.concurrent_pool.bounded_threadpoolexcutor import \
+    BoundedThreadPoolExecutor
+from function_scheduling_distributed_framework.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco, \
+    check_evenlet_monkey_patch, CustomEventletPoolExecutor
+from function_scheduling_distributed_framework.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_deco, \
+    GeventPoolExecutor, check_gevent_monkey_patch
+from function_scheduling_distributed_framework.concurrent_pool.custom_threadpool_executor import \
+    CustomThreadPoolExecutor, check_not_monkey
 from function_scheduling_distributed_framework.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
-from function_scheduling_distributed_framework.utils import LoggerLevelSetterMixin, LogManager, decorators, nb_print, LoggerMixin, time_util, RedisMixin
+from function_scheduling_distributed_framework.utils import decorators, time_util, RedisMixin
 from function_scheduling_distributed_framework.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
 from function_scheduling_distributed_framework.utils.mongo_util import MongoMixin
 
@@ -146,7 +151,8 @@ class ConsumersManager:
 
     @classmethod
     def join_all_consumer_shedual_task_thread(cls):
-        nb_print((cls.schedulal_thread_to_be_join, len(cls.schedulal_thread_to_be_join), '模式：', cls.global_concurrent_mode))
+        nb_print(
+            (cls.schedulal_thread_to_be_join, len(cls.schedulal_thread_to_be_join), '模式：', cls.global_concurrent_mode))
         if cls.schedual_task_always_use_thread:
             for t in cls.schedulal_thread_to_be_join:
                 nb_print(t)
@@ -170,7 +176,8 @@ class ConsumersManager:
     def show_all_consumer_info(cls):
         nb_print(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}')
         for _, consumer_info in cls.consumers_queue__info_map.items():
-            sys.stdout.write(f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}"  \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
+            sys.stdout.write(
+                f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}"  \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
 
     @classmethod
     def get_concurrent_info(cls):
@@ -293,7 +300,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         ConsumersManager.consumers_queue__info_map[queue_name] = current_queue__info_dict = copy.copy(locals())
         current_queue__info_dict['consuming_function'] = str(consuming_function)  # consuming_function.__name__
-        current_queue__info_dict['function_result_status_persistance_conf'] = function_result_status_persistance_conf.to_dict()
+        current_queue__info_dict[
+            'function_result_status_persistance_conf'] = function_result_status_persistance_conf.to_dict()
         current_queue__info_dict.pop('self')
         current_queue__info_dict['broker_kind'] = self.__class__.BROKER_KIND
         current_queue__info_dict['class_name'] = self.__class__.__name__
@@ -337,9 +345,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         logger_name = f'{logger_prefix}{self.__class__.__name__}--{concurrent_name}--{queue_name}'
         # nb_print(logger_name)
-        self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level, log_filename=f'{logger_name}.log' if create_logger_file else None)
+        self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level,
+                                                                          log_filename=f'{logger_name}.log' if create_logger_file else None)
         # self.logger.info(f'{self.__class__} 在 {current_queue__info_dict["where_to_instantiate"]}  被实例化')
-        sys.stdout.write(f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;30;44m此行 实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
+        sys.stdout.write(
+            f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;30;44m此行 实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
 
         self._do_task_filtering = do_task_filtering
         self._redis_filter_key_name = f'filter_zset:{queue_name}' if task_filtering_expire_seconds else f'filter_set:{queue_name}'
@@ -378,7 +388,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def custom_init(self):
         pass
 
-    def keep_circulating(self, time_sleep=0.001, exit_if_function_run_sucsess=False, is_display_detail_exception=True, block=True):
+    def keep_circulating(self, time_sleep=0.001, exit_if_function_run_sucsess=False, is_display_detail_exception=True,
+                         block=True):
         """间隔一段时间，一直循环运行某个方法的装饰器
         :param time_sleep :循环的间隔时间
         :param is_display_detail_exception
@@ -398,7 +409,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                             if exit_if_function_run_sucsess:
                                 return result
                         except Exception as e:
-                            msg = func.__name__ + '   运行出错\n ' + traceback.format_exc(limit=10) if is_display_detail_exception else str(e)
+                            msg = func.__name__ + '   运行出错\n ' + traceback.format_exc(
+                                limit=10) if is_display_detail_exception else str(e)
                             self.logger.error(msg)
                         finally:
                             time.sleep(time_sleep)
@@ -432,7 +444,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _run(self, kw: dict, ):
         do_task_filtering_priority = self.__get_priority_conf(kw, 'do_task_filtering')
         function_only_params = delete_keys_and_return_new_dict(kw['body'], )
-        if do_task_filtering_priority and self._redis_filter.check_value_exists(function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
+        if do_task_filtering_priority and self._redis_filter.check_value_exists(
+                function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
             self.logger.info(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
             self._confirm_consume(kw)
             return
@@ -445,8 +458,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     f'才能执行完成 {self._msg_num_in_broker}个剩余的任务 ')
                 self._current_time_for_execute_task_times_every_minute = time.time()
                 self._execute_task_times_every_minute = 0
-        self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times=0, function_result_status=FunctionResultStatus(
-            self.queue_name, self.consuming_function.__name__, kw['body']), do_task_filtering_priority=do_task_filtering_priority)
+        self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times=0,
+                                                            function_result_status=FunctionResultStatus(
+                                                                self.queue_name, self.consuming_function.__name__,
+                                                                kw['body']),
+                                                            do_task_filtering_priority=do_task_filtering_priority)
 
     def __get_priority_conf(self, kw: dict, broker_task_config_key: str):
         broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)
@@ -455,18 +471,22 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         else:
             return broker_task_config
 
-    def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times, function_result_status: FunctionResultStatus, do_task_filtering_priority):
+    def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
+                                                       function_result_status: FunctionResultStatus,
+                                                       do_task_filtering_priority):
         function_only_params = delete_keys_and_return_new_dict(kw['body'])
         if current_retry_times < self.__get_priority_conf(kw, 'max_retry_times'):
             function_result_status.run_times += 1
             # noinspection PyBroadException
             t_start = time.time()
             try:
-                function_run = self.consuming_function if self._function_timeout == 0 else self._concurrent_mode_dispatcher.timeout_deco(self.__get_priority_conf(kw, 'function_timeout'))(self.consuming_function)
+                function_run = self.consuming_function if self._function_timeout == 0 else self._concurrent_mode_dispatcher.timeout_deco(
+                    self.__get_priority_conf(kw, 'function_timeout'))(self.consuming_function)
                 if self._is_consuming_function_use_multi_params:  # 消费函数使用传统的多参数形式
                     function_result_status.result = function_run(**function_only_params)
                 else:
-                    function_result_status.result = function_run(function_only_params)  # 消费函数使用单个参数，参数自身是一个字典，由键值对表示各个参数。
+                    function_result_status.result = function_run(
+                        function_only_params)  # 消费函数使用单个参数，参数自身是一个字典，由键值对表示各个参数。
                 function_result_status.success = True
                 self._confirm_consume(kw)
                 if do_task_filtering_priority:
@@ -475,16 +495,20 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。  {ConsumersManager.get_concurrent_info()}')
 
             except Exception as e:
-                if isinstance(e, (PyMongoError, ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
+                if isinstance(e, (PyMongoError,
+                                  ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
                     self.logger.critical(f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}，消息重新入队')
                     time.sleep(1)  # 防止快速无限出错入队出队，导致cpu和中间件忙
                     return self._requeue(kw)
                 self.logger.error(f'函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次发生错误，'
-                                  f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是 【 {function_only_params} 】   \n 原因是 {type(e)} {e} ', exc_info=self.__get_priority_conf(kw, 'is_print_detail_exception'))
+                                  f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是 【 {function_only_params} 】   \n 原因是 {type(e)} {e} ',
+                                  exc_info=self.__get_priority_conf(kw, 'is_print_detail_exception'))
                 function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
-                self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times + 1, function_result_status, do_task_filtering_priority)
+                self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times + 1, function_result_status,
+                                                                    do_task_filtering_priority)
         else:
-            self.logger.critical(f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是 【 {function_only_params} 】')
+            self.logger.critical(
+                f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是 【 {function_only_params} 】')
             self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
         self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
         if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
@@ -492,7 +516,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             with RedisMixin().redis_db_frame.pipeline() as p:
                 # RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
                 # RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
-                p.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
+                p.lpush(kw['body']['extra']['task_id'],
+                        json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
                 p.expire(kw['body']['extra']['task_id'], 600)
                 p.execute()
 
@@ -523,8 +548,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         publish_time = _get_publish_time(kw['body'])
         msg_expire_senconds_priority = self.__get_priority_conf(kw, 'msg_expire_senconds')
         if msg_expire_senconds_priority != 0 and time.time() - msg_expire_senconds_priority > publish_time:
-            self.logger.warning(f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(time.time() - publish_time, 4)} 秒 ,'
-                                f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
+            self.logger.warning(
+                f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(time.time() - publish_time, 4)} 秒 ,'
+                f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
             self._confirm_consume(kw)
             return 0
         self.concurrent_pool.submit(self._run, kw)
@@ -532,8 +558,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)
     def _judge_is_daylight(self):
-        if self._is_do_not_run_by_specify_time_effect and self._do_not_run_by_specify_time[0] < time_util.DatetimeConverter().time_str < self._do_not_run_by_specify_time[1]:
-            self.logger.warning(f'现在时间是 {time_util.DatetimeConverter()} ，现在时间是在 {self._do_not_run_by_specify_time} 之间，不运行')
+        if self._is_do_not_run_by_specify_time_effect and self._do_not_run_by_specify_time[
+            0] < time_util.DatetimeConverter().time_str < self._do_not_run_by_specify_time[1]:
+            self.logger.warning(
+                f'现在时间是 {time_util.DatetimeConverter()} ，现在时间是在 {self._do_not_run_by_specify_time} 之间，不运行')
             return True
 
     def __str__(self):
@@ -575,7 +603,8 @@ class ConcurrentModeDispatcher(LoggerMixin):
         elif self._concurrent_mode == 3:
             pool_type = CustomEventletPoolExecutor
             check_evenlet_monkey_patch()
-        self.consumer._threadpool = self.consumer._specify_threadpool if self.consumer._specify_threadpool else pool_type(self.consumer._threads_num)
+        self.consumer._threadpool = self.consumer._specify_threadpool if self.consumer._specify_threadpool else pool_type(
+            self.consumer._threads_num)
         return self.consumer._threadpool
 
     def schedulal_task_with_no_block(self):
@@ -596,7 +625,8 @@ class ConcurrentModeDispatcher(LoggerMixin):
                 ConsumersManager.schedulal_thread_to_be_join.append(g)
 
 
-def wait_for_possible_has_finish_all_tasks(queue_name: str, minutes: int, send_stop_to_broker=0, broker_kind: int = 0, ):
+def wait_for_possible_has_finish_all_tasks(queue_name: str, minutes: int, send_stop_to_broker=0,
+                                           broker_kind: int = 0, ):
     """
       由于是异步消费，和存在队列一边被消费，一边在推送，或者还有结尾少量任务还在确认消费者实际还没彻底运行完成。  但有时候需要判断 所有任务，务是否完成，提供一个不精确的判断，要搞清楚原因和场景后再慎用。
     :param queue_name: 队列名字

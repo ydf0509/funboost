@@ -20,7 +20,7 @@ def f2(a, b):
 
 
 # 把消费的函数名传给consuming_function，就这么简单。
-consumer = get_consumer('queue_test2', consuming_function=f2, broker_kind=6)  # 通过设置broker_kind，一键切换中间件为mq或redis等7种中间件或包。
+consumer = get_consumer('queue_test2', consuming_function=f2,broker_kind=6)  # 通过设置broker_kind，一键切换中间件为mq或redis等7种中间件或包。
 
 if __name__ == '__main__':
     consumer.start_consuming_message()

@@ -20,7 +20,6 @@ class KafkaConsumer(AbstractConsumer):
     BROKER_KIND = 8
 
     def _shedual_task(self):
-
         self._producer = KafkaProducer(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
         consumer = OfficialKafkaConsumer(self._queue_name, bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS,
                                          group_id='frame_group', enable_auto_commit=True)
@@ -30,7 +29,8 @@ class KafkaConsumer(AbstractConsumer):
 
         for message in consumer:
             # 注意: message ,value都是原始的字节数据，需要decode
-            self.logger.debug(f'从kafka的 [{message.topic}] 主题,分区 {message.partition} 中 取出的消息是：  {message.value.decode()}')
+            self.logger.debug(
+                f'从kafka的 [{message.topic}] 主题,分区 {message.partition} 中 取出的消息是：  {message.value.decode()}')
             kw = {'consumer': consumer, 'message': message, 'body': json.loads(message.value)}
             self._submit_task(kw)
 
@@ -39,4 +39,3 @@ class KafkaConsumer(AbstractConsumer):
 
     def _requeue(self, kw):
         self._producer.send(self._queue_name, json.dumps(kw['body']).encode())
-

@@ -28,7 +28,7 @@ import logging
 # MONGO_URL = 'mongodb://myUserAdmin:mimamiama@127.0.0.1:27016/admin'
 # 
 # DEFAULUT_USE_COLOR_HANDLER = True  # 是否默认使用有彩的日志。有的人讨厌彩色可以关掉（主要是不按提示的说明配置pycahrm的conose）。
-DISPLAY_BACKGROUD_COLOR_IN_CONSOLE = False     # 在控制台是否显示彩色块状的日志。为False则不使用大块的背景颜色。
+DISPLAY_BACKGROUD_COLOR_IN_CONSOLE = True     # 在控制台是否显示彩色块状的日志。为False则不使用大块的背景颜色。
 # AUTO_PATCH_PRINT = True  # 是否自动打print的猴子补丁，如果打了后指不定，print自动变色和可点击跳转。
 # WARNING_PYCHARM_COLOR_SETINGS = True
 # 

@@ -15,7 +15,7 @@ from pika.exceptions import AMQPError as PikaAMQPError
 
 from nb_log import LoggerLevelSetterMixin, LogManager, LoggerMixin
 from function_scheduling_distributed_framework.utils import decorators, RedisMixin
-
+from function_scheduling_distributed_framework import frame_config
 
 class RedisAsyncResult(RedisMixin):
     def __init__(self, task_id, timeout=120):
@@ -112,9 +112,13 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._queue_name = queue_name
         if logger_prefix != '':
             logger_prefix += '--'
+        consuming_function_name = f'--{consuming_function.__name__}' if consuming_function else ''
+        # logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}{consuming_function_name}'
         logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}'
         self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level_int,
-                                                                          log_filename=f'{logger_name}.log' if is_add_file_handler else None)  #
+                                                                          log_filename=f'{logger_name}.log' if is_add_file_handler else None,
+                                                                          formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
+        )  #
         self.publish_params_checker = PublishParamsChecker(consuming_function) if consuming_function else None
         # self.rabbit_client = RabbitMqFactory(is_use_rabbitpy=is_use_rabbitpy).get_rabbit_cleint()
         # self.channel = self.rabbit_client.creat_a_channel()

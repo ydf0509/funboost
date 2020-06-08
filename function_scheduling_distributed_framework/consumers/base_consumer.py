@@ -40,6 +40,7 @@ from function_scheduling_distributed_framework.factories.publisher_factotry impo
 from function_scheduling_distributed_framework.utils import decorators, time_util, RedisMixin
 from function_scheduling_distributed_framework.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
 from function_scheduling_distributed_framework.utils.mongo_util import MongoMixin
+from function_scheduling_distributed_framework import frame_config
 
 
 def delete_keys_and_return_new_dict(dictx: dict, keys: list = None):
@@ -343,10 +344,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if logger_prefix != '':
             logger_prefix += '--'
 
-        logger_name = f'{logger_prefix}{self.__class__.__name__}--{concurrent_name}--{queue_name}'
+        # logger_name = f'{logger_prefix}{self.__class__.__name__}--{concurrent_name}--{queue_name}--{self.consuming_function.__name__}'
+        logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}'
         # nb_print(logger_name)
         self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level,
-                                                                          log_filename=f'{logger_name}.log' if create_logger_file else None)
+                                                                          log_filename=f'{logger_name}.log' if create_logger_file else None,
+                                                                          formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
         # self.logger.info(f'{self.__class__} 在 {current_queue__info_dict["where_to_instantiate"]}  被实例化')
         sys.stdout.write(
             f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;30;44m此行 实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')

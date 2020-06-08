@@ -76,6 +76,7 @@ class CustomThreadPoolExecutor(LoggerMixin, LoggerLevelSetterMixin):
         self.threads_free_count = 0
         self._shutdown = False
         self._shutdown_lock = threading.Lock()
+        # self.logger.setLevel(20)
 
     def set_min_workers(self, min_workers=10):
         self._min_workers = min_workers
@@ -94,7 +95,7 @@ class CustomThreadPoolExecutor(LoggerMixin, LoggerLevelSetterMixin):
 
     def _adjust_thread_count(self):
         # if len(self._threads) < self._threads_num:
-        self.logger.debug((self.threads_free_count, len(self._threads), len(_threads_queues), get_current_threads_num()))
+        # self.logger.debug((self.threads_free_count, len(self._threads), len(_threads_queues), get_current_threads_num()))
         if self.threads_free_count < self._min_workers and len(self._threads) < self._max_workers:
             # t = threading.Thread(target=_work,
             #                      args=(self._work_queue,self))

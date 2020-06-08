@@ -21,4 +21,4 @@ sqlalchemy_utils==0.36.1
 apscheduler
 pikav0
 pikav1
-nb_log
+nb_log>=2.7

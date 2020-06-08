@@ -10,7 +10,7 @@ from test_frame.my_patch_frame_config import do_patch_frame_config
 
 do_patch_frame_config()
 
-logger = LogManager('f2').get_logger_and_add_handlers()
+logger = LogManager('test.f2').get_logger_and_add_handlers()
 
 
 def f2(a, b):

@@ -5,9 +5,10 @@ from setuptools import setup, find_packages
 # with open("README.md", "r",encoding='utf8') as fh:
 #     long_description = fh.read()
 
+
 setup(
     name='function_scheduling_distributed_framework',  #
-    version="6.3",
+    version=6.6,
     description=(
         'function scheduling distributed framework'
     ),
@@ -59,7 +60,7 @@ setup(
         'apscheduler',
         'pikav0',
         'pikav1',
-        'nb_log'
+        'nb_log>=2.7'
     ]
 )
 """

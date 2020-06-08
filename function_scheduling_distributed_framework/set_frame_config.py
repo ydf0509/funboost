@@ -135,6 +135,9 @@ patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:2
 # KAFKA_BOOTSTRAP_SERVERS = ['127.0.0.1:9092']
 # 
 # SQLACHEMY_ENGINE_URL ='sqlite:////sqlachemy_queues/queues.db'
+
+# nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
+# NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7               
 '''
 
 
@@ -178,6 +181,9 @@ def use_config_form_distributed_frame_config_module():
     
     SQLACHEMY_ENGINE_URL ='sqlite:////sqlachemy_queues/queues.db'
     
+    # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
+    NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7               
+    
     \033[0m
     
     \033[0;93;100m
@@ -212,6 +218,8 @@ def use_config_form_distributed_frame_config_module():
                        KAFKA_BOOTSTRAP_SERVERS=['12.34.56.78:9092'],
                        
                        SQLACHEMY_ENGINE_URL = 'mysql+pymysql://root:123456@127.0.0.1:3306/sqlachemy_queues?charset=utf8',
+                       
+                       NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7,
                        )
 
     show_frame_config()

@@ -1,5 +1,5 @@
 # coding=utf8
-import redis
+import redis2 as redis
 from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.utils import decorators
 

@@ -16,9 +16,9 @@ setup(
     long_description='see github     https://github.com/ydf0509/distributed_framework',
     long_description_content_type="text/markdown",
     author='bfzs',
-    author_email='m13148804508@163.com',
+    author_email='ydf0509@sohu.com',
     maintainer='ydf',
-    maintainer_email='m13148804508@163.com',
+    maintainer_email='ydf0509@sohu.com',
     license='BSD License',
     # packages=['douban'], #
     packages=find_packages(),

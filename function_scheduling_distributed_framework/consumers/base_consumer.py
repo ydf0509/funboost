@@ -43,7 +43,7 @@ from function_scheduling_distributed_framework.utils.mongo_util import MongoMixi
 from function_scheduling_distributed_framework import frame_config
 
 
-def delete_keys_and_return_new_dict(dictx: dict, keys: list = None):
+def _delete_keys_and_return_new_dict(dictx: dict, keys: list = None):
     dict_new = copy.copy(dictx)  # 主要是去掉一级键 publish_time，浅拷贝即可。
     keys = ['publish_time', 'publish_time_format', 'extra'] if keys is None else keys
     for dict_key in keys:
@@ -83,7 +83,7 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         publish_time = _get_publish_time(params)
         if publish_time:
             self.publish_time_str = time_util.DatetimeConverter(publish_time).datetime_str
-        function_params = delete_keys_and_return_new_dict(params, )
+        function_params = _delete_keys_and_return_new_dict(params, )
         self.params = function_params
         self.params_str = json.dumps(function_params, ensure_ascii=False)
         self.result = ''
@@ -117,7 +117,7 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
                          'utime': datetime.datetime.utcnow(),
                          })
         else:
-            item = delete_keys_and_return_new_dict(item, ['insert_time', 'utime'])
+            item = _delete_keys_and_return_new_dict(item, ['insert_time', 'utime'])
         item['_id'] = str(uuid.uuid4())
         self.logger.debug(item)
         return item
@@ -134,6 +134,7 @@ class ResultPersistenceHelper(MongoMixin):
             task_status_col.create_index([("utime", 1)],
                                          expireAfterSeconds=function_result_status_persistance_conf.expire_seconds)  # 只保留7天。
             self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
+            self.task_status_col = task_status_col
 
     def save_function_result_to_mongo(self, function_result_status: FunctionResultStatus):
         if self.function_result_status_persistance_conf.is_save_status:
@@ -141,7 +142,7 @@ class ResultPersistenceHelper(MongoMixin):
             if not self.function_result_status_persistance_conf.is_save_result:
                 item['result'] = '不保存结果'
             self._mongo_bulk_write_helper.add_task(InsertOne(item))  # 自动离散批量聚合方式。
-            # self._task_status_col.insert_one(function_result_status.get_status_dict())
+            # self.task_status_col.insert_one(item)
 
 
 class ConsumersManager:
@@ -445,9 +446,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         raise NotImplementedError
 
     def _run(self, kw: dict, ):
-        do_task_filtering_priority = self.__get_priority_conf(kw, 'do_task_filtering')
-        function_only_params = delete_keys_and_return_new_dict(kw['body'], )
-        if do_task_filtering_priority and self._redis_filter.check_value_exists(
+        function_only_params = _delete_keys_and_return_new_dict(kw['body'], )
+        if self.__get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
                 function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
             self.logger.info(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
             self._confirm_consume(kw)
@@ -465,7 +465,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                             function_result_status=FunctionResultStatus(
                                                                 self.queue_name, self.consuming_function.__name__,
                                                                 kw['body']),
-                                                            do_task_filtering_priority=do_task_filtering_priority)
+                                                            )
 
     def __get_priority_conf(self, kw: dict, broker_task_config_key: str):
         broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)
@@ -475,9 +475,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             return broker_task_config
 
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
-                                                       function_result_status: FunctionResultStatus,
-                                                       do_task_filtering_priority):
-        function_only_params = delete_keys_and_return_new_dict(kw['body'])
+                                                       function_result_status: FunctionResultStatus, ):
+        function_only_params = _delete_keys_and_return_new_dict(kw['body'])
         if current_retry_times < self.__get_priority_conf(kw, 'max_retry_times'):
             function_result_status.run_times += 1
             # noinspection PyBroadException
@@ -492,11 +491,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                         function_only_params)  # 消费函数使用单个参数，参数自身是一个字典，由键值对表示各个参数。
                 function_result_status.success = True
                 self._confirm_consume(kw)
-                if do_task_filtering_priority:
+                if self.__get_priority_conf(kw, 'do_task_filtering'):
                     self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。  {ConsumersManager.get_concurrent_info()}')
-
             except Exception as e:
                 if isinstance(e, (PyMongoError,
                                   ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
@@ -507,8 +505,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                   f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是 【 {function_only_params} 】   \n 原因是 {type(e)} {e} ',
                                   exc_info=self.__get_priority_conf(kw, 'is_print_detail_exception'))
                 function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
-                self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times + 1, function_result_status,
-                                                                    do_task_filtering_priority)
+                return self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times + 1, function_result_status, )
         else:
             self.logger.critical(
                 f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是 【 {function_only_params} 】')
@@ -561,8 +558,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)
     def _judge_is_daylight(self):
-        if self._is_do_not_run_by_specify_time_effect and self._do_not_run_by_specify_time[
-            0] < time_util.DatetimeConverter().time_str < self._do_not_run_by_specify_time[1]:
+        if self._is_do_not_run_by_specify_time_effect and (
+                self._do_not_run_by_specify_time[0] < time_util.DatetimeConverter().time_str < self._do_not_run_by_specify_time[1]):
             self.logger.warning(
                 f'现在时间是 {time_util.DatetimeConverter()} ，现在时间是在 {self._do_not_run_by_specify_time} 之间，不运行')
             return True

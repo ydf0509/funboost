@@ -71,6 +71,7 @@ class BaseBulkHelper(LoggerMixin, metaclass=abc.ABCMeta):
     def add_task(self, base_operation: Union[UpdateOne, InsertOne, RedisOperation, tuple, dict]):
         """添加单个需要执行的操作，程序自动聚合陈批次操作"""
         self._to_be_request_queue.put(base_operation)
+        # self.logger.debug(base_operation)
 
     # @decorators.tomorrow_threads(100)
     @decorators.keep_circulating(1)  # redis异常或网络异常，使其自动恢复。
@@ -109,14 +110,17 @@ class MongoBulkWriteHelper(BaseBulkHelper):
             t_start = time.time()
             count = 0
             request_list = []
-            for _ in range(self._threshold):
+            for _ in range(0,self._threshold):
                 try:
                     request = self._to_be_request_queue.get_nowait()
+                    # print(request)
                     count += 1
                     request_list.append(request)
                 except Empty:
                     pass
+                    break
             if request_list:
+                print(request_list)
                 self.base_object.bulk_write(request_list, ordered=False)
             if self._is_print_log:
                 mongo_col_str = re.sub(r"document_class=dict, tz_aware=False, connect=True\),", "", str(self.base_object))
@@ -141,6 +145,7 @@ class ElasticBulkHelper(BaseBulkHelper):
                     request_list.append(request)
                 except Empty:
                     pass
+                    break
             if request_list:
                 # self.base_object.bulk_write(request_list, ordered=False)
                 helpers.bulk(self.base_object, request_list)
@@ -162,6 +167,7 @@ class RedisBulkWriteHelper(BaseBulkHelper):
                     request = self._to_be_request_queue.get_nowait()
                     count += 1
                 except Empty:
+                    break
                     pass
                 else:
                     getattr(pipeline, request.operation_name)(request.key, request.value)
@@ -192,18 +198,19 @@ class RedisBulkWriteHelper(BaseBulkHelper):
 
 # noinspection SpellCheckingInspection,PyMethodMayBeStatic
 class _Test(unittest.TestCase, LoggerMixin):
-    @unittest.skip
+    # @unittest.skip
     def test_mongo_bulk_write(self):
         # col = MongoMixin().mongo_16_client.get_database('test').get_collection('ydf_test2')
-        col = MongoClient().get_database('test').get_collection('ydf_test2')
+        col = MongoClient('mongodb://myUserAdmin:8mwTdy1klnSYepNo@192.168.199.202:27016/admin').get_database('test').get_collection('ydf_test3')
         with decorators.TimerContextManager():
-            for i in range(50000 + 13):
+            for i in range(5000 + 13):
                 # time.sleep(0.01)
                 item = {'_id': i, 'field1': i * 2}
-                mongo_helper = MongoBulkWriteHelper(col, 10000, is_print_log=True)
-                mongo_helper.add_task(UpdateOne({'_id': item['_id']}, {'$set': item}, upsert=True))
+                mongo_helper = MongoBulkWriteHelper(col, 100, is_print_log=True)
+                # mongo_helper.add_task(UpdateOne({'_id': item['_id']}, {'$set': item}, upsert=True))
+                mongo_helper.add_task(InsertOne({'_id': item['_id']}))
 
-    # @unittest.skip
+    @unittest.skip
     def test_redis_bulk_write(self):
 
         with decorators.TimerContextManager():

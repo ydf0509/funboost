@@ -257,7 +257,7 @@ consumer.start_consuming_message()
  
  
  
-### 3.1.1 windows运行中截图
+### 3.1.1 windows运行中截图。 
 
 ####win之1
 

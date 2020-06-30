@@ -35,5 +35,4 @@ def monkey_patch_json():
     json.dumps = _dumps
 
 #################以下为打猴子补丁#####################
-patch_print()
 monkey_patch_json()

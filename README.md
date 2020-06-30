@@ -258,7 +258,14 @@ consumer.start_consuming_message()
  
  
 ### 3.1.1 windows运行中截图
+
+####win之1
+
 ![Image text](https://i.niupic.com/images/2019/08/09/_477.png)
+
+####win之2
+
+![Image text](https://i.niupic.com/images/2020/06/30/8lvs.png)
 
 ### 3.1.2 linux运行中截图,使用gevent模式，减法消费控频更厉害，所以执行次数更少。
 ![Image text](https://i.niupic.com/images/2019/09/16/_222.png)

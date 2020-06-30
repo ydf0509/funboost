@@ -139,10 +139,11 @@ class ResultPersistenceHelper(MongoMixin):
     def save_function_result_to_mongo(self, function_result_status: FunctionResultStatus):
         if self.function_result_status_persistance_conf.is_save_status:
             item = function_result_status.get_status_dict()
+            item2 = copy.copy(item)
             if not self.function_result_status_persistance_conf.is_save_result:
-                item['result'] = '不保存结果'
-            self._mongo_bulk_write_helper.add_task(InsertOne(item))  # 自动离散批量聚合方式。
-            # self.task_status_col.insert_one(item)
+                item2['result'] = '不保存结果'
+            self._mongo_bulk_write_helper.add_task(InsertOne(item2))  # 自动离散批量聚合方式。
+            # self.task_status_col.insert_one(item2)
 
 
 class ConsumersManager:
@@ -510,7 +511,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.logger.critical(
                 f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是 【 {function_only_params} 】')
             self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
-        self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
         if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
             # print(function_result_status.get_status_dict(without_datetime_obj=True))
             with RedisMixin().redis_db_frame.pipeline() as p:
@@ -520,6 +520,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                         json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
                 p.expire(kw['body']['extra']['task_id'], 600)
                 p.execute()
+        self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
 
     @abc.abstractmethod
     def _confirm_consume(self, kw):

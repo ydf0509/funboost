@@ -47,7 +47,7 @@ class BeggarRedisConsumer:
                 print(e)
 
 
-def start_consuming_message(queue_name, consume_function, threads_num):
+def start_consuming_message(queue_name, consume_function, threads_num=50):
     """
     本例子实现的功能和中间件过于简单，单一函数最好了。
     看不懂有类的代码，不用看上面那个类，看这个函数就可以，使用一个10行代码的函数实现乞丐版分布式函数执行框架。

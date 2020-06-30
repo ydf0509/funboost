@@ -258,6 +258,8 @@ def auto_creat_config_file_to_project_root_path():
     if Path(sys.path[1]).as_posix() in Path(__file__).parent.parent.absolute().as_posix():
         nb_print('不希望在本项目里面创建')
         return
+    if '/lib/python' in sys.path[1] or r'\lib\python' in sys.path[1]:
+        return  # 当没设置pythonpath时候，也不要在 /lib/python36.zip这样的地方创建配置文件。
     with (Path(sys.path[1]) / Path('distributed_frame_config.py')).open(mode='w', encoding='utf8') as f:
         f.write(config_file_content)
 

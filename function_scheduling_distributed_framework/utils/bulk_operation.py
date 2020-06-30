@@ -82,7 +82,7 @@ class BaseBulkHelper(LoggerMixin, metaclass=abc.ABCMeta):
             if self._main_thread_has_exit and self._to_be_request_queue.qsize() == 0:
                 pass
                 # break
-            time.sleep(10 ** -2)
+            time.sleep(10 ** -1)
 
     @decorators.keep_circulating(60)
     def __check_queue_size(self):
@@ -120,7 +120,7 @@ class MongoBulkWriteHelper(BaseBulkHelper):
                     pass
                     break
             if request_list:
-                print(request_list)
+                # print(request_list)
                 self.base_object.bulk_write(request_list, ordered=False)
             if self._is_print_log:
                 mongo_col_str = re.sub(r"document_class=dict, tz_aware=False, connect=True\),", "", str(self.base_object))

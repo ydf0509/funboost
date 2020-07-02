@@ -63,9 +63,10 @@ class BaseBulkHelper(LoggerMixin, metaclass=abc.ABCMeta):
         self._last_has_task_time = time.time()
         atexit.register(self.__do_something_before_exit)  # 程序自动结束前执行注册的函数
         self._main_thread_has_exit = False
-        Thread(target=self.__excute_bulk_operation_in_other_thread).start()
-        Thread(target=self.__check_queue_size).start()
-        # self.__excute_bulk_operation_in_other_thread()
+        # Thread(target=self.__excute_bulk_operation_in_other_thread).start()
+        # Thread(target=self.__check_queue_size).start()
+        self.__excute_bulk_operation_in_other_thread()
+        self.__check_queue_size()
         self.logger.debug(f'{self.__class__}被实例化')
 
     def add_task(self, base_operation: Union[UpdateOne, InsertOne, RedisOperation, tuple, dict]):
@@ -74,7 +75,7 @@ class BaseBulkHelper(LoggerMixin, metaclass=abc.ABCMeta):
         # self.logger.debug(base_operation)
 
     # @decorators.tomorrow_threads(100)
-    @decorators.keep_circulating(1)  # redis异常或网络异常，使其自动恢复。
+    @decorators.keep_circulating(1,block=False,daemon=True)  # redis异常或网络异常，使其自动恢复。
     def __excute_bulk_operation_in_other_thread(self):
         while True:
             if self._to_be_request_queue.qsize() >= self._threshold or time.time() > self._current_time + self._max_time_interval:
@@ -84,7 +85,7 @@ class BaseBulkHelper(LoggerMixin, metaclass=abc.ABCMeta):
                 # break
             time.sleep(10 ** -1)
 
-    @decorators.keep_circulating(60)
+    @decorators.keep_circulating(60,block=False,daemon=True)
     def __check_queue_size(self):
         if self._to_be_request_queue.qsize() > 0:
             self._last_has_task_time = time.time()

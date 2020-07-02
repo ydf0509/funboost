@@ -10,6 +10,7 @@ import copy
 # from multiprocessing import Process
 import datetime
 import json
+import pymongo
 import sys
 import socket
 import os
@@ -119,7 +120,8 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         else:
             item = _delete_keys_and_return_new_dict(item, ['insert_time', 'utime'])
         item['_id'] = str(uuid.uuid4())
-        self.logger.debug(item)
+        # self.logger.warning(item['_id'])
+        # self.logger.warning(item)
         return item
 
 
@@ -128,8 +130,9 @@ class ResultPersistenceHelper(MongoMixin):
         self.function_result_status_persistance_conf = function_result_status_persistance_conf
         if self.function_result_status_persistance_conf.is_save_status:
             task_status_col = self.mongo_db_task_status.get_collection(queue_name)
+            # params_str 如果很长，必须使用TEXt或HASHED索引。
             task_status_col.create_indexes([IndexModel([("insert_time_str", -1)]), IndexModel([("insert_time", -1)]),
-                                            IndexModel([("params_str", -1)]), IndexModel([("success", 1)])
+                                            IndexModel([("params_str", pymongo.TEXT)]), IndexModel([("success", 1)])
                                             ], )
             task_status_col.create_index([("utime", 1)],
                                          expireAfterSeconds=function_result_status_persistance_conf.expire_seconds)  # 只保留7天。

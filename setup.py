@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version=6.9,
+    version=7.1,
     description=(
         'function scheduling distributed framework'
     ),
@@ -77,3 +77,4 @@ python setup.py sdist upload -r pypi
 最新版下载
 ./pip install function_scheduling_distributed_framework --upgrade -i https://pypi.org/simple      
 """
+

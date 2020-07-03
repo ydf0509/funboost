@@ -28,6 +28,7 @@ from pymongo.errors import PyMongoError
 
 # noinspection PyUnresolvedReferences
 from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin
+# noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.concurrent_pool.bounded_threadpoolexcutor import \
     BoundedThreadPoolExecutor
 from function_scheduling_distributed_framework.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco, \
@@ -268,7 +269,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0,
                  threads_num=50, concurrent_num=50, specify_threadpool=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True,
-                 msg_schedule_time_intercal=0.0, qps=0, msg_expire_senconds=0,
+                 msg_schedule_time_intercal=0.0, qps: float = 0, msg_expire_senconds=0,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False,
                  task_filtering_expire_seconds=0, is_consuming_function_use_multi_params=True,
                  is_do_not_run_by_specify_time_effect=False,
@@ -335,6 +336,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._concurrent_mode = concurrent_mode
         self._max_retry_times = max_retry_times
         self._is_print_detail_exception = is_print_detail_exception
+        self._qps = qps
         if qps != 0:
             msg_schedule_time_intercal = 1.0 / qps  # 使用qps覆盖消息调度间隔，以qps为准，以后废弃msg_schedule_time_intercal这个参数。
         self._msg_schedule_time_intercal = msg_schedule_time_intercal if msg_schedule_time_intercal > 0.001 else 0.001
@@ -384,7 +386,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self.stop_flag = False
 
+        # 控频要用到的成员变量
         self._last_submit_task_timestamp = 0
+        self._last_start_count_qps_timestamp = time.time()
+        self._has_execute_times_in_recent_second = 0
 
         self._publisher_of_same_queue = None
 
@@ -559,15 +564,28 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
             self._confirm_consume(kw)
             return 0
-        print(time.time() - self._last_submit_task_timestamp)
-        time_sleep_for_qps_control = max(self._msg_schedule_time_intercal - (time.time() - self._last_submit_task_timestamp),0)
-
-        print(time_sleep_for_qps_control)
-        time.sleep(time_sleep_for_qps_control)
+        # 以下是控制代码。
+        if self._qps <= 5:
+            """ 原来的简单版 """
+            time.sleep(self._msg_schedule_time_intercal)
+        elif 5 < self._qps < 20:
+            """ 改进的控频版,防止网络波动"""
+            time_sleep_for_qps_control = max((self._msg_schedule_time_intercal - (time.time() - self._last_submit_task_timestamp)) * 0.95, 10 ** -3)
+            # print(time.time() - self._last_submit_task_timestamp)
+            # print(time_sleep_for_qps_control)
+            time.sleep(time_sleep_for_qps_control)
+            self._last_submit_task_timestamp = time.time()
+        else:
+            """基于计数的控频"""
+            if time.time() - self._last_start_count_qps_timestamp > 1:
+                self._has_execute_times_in_recent_second = 1
+                self._last_start_count_qps_timestamp = time.time()
+            else:
+                self._has_execute_times_in_recent_second += 1
+            if self._has_execute_times_in_recent_second > self._qps:
+                time.sleep((1 - (time.time() - self._last_start_count_qps_timestamp)) * 0.9)
 
         self.concurrent_pool.submit(self._run, kw)
-        self._last_submit_task_timestamp = time.time()
-
 
     @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)
     def _judge_is_daylight(self):

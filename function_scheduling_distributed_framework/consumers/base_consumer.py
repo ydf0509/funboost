@@ -384,6 +384,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self.stop_flag = False
 
+        self._last_submit_task_timestamp = 0
+
         self._publisher_of_same_queue = None
 
         self.custom_init()
@@ -557,8 +559,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
             self._confirm_consume(kw)
             return 0
+        print(time.time() - self._last_submit_task_timestamp)
+        time_sleep_for_qps_control = max(self._msg_schedule_time_intercal - (time.time() - self._last_submit_task_timestamp),0)
+
+        print(time_sleep_for_qps_control)
+        time.sleep(time_sleep_for_qps_control)
+
         self.concurrent_pool.submit(self._run, kw)
-        time.sleep(self._msg_schedule_time_intercal)
+        self._last_submit_task_timestamp = time.time()
+
 
     @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)
     def _judge_is_daylight(self):

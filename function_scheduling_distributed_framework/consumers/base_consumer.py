@@ -703,7 +703,7 @@ def wait_for_possible_has_finish_all_tasks(queue_name: str, minutes: int, send_s
 
 
 @decorators.flyweight
-class DistributedConsumerStatistics(LoggerMixin):
+class DistributedConsumerStatistics(RedisMixin,LoggerMixin):
     """
     分布式环境中的消费者统计。
     主要是为了兼容模拟mq的中间件（例如redis，他没有实现amqp协议，redis的list结构和真mq差远了），获取一个队列有几个连接活跃消费者数量。
@@ -714,7 +714,6 @@ class DistributedConsumerStatistics(LoggerMixin):
 
     def __init__(self, queue_name, consumer_identification):
         self._consumer_identification = consumer_identification
-        self._r = RedisMixin().redis_db_frame
         self._queue_name = queue_name
         self._redis_key_name = f'hearbeat:{queue_name}'
         self._send_heartbeat()
@@ -724,8 +723,8 @@ class DistributedConsumerStatistics(LoggerMixin):
 
     @decorators.keep_circulating(10, block=False)
     def _send_heartbeat(self):
-        with self._r.pipeline() as p:
-            results = self._r.smembers(self._redis_key_name)
+        results = self.redis_db_frame.smembers(self._redis_key_name)
+        with self.redis_db_frame.pipeline() as p:
             for result in results:
                 if time.time() - time_util.DatetimeConverter(result.decode().split('&&')[-1]).timestamp > 15 or \
                         self._consumer_identification == result.decode().split('&&')[0]:
@@ -735,6 +734,6 @@ class DistributedConsumerStatistics(LoggerMixin):
 
     @decorators.keep_circulating(5, block=False)
     def _show_active_consumer_num(self):
-        self.active_consumer_num = self._r.scard(self._redis_key_name)
+        self.active_consumer_num = self.redis_db_frame.scard(self._redis_key_name)
         if time.time() - self._last_show_consumer_num_timestamp > 60:
             self.logger.info(f'分布式所有环境中使用 {self._queue_name} 队列的， 一共有 {self.active_consumer_num} 个消费者')

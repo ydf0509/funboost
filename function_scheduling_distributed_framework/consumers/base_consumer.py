@@ -270,6 +270,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                  threads_num=50, concurrent_num=50, specify_threadpool=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True,
                  msg_schedule_time_intercal=0.0, qps: float = 0, msg_expire_senconds=0,
+                 is_using_distributed_frequency_control=False,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False,
                  task_filtering_expire_seconds=0, is_consuming_function_use_multi_params=True,
                  is_do_not_run_by_specify_time_effect=False,
@@ -291,6 +292,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param is_print_detail_exception:
         :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频
         :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，一会废弃msg_schedule_time_intercal这个参数。
+        :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis计数），默认只对当前实例化的消费者空频有效。假如实例化了2个qps为10的使用同一队列名的消费者，
+               并且都启动，则每秒运行次数会达到20。如果使用分布式空频则所有消费者加起来的总运行次数是10。
         :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
         :param create_logger_file : 是否创建文件日志
         :param do_task_filtering :是否执行基于函数参数的任务过滤
@@ -340,6 +343,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if qps != 0:
             msg_schedule_time_intercal = 1.0 / qps  # 使用qps覆盖消息调度间隔，以qps为准，以后废弃msg_schedule_time_intercal这个参数。
         self._msg_schedule_time_intercal = msg_schedule_time_intercal if msg_schedule_time_intercal > 0.001 else 0.001
+        self._is_using_distributed_frequency_control = is_using_distributed_frequency_control
+        if is_using_distributed_frequency_control:
+            self._distributed_consumer_statistics = DistributedConsumerStatistics(queue_name, f'{socket.gethostname()} - {os.getpid()} - {id(self)}')
         self._msg_expire_senconds = msg_expire_senconds
 
         if self._concurrent_mode not in (1, 2, 3):
@@ -359,7 +365,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                                           formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
         # self.logger.info(f'{self.__class__} 在 {current_queue__info_dict["where_to_instantiate"]}  被实例化')
         sys.stdout.write(
-            f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;30;44m此行 实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
+            f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;30;44m此行 '
+            f'实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
 
         self._do_task_filtering = do_task_filtering
         self._redis_filter_key_name = f'filter_zset:{queue_name}' if task_filtering_expire_seconds else f'filter_set:{queue_name}'
@@ -564,14 +571,21 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
             self._confirm_consume(kw)
             return 0
+        if self._is_using_distributed_frequency_control:  # 如果是需要分布式控频。
+            active_num = self._distributed_consumer_statistics.active_consumer_num
+            self.__frequency_control(self._qps / active_num, self._msg_schedule_time_intercal * active_num)
+        else:
+            self.__frequency_control(self._qps, self._msg_schedule_time_intercal)
+        self.concurrent_pool.submit(self._run, kw)
 
+    def __frequency_control(self, qpsx, msg_schedule_time_intercalx):
         # 以下是消费函数qps控制代码。
-        if self._qps <= 5:
+        if qpsx <= 5:
             """ 原来的简单版 """
-            time.sleep(self._msg_schedule_time_intercal)
-        elif 5 < self._qps <= 20:
+            time.sleep(msg_schedule_time_intercalx)
+        elif 5 < qpsx <= 20:
             """ 改进的控频版,防止网络波动"""
-            time_sleep_for_qps_control = max((self._msg_schedule_time_intercal - (time.time() - self._last_submit_task_timestamp)) * 0.95, 10 ** -3)
+            time_sleep_for_qps_control = max((msg_schedule_time_intercalx - (time.time() - self._last_submit_task_timestamp)) * 0.95, 10 ** -3)
             # print(time.time() - self._last_submit_task_timestamp)
             # print(time_sleep_for_qps_control)
             time.sleep(time_sleep_for_qps_control)
@@ -583,10 +597,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._last_start_count_qps_timestamp = time.time()
             else:
                 self._has_execute_times_in_recent_second += 1
-            if self._has_execute_times_in_recent_second > self._qps:
-                time.sleep((1 - (time.time() - self._last_start_count_qps_timestamp)) * 0.9)
-
-        self.concurrent_pool.submit(self._run, kw)
+            if self._has_execute_times_in_recent_second > qpsx:
+                time.sleep((1 - (time.time() - self._last_start_count_qps_timestamp)) * 1)
 
     @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)
     def _judge_is_daylight(self):
@@ -688,3 +700,39 @@ def wait_for_possible_has_finish_all_tasks(queue_name: str, minutes: int, send_s
     if send_stop_to_broker:
         pb.publish({'stop': 1})
     pb.close()
+
+
+@decorators.flyweight
+class DistributedConsumerStatistics(LoggerMixin):
+    """
+    分布式环境中的消费者统计。
+    主要是为了兼容模拟mq的中间件（例如redis，他没有实现amqp协议，redis的list结构和真mq差远了），获取一个队列有几个连接活跃消费者数量。
+
+    获取分布式的消费者数量后，用于分布式qps控频。如果不获取全环境中的消费者数量，则只能用于当前进程中的消费控频。
+    即使只有一台机器，例如把xx.py启动3次，xx.py的consumer设置qps为10，如果不使用分布式控频，会1秒钟最终运行30次函数而不是10次。
+    """
+
+    def __init__(self, queue_name, consumer_identification):
+        self._consumer_identification = consumer_identification
+        self._r = RedisMixin().redis_db_frame
+        self._queue_name = queue_name
+        self._redis_key_name = f'hearbeat:{queue_name}'
+        self._send_heartbeat()
+        self._show_active_consumer_num()
+        self.active_consumer_num = 1
+
+    @decorators.keep_circulating(10, block=False)
+    def _send_heartbeat(self):
+        with self._r.pipeline() as p:
+            results = self._r.smembers(self._redis_key_name)
+            for result in results:
+                if time.time() - time_util.DatetimeConverter(result.decode().split('&&')[-1]).timestamp > 15 or \
+                        self._consumer_identification == result.decode().split('&&')[0]:
+                    p.srem(self._redis_key_name, result)
+            p.sadd(self._redis_key_name, f'{self._consumer_identification}&&{time_util.DatetimeConverter().datetime_str}')
+            p.execute()
+
+    @decorators.keep_circulating(60, block=False)
+    def _show_active_consumer_num(self):
+        self.active_consumer_num = self._r.scard(self._redis_key_name)
+        self.logger.info(f'分布式所有环境中使用 {self._queue_name} 队列的， 一共有 {self.active_consumer_num} 个消费者')

@@ -720,6 +720,7 @@ class DistributedConsumerStatistics(LoggerMixin):
         self._send_heartbeat()
         self._show_active_consumer_num()
         self.active_consumer_num = 1
+        self._last_show_consumer_num_timestamp = time.time()
 
     @decorators.keep_circulating(10, block=False)
     def _send_heartbeat(self):
@@ -732,7 +733,8 @@ class DistributedConsumerStatistics(LoggerMixin):
             p.sadd(self._redis_key_name, f'{self._consumer_identification}&&{time_util.DatetimeConverter().datetime_str}')
             p.execute()
 
-    @decorators.keep_circulating(60, block=False)
+    @decorators.keep_circulating(5, block=False)
     def _show_active_consumer_num(self):
         self.active_consumer_num = self._r.scard(self._redis_key_name)
-        self.logger.info(f'分布式所有环境中使用 {self._queue_name} 队列的， 一共有 {self.active_consumer_num} 个消费者')
+        if time.time() - self._last_show_consumer_num_timestamp > 60:
+            self.logger.info(f'分布式所有环境中使用 {self._queue_name} 队列的， 一共有 {self.active_consumer_num} 个消费者')

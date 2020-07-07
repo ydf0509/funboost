@@ -715,13 +715,13 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixin):
     即使只有一台机器，例如把xx.py启动3次，xx.py的consumer设置qps为10，如果不使用分布式控频，会1秒钟最终运行30次函数而不是10次。
     """
 
-    def __init__(self, queue_name, consumer_identification):
+    def __init__(self, queue_name: str, consumer_identification: str):
         self._consumer_identification = consumer_identification
         self._queue_name = queue_name
         self._redis_key_name = f'hearbeat:{queue_name}'
+        self.active_consumer_num = 1
         self._send_heartbeat()
         self._show_active_consumer_num()
-        self.active_consumer_num = 1
         self._last_show_consumer_num_timestamp = time.time()
 
     @decorators.keep_circulating(10, block=False)

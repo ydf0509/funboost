@@ -564,11 +564,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
             self._confirm_consume(kw)
             return 0
-        # 以下是控制代码。
+
+        # 以下是消费函数qps控制代码。
         if self._qps <= 5:
             """ 原来的简单版 """
             time.sleep(self._msg_schedule_time_intercal)
-        elif 5 < self._qps < 20:
+        elif 5 < self._qps <= 20:
             """ 改进的控频版,防止网络波动"""
             time_sleep_for_qps_control = max((self._msg_schedule_time_intercal - (time.time() - self._last_submit_task_timestamp)) * 0.95, 10 ** -3)
             # print(time.time() - self._last_submit_task_timestamp)

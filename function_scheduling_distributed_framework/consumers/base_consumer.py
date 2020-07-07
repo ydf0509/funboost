@@ -600,7 +600,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._last_start_count_qps_timestamp = time.time()
             else:
                 self._has_execute_times_in_recent_second += 1
-            print(self._has_execute_times_in_recent_second)
+            # print(self._has_execute_times_in_recent_second)
             if self._has_execute_times_in_recent_second >= qpsx:
                 time.sleep((1 - (time.time() - self._last_start_count_qps_timestamp)) * 1)
 

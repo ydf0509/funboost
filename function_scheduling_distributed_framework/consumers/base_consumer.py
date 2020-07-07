@@ -344,8 +344,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             msg_schedule_time_intercal = 1.0 / qps  # 使用qps覆盖消息调度间隔，以qps为准，以后废弃msg_schedule_time_intercal这个参数。
         self._msg_schedule_time_intercal = msg_schedule_time_intercal if msg_schedule_time_intercal > 0.001 else 0.001
         self._is_using_distributed_frequency_control = is_using_distributed_frequency_control
-        if is_using_distributed_frequency_control:
-            self._distributed_consumer_statistics = DistributedConsumerStatistics(queue_name, f'{socket.gethostname()} - {os.getpid()} - {id(self)}')
         self._msg_expire_senconds = msg_expire_senconds
 
         if self._concurrent_mode not in (1, 2, 3):
@@ -448,6 +446,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def start_consuming_message(self):
         self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
+        if self._is_using_distributed_frequency_control:
+            # noinspection PyAttributeOutsideInit
+            self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name,
+                                                                                  f'{socket.gethostname()} - {os.getpid()} - {id(self)}')
+
         self.keep_circulating(20, block=False)(self.check_heartbeat_and_message_count)()
         self._redis_filter.delete_expire_filter_task_cycle()
         if self._schedule_tasks_on_main_thread:
@@ -585,7 +588,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             time.sleep(msg_schedule_time_intercalx)
         elif 5 < qpsx <= 20:
             """ 改进的控频版,防止网络波动"""
-            time_sleep_for_qps_control = max((msg_schedule_time_intercalx - (time.time() - self._last_submit_task_timestamp)) * 0.95, 10 ** -3)
+            time_sleep_for_qps_control = max((msg_schedule_time_intercalx - (time.time() - self._last_submit_task_timestamp)) * 0.99, 10 ** -3)
             # print(time.time() - self._last_submit_task_timestamp)
             # print(time_sleep_for_qps_control)
             time.sleep(time_sleep_for_qps_control)
@@ -597,7 +600,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._last_start_count_qps_timestamp = time.time()
             else:
                 self._has_execute_times_in_recent_second += 1
-            if self._has_execute_times_in_recent_second > qpsx:
+            print(self._has_execute_times_in_recent_second)
+            if self._has_execute_times_in_recent_second >= qpsx:
                 time.sleep((1 - (time.time() - self._last_start_count_qps_timestamp)) * 1)
 
     @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)
@@ -702,8 +706,7 @@ def wait_for_possible_has_finish_all_tasks(queue_name: str, minutes: int, send_s
     pb.close()
 
 
-@decorators.flyweight
-class DistributedConsumerStatistics(RedisMixin,LoggerMixin):
+class DistributedConsumerStatistics(RedisMixin, LoggerMixin):
     """
     分布式环境中的消费者统计。
     主要是为了兼容模拟mq的中间件（例如redis，他没有实现amqp协议，redis的list结构和真mq差远了），获取一个队列有几个连接活跃消费者数量。
@@ -734,6 +737,6 @@ class DistributedConsumerStatistics(RedisMixin,LoggerMixin):
 
     @decorators.keep_circulating(5, block=False)
     def _show_active_consumer_num(self):
-        self.active_consumer_num = self.redis_db_frame.scard(self._redis_key_name)
+        self.active_consumer_num = self.redis_db_frame.scard(self._redis_key_name) or 1
         if time.time() - self._last_show_consumer_num_timestamp > 60:
             self.logger.info(f'分布式所有环境中使用 {self._queue_name} 队列的， 一共有 {self.active_consumer_num} 个消费者')

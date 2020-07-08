@@ -809,7 +809,7 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 即使只有1台机器，如果开多进程，Process运行3个进程，或者把xx.py反复运行启动3个，
 也会造成func函数每秒运行总次数是30。
 分布式控频主要是解决这种问题。默认不使用分布式控频，
-当设置 is_using_distributed_frequency_control为True的时候，使用分布式控频。1  
+当设置 is_using_distributed_frequency_control为True的时候，使用分布式控频。2
 
 ```
 

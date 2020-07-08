@@ -720,9 +720,10 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixin):
         self._queue_name = queue_name
         self._redis_key_name = f'hearbeat:{queue_name}'
         self.active_consumer_num = 1
+        self._send_heartbeat.__wrapped__(self)
         self._send_heartbeat()
         self._show_active_consumer_num()
-        self._last_show_consumer_num_timestamp = time.time()
+        self._last_show_consumer_num_timestamp = 0
 
     @decorators.keep_circulating(10, block=False)
     def _send_heartbeat(self):

@@ -590,7 +590,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             """ 改进的控频版,防止网络波动"""
             time_sleep_for_qps_control = max((msg_schedule_time_intercalx - (time.time() - self._last_submit_task_timestamp)) * 0.99, 10 ** -3)
             # print(time.time() - self._last_submit_task_timestamp)
-            print(time_sleep_for_qps_control)
+            # print(time_sleep_for_qps_control)
             time.sleep(time_sleep_for_qps_control)
             self._last_submit_task_timestamp = time.time()
         else:

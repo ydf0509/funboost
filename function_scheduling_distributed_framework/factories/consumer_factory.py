@@ -69,27 +69,19 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
     """
     all_kwargs = copy.copy(locals())
     all_kwargs.pop('broker_kind')
-    if broker_kind == 0:
-        return RabbitmqConsumer(**all_kwargs)
-    elif broker_kind == 1:
-        return RabbitmqConsumerRabbitpy(**all_kwargs)
-    elif broker_kind == 2:
-        return RedisConsumer(**all_kwargs)
-    elif broker_kind == 3:
-        return LocalPythonQueueConsumer(**all_kwargs)
-    elif broker_kind == 4:
-        return RabbitmqConsumerAmqpStorm(**all_kwargs)
-    elif broker_kind == 5:
-        return MongoMqConsumer(**all_kwargs)
-    elif broker_kind == 6:
-        return PersistQueueConsumer(**all_kwargs)
-    elif broker_kind == 7:
-        return NsqConsumer(**all_kwargs)
-    elif broker_kind == 8:
-        return KafkaConsumer(**all_kwargs)
-    elif broker_kind == 9:
-        return RedisConsumerAckAble(**all_kwargs)
-    elif broker_kind == 10:
-        return SqlachemyConsumer(**all_kwargs)
-    else:
+    broker_kind__consumer_type_map = {
+        0: RabbitmqConsumer,
+        1: RabbitmqConsumerRabbitpy,
+        2: RedisConsumer,
+        3: LocalPythonQueueConsumer,
+        4: RabbitmqConsumerAmqpStorm,
+        5: MongoMqConsumer,
+        6: PersistQueueConsumer,
+        7: NsqConsumer,
+        8: KafkaConsumer,
+        9: RedisConsumerAckAble,
+        10: SqlachemyConsumer
+    }
+    if broker_kind not in broker_kind__consumer_type_map:
         raise ValueError('设置的中间件种类数字不正确')
+    return broker_kind__consumer_type_map[broker_kind]

@@ -48,4 +48,4 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
     }
     if broker_kind not in broker_kind__publisher_type_map:
         raise ValueError('设置的中间件种类数字不正确')
-    return broker_kind__publisher_type_map[broker_kind]
+    return broker_kind__publisher_type_map[broker_kind](**all_kwargs)

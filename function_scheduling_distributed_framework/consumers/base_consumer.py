@@ -27,7 +27,7 @@ from pymongo import IndexModel
 from pymongo.errors import PyMongoError
 
 # noinspection PyUnresolvedReferences
-from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin
+from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin,LoggerMixinDefaultWithFileHandler
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.concurrent_pool.bounded_threadpoolexcutor import \
     BoundedThreadPoolExecutor
@@ -706,7 +706,7 @@ def wait_for_possible_has_finish_all_tasks(queue_name: str, minutes: int, send_s
     pb.close()
 
 
-class DistributedConsumerStatistics(RedisMixin, LoggerMixin):
+class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandler):
     """
     分布式环境中的消费者统计。
     主要是为了兼容模拟mq的中间件（例如redis，他没有实现amqp协议，redis的list结构和真mq差远了），获取一个队列有几个连接活跃消费者数量。

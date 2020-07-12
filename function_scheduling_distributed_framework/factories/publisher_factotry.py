@@ -44,7 +44,7 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
         7: NsqPublisher,
         8: KafkaPublisher,
         9: RedisPublisher,
-        10: SqlachemyQueuePublisher
+        10: SqlachemyQueuePublisher,
     }
     if broker_kind not in broker_kind__publisher_type_map:
         raise ValueError('设置的中间件种类数字不正确')

@@ -80,7 +80,7 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
         7: NsqConsumer,
         8: KafkaConsumer,
         9: RedisConsumerAckAble,
-        10: SqlachemyConsumer
+        10: SqlachemyConsumer,
     }
     if broker_kind not in broker_kind__consumer_type_map:
         raise ValueError('设置的中间件种类数字不正确')

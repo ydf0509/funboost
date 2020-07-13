@@ -5,6 +5,8 @@
 所有中间件类型消费者的抽象基类。使实现不同中间件的消费者尽可能代码少。
 里面很多调用sys.stdout是由于print被全局打了猴子补丁变成可跳转。当识别到两个可跳转链接时候，第二个不能被识别，所以一些地方直接调用了sys.stdout。
 """
+from typing import List
+
 import abc
 import copy
 # from multiprocessing import Process
@@ -27,7 +29,7 @@ from pymongo import IndexModel
 from pymongo.errors import PyMongoError
 
 # noinspection PyUnresolvedReferences
-from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin,LoggerMixinDefaultWithFileHandler
+from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, LoggerMixinDefaultWithFileHandler
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.concurrent_pool.bounded_threadpoolexcutor import \
     BoundedThreadPoolExecutor
@@ -308,12 +310,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
         :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。
         """
-        ConsumersManager.consumers_queue__info_map[queue_name] = current_queue__info_dict = copy.copy(locals())
+        self.init_params = copy.copy(locals())
+        self.init_params.pop('self')
+        self.init_params['broker_kind'] = self.__class__.BROKER_KIND
+
+        ConsumersManager.consumers_queue__info_map[queue_name] = current_queue__info_dict = copy.copy(self.init_params)
         current_queue__info_dict['consuming_function'] = str(consuming_function)  # consuming_function.__name__
         current_queue__info_dict[
             'function_result_status_persistance_conf'] = function_result_status_persistance_conf.to_dict()
-        current_queue__info_dict.pop('self')
-        current_queue__info_dict['broker_kind'] = self.__class__.BROKER_KIND
         current_queue__info_dict['class_name'] = self.__class__.__name__
         concurrent_name = ConsumersManager.get_concurrent_name_by_concurrent_mode(concurrent_mode)
         current_queue__info_dict['concurrent_mode_name'] = concurrent_name

@@ -10,7 +10,7 @@ Flask
 tomorrow3==1.1.0
 concurrent-log-handler==0.9.9
 redis
-persist-queue==0.4.2
+persist-queue>=0.4.2
 elasticsearch
 kafka-python==1.4.6
 requests

@@ -72,7 +72,7 @@ class PublishParamsChecker(LoggerMixin):
     """
 
     def __init__(self, func: typing.Callable):
-        print(func)
+        # print(func)
         spec = inspect.getfullargspec(func)
         self.all_arg_name_set = set(spec.args)
         if spec.defaults:

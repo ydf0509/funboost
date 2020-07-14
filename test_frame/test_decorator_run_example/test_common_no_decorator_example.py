@@ -15,3 +15,4 @@ for i in range(10, 20):
     consumer.publisher_of_same_queue.publish(dict(a=i, b=i * 2))
 
 consumer.start_consuming_message()
+

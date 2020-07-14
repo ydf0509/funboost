@@ -854,7 +854,7 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 
 ```
 
-## 6.11 增加装饰器形式生成消费者。本人喜欢常规方式，装饰器方式哪个好呢？
+## 6.11 增加装饰器形式生成消费者。本人喜欢常规方式，装饰器方式哪个好用呢？
 
 ~~~
 这次使用修改你的项目根目录下的自动生成的distributed_frame_config.py配置文件的方式来进行redis rabbitmq等的配置。
@@ -874,6 +874,7 @@ add.consume()                    # 使用add.consume 消费任务
 
 对比常规方式，常规方式使用方式如下
 '''
+from function_scheduling_distributed_framework import get_consumer
 def add(a, b):
     print(a + b)
 

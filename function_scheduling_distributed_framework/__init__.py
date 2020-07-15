@@ -90,6 +90,7 @@ def task_deco(queue_name, *, function_timeout=0, threads_num=50,
         func.start_consuming_message = func.consume = func.start = consumer.start_consuming_message
         func.publisher = consumer.publisher_of_same_queue
         func.publish = func.pub = consumer.publisher_of_same_queue.publish
+        func.clear = func.clear_queue = consumer.publisher_of_same_queue.clear
 
         # @functools.wraps(func)
         def __deco(*args, **kwargs):

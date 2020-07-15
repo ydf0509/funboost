@@ -1,20 +1,22 @@
-from functools import update_wrapper
+from functools import update_wrapper, partial
 from multiprocessing import Process
 from typing import List
 import copy
 
 # noinspection PyUnresolvedReferences
 import apscheduler
+import typing
+
 from function_scheduling_distributed_framework.set_frame_config import patch_frame_config, show_frame_config
 
 # import frame_config
 from function_scheduling_distributed_framework.consumers.base_consumer import ExceptionForRequeue, ExceptionForRetry, \
     AbstractConsumer, ConsumersManager, FunctionResultStatusPersistanceConfig
-from function_scheduling_distributed_framework.publishers.base_publisher import PriorityConsumingControlConfig
+from function_scheduling_distributed_framework.publishers.base_publisher import PriorityConsumingControlConfig, AbstractPublisher
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
 from function_scheduling_distributed_framework.factories.consumer_factory import get_consumer
 # noinspection PyUnresolvedReferences
-from function_scheduling_distributed_framework.utils import nb_print, patch_print, LogManager
+from function_scheduling_distributed_framework.utils import nb_print, patch_print, LogManager, LoggerMixin
 
 
 def run_many_consumer_by_init_params(consumer_init_params_list: List[dict]):
@@ -100,3 +102,45 @@ def task_deco(queue_name, *, function_timeout=0, threads_num=50,
         return update_wrapper(__deco, func)
 
     return _deco
+
+
+class IdeAutoCompleteHelper(LoggerMixin):
+    """
+    为了被装饰的消费函数的敲代码时候的被pycharm自动补全而写的类。
+    """
+
+    def __init__(self, consuming_func_decorated: callable):
+        """
+        :param consuming_func_decorated:   传入被task_deco装饰的函数
+
+        此框架非常非常注重，公有函数、方法、类 的名字和入参在ide开发环境下面的自动提示补全效果，如果不是为了这一点，框架能减少很多重复地方。
+        此类是防止用户调用打错字母或者不知道怎么敲代码不知道有哪些入参。所以才有这个类。
+
+        这个类是个补全类，能够使pycharm自动补全方法名字和入参。可以用，可以不用，用了后在pycharm里面补全效果会起作用。
+
+
+       from function_scheduling_distributed_framework import task_deco, IdeAutoCompleteHelper
+
+       @task_deco('queue_test_f01', qps=2, broker_kind=3)
+       def f(a, b):
+           print(f'{a} + {b} = {a + b}')
+
+
+       if __name__ == '__main__':
+           f(1000, 2000)
+           IdeAutoCompleteHelper(f).clear()  # f.clear()
+           for i in range(100, 200):
+               f.pub(dict(a=i, b=i * 2))  # f.sub方法是强行用元编程加到f上去的，是运行时状态，pycharm只能补全非运行时态的静态东西。
+               IdeAutoCompleteHelper(f).pub({'a': i * 3, 'b': i * 4})  # 和上面的发布等效，但可以自动补全方法名字和入参。
+
+           IdeAutoCompleteHelper(f).start_consuming_message()  # 和 f.consume()等效
+
+        """
+        self.consuming_func_decorated = consuming_func_decorated
+
+        self.consumer = consuming_func_decorated.consumer  # type: AbstractConsumer
+        self.start_consuming_message = self.consume = self.start = consuming_func_decorated.consume = self.consumer.start_consuming_message
+
+        self.publisher = consuming_func_decorated.publisher  # type: AbstractPublisher
+        self.publish = self.pub = consuming_func_decorated.pub = self.publisher.publish
+        self.clear = self.clear_queue = self.consumer.publisher_of_same_queue.clear = self.publisher.clear

@@ -5,12 +5,12 @@
 from function_scheduling_distributed_framework import task_deco
 
 
-@task_deco('queue_test_f01', qps=0.2, broker_kind=2)
+@task_deco('queue_test_f01', qps=2, broker_kind=0)
 def f(a, b):
     print(a + b)
 
 
-for i in range(10, 20):
+for i in range(100, 200):
     f.pub(dict(a=i, b=i * 2))
 
 f.consume()

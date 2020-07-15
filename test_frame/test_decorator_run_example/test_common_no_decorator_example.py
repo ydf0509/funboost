@@ -9,7 +9,7 @@ def f(a, b):
     print(a + b)
 
 
-consumer = get_consumer('queue_test_f01', consuming_function=f, qps=0.2, broker_kind=2)
+consumer = get_consumer('queue_test_f01', consuming_function=f, qps=0.2, broker_kind=0)
 
 for i in range(10, 20):
     consumer.publisher_of_same_queue.publish(dict(a=i, b=i * 2))

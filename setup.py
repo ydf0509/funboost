@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version=7.4,
+    version=7.6,
     description=(
         'function scheduling distributed framework'
     ),
@@ -34,6 +34,9 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: Implementation',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Software Development :: Libraries'
     ],
     install_requires=[
@@ -41,14 +44,13 @@ setup(
         'gevent',
         'pymongo==3.5.1',
         'AMQPStorm==2.7.1',
-        'pika==1.1.0',
         'rabbitpy==2.0.1',
         'decorator==4.4.0',
         'pysnooper==0.0.11',
         'Flask',
+        'flask_bootstrap',
         'tomorrow3==1.1.0',
         'concurrent-log-handler==0.9.9',
-        'redis',
         'persist-queue>=0.4.2',
         'elasticsearch',
         'kafka-python==1.4.6',
@@ -60,7 +62,9 @@ setup(
         'apscheduler',
         'pikav0',
         'pikav1',
-        'nb_log>=2.7'
+        'redis2',
+        'redis3',
+        'nb_log>=3.4',
     ]
 )
 """

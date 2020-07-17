@@ -24,7 +24,7 @@ class RocketmqConsumer(AbstractConsumer):
         self._publisher = RocketmqPublisher(self._queue_name)
 
         def callback(rocketmq_msg: RecvMessage):
-            self.logger.debug(f'从rocketmq的 [{self._queue_name}] 主题的队列 {rocketmq_msg.queue_id} 中 取出的消息是：{rocketmq_msg.body}')
+            self.logger.debug(f'从rocketmq的 [{self._queue_name}] 主题的queue_id {rocketmq_msg.queue_id} 中 取出的消息是：{rocketmq_msg.body}')
             kw = {'body': json.loads(rocketmq_msg.body), 'rocketmq_msg': rocketmq_msg}
             self._submit_task(kw)
 

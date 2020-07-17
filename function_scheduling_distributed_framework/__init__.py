@@ -66,6 +66,7 @@ def task_deco(queue_name, *, function_timeout=0, threads_num=50,
 
     for i in range(10, 20):
         f.pub(dict(a=i, b=i * 2))
+        f.push(i, i * 2)
     f.consume()
     '''
 
@@ -92,6 +93,7 @@ def task_deco(queue_name, *, function_timeout=0, threads_num=50,
         func.start_consuming_message = func.consume = func.start = consumer.start_consuming_message
         func.publisher = consumer.publisher_of_same_queue
         func.publish = func.pub = consumer.publisher_of_same_queue.publish
+        func.push = func.delay = consumer.publisher_of_same_queue.push
         func.clear = func.clear_queue = consumer.publisher_of_same_queue.clear
 
         # @functools.wraps(func)
@@ -132,6 +134,8 @@ class IdeAutoCompleteHelper(LoggerMixin):
            for i in range(100, 200):
                f.pub(dict(a=i, b=i * 2))  # f.sub方法是强行用元编程加到f上去的，是运行时状态，pycharm只能补全非运行时态的静态东西。
                IdeAutoCompleteHelper(f).pub({'a': i * 3, 'b': i * 4})  # 和上面的发布等效，但可以自动补全方法名字和入参。
+               f.push(a=i, b=i * 2)
+               IdeAutoCompleteHelper(f).delay(i * 3,  i * 4)
 
            IdeAutoCompleteHelper(f).start_consuming_message()  # 和 f.consume()等效
 
@@ -139,8 +143,9 @@ class IdeAutoCompleteHelper(LoggerMixin):
         self.consuming_func_decorated = consuming_func_decorated
 
         self.consumer = consuming_func_decorated.consumer  # type: AbstractConsumer
-        self.start_consuming_message = self.consume = self.start = consuming_func_decorated.consume = self.consumer.start_consuming_message
+        self.start_consuming_message = self.consume = self.start = self.consumer.start_consuming_message
 
         self.publisher = consuming_func_decorated.publisher  # type: AbstractPublisher
-        self.publish = self.pub = consuming_func_decorated.pub = self.publisher.publish
+        self.publish = self.pub = self.publisher.publish
+        self.push = self.delay = self.publisher.push
         self.clear = self.clear_queue = self.consumer.publisher_of_same_queue.clear = self.publisher.clear

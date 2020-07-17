@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2020/7/9 0008 12:12
+import time
+
 from rocketmq.client import Producer, Message
 
 from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
 
 
-class RocketPublisher(AbstractPublisher, ):
+class RocketmqPublisher(AbstractPublisher, ):
     group_id__rocketmq_producer = {}
 
     def custom_init(self):
@@ -30,10 +32,12 @@ class RocketPublisher(AbstractPublisher, ):
         self._producer.send_sync(rocket_msg)
 
     def clear(self):
-        self.logger.error('python版的rocket包太弱了，没有方法设置偏移量或者删除主题。java才能做到')
+        self.logger.error('清除队列，python版的rocket包太弱了，没有方法设置偏移量或者删除主题。java才能做到')
 
     def get_message_count(self):
-        self.logger.warning('python版的rocket包太弱了，没找到方法，，java才能做到。')
+        if time.time() - getattr(self, '_last_warning_count', 0) > 300:
+            setattr(self, '_last_warning_count', time.time())
+            self.logger.warning('获取消息数量，python版的rocket包太弱了，没找到方法，，java才能做到。')
         return 0
 
     def close(self):

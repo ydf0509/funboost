@@ -15,6 +15,7 @@ from function_scheduling_distributed_framework.consumers.rabbitmq_pika_consumer 
 from function_scheduling_distributed_framework.consumers.rabbitmq_rabbitpy_consumer import RabbitmqConsumerRabbitpy
 from function_scheduling_distributed_framework.consumers.redis_consumer import RedisConsumer
 from function_scheduling_distributed_framework.consumers.redis_consumer_ack_able import RedisConsumerAckAble
+from function_scheduling_distributed_framework.consumers.rocketmq_consumer import RocketmqConsumer
 from function_scheduling_distributed_framework.consumers.sqlachemy_consumer import SqlachemyConsumer
 
 
@@ -81,6 +82,7 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
         8: KafkaConsumer,
         9: RedisConsumerAckAble,
         10: SqlachemyConsumer,
+        11:RocketmqConsumer,
     }
     if broker_kind not in broker_kind__consumer_type_map:
         raise ValueError('设置的中间件种类数字不正确')

@@ -13,6 +13,7 @@ from function_scheduling_distributed_framework.publishers.rabbitmq_amqpstorm_pub
 from function_scheduling_distributed_framework.publishers.rabbitmq_pika_publisher import RabbitmqPublisher
 from function_scheduling_distributed_framework.publishers.rabbitmq_rabbitpy_publisher import RabbitmqPublisherUsingRabbitpy
 from function_scheduling_distributed_framework.publishers.redis_publisher import RedisPublisher
+from function_scheduling_distributed_framework.publishers.rocketmq_publisher import RocketmqPublisher
 from function_scheduling_distributed_framework.publishers.sqla_queue_publisher import SqlachemyQueuePublisher
 
 
@@ -45,6 +46,7 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
         8: KafkaPublisher,
         9: RedisPublisher,
         10: SqlachemyQueuePublisher,
+        11:RocketmqPublisher,
     }
     if broker_kind not in broker_kind__publisher_type_map:
         raise ValueError('设置的中间件种类数字不正确')

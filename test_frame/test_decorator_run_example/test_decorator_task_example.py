@@ -17,7 +17,8 @@ if __name__ == '__main__':
     f.clear()
     for i in range(100, 200):
         f.pub(dict(a=i, b=i * 2))
+        f.delay(i,i*2)
+        f.push(i,b= i * 2)
         IdeAutoCompleteHelper(f).pub({'a': i * 3, 'b': i * 4})  # 和上面等效，但可以自动补全方法名字和入参。
 
     IdeAutoCompleteHelper(f).start_consuming_message()  # f.consume() 等效
-    

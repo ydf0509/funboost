@@ -5,6 +5,7 @@ import json
 from rocketmq.client import PushConsumer, RecvMessage
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
 from function_scheduling_distributed_framework import frame_config
+from function_scheduling_distributed_framework.publishers.rocketmq_publisher import RocketPublisher
 
 
 class RocketmqConsumer(AbstractConsumer):
@@ -18,6 +19,8 @@ class RocketmqConsumer(AbstractConsumer):
         consumer.set_namesrv_addr(frame_config.ROCKETMQ_NAMESRV_ADDR)
         consumer.set_thread_count(1)
 
+        self._publisher = RocketPublisher(self._queue_name)
+
         def callback(rocketmq_msg: RecvMessage):
             self.logger.debug(f'从rocketmq的 [{self._queue_name}] 主题的队列 {rocketmq_msg.queue_id} 中 取出的消息是：{rocketmq_msg.body}')
             kw = {'body': json.loads(rocketmq_msg.body), 'rocketmq_msg': rocketmq_msg}
@@ -30,4 +33,5 @@ class RocketmqConsumer(AbstractConsumer):
         pass
 
     def _requeue(self, kw):
-        pass
+        self._publisher.publish(kw['body'])
+

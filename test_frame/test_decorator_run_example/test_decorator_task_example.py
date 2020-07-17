@@ -6,7 +6,7 @@ import time
 from function_scheduling_distributed_framework import task_deco, IdeAutoCompleteHelper
 
 
-@task_deco('queue_test_f01', qps=1, broker_kind=0)
+@task_deco('queue_test_f01', qps=1, broker_kind=3)
 def f(a, b):
     print(f'{a} + {b} = {a + b}')
     f.pub(dict(a=a + 10, b=b + 10))
@@ -17,6 +17,8 @@ if __name__ == '__main__':
     f.clear()
     for i in range(100, 200):
         f.pub(dict(a=i, b=i * 2))
+        f.push(i * 5, i * 6)
+        f.delay(i * 10, b=i * 20,)
         IdeAutoCompleteHelper(f).pub({'a': i * 3, 'b': i * 4})  # 和上面等效，但可以自动补全方法名字和入参。
 
     IdeAutoCompleteHelper(f).start_consuming_message()  # f.consume() 等效

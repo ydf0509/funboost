@@ -17,6 +17,7 @@ from nb_log import LoggerLevelSetterMixin, LogManager, LoggerMixin
 from function_scheduling_distributed_framework.utils import decorators, RedisMixin
 from function_scheduling_distributed_framework import frame_config
 
+
 class RedisAsyncResult(RedisMixin):
     def __init__(self, task_id, timeout=120):
         self.task_id = task_id
@@ -118,7 +119,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level_int,
                                                                           log_filename=f'{logger_name}.log' if is_add_file_handler else None,
                                                                           formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
-        )  #
+                                                                          )  #
         self.publish_params_checker = PublishParamsChecker(consuming_function) if consuming_function else None
         # self.rabbit_client = RabbitMqFactory(is_use_rabbitpy=is_use_rabbitpy).get_rabbit_cleint()
         # self.channel = self.rabbit_client.creat_a_channel()
@@ -171,6 +172,28 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 中')
             self._init_count()
         return RedisAsyncResult(task_id)
+
+    def push(self, *func_args, **func_kwargs):
+        """
+        简写，只支持传递消费函数的本身参数，不支持priority_control_config参数。
+        类似于 publish和push的关系类似 apply_async 和 delay的关系。前者更强大，后者更简略。
+
+        例如消费函数是
+        def add(x,y):
+            print(x+y)
+
+        publish({"x":1,'y':2}) 和 push(1,2)是等效的。但前者可以传递priority_control_config参数。后者只能穿add函数所接受的入参。
+        :param func_args:
+        :param func_kwargs:
+        :return:
+        """
+        msg_dict = func_kwargs
+        position_arg_name_list = list(self.publish_params_checker.position_arg_name_set)
+        for index, arg in enumerate(func_args):
+            msg_dict[position_arg_name_list[index]] = arg
+        self.publish(msg_dict)
+
+    delay = push  # 那就来个别名吧，两者都可以。
 
     @abc.abstractmethod
     def concrete_realization_of_publish(self, msg):

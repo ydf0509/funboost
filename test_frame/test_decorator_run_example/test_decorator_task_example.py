@@ -9,7 +9,7 @@ from function_scheduling_distributed_framework import task_deco, IdeAutoComplete
 @task_deco('queue_test_f01', qps=1, broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
 def f(a, b):
     print(f'{a} + {b} = {a + b}')
-    f.pub(dict(a=a + 10, b=b + 10))
+    # f.pub(dict(a=a + 10, b=b + 10))
 
 
 if __name__ == '__main__':
@@ -17,8 +17,8 @@ if __name__ == '__main__':
     f.clear()
     for i in range(100, 200):
         f.pub(dict(a=i, b=i * 2))
-        f.push(i * 5, i * 6)
-        f.delay(i * 10, b=i * 20,)
-        IdeAutoCompleteHelper(f).pub({'a': i * 3, 'b': i * 4})  # 和上面等效，但可以自动补全方法名字和入参。
+        f.push(i * 10, i * 20,)
+        f.delay(i * 100, b=i * 200,)
+        IdeAutoCompleteHelper(f).pub({'a': i * 1000, 'b': i * 2000})  # 和上面等效，但可以自动补全方法名字和入参。
 
     IdeAutoCompleteHelper(f).start_consuming_message()  # f.consume() 等效

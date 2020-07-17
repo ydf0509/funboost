@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2020/7/9 0008 12:12
+import json
 import os
 import time
 from function_scheduling_distributed_framework import frame_config
@@ -15,7 +16,7 @@ class RocketmqPublisher(AbstractPublisher, ):
 
     def custom_init(self):
         group_id = f'g-{self._queue_name}'
-        if group_id not in self.__class__.group_id__rocketmq_producer:
+        if group_id not in self.__class__.group_id__rocketmq_producer:  # 同一个进程中创建多个同组消费者会报错。
             producer = Producer(group_id)
             producer.set_namesrv_addr(frame_config.ROCKETMQ_NAMESRV_ADDR)
             producer.start()
@@ -26,7 +27,7 @@ class RocketmqPublisher(AbstractPublisher, ):
 
     def concrete_realization_of_publish(self, msg):
         rocket_msg = Message(self._queue_name)
-        # rocket_msg.set_keys('XXX')
+        rocket_msg.set_keys(json.dumps(json.loads(msg)['body'])) # 利于检索
         # rocket_msg.set_tags('XXX')
         rocket_msg.set_body(msg)
         # print(msg)

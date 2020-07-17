@@ -78,10 +78,14 @@ class PublishParamsChecker(LoggerMixin):
         self.all_arg_name_set = set(spec.args)
         if spec.defaults:
             len_deafult_args = len(spec.defaults)
-            self.position_arg_name_set = set(spec.args[0:len_deafult_args])
-            self.keyword_arg_name_set = set(spec.args[-len_deafult_args:])
+            self.position_arg_name_list = spec.args[0:len_deafult_args]
+            self.position_arg_name_set = set(self.position_arg_name_list)
+            self.keyword_arg_name_list = spec.args[-len_deafult_args:]
+            self.keyword_arg_name_set = set(self.keyword_arg_name_list)
         else:
-            self.position_arg_name_set = set(spec.args)
+            self.position_arg_name_list = spec.args
+            self.position_arg_name_set = set(self.position_arg_name_list)
+            self.keyword_arg_name_list = []
             self.keyword_arg_name_set = set()
         self.logger.info(f'{func} 函数的入参要求是 全字段 {self.all_arg_name_set} ,必须字段为 {self.position_arg_name_set} ')
 
@@ -187,10 +191,14 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param func_kwargs:
         :return:
         """
+        # print(func_args,func_kwargs)
         msg_dict = func_kwargs
-        position_arg_name_list = list(self.publish_params_checker.position_arg_name_set)
+        # print(msg_dict)
+        # print(self.publish_params_checker.position_arg_name_list)
+        # print(func_args)
         for index, arg in enumerate(func_args):
-            msg_dict[position_arg_name_list[index]] = arg
+            msg_dict[self.publish_params_checker.position_arg_name_list[index]] = arg
+        # print(msg_dict)
         self.publish(msg_dict)
 
     delay = push  # 那就来个别名吧，两者都可以。

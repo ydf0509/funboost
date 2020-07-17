@@ -49,5 +49,5 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
         11:RocketmqPublisher,
     }
     if broker_kind not in broker_kind__publisher_type_map:
-        raise ValueError('设置的中间件种类数字不正确')
+        raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')
     return broker_kind__publisher_type_map[broker_kind](**all_kwargs)

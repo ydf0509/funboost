@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2020/7/8 0008 13:27
+import os
 import json
 import time
 
-from rocketmq.client import PushConsumer, RecvMessage
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
 from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.publishers.rocketmq_publisher import RocketmqPublisher
+
+if os.name != 'nt':
+    from rocketmq.client import PushConsumer
 
 
 class RocketmqConsumer(AbstractConsumer):
@@ -23,7 +26,7 @@ class RocketmqConsumer(AbstractConsumer):
 
         self._publisher = RocketmqPublisher(self._queue_name)
 
-        def callback(rocketmq_msg: RecvMessage):
+        def callback(rocketmq_msg):
             self.logger.debug(f'从rocketmq的 [{self._queue_name}] 主题的queue_id {rocketmq_msg.queue_id} 中 取出的消息是：{rocketmq_msg.body}')
             kw = {'body': json.loads(rocketmq_msg.body), 'rocketmq_msg': rocketmq_msg}
             self._submit_task(kw)

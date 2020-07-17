@@ -3,10 +3,10 @@
 """
 import time
 
-from function_scheduling_distributed_framework import task_deco, IdeAutoCompleteHelper
+from function_scheduling_distributed_framework import task_deco, IdeAutoCompleteHelper,BrokerEnum
 
 
-@task_deco('queue_test_f01', qps=1, broker_kind=3)
+@task_deco('queue_test_f01', qps=1, broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
 def f(a, b):
     print(f'{a} + {b} = {a + b}')
     f.pub(dict(a=a + 10, b=b + 10))

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2020/7/9 0008 12:12
+import os
 import time
-
-from rocketmq.client import Producer, Message
-
 from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
+
+if os.name != 'nt':
+    from rocketmq.client import Producer, Message
 
 
 class RocketmqPublisher(AbstractPublisher, ):

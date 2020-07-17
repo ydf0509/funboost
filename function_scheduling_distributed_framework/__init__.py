@@ -18,10 +18,8 @@ from function_scheduling_distributed_framework.factories.consumer_factory import
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.utils import nb_print, patch_print, LogManager, LoggerMixin
 
-from enum import Enum
 
-
-class BrokerEnum(Enum):
+class BrokerEnum:
     RABBITMQ_PIKA = 0
     RABBITMQ_RABBITPY = 1
     REDIS = 2

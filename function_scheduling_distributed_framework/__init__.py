@@ -18,6 +18,23 @@ from function_scheduling_distributed_framework.factories.consumer_factory import
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.utils import nb_print, patch_print, LogManager, LoggerMixin
 
+from enum import Enum
+
+
+class BrokerEnum(Enum):
+    RABBITMQ_PIKA = 0
+    RABBITMQ_RABBITPY = 1
+    REDIS = 2
+    LOCAL_PYTHON_QUEUE = 3
+    RABBITMQ_AMQPSTORM = 4
+    MONGOMQ = 5
+    PERSISTQUEUE = 6
+    NSQ = 7
+    KAFKA = 8
+    REDIS_ACK_ABLE = 9
+    SQLACHEMY = 10
+    ROCKETMQ = 11
+
 
 def run_many_consumer_by_init_params(consumer_init_params_list: List[dict]):
     for consumer_init_params in consumer_init_params_list:

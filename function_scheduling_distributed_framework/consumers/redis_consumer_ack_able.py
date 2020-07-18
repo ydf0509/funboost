@@ -55,7 +55,8 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractConsu
                      if v then
                      redis.call('zadd',KEYS[2],ARGV[1],v)
                       end
-                     return v'''
+                     return v
+                '''
         script = self.redis_db_frame.register_script(lua)
         while True:
             return_v = script(keys=[self._queue_name, self._unack_zset_name], args=[time.time()])

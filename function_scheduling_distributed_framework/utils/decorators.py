@@ -2,6 +2,8 @@
 import base64
 import copy
 import random
+import uuid
+
 from flask import request as flask_request
 # noinspection PyUnresolvedReferences
 from contextlib import contextmanager
@@ -18,7 +20,7 @@ from functools import wraps
 import pysnooper
 from tomorrow3 import threads as tomorrow_threads
 
-from function_scheduling_distributed_framework.utils import LogManager, nb_print
+from function_scheduling_distributed_framework.utils import LogManager, nb_print, LoggerMixin
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.utils.custom_pysnooper import _snoop_can_click, snoop_deco, patch_snooper_max_variable_length
 
@@ -219,7 +221,7 @@ class TimerContextManager(object):
     """
     用上下文管理器计时，可对代码片段计时
     """
-    log = LogManager('TimerContext').get_logger_and_add_handlers()
+    log = LogManager('TimerContext').get_logger_and_add_handlers(formatter_template=7)
 
     def __init__(self, is_print_log=True):
         self._is_print_log = is_print_log
@@ -238,6 +240,39 @@ class TimerContextManager(object):
         self.t_spend = time.time() - self.time_start
         if self._is_print_log:
             self.log.debug(f'对下面代码片段进行计时:  \n执行"{self._file_name}:{self._line}" 用时 {round(self.t_spend, 2)} 秒')
+
+
+class RedisDistributedLockContextManager:
+    """
+    分布式redis锁自动管理.
+    """
+    logger = LogManager('RedisDistributedLockContextManager').get_logger_and_add_handlers(formatter_template=7)
+
+    def __init__(self, redis_client, redis_lock_key, expire_seconds=30):
+        self.redis_client = redis_client
+        self.redis_lock_key = redis_lock_key
+        self._expire_seconds = expire_seconds
+        self.identifier = str(uuid.uuid4())
+        self.has_aquire_lock = False
+
+    def __enter__(self):
+        self._line = sys._getframe().f_back.f_lineno  # 调用此方法的代码的函数
+        self._file_name = sys._getframe(1).f_code.co_filename  # 哪个文件调了用此方法
+        self.redis_client.set(self.redis_lock_key, value=self.identifier, ex=self._expire_seconds, nx=True)
+        identifier_in_redis = self.redis_client.get(self.redis_lock_key)
+        if identifier_in_redis and identifier_in_redis.decode() == self.identifier:
+            self.has_aquire_lock = True
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.has_aquire_lock:
+            self.redis_client.delete(self.redis_lock_key)
+        if self.has_aquire_lock:
+            log_msg = f'"{self._file_name}:{self._line}" 这行代码获得了redis锁 {self.redis_lock_key}'
+            self.logger.info(log_msg)
+        else:
+            log_msg = f'"{self._file_name}:{self._line}" 这行代码没有获得redis锁 {self.redis_lock_key}'
+            self.logger.warning(log_msg)
 
 
 """

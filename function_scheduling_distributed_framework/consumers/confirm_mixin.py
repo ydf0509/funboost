@@ -4,7 +4,7 @@
 import time
 import json
 import uuid
-from function_scheduling_distributed_framework.utils import RedisMixin, LoggerMixin
+from function_scheduling_distributed_framework.utils import RedisMixin,decorators
 
 
 # noinspection PyUnresolvedReferences
@@ -23,7 +23,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
 
     def start_consuming_message(self):
         self.logger.warning('启动了任务redis确认消费助手')
-        self.keep_circulating(60, block=False)(self.__requeue_tasks_which_unconfirmed_timeout)()
+        self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
         super().start_consuming_message()
 
     def _add_task_str_to_unack_zset(self, task_str, ):
@@ -32,19 +32,22 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
     def _confirm_consume(self, kw):
         self.redis_db_frame.zrem(self._unack_zset_name, kw['task_str'])
 
-    def __requeue_tasks_which_unconfirmed_timeout(self):
+    def _requeue_tasks_which_unconfirmed(self):
         ## 防止在多个进程或多个机器中同时做扫描和放入未确认消费的任务。使用个分布式锁。
-        identifier = str(uuid.uuid4())
-        lock_key = f'fsff_lock__requeue_tasks_which_unconfirmed_timeout:{self._queue_name}'
-        self.redis_db_frame.set(lock_key, value=identifier, ex=30, nx=True) # 不需要手动释放锁，完全可以粗暴的锁住30秒。
-        identifier_in_redis = self.redis_db_frame.get(lock_key)
-        if identifier_in_redis and identifier_in_redis.decode() == identifier:
-            time_max = time.time() - self.UNCONFIRMED_TIMEOUT
-            for value in self.redis_db_frame.zrangebyscore(self._unack_zset_name, 0, time_max):
-                self.logger.warning(f'向 {self._queue_name} 重新放入未消费确认的任务 {value}')
-                self._requeue({'body': json.loads(value)})
-                self.redis_db_frame.zrem(self._unack_zset_name, value)
-            self.logger.info(f'{self._unack_zset_name} 中有待确认消费任务的数量是'
-                             f' {self.redis_db_frame.zcard(self._unack_zset_name)}')
-        else:
-            self.logger.info(f'没有获取到锁 {lock_key}，此次不执行判断和重新放入未消费确认的任务')
+        lock_key = f'fsdf_lock__requeue_tasks_which_unconfirmed_timeout:{self._queue_name}'
+        with decorators.RedisDistributedLockContextManager(self.redis_db_frame,lock_key,) as lock:
+            if lock.has_aquire_lock:
+                time_max = time.time() - self.UNCONFIRMED_TIMEOUT
+                for value in self.redis_db_frame.zrangebyscore(self._unack_zset_name, 0, time_max):
+                    self.logger.warning(f'向 {self._queue_name} 重新放入未消费确认的任务 {value}')
+                    self._requeue({'body': json.loads(value)})
+                    self.redis_db_frame.zrem(self._unack_zset_name, value)
+                self.redis_db_frame.delete(lock_key)
+                self.logger.info(f'{self._unack_zset_name} 中有待确认消费任务的数量是'
+                                 f' {self.redis_db_frame.zcard(self._unack_zset_name)}')
+
+
+
+
+
+

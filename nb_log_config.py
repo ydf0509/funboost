@@ -39,26 +39,27 @@ DISPLAY_BACKGROUD_COLOR_IN_CONSOLE = True     # 在控制台是否显示彩色�
 # LOG_LEVEL_FILTER = logging.DEBUG  # 默认日志级别，低于此级别的日志不记录了。例如设置为INFO，那么logger.debug的不会记录，只会记录logger.info以上级别的。
 # RUN_ENV = 'test'
 # 
-# FORMATTER_DICT = {
-#     1: logging.Formatter(
-#         '日志时间【%(asctime)s】 - 日志名称【%(name)s】 - 文件【%(filename)s】 - 第【%(lineno)d】行 - 日志等级【%(levelname)s】 - 日志信息【%(message)s】',
-#         "%Y-%m-%d %H:%M:%S"),
-#     2: logging.Formatter(
-#         '%(asctime)s - %(name)s - %(filename)s - %(funcName)s - %(lineno)d - %(levelname)s - %(message)s',
-#         "%Y-%m-%d %H:%M:%S"),
-#     3: logging.Formatter(
-#         '%(asctime)s - %(name)s - 【 File "%(pathname)s", line %(lineno)d, in %(funcName)s 】 - %(levelname)s - %(message)s',
-#         "%Y-%m-%d %H:%M:%S"),  # 一个模仿traceback异常的可跳转到打印日志地方的模板
-#     4: logging.Formatter(
-#         '%(asctime)s - %(name)s - "%(filename)s" - %(funcName)s - %(lineno)d - %(levelname)s - %(message)s -               File "%(pathname)s", line %(lineno)d ',
-#         "%Y-%m-%d %H:%M:%S"),  # 这个也支持日志跳转
-#     5: logging.Formatter(
-#         '%(asctime)s - %(name)s - "%(pathname)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(message)s',
-#         "%Y-%m-%d %H:%M:%S"),  # 我认为的最好的模板,推荐
-#     6: logging.Formatter('%(name)s - %(asctime)-15s - %(filename)s - %(lineno)d - %(levelname)s: %(message)s',
-#                          "%Y-%m-%d %H:%M:%S"),
-#     7: logging.Formatter('%(levelname)s - %(filename)s - %(lineno)d - %(message)s'),  # 一个只显示简短文件名和所处行数的日志模板
-# }
-# 
-# FORMATTER_KIND = 5  # 默认选择第几个模板
+FORMATTER_DICT = {
+    1: logging.Formatter(
+        '日志时间【%(asctime)s】 - 日志名称【%(name)s】 - 文件【%(filename)s】 - 第【%(lineno)d】行 - 日志等级【%(levelname)s】 - 日志信息【%(message)s】',
+        "%Y-%m-%d %H:%M:%S"),
+    2: logging.Formatter(
+        '%(asctime)s - %(name)s - %(filename)s - %(funcName)s - %(lineno)d - %(levelname)s - %(message)s',
+        "%Y-%m-%d %H:%M:%S"),
+    3: logging.Formatter(
+        '%(asctime)s - %(name)s - 【 File "%(pathname)s", line %(lineno)d, in %(funcName)s 】 - %(levelname)s - %(message)s',
+        "%Y-%m-%d %H:%M:%S"),  # 一个模仿traceback异常的可跳转到打印日志地方的模板
+    4: logging.Formatter(
+        '%(asctime)s - %(name)s - "%(filename)s" - %(funcName)s - %(lineno)d - %(levelname)s - %(message)s -               File "%(pathname)s", line %(lineno)d ',
+        "%Y-%m-%d %H:%M:%S"),  # 这个也支持日志跳转
+    5: logging.Formatter(
+        '%(asctime)s - %(name)s - "%(pathname)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(message)s',
+        "%Y-%m-%d %H:%M:%S"),  # 我认为的最好的模板,推荐
+    6: logging.Formatter('%(name)s - %(asctime)-15s - %(filename)s - %(lineno)d - %(levelname)s: %(message)s',
+                         "%Y-%m-%d %H:%M:%S"),
+    7: logging.Formatter('%(asctime)s - %(name)s - "%(filename)s:%(lineno)d" - %(levelname)s - %(message)s',"%Y-%m-%d %H:%M:%S"),  # 一个只显示简短文件名和所处行数的日志模板
+    8: logging.Formatter('%(levelname)s - %(filename)s - %(lineno)d - %(message)s'),  # 一个只显示简短文件名和所处行数的日志模板
+}
+
+FORMATTER_KIND = 5  # 默认选择第几个模板
 

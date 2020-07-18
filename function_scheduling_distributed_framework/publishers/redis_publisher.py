@@ -16,6 +16,7 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
 
     def clear(self):
         self.redis_db_frame.delete(self._queue_name)
+        self.redis_db_frame.delete(f'{self._queue_name}__unack')
         self.logger.warning(f'清除 {self._queue_name} 队列中的消息成功')
 
     def get_message_count(self):

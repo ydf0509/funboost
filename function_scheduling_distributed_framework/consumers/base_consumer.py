@@ -273,6 +273,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                  max_retry_times=3, log_level=10, is_print_detail_exception=True,
                  msg_schedule_time_intercal=0.0, qps: float = 0, msg_expire_senconds=0,
                  is_using_distributed_frequency_control=False,
+                 is_send_consumer_hearbeat_to_redis=False,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False,
                  task_filtering_expire_seconds=0, is_consuming_function_use_multi_params=True,
                  is_do_not_run_by_specify_time_effect=False,
@@ -348,6 +349,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             msg_schedule_time_intercal = 1.0 / qps  # 使用qps覆盖消息调度间隔，以qps为准，以后废弃msg_schedule_time_intercal这个参数。
         self._msg_schedule_time_intercal = msg_schedule_time_intercal if msg_schedule_time_intercal > 0.001 else 0.001
         self._is_using_distributed_frequency_control = is_using_distributed_frequency_control
+        self._is_send_consumer_hearbeat_to_redis = is_send_consumer_hearbeat_to_redis or is_using_distributed_frequency_control
         self._msg_expire_senconds = msg_expire_senconds
 
         if self._concurrent_mode not in (1, 2, 3):
@@ -448,12 +450,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         return _keep_circulating
 
+    # noinspection PyAttributeOutsideInit
     def start_consuming_message(self):
         self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
-        if self._is_using_distributed_frequency_control:
-            # noinspection PyAttributeOutsideInit
+        if self._is_send_consumer_hearbeat_to_redis:
+            self._has_start_run_distributed_consumer_statistics = True
             self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name,
                                                                                   f'{socket.gethostname()} - {os.getpid()} - {id(self)}')
+
 
         self.keep_circulating(20, block=False)(self.check_heartbeat_and_message_count)()
         self._redis_filter.delete_expire_filter_task_cycle()

@@ -59,14 +59,14 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
                 self._distributed_consumer_statistics.send_heartbeat()
                 current_queue_hearbeat_ids = self._distributed_consumer_statistics.get_queue_heartbeat_ids(without_time=True)
                 current_queue_unacked_msg_queues = self.redis_db_frame.scan(0, f'{self._queue_name}__unack_id_*', 100)
-                print(current_queue_unacked_msg_queues)
+                # print(current_queue_unacked_msg_queues)
                 for current_queue_unacked_msg_queue in current_queue_unacked_msg_queues[1]:
                     current_queue_unacked_msg_queue_str = current_queue_unacked_msg_queue.decode()
                     self.logger.info(f'{current_queue_unacked_msg_queue_str} 中有待确认消费任务的数量是'
                                      f' {self.redis_db_frame.zcard(current_queue_unacked_msg_queue_str)}')
                     if current_queue_unacked_msg_queue_str.split(f'{self._queue_name}__unack_id_')[1] not in current_queue_hearbeat_ids:
                         self.logger.warning(f'{current_queue_unacked_msg_queue_str} 是过期的')
-                        for unacked_task_str in self.redis_db_frame.zrevrange(current_queue_unacked_msg_queue_str, 0, 100000):
+                        for unacked_task_str in self.redis_db_frame.zrevrange(current_queue_unacked_msg_queue_str, 0, 1000):
                             self.logger.warning(f'从 {current_queue_unacked_msg_queue_str} 向 {self._queue_name} 重新放入未消费确认的任务 {unacked_task_str}')
                             self.redis_db_frame.rpush(self._queue_name, unacked_task_str)
                             self.redis_db_frame.zrem(current_queue_unacked_msg_queue_str, unacked_task_str)

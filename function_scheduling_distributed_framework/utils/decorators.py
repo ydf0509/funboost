@@ -217,11 +217,10 @@ def timer(func):
 
 
 # noinspection PyProtectedMember
-class TimerContextManager(object):
+class TimerContextManager(LoggerMixin):
     """
     用上下文管理器计时，可对代码片段计时
     """
-    log = LogManager('TimerContext').get_logger_and_add_handlers(formatter_template=7)
 
     def __init__(self, is_print_log=True):
         self._is_print_log = is_print_log
@@ -242,11 +241,10 @@ class TimerContextManager(object):
             self.log.debug(f'对下面代码片段进行计时:  \n执行"{self._file_name}:{self._line}" 用时 {round(self.t_spend, 2)} 秒')
 
 
-class RedisDistributedLockContextManager:
+class RedisDistributedLockContextManager(LoggerMixin):
     """
     分布式redis锁自动管理.
     """
-    logger = LogManager('RedisDistributedLockContextManager').get_logger_and_add_handlers(formatter_template=7)
 
     def __init__(self, redis_client, redis_lock_key, expire_seconds=30):
         self.redis_client = redis_client

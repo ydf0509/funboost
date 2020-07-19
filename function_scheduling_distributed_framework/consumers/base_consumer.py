@@ -404,6 +404,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._publisher_of_same_queue = None
 
+        self.consumer_identification = f'{socket.gethostname()}_{os.getpid()}_{id(self)}'
+
         self.custom_init()
 
     @property
@@ -454,11 +456,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def start_consuming_message(self):
         self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
         if self._is_send_consumer_hearbeat_to_redis:
-            self._has_start_run_distributed_consumer_statistics = True
-            self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name,
-                                                                                  f'{socket.gethostname()} - {os.getpid()} - {id(self)}')
-
-
+            self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name,self.consumer_identification)
+            self._distributed_consumer_statistics.run()
         self.keep_circulating(20, block=False)(self.check_heartbeat_and_message_count)()
         self._redis_filter.delete_expire_filter_task_cycle()
         if self._schedule_tasks_on_main_thread:
@@ -728,25 +727,31 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
         self._queue_name = queue_name
         self._redis_key_name = f'hearbeat:{queue_name}'
         self.active_consumer_num = 1
-        self._send_heartbeat.__wrapped__(self)
-        self._send_heartbeat()
-        self._show_active_consumer_num()
         self._last_show_consumer_num_timestamp = 0
 
-    @decorators.keep_circulating(10, block=False)
-    def _send_heartbeat(self):
+    def run(self):
+        self.send_heartbeat()
+        decorators.keep_circulating(10, block=False)(self.send_heartbeat)()
+        decorators.keep_circulating(5, block=False)(self._show_active_consumer_num)()
+
+    def send_heartbeat(self):
         results = self.redis_db_frame.smembers(self._redis_key_name)
         with self.redis_db_frame.pipeline() as p:
             for result in results:
-                if time.time() - time_util.DatetimeConverter(result.decode().split('&&')[-1]).timestamp > 15 or \
+                if time.time() - float(result.decode().split('&&')[-1])> 15 or \
                         self._consumer_identification == result.decode().split('&&')[0]:
                     p.srem(self._redis_key_name, result)
-            p.sadd(self._redis_key_name, f'{self._consumer_identification}&&{time_util.DatetimeConverter().datetime_str}')
+            p.sadd(self._redis_key_name, f'{self._consumer_identification}&&{time.time()}')
             p.execute()
 
-    @decorators.keep_circulating(5, block=False)
     def _show_active_consumer_num(self):
         self.active_consumer_num = self.redis_db_frame.scard(self._redis_key_name) or 1
         if time.time() - self._last_show_consumer_num_timestamp > 60:
             self.logger.info(f'分布式所有环境中使用 {self._queue_name} 队列的，一共有 {self.active_consumer_num} 个消费者')
             self._last_show_consumer_num_timestamp = time.time()
+
+    def get_queue_heartbeat_ids(self,without_time:bool):
+        if without_time:
+            return [id.decode().split('&&')[0] for id in self.redis_db_frame.smembers(self._redis_key_name)]
+        else:
+            return [id.decode() for id in self.redis_db_frame.smembers(self._redis_key_name)]

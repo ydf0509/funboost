@@ -268,10 +268,10 @@ class RedisDistributedLockContextManager:
         if self.has_aquire_lock:
             self.redis_client.delete(self.redis_lock_key)
         if self.has_aquire_lock:
-            log_msg = f'"{self._file_name}:{self._line}" 这行代码获得了redis锁 {self.redis_lock_key}'
+            log_msg = f'\n"{self._file_name}:{self._line}" 这行代码获得了redis锁 {self.redis_lock_key}'
             self.logger.info(log_msg)
         else:
-            log_msg = f'"{self._file_name}:{self._line}" 这行代码没有获得redis锁 {self.redis_lock_key}'
+            log_msg = f'\n"{self._file_name}:{self._line}" 这行代码没有获得redis锁 {self.redis_lock_key}'
             self.logger.warning(log_msg)
 
 

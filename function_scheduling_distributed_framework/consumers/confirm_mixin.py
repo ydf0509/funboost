@@ -71,5 +71,6 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
                             self.redis_db_frame.rpush(self._queue_name, unacked_task_str)
                             self.redis_db_frame.zrem(current_queue_unacked_msg_queue_str, unacked_task_str)
                     else:
-                        print('是当前queue')
+                        pass
+                        # print('是活跃消费者')
 

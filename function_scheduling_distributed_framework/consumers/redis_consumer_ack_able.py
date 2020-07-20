@@ -10,6 +10,7 @@ from function_scheduling_distributed_framework.consumers.confirm_mixin import Co
 
 class RedisConsumerAckAble000(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractConsumer, ):
     """
+    随意重启代码会极小概率丢失1个任务。
     redis作为中间件实现的。将取出来的消息同时放入一个set中，代表unack消费状态。以支持对机器和python进程的随意关闭和断电。
     和celery的配置  task_reject_on_worker_lost = True task_acks_late = True后，处理逻辑几乎不约而同相似。
     """
@@ -34,6 +35,7 @@ class RedisConsumerAckAble000(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractCo
 
 class RedisConsumerAckAble111(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, AbstractConsumer, ):
     """
+    随意重启代码不会丢失任务，使用的是超时10分钟没有确认消费就认为是已经断开了，重新回到代消费队列。
     redis作为中间件实现的。将取出来的消息同时放入一个set中，代表unack消费状态。以支持对机器和python进程的随意关闭和断电。
     和celery的配置  task_reject_on_worker_lost = True task_acks_late = True后，处理逻辑几乎不约而同相似。
 
@@ -77,6 +79,7 @@ class RedisConsumerAckAble111(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, 
 
 class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, AbstractConsumer, ):
     """
+    随意重启代码不会丢失任务，采用的是配合redis心跳，将心跳过期的未确认的队列，全部重回消费队列。这种不需要等待10分钟，判断更精确。
     redis作为中间件实现的。将取出来的消息同时放入一个set中，代表unack消费状态。以支持对机器和python进程的随意关闭和断电。
     和celery的配置  task_reject_on_worker_lost = True task_acks_late = True后，处理逻辑几乎不约而同相似。
 

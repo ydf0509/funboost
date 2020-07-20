@@ -128,9 +128,6 @@ class RedisImpermanencyFilterUsingRedisKey(RedisFilter):
 
 
 if __name__ == '__main__':
-    from test_frame.my_patch_frame_config import do_patch_frame_config
-
-    do_patch_frame_config()
     # filter = RedisFilter('filter_set:abcdefgh', 120)
     params_filter = RedisImpermanencyFilter('filter_zset:abcdef', 120)
     # params_filter = RedisImpermanencyFilterUsingRedisKey('filter_dir', 300)

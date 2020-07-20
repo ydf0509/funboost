@@ -73,4 +73,3 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
                     else:
                         pass
                         # print('是活跃消费者')
-

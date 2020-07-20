@@ -263,6 +263,7 @@ def add(a, b):
 
 for i in range(10, 20):
     add.pub(dict(a=i, b=i * 2))  # 使用add.pub 发布任务
+    add.push(i, b=i * 2)  # 使用add.push 发布任务
 add.consume()                    # 使用add.consume 消费任务
 ```
 
@@ -525,7 +526,7 @@ while 1：
        劣势：用户很少，比rabbitmq用户少了几百倍，导致资料也很少，需要看nsq包的源码来调用一些冷门功能。
        
        redis 可确认消费方式，作为消息队列，
-       优势： 真分布式，多个脚本和多态机器可以共享任务。有极小概率会丢失一个任务，不会绝对丢失大批量任务。
+       优势： 真分布式，多个脚本和多态机器可以共享任务。某个消费者突然关闭或者宕机，不会造成内存中正在运行的任务丢失。
        劣势： 需要安装redis。
        
        sqlalchemy 作为消息队列，
@@ -854,7 +855,7 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 
 ```
 
-## 6.11 增加装饰器形式生成消费者。本人喜欢常规方式，装饰器方式哪个好用呢？
+## 6.11 增加装饰器形式生成消费者。常规方式，装饰器方式区别是自动实例化和手动实例化，哪个好用呢？
 
 ~~~
 这次使用修改你的项目根目录下的自动生成的distributed_frame_config.py配置文件的方式来进行redis rabbitmq等的配置。
@@ -869,6 +870,7 @@ def add(a, b):
 
 for i in range(10, 20):
     add.pub(dict(a=i, b=i * 2))  # 使用add.pub 发布任务
+    add.push(i, b=i * 2)  # 使用add.push 发布任务
 add.consume()                    # 使用add.consume 消费任务
 '''
 
@@ -888,3 +890,14 @@ consumer.start_consuming_message()
 装饰器版本的 task_deco 入参 和 get_consumer 入参99%一致，唯一不同的是 装饰器版本加在了函数上自动知道消费函数了，
 所以不需要传consuming_function参数。
 ~~~
+
+## 6.12 增加rocketmq支持。
+```python
+from function_scheduling_distributed_framework import task_deco, BrokerEnum
+
+
+@task_deco('queue_test_f01', qps=2, broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
+def f(a, b):
+    print(f'{a} + {b} = {a + b}')
+
+```

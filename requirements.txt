@@ -6,7 +6,7 @@ rabbitpy==2.0.1
 gnsq==1.0.1
 kafka-python==1.4.6
 mongo-mq==0.0.1
-persist-queue==0.4.2
+persist-queue>=0.4.2
 redis
 decorator==4.4.0
 pysnooper==0.0.11

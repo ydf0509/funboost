@@ -404,7 +404,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._publisher_of_same_queue = None
 
-        self.consumer_identification = f'{socket.gethostname()}_{time_util.DatetimeConverter()}_{os.getpid()}_{id(self)}'
+        self.consumer_identification = f'{socket.gethostname()}_{time_util.DatetimeConverter().datetime_str.replace(":","-")}_{os.getpid()}_{id(self)}'
 
         self.custom_init()
 
@@ -752,6 +752,6 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
 
     def get_queue_heartbeat_ids(self, without_time: bool):
         if without_time:
-            return [id.decode().split('&&')[0] for id in self.redis_db_frame.smembers(self._redis_key_name)]
+            return [idx.decode().split('&&')[0] for idx in self.redis_db_frame.smembers(self._redis_key_name)]
         else:
-            return [id.decode() for id in self.redis_db_frame.smembers(self._redis_key_name)]
+            return [idx.decode() for idx in self.redis_db_frame.smembers(self._redis_key_name)]

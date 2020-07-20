@@ -33,7 +33,7 @@ class RedisConsumerAckAble000(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractCo
         self.redis_db_frame.rpush(self._queue_name, json.dumps(kw['body']))
 
 
-class RedisConsumerAckAble111(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, AbstractConsumer, ):
+class RedisConsumerAckAble111(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractConsumer, ):
     """
     随意重启代码不会丢失任务，使用的是超时10分钟没有确认消费就认为是已经断开了，重新回到代消费队列。
     redis作为中间件实现的。将取出来的消息同时放入一个set中，代表unack消费状态。以支持对机器和python进程的随意关闭和断电。
@@ -64,7 +64,6 @@ class RedisConsumerAckAble111(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, 
             return_v = script(keys=[self._queue_name, self._unack_zset_name], args=[time.time()])
             if return_v:
                 task_str = return_v.decode()
-                self._add_task_str_to_unack_zset(task_str, )
                 self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：     {task_str}  ')
                 task_dict = json.loads(task_str)
                 kw = {'body': task_dict, 'task_str': task_str}
@@ -96,6 +95,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
     BROKER_KIND = 9
 
     def _shedual_task(self):
+        # 可以采用lua脚本，也可以采用redis的watch配合pipeline使用。比代码分两行pop和zadd比还能减少一次io交互，还能防止丢失小概率一个任务。
         lua = '''
                      local v = redis.call("lpop", KEYS[1])
                      if v then
@@ -108,7 +108,6 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
             return_v = script(keys=[self._queue_name, self._unack_zset_name], args=[time.time()])
             if return_v:
                 task_str = return_v.decode()
-                self._add_task_str_to_unack_zset(task_str, )
                 self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：     {task_str}  ')
                 task_dict = json.loads(task_str)
                 kw = {'body': task_dict, 'task_str': task_str}
@@ -119,3 +118,4 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
 
     def _requeue(self, kw):
         self.redis_db_frame.rpush(self._queue_name, json.dumps(kw['body']))
+        

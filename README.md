@@ -1,5 +1,7 @@
 # 1.distributed_framework
 
+pip install function_scheduling_distributed_framework --upgrade
+
 ### 1.0.1  框架用途功能
 
 python通用分布式函数调度框架。适用场景范围广泛。

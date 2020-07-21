@@ -3,17 +3,11 @@
 # @Time    : 2019/8/8 0008 14:57
 import time
 
-from test_frame.best_simple_example.test_consume import consumer
+from test_frame.best_simple_example.test_consume import f2
 
-consumer.publisher_of_same_queue.clear()
-# 这里的publisher_of_same_queue 也可以使用get_publisher函数得到发布者，但需要手动确保消费者的队列名字与发布者的队列名字一致，并且中间件种类一致。用法如下。
-# pb = get_publisher('queue_test2',broker_kind=6)
-# pb.publish({'a': i, 'b': 2 * i})
-
-
-
-# [consumer.publisher_of_same_queue.publish({'a': i, 'b': 2 * i}) for i in range(100)]
+f2.clear()
 
 for i in range(10000):
     time.sleep(0.05)
-    consumer.publisher_of_same_queue.publish({'a': i, 'b': 2 * i})
+    f2.pub({'a': i, 'b': 2 * i})  # pub这是发布字典，另外还能设置函数控制参数
+    f2.push(i, i * 2)  # push这是发布函数参数形式，不是发布一个指点的形式

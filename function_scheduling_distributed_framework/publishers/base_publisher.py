@@ -199,7 +199,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         for index, arg in enumerate(func_args):
             msg_dict[self.publish_params_checker.position_arg_name_list[index]] = arg
         # print(msg_dict)
-        self.publish(msg_dict)
+        return self.publish(msg_dict)
 
     delay = push  # 那就来个别名吧，两者都可以。
 

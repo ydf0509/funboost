@@ -2,14 +2,18 @@
 # @Author  : ydf
 # @Time    : 2020/7/9 0008 12:12
 import json
+import traceback
 import os
 import time
 from function_scheduling_distributed_framework import frame_config
+
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
 
-if os.name != 'nt':
+try:
     from rocketmq.client import Producer, Message
-
+except Exception as e:
+    print(traceback.format_exc())
+    print('rocketmq包 只支持linux和mac')
 
 class RocketmqPublisher(AbstractPublisher, ):
     group_id__rocketmq_producer = {}
@@ -27,7 +31,7 @@ class RocketmqPublisher(AbstractPublisher, ):
 
     def concrete_realization_of_publish(self, msg):
         rocket_msg = Message(self._queue_name)
-        rocket_msg.set_keys(json.dumps(json.loads(msg)['body'])) # 利于检索
+        rocket_msg.set_keys(json.dumps(json.loads(msg))) # 利于检索
         # rocket_msg.set_tags('XXX')
         rocket_msg.set_body(msg)
         # print(msg)

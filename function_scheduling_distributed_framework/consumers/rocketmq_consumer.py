@@ -4,13 +4,17 @@
 import os
 import json
 import time
+import traceback
 
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
 from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.publishers.rocketmq_publisher import RocketmqPublisher
 
-if os.name != 'nt':
+try:
     from rocketmq.client import PushConsumer
+except Exception as e:
+    print(traceback.format_exc())
+    print('rocketmq包 只支持linux和mac')
 
 
 class RocketmqConsumer(AbstractConsumer):
@@ -23,6 +27,7 @@ class RocketmqConsumer(AbstractConsumer):
         consumer = PushConsumer(f'g-{self._queue_name}')
         consumer.set_namesrv_addr(frame_config.ROCKETMQ_NAMESRV_ADDR)
         consumer.set_thread_count(1)
+        consumer.set_message_batch_max_size(1)
 
         self._publisher = RocketmqPublisher(self._queue_name)
 

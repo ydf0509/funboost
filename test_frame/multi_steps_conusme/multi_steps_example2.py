@@ -22,3 +22,4 @@ consumer1.publisher_of_same_queue.publish({'x': 0})
 
 consumer1.start_consuming_message()
 consumer2.start_consuming_message()
+

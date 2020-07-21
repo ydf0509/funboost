@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version=7.7,
+    version=7.8,
     description=(
         'function scheduling distributed framework'
     ),
@@ -65,6 +65,7 @@ setup(
         'redis2',
         'redis3',
         'nb_log>=3.4',
+        'rocketmq',
     ]
 )
 """

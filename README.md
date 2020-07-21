@@ -896,7 +896,7 @@ consumer.start_consuming_message()
 from function_scheduling_distributed_framework import task_deco, BrokerEnum
 
 
-@task_deco('queue_test_f01', qps=2, broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
+@task_deco('queue_test_f01', qps=2, broker_kind=BrokerEnum.ROCKETMQ)
 def f(a, b):
     print(f'{a} + {b} = {a + b}')
 

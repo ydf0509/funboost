@@ -23,3 +23,4 @@ pikav1
 redis2
 redis3
 nb_log>=3.4
+rocketmq

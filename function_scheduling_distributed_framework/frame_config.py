@@ -4,6 +4,7 @@
 
 
 # 你需要使用patch_frame_config函数打猴子补丁的方式修改这里的配置就可以了，很简单。最好不要去改框架源码这里，但也可以改这里。
+# 还可以在你项目根目录下自动生成的 distributed_frame_config.py 文件种修改配置，会被自动读取到。
 
 MONGO_CONNECT_URL = f'mongodb://myUserAdmin:8mwTdy1klnSYepNo@{"192.168.199.202"}:27016/admin'
 
@@ -14,7 +15,7 @@ RABBITMQ_PORT = 5672
 RABBITMQ_VIRTUAL_HOST = 'rabbitmq_virtual_host'
 
 REDIS_HOST = '127.0.0.1'
-REDIS_PASSWORD = 'redis_password'
+REDIS_PASSWORD = ''
 REDIS_PORT = 6379
 REDIS_DB = 7
 

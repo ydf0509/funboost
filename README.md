@@ -916,6 +916,4 @@ if __name__ == '__main__':
         f.push(i, i * 2)
     f.consume()
 
-
-
 ```

@@ -167,4 +167,3 @@ class IdeAutoCompleteHelper(LoggerMixin):
         self.publish = self.pub = self.publisher.publish
         self.push = self.delay = self.publisher.push
         self.clear = self.clear_queue = self.consumer.publisher_of_same_queue.clear = self.publisher.clear
-        

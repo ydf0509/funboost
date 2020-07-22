@@ -91,13 +91,15 @@ def task_deco(queue_name, *, function_timeout=0, threads_num=50,
     def f(a, b):
         print(a + b)
 
-    consumer = get_consumer('queue_test_f01', consuming_function=f,qps=0.2, broker_kind=2) # 需要手动指定consuming_function入参的值。
+    consumer = get_consumer('queue_test_f01', consuming_function=f,qps=0.2, broker_kind=2)
+    # 需要手动指定consuming_function入参的值。
     for i in range(10, 20):
         consumer.publisher_of_same_queue.publish(dict(a=i, b=i * 2))
     consumer.start_consuming_message()
     '''
 
-    装饰器版本的 task_deco 入参 和 get_consumer 入参99%一致，唯一不同的是 装饰器版本加在了函数上自动知道消费函数了，所以不需要传consuming_function参数。
+    装饰器版本的 task_deco 入参 和 get_consumer 入参99%一致，唯一不同的是 装饰器版本加在了函数上自动知道消费函数了，
+    所以不需要传consuming_function参数。
     """
     # 装饰器版本能够自动知道消费函数，防止task_deco按照get_consumer的入参重复传参了consuming_function。
     consumer_init_kwargs = copy.copy(locals())
@@ -165,3 +167,4 @@ class IdeAutoCompleteHelper(LoggerMixin):
         self.publish = self.pub = self.publisher.publish
         self.push = self.delay = self.publisher.push
         self.clear = self.clear_queue = self.consumer.publisher_of_same_queue.clear = self.publisher.clear
+        

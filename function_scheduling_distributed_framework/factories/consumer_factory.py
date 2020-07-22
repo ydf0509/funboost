@@ -23,6 +23,7 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
                  concurrent_num=50, specify_threadpool=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True, msg_schedule_time_intercal=0.0,
                  qps: float = 0, msg_expire_senconds=0, is_using_distributed_frequency_control=False,
+                 is_send_consumer_hearbeat_to_redis=False,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False, task_filtering_expire_seconds=0,
                  is_consuming_function_use_multi_params=True,
                  is_do_not_run_by_specify_time_effect=False, do_not_run_by_specify_time=('10:00:00', '22:00:00'),
@@ -50,6 +51,7 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
     :param msg_expire_senconds:消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
     :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis计数），默认只对当前实例化的消费者空频有效。假如实例化了2个qps为10的使用同一队列名的消费者，
                并且都启动，则每秒运行次数会达到20。如果使用分布式空频则所有消费者加起来的总运行次数是10。
+    :param is_send_consumer_hearbeat_to_redis   时候将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
     :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
     :param create_logger_file : 是否创建文件日志
     :param do_task_filtering :是否执行基于函数参数的任务过滤
@@ -66,6 +68,7 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
     :param broker_kind:中间件种类,。 0 使用pika链接rabbitmqmq，1使用rabbitpy包实现的操作rabbitmnq，2使用redis，
            3使用python内置Queue,4使用amqpstorm包实现的操作rabbitmq，5使用mongo，6使用本机磁盘持久化。
            7使用nsq，8使用kafka，9也是使用redis但支持消费确认。10为sqlachemy，支持mysql sqlite postgre oracel sqlserver
+           11使用rocketmq.
     :return AbstractConsumer
     """
     all_kwargs = copy.copy(locals())

@@ -23,6 +23,9 @@ python通用分布式函数调度框架。适用场景范围广泛。
      
      控频限流：
         例如十分精确的指定1秒钟运行30次函数（无论函数需要随机运行多久时间，都能精确控制到指定的消费频率；
+       
+     分布式控频限流：
+        例如一个脚本反复启动多次或者多台机器多个容器在运行，如果要严格控制总的qps，能够支持分布式控频限流。
       
      任务持久化：
         消息队列中间件天然支持
@@ -201,39 +204,43 @@ def f2(a, b):
 # 这里演示使用本地持久化队列，本机多个脚本之间可以相互通信共享任务，无需安装任何中间件，降低初次使用门槛。
 # 框架使用很简单，全部源码的函数和类都不需要深入了解，只需要看懂get_consumer这一个函数的参数就可以就可以。
 """
-    使用工厂模式再包一层，通过设置数字来生成基于不同中间件或包的consumer。
+        使用工厂模式再包一层，通过设置数字来生成基于不同中间件或包的consumer。
     :param queue_name: 队列名字。
     :param consuming_function: 处理消息的函数。  指定队列名字和指定消费函数这两个参数是必传，必须指定，
-           这2个是这个消费框架的本质核心参数，其他参数都是可选的,有默认值。
+           这2个是这个消费框架的本质核心参数，其他参数都是可选的。
     :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
-    :param concurrent_num:并发数量，协程或线程。由concurrent_mode决定并发种类。
+    :param threads_num:并发数量，协程或线程。由concurrent_mode决定并发种类。
+    :param concurrent_num:并发数量，这个覆盖threads_num。以后会废弃threads_num参数，因为表达的意思不太准确，不一定是线程模式并发。
     :param specify_threadpool:使用指定的线程池（协程池），可以多个消费者共使用一个线程池，不为None时候。threads_num失效
     :param concurrent_mode:并发模式，1线程 2gevent 3eventlet
-    :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊
-           不稳定情况会有效果。可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。
+    :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
+           可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。
            主动抛出ExceptionForRequeue异常，则当前消息会重返中间件。
     :param log_level:框架的日志级别。
     :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
-    :param qps:用于控频，精确指定1秒钟运行几次函数。
+    :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频的关键。
+    :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，以后废弃msg_schedule_time_intercal这个参数。
     :param msg_expire_senconds:消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
+    :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis计数），默认只对当前实例化的消费者空频有效。假如实例化了2个qps为10的使用同一队列名的消费者，
+               并且都启动，则每秒运行次数会达到20。如果使用分布式空频则所有消费者加起来的总运行次数是10。
+    :param is_send_consumer_hearbeat_to_redis   时候将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
     :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
     :param create_logger_file : 是否创建文件日志
-    :param do_task_filtering :是否执行基于函数参数的任务过滤。支持永久过滤和限时过滤，限时过滤意思是例如10分钟
-           之前执行过，现在仍然执行，10分钟之内执行过则不执行。
-    :param is_consuming_function_use_multi_params  函数的参数是否是传统的多参数，不为单个body字典
-           表示多个参数。现在基本可以无视指定这个值了，因为现在默认用的是**{}来解包，第一版时候没想好，
-           第一版时候函数的参数有且只能有一个并且入参本身是1个字典。为了兼容以前的调用方式，保留这个参数。
+    :param do_task_filtering :是否执行基于函数参数的任务过滤
+    :param task_filtering_expire_seconds:任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ，
+           30分钟前发布过1 + 2 的任务，现在仍然执行，
+           如果是30分钟以内发布过这个任务，则不执行1 + 2，现在把这个逻辑集成到框架，一般用于接口价格缓存。
+    :param is_consuming_function_use_multi_params  函数的参数是否是传统的多参数，不为单个body字典表示多个参数。
     :param is_do_not_run_by_specify_time_effect :是否使不运行的时间段生效
     :param do_not_run_by_specify_time   :不运行的时间段
     :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
-    :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态
-           到mongodb。这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
-    :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能,并且阻塞住当前线程，
-           使用async_result.result时候会等待结果阻塞住当前线程。
+    :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。
+           这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
+    :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。。
     :param broker_kind:中间件种类,。 0 使用pika链接rabbitmqmq，1使用rabbitpy包实现的操作rabbitmnq，2使用redis，
            3使用python内置Queue,4使用amqpstorm包实现的操作rabbitmq，5使用mongo，6使用本机磁盘持久化。
-           7使用nsq，8使用kafka，9也是使用redis但支持消费确认。
-           10为sqlachemy，支持mysql sqlite postgre oracel sqlserver
+           7使用nsq，8使用kafka，9也是使用redis但支持消费确认。10为sqlachemy，支持mysql sqlite postgre oracel sqlserver
+           11使用rocketmq.
     :return AbstractConsumer
 """
 consumer = get_consumer('queue_test2', consuming_function=f2, broker_kind=6)  

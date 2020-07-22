@@ -22,7 +22,7 @@ class MongoMqConsumer(AbstractConsumer, MongoMixin):
                 kw = {'body': job.payload, 'job': job}
                 self._submit_task(kw)
             else:
-                time.sleep(self._msg_schedule_time_intercal)
+                time.sleep(0.1)
 
     def _confirm_consume(self, kw):
         kw['job'].complete()

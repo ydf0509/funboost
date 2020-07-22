@@ -11,9 +11,9 @@ python通用分布式函数调度框架。适用场景范围广泛。
 可以一行代码分布式并发调度起一切任何老代码的旧函数和新项目的新函数，并提供数十种函数控制功能。
 
 还是不懂框架能做什么是什么，就必须先去了解下celery。如果连celery的用途概念听都没听说，
-那就不可能知道此框架的功能用途。
+那就不可能知道框架的概念和功能用途。
 
-包括：
+功能包括：
      
      分布式：
         支持数十种最负盛名的消息中间件.(除了常规mq，还包括用不同形式的如 数据库 磁盘文件 redis等来模拟消息队列)
@@ -155,7 +155,7 @@ pip install function_scheduling_distributed_framework --upgrade -i https://pypi.
 
 ## 2.1 具体更详细的用法可以看test_frame文件夹里面的几个示例和操作文档.md。
 
-以下为简单例子,介绍了入参意义，这里是介绍的手动调用猴子补丁函数修改框架配置和非装饰器方式。
+2.1为简单例子,介绍了入参意义，这里是介绍的手动调用猴子补丁函数修改框架配置和非装饰器方式。
 
 2.2 是使用修改你项目根目录下文件distributed_frame_config.py的配置文件的方式，并且生成消费者使用装饰器方式。
  ```python
@@ -906,8 +906,15 @@ consumer.start_consuming_message()
 from function_scheduling_distributed_framework import task_deco, BrokerEnum
 
 
-@task_deco('queue_test_f01', qps=2, broker_kind=BrokerEnum.ROCKETMQ)
+@task_deco('queue_test_f03', qps=2, broker_kind=BrokerEnum.ROCKETMQ)
 def f(a, b):
     print(f'{a} + {b} = {a + b}')
+
+
+if __name__ == '__main__':
+    for i in range(100):
+        f.push(i, i * 2)
+    f.consume()
+
 
 ```

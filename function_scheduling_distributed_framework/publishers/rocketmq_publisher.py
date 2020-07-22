@@ -31,7 +31,7 @@ class RocketmqPublisher(AbstractPublisher, ):
 
     def concrete_realization_of_publish(self, msg):
         rocket_msg = Message(self._queue_name)
-        rocket_msg.set_keys(json.dumps(json.loads(msg))) # 利于检索
+        rocket_msg.set_keys(msg)# 利于检索
         # rocket_msg.set_tags('XXX')
         rocket_msg.set_body(msg)
         # print(msg)

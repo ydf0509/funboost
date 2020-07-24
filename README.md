@@ -338,7 +338,7 @@ if __name__ == '__main__':
 
 ```
 
-### 2.4 演示如何定时运行，配合apscheduler定时库。
+### 2.5 演示如何定时运行，配合apscheduler定时库。
 ```python
 
 # 定时运行消费演示
@@ -352,7 +352,7 @@ def consume_func(x, y):
     print(f'{x} + {y} = {x + y}')
 
 
-# 写一个推送的函数
+# 写一个推送的函数（这里的pubilsh_task函数当然也可以传参了，在add_job指定参数args和kwargs就行了，因为这只是简单演示。）
 def pubilsh_task():
     consume_func.push(1, 2)
 

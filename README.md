@@ -302,6 +302,10 @@ consumer.start_consuming_message()   # 使用consumer.start_consuming_message �
 ```
 
 ### 2.4 演示如何解决多个步骤的消费函数，以及如何连续启动两个队列的消费。
+
+看这个例子，step1函数中不仅可以给step2发布任务，也可以给step1自身发布任务。
+
+qps规定了step1每2秒执行一次，step2每秒执行3次。
 ```python
 import time
 
@@ -329,11 +333,43 @@ if __name__ == '__main__':
     # step1.clear()
     step1.push(0)    # 给step1的队列推送任务。
     
-    step1.consume()  # 可以连续启动两个消费者，因为conusme是启动独立线程里面while 1调度的，所以可以连续运行多个启动消费。
+    step1.consume()  # 可以连续启动两个消费者，因为conusme是启动独立线程里面while 1调度的，不会阻塞主线程，所以可以连续运行多个启动消费。
     step2.consume()
 
+```
+
+### 2.4 演示如何定时运行，配合apscheduler定时库。
+```python
+
+# 定时运行消费演示
+import datetime
+from apscheduler.schedulers.background import BackgroundScheduler
+from function_scheduling_distributed_framework import task_deco, BrokerEnum
+
+
+@task_deco('queue_test_666', broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
+def consume_func(x, y):
+    print(f'{x} + {y} = {x + y}')
+
+
+# 写一个推送的函数
+def pubilsh_task():
+    consume_func.push(1, 2)
+
+
+if __name__ == '__main__':
+    sched = BackgroundScheduler(timezone='Asia/Shanghai')
+    # sched.add_job(pubilsh_task, 'interval', id='3_second_job', seconds=3)  # 每隔3秒发布一次任务，自然就能每隔3秒消费一次任务了。
+    # sched.add_job(pubilsh_task, 'date', run_date=datetime.datetime(2020, 7, 24, 11, 27, 6))  # 定时，只执行一次
+    sched.add_job(pubilsh_task, 'cron', day_of_week='*', hour=11, minute='32', second='20')  # 定时，每天的11点32分20秒都执行一次。
+    # 启动定时
+    sched.start()
+
+    # 启动消费
+    consume_func.consume()
 
 ```
+
 
 ### 3 运行中截图
  
@@ -621,9 +657,11 @@ while 1：
     json键的值必须是简单类型，例如 数字 字符串 数组 字典这种。不可以是不可被json序列化的python自定义类型的对象。
     
     用json序列化已经满足所有场景了，picke序列化更强，但仍然有一些自定义类型的对象的实例属性由于是一个不可被序列化
-    的东西，picke解决不了，这种东西例如self.r = Redis（）  ,不可以序列化，就算能序列化也是要用一串很长的东西来
-    表示这种属性，不仅会导致中间件要存储很大的东西传输效率会降低，在编码和解码也会消耗更多的cpu。
-    这种完全可以使用json来解决，例如指定ip 和端口，在消费函数内部来使用redis。所以用json一定可以满足一切传参场景。
+    的东西，picke解决不了，这种东西例如self.r = Redis（），而redis对象又包括threding.Lock类型的属性 ,不可以被pike序列化
+
+    就算能序列化的对象也是要用一串很长的东西来。
+    用pike来序列化复杂嵌套属性类型的对象，不仅会导致中间件要存储很大的东西传输效率会降低，在编码和解码也会消耗更多的cpu。如果框架支持了pike序列化，会让使用者养成不好的粗暴习惯。
+    想消费函数传redis对象作为入参，这种完全可以使用json来解决，例如指定ip 和端口，在消费函数内部来使用redis。所以用json一定可以满足一切传参场景。
     
     如果json不能满足你的消费任务的序列化，那不是框架的问题，一定是你代码设计的问题。所以没有预留不同种类序列化方式的扩展，
     也不打算准备加入其他序列化方式。

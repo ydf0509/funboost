@@ -17,7 +17,7 @@ def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, Ab
     return _deco
 
 
-class CustomBackgroundScheduler(BackgroundScheduler):
+class FsdfBackgroundScheduler(BackgroundScheduler):
     """
     自定义的，添加一个方法add_timing_publish_job
     """
@@ -32,4 +32,4 @@ class CustomBackgroundScheduler(BackgroundScheduler):
                      replace_existing, **trigger_args)
 
 
-fsdf_background_scheduler = CustomBackgroundScheduler(timezone='Asia/Shanghai')
+fsdf_background_scheduler = FsdfBackgroundScheduler(timezone='Asia/Shanghai')

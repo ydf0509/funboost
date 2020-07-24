@@ -34,7 +34,7 @@ python通用分布式函数调度框架。适用场景范围广泛。
         无惧反复重启代码，造成任务丢失。消息队列的持久化 + 消费确认机制 做到不丢失一个消息
      
      定时：
-        需要结合apschedual定时框架，定时的推送消息，分布式函数调度框架就能立即消费这条消息了
+        可以按时间间隔、按指定时间执行一次、按指定时间执行多次，使用的是apscheduler包的方式。
      
      指定时间不运行：
         例如，有些任务你不想在白天运行，可以只在晚上的时间段运行
@@ -663,12 +663,30 @@ while 1：
 
 #### 5.6 框架如何实现定时？
 
- ```
-    答： 没有自带定时功能。
-        安装三方shchduler框架，消费进程是常驻后台的，shchduler框架定时推送一个任务到消息队列，
-        定时推送了消息自然就能定时消费。
-        消费框架在应对不光是断网 还是中间件宕机，都不会导致python程序退出结束，只要是恢复了网络或者恢复了中间件，
-        就可以正常继续运行。
+答：使用的是定时发布任务，那么久能定时消费任务了。导入fsdf_background_scheduler然后添加定时发布任务。
+
+FsdfBackgroundScheduler继承自 apscheduler 的 BackgroundScheduler，定时方式可以百度apscheduler
+
+```python
+import datetime
+from function_scheduling_distributed_framework import task_deco, BrokerEnum, fsdf_background_scheduler, timing_publish_deco
+
+
+@task_deco('queue_test_666', broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
+def consume_func(x, y):
+    print(f'{x} + {y} = {x + y}')
+
+
+if __name__ == '__main__':
+    fsdf_background_scheduler.add_job(timing_publish_deco(consume_func), 'interval', id='3_second_job', seconds=3, kwargs={"x": 5, "y": 6})  # 每隔3秒发布一次任务，自然就能每隔3秒消费一次任务了。
+    fsdf_background_scheduler.add_job(timing_publish_deco(consume_func), 'date', run_date=datetime.datetime(2020, 7, 24, 13, 53, 6), args=(5, 6,))  # 定时，只执行一次
+    fsdf_background_scheduler.add_timing_publish_job(consume_func, 'cron', day_of_week='*', hour=14, minute=51, second=20, args=(5, 6,))  # 定时，每天的11点32分20秒都执行一次。
+    # 启动定时
+    fsdf_background_scheduler.start()
+
+    # 启动消费
+    consume_func.consume()
+
   ```
   
 #### 5.7 为什么强调是函数调度框架不是类调度框架，不是方法调度框架？你代码里面使用了类，是不是和此框架水火不容了?

@@ -870,14 +870,15 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 
 ```
 
-## 6.11 增加装饰器形式生成消费者。常规方式，装饰器方式区别是自动实例化和手动实例化，哪个好用呢？
+## 6.11 增加装饰器形式生成消费者。常规方式，装饰器方式区别是自动实例化和手动实例化。
 
-~~~
 这次使用修改你的项目根目录下的自动生成的distributed_frame_config.py配置文件的方式来进行redis rabbitmq等的配置。
+
 不用调用patch_frame_config函数的方式进行配置。
 
 装饰器版，使用方式例如：
-'''
+
+```python
 from function_scheduling_distributed_framework import task_deco
 @task_deco('queue_test_f01', qps=0.2, broker_kind=2)
 def add(a, b):
@@ -887,10 +888,11 @@ for i in range(10, 20):
     add.pub(dict(a=i, b=i * 2))  # 使用add.pub 发布任务
     add.push(i, b=i * 2)  # 使用add.push 发布任务
 add.consume()                    # 使用add.consume 消费任务
-'''
+```
 
 对比常规方式，常规方式使用方式如下
-'''
+
+```python
 from function_scheduling_distributed_framework import get_consumer
 def add(a, b):
     print(a + b)
@@ -900,11 +902,12 @@ consumer = get_consumer('queue_test_f01', consuming_function=add,qps=0.2, broker
 for i in range(10, 20):
     consumer.publisher_of_same_queue.publish(dict(a=i, b=i * 2))
 consumer.start_consuming_message()
-'''
+```
 
 装饰器版本的 task_deco 入参 和 get_consumer 入参99%一致，唯一不同的是 装饰器版本加在了函数上自动知道消费函数了，
+
 所以不需要传consuming_function参数。
-~~~
+
 
 ## 6.12 增加rocketmq支持。
 ```python
@@ -922,3 +925,4 @@ if __name__ == '__main__':
     f.consume()
 
 ```
+

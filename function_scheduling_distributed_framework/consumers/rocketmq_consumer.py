@@ -13,7 +13,7 @@ from function_scheduling_distributed_framework.publishers.rocketmq_publisher imp
 try:
     from rocketmq.client import PushConsumer
 except Exception as e:
-    print(traceback.format_exc())
+    # print(traceback.format_exc())
     print('rocketmq包 只支持linux和mac')
 
 

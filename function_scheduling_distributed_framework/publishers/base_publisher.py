@@ -76,9 +76,10 @@ class PublishParamsChecker(LoggerMixin):
         # print(func)
         spec = inspect.getfullargspec(func)
         self.all_arg_name_set = set(spec.args)
+        print(spec.args)
         if spec.defaults:
             len_deafult_args = len(spec.defaults)
-            self.position_arg_name_list = spec.args[0:len_deafult_args]
+            self.position_arg_name_list = spec.args[0: -len_deafult_args]
             self.position_arg_name_set = set(self.position_arg_name_list)
             self.keyword_arg_name_list = spec.args[-len_deafult_args:]
             self.keyword_arg_name_set = set(self.keyword_arg_name_list)
@@ -197,6 +198,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # print(self.publish_params_checker.position_arg_name_list)
         # print(func_args)
         for index, arg in enumerate(func_args):
+            # print(arg)
             msg_dict[self.publish_params_checker.position_arg_name_list[index]] = arg
         # print(msg_dict)
         return self.publish(msg_dict)

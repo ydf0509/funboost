@@ -5,7 +5,7 @@ import copy
 
 # noinspection PyUnresolvedReferences
 import apscheduler
-import typing
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from function_scheduling_distributed_framework.set_frame_config import patch_frame_config, show_frame_config
 
@@ -17,6 +17,8 @@ from function_scheduling_distributed_framework.factories.publisher_factotry impo
 from function_scheduling_distributed_framework.factories.consumer_factory import get_consumer
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.utils import nb_print, patch_print, LogManager, LoggerMixin
+
+aps_background_scheduler = BackgroundScheduler(timezone='Asia/Shanghai')
 
 
 class BrokerEnum:
@@ -106,6 +108,7 @@ def task_deco(queue_name, *, function_timeout=0, threads_num=50,
 
     def _deco(func):
         consumer = get_consumer(consuming_function=func, **consumer_init_kwargs)
+        func.is_decorated_as_consume_function = True
         func.consumer = consumer
         # 下面这些连等主要是由于元编程造成的不能再ide下智能补全，参数太长很难手动拼写出来
         func.start_consuming_message = func.consume = func.start = consumer.start_consuming_message
@@ -158,6 +161,8 @@ class IdeAutoCompleteHelper(LoggerMixin):
            IdeAutoCompleteHelper(f).start_consuming_message()  # 和 f.consume()等效
 
         """
+        self.is_decorated_as_consume_function = consuming_func_decorated.is_decorated_as_consume_function
+
         self.consuming_func_decorated = consuming_func_decorated
 
         self.consumer = consuming_func_decorated.consumer  # type: AbstractConsumer
@@ -166,4 +171,4 @@ class IdeAutoCompleteHelper(LoggerMixin):
         self.publisher = consuming_func_decorated.publisher  # type: AbstractPublisher
         self.publish = self.pub = self.publisher.publish
         self.push = self.delay = self.publisher.push
-        self.clear = self.clear_queue  = self.publisher.clear
+        self.clear = self.clear_queue = self.publisher.clear

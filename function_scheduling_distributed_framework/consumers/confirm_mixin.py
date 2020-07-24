@@ -48,6 +48,9 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
 
 # noinspection PyUnresolvedReferences
 class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithTheHelpOfRedis):
+    """
+    使用的是根据心跳，判断非活跃消费者，将非活跃消费者对应的unack zset的重新回到消费队列。
+    """
     def custom_init(self):
         self._unack_zset_name = f'{self._queue_name}__unack_id_{self.consumer_identification}'
         self._is_send_consumer_hearbeat_to_redis = True

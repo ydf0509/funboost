@@ -25,9 +25,11 @@ NSQD_HTTP_CLIENT_PORT = 4151
 
 KAFKA_BOOTSTRAP_SERVERS = ['127.0.0.1:9092']
 
-SQLACHEMY_ENGINE_URL ='sqlite:////sqlachemy_queues/queues.db'
+SQLACHEMY_ENGINE_URL = 'sqlite:////sqlachemy_queues/queues.db'
 
 ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
 
 # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
 NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7  # 7是简短的不可跳转，5是可点击跳转的
+
+TIMEZONE = 'Asia/Shanghai'

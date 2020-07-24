@@ -136,10 +136,12 @@ patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:2
 # 
 # SQLACHEMY_ENGINE_URL ='sqlite:////sqlachemy_queues/queues.db'
 
-#ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
+# ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
 
 # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
-# NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7               
+# NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7     
+
+# TIMEZONE = 'Asia/Shanghai'          
 '''
 
 
@@ -187,6 +189,7 @@ def use_config_form_distributed_frame_config_module():
     
     # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
     NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7  # 7是简短的不可跳转，5是可点击跳转的
+    TIMEZONE = 'Asia/Shanghai' 
     
     \033[0m
     

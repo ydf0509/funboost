@@ -11,7 +11,6 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
     """
 
     def concrete_realization_of_publish(self, msg):
-        # noinspection PyTypeChecker
         self.redis_db_frame.rpush(self._queue_name, msg)
 
     def clear(self):
@@ -26,5 +25,3 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
     def close(self):
         # self.redis_db7.connection_pool.disconnect()
         pass
-
-

@@ -43,7 +43,7 @@ class RocketmqPublisher(AbstractPublisher, ):
     def get_message_count(self):
         if time.time() - getattr(self, '_last_warning_count', 0) > 300:
             setattr(self, '_last_warning_count', time.time())
-            self.logger.warning('获取消息数量，python版的rocket包太弱了，没找到方法，，java才能做到。')
+            self.logger.warning('获取消息数量，python版的rocket包太弱了，没找到方法。java才能做到。')
         return 0
 
     def close(self):

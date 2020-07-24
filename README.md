@@ -663,9 +663,9 @@ while 1：
 
 #### 5.6 框架如何实现定时？
 
-答：使用的是定时发布任务，那么久能定时消费任务了。导入fsdf_background_scheduler然后添加定时发布任务。
+答：使用的是定时发布任务，那么就能定时消费任务了。导入fsdf_background_scheduler然后添加定时发布任务。
 
-FsdfBackgroundScheduler继承自 apscheduler 的 BackgroundScheduler，定时方式可以百度apscheduler
+FsdfBackgroundScheduler继承自 apscheduler 的 BackgroundScheduler，定时方式可以百度 apscheduler
 
 ```python
 import datetime

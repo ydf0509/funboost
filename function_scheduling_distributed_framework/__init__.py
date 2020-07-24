@@ -5,7 +5,6 @@ import copy
 
 # noinspection PyUnresolvedReferences
 import apscheduler
-from apscheduler.schedulers.background import BackgroundScheduler
 
 from function_scheduling_distributed_framework.set_frame_config import patch_frame_config, show_frame_config
 
@@ -17,8 +16,7 @@ from function_scheduling_distributed_framework.factories.publisher_factotry impo
 from function_scheduling_distributed_framework.factories.consumer_factory import get_consumer
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.utils import nb_print, patch_print, LogManager, LoggerMixin
-
-aps_background_scheduler = BackgroundScheduler(timezone='Asia/Shanghai')
+from function_scheduling_distributed_framework.timing_job import fsdf_background_scheduler,timing_publish_deco
 
 
 class BrokerEnum:

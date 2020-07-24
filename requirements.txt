@@ -22,7 +22,7 @@ wtforms
 flask_login
 sqlalchemy
 sqlalchemy_utils==0.36.1
-apscheduler
+apscheduler==3.3.1
 PyWin32    # windows need because of concurrent-log-handler
 # pip install -r requirements.text -i http://mirrors.aliyun.com/pypi/simple/
 pikav0

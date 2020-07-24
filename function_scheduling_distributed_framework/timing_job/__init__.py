@@ -1,4 +1,3 @@
-import copy
 from typing import Union
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.util import undefined
@@ -28,9 +27,9 @@ class CustomBackgroundScheduler(BackgroundScheduler):
                                next_run_time=undefined, jobstore='default', executor='default',
                                replace_existing=False, **trigger_args):
         self.add_job(timing_publish_deco(func), trigger, args, kwargs, id, name,
-                               misfire_grace_time, coalesce, max_instances,
-                               next_run_time, jobstore, executor,
-                               replace_existing, **trigger_args)
+                     misfire_grace_time, coalesce, max_instances,
+                     next_run_time, jobstore, executor,
+                     replace_existing, **trigger_args)
 
 
 fsdf_background_scheduler = CustomBackgroundScheduler(timezone='Asia/Shanghai')

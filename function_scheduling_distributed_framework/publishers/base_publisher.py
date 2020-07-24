@@ -76,7 +76,7 @@ class PublishParamsChecker(LoggerMixin):
         # print(func)
         spec = inspect.getfullargspec(func)
         self.all_arg_name_set = set(spec.args)
-        print(spec.args)
+        # print(spec.args)
         if spec.defaults:
             len_deafult_args = len(spec.defaults)
             self.position_arg_name_list = spec.args[0: -len_deafult_args]

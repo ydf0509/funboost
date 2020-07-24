@@ -4,6 +4,8 @@
 import json
 from datetime import datetime as _datetime
 from datetime import date as _date
+
+
 from nb_log import (LogManager, simple_logger, defaul_logger, LoggerMixin, LoggerLevelSetterMixin, LoggerMixinDefaultWithFileHandler,nb_print,patch_print,reverse_patch_print)
 
 from function_scheduling_distributed_framework.utils.redis_manager import RedisMixin
@@ -25,6 +27,8 @@ def _dumps(obj, skipkeys=False, ensure_ascii=False, check_circular=True, allow_n
            default=None, sort_keys=False, **kw):
     if (not skipkeys and ensure_ascii and check_circular and allow_nan and cls is None and indent is None and separators is None and default is None and not sort_keys and not kw):
         return json._default_encoder.encode(obj)
+    if cls is None:
+        cls = json.JSONEncoder
     return cls(
         skipkeys=skipkeys, ensure_ascii=ensure_ascii,
         check_circular=check_circular, allow_nan=allow_nan, indent=indent,

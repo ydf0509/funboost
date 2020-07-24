@@ -301,6 +301,40 @@ consumer.start_consuming_message()   # 使用consumer.start_consuming_message �
 所以不需要传consuming_function参数。
 ```
 
+### 2.4 演示如何解决多个步骤的消费函数，以及如何连续启动两个队列的消费。
+```python
+import time
+
+from function_scheduling_distributed_framework import task_deco, BrokerEnum
+
+
+@task_deco('queue_test_step1', qps=0.5, broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
+def step1(x):
+    print(f'x 的值是 {x}')
+    if x == 0:
+        for i in range(1, 300):
+            step1.pub(dict(x=x + i))
+    for j in range(10):
+        step2.push(x * 100 + j)  # push是直接发送多个参数，pub是发布一个字典
+    time.sleep(10)
+
+
+@task_deco('queue_test_step2', qps=3, broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
+def step2(y):
+    print(f'y 的值是 {y}')
+    time.sleep(10)
+
+
+if __name__ == '__main__':
+    # step1.clear()
+    step1.push(0)    # 给step1的队列推送任务。
+    
+    step1.consume()  # 可以连续启动两个消费者，因为conusme是启动独立线程里面while 1调度的，所以可以连续运行多个启动消费。
+    step2.consume()
+
+
+```
+
 ### 3 运行中截图
  
  
@@ -606,7 +640,10 @@ while 1：
         就可以正常继续运行。
   ```
   
-#### 5.7 为什么强调是函数调度框架不是类调度框架？你代码里面使用了类，是不是和此框架水火不容了?
+#### 5.7 为什么强调是函数调度框架不是类调度框架，不是方法调度框架？你代码里面使用了类，是不是和此框架水火不容了?
+
+问的是consuming_function的值能不能是一个类或者一个实例方法。
+               
  ```
     答：一切对类的调用最后都是体现在对方法的调用。这个问题莫名其妙。
     celery rq huery 框架都是针对函数。
@@ -614,6 +651,10 @@ while 1：
     1）类实例化时候构造方法要传参，类的公有方法也要传参，这样就不确定要把中间件里面的参数哪些传给构造方法哪些传给普通方法了。
        见5.8
     2） 这种分布式一般要求是幂等的，传啥参数有固定的结果，函数是无依赖状态的。类是封装的带有状态，方法依赖了对象的实例属性。
+    3) 比如例子的add方法是一个是实例方法，看起来好像传个y的值就可以，实际是add要接受两个入参，一个是self，一个是y。如果把self推到消息队列，那就不好玩了。
+       对象的序列化浪费磁盘空间，浪费网速传输大体积消息，浪费cpu 序列化和反序列化。所以此框架的入参已近说明了，
+       仅仅支持能够被json序列化的东西，像普通的自定义类型的对象就不能被json序列化了。
+        celery也是这样的，演示的例子也是用函数（也可以是静态方法），而不是类或者实例方法，这不是刻意要和celery一样，原因已经说了，自己好好体会好好想想原因吧。
     
     框架如何调用你代码里面的类。
     假设你的代码是：
@@ -621,7 +662,7 @@ while 1：
        def __init__(x):
            self.x = x
         
-       def add(y):
+       def add(self,y):
            print( self.x + y)
     
     那么你需要再写一个函数

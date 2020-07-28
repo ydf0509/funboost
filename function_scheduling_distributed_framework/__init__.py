@@ -1,4 +1,4 @@
-from functools import update_wrapper
+from functools import update_wrapper,wraps
 from multiprocessing import Process
 from typing import List
 import copy
@@ -115,7 +115,7 @@ def task_deco(queue_name, *, function_timeout=0, threads_num=50,
         func.push = func.delay = consumer.publisher_of_same_queue.push
         func.clear = func.clear_queue = consumer.publisher_of_same_queue.clear
 
-        # @functools.wraps(func)
+        # @wraps(func)
         def __deco(*args, **kwargs):
             return func(*args, **kwargs)
 

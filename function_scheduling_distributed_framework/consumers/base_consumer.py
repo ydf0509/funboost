@@ -383,6 +383,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._execute_task_times_every_minute = 0  # 每分钟执行了多少次任务。
         self._lock_for_count_execute_task_times_every_minute = Lock()
         self._current_time_for_execute_task_times_every_minute = time.time()
+        self._consuming_function_cost_time_total_every_minute = 0
 
         self._msg_num_in_broker = 0
         self._last_timestamp_when_has_task_in_queue = 0
@@ -405,7 +406,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._publisher_of_same_queue = None
 
-        self.consumer_identification = f'{socket.gethostname()}_{time_util.DatetimeConverter().datetime_str.replace(":","-")}_{os.getpid()}_{id(self)}'
+        self.consumer_identification = f'{socket.gethostname()}_{time_util.DatetimeConverter().datetime_str.replace(":", "-")}_{os.getpid()}_{id(self)}'
 
         self.custom_init()
 
@@ -481,20 +482,25 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.logger.info(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
             self._confirm_consume(kw)
             return
-        with self._lock_for_count_execute_task_times_every_minute:
-            self._execute_task_times_every_minute += 1
-            if time.time() - self._current_time_for_execute_task_times_every_minute > 60:
-                self.logger.info(
-                    f'一分钟内执行了 {self._execute_task_times_every_minute} 次函数 [ {self.consuming_function.__name__} ] ,预计'
-                    f'还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / self._execute_task_times_every_minute * 60)} 时间'
-                    f'才能执行完成 {self._msg_num_in_broker}个剩余的任务 ')
-                self._current_time_for_execute_task_times_every_minute = time.time()
-                self._execute_task_times_every_minute = 0
+
+        t_start_run_fun = time.time()
         self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times=0,
                                                             function_result_status=FunctionResultStatus(
                                                                 self.queue_name, self.consuming_function.__name__,
                                                                 kw['body']),
                                                             )
+        with self._lock_for_count_execute_task_times_every_minute:
+            self._execute_task_times_every_minute += 1
+            self._consuming_function_cost_time_total_every_minute += time.time() - t_start_run_fun
+            if time.time() - self._current_time_for_execute_task_times_every_minute > 60:
+                self.logger.info(
+                    f'一分钟内执行了 {self._execute_task_times_every_minute} 次函数 [ {self.consuming_function.__name__} ] ,'
+                    f'函数平均运行耗时 {round(self._consuming_function_cost_time_total_every_minute / self._execute_task_times_every_minute, 4)} 秒，预计'
+                    f'还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / self._execute_task_times_every_minute * 60)} 时间'
+                    f'才能执行完成 {self._msg_num_in_broker}个剩余的任务 ')
+                self._current_time_for_execute_task_times_every_minute = time.time()
+                self._consuming_function_cost_time_total_every_minute = 0
+                self._execute_task_times_every_minute = 0
 
     def __get_priority_conf(self, kw: dict, broker_task_config_key: str):
         broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)

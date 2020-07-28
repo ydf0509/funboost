@@ -340,7 +340,7 @@ if __name__ == '__main__':
 
 ### 2.5 演示如何定时运行。
 ```python
-# 定时运行消费演示
+# 定时运行消费演示，定时方式入参用法可以百度 apscheduler 定时包。
 import datetime
 from function_scheduling_distributed_framework import task_deco, BrokerEnum, fsdf_background_scheduler, timing_publish_deco
 
@@ -1018,7 +1018,7 @@ def f(a, b):
 if __name__ == '__main__':
     for i in range(100):
         f.push(i, i * 2)
-    f.consume()
+    f.start()
 
 ```
 

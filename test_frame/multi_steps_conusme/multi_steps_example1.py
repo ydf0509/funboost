@@ -26,3 +26,4 @@ if __name__ == '__main__':
 
     step1.consume()  # 可以连续启动两个消费者，sonusme是启动独立线程里面while 1调度的，所以可以连续运行多个启动消费。
     step2.consume()
+

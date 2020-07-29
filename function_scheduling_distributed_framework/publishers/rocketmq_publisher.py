@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2020/7/9 0008 12:12
-import json
-import traceback
-import os
+
 import time
 from function_scheduling_distributed_framework import frame_config
 
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
 
-try:
-    from rocketmq.client import Producer, Message
-except Exception as e:
-    # print(traceback.format_exc())
-    print('rocketmq包 只支持linux和mac')
 
 class RocketmqPublisher(AbstractPublisher, ):
     group_id__rocketmq_producer = {}
 
     def custom_init(self):
+        try:
+            from rocketmq.client import Producer
+        except Exception as e:
+            # print(traceback.format_exc())
+            raise ImportError(f'rocketmq包 只支持linux和mac {str(e)}')
+
         group_id = f'g-{self._queue_name}'
         if group_id not in self.__class__.group_id__rocketmq_producer:  # 同一个进程中创建多个同组消费者会报错。
             producer = Producer(group_id)
@@ -30,8 +29,13 @@ class RocketmqPublisher(AbstractPublisher, ):
         self._producer = producer
 
     def concrete_realization_of_publish(self, msg):
+        try:
+            from rocketmq.client import Message
+        except Exception as e:
+            # print(traceback.format_exc())
+            raise ImportError(f'rocketmq包 只支持linux和mac {str(e)}')
         rocket_msg = Message(self._queue_name)
-        rocket_msg.set_keys(msg)# 利于检索
+        rocket_msg.set_keys(msg)  # 利于检索
         # rocket_msg.set_tags('XXX')
         rocket_msg.set_body(msg)
         # print(msg)

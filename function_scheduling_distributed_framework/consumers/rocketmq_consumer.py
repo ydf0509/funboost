@@ -10,12 +10,6 @@ from function_scheduling_distributed_framework.consumers.base_consumer import Ab
 from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.publishers.rocketmq_publisher import RocketmqPublisher
 
-try:
-    from rocketmq.client import PushConsumer
-except Exception as e:
-    # print(traceback.format_exc())
-    print('rocketmq包 只支持linux和mac')
-
 
 class RocketmqConsumer(AbstractConsumer):
     """
@@ -24,6 +18,11 @@ class RocketmqConsumer(AbstractConsumer):
     BROKER_KIND = 11
 
     def _shedual_task(self):
+        try:
+            from rocketmq.client import PushConsumer
+        except Exception as e:
+            # print(traceback.format_exc())
+            raise ImportError(f'rocketmq包 只支持linux和mac {e}')
         consumer = PushConsumer(f'g-{self._queue_name}')
         consumer.set_namesrv_addr(frame_config.ROCKETMQ_NAMESRV_ADDR)
         consumer.set_thread_count(1)

@@ -272,15 +272,16 @@ consumer.start_consuming_message()
     queue_name和consuming_function这2个是这个消费框架的本质核心参数，其他参数都是可选的。
 
 重点参数：
+    
     concurrent_num:并发数量。
     qps qps是有个很有趣的参数，能精确控制函数每秒运行多少次。
     concurrent_num和qps存在着一定的关系。
     
     例如对于下面这个函数
     
-    def func():
-           time.lseep(2)
-           print("hello"）
+    def func(x):
+           time.sleep(2)
+           print(x）
 
     1）如果设置 concurrent_num = 1000(或100万)  qps = 10
     那么一秒钟会执行10次func函数。如果不指定qps的值，则不进行控频，消费框架会平均每秒钟会执行50次函数func。

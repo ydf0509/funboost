@@ -1,7 +1,9 @@
 """
 集成定时任务。
 """
+import time
 from typing import Union
+import threading
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.util import undefined
 
@@ -36,8 +38,17 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
                             next_run_time, jobstore, executor,
                             replace_existing, **trigger_args)
 
+    def start(self):
+        def _block_exit():
+            while True:
+                time.sleep(3600)
+
+        threading.Thread(target=_block_exit).start()  # 不希望定时退出。
+        super(FsdfBackgroundScheduler, self).start()
+
 
 fsdf_background_scheduler = FsdfBackgroundScheduler(timezone=frame_config.TIMEZONE)
+# fsdf_background_scheduler = FsdfBackgroundScheduler()
 
 if __name__ == '__main__':
     # 定时运行消费演示
@@ -59,7 +70,7 @@ if __name__ == '__main__':
 
     # 定时，每天的11点32分20秒都执行一次。
     fsdf_background_scheduler.add_timing_publish_job(consume_func,
-                                                     'cron', day_of_week='*', hour=14, minute=51, second=20, args=(5, 6,))
+                                                     'cron', day_of_week='*', hour=18, minute=22, second=20, args=(5, 6,))
 
     # 启动定时
     fsdf_background_scheduler.start()

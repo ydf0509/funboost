@@ -10,7 +10,7 @@ python通用分布式函数调度框架。适用场景范围广泛。
 
 可以一行代码分布式并发调度起一切任何老代码的旧函数和新项目的新函数，并提供数十种函数控制功能。
 
-还是不懂框架能做什么是什么，就必须先去了解下celery。如果连celery的用途概念听都没听说，
+还是不懂框架能做什么是什么，就必须先去了解下celery rq。如果连celery rq类似这种的用途概念听都没听说，
 那就不可能知道框架的概念和功能用途。
 
 功能包括：
@@ -158,7 +158,7 @@ pip install function_scheduling_distributed_framework --upgrade -i https://pypi.
 
 2.1为简单例子,介绍了入参意义，这里是介绍的手动调用猴子补丁函数修改框架配置和非装饰器方式。
 
-2.2 是使用修改你项目根目录下文件distributed_frame_config.py的配置文件的方式，并且生成消费者使用装饰器方式。
+下面的2.2 是使用修改你项目根目录下文件distributed_frame_config.py的配置文件的方式，并且生成消费者使用装饰器方式。
  ```python
 import time
 
@@ -262,6 +262,67 @@ consumer.publisher_of_same_queue.clear()
 consumer.start_consuming_message()
 
  ```
+
+### 2.1.2 重要参数说明
+```
+
+核心必要参数：
+    queue_name: 队列名字。
+    consuming_function: 处理消息的函数。  指定队列名字和指定消费函数这两个参数是必传，必须指定，
+    queue_name和consuming_function这2个是这个消费框架的本质核心参数，其他参数都是可选的。
+
+重点参数：
+    concurrent_num:并发数量。
+    qps qps是有个很有趣的参数，能精确控制函数每秒运行多少次。
+    concurrent_num和qps存在着一定的关系。
+    
+    例如对于下面这个函数
+    
+    def func():
+           time.lseep(2)
+           print("hello"）
+
+    1）如果设置 concurrent_num = 100  qps = 10
+    那么一秒钟会执行10次func函数。如果不指定qps的值，则不进行控频，消费框架会平均每秒钟会执行50次函数func。
+
+    如果设置concurrent_num = 1000000  qps = 5   （当然正常情况下不会设置100万的，一般python线程池大小绝对千万要设置1000以下）
+    那么一秒钟会执行5次func函数。所以可以看到，当你不知道要开多少并发合适的时候，可以粗暴开100万个线程，但要设置一个qps。
+    在正常情况下，使用ThreadpoolExecutor线程池大小设置为100万，不用想，肯定是行不通的，线程开太多系统会一直报错，
+    并且即使假设电脑能开100万线程，那python在100万线程之间的切换，会消耗大量的性能，
+    切换线程占用99%性能，业务逻辑只能涨1%性能，这就是常说的线程并不是越多越好，不能说开100万线程执行任务速度就吊打100线程执行的速度，这毫无道理，
+    如果不相信100万线程行不通的人，可以使用concurrent.tutures.ThreadpoolExecutor设置为100万线程去并发运行 sleep 20秒的函数。
+
+    那为什么次框架，可以让你粗暴的设置100万线程呢，并不是做了数字截取，判断线程设置大于多少就自动调小了，此消费框架并没有这样去实现。
+    而是次框架使用的非concurrent.tutures.ThreadpoolExecutor，是使用的自定义的  ThreadPoolExecutorShrinkAble 线程池，
+    此线程池其中之一的功能就是节制开更多的线程，因为对于上面的休眠2秒的func函数，如果设置concurrent_num = 1000000  qps = 5，
+    正常来说开10个线程足够实现每秒执行5次了，此框架在调节线程新增线程时候进行了更多的判断，所以原生线程池不可以设置100万大小，
+    而ThreadPoolExecutorShrinkAble可以设置为100万大小。
+
+    此外ThreadPoolExecutorShrinkAble 实现了线程池自动缩小的功能，这也是原生concurrent.tutures.ThreadpoolExecutor没有的功能。
+    自动缩小是什么意思呢，比如一段时间任务非常密集1秒钟来了几百个任务，所以当时开启了很多线程来应付，但一段时间后每分钟只来了个把任务，
+    此时 ThreadPoolExecutorShrinkAble 能够自动缩小线程池，
+    ThreadPoolExecutorShrinkAble实现了java ThreadpoolExecutor的KeepAliveTime参数的功能，
+    原生concurrent.tutures.ThreadpoolExecutor线程池即使以后永久不来新任务，之前开的线程数量一致保持这。
+
+    关于 ThreadPoolExecutorShrinkAble 的厉害之处，可以参考 https://github.com/ydf0509/threadpool_executor_shrink_able
+    
+    最终关于 concurrent_num 大小设置为多少，看自己需求，上面说的100万是举个例子，
+    实际这个参数还被用作为线程池的任务队列的有界队列的大小，所以一定要设置为1000以下，否则如果设置为100万，
+    从消息中间件预取出的消息过多，造成python内存大、单个消费者掏空消息队列中间件造成别的行启动的消费者无任务可消费、
+    不支持消费确认中间件的随意重启会丢失大量任务等影响。
+
+
+    2）如果逇func函数，设置 concurrent_num = 1  qps = 100，那会如何呢？
+       由于你设置的并发是1,对于一个需要2秒运行完成的函数，显然平均每2秒才能执行1次，就是框架真正的只能达到0.5个qps。
+       所以 concurrent_num 和 qps，既有关系，也不是绝对的关系。
+    
+    在对一个随机消耗时间的函数进行并发控制时候，如果函数的云溪老时间是0.5到20秒不确定的徘徊，你可以设置 concurrent_num = 100,
+    如果合作方要求了只能1秒钟使用多少次，例如需要精确控频10次，可以设置qps =10，concurrent_num随便搞个两三百。
+
+    这主要是介绍了 concurrent_num 和qps的关系和设置值。
+    
+
+```
 
 ### 2.2 新增的装饰器版本运行方式演示。
 

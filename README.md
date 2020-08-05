@@ -317,7 +317,7 @@ consumer.start_consuming_message()
        所以 concurrent_num 和 qps，既有关系，也不是绝对的关系。
     
     在对一个随机消耗时间的函数进行并发控制时候，如果函数的运行时间是0.5到20秒任意时间不确定的徘徊，你可以设置 concurrent_num = 100,
-    如果合作方要求了只能1秒钟使用多少次，例如需要精确控频10次，可以设置qps =10，concurrent_num随便搞个两三百。
+    如果合作方要求了只能1秒钟能让你使用多少次，例如需要精确控频10次，可以设置qps =10，concurrent_num随便搞个两三百。
 
     这主要是介绍了 concurrent_num 和qps的关系和设置值。
     

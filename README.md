@@ -317,6 +317,8 @@ consumer.start_consuming_message()
     如果合作方要求了只能1秒钟能让你使用多少次，例如需要精确控频10次，可以设置qps =10，concurrent_num随便搞个 一两百 两三百就行了,
     因为是智能的克制的调节线程池大小的，所以不会真的达到concurrent_num的值。
 
+    3）qps是个小数可以小于1，如果要设置10秒执行一次函数，则设置qps=0.1
+
     这主要是介绍了 concurrent_num 和qps的关系和设置值。
     
 

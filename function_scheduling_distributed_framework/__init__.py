@@ -15,7 +15,7 @@ from function_scheduling_distributed_framework.publishers.base_publisher import 
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
 from function_scheduling_distributed_framework.factories.consumer_factory import get_consumer
 # noinspection PyUnresolvedReferences
-from function_scheduling_distributed_framework.utils import nb_print, patch_print, LogManager, LoggerMixin
+from function_scheduling_distributed_framework.utils import nb_print, patch_print, LogManager,get_logger, LoggerMixin
 from function_scheduling_distributed_framework.timing_job import fsdf_background_scheduler,timing_publish_deco
 
 

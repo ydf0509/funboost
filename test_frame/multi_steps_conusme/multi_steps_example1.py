@@ -10,7 +10,7 @@ def step1(x):
         for i in range(1, 300):
             step1.pub(dict(x=x + i))
     for j in range(10):
-        step2.push(x * 100 + j)  # push是直接发送多个参数，pub是发布一个字典
+        step2.push(y=x * 100 + j)  # push是直接发送多个参数，pub是发布一个字典
     time.sleep(10)
 
 

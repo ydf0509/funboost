@@ -516,7 +516,7 @@ def add(a, b):
      "delivery_tag":  "59e39055-2086-4be8-a801-993061fee443"
   }
 }
-  ```
+```
 
 ### 4.2 此框架的消息很短，就是一个字典，内容的键值对和函数入参一一对应。
 额外控制参数如重试、超时kill，由代码决定，
@@ -538,7 +538,7 @@ def add(a, b):
   
 ## 4.2 性能对比,celery推送慢5倍，消费慢15%。测试的消费基准函数为阻塞10s的求和函数，两个框架都推送和消费10000次。都使用gevent并发模型，相同并发数量 相同的linux机器内网连接中间件下反复测试的。
 ### 4.2.1 celery测试基准代码,消费
-~~~python
+```python
 celery_app.config_from_object(Config2)
 
 
@@ -556,10 +556,10 @@ if __name__ == '__main__':
         argv=['worker', '--pool=gevent', '--concurrency=1000', '-n', 'worker1@%h', '--loglevel=debug',
               '--queues=queue_add', '--detach',])
 
-~~~
+```
 
 ### 4.2.2 function_scheduling_distributed_framework测试基准代码，消费
-~~~python
+```python
 def add(a, b):
     print(f'消费此消息 {a} + {b} 中。。。。。')
     time.sleep(10)  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
@@ -579,7 +579,7 @@ consumer_add = get_consumer('queue_test569', consuming_function=add, threads_num
 
 if __name__ == '__main__':
     consumer_add.start_consuming_message()
-~~~
+```
 
 
 # 5.常见问题回答

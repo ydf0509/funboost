@@ -927,7 +927,7 @@ requests.get("https://www.baidu.com")需要执行3万行代码，如果不用工
 ## 6.5 新增一个10行代码的函数的最精简乞丐版实现的分布式函数执行框架，演示最本质实现原理，不要亲自这么使用。
 
 beggar_redis_consumer.py文件的 start_consuming_message函数。
-~~~python
+```python
 
 def start_consuming_message(queue_name, consume_function, threads_num):
     pool = ThreadPoolExecutor(threads_num)
@@ -955,7 +955,7 @@ for i in range(100):
 # 消费任务 
 start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add, threads_num=10)
 
-~~~
+```
 
 看完整版代码很长很多，是由于控制功能太多，中间件类型多，并发模式多，
 所以加入一个最精简版，精简版的本质实现原理和完整版相同。

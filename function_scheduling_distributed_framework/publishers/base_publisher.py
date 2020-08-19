@@ -147,9 +147,8 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         return self
 
     def _init_count(self):
-        with self._lock_for_count:
-            self._current_time = time.time()
-            self.count_per_minute = 0
+        self._current_time = time.time()
+        self.count_per_minute = 0
 
     def custom_init(self):
         pass
@@ -172,10 +171,10 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         with self._lock_for_count:
             self.count_per_minute += 1
             self.publish_msg_num_total += 1
-        if time.time() - self._current_time > 10:
-            self.logger.info(
-                f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 中')
-            self._init_count()
+            if time.time() - self._current_time > 10:
+                self.logger.info(
+                    f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 中')
+                self._init_count()
         return RedisAsyncResult(task_id)
 
     def push(self, *func_args, **func_kwargs):

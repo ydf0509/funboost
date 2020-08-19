@@ -340,6 +340,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.consuming_function = consuming_function
         self._function_timeout = function_timeout
         self._threads_num = concurrent_num if threads_num == 50 else threads_num  # concurrent参数优先，以后废弃threads_num参数。
+        self._concurrent_num =self._threads_num
         self._specify_threadpool = specify_threadpool
         self._threadpool = None  # 单独加一个检测消息数量和心跳的线程
         self._concurrent_mode = concurrent_mode
@@ -762,3 +763,4 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
             return [idx.decode().split('&&')[0] for idx in self.redis_db_frame.smembers(self._redis_key_name)]
         else:
             return [idx.decode() for idx in self.redis_db_frame.smembers(self._redis_key_name)]
+

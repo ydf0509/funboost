@@ -26,7 +26,7 @@ class RocketmqConsumer(AbstractConsumer):
         consumer = PushConsumer(f'g-{self._queue_name}')
         consumer.set_namesrv_addr(frame_config.ROCKETMQ_NAMESRV_ADDR)
         consumer.set_thread_count(1)
-        consumer.set_message_batch_max_size(1)
+        consumer.set_message_batch_max_size(self._concurrent_num)
 
         self._publisher = RocketmqPublisher(self._queue_name)
 

@@ -124,7 +124,7 @@ patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:2
 # RABBITMQ_VIRTUAL_HOST = 'rabbitmq_virtual_host'
 # 
 # REDIS_HOST = '127.0.0.1'
-# REDIS_PASSWORD = 'redis_password' 
+# REDIS_PASSWORD = '' 
 # REDIS_PORT = 6379
 # REDIS_DB = 7
 # 

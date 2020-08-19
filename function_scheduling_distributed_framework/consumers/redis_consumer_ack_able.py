@@ -114,7 +114,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
                 self._submit_task(kw)
             else:
                 # print('xiuxi')
-                time.sleep(0.2)
+                time.sleep(0.5)
 
     def _requeue(self, kw):
         self.redis_db_frame.rpush(self._queue_name, json.dumps(kw['body']))

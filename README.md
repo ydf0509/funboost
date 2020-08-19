@@ -516,7 +516,7 @@ def add(a, b):
      "delivery_tag":  "59e39055-2086-4be8-a801-993061fee443"
   }
 }
-  ```
+```
 
 ### 4.2 此框架的消息很短，就是一个字典，内容的键值对和函数入参一一对应。
 额外控制参数如重试、超时kill，由代码决定，
@@ -538,7 +538,7 @@ def add(a, b):
   
 ## 4.2 性能对比,celery推送慢5倍，消费慢15%。测试的消费基准函数为阻塞10s的求和函数，两个框架都推送和消费10000次。都使用gevent并发模型，相同并发数量 相同的linux机器内网连接中间件下反复测试的。
 ### 4.2.1 celery测试基准代码,消费
-~~~python
+```python
 celery_app.config_from_object(Config2)
 
 
@@ -556,10 +556,10 @@ if __name__ == '__main__':
         argv=['worker', '--pool=gevent', '--concurrency=1000', '-n', 'worker1@%h', '--loglevel=debug',
               '--queues=queue_add', '--detach',])
 
-~~~
+```
 
 ### 4.2.2 function_scheduling_distributed_framework测试基准代码，消费
-~~~python
+```python
 def add(a, b):
     print(f'消费此消息 {a} + {b} 中。。。。。')
     time.sleep(10)  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
@@ -579,7 +579,7 @@ consumer_add = get_consumer('queue_test569', consuming_function=add, threads_num
 
 if __name__ == '__main__':
     consumer_add.start_consuming_message()
-~~~
+```
 
 
 # 5.常见问题回答
@@ -874,13 +874,17 @@ if __name__ == '__main__':
 改版的CustomThreadpoolexecutor修改成了queue最大长度是max_works，自己内部存储100个，
 运行中100个，突然关闭python会丢失200个任务。如果queue设置大小为0，则只会丢失100个运行中的任务。
 
-巧妙的使用redis zset结构作为任务缓冲，value为消息，score为时间戳，具有很好的按时间范围查询和删除功能。
-600秒内还没确认重回队列，时间可以配置，左右类似于rabbitmq和nsq的heartbeat_interval作用。
+采用的是消费者去除消息时候，用lua脚本同时pop和添加到unacked的独立zset中，函数运行成功后会从set中删除该任务。
+同时有一个一直每隔5秒发送心跳到redis服务中的线程，心跳标识中有消费者的唯一标识，绝对不会重复。
+如果突然关闭消费者（例如突然断电或者点击关闭python），那么该消费者的心跳将会停止了。这时其他机器的同队列消费者或者当前机器重新启动代码后，在15秒后会
+检到被关闭的消费者是非活跃消费者，那么自动将该消费者的unack里面任务全部重新取出返回到待消费队列中。
 
-RedisConsumerAckAble类比RedisConsumer会有一丝丝性能损耗。
-k8s生产环境一般不需要随意反复重启和随意断电。但还是要写这个类。
+RedisConsumerAckAble类比RedisConsumer会有一丝丝性能损耗，但python玩redis大部分情况还是python代码本身有性能瓶颈，
+而不是造成redis服务端有性能瓶颈，一般只要用在有意义的业务上，就算python很忙把cpu占光了，也不会造成redis服务端达到极限，
+python是性能很差的语言，没玩垮redis，自身就把电脑玩死了，所以大部分情况下不要在意加入确认消费后产生额外的对redis服务端的性能压力。
+
 redis要是能直接作为mq使用，redis早就一统天下了，哪里还不断有几十种mq出来。
-所以直接基于redis list的必须改进。
+所以直接基于redis list的如果要做到可靠就必须改进。
 ```
 
 ## 6.2 新增基于以redis为消息中间件时候的页面管理和消费速度显示。
@@ -923,7 +927,7 @@ requests.get("https://www.baidu.com")需要执行3万行代码，如果不用工
 ## 6.5 新增一个10行代码的函数的最精简乞丐版实现的分布式函数执行框架，演示最本质实现原理，不要亲自这么使用。
 
 beggar_redis_consumer.py文件的 start_consuming_message函数。
-~~~python
+```python
 
 def start_consuming_message(queue_name, consume_function, threads_num):
     pool = ThreadPoolExecutor(threads_num)
@@ -951,7 +955,7 @@ for i in range(100):
 # 消费任务 
 start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add, threads_num=10)
 
-~~~
+```
 
 看完整版代码很长很多，是由于控制功能太多，中间件类型多，并发模式多，
 所以加入一个最精简版，精简版的本质实现原理和完整版相同。

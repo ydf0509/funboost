@@ -17,6 +17,6 @@ def f2(a, b):
 
 if __name__ == '__main__':
     f2.clear()
-    for i in range(100):
+    for i in range(103):
         f2.push(i, i * 2)
     f2.consume()

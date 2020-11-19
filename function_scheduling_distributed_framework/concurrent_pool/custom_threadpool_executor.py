@@ -2,9 +2,9 @@
 可自动实时调节线程数量的线程池。
 比官方ThreadpoolExecutor的改进是
 1.有界队列
-2.实时调节线程数量，指的是当任务很少时候会去关闭很多线程。官方ThreadpoolExecurot只能做到忙时候开启很多线程，但不忙时候线程没有关闭线程。
-linux系统能承受的线程总数有限，一般不到2万。
-3.能非常智能节制的开启多线程。比如设置项城市大小为500，线程池的运行函数消耗时间是只需要0.1秒，如果每隔2秒钟来一个任务。1个线程足够了，官方线程池是一直增长到500，然后不增长，官方的太不智能了。
+2.实时调节线程数量，指的是当任务很少时候会去关闭很多线程。官方ThreadpoolExecurot只能做到忙时候开启很多线程，但不忙时候线程没有关闭线程，
+此线程池实现了java ThreadpoolExecutor线程池的keppaliveTime参数的功能，linux系统能承受的线程总数有限，一般不到2万。
+3.能非常智能节制的开启多线程。比如设置线程池大小为500，线程池的运行函数消耗时间是只需要0.1秒，如果每隔2秒钟来一个任务。1个线程足够了，官方线程池是一直增长到500，然后不增长，官方的太不智能了。
 
 """
 
@@ -68,7 +68,7 @@ class CustomThreadPoolExecutor(LoggerMixin, LoggerLevelSetterMixin):
         :param thread_name_prefix:
         """
         self._max_workers = max_workers or 4
-        self._min_workers = 5
+        self._min_workers = 5 # 这是对应的 java Threadpoolexecutor的corePoolSize，为了保持线程池公有方法和与py官方内置的concurren.futures.ThreadPoolExecutor一致，不增加更多的实例化时候入参，这里写死为5.
         self._thread_name_prefix = thread_name_prefix
         self.work_queue = queue.Queue(max_workers)
         # self._threads = set()

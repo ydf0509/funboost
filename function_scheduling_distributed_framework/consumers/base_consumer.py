@@ -240,7 +240,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def publisher_of_same_queue(self):
         if not self._publisher_of_same_queue:
             self._publisher_of_same_queue = get_publisher(self._queue_name, consuming_function=self.consuming_function,
-                                                          broker_kind=self.BROKER_KIND)
+                                                          broker_kind=self.BROKER_KIND, log_level_int=self._log_level)
             if self._msg_expire_senconds:
                 self._publisher_of_same_queue.set_is_add_publish_time()
         return self._publisher_of_same_queue
@@ -340,7 +340,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.consuming_function = consuming_function
         self._function_timeout = function_timeout
         self._threads_num = concurrent_num if threads_num == 50 else threads_num  # concurrent参数优先，以后废弃threads_num参数。
-        self._concurrent_num =self._threads_num
+        self._concurrent_num = self._threads_num
         self._specify_threadpool = specify_threadpool
         self._threadpool = None  # 单独加一个检测消息数量和心跳的线程
         self._concurrent_mode = concurrent_mode
@@ -381,10 +381,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._is_consuming_function_use_multi_params = is_consuming_function_use_multi_params
 
-        self._execute_task_times_every_minute = 0  # 每分钟执行了多少次任务。
-        self._lock_for_count_execute_task_times_every_minute = Lock()
-        self._current_time_for_execute_task_times_every_minute = time.time()
-        self._consuming_function_cost_time_total_every_minute = 0
+        self._unit_time_for_count = 10  # 每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。
+        self._execute_task_times_every_unit_time = 0  # 每单位时间执行了多少次任务。
+        self._lock_for_count_execute_task_times_every_unit_time = Lock()
+        self._current_time_for_execute_task_times_every_unit_time = time.time()
+        self._consuming_function_cost_time_total_every_unit_time = 0
 
         self._msg_num_in_broker = 0
         self._last_timestamp_when_has_task_in_queue = 0
@@ -461,7 +462,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if self._is_send_consumer_hearbeat_to_redis:
             self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name, self.consumer_identification)
             self._distributed_consumer_statistics.run()
-        self.keep_circulating(20, block=False)(self.check_heartbeat_and_message_count)()
+        self.keep_circulating(9, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小，不然日志不准。
         self._redis_filter.delete_expire_filter_task_cycle()
         if self._schedule_tasks_on_main_thread:
             self.keep_circulating(1)(self._shedual_task)()
@@ -490,18 +491,18 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                                 self.queue_name, self.consuming_function.__name__,
                                                                 kw['body']),
                                                             )
-        with self._lock_for_count_execute_task_times_every_minute:
-            self._execute_task_times_every_minute += 1
-            self._consuming_function_cost_time_total_every_minute += time.time() - t_start_run_fun
-            if time.time() - self._current_time_for_execute_task_times_every_minute > 60:
+        with self._lock_for_count_execute_task_times_every_unit_time:
+            self._execute_task_times_every_unit_time += 1
+            self._consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
+            if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
                 self.logger.info(
-                    f'一分钟内执行了 {self._execute_task_times_every_minute} 次函数 [ {self.consuming_function.__name__} ] ,'
-                    f'函数平均运行耗时 {round(self._consuming_function_cost_time_total_every_minute / self._execute_task_times_every_minute, 4)} 秒，预计'
-                    f'还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / self._execute_task_times_every_minute * 60)} 时间'
+                    f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,'
+                    f'函数平均运行耗时 {round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)} 秒，预计'
+                    f'还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / self._execute_task_times_every_unit_time * self._unit_time_for_count)} 时间'
                     f'才能执行完成 {self._msg_num_in_broker}个剩余的任务 ')
-                self._current_time_for_execute_task_times_every_minute = time.time()
-                self._consuming_function_cost_time_total_every_minute = 0
-                self._execute_task_times_every_minute = 0
+                self._current_time_for_execute_task_times_every_unit_time = time.time()
+                self._consuming_function_cost_time_total_every_unit_time = 0
+                self._execute_task_times_every_unit_time = 0
 
     def __get_priority_conf(self, kw: dict, broker_task_config_key: str):
         broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)
@@ -577,6 +578,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         raise NotImplementedError
 
     def _submit_task(self, kw):
+        # print(kw)
+        # return
         if self._judge_is_daylight():
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
@@ -598,6 +601,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def __frequency_control(self, qpsx, msg_schedule_time_intercalx):
         # 以下是消费函数qps控制代码。
+        if qpsx == 0:
+            return
         if qpsx <= 2:
             """ 原来的简单版 """
             time.sleep(msg_schedule_time_intercalx)
@@ -763,4 +768,3 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
             return [idx.decode().split('&&')[0] for idx in self.redis_db_frame.smembers(self._redis_key_name)]
         else:
             return [idx.decode() for idx in self.redis_db_frame.smembers(self._redis_key_name)]
-

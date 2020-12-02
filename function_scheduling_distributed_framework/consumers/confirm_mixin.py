@@ -6,6 +6,9 @@ import json
 import uuid
 from function_scheduling_distributed_framework.utils import RedisMixin, decorators
 
+"""
+此模块是依赖redis的确认消费，所以比较复杂。
+"""
 
 # noinspection PyUnresolvedReferences
 class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
@@ -23,8 +26,9 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
 
     def start_consuming_message(self):
         self.logger.warning('启动了任务redis确认消费助手')
-        self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
         super().start_consuming_message()
+        self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
+
 
     def _add_task_str_to_unack_zset(self, task_str, ):
         self.redis_db_frame.zadd(self._unack_zset_name, task_str, time.time())
@@ -70,9 +74,10 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
                     if current_queue_unacked_msg_queue_str.split(f'{self._queue_name}__unack_id_')[1] not in current_queue_hearbeat_ids:
                         self.logger.warning(f'{current_queue_unacked_msg_queue_str} 是过期的')
                         for unacked_task_str in self.redis_db_frame.zrevrange(current_queue_unacked_msg_queue_str, 0, 1000):
-                            self.logger.warning(f'从 {current_queue_unacked_msg_queue_str} 向 {self._queue_name} 重新放入未消费确认的任务 {unacked_task_str}')
+                            self.logger.warning(f'从 {current_queue_unacked_msg_queue_str} 向 {self._queue_name} 重新放入未消费确认的任务 {unacked_task_str.decode()}')
                             self.redis_db_frame.rpush(self._queue_name, unacked_task_str)
                             self.redis_db_frame.zrem(current_queue_unacked_msg_queue_str, unacked_task_str)
                     else:
                         pass
                         # print('是活跃消费者')
+

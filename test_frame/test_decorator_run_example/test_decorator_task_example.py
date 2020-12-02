@@ -22,3 +22,4 @@ if __name__ == '__main__':
         # IdeAutoCompleteHelper(f).pub({'a': i * 1000, 'b': i * 2000})  # 和上面等效，但可以自动补全方法名字和入参。
 
     IdeAutoCompleteHelper(f).start_consuming_message()  # f.consume() 等效
+    

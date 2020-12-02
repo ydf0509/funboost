@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 13:32
+"""
+
+这个是加强版的可确认消费的redis消费实现，所以比redis_conusmer实现复杂很多。
+这个可以确保随意反复多次停止重启脚本，任务永不丢失
+"""
 import json
 import time
 
@@ -101,7 +106,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
                      if v then
                      redis.call('zadd',KEYS[2],ARGV[1],v)
                       end
-                     return v
+                     return v 
                 '''
         script = self.redis_db_frame.register_script(lua)
         while True:

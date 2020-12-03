@@ -536,7 +536,19 @@ def add(a, b):
  2）celery的方式不是跨平台，如果发布方和消费方不在同一个git项目，不能直接调用。例如java人员或ai人员并不能直接调用你项目里面的add.delay(1,2)这样写来发布消息，
  非常难以构造出来上面celery任务的那一长串东西，几乎不可能。
   
-## 4.2 性能对比,celery推送慢5倍，消费慢15%。测试的消费基准函数为阻塞10s的求和函数，两个框架都推送和消费10000次。都使用gevent并发模型，相同并发数量 相同的linux机器内网连接中间件下反复测试的。
+## 4.2 性能对比,celery比次框架推送慢5倍，消费比次框架慢5倍。
+```
+测试的消费基准函数为简单地求和函数，两个框架都推送和消费10000次。
+都使用gevent并发模型，相同并发数量 相同的linux机器内网连接中间件下反复测试的。
+
+假设框架包装和调度一个函数执行的代码需要消耗的cpu执行时间是t1，消费函数自身需要的cpu执行时间是t2，
+
+如果消费函数本身非常简单，例如消费函数是def f(x): print(x)这种机器简单地,那么t1远大于t2，
+此时celery的t1远大于此框架的t1，所以出现了5倍的性能差距。
+
+如果消费函数非常复杂，执行逻辑需要消耗的cpu时间远大于调度和包装一个函数的cpu执行时间，即t2远大于t1，
+此时相同的非常复杂的消费函数逻辑，两个框架的执行效率就不会出现有5倍的差距。
+```
 ### 4.2.1 celery测试基准代码,消费
 ```python
 celery_app.config_from_object(Config2)
@@ -544,8 +556,6 @@ celery_app.config_from_object(Config2)
 
 @celery_app.task(name='求和啊',)  
 def add(a, b):
-    print(f'消费此消息 {a} + {b} 中。。。。。')
-    time.sleep(10) # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
     print(f'计算 {a} + {b} 得到的结果是  {a + b}')
     return a + b
 
@@ -553,7 +563,7 @@ def add(a, b):
 
 if __name__ == '__main__':
     celery_app.worker_main(
-        argv=['worker', '--pool=gevent', '--concurrency=1000', '-n', 'worker1@%h', '--loglevel=debug',
+        argv=['worker', '--pool=gevent', '--concurrency=50', '-n', 'worker1@%h', '--loglevel=debug',
               '--queues=queue_add', '--detach',])
 
 ```
@@ -561,8 +571,6 @@ if __name__ == '__main__':
 ### 4.2.2 function_scheduling_distributed_framework测试基准代码，消费
 ```python
 def add(a, b):
-    print(f'消费此消息 {a} + {b} 中。。。。。')
-    time.sleep(10)  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
     # if random.randint(4, 6) == 5:
     #     raise RandomError('演示随机出错')
     print(f'计算 {a} + {b} 得到的结果是  {a + b}')
@@ -570,11 +578,9 @@ def add(a, b):
 
 
 # 把消费的函数名传给consuming_function，就这么简单。
-consumer_add = get_consumer('queue_test569', consuming_function=add, threads_num=1000, max_retry_times=2,
+consumer_add = get_consumer('queue_test569', consuming_function=add, max_retry_times=2,
                             qps=0, log_level=10, logger_prefix='zz平台消费',
-                            function_timeout=0, is_print_detail_exception=False,
-                            msg_expire_senconds=3600,concurrent_mode=2,  
-                            broker_kind=2, ) # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等数十种中间件或包。
+                            concurrent_mode=2,  broker_kind=2, ) # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等数十种中间件或包。
 
 
 if __name__ == '__main__':

@@ -2,8 +2,6 @@ import asyncio
 import time
 from threading import Thread
 
-import nb_log
-
 
 class AsyncPoolExecutor:
     def __init__(self, size):
@@ -33,6 +31,9 @@ class AsyncPoolExecutor:
 
     def _start_loop_in_new_thread(self, ):
         self._loop.run_forever()
+
+    def shutdown(self):
+        pass
 
 
 if __name__ == '__main__':

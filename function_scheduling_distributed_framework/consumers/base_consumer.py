@@ -25,12 +25,14 @@ import threading
 from threading import Lock, Thread
 import eventlet
 import gevent
+import asyncio
 from pymongo import IndexModel
 from pymongo.errors import PyMongoError
 
 # noinspection PyUnresolvedReferences
 from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, LoggerMixinDefaultWithFileHandler
 # noinspection PyUnresolvedReferences
+from function_scheduling_distributed_framework.concurrent_pool.async_pool_executor import AsyncPoolExecutor
 from function_scheduling_distributed_framework.concurrent_pool.bounded_threadpoolexcutor import \
     BoundedThreadPoolExecutor
 from function_scheduling_distributed_framework.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco, \
@@ -96,7 +98,6 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         self.time_start = time.time()
         self.time_cost = None
         self.success = False
-        self.current_thread = ConsumersManager.get_concurrent_info()
         self.total_thread = threading.active_count()
         self.set_log_level(20)
 
@@ -167,7 +168,7 @@ class ConsumersManager:
                 nb_print(t)
                 t.join()
         else:
-            if cls.global_concurrent_mode == 1:
+            if cls.global_concurrent_mode in [1, 4]:
                 for t in cls.schedulal_thread_to_be_join:
                     nb_print(t)
                     t.join()
@@ -188,18 +189,6 @@ class ConsumersManager:
             sys.stdout.write(
                 f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}"  \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
 
-    @classmethod
-    def get_concurrent_info(cls):
-        concurrent_info = ''
-        if cls.global_concurrent_mode == 1:
-            concurrent_info = f'[{threading.current_thread()}  {threading.active_count()}]'
-        elif cls.global_concurrent_mode == 2:
-            concurrent_info = f'[{gevent.getcurrent()}  {threading.active_count()}]'
-        elif cls.global_concurrent_mode == 3:
-            # noinspection PyArgumentList
-            concurrent_info = f'[{eventlet.getcurrent()}  {threading.active_count()}]'
-        return concurrent_info
-
     @staticmethod
     def get_concurrent_name_by_concurrent_mode(concurrent_mode):
         if concurrent_mode == 1:
@@ -208,6 +197,8 @@ class ConsumersManager:
             return 'gevent'
         elif concurrent_mode == 3:
             return 'evenlet'
+        elif concurrent_mode == 4:
+            return 'async'
 
 
 class FunctionResultStatusPersistanceConfig(LoggerMixin):
@@ -231,6 +222,7 @@ class FunctionResultStatusPersistanceConfig(LoggerMixin):
                 'is_save_result': self.is_save_result, 'expire_seconds': self.expire_seconds}
 
 
+# noinspection DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     time_interval_for_check_do_not_run_time = 60
     BROKER_KIND = None
@@ -354,9 +346,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._is_send_consumer_hearbeat_to_redis = is_send_consumer_hearbeat_to_redis or is_using_distributed_frequency_control
         self._msg_expire_senconds = msg_expire_senconds
 
-        if self._concurrent_mode not in (1, 2, 3):
+        if self._concurrent_mode not in (1, 2, 3, 4):
             raise ValueError('设置的并发模式不正确')
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
+        if self._concurrent_mode == 4:
+            self._run = self._async_run
 
         self._logger_prefix = logger_prefix
         self._log_level = log_level
@@ -462,7 +456,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if self._is_send_consumer_hearbeat_to_redis:
             self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name, self.consumer_identification)
             self._distributed_consumer_statistics.run()
-        self.keep_circulating(9, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小，不然日志不准。
+        self.keep_circulating(10, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
         self._redis_filter.delete_expire_filter_task_cycle()
         if self._schedule_tasks_on_main_thread:
             self.keep_circulating(1)(self._shedual_task)()
@@ -476,6 +470,24 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :return:
         """
         raise NotImplementedError
+
+    def __get_priority_conf(self, kw: dict, broker_task_config_key: str):
+        broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)
+        if broker_task_config is None:
+            return getattr(self, f'_{broker_task_config_key}')
+        else:
+            return broker_task_config
+
+    def _get_concurrent_info(self):
+        concurrent_info = ''
+        if self._concurrent_mode == 1:
+            concurrent_info = f'[{threading.current_thread()}  {threading.active_count()}]'
+        elif self._concurrent_mode == 2:
+            concurrent_info = f'[{gevent.getcurrent()}  {threading.active_count()}]'
+        elif self._concurrent_mode == 3:
+            # noinspection PyArgumentList
+            concurrent_info = f'[{eventlet.getcurrent()}  {threading.active_count()}]'
+        return concurrent_info
 
     def _run(self, kw: dict, ):
         function_only_params = _delete_keys_and_return_new_dict(kw['body'], )
@@ -504,13 +516,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._consuming_function_cost_time_total_every_unit_time = 0
                 self._execute_task_times_every_unit_time = 0
 
-    def __get_priority_conf(self, kw: dict, broker_task_config_key: str):
-        broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)
-        if broker_task_config is None:
-            return getattr(self, f'_{broker_task_config_key}')
-        else:
-            return broker_task_config
-
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
                                                        function_result_status: FunctionResultStatus, ):
         function_only_params = _delete_keys_and_return_new_dict(kw['body'])
@@ -526,12 +531,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 else:
                     function_result_status.result = function_run(
                         function_only_params)  # 消费函数使用单个参数，参数自身是一个字典，由键值对表示各个参数。
+                if asyncio.iscoroutine(function_result_status.result):
+                    self.logger.critical(f'异步的协程消费函数必须使用 async 并发模式并发,请设置 '
+                                         f'消费函数 {self.consuming_function.__name__} 的concurrent_mode 为4')
+                    os._exit(4)
                 function_result_status.success = True
                 self._confirm_consume(kw)
                 if self.__get_priority_conf(kw, 'do_task_filtering'):
                     self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
-                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。  {ConsumersManager.get_concurrent_info()}')
+                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。  {self._get_concurrent_info()}')
             except Exception as e:
                 if isinstance(e, (PyMongoError,
                                   ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
@@ -543,6 +552,82 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                   exc_info=self.__get_priority_conf(kw, 'is_print_detail_exception'))
                 function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
                 return self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times + 1, function_result_status, )
+        else:
+            self.logger.critical(
+                f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是 【 {function_only_params} 】')
+            self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
+        if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
+            # print(function_result_status.get_status_dict(without_datetime_obj=True))
+            with RedisMixin().redis_db_frame.pipeline() as p:
+                # RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
+                # RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
+                p.lpush(kw['body']['extra']['task_id'],
+                        json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
+                p.expire(kw['body']['extra']['task_id'], 600)
+                p.execute()
+        self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
+
+    async def _async_run(self, kw: dict, ):
+        function_only_params = _delete_keys_and_return_new_dict(kw['body'], )
+        if self.__get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
+                function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
+            self.logger.info(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
+            self._confirm_consume(kw)
+            return
+        t_start_run_fun = time.time()
+        await self._async_run_consuming_function_with_confirm_and_retry(kw, current_retry_times=0,
+                                                                        function_result_status=FunctionResultStatus(
+                                                                            self.queue_name, self.consuming_function.__name__,
+                                                                            kw['body']),
+                                                                        )
+
+        self._execute_task_times_every_unit_time += 1
+        self._consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
+        if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
+            self.logger.info(
+                f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,'
+                f'函数平均运行耗时 {round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)} 秒，预计'
+                f'还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / self._execute_task_times_every_unit_time * self._unit_time_for_count)} 时间'
+                f'才能执行完成 {self._msg_num_in_broker}个剩余的任务 ')
+            self._current_time_for_execute_task_times_every_unit_time = time.time()
+            self._consuming_function_cost_time_total_every_unit_time = 0
+            self._execute_task_times_every_unit_time = 0
+
+    async def _async_run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
+                                                                   function_result_status: FunctionResultStatus, ):
+        function_only_params = _delete_keys_and_return_new_dict(kw['body'])
+        if current_retry_times < self.__get_priority_conf(kw, 'max_retry_times'):
+            function_result_status.run_times += 1
+            # noinspection PyBroadException
+            t_start = time.time()
+            try:
+                corotinue_obj = self.consuming_function(**function_only_params)
+                if not asyncio.iscoroutine(corotinue_obj):
+                    self.logger.critical(f'当前设置的并发模式为 async 并发模式，但消费函数不是异步协程函数，'
+                                         f'请不要把消费函数 {self.consuming_function.__name__} 的 concurrent_mode 设置为 4')
+                    os._exit(444)
+                if self._function_timeout == 0:
+                    rs = await corotinue_obj
+                else:
+                    rs = await asyncio.wait_for(corotinue_obj, timeout=self._function_timeout)
+                function_result_status.result = rs
+                function_result_status.success = True
+                self._confirm_consume(kw)
+                if self.__get_priority_conf(kw, 'do_task_filtering'):
+                    self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
+                self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
+                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。  {corotinue_obj}')
+            except Exception as e:
+                if isinstance(e, (PyMongoError,
+                                  ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
+                    self.logger.critical(f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}，消息重新入队')
+                    time.sleep(1)  # 防止快速无限出错入队出队，导致cpu和中间件忙
+                    return self._requeue(kw)
+                self.logger.error(f'函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次发生错误，'
+                                  f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是 【 {function_only_params} 】   \n 原因是 {type(e)} {e} ',
+                                  exc_info=self.__get_priority_conf(kw, 'is_print_detail_exception'))
+                function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
+                return await self._async_run_consuming_function_with_confirm_and_retry(kw, current_retry_times + 1, function_result_status, )
         else:
             self.logger.critical(
                 f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是 【 {function_only_params} 】')
@@ -643,8 +728,10 @@ class ConcurrentModeDispatcher(LoggerMixin):
         self.consumer = consumerx
         if ConsumersManager.global_concurrent_mode is not None and self.consumer._concurrent_mode != ConsumersManager.global_concurrent_mode:
             ConsumersManager.show_all_consumer_info()
-            raise ValueError('由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，'
-                             '搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种')
+            print({self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode})
+            if not {self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode}.issubset({1, 4}):
+                raise ValueError('由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，'
+                                 '搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种')
         self._concurrent_mode = ConsumersManager.global_concurrent_mode = self.consumer._concurrent_mode
         self.timeout_deco = None
         if self._concurrent_mode == 1:
@@ -671,6 +758,8 @@ class ConcurrentModeDispatcher(LoggerMixin):
         elif self._concurrent_mode == 3:
             pool_type = CustomEventletPoolExecutor
             check_evenlet_monkey_patch()
+        elif self._concurrent_mode == 4:
+            pool_type = AsyncPoolExecutor
         self.consumer._threadpool = self.consumer._specify_threadpool if self.consumer._specify_threadpool else pool_type(
             self.consumer._threads_num)
         return self.consumer._threadpool
@@ -691,6 +780,10 @@ class ConcurrentModeDispatcher(LoggerMixin):
             elif self._concurrent_mode == 3:
                 g = eventlet.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
                 ConsumersManager.schedulal_thread_to_be_join.append(g)
+            elif self._concurrent_mode == 4:
+                t = Thread(target=self.consumer.keep_circulating(1)(self.consumer._shedual_task))
+                ConsumersManager.schedulal_thread_to_be_join.append(t)
+                t.start()
 
 
 def wait_for_possible_has_finish_all_tasks(queue_name: str, minutes: int, send_stop_to_broker=0,

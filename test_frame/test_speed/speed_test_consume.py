@@ -13,13 +13,13 @@ def f_test_speed2(y):
     pass
     print(y)
 
-
 if __name__ == '__main__':
     f_test_speed.clear()
 
-    for i in range(20000):
+    for i in range(1000000):
         f_test_speed.push(i)
 
     f_test_speed.consume()
     # # f_test_speed2.consume()
+
 

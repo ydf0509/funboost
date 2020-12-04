@@ -13,7 +13,7 @@ platforms.C_FORCE_ROOT = True
 celery_app = celery.Celery()
 class Config2:
     broker_url = f'redis://:{frame_config.REDIS_PASSWORD}@{frame_config.REDIS_HOST}:{frame_config.REDIS_PORT}/10'  # 使用redis
-    result_backend = f'redis://:{frame_config.REDIS_PASSWORD}@{frame_config.REDIS_HOST}:{frame_config.REDIS_PORT}/14'  # 使用redis
+    # result_backend = f'redis://:{frame_config.REDIS_PASSWORD}@{frame_config.REDIS_HOST}:{frame_config.REDIS_PORT}/14'  # 使用redis
     broker_connection_max_retries = 150  # 默认是100
     # result_serializer = 'json'
     task_default_queue = 'default'  # 默认celery

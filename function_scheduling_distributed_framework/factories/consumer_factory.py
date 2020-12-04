@@ -20,7 +20,7 @@ from function_scheduling_distributed_framework.consumers.sqlachemy_consumer impo
 
 
 def get_consumer(queue_name, *, consuming_function: Callable = None, function_timeout=0, threads_num=50,
-                 concurrent_num=50, specify_threadpool=None, concurrent_mode=1,
+                 concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None,concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True, msg_schedule_time_intercal=0.0,
                  qps: float = 0, msg_expire_senconds=0, is_using_distributed_frequency_control=False,
                  is_send_consumer_hearbeat_to_redis=False,
@@ -39,7 +39,8 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
     :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
     :param threads_num:并发数量，协程或线程。由concurrent_mode决定并发种类。
     :param concurrent_num:并发数量，这个覆盖threads_num。以后会废弃threads_num参数，因为表达的意思不太准确，不一定是线程模式并发。
-    :param specify_threadpool:使用指定的线程池（协程池），可以多个消费者共使用一个线程池，不为None时候。threads_num失效
+    :param specify_concurrent_pool:使用指定的线程池（协程池），可以多个消费者共使用一个线程池，不为None时候。threads_num失效
+    :param specify_async_loop:指定的async的loop循环，设置并发模式为async才能起作用。
     :param concurrent_mode:并发模式，1线程 2gevent 3eventlet
     :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
            可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。

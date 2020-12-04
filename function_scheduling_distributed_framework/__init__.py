@@ -51,7 +51,7 @@ def run_many_consumer_with_multi_process(consumer_init_params_list: List[dict], 
 
 
 def task_deco(queue_name, *, function_timeout=0, threads_num=50,
-              concurrent_num=50, specify_threadpool=None, concurrent_mode=1,
+              concurrent_num=50, specify_concurrent_pool=None,specify_async_loop=None, concurrent_mode=1,
               max_retry_times=3, log_level=10, is_print_detail_exception=True, msg_schedule_time_intercal=0.0,
               qps: float = 0, msg_expire_senconds=0, is_using_distributed_frequency_control=False,
               is_send_consumer_hearbeat_to_redis=False,

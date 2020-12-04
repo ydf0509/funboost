@@ -184,7 +184,7 @@ class ConsumersManager:
 
     @classmethod
     def show_all_consumer_info(cls):
-        nb_print(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}')
+        # nb_print(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}')
         for _, consumer_info in cls.consumers_queue__info_map.items():
             sys.stdout.write(
                 f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}"  \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
@@ -261,7 +261,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     # noinspection PyProtectedMember
     def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0,
-                 threads_num=50, concurrent_num=50, specify_threadpool=None, concurrent_mode=1,
+                 threads_num=50, concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None,concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True,
                  msg_schedule_time_intercal=0.0, qps: float = 0, msg_expire_senconds=0,
                  is_using_distributed_frequency_control=False,
@@ -280,7 +280,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
         :param threads_num:线程或协程并发数量
         :param concurrent_num:并发数量，这个覆盖threads_num。以后会废弃threads_num参数，因为表达的意思不太准确，不一定是线程模式并发。
-        :param specify_threadpool:使用指定的线程池/携程池，可以多个消费者共使用一个线程池，不为None时候。threads_num失效
+        :param specify_concurrent_pool:使用指定的线程池/携程池，可以多个消费者共使用一个线程池，不为None时候。threads_num失效
+        :param specify_async_loop:指定的async的loop循环，设置并发模式为async才能起作用。
         :param concurrent_mode:并发模式，暂时支持 线程 、gevent、eventlet三种模式。  1线程  2 gevent 3 evenlet
         :param max_retry_times:
         :param log_level:
@@ -333,7 +334,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._function_timeout = function_timeout
         self._threads_num = concurrent_num if threads_num == 50 else threads_num  # concurrent参数优先，以后废弃threads_num参数。
         self._concurrent_num = self._threads_num
-        self._specify_threadpool = specify_threadpool
+        self._specify_concurrent_pool = specify_concurrent_pool
+        self._specify_async_loop = specify_async_loop
         self._threadpool = None  # 单独加一个检测消息数量和心跳的线程
         self._concurrent_mode = concurrent_mode
         self._max_retry_times = max_retry_times
@@ -760,8 +762,13 @@ class ConcurrentModeDispatcher(LoggerMixin):
             check_evenlet_monkey_patch()
         elif self._concurrent_mode == 4:
             pool_type = AsyncPoolExecutor
-        self.consumer._threadpool = self.consumer._specify_threadpool if self.consumer._specify_threadpool else pool_type(
-            self.consumer._threads_num)
+        if self._concurrent_mode == 4:
+            self.consumer._threadpool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
+                self.consumer._concurrent_num,loop=self.consumer._specify_async_loop)
+        else:
+            self.consumer._threadpool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
+                    self.consumer._concurrent_num)
+
         return self.consumer._threadpool
 
     def schedulal_task_with_no_block(self):

@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
     print(1111)
     pool = AsyncPoolExecutor(5)
-    for i in range(1, 11):
+    for i in range(1, 31):
         print('放入', i)
         pool.submit(f, i)
     time.sleep(5)

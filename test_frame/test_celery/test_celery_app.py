@@ -4,15 +4,13 @@
 import time
 import celery
 from celery import platforms
-from function_scheduling_distributed_framework import frame_config
-from test_frame.my_patch_frame_config import do_patch_frame_config
-
-do_patch_frame_config()
+import distributed_frame_config
+import nb_log
 platforms.C_FORCE_ROOT = True
 # celery_app = celery.Celery('test_frame.test_celery.test_celery_app')
 celery_app = celery.Celery()
 class Config2:
-    broker_url = f'redis://:{frame_config.REDIS_PASSWORD}@{frame_config.REDIS_HOST}:{frame_config.REDIS_PORT}/10'  # 使用redis
+    broker_url = f'redis://:{distributed_frame_config.REDIS_PASSWORD}@{distributed_frame_config.REDIS_HOST}:{distributed_frame_config.REDIS_PORT}/10'  # 使用redis
     # result_backend = f'redis://:{frame_config.REDIS_PASSWORD}@{frame_config.REDIS_HOST}:{frame_config.REDIS_PORT}/14'  # 使用redis
     broker_connection_max_retries = 150  # 默认是100
     # result_serializer = 'json'
@@ -72,5 +70,5 @@ if __name__ == '__main__':
     """
     # queue_add,queue_sub,queue_f1
     celery_app.worker_main(
-        argv=['worker', '--pool=gevent', '--concurrency=5', '-n', 'worker1@%h', '--loglevel=debug',
+        argv=['worker', '--pool=gevent', '--concurrency=50', '-n', 'worker1@%h', '--loglevel=debug',
               '--queues=queue_f1,queue_add2,queue_sub2', '--detach', ])

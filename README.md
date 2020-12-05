@@ -1133,7 +1133,7 @@ from function_scheduling_distributed_framework import task_deco, BrokerEnum,Conc
 import asyncio
 
 @task_deco('test_async_queue2', concurrent_mode=ConcurrentModeEnum.ASYNC, 
-            broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE, log_level=10,concurrent_num=500,)
+            broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE, concurrent_num=500,)
 async def async_f(x):
     await asyncio.sleep(1)  #  此处不能写成time.sleep(1),否则无论设置多高的并发，1秒钟最多只能运行1次函数。
     print(x)

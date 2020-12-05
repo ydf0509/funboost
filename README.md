@@ -1137,6 +1137,7 @@ async def async_f(x):
     print(x)
 
 if __name__ == '__main__':
+    async_f.clear()
     for i in range(100):
         async_f.push(i, )
     async_f.consume()

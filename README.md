@@ -1135,7 +1135,7 @@ import asyncio
 @task_deco('test_async_queue2', concurrent_mode=ConcurrentModeEnum.ASYNC, 
             broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE, concurrent_num=500,)
 async def async_f(x):
-    await asyncio.sleep(1)  #  此处不能写成time.sleep(1),否则无论设置多高的并发，1秒钟最多只能运行1次函数。
+    await asyncio.sleep(1)  # 测试异步阻塞并发， 此处不能写成time.sleep(1),否则无论设置多高的并发，1秒钟最多只能运行1次函数。
     print(x)
 
 if __name__ == '__main__':

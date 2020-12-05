@@ -65,7 +65,7 @@ def sync_request(i):
 
 
 pool_works = 500
-test_times = 10000
+test_times = 10
 pool1 = AsyncPoolExecutor(500, loop=loopx)
 pool2 = CustomThreadPoolExecutor(500)
 

@@ -3,7 +3,7 @@ import time
 from threading import Thread
 import nb_log
 import queue
-
+from function_scheduling_distributed_framework.utils.develop_log import develop_logger
 
 class AsyncPoolExecutor2:
     def __init__(self, size, loop=None):
@@ -34,7 +34,7 @@ class AsyncPoolExecutor2:
         self.loop.close()
 
 
-class AsyncPoolExecutor4(nb_log.LoggerMixin):
+class AsyncPoolExecutor(nb_log.LoggerMixin):
     def __init__(self, size, loop=None):
         self._size = size
         self.loop = loop or asyncio.new_event_loop()
@@ -80,45 +80,7 @@ class AsyncPoolExecutor4(nb_log.LoggerMixin):
             time.sleep(0.1)
         self.loop.close()
 
-class AsyncPoolExecutor(nb_log.LoggerMixin):
-    """
-    没采用asyncio的queue，asyncio.run_coroutine_threadsafe消耗性能大，没有这个提交任务快。
-    """
-    def __init__(self, size, loop=None):
-        self._size = size
-        self.loop = loop or asyncio.new_event_loop()
-        self._sem = asyncio.Semaphore(self._size, loop=self.loop)
-        # atexit.register(self.shutdown)
-        self._queue = queue.Queue(self._size)
-        Thread(target=self._start_loop_in_new_thread).start()
-        self._can_be_closed_flag = False
 
-    def submit(self, func, *args, **kwargs):
-        self._queue.put((func,args,kwargs))
-
-    async def _consume(self):
-        while True:
-            func, args, kwargs = self._queue.get()
-            # print(func,args, kwargs)
-            if func == 'stop':
-                break
-            try:
-                await func(*args, **kwargs)
-            except Exception as e:
-                self.logger.exception(e)
-
-    def _start_loop_in_new_thread(self, ):
-        # asyncio.set_event_loop(self.loop)
-        self.loop.run_until_complete(asyncio.wait([self._consume() for _ in range(self._size)], loop=self.loop))
-        self._can_be_closed_flag = True
-        print('wan')
-
-    def shutdown(self):
-        for _ in range(self._size):
-            self.submit('stop', )
-        while not self._can_be_closed_flag:
-            time.sleep(0.1)
-        self.loop.close()
 
 if __name__ == '__main__':
     async def f(x):

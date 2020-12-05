@@ -612,6 +612,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     os._exit(444)
                 if self._function_timeout == 0:
                     rs = await corotinue_obj
+                    # rs = await asyncio.wait_for(corotinue_obj, timeout=4)
                 else:
                     rs = await asyncio.wait_for(corotinue_obj, timeout=self._function_timeout)
                 function_result_status.result = rs
@@ -732,7 +733,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
         self.consumer = consumerx
         if ConsumersManager.global_concurrent_mode is not None and self.consumer._concurrent_mode != ConsumersManager.global_concurrent_mode:
             ConsumersManager.show_all_consumer_info()
-            print({self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode})
+            # print({self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode})
             if not {self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode}.issubset({1, 4}):
                 raise ValueError('由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，'
                                  '搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种')

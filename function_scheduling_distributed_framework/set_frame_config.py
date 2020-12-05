@@ -140,6 +140,7 @@ patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:2
 
 # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
 # NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7     
+# FSDF_DEVELOP_LOG_LEVEL = 50   # 开发时候的日志，进攻自己用，所以日志级别跳到最高
 
 # TIMEZONE = 'Asia/Shanghai'          
 '''
@@ -189,6 +190,8 @@ def use_config_form_distributed_frame_config_module():
     
     # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
     NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7  # 7是简短的不可跳转，5是可点击跳转的
+    FSDF_DEVELOP_LOG_LEVEL = 50   # 开发时候的日志，进攻自己用，所以日志级别跳到最高
+
     TIMEZONE = 'Asia/Shanghai' 
     
     \033[0m

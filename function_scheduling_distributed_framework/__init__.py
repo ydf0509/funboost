@@ -33,6 +33,12 @@ class BrokerEnum:
     SQLACHEMY = 10
     ROCKETMQ = 11
 
+class ConcurrentModeEnum:
+    THREADING = 1
+    GEVENT = 2
+    EVENTLET = 3
+    ASYNC = 4
+
 
 def run_many_consumer_by_init_params(consumer_init_params_list: List[dict]):
     for consumer_init_params in consumer_init_params_list:

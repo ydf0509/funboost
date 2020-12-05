@@ -1111,7 +1111,34 @@ def f(a, b):
 if __name__ == '__main__':
     for i in range(100):
         f.push(i, i * 2)
-    f.start()
+    f.consume()
 
 ```
 
+## 6.13 新增 async 并发模式
+
+```
+之前一直都没支持这种并发模式，异步代码不仅消费函数本身与同步代码很多不同，例如函数的定义和调用以及三方库，
+不同于gevent和eventlet打个猴子补丁就可以变并发方式并且代码保持100%原样，asyncio的方式代比同步码真的是要大改特改。
+而且在框架层面要支持异步也要增加和修改很多，支持异步并不是很容易。这一点连celery目前都还没支持到。
+
+如果消费函数已经写成了async def这种，那么可以设置 concurrent_mode=ConcurrentModeEnum.ASYNC，
+框架会在一个loop里面自动运行协程。
+```
+
+```python
+from function_scheduling_distributed_framework import task_deco, BrokerEnum,ConcurrentModeEnum
+import asyncio
+
+@task_deco('test_async_queue2', concurrent_mode=ConcurrentModeEnum.ASYNC, 
+            broker_kind=BrokerEnum.REDIS, log_level=10,concurrent_num=500,)
+async def async_f(x):
+    await asyncio.sleep(1,)
+    print(x)
+
+if __name__ == '__main__':
+    for i in range(100):
+        async_f.push(i, )
+    async_f.consume()
+
+```

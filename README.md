@@ -1123,7 +1123,7 @@ if __name__ == '__main__':
 而且在框架层面要支持异步也要增加和修改很多，支持异步并不是很容易。这一点连celery目前都还没支持到。
 
 如果消费函数已经写成了async def这种，那么可以设置 concurrent_mode=ConcurrentModeEnum.ASYNC，
-框架会在一个loop里面自动运行协程。
+框架会在一个新的线程的loop里面自动运行协程。
 ```
 
 ```python
@@ -1135,7 +1135,7 @@ import asyncio
 @task_deco('test_async_queue2', concurrent_mode=ConcurrentModeEnum.ASYNC, 
             broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE, log_level=10,concurrent_num=500,)
 async def async_f(x):
-    await asyncio.sleep(1,)
+    await asyncio.sleep(1)  #  此处不能写成time.sleep(1),否则无论设置多高的并发，1秒钟最多只能运行1次函数。
     print(x)
 
 if __name__ == '__main__':

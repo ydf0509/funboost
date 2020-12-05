@@ -184,7 +184,8 @@ class ConsumersManager:
 
     @classmethod
     def show_all_consumer_info(cls):
-        # nb_print(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}')
+        # nb_print(f'当前解释器内，所有消费者的信息是：\n  {cls.consumers_queue__info_map}')
+        nb_print(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}')
         for _, consumer_info in cls.consumers_queue__info_map.items():
             sys.stdout.write(
                 f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}"  \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
@@ -311,6 +312,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         ConsumersManager.consumers_queue__info_map[queue_name] = current_queue__info_dict = copy.copy(self.init_params)
         current_queue__info_dict['consuming_function'] = str(consuming_function)  # consuming_function.__name__
+        current_queue__info_dict['specify_async_loop'] = str(specify_async_loop)
         current_queue__info_dict[
             'function_result_status_persistance_conf'] = function_result_status_persistance_conf.to_dict()
         current_queue__info_dict['class_name'] = self.__class__.__name__

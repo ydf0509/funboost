@@ -238,7 +238,7 @@ class TimerContextManager(LoggerMixin):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.t_spend = time.time() - self.time_start
         if self._is_print_log:
-            self.log.debug(f'对下面代码片段进行计时:  \n执行"{self._file_name}:{self._line}" 用时 {round(self.t_spend, 2)} 秒')
+            self.logger.debug(f'对下面代码片段进行计时:  \n执行"{self._file_name}:{self._line}" 用时 {round(self.t_spend, 2)} 秒')
 
 
 class RedisDistributedLockContextManager(LoggerMixin):

@@ -2,6 +2,7 @@ import asyncio
 import time
 from threading import Thread
 import nb_log
+import queue
 
 
 class AsyncPoolExecutor2:
@@ -13,7 +14,7 @@ class AsyncPoolExecutor2:
         Thread(target=self._start_loop_in_new_thread).start()
 
     def submit(self, func, *args, **kwargs):
-        while True:
+        while True:  # 阻止过快放入。
             if self._sem.locked():
                 time.sleep(0.01)
             else:
@@ -29,10 +30,11 @@ class AsyncPoolExecutor2:
         self.loop.run_forever()
 
     def shutdown(self):
-        pass
+        self.loop.stop()
+        self.loop.close()
 
 
-class AsyncPoolExecutor(nb_log.LoggerMixin):
+class AsyncPoolExecutor4(nb_log.LoggerMixin):
     def __init__(self, size, loop=None):
         self._size = size
         self.loop = loop or asyncio.new_event_loop()
@@ -40,6 +42,7 @@ class AsyncPoolExecutor(nb_log.LoggerMixin):
         # atexit.register(self.shutdown)
         self._queue = asyncio.Queue(maxsize=size, loop=self.loop)
         Thread(target=self._start_loop_in_new_thread).start()
+        self._can_be_closed_flag = False
 
     def submit(self, func, *args, **kwargs):
         future = asyncio.run_coroutine_threadsafe(self._produce(func, *args, **kwargs), self.loop)
@@ -51,6 +54,8 @@ class AsyncPoolExecutor(nb_log.LoggerMixin):
     async def _consume(self):
         while True:
             func, args, kwargs = await self._queue.get()
+            if func == 'stop':
+                break
             try:
                 await func(*args, **kwargs)
             except Exception as e:
@@ -64,11 +69,56 @@ class AsyncPoolExecutor(nb_log.LoggerMixin):
         # self._loop.run_until_complete(self.__run())  # 这种也可以。
         # self._loop.run_forever()
 
+        # asyncio.set_event_loop(self.loop)
         self.loop.run_until_complete(asyncio.wait([self._consume() for _ in range(self._size)], loop=self.loop))
+        self._can_be_closed_flag = True
 
     def shutdown(self):
-        pass
+        for _ in range(self._size):
+            self.submit('stop', )
+        while not self._can_be_closed_flag:
+            time.sleep(0.1)
+        self.loop.close()
 
+class AsyncPoolExecutor(nb_log.LoggerMixin):
+    """
+    没采用asyncio的queue，asyncio.run_coroutine_threadsafe消耗性能大，没有这个提交任务快。
+    """
+    def __init__(self, size, loop=None):
+        self._size = size
+        self.loop = loop or asyncio.new_event_loop()
+        self._sem = asyncio.Semaphore(self._size, loop=self.loop)
+        # atexit.register(self.shutdown)
+        self._queue = queue.Queue(self._size)
+        Thread(target=self._start_loop_in_new_thread).start()
+        self._can_be_closed_flag = False
+
+    def submit(self, func, *args, **kwargs):
+        self._queue.put((func,args,kwargs))
+
+    async def _consume(self):
+        while True:
+            func, args, kwargs = self._queue.get()
+            # print(func,args, kwargs)
+            if func == 'stop':
+                break
+            try:
+                await func(*args, **kwargs)
+            except Exception as e:
+                self.logger.exception(e)
+
+    def _start_loop_in_new_thread(self, ):
+        # asyncio.set_event_loop(self.loop)
+        self.loop.run_until_complete(asyncio.wait([self._consume() for _ in range(self._size)], loop=self.loop))
+        self._can_be_closed_flag = True
+        print('wan')
+
+    def shutdown(self):
+        for _ in range(self._size):
+            self.submit('stop', )
+        while not self._can_be_closed_flag:
+            time.sleep(0.1)
+        self.loop.close()
 
 if __name__ == '__main__':
     async def f(x):
@@ -78,7 +128,7 @@ if __name__ == '__main__':
 
     print(1111)
     pool = AsyncPoolExecutor(5)
-    for i in range(1, 101):
+    for i in range(1, 11):
         print('放入', i)
         pool.submit(f, i)
     time.sleep(5)
@@ -86,3 +136,4 @@ if __name__ == '__main__':
     pool.submit(f, 'hi2')
     pool.submit(f, 'hi3')
     print(2222)
+    pool.shutdown()

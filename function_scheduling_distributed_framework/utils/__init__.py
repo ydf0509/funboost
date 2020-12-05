@@ -6,7 +6,8 @@ from datetime import datetime as _datetime
 from datetime import date as _date
 
 
-from nb_log import (LogManager, simple_logger, defaul_logger, LoggerMixin, LoggerLevelSetterMixin, LoggerMixinDefaultWithFileHandler,nb_print,patch_print,reverse_patch_print,get_logger)
+from nb_log import (LogManager, simple_logger, defaul_logger, LoggerMixin, LoggerLevelSetterMixin,
+                    LoggerMixinDefaultWithFileHandler,nb_print,patch_print,reverse_patch_print,get_logger)
 
 from function_scheduling_distributed_framework.utils.redis_manager import RedisMixin
 

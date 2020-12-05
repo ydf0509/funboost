@@ -1,13 +1,10 @@
-from functools import update_wrapper,wraps
+from functools import update_wrapper, wraps
 from multiprocessing import Process
 from typing import List
 import copy
-
 # noinspection PyUnresolvedReferences
 import apscheduler
-
 from function_scheduling_distributed_framework.set_frame_config import patch_frame_config, show_frame_config
-
 # import frame_config
 from function_scheduling_distributed_framework.consumers.base_consumer import ExceptionForRequeue, ExceptionForRetry, \
     AbstractConsumer, ConsumersManager, FunctionResultStatusPersistanceConfig
@@ -15,8 +12,8 @@ from function_scheduling_distributed_framework.publishers.base_publisher import 
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
 from function_scheduling_distributed_framework.factories.consumer_factory import get_consumer
 # noinspection PyUnresolvedReferences
-from function_scheduling_distributed_framework.utils import nb_print, patch_print, LogManager,get_logger, LoggerMixin
-from function_scheduling_distributed_framework.timing_job import fsdf_background_scheduler,timing_publish_deco
+from function_scheduling_distributed_framework.utils import nb_print, patch_print, LogManager, get_logger, LoggerMixin
+from function_scheduling_distributed_framework.timing_job import fsdf_background_scheduler, timing_publish_deco
 
 
 class BrokerEnum:
@@ -32,6 +29,7 @@ class BrokerEnum:
     REDIS_ACK_ABLE = 9
     SQLACHEMY = 10
     ROCKETMQ = 11
+
 
 class ConcurrentModeEnum:
     THREADING = 1
@@ -57,7 +55,7 @@ def run_many_consumer_with_multi_process(consumer_init_params_list: List[dict], 
 
 
 def task_deco(queue_name, *, function_timeout=0, threads_num=50,
-              concurrent_num=50, specify_concurrent_pool=None,specify_async_loop=None, concurrent_mode=1,
+              concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=1,
               max_retry_times=3, log_level=10, is_print_detail_exception=True, msg_schedule_time_intercal=0.0,
               qps: float = 0, msg_expire_senconds=0, is_using_distributed_frequency_control=False,
               is_send_consumer_hearbeat_to_redis=False,
@@ -69,6 +67,7 @@ def task_deco(queue_name, *, function_timeout=0, threads_num=50,
               is_using_rpc_mode=False,
               broker_kind=0):
     """
+    这是此框架最重要的一个函数，必须看懂里面的入参有哪些。
     此函数的入参意义请查看 get_consumer的入参注释。
 
     本来是这样定义的，def task_deco(queue_name, **consumer_init_kwargs):

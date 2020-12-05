@@ -2,7 +2,7 @@ from function_scheduling_distributed_framework import task_deco, BrokerEnum,Conc
 import asyncio
 
 @task_deco('test_async_queue2', concurrent_mode=ConcurrentModeEnum.ASYNC,
-            broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE, log_level=10,concurrent_num=500,)
+            broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE, log_level=20,concurrent_num=500,)
 async def async_f(x):
     # await asyncio.sleep(0.1,)
     print(x)

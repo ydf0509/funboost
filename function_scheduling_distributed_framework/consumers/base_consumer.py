@@ -3,7 +3,6 @@
 # @Time    : 2019/8/8 0008 13:11
 """
 所有中间件类型消费者的抽象基类。使实现不同中间件的消费者尽可能代码少。
-里面很多调用sys.stdout是由于print被全局打了猴子补丁变成可跳转。当识别到两个可跳转链接时候，第二个不能被识别，所以一些地方直接调用了sys.stdout。
 """
 from typing import List
 
@@ -262,7 +261,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     # noinspection PyProtectedMember
     def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0,
-                 threads_num=50, concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None,concurrent_mode=1,
+                 threads_num=50, concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True,
                  msg_schedule_time_intercal=0.0, qps: float = 0, msg_expire_senconds=0,
                  is_using_distributed_frequency_control=False,
@@ -538,6 +537,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if asyncio.iscoroutine(function_result_status.result):
                     self.logger.critical(f'异步的协程消费函数必须使用 async 并发模式并发,请设置 '
                                          f'消费函数 {self.consuming_function.__name__} 的concurrent_mode 为4')
+                    # noinspection PyProtectedMember
                     os._exit(4)
                 function_result_status.success = True
                 self._confirm_consume(kw)
@@ -582,9 +582,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         await self._async_run_consuming_function_with_confirm_and_retry(kw, current_retry_times=0,
                                                                         function_result_status=FunctionResultStatus(
                                                                             self.queue_name, self.consuming_function.__name__,
-                                                                            kw['body']),
-                                                                        )
-
+                                                                            kw['body']), )
+        # 异步调度不存在线程并发，不需要加锁。
         self._execute_task_times_every_unit_time += 1
         self._consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
         if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
@@ -609,6 +608,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if not asyncio.iscoroutine(corotinue_obj):
                     self.logger.critical(f'当前设置的并发模式为 async 并发模式，但消费函数不是异步协程函数，'
                                          f'请不要把消费函数 {self.consuming_function.__name__} 的 concurrent_mode 设置为 4')
+                    # noinspection PyProtectedMember
                     os._exit(444)
                 if self._function_timeout == 0:
                     rs = await corotinue_obj
@@ -767,10 +767,10 @@ class ConcurrentModeDispatcher(LoggerMixin):
             pool_type = AsyncPoolExecutor
         if self._concurrent_mode == 4:
             self.consumer._threadpool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
-                self.consumer._concurrent_num,loop=self.consumer._specify_async_loop)
+                self.consumer._concurrent_num, loop=self.consumer._specify_async_loop)
         else:
             self.consumer._threadpool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
-                    self.consumer._concurrent_num)
+                self.consumer._concurrent_num)
 
         return self.consumer._threadpool
 

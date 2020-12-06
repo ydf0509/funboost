@@ -1158,7 +1158,7 @@ gevent就像自动挡汽车，自动换挡相当于自动切换阻塞。
 asyncio就像手动挡，全要靠自己写await / async def /loop / run_until_complete /run_forever/ 
 run_coroutine_threadsafe /wait / wait_for ,写法很麻烦很难。异步多了一个loop就像手动挡汽车多了一个离合器一样，十分之难懂。
 
-手动挡玩的溜性能比自动挡高也更省油。asyncio玩的溜那么他的io并发执行速度和效率也会更好。
+手动挡玩的溜性能比自动挡高也更省油。asyncio玩的溜那么他的io并发执行速度和效率也会更好，cpu消耗更少。
 如果你写一般的代码，那就用同步方式吧，让分布式函数调度框架来替你自动并发就好了。
 如果追求更好的控制和性能，不在乎代码写法上的麻烦，并且asyncio技术掌握的很溜，那就用asyncio的方式吧。 
 ```

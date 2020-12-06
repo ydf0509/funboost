@@ -11,14 +11,14 @@ def crawl_list_page(news_type, page):
     for li in sel.css('#Ul1 > li'):
         url_detail = 'https:' + li.xpath('./a/@href').extract_first()
         title = li.xpath('./a/h3/text()').extract_first()
-        crawl_detail_page.push(url_detail, title=title, news_type=news_type)
+        crawl_detail_page.push(url_detail, title=title, news_type=news_type) # 发布详情页任务
     if page == 1:
         last_page = int(sel.css('#channelPage > a:nth-child(12)::text').extract_first())
         for p in range(2, last_page + 1):
-            crawl_list_page.push(news_type, p)
+            crawl_list_page.push(news_type, p)  # 列表页翻页。
 
 
-@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=100, qps=8, do_task_filtering=True)
+@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=100, qps=10, do_task_filtering=True)
 def crawl_detail_page(url, title, news_type):
     resp_text = requests.get(url).text
     sel = Selector(resp_text)

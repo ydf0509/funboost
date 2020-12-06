@@ -1127,13 +1127,13 @@ if __name__ == '__main__':
 ```
 
 ```python
-# 此段代码使用的是语言级Queue队列，不需要安装中间件，可以直接复制运行。
 
 from function_scheduling_distributed_framework import task_deco, BrokerEnum,ConcurrentModeEnum
 import asyncio
 
+# 此段代码使用的是语言级Queue队列，不需要安装中间件，可以直接复制运行。
 @task_deco('test_async_queue2', concurrent_mode=ConcurrentModeEnum.ASYNC, 
-            broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE, concurrent_num=500,)
+            broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE, concurrent_num=500,qps=20)
 async def async_f(x):
     # 测试异步阻塞并发， 此处不能写成time.sleep(1),否则无论设置多高的并发，1秒钟最多只能运行1次函数。
     # 同理asyncio 不能和 requests搭配，要和 aiohttp 搭配。

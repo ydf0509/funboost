@@ -1,9 +1,15 @@
+import os
 import asyncio
 import time
 from threading import Thread
 import nb_log
-import queue
 from function_scheduling_distributed_framework.utils.develop_log import develop_logger
+
+if os.name == 'posix':
+    import uvloop
+
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
 
 class AsyncPoolExecutor2:
     def __init__(self, size, loop=None):
@@ -79,7 +85,6 @@ class AsyncPoolExecutor(nb_log.LoggerMixin):
         while not self._can_be_closed_flag:
             time.sleep(0.1)
         self.loop.close()
-
 
 
 if __name__ == '__main__':

@@ -1131,7 +1131,7 @@ if __name__ == '__main__':
 from function_scheduling_distributed_framework import task_deco, BrokerEnum,ConcurrentModeEnum
 import asyncio
 
-# 此段代码使用的是语言级Queue队列，不需要安装中间件，可以直接复制运行。
+# 此段代码使用的是语言级Queue队列，不需要安装中间件，可以直接复制运行测试。
 @task_deco('test_async_queue2', concurrent_mode=ConcurrentModeEnum.ASYNC, 
             broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE, concurrent_num=500,qps=20)
 async def async_f(x):

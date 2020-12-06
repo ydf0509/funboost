@@ -1148,7 +1148,7 @@ if __name__ == '__main__':
 
 ```
  
- ### 6.13.2 gevent/eventlet 和 asyncio 区别
+ ### 6.13.2 gevent/eventlet 和 asyncio 用法区别感受
  ```
 比方说汽车的自动挡和手动挡，学了手动挡一定会开自动挡，只学自动挡很难开手动挡。
 asyncio方式的代码比正常普通同步思维的代码写法也要难得多了，能玩asyncio的人一定会用threading gevent，

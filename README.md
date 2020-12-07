@@ -1059,7 +1059,7 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 
 ```
 
-## 6.11 增加装饰器形式生成消费者。常规方式，装饰器方式区别是自动实例化和手动实例化。
+## 6.11 增加装饰器形式生成消费者。常规方式，装饰器方式区别是自动实例化和手动实例化。(2020-7)
 
 这次使用修改你的项目根目录下的自动生成的distributed_frame_config.py配置文件的方式来进行redis rabbitmq等的配置。
 
@@ -1098,7 +1098,7 @@ consumer.start_consuming_message()
 所以不需要传consuming_function参数。
 
 
-## 6.12 增加rocketmq支持。
+## 6.12 增加rocketmq支持。 (2020-7)
 ```python
 from function_scheduling_distributed_framework import task_deco, BrokerEnum
 
@@ -1115,7 +1115,7 @@ if __name__ == '__main__':
 
 ```
 
-## 6.13 新增 async 并发模式
+## 6.13 新增 async 并发模式 (2020-12)
 
 ```
 之前一直都没支持这种并发模式，异步代码不仅消费函数本身与同步代码很多不同，例如函数的定义和调用以及三方库，

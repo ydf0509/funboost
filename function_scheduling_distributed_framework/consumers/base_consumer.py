@@ -621,7 +621,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if self.__get_priority_conf(kw, 'do_task_filtering'):
                     self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
-                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。  {corotinue_obj}')
+                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。  {dir(corotinue_obj.cr_running)}')
             except Exception as e:
                 if isinstance(e, (PyMongoError,
                                   ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
@@ -871,3 +871,4 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
             return [idx.decode().split('&&')[0] for idx in self.redis_db_frame.smembers(self._redis_key_name)]
         else:
             return [idx.decode() for idx in self.redis_db_frame.smembers(self._redis_key_name)]
+

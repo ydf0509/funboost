@@ -117,7 +117,8 @@ class AsyncProducerConsumer:
     """
 
     """
-    按时间间隔慢慢添加任务，边生产边消费。此框架没用到这个类，这个要求生产和消费在同一个线程里面，不方便。
+    边生产边消费。此框架没用到这个类，这个要求生产和消费在同一个线程里面，对原有同步方式的框架代码改造不方便。
+    
     """
 
     def __init__(self, items, concurrent_num=200, consume_fun_specify=None):
@@ -209,13 +210,13 @@ if __name__ == '__main__':
 
     async def _my_fun(item):
         print('嘻嘻', item)
-        await asyncio.sleep(1)
+        # await asyncio.sleep(1)
 
 
     def test_async_producer_consumer():
-        AsyncProducerConsumer([i for i in range(1000)], concurrent_num=200, consume_fun_specify=_my_fun).start_run()
+        AsyncProducerConsumer([i for i in range(100000)], concurrent_num=200, consume_fun_specify=_my_fun).start_run()
         print('over')
 
 
-    test_async_pool_executor()
-    # test_async_producer_consumer()
+    # test_async_pool_executor()
+    test_async_producer_consumer()

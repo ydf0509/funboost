@@ -41,7 +41,7 @@ class AsyncPoolExecutor2:
 
 class AsyncPoolExecutor:
     """
-    使api和线程池一样，最好的性能做法是submit也弄成async def，生产和消费在同一个线程同一个loop一起运行，但会对调用链路的兼容性产生破坏，从而调用方式不兼容线程池。
+    使api和线程池一样，最好的性能做法是submit也弄成 async def，生产和消费在同一个线程同一个loop一起运行，但会对调用链路的兼容性产生破坏，从而调用方式不兼容线程池。
     """
 
     def __init__(self, size, loop=None):
@@ -67,7 +67,7 @@ class AsyncPoolExecutor:
         # asyncio.ensure_future(self._produce(func, *args, **kwargs),loop=self.loop) # 这样快，但不能阻塞导致快速放入。
         # 这个submit提交方法性能比submit2的 run_coroutine_threadsafe 性能好
         while self._queue.full():
-            time.sleep(0.00001)
+            time.sleep(0.0001)
         asyncio.ensure_future(self._produce(func, *args, **kwargs), loop=self.loop)
 
     def submit(self, func, *args, **kwargs):
@@ -215,5 +215,5 @@ if __name__ == '__main__':
         print('over')
 
 
-    # test_async_pool_executor()
-    test_async_producer_consumer()
+    test_async_pool_executor()
+    # test_async_producer_consumer()

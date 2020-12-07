@@ -1,13 +1,11 @@
 import atexit
 import os
 import asyncio
-import sys
 import time
 import traceback
 from threading import Thread
-import nb_log
-
-from function_scheduling_distributed_framework.utils.develop_log import develop_logger
+import nb_log  # noqa
+from function_scheduling_distributed_framework.utils.develop_log import develop_logger  # noqa
 
 if os.name == 'posix':
     import uvloop

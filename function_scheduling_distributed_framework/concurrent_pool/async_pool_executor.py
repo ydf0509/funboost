@@ -116,7 +116,6 @@ class AsyncProducerConsumer:
 
     """
     边生产边消费。此框架没用到这个类，这个要求生产和消费在同一个线程里面，对原有同步方式的框架代码改造不方便。
-    
     """
 
     def __init__(self, items, concurrent_num=200, consume_fun_specify=None):

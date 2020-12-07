@@ -154,89 +154,11 @@ def use_config_form_distributed_frame_config_module():
     current_script_path = sys.path[0].replace('\\', '/')
     project_root_path = sys.path[1].replace('\\', '/')
     inspect_msg = f"""
-    分布式函数调度框架，设置配置有两种方式。两种方式的目的相同，就是使用猴子补丁的方式修改此框架的frame_config模中块的变量。
-    
-    1)第一种方式，自动读取配置文件方式
-    分布式函数调度框架会尝试自动导入distributed_frame_config模块
-    请在你的python当前项目的根目录下 {project_root_path} 或 当前文件夹 {current_script_path} 文件夹下，创建一个名为 distributed_frame_config.py 的文件，并在文件中定义例子里面的python常量。
+    分布式函数调度框架会自动导入distributed_frame_config模块
+    当第一次运行脚本时候，函数调度框架会在你的python当前项目的根目录下 {project_root_path} 下，创建一个名为 distributed_frame_config.py 的文件。
     自动读取配置，会优先读取启动脚本的所在目录 {current_script_path} 的distributed_frame_config.py文件，
     如果没有 {current_script_path}/distributed_frame_config.py 文件，则读取项目根目录 {project_root_path} 下的distributed_frame_config.py做配置。
-    内容例子如下，distributed_frame_config模块需要按需必须包含以下变量，需要按需重新设置要使用到的中间件的键和值，例如没有使用rabbitmq而是使用redis做中间件，则不需要配置rabbitmq。
-    
-    
-    \033[0;97;40m
-    MONGO_CONNECT_URL = f'mongodb://yourname:yourpassword@127.0.01:27017/admin'
-    
-    RABBITMQ_USER = 'rabbitmq_user'
-    RABBITMQ_PASS = 'rabbitmq_pass'
-    RABBITMQ_HOST = '127.0.0.1'
-    RABBITMQ_PORT = 5672
-    RABBITMQ_VIRTUAL_HOST = 'rabbitmq_virtual_host'
-    
-    REDIS_HOST = '127.0.0.1'
-    REDIS_PASSWORD = 'redis_password' 
-    REDIS_PORT = 6379
-    REDIS_DB = 7
-    
-    NSQD_TCP_ADDRESSES = ['127.0.0.1:4150']
-    NSQD_HTTP_CLIENT_HOST = '127.0.0.1'
-    NSQD_HTTP_CLIENT_PORT = 4151
-    
-    KAFKA_BOOTSTRAP_SERVERS = ['127.0.0.1:9092']
-    
-    SQLACHEMY_ENGINE_URL ='sqlite:////sqlachemy_queues/queues.db'
-
-    ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
-    
-    # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
-    NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7  # 7是简短的不可跳转，5是可点击跳转的
-    FSDF_DEVELOP_LOG_LEVEL = 50   # 开发时候的日志，进攻自己用，所以日志级别跳到最高
-
-    TIMEZONE = 'Asia/Shanghai' 
-    
-    \033[0m
-    
-    \033[0;93;100m
-    2)第二种方式,手动调用猴子补丁函数的方式
-    如果你没有在python当前项目的根目录下 {project_root_path} 或 当前文件夹 {current_script_path} 文件夹下建立 distributed_frame_config.py 这个文件，
-    也可以使用第二种配置方式，调用 patch_frame_config 函数进行框架配置设置
-    \033[0m
-    
-    \033[0;97;40m
-    from function_scheduling_distributed_framework import patch_frame_config, show_frame_config
-    # 初次接触使用，可以不安装任何中间件，使用本地持久化队列。正式墙裂推荐安装rabbitmq。
-    # 使用打猴子补丁的方式修改框架配置。这里为了演示，列举了所有中间件的参数，
-    # 实际是只需要对使用到的中间件的配置进行赋值即可。
-
-    patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:27016/admin',
-    
-                       RABBITMQ_USER='silxxxx',
-                       RABBITMQ_PASS='Fr3Mxxxxx',
-                       RABBITMQ_HOST='1xx.90.89.xx',
-                       RABBITMQ_PORT=5672,
-                       RABBITMQ_VIRTUAL_HOST='test_host',
-    
-                       REDIS_HOST='1xx.90.89.xx',
-                       REDIS_PASSWORD='yxxxxxxR',
-                       REDIS_PORT=6543,
-                       REDIS_DB=7,
-    
-                       NSQD_TCP_ADDRESSES=['xx.112.34.56:4150'],
-                       NSQD_HTTP_CLIENT_HOST='12.34.56.78',
-                       NSQD_HTTP_CLIENT_PORT=4151,
-    
-                       KAFKA_BOOTSTRAP_SERVERS=['12.34.56.78:9092'],
-                       
-                       SQLACHEMY_ENGINE_URL = 'mysql+pymysql://root:123456@127.0.0.1:3306/sqlachemy_queues?charset=utf8',
-
-                       ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876',
-                       
-                       NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7  # 7是简短的不可跳转，5是可点击跳转的
-                       )
-
-    show_frame_config()
-    \033[0m
-    
+    在 "{project_root_path}/distributed_frame_config.py:1" 文件中，需要按需重新设置要使用到的中间件的键和值，例如没有使用rabbitmq而是使用redis做中间件，则不需要配置rabbitmq。
     """
     # sys.stdout.write(f'\033[0;33m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;30;43m{inspect_msg}\033[0m\n')
     # noinspection PyProtectedMember
@@ -254,10 +176,7 @@ def use_config_form_distributed_frame_config_module():
                 setattr(frame_config, var_namex, var_valuex)
     except ModuleNotFoundError:
         nb_print(
-            f'''分布式函数调度框架检测到 你的项目根目录 {project_root_path} 和当前文件夹 {current_script_path}  下没有 distributed_frame_config.py 文件，
-                 无法使用第一种方式做配置。
-                 请你务必使用第二种方式，调用 patch_frame_config 函数打猴子补丁进行框架的配置进行设置，
-                 patch_frame_config 函数要放在生成消费者 发布者之前运行\n\n''')
+            f'''分布式函数调度框架检测到 你的项目根目录 {project_root_path} 和当前文件夹 {current_script_path}  下没有 distributed_frame_config.py 文件，\n\n''')
         auto_creat_config_file_to_project_root_path()
         nb_print(f'在 {project_root_path} 目录下自动生成了一个文件， 请查看或修改 \n "{project_root_path}/distributed_frame_config.py:1" 文件')
 

@@ -1,8 +1,12 @@
+import atexit
 import os
 import asyncio
+import sys
 import time
+import traceback
 from threading import Thread
 import nb_log
+
 from function_scheduling_distributed_framework.utils.develop_log import develop_logger
 
 if os.name == 'posix':
@@ -40,18 +44,39 @@ class AsyncPoolExecutor2:
         self.loop.close()
 
 
-class AsyncPoolExecutor(nb_log.LoggerMixin):
+class AsyncPoolExecutor:
+    """
+    使api和线程池一样，最好的性能做法是submit也弄成async def，生产和消费在同一个线程同一个loop一起运行，但会对调用链路的兼容性产生破坏，从而调用方式不兼容线程池。
+    """
+
     def __init__(self, size, loop=None):
+        """
+
+        :param size: 同时并发运行的协程任务数量。
+        :param loop:
+        """
         self._size = size
         self.loop = loop or asyncio.new_event_loop()
         self._sem = asyncio.Semaphore(self._size, loop=self.loop)
-        # atexit.register(self.shutdown)
         self._queue = asyncio.Queue(maxsize=size, loop=self.loop)
-        Thread(target=self._start_loop_in_new_thread).start()
+        t = Thread(target=self._start_loop_in_new_thread)
+        t.setDaemon(True)  # 设置守护线程是为了有机会触发atexit，使程序自动结束，不用手动调用shutdown
+        t.start()
         self._can_be_closed_flag = False
+        atexit.register(self.shutdown)
+
+    def submit2(self, func, *args, **kwargs):
+        # future = asyncio.run_coroutine_threadsafe(self._produce(func, *args, **kwargs), self.loop) # 这个方法也有缺点，消耗的性能巨大。
+        # future.result()  # 阻止过快放入，放入超过队列大小后，使submit阻塞。
+
+        # asyncio.ensure_future(self._produce(func, *args, **kwargs),loop=self.loop) # 这样快，但不能阻塞导致快速放入。
+        # 这个submit提交方法性能比submit2的 run_coroutine_threadsafe 性能好
+        while self._queue.full():
+            time.sleep(0.00001)
+        asyncio.ensure_future(self._produce(func, *args, **kwargs), loop=self.loop)
 
     def submit(self, func, *args, **kwargs):
-        future = asyncio.run_coroutine_threadsafe(self._produce(func, *args, **kwargs), self.loop)
+        future = asyncio.run_coroutine_threadsafe(self._produce(func, *args, **kwargs), self.loop)  # 这个方法也有缺点，消耗的性能巨大。
         future.result()  # 阻止过快放入，放入超过队列大小后，使submit阻塞。
 
     async def _produce(self, func, *args, **kwargs):
@@ -65,7 +90,7 @@ class AsyncPoolExecutor(nb_log.LoggerMixin):
             try:
                 await func(*args, **kwargs)
             except Exception as e:
-                self.logger.exception(e)
+                traceback.print_exc()
 
     async def __run(self):
         for _ in range(self._size):
@@ -85,17 +110,23 @@ class AsyncPoolExecutor(nb_log.LoggerMixin):
         while not self._can_be_closed_flag:
             time.sleep(0.1)
         self.loop.close()
+        print('关闭循环')
 
 
 if __name__ == '__main__':
+    from function_scheduling_distributed_framework.concurrent_pool.bounded_threadpoolexcutor import ThreadPoolExecutor
+
+
     async def f(x):
-        await asyncio.sleep(1)
-        print(x)
+        # await asyncio.sleep(1)
+        # raise Exception('aaa')
+        print('打印', x)
 
 
     print(1111)
-    pool = AsyncPoolExecutor(5)
-    for i in range(1, 31):
+    pool = AsyncPoolExecutor(500)
+    # pool = ThreadPoolExecutor(500)  # 协程不能用线程池运行，否则压根不会执行print打印，对于一部函数 f(x)得到的是一个协程，必须进一步把协程编排成任务放在loop循环里面运行。
+    for i in range(1, 41001):
         print('放入', i)
         pool.submit(f, i)
     time.sleep(5)
@@ -103,4 +134,4 @@ if __name__ == '__main__':
     pool.submit(f, 'hi2')
     pool.submit(f, 'hi3')
     print(2222)
-    pool.shutdown()
+    # pool.shutdown()

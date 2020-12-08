@@ -871,4 +871,3 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
             return [idx.decode().split('&&')[0] for idx in self.redis_db_frame.smembers(self._redis_key_name)]
         else:
             return [idx.decode() for idx in self.redis_db_frame.smembers(self._redis_key_name)]
-

@@ -19,7 +19,7 @@ python通用分布式函数调度框架。适用场景范围广泛。
         支持数十种最负盛名的消息中间件.(除了常规mq，还包括用不同形式的如 数据库 磁盘文件 redis等来模拟消息队列)
 
      并发：
-        支持threading gevent eventlet三种并发模式 + 多进程
+        支持threading gevent eventlet asyncio 四种并发模式 + 多进程
      
      控频限流：
         例如十分精确的指定1秒钟运行30次函数（无论函数需要随机运行多久时间，都能精确控制到指定的消费频率；
@@ -160,38 +160,12 @@ pip install function_scheduling_distributed_framework --upgrade -i https://pypi.
 
 下面的2.2 是使用修改你项目根目录下文件distributed_frame_config.py的配置文件的方式，并且生成消费者使用装饰器方式。
  ```python
+"""
+运行后悔自动在你的当前项目根目录下生成一个 distributed_frame_config.py 的文件，在里面修改写配置就好了，框架会自动读取这个文件的配置。
+"""
 import time
 
 from function_scheduling_distributed_framework import patch_frame_config, show_frame_config,get_consumer
-
-
-# 初次接触使用，可以不安装任何中间件，使用本地持久化队列。正式墙裂推荐安装rabbitmq。
-# 使用打猴子补丁的方式修改框架配置。这里为了演示，列举了所有中间件的参数，
-# 实际是只需要对使用到的中间件的配置进行赋值即可。
-patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:27016/admin',
-
-                       RABBITMQ_USER='silxxxx',
-                       RABBITMQ_PASS='Fr3Mxxxxx',
-                       RABBITMQ_HOST='1xx.90.89.xx',
-                       RABBITMQ_PORT=5672,
-                       RABBITMQ_VIRTUAL_HOST='test_host',
-
-                       REDIS_HOST='1xx.90.89.xx',
-                       REDIS_PASSWORD='yxxxxxxR',
-                       REDIS_PORT=6543,
-                       REDIS_DB=7,
-
-                       NSQD_TCP_ADDRESSES=['xx.112.34.56:4150'],
-                       NSQD_HTTP_CLIENT_HOST='12.34.56.78',
-                       NSQD_HTTP_CLIENT_PORT=4151,
-
-                       KAFKA_BOOTSTRAP_SERVERS=['12.34.56.78:9092'],
-                       
-                       SQLACHEMY_ENGINE_URL = 'mysql+pymysql://root:123456@127.0.0.1:3306/sqlachemy_queues?charset=utf8',
-                       )
-
-show_frame_config()
-# 也可以按照6.8更新说明中的以py文件作为配置，不需要手动调用patch_frame_config这个函数。
 
 # 主要的消费函数，演示做加法，假设需要花10秒钟。
 # 为什么消费举例大多数是time.sleep(n秒钟)，主要是用框架用来验证并发和控频。

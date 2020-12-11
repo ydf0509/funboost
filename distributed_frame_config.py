@@ -69,7 +69,7 @@ REDIS_DB = 7
 # 
 # SQLACHEMY_ENGINE_URL ='sqlite:////sqlachemy_queues/queues.db'
 
-# nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
+# nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。第5个模板可以点击跳转到框架内部，但有点占控制台面积，第7个模板简单不可点击跳转到框架内部。
 NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7
 FSDF_DEVELOP_LOG_LEVEL = 10
 

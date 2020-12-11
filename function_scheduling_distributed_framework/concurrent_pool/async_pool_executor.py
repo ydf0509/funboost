@@ -3,7 +3,7 @@ import os
 import asyncio
 import time
 import traceback
-from threading import Thread
+from threading import Thread,Event
 import nb_log  # noqa
 from function_scheduling_distributed_framework.utils.develop_log import develop_logger  # noqa
 
@@ -187,14 +187,15 @@ if __name__ == '__main__':
         from function_scheduling_distributed_framework.concurrent_pool.bounded_threadpoolexcutor import ThreadPoolExecutor
 
         async def f(x):
-            # await asyncio.sleep(1)
-            # raise Exception('aaa')
             print('打印', x)
+            await asyncio.sleep(1)
+            # raise Exception('aaa')
+
 
         print(1111)
-        pool = AsyncPoolExecutor(500)
+        pool = AsyncPoolExecutor(2)
         # pool = ThreadPoolExecutor(500)  # 协程不能用线程池运行，否则压根不会执行print打印，对于一部函数 f(x)得到的是一个协程，必须进一步把协程编排成任务放在loop循环里面运行。
-        for i in range(1, 41001):
+        for i in range(1, 201):
             print('放入', i)
             pool.submit(f, i)
         time.sleep(5)

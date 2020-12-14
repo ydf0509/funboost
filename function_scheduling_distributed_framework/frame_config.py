@@ -27,6 +27,8 @@ KAFKA_BOOTSTRAP_SERVERS = ['127.0.0.1:9092']
 
 SQLACHEMY_ENGINE_URL = 'sqlite:////sqlachemy_queues/queues.db'
 
+SQLLITE_QUEUES_PATH = '/sqllite_queues'
+
 ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
 
 # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。

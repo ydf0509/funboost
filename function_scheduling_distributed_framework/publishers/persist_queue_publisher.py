@@ -5,7 +5,7 @@ import json
 import sqlite3
 
 import persistqueue
-
+from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
 from function_scheduling_distributed_framework.utils import LogManager
 
@@ -37,7 +37,7 @@ class PersistQueuePublisher(AbstractPublisher):
         persistqueue.SQLiteAckQueue._new_db_connection = _my_new_db_connection  # 打猴子补丁。
         # REMIND 官方测试基于sqlite的本地持久化，比基于纯文件的持久化，使用相同固态硬盘和操作系统情况下，速度快3倍以上，所以这里选用sqlite方式。
 
-        self.queue = persistqueue.SQLiteAckQueue(path='/sqllite_queues', name=self._queue_name, auto_commit=True, serializer=json, multithreading=True)
+        self.queue = persistqueue.SQLiteAckQueue(path=frame_config.SQLLITE_QUEUES_PATH, name=self._queue_name, auto_commit=True, serializer=json, multithreading=True)
 
     def concrete_realization_of_publish(self, msg):
         # noinspection PyTypeChecker

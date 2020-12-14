@@ -18,6 +18,7 @@ from function_scheduling_distributed_framework import frame_config
 
 
 # noinspection PyPep8Naming
+# 这是手动调用函数设置配置，框架会自动调用use_config_form_distributed_frame_config_module读当前取项目根目录下的distributed_frame_config.py，不需要嗲用这里
 def patch_frame_config(MONGO_CONNECT_URL: str = None,
 
                        RABBITMQ_USER: str = None,
@@ -78,42 +79,11 @@ config_file_content = '''# -*- coding: utf-8 -*-
 
 1.2）如果你的py启动脚本是项目的深层目录下，你也可以在那个启动目录下，放入这个文件，
 框架会优先读取启动脚本所在目录的distributed_frame_config.py作为配置，
-如果启动脚本所在目录下无distributed_frame_config.py文件，则会使用项目根目录下的distributed_frame_config.py做配置。
-
-2）也可以使用 patch_frame_config函数进行配置的覆盖和指定。
-用法为：
-
-from function_scheduling_distributed_framework import patch_frame_config, show_frame_config
-# 初次接触使用，可以不安装任何中间件，使用本地持久化队列。正式墙裂推荐安装rabbitmq。
-# 使用打猴子补丁的方式修改框架配置。这里为了演示，列举了所有中间件的参数，
-# 实际是只需要对使用到的中间件的配置进行赋值即可。
-patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:27016/admin',
-
-                   RABBITMQ_USER='silxxxx',
-                   RABBITMQ_PASS='Fr3Mxxxxx',
-                   RABBITMQ_HOST='1xx.90.89.xx',
-                   RABBITMQ_PORT=5672,
-                   RABBITMQ_VIRTUAL_HOST='test_host',
-
-                   REDIS_HOST='1xx.90.89.xx',
-                   REDIS_PASSWORD='yxxxxxxR',
-                   REDIS_PORT=6543,
-                   REDIS_DB=7,
-
-                   NSQD_TCP_ADDRESSES=['xx.112.34.56:4150'],
-                   NSQD_HTTP_CLIENT_HOST='12.34.56.78',
-                   NSQD_HTTP_CLIENT_PORT=4151,
-
-                   KAFKA_BOOTSTRAP_SERVERS=['12.34.56.78:9092'],
-                   
-                   SQLACHEMY_ENGINE_URL = 'mysql+pymysql://root:123456@127.0.0.1:3306/sqlachemy_queues?charset=utf8',
-                   )
+如果启动脚本所在目录下无 distributed_frame_config.py 文件，则会使用项目根目录下的distributed_frame_config.py做配置。
 
 """
 
-
-
-# 以下为配置，请您按需修改。
+# 以下为配置，请按需修改。
 
 # MONGO_CONNECT_URL = f'mongodb://yourname:yourpassword@127.0.01:27017/admin'
 # 
@@ -135,6 +105,8 @@ patch_frame_config(MONGO_CONNECT_URL='mongodb://myUserAdminxx:xxxx@xx.90.89.xx:2
 # KAFKA_BOOTSTRAP_SERVERS = ['127.0.0.1:9092']
 # 
 # SQLACHEMY_ENGINE_URL ='sqlite:////sqlachemy_queues/queues.db'
+
+# SQLLITE_QUEUES_PATH = '/sqllite_queues'
 
 # ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
 

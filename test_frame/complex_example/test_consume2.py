@@ -7,12 +7,7 @@ from function_scheduling_distributed_framework import get_consumer, get_publishe
 from function_scheduling_distributed_framework.consumers.redis_consumer import RedisConsumer
 from function_scheduling_distributed_framework.utils import LogManager
 
-from test_frame.my_patch_frame_config import do_patch_frame_config
-
-do_patch_frame_config()
-
 logger = LogManager('complex_example').get_logger_and_add_handlers()
-
 pb2 = get_publisher('task2_queue', broker_kind=2)
 
 

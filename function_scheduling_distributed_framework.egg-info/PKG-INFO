@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: function-scheduling-distributed-framework
-Version: 8.3
+Version: 8.5
 Summary: function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way
 Home-page: https://github.com/ydf0509/distributed_framework
 Author: bfzs
@@ -1144,7 +1144,7 @@ Description: # 1.distributed_framework
          ,写法很麻烦很难。异步多了一个loop就像手动挡汽车多了一个离合器一样，十分之难懂。
         
         手动挡玩的溜性能比自动挡高也更省油。asyncio玩的溜那么他的io并发执行速度和效率也会更好，cpu消耗更少。
-        如果你写一般的代码，那就用同步方式吧，让分布式函数调度框架来替你自动并发就好了。
+        如果你写一般的代码，那就用同步方式思维来写吧，让分布式函数调度框架来替你自动并发就可以啦。
         如果追求更好的控制和性能，不在乎代码写法上的麻烦，并且asyncio技术掌握的很溜，那就用asyncio的方式吧。 
         ```
 Keywords: distributed-framework,function-scheduling,rabbitmq,rocketmq,kafka,nsq,redis,disk,sqlachemy,consume-confirm,timing,task-scheduling,apscheduler

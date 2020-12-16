@@ -282,7 +282,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param concurrent_num:并发数量，这个覆盖threads_num。以后会废弃threads_num参数，因为表达的意思不太准确，不一定是线程模式并发。
         :param specify_concurrent_pool:使用指定的线程池/携程池，可以多个消费者共使用一个线程池，不为None时候。threads_num失效
         :param specify_async_loop:指定的async的loop循环，设置并发模式为async才能起作用。
-        :param concurrent_mode:并发模式，暂时支持 线程 、gevent、eventlet三种模式。  1线程  2 gevent 3 evenlet
+        :param concurrent_mode:并发模式，1线程 2gevent 3eventlet 4 asyncio
         :param max_retry_times:
         :param log_level:
         :param is_print_detail_exception:

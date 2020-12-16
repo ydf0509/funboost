@@ -46,5 +46,6 @@ if __name__ == '__main__':
     def fun():
         print(1 / 0)
 
+
     pool = BoundedThreadPoolExecutor(10)
     pool.submit(fun)

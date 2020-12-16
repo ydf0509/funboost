@@ -3,7 +3,7 @@ import os
 import asyncio
 import time
 import traceback
-from threading import Thread,Event
+from threading import Thread, Event
 import nb_log  # noqa
 from function_scheduling_distributed_framework.utils.develop_log import develop_logger  # noqa
 
@@ -191,7 +191,6 @@ if __name__ == '__main__':
             await asyncio.sleep(1)
             # raise Exception('aaa')
 
-
         print(1111)
         pool = AsyncPoolExecutor(2)
         # pool = ThreadPoolExecutor(500)  # 协程不能用线程池运行，否则压根不会执行print打印，对于一部函数 f(x)得到的是一个协程，必须进一步把协程编排成任务放在loop循环里面运行。
@@ -203,7 +202,7 @@ if __name__ == '__main__':
         pool.submit(f, 'hi2')
         pool.submit(f, 'hi3')
         print(2222)
-        # pool.shutdown()
+        pool.shutdown()
 
 
     async def _my_fun(item):

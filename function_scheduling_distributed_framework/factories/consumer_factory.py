@@ -41,7 +41,7 @@ def get_consumer(queue_name, *, consuming_function: Callable = None, function_ti
     :param concurrent_num:并发数量，这个覆盖threads_num。以后会废弃threads_num参数，因为表达的意思不太准确，不一定是线程模式并发。
     :param specify_concurrent_pool:使用指定的线程池（协程池），可以多个消费者共使用一个线程池，不为None时候。threads_num失效
     :param specify_async_loop:指定的async的loop循环，设置并发模式为async才能起作用。
-    :param concurrent_mode:并发模式，1线程 2gevent 3eventlet
+    :param concurrent_mode:并发模式，1线程 2gevent 3eventlet 4 asyncio
     :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
            可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。
            主动抛出ExceptionForRequeue异常，则当前消息会重返中间件。

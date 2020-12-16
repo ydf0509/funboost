@@ -4,15 +4,16 @@ from parsel import Selector
 
 
 @task_deco('car_home_list', broker_kind=BrokerEnum.REDIS_ACK_ABLE, max_retry_times=5, qps=3)
-def crawl_list_page(news_type, page):
+def crawl_list_page(news_type, page, do_page_turning=False):
     url = f'https://www.autohome.com.cn/{news_type}/{page}/#liststart'
     resp_text = requests.get(url).text
     sel = Selector(resp_text)
-    for li in sel.css('#Ul1 > li'):
-        url_detail = 'https:' + li.xpath('./a/@href').extract_first()
-        title = li.xpath('./a/h3/text()').extract_first()
-        crawl_detail_page.push(url_detail, title=title, news_type=news_type) # 发布详情页任务
-    if page == 1:
+    for li in sel.css('ul.article > li'):
+        if len(li.extract()) > 100:  # 有的是这样的去掉。 <li id="ad_tw_04" style="display: none;">
+            url_detail = 'https:' + li.xpath('./a/@href').extract_first()
+            title = li.xpath('./a/h3/text()').extract_first()
+            crawl_detail_page.push(url_detail, title=title, news_type=news_type)  # 发布详情页任务
+    if do_page_turning:
         last_page = int(sel.css('#channelPage > a:nth-child(12)::text').extract_first())
         for p in range(2, last_page + 1):
             crawl_list_page.push(news_type, p)  # 列表页翻页。
@@ -29,5 +30,6 @@ def crawl_detail_page(url, title, news_type):
 
 
 if __name__ == '__main__':
-    crawl_list_page.consume()
-    crawl_detail_page.consume()
+    # crawl_list_page('news',1)
+    crawl_list_page.consume()  # 启动列表页消费
+    crawl_detail_page.consume()  # 启动详情页消费

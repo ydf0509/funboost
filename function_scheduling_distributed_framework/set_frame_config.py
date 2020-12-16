@@ -153,7 +153,7 @@ def use_config_form_distributed_frame_config_module():
         nb_print(
             f'''分布式函数调度框架检测到 你的项目根目录 {project_root_path} 和当前文件夹 {current_script_path}  下没有 distributed_frame_config.py 文件，\n\n''')
         auto_creat_config_file_to_project_root_path()
-        nb_print(f'在 {project_root_path} 目录下自动生成了一个文件， 请查看或修改 \n "{project_root_path}/distributed_frame_config.py:1" 文件')
+
 
     show_frame_config()
 
@@ -161,12 +161,15 @@ def use_config_form_distributed_frame_config_module():
 def auto_creat_config_file_to_project_root_path():
     # print(Path(sys.path[1]).as_posix())
     # print((Path(__file__).parent.parent).absolute().as_posix())
-    if Path(sys.path[1]).as_posix() in Path(__file__).parent.parent.absolute().as_posix():
-        nb_print('不希望在本项目里面创建')
-        return
+    # if Path(sys.path[1]).as_posix() in Path(__file__).parent.parent.absolute().as_posix():
+    #     nb_print('不希望在本项目里面创建')
+    #     return
     if '/lib/python' in sys.path[1] or r'\lib\python' in sys.path[1] or '.zip' in sys.path[1]:
         return  # 当没设置pythonpath时候，也不要在 /lib/python36.zip这样的地方创建配置文件。
-    with (Path(sys.path[1]) / Path('distributed_frame_config.py')).open(mode='w', encoding='utf8') as f:
+
+    file_name = Path(sys.path[1]) / Path('distributed_frame_config.py')
+    with (file_name).open(mode='w', encoding='utf8') as f:
+        nb_print(f'在 {file_name} 目录下自动生成了一个文件， 请查看或修改 \n "{file_name}:1" 文件')
         f.write(config_file_content)
 
 

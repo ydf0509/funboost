@@ -5,9 +5,7 @@ import time
 
 from function_scheduling_distributed_framework import nb_print
 from function_scheduling_distributed_framework.utils.resource_monitoring import ResourceMonitor
-from test_frame.my_patch_frame_config import do_patch_frame_config
 
-do_patch_frame_config()
 
 
 def test_monitor():

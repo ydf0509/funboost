@@ -8,9 +8,7 @@
 import requests
 from function_scheduling_distributed_framework.utils import RedisMixin, pysnooper_ydf, LogManager
 
-from test_frame.my_patch_frame_config import do_patch_frame_config
 
-do_patch_frame_config()
 
 
 def foo():

@@ -7,9 +7,7 @@ import time
 from function_scheduling_distributed_framework import get_consumer
 from function_scheduling_distributed_framework.utils import LogManager
 
-from test_frame.my_patch_frame_config import do_patch_frame_config
 
-do_patch_frame_config()
 
 logger = LogManager('f2').get_logger_and_add_handlers()
 

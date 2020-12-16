@@ -9,9 +9,7 @@ from function_scheduling_distributed_framework import get_consumer, AbstractCons
 from function_scheduling_distributed_framework.consumers.base_consumer import ConsumersManager, FunctionResultStatusPersistanceConfig
 from function_scheduling_distributed_framework.utils import LogManager
 
-from test_frame.my_patch_frame_config import do_patch_frame_config
 
-do_patch_frame_config()
 
 logger = LogManager('test_consume').get_logger_and_add_handlers()
 

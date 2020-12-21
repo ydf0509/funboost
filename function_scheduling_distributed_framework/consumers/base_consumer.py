@@ -572,6 +572,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
 
     async def _async_run(self, kw: dict, ):
+        """这个是为了asyncio模式的"""
         function_only_params = _delete_keys_and_return_new_dict(kw['body'], )
         if self.__get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
                 function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
@@ -621,7 +622,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if self.__get_priority_conf(kw, 'do_task_filtering'):
                     self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
-                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。  {dir(corotinue_obj.cr_running)}')
+                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。  {corotinue_obj}')
             except Exception as e:
                 if isinstance(e, (PyMongoError,
                                   ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。

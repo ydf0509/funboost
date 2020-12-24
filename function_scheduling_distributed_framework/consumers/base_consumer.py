@@ -4,14 +4,12 @@
 """
 所有中间件类型消费者的抽象基类。使实现不同中间件的消费者尽可能代码少。
 """
-from typing import List
 
 import abc
 import copy
 # from multiprocessing import Process
 import datetime
 import json
-import pymongo
 import sys
 import socket
 import os
@@ -25,6 +23,7 @@ from threading import Lock, Thread
 import eventlet
 import gevent
 import asyncio
+import pymongo
 from pymongo import IndexModel
 from pymongo.errors import PyMongoError
 
@@ -32,6 +31,7 @@ from pymongo.errors import PyMongoError
 from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, LoggerMixinDefaultWithFileHandler
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.concurrent_pool.async_pool_executor import AsyncPoolExecutor
+# noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.concurrent_pool.bounded_threadpoolexcutor import \
     BoundedThreadPoolExecutor
 from function_scheduling_distributed_framework.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco, \
@@ -259,7 +259,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         ConsumersManager.join_all_consumer_shedual_task_thread()
 
-    # noinspection PyProtectedMember
+    # noinspection PyProtectedMember,PyUnresolvedReferences
     def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0,
                  threads_num=50, concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True,
@@ -320,13 +320,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         # 方便点击跳转定位到当前解释器下所有实例化消费者的文件行，点击可跳转到该处。
         # 获取被调用函数在被调用时所处代码行数
-        # 直接实例化相应的类和使用工厂模式来实例化相应的类，得到的消费者实际实例化的行是不一样的，希望定位到用户的代码处，而不是定位到工厂模式处。
+        # 直接实例化相应的类和使用工厂模式来实例化相应的类，得到的消费者实际实例化的行是不一样的，希望定位到用户的代码处，而不是定位到工厂模式处。也不要是task_deco装饰器本身处。
         line = sys._getframe(0).f_back.f_lineno
         # 获取被调用函数所在模块文件名
         file_name = sys._getframe(1).f_code.co_filename
         if 'consumer_factory.py' in file_name:
             line = sys._getframe(1).f_back.f_lineno
             file_name = sys._getframe(2).f_code.co_filename
+        if r'function_scheduling_distributed_framework\__init__.py' in file_name or 'function_scheduling_distributed_framework/__init__.py' in file_name:
+            line = sys._getframe(2).f_back.f_lineno
+            file_name = sys._getframe(3).f_code.co_filename
         current_queue__info_dict['where_to_instantiate'] = f'{file_name}:{line}'
 
         self._queue_name = queue_name
@@ -537,7 +540,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if asyncio.iscoroutine(function_result_status.result):
                     self.logger.critical(f'异步的协程消费函数必须使用 async 并发模式并发,请设置 '
                                          f'消费函数 {self.consuming_function.__name__} 的concurrent_mode 为4')
-                    # noinspection PyProtectedMember
+                    # noinspection PyProtectedMember,PyUnresolvedReferences
                     os._exit(4)
                 function_result_status.success = True
                 self._confirm_consume(kw)
@@ -609,7 +612,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if not asyncio.iscoroutine(corotinue_obj):
                     self.logger.critical(f'当前设置的并发模式为 async 并发模式，但消费函数不是异步协程函数，'
                                          f'请不要把消费函数 {self.consuming_function.__name__} 的 concurrent_mode 设置为 4')
-                    # noinspection PyProtectedMember
+                    # noinspection PyProtectedMember,PyUnresolvedReferences
                     os._exit(444)
                 if self._function_timeout == 0:
                     rs = await corotinue_obj
@@ -797,6 +800,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
                 t.start()
 
 
+# noinspection DuplicatedCode
 def wait_for_possible_has_finish_all_tasks(queue_name: str, minutes: int, send_stop_to_broker=0,
                                            broker_kind: int = 0, ):
     """

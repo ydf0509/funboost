@@ -71,7 +71,7 @@ class AsyncPoolExecutor:
         asyncio.ensure_future(self._produce(func, *args, **kwargs), loop=self.loop)
 
     def submit(self, func, *args, **kwargs):
-        future = asyncio.run_coroutine_threadsafe(self._produce(func, *args, **kwargs), self.loop)  # 这个方法也有缺点，消耗的性能巨大。
+        future = asyncio.run_coroutine_threadsafe(self._produce(func, *args, **kwargs), self.loop)  # 这个 run_coroutine_threadsafe 方法也有缺点，消耗的性能巨大。
         future.result()  # 阻止过快放入，放入超过队列大小后，使submit阻塞。
 
     async def _produce(self, func, *args, **kwargs):
@@ -184,25 +184,28 @@ class AsyncProducerConsumer:
 
 if __name__ == '__main__':
     def test_async_pool_executor():
-        from function_scheduling_distributed_framework.concurrent_pool.bounded_threadpoolexcutor import ThreadPoolExecutor
+        from function_scheduling_distributed_framework.concurrent_pool import CustomThreadPoolExecutor as ThreadPoolExecutor
 
         async def f(x):
             print('打印', x)
-            await asyncio.sleep(1)
+            # await asyncio.sleep(1)
             # raise Exception('aaa')
 
+        def f2(x):
+            print('打印', x)
+
         print(1111)
-        pool = AsyncPoolExecutor(2)
-        # pool = ThreadPoolExecutor(500)  # 协程不能用线程池运行，否则压根不会执行print打印，对于一部函数 f(x)得到的是一个协程，必须进一步把协程编排成任务放在loop循环里面运行。
-        for i in range(1, 201):
+        pool = AsyncPoolExecutor(200)
+        # pool = ThreadPoolExecutor(200)  # 协程不能用线程池运行，否则压根不会执行print打印，对于一部函数 f(x)得到的是一个协程，必须进一步把协程编排成任务放在loop循环里面运行。
+        for i in range(1, 50001):
             print('放入', i)
             pool.submit(f, i)
-        time.sleep(5)
+        # time.sleep(5)
         pool.submit(f, 'hi')
         pool.submit(f, 'hi2')
         pool.submit(f, 'hi3')
         print(2222)
-        pool.shutdown()
+        # pool.shutdown()
 
 
     async def _my_fun(item):
@@ -217,3 +220,4 @@ if __name__ == '__main__':
 
     test_async_pool_executor()
     # test_async_producer_consumer()
+

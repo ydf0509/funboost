@@ -27,3 +27,4 @@ class SqlachemyConsumer(AbstractConsumer):
 
     def _requeue(self, kw):
         self.queue.set_task_status(kw['sqla_task_dict'], sqla_queue.TaskStatus.REQUEUE)
+

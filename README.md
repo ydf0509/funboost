@@ -116,7 +116,79 @@ windows和linux行为100%一致，不会像celery一样，相同代码前提下�
 总体来说首选rabbitmq，这也是不指定broker_kind参数时候的默认的方式。
 ```
 
-### 1.0.3  设计规范原则
+### 1.0.3 框架支持的函数调度并发模式种类
+```
+1、threading 多线程，使用自定义的可缩小、节制开启新线程的自定义线程池，非直接用官方内置concurrent.futures.ThreadpoolExecutor
+2、gevent    需要在运行起点的脚本首行打 gevent 猴子补丁。
+3、eventlet  需要在运行起点的脚本首行打 eventlet 猴子补丁。
+4、asyncio  async异步，主要是针对消费函数已经定义成了   async def fun(x)  这种情况，这种情况不能直接使用多线程，
+   因为执行  fun(1)  后得到的并不是所想象的函数最终结果，而是得到的一个协程对象，所以针对已经定义成异步函数了的，需要使用此种并发模式。
+   框架不鼓励用户定义异步函数，你就用同步的直观方式思维定义函数就行了，其余的并发调度交给框架就行了。
+5、多进程，这个有用户在if  name 等于 main 里面 自己来开启 mulitiprocessing，因为直接集成到框架里面不行，有很多属性不支持 picke序列化，
+   windwos没有 linux的fork，框架只能支持到linux fork多进程，与其这样，还不如用户自己开多进程 + 上面的 4种并发，
+   这样可以使同样的代码在 linux 和 win 表现一致。例如 有名的celery框架，默认是多进程并发，所以默认无法在win运行， 
+   其实celery 4是可以在win运行 的，只不过你不能设置成默认的 多进程模式，如果设置成 gevent 并发 还是可以在win环境玩celery的，
+    主要是win 不能 fork，只能 spwan，多进程需要picke序列化，consumer对象很多属性不能 picke 序列化，这是个什么意思呢，
+   例如lock对象 redis对象都不能被picke序列化反序列化。
+   
+```
+#### 多进程在win和linux的不同区别举个例子
+```
+python虽然通常来说是跨平台的， 在linux和win的可移植性不是100%的，
+用脑袋想都知道，如果win和linux的移植性是100%的，为什么部分pip包只支持linux不支持win呢
+例如 uwsgi  gunicorn  celery  uvloop 一大批包都不支持win，特别是越低层的包对win支持越困难，
+平常写高层次的代码是不会出现win linux不兼容的，基本不需要考虑win linux，但写了多进程后，一定要格外小心，linux和win的多进程不同之处非常多。
+
+下面举个非常简单的例子，测试win下面跑不通，而linux可以跑的例子吧。分四种情况
+1、当Process(target=f, args=(x,)).start() 写在 if __name__ == '__main__'里面,
+   x = 2 时候，Process(target=f, args=(x,)).start() 在 win 和 linux都可以运行成功。
+2、当Process(target=f, args=(x,)).start() 写在 if __name__ == '__main__'里面 ,
+  x = threading.Lock() 时候，Process(target=f, args=(x,)).start() 在win下100%报错，linux则能够成功。
+
+3、当Process(target=f, args=(x,)).start() 没有写在 if __name__ == '__main__'，直接写在外面没有缩进, 
+   即使 x = 2 时候，Process(target=f, args=(x,)).start() 在 win 也运行报错。
+4、当Process(target=f, args=(x,)).start() 没有写在 if __name__ == '__main__'，直接写在外面没有缩进, 
+   无论 x = 2 还是 threading.Lock() 时候，Process(target=f, args=(x,)).start() 在linux都运行正常。
+
+所以天天背诵一段 进程 和线程的区别的文字概念，没有个卵用，不多实践对比，只会死记硬背概念会走火入魔并没卵用，也还要多实践测试，
+如果linux和win的多进程代码表现可移植性是100%，那celery团队就不会头疼celery对win的支持问题的了。
+
+说这么多就是说为什么，框架的broker_kind是不能直接支持指定多进程并发，因为这样做，我只能保证相同代码在linux上运行的很好，在win上却肯定出错。
+如果你要开多进程消费也很简单，自己定义一个函数然后开启多进程就可以啦，下面的代码兼容linnux和win，跨平台兼容性高才算好代码。
+
+def fun():
+    consume_fun1.consume()
+    consume_fun2.consume()
+
+if __name__ == '__main__':
+    Process(target=fun).start()
+
+```
+
+#### python多进程代码在 linux 和 win 巨大区别之举例代码。
+```python
+## 这段代码分别让 x 等于不同的值和 Process(target=f, args=(x,)).start() 在 if main里面和外面，使用win和linux平台分别测试，就能感受到多进程在linux和win的巨大区别。
+## 代码只是举个例子，并不是入参只有是 threding.Lock()才在win下行不通，任意自定义对象包含了threding.Lock属性，如果作为target的args入参都会报错。例如x = Redis()，args为Redis()连接对象也行不通，
+##  win下不能运行的入参种类太多了，只有简单的包括简单数字 字符串 数组 字典啥的非常简单的变量才可以作为args的入参，任何复杂的对象肯定包含了了很多属性，经常在win下报错。
+from multiprocessing import Process
+import threading
+
+
+def f(xx):
+    print(xx)
+
+
+x = threading.Lock()  # 这两行x值的不同是测试的重点之一，threading.Lock 不可picke序列化导致win下100%失败。
+# x = 2
+
+
+if __name__ == '__main__':
+    Process(target=f, args=(x,)).start()
+
+# Process(target=f, args=(x,)).start()  # 此行放不放在 if __name__ == '__main__': 是测试的重点之二。
+```
+
+### 1.0.4  设计规范原则
 ```
 源码实现思路基本90%遵守了oop的6个设计原则，很容易扩展中间件。
 1、单一职责原则——SRP
@@ -130,7 +202,7 @@ windows和linux行为100%一致，不会像celery一样，相同代码前提下�
 可以仿照源码中实现中间件的例子，只需要继承发布者、消费者基类后实现几个抽象方法即可添加新的中间件。
 ```
 
-### 1.0.4 运行方式
+### 1.0.5 运行方式
 ```
 
 将函数名和队列名绑定，即可开启自动消费。

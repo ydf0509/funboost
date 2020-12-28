@@ -180,7 +180,7 @@ def f(xx):
 
 x = threading.Lock()   # 这两行x值的不同是测试的重点之一，threading.Lock 不可picke序列化导致win下100%失败。
 ## 或者 x = (i for i in range(5)) 在win下也会100%报错
-# x = 2
+# x = 2  # x=2可以在win运行
 
 
 if __name__ == '__main__':

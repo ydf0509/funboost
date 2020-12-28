@@ -154,7 +154,7 @@ python虽然通常来说是跨平台的， 在linux和win的可移植性不是10
 如果linux和win的多进程代码表现可移植性是100%，那celery团队就不会头疼celery对win的支持问题的了。
 
 说这么多就是说为什么，框架的broker_kind是不能直接支持指定多进程并发，因为这样做，我只能保证相同代码在linux上运行的很好，在win上却肯定出错。
-如果你要开多进程消费也很简单，自己定义一个函数然后开启多进程就可以啦，下面的代码兼容linnux和win，跨平台兼容性高才算好代码。
+如果你要开多进程消费也很简单，自己定义一个函数然后开启多进程就可以啦，下面的代码兼容linux和win，跨平台兼容性高才算好代码。
 
 def fun():
     consume_fun1.consume()
@@ -169,7 +169,7 @@ if __name__ == '__main__':
 ```python
 ## 这段代码分别让 x 等于不同的值和 Process(target=f, args=(x,)).start() 在 if main里面和外面，使用win和linux平台分别测试，就能感受到多进程在linux和win的巨大区别。
 ## 代码只是举个例子，并不是入参只有是 threding.Lock()才在win下行不通，任意自定义对象包含了threding.Lock属性，如果作为target的args入参都会报错。例如x = Redis()，args为Redis()连接对象也行不通，
-##  win下不能运行的入参种类太多了，只有简单的包括简单数字 字符串 数组 字典啥的非常简单的变量才可以作为args的入参，任何复杂的对象肯定包含了了很多属性，经常在win下报错。
+##  win下不能运行的入参种类太多了例如生成器对象也不行，只有简单的包括简单数字 字符串 数组 字典啥的非常简单的变量才可以作为args的入参，任何复杂的对象肯定包含了了很多属性，经常在win下报错。
 from multiprocessing import Process
 import threading
 
@@ -178,7 +178,8 @@ def f(xx):
     print(xx)
 
 
-x = threading.Lock()  # 这两行x值的不同是测试的重点之一，threading.Lock 不可picke序列化导致win下100%失败。
+x = threading.Lock()   # 这两行x值的不同是测试的重点之一，threading.Lock 不可picke序列化导致win下100%失败。
+## 或者 x = (i for i in range(5)) 在win下也会100%报错
 # x = 2
 
 

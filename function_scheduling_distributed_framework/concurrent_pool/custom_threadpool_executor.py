@@ -69,7 +69,7 @@ class CustomThreadPoolExecutor(LoggerMixin, LoggerLevelSetterMixin):
         :param thread_name_prefix:
         """
         self._max_workers = max_workers or 4
-        self._min_workers = 5 # 这是对应的 java Threadpoolexecutor的corePoolSize，为了保持线程池公有方法和与py官方内置的concurren.futures.ThreadPoolExecutor一致，不增加更多的实例化时候入参，这里写死为5.
+        self._min_workers = 5  # 这是对应的 java Threadpoolexecutor的corePoolSize，为了保持线程池公有方法和与py官方内置的concurren.futures.ThreadPoolExecutor一致，不增加更多的实例化时候入参，这里写死为5.
         self._thread_name_prefix = thread_name_prefix
         self.work_queue = queue.Queue(max_workers)
         # self._threads = set()
@@ -148,13 +148,10 @@ class _CustomThread(threading.Thread, LoggerMixin, LoggerLevelSetterMixin):
             try:
                 work_item = self._executorx.work_queue.get(block=True, timeout=60)
             except queue.Empty:
-                # continue
-                # self._remove_thread()
-                # break
                 with self._lock_for_judge_threads_free_count:
                     if self._executorx.threads_free_count > self._executorx._min_workers:
                         self._remove_thread(f'当前线程超过60秒没有任务，线程池中不在工作状态中的线程数量是 {self._executorx.threads_free_count}，超过了指定的数量 {self._executorx._min_workers}')
-                        break   # 退出while 1，即是结束。这里才是决定线程结束销毁，_remove_thread只是个名字而已，不是由那个来销毁线程。
+                        break  # 退出while 1，即是结束。这里才是决定线程结束销毁，_remove_thread只是个名字而已，不是由那个来销毁线程。
                     else:
                         continue
 
@@ -171,7 +168,8 @@ class _CustomThread(threading.Thread, LoggerMixin, LoggerLevelSetterMixin):
 
 
 process_name_set = set()
-logger_show_current_threads_num = LogManager('show_current_threads_num').get_logger_and_add_handlers(formatter_template=5, log_filename='show_current_threads_num.log', do_not_use_color_handler=True)
+logger_show_current_threads_num = LogManager('show_current_threads_num').get_logger_and_add_handlers(
+    formatter_template=5, log_filename='show_current_threads_num.log', do_not_use_color_handler=True)
 
 
 def show_current_threads_num(sleep_time=60, process_name='', block=False):

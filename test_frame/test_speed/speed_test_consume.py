@@ -1,7 +1,7 @@
 from function_scheduling_distributed_framework import task_deco, BrokerEnum
 import logging
 
-@task_deco('speed_test_queue', broker_kind=BrokerEnum.REDIS, log_level=10, )
+@task_deco('speed_test_queue', broker_kind=BrokerEnum.REDIS, log_level=20, )
 def f_test_speed(x):
     pass
     # f_test_speed2.push(x * 10)

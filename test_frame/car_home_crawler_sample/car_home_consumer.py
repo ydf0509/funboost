@@ -1,6 +1,6 @@
-from function_scheduling_distributed_framework import task_deco, BrokerEnum
 import requests
 from parsel import Selector
+from function_scheduling_distributed_framework import task_deco, BrokerEnum
 
 
 @task_deco('car_home_list', broker_kind=BrokerEnum.REDIS_ACK_ABLE, max_retry_times=5, qps=3)
@@ -26,10 +26,11 @@ def crawl_detail_page(url, title, news_type):
     author = sel.css('#articlewrap > div.article-info > div > a::text').extract_first() or \
              sel.css('#articlewrap > div.article-info > div::text').extract_first() or ''
     author = author.replace("\n", "").strip()
-    print(f'使用print模拟保存到数据库  {news_type}   {title} {author} {url}')  # ，实际为调用数据库插入函数，压根不需要return item出来在另外文件的地方进行保存。
+    print(f'保存数据  {news_type}   {title} {author} {url} 到 数据库')  # 用户自由发挥保存。
 
 
 if __name__ == '__main__':
     # crawl_list_page('news',1)
     crawl_list_page.consume()  # 启动列表页消费
     crawl_detail_page.consume()  # 启动详情页消费
+

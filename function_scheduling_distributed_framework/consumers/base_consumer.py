@@ -564,6 +564,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.logger.critical(
                 f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是 【 {function_only_params} 】')
             self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
+            if self.__get_priority_conf(kw, 'do_task_filtering'):
+                self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
+
+
         if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
             # print(function_result_status.get_status_dict(without_datetime_obj=True))
             with RedisMixin().redis_db_frame.pipeline() as p:
@@ -582,7 +586,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         #         function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
         if self.__get_priority_conf(kw, 'do_task_filtering'):
             is_exists = await simple_run_in_executor(self._redis_filter.check_value_exists,
-                    function_only_params)
+                                                     function_only_params)
             if is_exists:
                 self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
                 # self._confirm_consume(kw)
@@ -652,6 +656,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是 【 {function_only_params} 】')
             # self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
             await simple_run_in_executor(self._confirm_consume, kw)
+            if self.__get_priority_conf(kw, 'do_task_filtering'):
+                # self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
+                await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params)
+
         if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
             def push_result():
                 with RedisMixin().redis_db_frame.pipeline() as p:

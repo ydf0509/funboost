@@ -30,6 +30,7 @@ from pymongo.errors import PyMongoError
 # noinspection PyUnresolvedReferences
 from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, LoggerMixinDefaultWithFileHandler
 # noinspection PyUnresolvedReferences
+from function_scheduling_distributed_framework.concurrent_pool.async_helper import simple_run_in_executor
 from function_scheduling_distributed_framework.concurrent_pool.async_pool_executor import AsyncPoolExecutor
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.concurrent_pool.bounded_threadpoolexcutor import \
@@ -577,11 +578,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     async def _async_run(self, kw: dict, ):
         """这个是为了asyncio模式的"""
         function_only_params = _delete_keys_and_return_new_dict(kw['body'], )
-        if self.__get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
-                function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
-            self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
-            self._confirm_consume(kw)
-            return
+        # if self.__get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
+        #         function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
+        if self.__get_priority_conf(kw, 'do_task_filtering'):
+            is_exists = await simple_run_in_executor(self._redis_filter.check_value_exists,
+                    function_only_params)
+            if is_exists:
+                self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
+                # self._confirm_consume(kw)
+                await simple_run_in_executor(self._confirm_consume, kw)
+                return
         t_start_run_fun = time.time()
         await self._async_run_consuming_function_with_confirm_and_retry(kw, current_retry_times=0,
                                                                         function_result_status=FunctionResultStatus(
@@ -621,9 +627,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     rs = await asyncio.wait_for(corotinue_obj, timeout=self._function_timeout)
                 function_result_status.result = rs
                 function_result_status.success = True
-                self._confirm_consume(kw)
+                # self._confirm_consume(kw)
+                await simple_run_in_executor(self._confirm_consume, kw)
                 if self.__get_priority_conf(kw, 'do_task_filtering'):
-                    self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
+                    # self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
+                    await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params)
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。  {corotinue_obj}')
             except Exception as e:
@@ -632,7 +640,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     self.logger.critical(f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}，消息重新入队')
                     # time.sleep(1)  # 防止快速无限出错入队出队，导致cpu和中间件忙
                     await asyncio.sleep(1)
-                    return self._requeue(kw)
+                    # return self._requeue(kw)
+                    return await simple_run_in_executor(self._requeue, kw)
                 self.logger.error(f'函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次发生错误，'
                                   f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是 【 {function_only_params} 】   \n 原因是 {type(e)} {e} ',
                                   exc_info=self.__get_priority_conf(kw, 'is_print_detail_exception'))
@@ -641,17 +650,19 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         else:
             self.logger.critical(
                 f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是 【 {function_only_params} 】')
-            self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
+            # self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
+            await simple_run_in_executor(self._confirm_consume, kw)
         if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
-            # print(function_result_status.get_status_dict(without_datetime_obj=True))
-            with RedisMixin().redis_db_frame.pipeline() as p:
-                # RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
-                # RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
-                p.lpush(kw['body']['extra']['task_id'],
-                        json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
-                p.expire(kw['body']['extra']['task_id'], 600)
-                p.execute()
-        self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
+            def push_result():
+                with RedisMixin().redis_db_frame.pipeline() as p:
+                    p.lpush(kw['body']['extra']['task_id'],
+                            json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
+                    p.expire(kw['body']['extra']['task_id'], 600)
+                    p.execute()
+
+            await simple_run_in_executor(push_result)
+        # self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
+        await simple_run_in_executor(self._result_persistence_helper.save_function_result_to_mongo, function_result_status)
 
     @abc.abstractmethod
     def _confirm_consume(self, kw):

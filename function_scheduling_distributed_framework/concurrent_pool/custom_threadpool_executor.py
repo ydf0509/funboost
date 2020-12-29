@@ -124,6 +124,8 @@ class CustomThreadPoolExecutor(LoggerMixin, LoggerLevelSetterMixin):
 
 
 class _CustomThread(threading.Thread, LoggerMixin, LoggerLevelSetterMixin):
+    _lock_for_judge_threads_free_count = threading.Lock()
+
     def __init__(self, executorx: CustomThreadPoolExecutor):
         super().__init__()
         self._executorx = executorx
@@ -149,7 +151,7 @@ class _CustomThread(threading.Thread, LoggerMixin, LoggerLevelSetterMixin):
                 # continue
                 # self._remove_thread()
                 # break
-                with self._executorx._lock_compute_threads_free_count:
+                with self._lock_for_judge_threads_free_count:
                     if self._executorx.threads_free_count > self._executorx._min_workers:
                         self._remove_thread(f'当前线程超过60秒没有任务，线程池中不在工作状态中的线程数量是 {self._executorx.threads_free_count}，超过了指定的数量 {self._executorx._min_workers}')
                         break   # 退出while 1，即是结束。这里才是决定线程结束销毁，_remove_thread只是个名字而已，不是由那个来销毁线程。

@@ -39,3 +39,4 @@ class KafkaConsumer(AbstractConsumer):
 
     def _requeue(self, kw):
         self._producer.send(self._queue_name, json.dumps(kw['body']).encode())
+

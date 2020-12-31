@@ -3,6 +3,7 @@
 # @Time    : 2019/8/8 0008 13:11
 """
 所有中间件类型消费者的抽象基类。使实现不同中间件的消费者尽可能代码少。
+真个流程最难的都在这里面。
 """
 
 import abc
@@ -357,7 +358,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             raise ValueError('设置的并发模式不正确')
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
         if self._concurrent_mode == 4:
-            self._run = self._async_run
+            self._run = self._async_run   # 这里做了自动转化，使用async_run代替run
 
         self._logger_prefix = logger_prefix
         self._log_level = log_level
@@ -548,7 +549,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if self.__get_priority_conf(kw, 'do_task_filtering'):
                     self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
-                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。  {self._get_concurrent_info()}')
+                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。 '
+                                  f' {self._get_concurrent_info()}')
             except Exception as e:
                 if isinstance(e, (PyMongoError,
                                   ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
@@ -566,7 +568,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
             if self.__get_priority_conf(kw, 'do_task_filtering'):
                 self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
-
 
         if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
             # print(function_result_status.get_status_dict(without_datetime_obj=True))

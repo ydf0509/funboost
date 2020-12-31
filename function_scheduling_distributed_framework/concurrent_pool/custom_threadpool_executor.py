@@ -31,6 +31,7 @@ from function_scheduling_distributed_framework.concurrent_pool.custom_gevent_poo
 _shutdown = False
 _threads_queues = weakref.WeakKeyDictionary()
 
+
 def check_not_monkey():
     if check_gevent_monkey_patch(raise_exc=False):
         raise Exception('请不要打gevent包的补丁')
@@ -68,7 +69,7 @@ class _WorkItem(LoggerMixin):
             self.logger.exception(f'函数 {self.fn.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
             self.future.set_exception(exc)
             # Break a reference cycle with the exception 'exc'
-            self = None # noqa
+            self = None  # noqa
         else:
             self.future.set_result(result)
 
@@ -76,10 +77,19 @@ class _WorkItem(LoggerMixin):
         return f'{(self.fn.__name__, self.args, self.kwargs)}'
 
 
+def set_threadPool_executor_shrinkAble(min_works=1, keep_alive_time=10):
+    ThreadPoolExecutorShrinkAble.MIN_WORKERS = min_works
+    ThreadPoolExecutorShrinkAble.KEEP_ALIVE_TIME = keep_alive_time
+
+
 class ThreadPoolExecutorShrinkAble(Executor, LoggerMixin, LoggerLevelSetterMixin):
     # 为了和官方自带的THredpoolexecutor保持完全一致的鸭子类，参数设置成死的，不然用户传参了。
-    MIN_WORKERS = 5
-    KEEP_ALIVE_TIME = 60
+    # 建议用猴子补丁修改这两个参数，为了保持入参api和内置的concurrent.futures 相同。
+    # MIN_WORKERS = 5   # 最小值可以设置为0，代表线程池无论多久没有任务最少要保持多少个线程待命。
+    # KEEP_ALIVE_TIME = 60
+
+    MIN_WORKERS = 1
+    KEEP_ALIVE_TIME = 10
 
     def __init__(self, max_workers=None, thread_name_prefix=''):
         """
@@ -113,7 +123,7 @@ class ThreadPoolExecutorShrinkAble(Executor, LoggerMixin, LoggerLevelSetterMixin
 
     def _adjust_thread_count(self):
         # print(self.threads_free_count, self.MIN_WORKERS, len(self._threads), self._max_workers)
-        if self.threads_free_count < self.MIN_WORKERS and len(self._threads) < self._max_workers:
+        if self.threads_free_count <= self.MIN_WORKERS and len(self._threads) < self._max_workers:
             t = _CustomThread(self).set_log_level(self.logger.level)
             t.daemon = True
             t.start()
@@ -163,7 +173,7 @@ class _CustomThread(threading.Thread, LoggerMixin, LoggerLevelSetterMixin):
                     if self._executorx.threads_free_count > self._executorx.MIN_WORKERS:
                         self._remove_thread(
                             f'当前线程超过 {self._executorx.KEEP_ALIVE_TIME} 秒没有任务，线程池中不在工作状态中的线程数量是 '
-                            f'{self._executorx.threads_free_count}，超过了指定的数量 {self._executorx.MIN_WORKERS}')
+                            f'{self._executorx.threads_free_count}，超过了指定的最小核心数量 {self._executorx.MIN_WORKERS}')
                         break  # 退出while 1，即是结束。这里才是决定线程结束销毁，_remove_thread只是个名字而已，不是由那个来销毁线程。
                     else:
                         continue
@@ -213,7 +223,7 @@ if __name__ == '__main__':
 
 
     def f1(a):
-        time.sleep(2)  # 可修改这个数字测试多线程数量调节功能。
+        time.sleep(0.2)  # 可修改这个数字测试多线程数量调节功能。
         nb_print(f'{a} 。。。。。。。')
         return a * 10
         # raise Exception('抛个错误测试')  # 官方的不会显示函数出错你，你还以为你写的代码没毛病呢。
@@ -222,8 +232,8 @@ if __name__ == '__main__':
     pool = ThreadPoolExecutorShrinkAble(200)
     # pool = ThreadPoolExecutor(200)  # 测试对比官方自带
 
-    for i in range(300):
-        time.sleep(0.5)  # 这里的间隔时间模拟，当任务来临不密集，只需要少量线程就能搞定f1了，因为f1的消耗时间短，
+    for i in range(30):
+        time.sleep(0.05)  # 这里的间隔时间模拟，当任务来临不密集，只需要少量线程就能搞定f1了，因为f1的消耗时间短，
         # 不需要开那么多线程，CustomThreadPoolExecutor比ThreadPoolExecutor 优势之一。
         futurex = pool.submit(f1, i)
         # print(futurex.result())

@@ -12,7 +12,34 @@ if os.name == 'posix':
 
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
+"""
+# 也可以采用 janus 的 线程安全的queue方式来实现异步池，此queue性能和本模块实现的生产 消费相比，性能并没有提高，所以就不重新用这这个包来实现一次了。
+import janus
+import asyncio
+import time
+import threading
+import nb_log
+queue = janus.Queue(maxsize=6000)
 
+async def consume():
+    while 1:
+        # time.sleep(1)
+        val = await queue.async_q.get() # 这是async，不要看错了
+        print(val)
+
+def push():
+    for i in range(50000):
+        # time.sleep(0.2)
+        # print(i)
+        queue.sync_q.put(i)  # 这是aync。不要看错了。
+
+
+if __name__ == '__main__':
+    threading.Thread(target=push).start()
+    loop = asyncio.get_event_loop()
+    loop.create_task(consume())
+    loop.run_forever()
+"""
 
 
 class AsyncPoolExecutor2:

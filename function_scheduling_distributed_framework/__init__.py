@@ -78,7 +78,7 @@ def task_deco(queue_name, *, function_timeout=0, threads_num=50,
     :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
            可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。
            主动抛出ExceptionForRequeue异常，则当前消息会重返中间件。
-    :param log_level:框架的日志级别。
+    :param log_level:框架的日志级别。logging.DEBUG(10)  logging.DEBUG(10) logging.INFO(20) logging.WARNING(30) logging.ERROR(40) logging.CRITICAL(50)
     :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
     :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频的关键。
     :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，以后废弃msg_schedule_time_intercal这个参数。

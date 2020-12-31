@@ -77,7 +77,7 @@ class _WorkItem(LoggerMixin):
         return f'{(self.fn.__name__, self.args, self.kwargs)}'
 
 
-def set_threadPool_executor_shrinkAble(min_works=1, keep_alive_time=10):
+def set_threadpool_executor_shrinkable(min_works=1, keep_alive_time=10):
     ThreadPoolExecutorShrinkAble.MIN_WORKERS = min_works
     ThreadPoolExecutorShrinkAble.KEEP_ALIVE_TIME = keep_alive_time
 

@@ -19,7 +19,7 @@ def crawl_list_page(news_type, page, do_page_turning=False):
             crawl_list_page.push(news_type, p)  # 列表页翻页。
 
 
-@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=130, qps=10, do_task_filtering=True)
+@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=130, qps=0, do_task_filtering=True)
 def crawl_detail_page(url, title, news_type):
     resp_text = requests.get(url).text
     sel = Selector(resp_text)

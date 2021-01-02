@@ -21,10 +21,10 @@ async def simple_run_in_executor(f, *args, async_executor=None, async_loop=None,
 
 
     :param f:  f是一个同步的阻塞函数，f前面不能是由async定义的。
-    :param args:
+    :param args: f函数的位置方式入参
     :async_executor: 线程池
     :param async_loop: async的loop对象
-    :param kwargs:
+    :param kwargs:f函数的关键字方式入参
     :return:
     """
     loopx = async_loop or asyncio.get_event_loop()

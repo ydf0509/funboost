@@ -1210,3 +1210,31 @@ run_coroutine_threadsafe /wait / wait_for /get_event_loop / new_event_loop / get
 如果你写一般的代码，那就用同步方式思维来写吧，让分布式函数调度框架来替你自动并发就可以啦。
 如果追求更好的控制和性能，不在乎代码写法上的麻烦，并且asyncio技术掌握的很溜，那就用asyncio的方式吧。 
 ```
+
+### 6.13.3 关于 async 鬓发模式，为什么框架还使用 pyredis pika pymongo，而没有使用aioredis  aiomongo
+
+```
+异步鬓发模式里面，整个调用链路必须是一旦异步，必须处处异步，在base_consumer.py的AbstractConsumer中，
+方法 _async_run_consuming_function_with_confirm_and_retry里面使用的还是操作中间件的同步库，
+
+主要是因为框架目前支持15种中间件，一个一个的使用异步模式的库操作中间件来实现，比现在代码起码要增加80%，无异于重写一个项目了。
+异步和同步真的写法语法相差很大的，不信可以比比aiomysql 和pymysql库，aiohttp和requests，如果非常简单能实现异步，
+那aiohttp和aiomysql作者为什么要写几万行代码来重新实现，不在原来基础上改造个七八行来实现？
+
+
+
+目前此库对 消息确认 消息重新入队 任务过滤  mongo插入，都是采用的同步库，但是使用了 run_in_executor,
+把这些操作在异步链路中交给线程池来运行了，同事这个线程池不是官方内置线程池，是智能缩小扩大线程池 ThreadPoolExecutorShrinkAble。
+run_in_executor 会把一个同步的操作，sumbit提交给线程池，线程池返回的是一个concurrent.futures包的Future对象，
+run_in_executor包装转化了这个Future(此Future不是asyncio的，不是一个awaitable对象)成为了一个asyncio包的Future对象，asyncio的Future对象可以被await，
+所以这是非常快捷的同步阻塞函数在异步链路中转同步转异步语法的最佳方式。官方也是这么推荐的。
+
+除了框架内部的阻塞函数是run_in_executor快速转化成非阻塞事件循环的，但是主要的用户的消费函数，是使用的真async模式运行在一个loop循环中的，
+也即是单线陈鬓发运行用户的异步函数。
+
+其次框架的同步阻塞函数，都是操作中间件内心的库，异步就是 入队 确认消费 查询是否过滤，这些操作一般都会在1毫秒之内完成，不阻塞太长的事件，
+即使不适用run_in_executor，直接在异步链路使用这些同步操作，也没太大问题。一旦异步必须处处异步，说的是不能调用耗时太长的阻塞函数，
+1毫秒的无伤大雅，因为celery 1秒钟最多能调度300个 def f： print(hello) 这样的无cpu 无io的函数，此框架调度运行速度任然超过celery。
+
+```
+

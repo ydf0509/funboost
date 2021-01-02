@@ -1236,7 +1236,7 @@ run_in_executor包装转化了这个Future(此Future不是asyncio的，不是一
 即使不适用run_in_executor，直接在异步链路使用这些同步操作，也没太大问题。一旦异步必须处处异步，说的是不能调用耗时太长的阻塞函数，
 1毫秒的无伤大雅，因为celery 1秒钟最多能调度300个 def f： print(hello) 这样的无cpu 无io的函数，此框架调度运行速度任然超过celery。
 
-
+     
 
 还有一种调度起 async def定义 的消费函数方式是继续开多线程并发，然后使用 临时get_event_loop，loop.run_until_complete，这方式太愚蠢了，
 相当于只是为了运行起这个函数，但全流程丝毫没有丁点异步。

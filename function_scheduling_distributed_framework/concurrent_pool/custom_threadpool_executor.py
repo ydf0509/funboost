@@ -16,6 +16,8 @@
 4、此线程池运行函数出错时候，直接显示线程错误，官方的线程池则不会显示错误，例如函数中写1/0,任然不现实错误。
 
 此实现了submit，还实现future相关的内容，真正的和内置的ThreadpoolExecutor 完全替代。
+
+可以在各种地方加入 time.sleep 来验证 第1条和第2条的自动智能缩放功能。
 """
 import os
 import atexit
@@ -175,7 +177,7 @@ class _CustomThread(threading.Thread, LoggerMixin, LoggerLevelSetterMixin):
                 with self._lock_for_judge_threads_free_count:
                     if self._executorx.threads_free_count > self._executorx.MIN_WORKERS:
                         self._remove_thread(
-                            f'{ self._executorx.pool_ident} 线程池中的 {self.ident} 线程 超过 {self._executorx.KEEP_ALIVE_TIME} 秒没有任务，线程池中不在工作状态中的线程数量是 '
+                            f'{self._executorx.pool_ident} 线程池中的 {self.ident} 线程 超过 {self._executorx.KEEP_ALIVE_TIME} 秒没有任务，线程池中不在工作状态中的线程数量是 '
                             f'{self._executorx.threads_free_count}，超过了指定的最小核心数量 {self._executorx.MIN_WORKERS}')
                         break  # 退出while 1，即是结束。这里才是决定线程结束销毁，_remove_thread只是个名字而已，不是由那个来销毁线程。
                     else:
@@ -198,6 +200,7 @@ logger_show_current_threads_num = LogManager('show_current_threads_num').get_log
 
 
 def show_current_threads_num(sleep_time=600, process_name='', block=False, daemon=True):
+    """另起一个线程每隔多少秒打印有多少线程，这个和可缩小线程池的实现没有关系"""
     process_name = sys.argv[0] if process_name == '' else process_name
 
     def _show_current_threads_num():

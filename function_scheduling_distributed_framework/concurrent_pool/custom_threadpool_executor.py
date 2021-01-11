@@ -90,18 +90,18 @@ class ThreadPoolExecutorShrinkAble(Executor, LoggerMixin, LoggerLevelSetterMixin
     # 为了和官方自带的THredpoolexecutor保持完全一致的鸭子类，参数设置成死的，不然用户传参了。
     # 建议用猴子补丁修改这两个参数，为了保持入参api和内置的concurrent.futures 相同。
     # MIN_WORKERS = 5   # 最小值可以设置为0，代表线程池无论多久没有任务最少要保持多少个线程待命。
-    # KEEP_ALIVE_TIME = 60
+    # KEEP_ALIVE_TIME = 60  # 这个参数表名，当前线程从queue.get(block=True, timeout=KEEP_ALIVE_TIME)多久没任务，就线程结束。
 
     MIN_WORKERS = 1
     KEEP_ALIVE_TIME = 10
 
-    def __init__(self, max_workers=None, thread_name_prefix=''):
+    def __init__(self, max_workers: int = None, thread_name_prefix=''):
         """
         最好需要兼容官方concurren.futures.ThreadPoolExecutor 和改版的BoundedThreadPoolExecutor，入参名字和个数保持了一致。
         :param max_workers:
         :param thread_name_prefix:
         """
-        self._max_workers = max_workers or 4
+        self._max_workers = max_workers if max_workers is not None else (os.cpu_count() or 1) * 5
         self._thread_name_prefix = thread_name_prefix
         self.work_queue = self._work_queue = queue.Queue(max_workers)
         # self._threads = set()

@@ -104,7 +104,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     has_init_broker = 0
 
     def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True,
-                 clear_queue_within_init=False, is_add_publish_time=True, consuming_function: callable = None):
+                 clear_queue_within_init=False, is_add_publish_time=True, consuming_function: callable = None, ):
         """
         :param queue_name:
         :param log_level_int:
@@ -118,7 +118,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._queue_name = queue_name
         if logger_prefix != '':
             logger_prefix += '--'
-        consuming_function_name = f'--{consuming_function.__name__}' if consuming_function else ''
+        # consuming_function_name = f'--{consuming_function.__name__}' if consuming_function else ''
         # logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}{consuming_function_name}'
         logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}'
         self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level_int,
@@ -153,13 +153,13 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def custom_init(self):
         pass
 
-    def publish(self, msg: typing.Union[str, dict],
+    def publish(self, msg: typing.Union[str, dict], task_id=None,
                 priority_control_config: PriorityConsumingControlConfig = None):
         if isinstance(msg, str):
             msg = json.loads(msg)
         if self.publish_params_checker:
             self.publish_params_checker.check_params(msg)
-        task_id = f'{self._queue_name}_result:{uuid.uuid4()}'
+        task_id = task_id or f'{self._queue_name}_result:{uuid.uuid4()}'
         msg['extra'] = extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
                                        'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
         if priority_control_config:

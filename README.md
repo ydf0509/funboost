@@ -4,7 +4,7 @@ pip install function_scheduling_distributed_framework --upgrade
 
 ### 1.0.0  示意图
 
-[![sgkrUs.png](https://s3.ax1x.com/2021/01/19/sgkrUs.png)](https://imgchr.com/i/sgkrUs)
+[![sgV2xP.png](https://s3.ax1x.com/2021/01/19/sgV2xP.png)](https://imgchr.com/i/sgV2xP)
 
 ### 1.0.1  框架用途功能
 

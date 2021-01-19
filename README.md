@@ -2,6 +2,10 @@
 
 pip install function_scheduling_distributed_framework --upgrade
 
+### 1.0.0  示意图
+
+[![scjtIS.png](https://s3.ax1x.com/2021/01/19/scjtIS.png)](https://imgchr.com/i/scjtIS)
+
 ### 1.0.1  框架用途功能
 
 python通用分布式函数调度框架。适用场景范围广泛。
@@ -152,11 +156,11 @@ python虽然通常来说是跨平台的， 在linux和win的可移植性不是10
 4、当Process(target=f, args=(x,)).start() 没有写在 if __name__ == '__main__'，直接写在外面没有缩进, 
    无论 x = 2 还是 threading.Lock() 时候，Process(target=f, args=(x,)).start() 在linux都运行正常。
 
-所以天天背诵一段 进程 和线程的区别的文字概念，没有个卵用，不多实践对比，只会死记硬背概念会走火入魔并没卵用，也还要多实践测试，
+所以天天背诵一段 进程 和线程的区别的文字概念，没有个卵用，不多实践对比，只死记硬背概念会走火入魔并没卵用，也还要多实践测试，
 如果linux和win的多进程代码表现可移植性是100%，那celery团队就不会头疼celery对win的支持问题的了。
 
 说这么多就是说为什么，框架的broker_kind是不能直接支持指定多进程并发，因为这样做，我只能保证相同代码在linux上运行的很好，在win上却肯定出错。
-如果你要开多进程消费也很简单，自己定义一个函数然后开启多进程就可以啦，下面的代码兼容linux和win，跨平台兼容性高才算好代码。
+如果你要开多进程消费也很简单，自己定义一个函数然后开启多进程就可以，下面的代码兼容linux和win，跨平台兼容性高才算好代码。
 
 def fun():
     consume_fun1.consume()
@@ -166,6 +170,9 @@ if __name__ == '__main__':
     Process(target=fun).start()
 
 ```
+
+
+
 
 #### python多进程代码在 linux 和 win 巨大区别之举例代码。
 ```python

@@ -50,6 +50,23 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
 fsdf_background_scheduler = FsdfBackgroundScheduler(timezone=frame_config.TIMEZONE)
 # fsdf_background_scheduler = FsdfBackgroundScheduler()
 
+# apscheduler 包的动态修改定时  reschedule_job
+"""
+SCHEDULER_JOBSTORES = {
+    'default': RedisJobStore(),
+}
+
+scheduler = BackgroundScheduler(jobstores=SCHEDULER_JOBSTORES,)
+
+def f(x):
+    print(x)
+
+job = scheduler.add_job(f ,'date', run_date=datetime(2021, 1, 22, 14, 28, 6), args=(5, ))
+scheduler.start()
+time.sleep(5)
+scheduler.reschedule_job(job.id,trigger='date',run_date=datetime(2021, 1, 21, 15, 29, 16), )
+
+"""
 if __name__ == '__main__':
     # 定时运行消费演示
     import datetime

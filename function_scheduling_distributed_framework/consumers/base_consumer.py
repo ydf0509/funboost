@@ -250,8 +250,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         """
         def ff():
-            RabbitmqConsumer('queue_test', consuming_function=f3, threads_num=20, msg_schedule_time_intercal=2, log_level=10, logger_prefix='yy平台消费', is_consuming_function_use_multi_params=True).start_consuming_message()
-            RabbitmqConsumer('queue_test2', consuming_function=f4, threads_num=20, msg_schedule_time_intercal=4, log_level=10, logger_prefix='zz平台消费', is_consuming_function_use_multi_params=True).start_consuming_message()
+            RabbitmqConsumer('queue_test', consuming_function=f3, concurrent_num=20, msg_schedule_time_intercal=2, log_level=10, logger_prefix='yy平台消费', is_consuming_function_use_multi_params=True).start_consuming_message()
+            RabbitmqConsumer('queue_test2', consuming_function=f4, concurrent_num=20, msg_schedule_time_intercal=4, log_level=10, logger_prefix='zz平台消费', is_consuming_function_use_multi_params=True).start_consuming_message()
             AbstractConsumer.join_shedual_task_thread()            # 如果开多进程启动消费者，在linux上需要这样写下这一行。
 
 
@@ -262,8 +262,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         ConsumersManager.join_all_consumer_shedual_task_thread()
 
     # noinspection PyProtectedMember,PyUnresolvedReferences
-    def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0,
-                 threads_num=50, concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=1,
+    def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0, concurrent_num=50,
+                 specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True,
                  msg_schedule_time_intercal=0.0, qps: float = 0, msg_expire_senconds=0,
                  is_using_distributed_frequency_control=False,
@@ -280,8 +280,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param queue_name:
         :param consuming_function: 处理消息的函数。
         :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
-        :param threads_num:线程或协程并发数量
-        :param concurrent_num:并发数量，这个覆盖threads_num。以后会废弃threads_num参数，因为表达的意思不太准确，不一定是线程模式并发。
+         # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
+         # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
+        :param concurrent_num:并发数量，并发种类由concurrent_mode决定
         :param specify_concurrent_pool:使用指定的线程池/携程池，可以多个消费者共使用一个线程池，不为None时候。threads_num失效
         :param specify_async_loop:指定的async的loop循环，设置并发模式为async才能起作用。
         :param concurrent_mode:并发模式，1线程 2gevent 3eventlet 4 asyncio
@@ -338,8 +339,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.queue_name = queue_name  # 可以换成公有的，免得外部访问有警告。
         self.consuming_function = consuming_function
         self._function_timeout = function_timeout
-        self._threads_num = concurrent_num if threads_num == 50 else threads_num  # concurrent参数优先，以后废弃threads_num参数。
-        self._concurrent_num = self._threads_num
+
+        # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
+        # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
+        if qps != 0 and concurrent_num == 50:
+            self._concurrent_num = 500
+        else:
+            self._concurrent_num = concurrent_num
+
         self._specify_concurrent_pool = specify_concurrent_pool
         self._specify_async_loop = specify_async_loop
         self._threadpool = None  # 单独加一个检测消息数量和心跳的线程
@@ -715,13 +722,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.concurrent_pool.submit(self._run, kw)
 
     def __frequency_control(self, qpsx, msg_schedule_time_intercalx):
-        # 以下是消费函数qps控制代码。
+        # 以下是消费函数qps控制代码。无论是单个消费者空频还是分布式消费控频，都是基于直接计算的，没有依赖redis inrc计数，使得控频性能好。
         if qpsx == 0:
             return
-        if qpsx <= 2:
+        if qpsx <= 5:
             """ 原来的简单版 """
             time.sleep(msg_schedule_time_intercalx)
-        elif 2 < qpsx <= 20:
+        elif 5 < qpsx <= 20:
             """ 改进的控频版,防止网络波动"""
             time_sleep_for_qps_control = max((msg_schedule_time_intercalx - (time.time() - self._last_submit_task_timestamp)) * 0.99, 10 ** -3)
             # print(time.time() - self._last_submit_task_timestamp)
@@ -729,7 +736,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             time.sleep(time_sleep_for_qps_control)
             self._last_submit_task_timestamp = time.time()
         else:
-            """基于计数的控频"""
+            """基于当前消费者计数的控频"""
             if time.time() - self._last_start_count_qps_timestamp > 1:
                 self._has_execute_times_in_recent_second = 1
                 self._last_start_count_qps_timestamp = time.time()

@@ -20,6 +20,12 @@ from function_scheduling_distributed_framework.consumers.sqlachemy_consumer impo
 
 
 def get_consumer(*args, broker_kind=0, **kwargs):
+    """
+    :param args: 入参是AbstractConsumer的入参
+    :param broker_kind:
+    :param kwargs:
+    :return:
+    """
     broker_kind__consumer_type_map = {
         0: RabbitmqConsumer,
         1: RabbitmqConsumerRabbitpy,

@@ -399,9 +399,9 @@ consumer.start_consuming_message()
 
 #装饰器版，使用方式例如：
 
-from function_scheduling_distributed_framework import task_deco
+from function_scheduling_distributed_framework import task_deco,BrokerEnum
 
-@task_deco('queue_test_f01', qps=0.2, broker_kind=2)  # qps 0.2表示每5秒运行一次函数，broker_kind=2表示使用redis作中间件。
+@task_deco('queue_test_f01', qps=0.2, broker_kind=BrokerEnum.REDIS_ACK_ABLE)  # qps 0.2表示每5秒运行一次函数，broker_kind=2表示使用redis作中间件。
 def add(a, b):
     print(a + b)
 
@@ -413,13 +413,13 @@ add.consume()                    # 使用add.consume 消费任务
 
 ### 2.3 对比常规方式，常规方式使用方式如下
 ```python
-from function_scheduling_distributed_framework import get_consumer
+from function_scheduling_distributed_framework import get_consumer,BrokerEnum
 
 def add(a, b):
     print(a + b)
 
 # 需要手动指定consuming_function入参的值。
-consumer = get_consumer('queue_test_f01', consuming_function=add,qps=0.2, broker_kind=2) 
+consumer = get_consumer('queue_test_f01', consuming_function=add,qps=0.2, broker_kind=BrokerEnum.REDIS_ACK_ABLE) 
 for i in range(10, 20):
     consumer.publisher_of_same_queue.publish(dict(a=i, b=i * 2)) # consumer.publisher_of_same_queue.publish 发布任务
 consumer.start_consuming_message()   # 使用consumer.start_consuming_message 消费任务

@@ -65,6 +65,7 @@ setup(
         'pikav1',
         'redis2',
         'redis3',
+        'redis',
         'nb_log>=3.4',
         'rocketmq',
     ]

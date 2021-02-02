@@ -265,9 +265,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0, concurrent_num=50,
                  specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True,
-                 msg_schedule_time_intercal=0.0, qps: float = 0, msg_expire_senconds=0,
-                 is_using_distributed_frequency_control=False,
-                 is_send_consumer_hearbeat_to_redis=False,
+                 msg_schedule_time_intercal=0.0, qps: float = 0, is_using_distributed_frequency_control=False,
+                 msg_expire_senconds=0, is_send_consumer_hearbeat_to_redis=False,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False,
                  task_filtering_expire_seconds=0, is_consuming_function_use_multi_params=True,
                  is_do_not_run_by_specify_time_effect=False,
@@ -365,7 +364,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             raise ValueError('设置的并发模式不正确')
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
         if self._concurrent_mode == 4:
-            self._run = self._async_run   # 这里做了自动转化，使用async_run代替run
+            self._run = self._async_run  # 这里做了自动转化，使用async_run代替run
 
         self._logger_prefix = logger_prefix
         self._log_level = log_level

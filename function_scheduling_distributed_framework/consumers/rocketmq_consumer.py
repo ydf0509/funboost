@@ -46,3 +46,6 @@ class RocketmqConsumer(AbstractConsumer):
 
     def _requeue(self, kw):
         self._publisher.publish(kw['body'])
+
+
+

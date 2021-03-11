@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: function-scheduling-distributed-framework
-Version: 8.7
+Version: 8.8
 Summary: function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way
 Home-page: https://github.com/ydf0509/distributed_framework
 Author: bfzs
@@ -108,6 +108,22 @@ Description: # 1.distributed_framework
         
         windows和linux行为100%一致，不会像celery一样，相同代码前提下，很多功能在win上不能运行或出错。
         
+        #### 1.0.1.2 关于特色控频功能
+        
+        ```
+        此功能是框架最好用的功能，控频功能远远强于只能控制并发数量的功能。
+        举个例子，在flask服务端接口中写个 time.sleep，消费函数里面请求这个flask接口，如果服务端反复修改sleep的大小后重新部署web服务，
+        例如分别把sleep 设置成 0.006 0.04 0.7 1 3 13 26 秒 这些值，如何做到无视服务端的修改而消费代码不重启且精确控制消费函数每秒得到7次响应结果呢，
+        传统的设置 线程数 进程数 或者asyncio的并发数，完全没有办法做到每秒都得到7次结果，有人说开7个线程就是每秒 7 tps，这是扯淡，
+        除非服务端flask接口永远都是time.sleep 1秒，如果改成了sleep 其他的值，
+        例如服务端接口中sleep 0.1秒，你开7个线程，每秒就是请求70次了，这样是严重超频，
+        例如服务端接口中sleep 10秒，你开7个线程，每秒平均得到的结果不到 1tps，这样是严重没有达到频率，
+        这在对接第三方供酒店 机票库存供应商的付费api时候，90%的供应商都会根据付费金额不同控制你的每秒调用次数，
+        请求频率大了返回error过多，没得到正确结果，请求频率小了，浪费自己花费的钱财和需要更长的时间执行完任务。
+        
+        此框架使用时候，建议不需要指定并发大小，而是指定qps大小，框架会自动自适应调节真正的并发数量来精确达到指定的运行频率。
+        
+        ```
         
         ### 1.0.2 框架支持的中间件类型
         ```
@@ -182,8 +198,6 @@ Description: # 1.distributed_framework
         ```
         
         
-        
-        
         #### python多进程代码在 linux 和 win 巨大区别之举例代码。
         ```python
         ## 这段代码分别让 x 等于不同的值和 Process(target=f, args=(x,)).start() 在 if main里面和外面，使用win和linux平台分别测试，就能感受到多进程在linux和win的巨大区别。
@@ -239,8 +253,6 @@ Description: # 1.distributed_framework
         并且所有重要公有方法和函数设计都不使用*args，**kwargs方式，全部都能使ide智能提示补全参数，一切为了ide智能补全。
         ```
         
-        # 手机版git上点击下方 view all of README.md
-        
         
         # 1.1  pip安装方式
         pip install function_scheduling_distributed_framework --upgrade -i https://pypi.org/simple 
@@ -281,14 +293,13 @@ Description: # 1.distributed_framework
             :param consuming_function: 处理消息的函数。  指定队列名字和指定消费函数这两个参数是必传，必须指定，
                    这2个是这个消费框架的本质核心参数，其他参数都是可选的。
             :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
-            :param threads_num:并发数量，协程或线程。由concurrent_mode决定并发种类。
-            :param concurrent_num:并发数量，这个覆盖threads_num。以后会废弃threads_num参数，因为表达的意思不太准确，不一定是线程模式并发。
+            :param concurrent_num:并发数量，
             :param specify_concurrent_pool:使用指定的线程池（协程池），可以多个消费者共使用一个线程池，不为None时候。threads_num失效
             :param concurrent_mode:并发模式，1线程 2gevent 3eventlet
             :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
                    可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。
                    主动抛出ExceptionForRequeue异常，则当前消息会重返中间件。
-            :param log_level:框架的日志级别。
+            :param log_level:框架的日志级别,默认是debug级别，可以看到详细的执行信息，如果不想看到太多详细的日志，可以设置为logging.INFO常量(20) 或者数字20。
             :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
             :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频的关键。
             :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，以后废弃msg_schedule_time_intercal这个参数。
@@ -397,9 +408,9 @@ Description: # 1.distributed_framework
         
         #装饰器版，使用方式例如：
         
-        from function_scheduling_distributed_framework import task_deco
+        from function_scheduling_distributed_framework import task_deco,BrokerEnum
         
-        @task_deco('queue_test_f01', qps=0.2, broker_kind=2)  # qps 0.2表示每5秒运行一次函数，broker_kind=2表示使用redis作中间件。
+        @task_deco('queue_test_f01', qps=0.2, broker_kind=BrokerEnum.REDIS_ACK_ABLE)  # qps 0.2表示每5秒运行一次函数，broker_kind=2表示使用redis作中间件。
         def add(a, b):
             print(a + b)
         
@@ -411,13 +422,13 @@ Description: # 1.distributed_framework
         
         ### 2.3 对比常规方式，常规方式使用方式如下
         ```python
-        from function_scheduling_distributed_framework import get_consumer
+        from function_scheduling_distributed_framework import get_consumer,BrokerEnum
         
         def add(a, b):
             print(a + b)
         
         # 需要手动指定consuming_function入参的值。
-        consumer = get_consumer('queue_test_f01', consuming_function=add,qps=0.2, broker_kind=2) 
+        consumer = get_consumer('queue_test_f01', consuming_function=add,qps=0.2, broker_kind=BrokerEnum.REDIS_ACK_ABLE) 
         for i in range(10, 20):
             consumer.publisher_of_same_queue.publish(dict(a=i, b=i * 2)) # consumer.publisher_of_same_queue.publish 发布任务
         consumer.start_consuming_message()   # 使用consumer.start_consuming_message 消费任务

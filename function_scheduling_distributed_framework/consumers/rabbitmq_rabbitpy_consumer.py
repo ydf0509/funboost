@@ -18,7 +18,7 @@ class RabbitmqConsumerRabbitpy(AbstractConsumer):
         # noinspection PyTypeChecker
         channel = RabbitMqFactory(is_use_rabbitpy=1).get_rabbit_cleint().creat_a_channel()  # type:  rabbitpy.AMQP         #
         channel.queue_declare(queue=self._queue_name, durable=True)
-        channel.basic_qos(prefetch_count=self._threads_num)
+        channel.basic_qos(prefetch_count=self._concurrent_num)
         for message in channel.basic_consume(self._queue_name, no_ack=False):
             body = message.body.decode()
             self.logger.debug(f'从rabbitmq {self._queue_name} 队列中 取出的消息是：  {body}')

@@ -42,8 +42,8 @@ if __name__ == '__main__':
 
 
     def block_fun(x):
-        time.sleep(5)
         print(x)
+        time.sleep(5)
         return x * 10
 
 

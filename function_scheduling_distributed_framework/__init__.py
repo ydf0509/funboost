@@ -38,22 +38,6 @@ class ConcurrentModeEnum:
     ASYNC = 4
 
 
-def run_many_consumer_by_init_params(consumer_init_params_list: List[dict]):
-    for consumer_init_params in consumer_init_params_list:
-        get_consumer(**consumer_init_params).start_consuming_message()
-    ConsumersManager.join_all_consumer_shedual_task_thread()
-
-
-def run_many_consumer_with_multi_process(consumer_init_params_list: List[dict], process_num=1):
-    """
-    如果要开多进程，建议使用这个函数。不需要自己再调用Process，以免再linux上忘了加 ConsumersManager.join_all_consumer_shedual_task_thread()
-     此处传init参数而不是conusmer对象本身，是由于一些属性的类型(例如threading.Lock类型)不可以被picke序列化，在windows中开多进程会出错。
-     if __name__ == '__main__':
-        run_many_consumer_with_multi_process([consumer1.init_params,consumer2.init_params],4)
-    """
-    [Process(target=run_many_consumer_by_init_params, args=(consumer_init_params_list,)).start() for _ in range(process_num)]
-
-
 def task_deco(queue_name, *, function_timeout=0,
               concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=1,
               max_retry_times=3, log_level=10, is_print_detail_exception=True, msg_schedule_time_intercal=0.0,
@@ -147,10 +131,11 @@ def task_deco(queue_name, *, function_timeout=0,
     所以不需要传consuming_function参数。
     """
     # 装饰器版本能够自动知道消费函数，防止task_deco按照get_consumer的入参重复传参了consuming_function。
-    consumer_init_kwargs = copy.copy(locals())
+    consumer_init_params = copy.copy(locals())
 
     def _deco(func):
-        consumer = get_consumer(consuming_function=func, **consumer_init_kwargs)
+        func.init_params = consumer_init_params
+        consumer = get_consumer(consuming_function=func, **consumer_init_params)
         func.is_decorated_as_consume_function = True
         func.consumer = consumer
         # 下面这些连等主要是由于元编程造成的不能再ide下智能补全，参数太长很难手动拼写出来
@@ -160,12 +145,12 @@ def task_deco(queue_name, *, function_timeout=0,
         func.push = func.delay = consumer.publisher_of_same_queue.push
         func.clear = func.clear_queue = consumer.publisher_of_same_queue.clear
 
-        # @wraps(func)
+        @wraps(func)
         def __deco(*args, **kwargs):
             return func(*args, **kwargs)
 
-        # return __deco   # 两种方式都可以
-        return update_wrapper(__deco, func)
+        return __deco  # 两种方式都可以
+        # return update_wrapper(__deco, func)
 
     return _deco
 
@@ -215,3 +200,38 @@ class IdeAutoCompleteHelper(LoggerMixin):
         self.publish = self.pub = self.publisher.publish
         self.push = self.delay = self.publisher.push
         self.clear = self.clear_queue = self.publisher.clear
+
+
+def _run_many_consumer_by_init_params(consumer_init_params_list: List[dict]):
+    for consumer_init_params in consumer_init_params_list:
+        get_consumer(**consumer_init_params).start_consuming_message()
+    ConsumersManager.join_all_consumer_shedual_task_thread()
+
+
+def run_consumer_with_multi_process(task_fun, process_num=1):
+    """
+    :param task_fun:被 task_deco 装饰器装饰的消费函数
+    :param process_num:开启多个进程。  主要是 多进程并发  + 4种细粒度并发(threading gevent eventlet asyncio)。叠加并发。
+    这种是多进程方式，一次编写能够兼容win和linux的运行。一次性启动6个进程 叠加 多线程 并发。
+
+    '''
+    from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum, run_consumer_with_multi_process
+    import os
+
+    @task_deco('test_multi_process_queue',broker_kind=BrokerEnum.REDIS_ACK_ABLE,concurrent_mode=ConcurrentModeEnum.THREADING,)
+    def fff(x):
+        print(x * 10,os.getpid())
+
+    if __name__ == '__main__':
+        # fff.consume()
+        run_consumer_with_multi_process(fff,6) # 一次性启动6个进程 叠加 多线程 并发。
+    '''
+
+    """
+    if getattr(task_fun, 'is_decorated_as_consume_function') != True:
+        raise ValueError('task_fun 参数必须是一个被 task_deco 装饰的函数')
+    if process_num == 1:
+        task_fun.conusme()
+    else:
+        [Process(target=_run_many_consumer_by_init_params,
+                 args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start() for _ in range(process_num)]

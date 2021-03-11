@@ -115,7 +115,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param consuming_function:消费函数，为了做发布时候的函数入参校验用的，如果不传则不做发布任务的校验，
                例如add 函数接收x，y入参，你推送{"x":1,"z":3}就是不正确的，函数不接受z参数。
         """
-        self._queue_name = queue_name
+        self.queue_name = self._queue_name = queue_name
         if logger_prefix != '':
             logger_prefix += '--'
         # consuming_function_name = f'--{consuming_function.__name__}' if consuming_function else ''

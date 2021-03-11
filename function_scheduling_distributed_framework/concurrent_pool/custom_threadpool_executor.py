@@ -103,7 +103,7 @@ class ThreadPoolExecutorShrinkAble(Executor, LoggerMixin, LoggerLevelSetterMixin
         """
         self._max_workers = max_workers if max_workers is not None else (os.cpu_count() or 1) * 5
         self._thread_name_prefix = thread_name_prefix
-        self.work_queue = self._work_queue = queue.Queue(max_workers)
+        self.work_queue = self._work_queue = queue.Queue(max_workers or 10)
         # self._threads = set()
         self._threads = weakref.WeakSet()
         self._lock_compute_threads_free_count = threading.Lock()

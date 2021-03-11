@@ -5,6 +5,7 @@ import atexit
 import time
 import warnings
 from collections import Callable
+import threading
 import gevent
 from gevent import pool as gevent_pool
 from gevent import monkey
@@ -49,7 +50,7 @@ def gevent_timeout_deco(timeout_t):
 
 class GeventPoolExecutor(gevent_pool.Pool):
     def __init__(self, size=None, greenlet_class=None):
-        check_gevent_monkey_patch()
+        # check_gevent_monkey_patch()
         super().__init__(size, greenlet_class)
         atexit.register(self.shutdown)
 
@@ -60,19 +61,79 @@ class GeventPoolExecutor(gevent_pool.Pool):
         self.join()
 
 
+class GeventPoolExecutor2(LoggerMixin):
+    def __init__(self, max_works, ):
+        self._q = JoinableQueue(maxsize=max_works)
+        # self._q = Queue(maxsize=max_works)
+        for _ in range(max_works):
+            gevent.spawn(self.__worker)
+        # atexit.register(self.__atexit)
+        self._q.join(timeout=100)
+
+    def __worker(self):
+        while True:
+            fn, args, kwargs = self._q.get()
+            try:
+                fn(*args, **kwargs)
+            except Exception as exc:
+                self.logger.exception(f'函数 {fn.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
+            finally:
+                pass
+                self._q.task_done()
+
+    def submit(self, fn: Callable, *args, **kwargs):
+        self._q.put((fn, args, kwargs))
+
+    def __atexit(self):
+        self.logger.critical('想即将退出程序。')
+        self._q.join()
+
+
+class GeventPoolExecutor3(LoggerMixin):
+    def __init__(self, max_works, ):
+        self._q = gevent.queue.Queue(max_works)
+        self.g_list = []
+        for _ in range(max_works):
+            self.g_list.append(gevent.spawn(self.__worker))
+        atexit.register(self.__atexit)
+
+    def __worker(self):
+        while True:
+            fn, args, kwargs = self._q.get()
+            try:
+                fn(*args, **kwargs)
+            except Exception as exc:
+                self.logger.exception(f'函数 {fn.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
+
+    def submit(self, fn: Callable, *args, **kwargs):
+        self._q.put((fn, args, kwargs))
+
+    def joinall(self):
+        gevent.joinall(self.g_list)
+
+    def joinall_in_new_thread(self):
+        threading.Thread(target=self.joinall)
+
+    def __atexit(self):
+        self.logger.critical('想即将退出程序。')
+        self.joinall()
+
+
 if __name__ == '__main__':
-    monkey.patch_all()
+    monkey.patch_all(thread=False)
 
 
     def f2(x):
 
         time.sleep(3)
-        nb_print(x)
+        nb_print(x * 10)
 
 
-    pool = GeventPoolExecutor(4)
+    pool = GeventPoolExecutor3(40)
 
     for i in range(20):
+        time.sleep(0.1)
         nb_print(f'放入{i}')
-        pool.submit(gevent_timeout_deco(0.8)(f2), i)
+        pool.submit(gevent_timeout_deco(8)(f2), i)
+    # pool.joinall_in_new_thread()
     nb_print(66666666)

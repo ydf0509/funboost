@@ -12,6 +12,7 @@ import copy
 import datetime
 import json
 import sys
+import atexit
 import socket
 import os
 import uuid
@@ -42,6 +43,7 @@ from function_scheduling_distributed_framework.concurrent_pool.custom_gevent_poo
     GeventPoolExecutor, check_gevent_monkey_patch
 from function_scheduling_distributed_framework.concurrent_pool.custom_threadpool_executor import \
     CustomThreadPoolExecutor, check_not_monkey
+# from function_scheduling_distributed_framework.concurrent_pool.concurrent_pool_with_multi_process import ConcurrentPoolWithProcess
 from function_scheduling_distributed_framework.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
 from function_scheduling_distributed_framework.utils import decorators, time_util, RedisMixin
@@ -171,7 +173,7 @@ class ConsumersManager:
         else:
             if cls.global_concurrent_mode in [1, 4]:
                 for t in cls.schedulal_thread_to_be_join:
-                    nb_print(t)
+                    # nb_print(t)
                     t.join()
             elif cls.global_concurrent_mode == 2:
                 # cls.logger.info()
@@ -224,7 +226,7 @@ class FunctionResultStatusPersistanceConfig(LoggerMixin):
                 'is_save_result': self.is_save_result, 'expire_seconds': self.expire_seconds}
 
 
-# noinspection DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode
+# noinspection DuplicatedCode
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     time_interval_for_check_do_not_run_time = 60
     BROKER_KIND = None
@@ -310,6 +312,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.init_params = copy.copy(locals())
         self.init_params.pop('self')
         self.init_params['broker_kind'] = self.__class__.BROKER_KIND
+        self.init_params['consuming_function'] = consuming_function
 
         ConsumersManager.consumers_queue__info_map[queue_name] = current_queue__info_dict = copy.copy(self.init_params)
         current_queue__info_dict['consuming_function'] = str(consuming_function)  # consuming_function.__name__
@@ -336,6 +339,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._queue_name = queue_name
         self.queue_name = queue_name  # 可以换成公有的，免得外部访问有警告。
+        if consuming_function is None:
+            raise ValueError('必须传 consuming_function 参数')
         self.consuming_function = consuming_function
         self._function_timeout = function_timeout
 
@@ -348,8 +353,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._specify_concurrent_pool = specify_concurrent_pool
         self._specify_async_loop = specify_async_loop
-        self._threadpool = None  # 单独加一个检测消息数量和心跳的线程
+        self._concurrent_pool = None
         self._concurrent_mode = concurrent_mode
+
         self._max_retry_times = max_retry_times
         self._is_print_detail_exception = is_print_detail_exception
         self._qps = qps
@@ -365,7 +371,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
         if self._concurrent_mode == 4:
             self._run = self._async_run  # 这里做了自动转化，使用async_run代替run
-
+        self.__check_monkey_patch()
         self._logger_prefix = logger_prefix
         self._log_level = log_level
         if logger_prefix != '':
@@ -419,6 +425,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.consumer_identification = f'{socket.gethostname()}_{time_util.DatetimeConverter().datetime_str.replace(":", "-")}_{os.getpid()}_{id(self)}'
 
         self.custom_init()
+
+        atexit.register(self.join_shedual_task_thread)
+
+    def __check_monkey_patch(self):
+        if self._concurrent_mode == 2:
+            check_gevent_monkey_patch()
+        elif self._concurrent_mode == 3:
+            check_evenlet_monkey_patch()
+        else:
+            check_not_monkey()
 
     @property
     @decorators.synchronized
@@ -554,9 +570,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._confirm_consume(kw)
                 if self.__get_priority_conf(kw, 'do_task_filtering'):
                     self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
+                result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。 '
-                                  f' {self._get_concurrent_info()}')
+                                  f' 结果是  {result_str_to_be_print} ，  {self._get_concurrent_info()}  ')
             except Exception as e:
                 if isinstance(e, (PyMongoError,
                                   ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
@@ -643,8 +660,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if self.__get_priority_conf(kw, 'do_task_filtering'):
                     # self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
                     await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params)
+                result_str_to_be_print = str(rs)[:100] if len(str(rs)) < 100 else str(rs)[:100] + '  。。。。。  '
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
-                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。  {corotinue_obj}')
+                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,'
+                                  f'入参是 【 {function_only_params} 】 ,结果是 {result_str_to_be_print}  。 {corotinue_obj} ')
             except Exception as e:
                 if isinstance(e, (PyMongoError,
                                   ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
@@ -780,30 +799,27 @@ class ConcurrentModeDispatcher(LoggerMixin):
                             f'为{ConsumersManager.get_concurrent_name_by_concurrent_mode(self._concurrent_mode)}')
 
     def build_pool(self):
-        if self.consumer._threadpool:
-            return self.consumer._threadpool
+        if self.consumer._concurrent_pool:
+            return self.consumer._concurrent_pool
 
         pool_type = None  # 是按照ThreadpoolExecutor写的三个鸭子类，公有方法名和功能写成完全一致，可以互相替换。
         if self._concurrent_mode == 1:
             pool_type = CustomThreadPoolExecutor
             # pool_type = BoundedThreadPoolExecutor
-            check_not_monkey()
         elif self._concurrent_mode == 2:
             pool_type = GeventPoolExecutor
-            check_gevent_monkey_patch()
         elif self._concurrent_mode == 3:
             pool_type = CustomEventletPoolExecutor
-            check_evenlet_monkey_patch()
         elif self._concurrent_mode == 4:
             pool_type = AsyncPoolExecutor
         if self._concurrent_mode == 4:
-            self.consumer._threadpool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
+            self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
                 self.consumer._concurrent_num, loop=self.consumer._specify_async_loop)
         else:
-            self.consumer._threadpool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
+            self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
                 self.consumer._concurrent_num)
 
-        return self.consumer._threadpool
+        return self.consumer._concurrent_pool
 
     def schedulal_task_with_no_block(self):
         if ConsumersManager.schedual_task_always_use_thread:

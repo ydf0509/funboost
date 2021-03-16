@@ -213,21 +213,19 @@ def run_consumer_with_multi_process(task_fun, process_num=1):
     :param task_fun:被 task_deco 装饰器装饰的消费函数
     :param process_num:开启多个进程。  主要是 多进程并发  + 4种细粒度并发(threading gevent eventlet asyncio)。叠加并发。
     这种是多进程方式，一次编写能够兼容win和linux的运行。一次性启动6个进程 叠加 多线程 并发。
-
-    '''
-    from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum, run_consumer_with_multi_process
-    import os
-
-    @task_deco('test_multi_process_queue',broker_kind=BrokerEnum.REDIS_ACK_ABLE,concurrent_mode=ConcurrentModeEnum.THREADING,)
-    def fff(x):
-        print(x * 10,os.getpid())
-
-    if __name__ == '__main__':
-        # fff.consume()
-        run_consumer_with_multi_process(fff,6) # 一次性启动6个进程 叠加 多线程 并发。
-    '''
-
     """
+    '''
+       from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum, run_consumer_with_multi_process
+       import os
+
+       @task_deco('test_multi_process_queue',broker_kind=BrokerEnum.REDIS_ACK_ABLE,concurrent_mode=ConcurrentModeEnum.THREADING,)
+       def fff(x):
+           print(x * 10,os.getpid())
+
+       if __name__ == '__main__':
+           # fff.consume()
+           run_consumer_with_multi_process(fff,6) # 一次性启动6个进程 叠加 多线程 并发。
+    '''
     if getattr(task_fun, 'is_decorated_as_consume_function') != True:
         raise ValueError('task_fun 参数必须是一个被 task_deco 装饰的函数')
     if process_num == 1:

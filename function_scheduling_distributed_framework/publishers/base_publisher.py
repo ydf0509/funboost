@@ -155,6 +155,14 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def publish(self, msg: typing.Union[str, dict], task_id=None,
                 priority_control_config: PriorityConsumingControlConfig = None):
+        """
+
+        :param msg:
+        :param task_id:
+        :param callback_fun: 回调函数
+        :param priority_control_config:
+        :return:
+        """
         if isinstance(msg, str):
             msg = json.loads(msg)
         if self.publish_params_checker:

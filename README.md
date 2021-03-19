@@ -6,6 +6,19 @@ pip install function_scheduling_distributed_framework --upgrade
 
 [![sgV2xP.png](https://s3.ax1x.com/2021/01/19/sgV2xP.png)](https://imgchr.com/i/sgV2xP)
 
+```
+@task_deco("task_queue_name1",qps=2)  # 入参包括20种，运行控制方式非常多，想得到的都会有。
+def task_fun(x,y):
+    print(x + y)
+
+if __name__ == "__main__":
+    task_fun.consume()
+
+对与消费函数框，架内部会生成发布者(生产者)和消费者。
+1.推送。 task_fun.push(1,y=2) 会把 {"x":1,"y":2} (消息也自动包含一些其他信息) 发送到中间件的 task_queue_name1 队列中。
+2.消费。 task_fun.consume() 开始自动从中间件拉取消息，并发的调度运行函数，task_fun(**{"x":1,"y":2})
+整个过程只有这两步，清晰明了，其他的控制方式需要看 task_deco 的中文入参解释，全都很有用。
+```
 ### 1.0.1  框架用途功能
 
 python通用分布式函数调度框架。适用场景范围广泛。
@@ -45,7 +58,9 @@ python通用分布式函数调度框架。适用场景范围广泛。
         例如，有些任务你不想在白天运行，可以只在晚上的时间段运行
      
      消费确认：
-        这是最为重要的一项功能之一，有了这才能肆无忌惮的任性反复重启代码也不会丢失一个任务
+        这是最为重要的一项功能之一，有了这才能肆无忌惮的任性反复重启代码也不会丢失一个任务。
+        （常规的手写 redis.lpush + redis.blpop,然后并发的运行取出来的消息，随意关闭重启代码瞬间会丢失大量任务，
+        那种有限的 断点接续 完全不可靠，根本不敢随意重启代码）
      
      立即重试指定次数：
         当函数运行出错，会立即重试指定的次数，达到最大次重试数后就确认消费了
@@ -540,7 +555,7 @@ if __name__ == '__main__':
 
 ![Image text](https://i.niupic.com/images/2019/11/05/_476.png)
 
-实测在进行阻塞式任务时候，性能略超过celery。
+实测在进行阻塞式任务时候，性能大幅超过celery。
 
 1)高并发
 ![Image text](https://i.niupic.com/images/2019/09/20/_331.png)

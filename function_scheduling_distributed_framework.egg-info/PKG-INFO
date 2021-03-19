@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: function-scheduling-distributed-framework
-Version: 8.8
+Version: 8.9
 Summary: function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way
 Home-page: https://github.com/ydf0509/distributed_framework
 Author: bfzs
@@ -33,7 +33,8 @@ Description: # 1.distributed_framework
                 支持数十种最负盛名的消息中间件.(除了常规mq，还包括用不同形式的如 数据库 磁盘文件 redis等来模拟消息队列)
         
              并发：
-                支持threading gevent eventlet asyncio 四种并发模式 + 多进程
+                支持threading gevent eventlet asyncio 四种并发模式 叠加 多进程。
+                多进程不是和前面四种模式平行的，是叠加的，例如可以是 多进程 + 协程，多进程 + 多线程。
              
              控频限流：
                 例如十分精确的指定1秒钟运行30次函数（无论函数需要随机运行多久时间，都能精确控制到指定的消费频率；
@@ -148,79 +149,32 @@ Description: # 1.distributed_framework
         
         ### 1.0.3 框架支持的函数调度并发模式种类
         ```
-        1、threading 多线程，使用自定义的可缩小、节制开启新线程的自定义线程池，非直接用官方内置concurrent.futures.ThreadpoolExecutor
-           次线程池非常智能，配合qps参数，任何场景可以无脑开500线程，真正的做到智能扩张，智能自动缩小。
+        1、threading 多线程，使用自定义的可缩小、节制开启新线程的自定义线程池，不是直接用官方内置concurrent.futures.ThreadpoolExecutor
+           此线程池非常智能，配合qps参数，任何场景可以无脑开500线程，真正的做到智能扩张，智能自动缩小。
            这线程池是智能线程池，由于非常好用，为这个线程池做了独立的pypi包，可以单独用于没有使用此框架的项目。
         2、gevent    需要在运行起点的脚本首行打 gevent 猴子补丁。
         3、eventlet  需要在运行起点的脚本首行打 eventlet 猴子补丁。
         4、asyncio  async异步，主要是针对消费函数已经定义成了   async def fun(x)  这种情况，这种情况不能直接使用多线程，
            因为执行  fun(1)  后得到的并不是所想象的函数最终结果，而是得到的一个协程对象，所以针对已经定义成异步函数了的，需要使用此种并发模式。
            框架不鼓励用户定义异步函数，你就用同步的直观方式思维定义函数就行了，其余的并发调度交给框架就行了。
-        5、多进程，这个有用户在if  name 等于 main 里面 自己来开启 mulitiprocessing，因为直接集成到框架里面不行，有很多属性不支持 picke序列化，
-           windwos没有 linux的fork，框架只能支持到linux fork多进程，与其这样，还不如用户自己开多进程 + 上面的 4种并发，
-           这样可以使同样的代码在 linux 和 win 表现一致。例如 有名的celery框架，默认是多进程并发，所以默认无法在win运行， 
-           其实celery 4是可以在win运行 的，只不过你不能设置成默认的 多进程模式，如果设置成 gevent 并发 还是可以在win环境玩celery的，
-            主要是win 不能 fork，只能 spwan，多进程需要picke序列化，consumer对象很多属性不能 picke 序列化，这是个什么意思呢，
-           例如lock对象 redis对象都不能被picke序列化反序列化。
-           
-        ```
-        #### 多进程在win和linux的不同区别举个例子
-        ```
-        python虽然通常来说是跨平台的， 在linux和win的可移植性不是100%的，
-        用脑袋想都知道，如果win和linux的移植性是100%的，为什么部分pip包只支持linux不支持win呢
-        例如 uwsgi  gunicorn  celery  uvloop 一大批包都不支持win，特别是越低层的包对win支持越困难，
-        平常写高层次的代码是不会出现win linux不兼容的，基本不需要考虑win linux，但写了多进程后，一定要格外小心，linux和win的多进程不同之处非常多。
+        5、开启多进程启动多个consumer，此模式是 多进程  + 上面4种的其中一种并发方式，充分利用多核和充分利用io，用法如下。可以实现 多进程 叠加 协程并发。
+        # 这种是多进程方式，一次编写能够兼容win和linux的运行。
+        from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum, run_consumer_with_multi_process
+        import os
         
-        下面举个非常简单的例子，测试win下面跑不通，而linux可以跑的例子吧。分四种情况
-        1、当Process(target=f, args=(x,)).start() 写在 if __name__ == '__main__'里面,
-           x = 2 时候，Process(target=f, args=(x,)).start() 在 win 和 linux都可以运行成功。
-        2、当Process(target=f, args=(x,)).start() 写在 if __name__ == '__main__'里面 ,
-          x = threading.Lock() 时候，Process(target=f, args=(x,)).start() 在win下100%报错，linux则能够成功。
-        
-        3、当Process(target=f, args=(x,)).start() 没有写在 if __name__ == '__main__'，直接写在外面没有缩进, 
-           即使 x = 2 时候，Process(target=f, args=(x,)).start() 在 win 也运行报错。
-        4、当Process(target=f, args=(x,)).start() 没有写在 if __name__ == '__main__'，直接写在外面没有缩进, 
-           无论 x = 2 还是 threading.Lock() 时候，Process(target=f, args=(x,)).start() 在linux都运行正常。
-        
-        所以天天背诵一段 进程 和线程的区别的文字概念，没有个卵用，不多实践对比，只死记硬背概念会走火入魔并没卵用，也还要多实践测试，
-        如果linux和win的多进程代码表现可移植性是100%，那celery团队就不会头疼celery对win的支持问题的了。
-        
-        说这么多就是说为什么，框架的broker_kind是不能直接支持指定多进程并发，因为这样做，我只能保证相同代码在linux上运行的很好，在win上却肯定出错。
-        如果你要开多进程消费也很简单，自己定义一个函数然后开启多进程就可以，下面的代码兼容linux和win，跨平台兼容性高才算好代码。
-        
-        def fun():
-            consume_fun1.consume()
-            consume_fun2.consume()
+        @task_deco('test_multi_process_queue',broker_kind=BrokerEnum.REDIS_ACK_ABLE,
+                   concurrent_mode=ConcurrentModeEnum.THREADING,)
+        def fff(x):
+            print(x * 10,os.getpid())
         
         if __name__ == '__main__':
-            Process(target=fun).start()
+            # run_many_consumer_with_multi_process([consumer_init_params_include_consuming_function(fff)],process_num=6)
+            run_consumer_with_multi_process(fff,6)
         
         ```
         
         
-        #### python多进程代码在 linux 和 win 巨大区别之举例代码。
-        ```python
-        ## 这段代码分别让 x 等于不同的值和 Process(target=f, args=(x,)).start() 在 if main里面和外面，使用win和linux平台分别测试，就能感受到多进程在linux和win的巨大区别。
-        ## 代码只是举个例子，并不是入参只有是 threding.Lock()才在win下行不通，任意自定义对象包含了threding.Lock属性，如果作为target的args入参都会报错。例如x = Redis()，args为Redis()连接对象也行不通，
-        ##  win下不能运行的入参种类太多了例如生成器对象也不行，只有简单的包括简单数字 字符串 数组 字典啥的非常简单的变量才可以作为args的入参，任何复杂的对象肯定包含了了很多属性，经常在win下报错。
-        from multiprocessing import Process
-        import threading
         
-        
-        def f(xx):
-            print(xx)
-        
-        
-        x = threading.Lock()   # 这两行x值的不同是测试的重点之一，threading.Lock 不可picke序列化导致win下100%失败。
-        ## 或者 x = (i for i in range(5)) 在win下也会100%报错
-        # x = 2  # x=2可以在win运行
-        
-        
-        if __name__ == '__main__':
-            Process(target=f, args=(x,)).start()
-        
-        # Process(target=f, args=(x,)).start()  # 此行放不放在 if __name__ == '__main__': 是测试的重点之二。
-        ```
         
         ### 1.0.4  设计规范原则
         ```
@@ -295,7 +249,7 @@ Description: # 1.distributed_framework
             :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
             :param concurrent_num:并发数量，
             :param specify_concurrent_pool:使用指定的线程池（协程池），可以多个消费者共使用一个线程池，不为None时候。threads_num失效
-            :param concurrent_mode:并发模式，1线程 2gevent 3eventlet
+            :param concurrent_mode:并发模式，1线程 2gevent 3eventlet 4 asyncio
             :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
                    可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。
                    主动抛出ExceptionForRequeue异常，则当前消息会重返中间件。
@@ -500,6 +454,73 @@ Description: # 1.distributed_framework
         
         
         ```
+        
+        ### 2.6 多进程并发 + 多线程/协程，代码例子。
+        ```python
+        import time
+        """
+        这种是多进程方式，一次编写能够兼容win和linux的运行。一次性启动6个进程 叠加 多线程 并发。
+        """
+        from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum, run_consumer_with_multi_process
+        import os
+        
+        @task_deco('test_multi_process_queue',broker_kind=BrokerEnum.REDIS_ACK_ABLE,concurrent_mode=ConcurrentModeEnum.THREADING,)
+        def fff(x):
+            print(x * 10,os.getpid())
+        
+        if __name__ == '__main__':
+            # fff.consume()
+            run_consumer_with_multi_process(fff,6) # 一次性启动6个进程 叠加 多线程 并发。
+        
+        ```
+        
+        
+        ### 2.7 演示qps控频和自适应扩大和减小并发数量。
+        
+        ```
+        通过不同的时间观察控制台，可以发现无论f2这个函数需要耗时多久（无论是函数耗时需要远小于1秒还是远大于1秒），框架都能精确控制每秒刚好运行2次。
+        当函数耗时很小的时候，只需要很少的线程就能自动控制函数每秒运行2次。
+        当函数突然需要耗时很大的时候，智能线程池会自动启动更多的线程来达到每秒运行2次的目的。
+        当函数耗时从需要耗时很大变成只需要耗时很小的时候，智能线程池会自动缩小线程数量。
+        总之是围绕qps恒定，会自动变幻线程数量，做到既不多开浪费cpu切换，也不少开造成执行速度慢。
+        ```
+        
+        ```python
+        import time
+        import threading
+        from function_scheduling_distributed_framework import task_deco, BrokerEnum,ConcurrentModeEnum
+        
+        t_start = time.time()
+        
+        @task_deco('queue_test2_qps', qps=2, broker_kind=BrokerEnum.PERSISTQUEUE,concurrent_mode=ConcurrentModeEnum.THREADING,concurrent_num=600 )
+        def f2(a, b):
+            """
+            这个例子是测试函数耗时是动态变化的，这样就不可能通过提前设置参数预估函数固定耗时和搞鬼了。看看能不能实现qps稳定和线程池自动扩大自动缩小
+            要说明的是打印的线程数量也包含了框架启动时候几个其他的线程，所以数量不是刚好和所需的线程计算一样的。
+            """
+            result = a + b
+            sleep_time = 0.01
+            if time.time() - t_start > 60:  # 先测试函数耗时慢慢变大了，框架能不能按需自动增大线程数量
+                sleep_time = 7
+            if time.time() - t_start > 120:
+                sleep_time = 30
+            if time.time() - t_start > 240: # 最后把函数耗时又减小，看看框架能不能自动缩小线程数量。
+                sleep_time = 0.8
+            if time.time() - t_start > 300:
+                sleep_time = None
+            print(f'{time.strftime("%H:%M:%S")}  ，当前线程数量是 {threading.active_count()},   {a} + {b} 的结果是 {result}， sleep {sleep_time} 秒')
+            if sleep_time is not None:
+                time.sleep(sleep_time)  # 模拟做某事需要阻塞n秒种，必须用并发绕过此阻塞。
+            return result
+        
+        
+        if __name__ == '__main__':
+            f2.clear()
+            for i in range(1000):
+                f2.push(i, i * 2)
+            f2.consume()
+        ```
+        
         
         
         ### 3 运行中截图

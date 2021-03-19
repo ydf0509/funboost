@@ -159,6 +159,11 @@ def use_config_form_distributed_frame_config_module():
 
 
 def auto_creat_config_file_to_project_root_path():
+    """
+    在没有使用pycahrm运行代码时候，如果实在cmd 或者 linux 运行， python xx.py，
+    请在临时会话窗口设置linux export PYTHONPATH=你的项目根目录 ，winwdos set PYTHONPATH=你的项目根目录
+    :return:
+    """
     # print(Path(sys.path[1]).as_posix())
     # print((Path(__file__).parent.parent).absolute().as_posix())
     # if Path(sys.path[1]).as_posix() in Path(__file__).parent.parent.absolute().as_posix():

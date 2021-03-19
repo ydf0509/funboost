@@ -81,7 +81,7 @@ class _WorkItem(LoggerMixin):
         return f'{(self.fn.__name__, self.args, self.kwargs)}'
 
 
-def set_threadpool_executor_shrinkable(min_works=1, keep_alive_time=10):
+def set_threadpool_executor_shrinkable(min_works=1, keep_alive_time=5):
     ThreadPoolExecutorShrinkAble.MIN_WORKERS = min_works
     ThreadPoolExecutorShrinkAble.KEEP_ALIVE_TIME = keep_alive_time
 
@@ -93,7 +93,7 @@ class ThreadPoolExecutorShrinkAble(Executor, LoggerMixin, LoggerLevelSetterMixin
     # KEEP_ALIVE_TIME = 60  # 这个参数表名，当前线程从queue.get(block=True, timeout=KEEP_ALIVE_TIME)多久没任务，就线程结束。
 
     MIN_WORKERS = 1
-    KEEP_ALIVE_TIME = 10
+    KEEP_ALIVE_TIME = 5
 
     def __init__(self, max_workers: int = None, thread_name_prefix=''):
         """

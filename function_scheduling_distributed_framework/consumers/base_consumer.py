@@ -3,7 +3,7 @@
 # @Time    : 2019/8/8 0008 13:11
 """
 所有中间件类型消费者的抽象基类。使实现不同中间件的消费者尽可能代码少。
-真个流程最难的都在这里面。
+整个流程最难的都在这里面。因为要实现多种并发模型，和对函数施加20运行种控制方式，所以代码非常长。
 """
 
 import abc
@@ -288,7 +288,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param specify_async_loop:指定的async的loop循环，设置并发模式为async才能起作用。
         :param concurrent_mode:并发模式，1线程 2gevent 3eventlet 4 asyncio
         :param max_retry_times:
-        :param log_level:
+        :param log_level: # 这里是设置消费者 发布者日志级别的，如果不想看到很多的细节显示信息，可以设置为 20 (logging.INFO)。
         :param is_print_detail_exception:
         :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频
         :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，一会废弃msg_schedule_time_intercal这个参数。

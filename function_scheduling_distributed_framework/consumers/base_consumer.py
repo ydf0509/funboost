@@ -790,6 +790,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
             check_evenlet_monkey_patch()
         elif self._concurrent_mode == 4:
             pool_type = AsyncPoolExecutor
+            check_not_monkey()
         if self._concurrent_mode == 4:
             self.consumer._threadpool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
                 self.consumer._concurrent_num, loop=self.consumer._specify_async_loop)

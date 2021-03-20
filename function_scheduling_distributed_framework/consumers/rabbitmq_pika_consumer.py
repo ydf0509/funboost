@@ -26,7 +26,7 @@ class RabbitmqConsumer(AbstractConsumer):
     def _shedual_task(self):
         channel = RabbitMqFactory(is_use_rabbitpy=0).get_rabbit_cleint().creat_a_channel()
         channel.queue_declare(queue=self._queue_name, durable=True)
-        channel.basic_qos(prefetch_count=self._threads_num)
+        channel.basic_qos(prefetch_count=self._concurrent_num)
 
         def callback(ch, method, properties, body):
             body = body.decode()

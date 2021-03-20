@@ -31,7 +31,7 @@ def push():
     for i in range(50000):
         # time.sleep(0.2)
         # print(i)
-        queue.sync_q.put(i)  # 这是aync。不要看错了。
+        queue.sync_q.put(i)  # 这是sync。不要看错了。
 
 
 if __name__ == '__main__':

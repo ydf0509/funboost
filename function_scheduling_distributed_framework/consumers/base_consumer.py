@@ -3,7 +3,7 @@
 # @Time    : 2019/8/8 0008 13:11
 """
 所有中间件类型消费者的抽象基类。使实现不同中间件的消费者尽可能代码少。
-真个流程最难的都在这里面。
+整个流程最难的都在这里面。因为要实现多种并发模型，和对函数施加20运行种控制方式，所以代码非常长。
 """
 
 import abc
@@ -12,6 +12,7 @@ import copy
 import datetime
 import json
 import sys
+import atexit
 import socket
 import os
 import uuid
@@ -42,6 +43,7 @@ from function_scheduling_distributed_framework.concurrent_pool.custom_gevent_poo
     GeventPoolExecutor, check_gevent_monkey_patch
 from function_scheduling_distributed_framework.concurrent_pool.custom_threadpool_executor import \
     CustomThreadPoolExecutor, check_not_monkey
+# from function_scheduling_distributed_framework.concurrent_pool.concurrent_pool_with_multi_process import ConcurrentPoolWithProcess
 from function_scheduling_distributed_framework.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
 from function_scheduling_distributed_framework.utils import decorators, time_util, RedisMixin
@@ -171,7 +173,7 @@ class ConsumersManager:
         else:
             if cls.global_concurrent_mode in [1, 4]:
                 for t in cls.schedulal_thread_to_be_join:
-                    nb_print(t)
+                    # nb_print(t)
                     t.join()
             elif cls.global_concurrent_mode == 2:
                 # cls.logger.info()
@@ -224,7 +226,7 @@ class FunctionResultStatusPersistanceConfig(LoggerMixin):
                 'is_save_result': self.is_save_result, 'expire_seconds': self.expire_seconds}
 
 
-# noinspection DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode,DuplicatedCode
+# noinspection DuplicatedCode
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     time_interval_for_check_do_not_run_time = 60
     BROKER_KIND = None
@@ -250,8 +252,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         """
         def ff():
-            RabbitmqConsumer('queue_test', consuming_function=f3, threads_num=20, msg_schedule_time_intercal=2, log_level=10, logger_prefix='yy平台消费', is_consuming_function_use_multi_params=True).start_consuming_message()
-            RabbitmqConsumer('queue_test2', consuming_function=f4, threads_num=20, msg_schedule_time_intercal=4, log_level=10, logger_prefix='zz平台消费', is_consuming_function_use_multi_params=True).start_consuming_message()
+            RabbitmqConsumer('queue_test', consuming_function=f3, concurrent_num=20, msg_schedule_time_intercal=2, log_level=10, logger_prefix='yy平台消费', is_consuming_function_use_multi_params=True).start_consuming_message()
+            RabbitmqConsumer('queue_test2', consuming_function=f4, concurrent_num=20, msg_schedule_time_intercal=4, log_level=10, logger_prefix='zz平台消费', is_consuming_function_use_multi_params=True).start_consuming_message()
             AbstractConsumer.join_shedual_task_thread()            # 如果开多进程启动消费者，在linux上需要这样写下这一行。
 
 
@@ -262,12 +264,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         ConsumersManager.join_all_consumer_shedual_task_thread()
 
     # noinspection PyProtectedMember,PyUnresolvedReferences
-    def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0,
-                 threads_num=50, concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=1,
+    def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0, concurrent_num=50,
+                 specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True,
-                 msg_schedule_time_intercal=0.0, qps: float = 0, msg_expire_senconds=0,
-                 is_using_distributed_frequency_control=False,
-                 is_send_consumer_hearbeat_to_redis=False,
+                 msg_schedule_time_intercal=0.0, qps: float = 0, is_using_distributed_frequency_control=False,
+                 msg_expire_senconds=0, is_send_consumer_hearbeat_to_redis=False,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False,
                  task_filtering_expire_seconds=0, is_consuming_function_use_multi_params=True,
                  is_do_not_run_by_specify_time_effect=False,
@@ -280,13 +281,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param queue_name:
         :param consuming_function: 处理消息的函数。
         :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
-        :param threads_num:线程或协程并发数量
-        :param concurrent_num:并发数量，这个覆盖threads_num。以后会废弃threads_num参数，因为表达的意思不太准确，不一定是线程模式并发。
+         # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
+         # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
+        :param concurrent_num:并发数量，并发种类由concurrent_mode决定
         :param specify_concurrent_pool:使用指定的线程池/携程池，可以多个消费者共使用一个线程池，不为None时候。threads_num失效
         :param specify_async_loop:指定的async的loop循环，设置并发模式为async才能起作用。
         :param concurrent_mode:并发模式，1线程 2gevent 3eventlet 4 asyncio
         :param max_retry_times:
-        :param log_level:
+        :param log_level: # 这里是设置消费者 发布者日志级别的，如果不想看到很多的细节显示信息，可以设置为 20 (logging.INFO)。
         :param is_print_detail_exception:
         :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频
         :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，一会废弃msg_schedule_time_intercal这个参数。
@@ -310,6 +312,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.init_params = copy.copy(locals())
         self.init_params.pop('self')
         self.init_params['broker_kind'] = self.__class__.BROKER_KIND
+        self.init_params['consuming_function'] = consuming_function
 
         ConsumersManager.consumers_queue__info_map[queue_name] = current_queue__info_dict = copy.copy(self.init_params)
         current_queue__info_dict['consuming_function'] = str(consuming_function)  # consuming_function.__name__
@@ -336,14 +339,23 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._queue_name = queue_name
         self.queue_name = queue_name  # 可以换成公有的，免得外部访问有警告。
+        if consuming_function is None:
+            raise ValueError('必须传 consuming_function 参数')
         self.consuming_function = consuming_function
         self._function_timeout = function_timeout
-        self._threads_num = concurrent_num if threads_num == 50 else threads_num  # concurrent参数优先，以后废弃threads_num参数。
-        self._concurrent_num = self._threads_num
+
+        # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
+        # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
+        if qps != 0 and concurrent_num == 50:
+            self._concurrent_num = 500
+        else:
+            self._concurrent_num = concurrent_num
+
         self._specify_concurrent_pool = specify_concurrent_pool
         self._specify_async_loop = specify_async_loop
-        self._threadpool = None  # 单独加一个检测消息数量和心跳的线程
+        self._concurrent_pool = None
         self._concurrent_mode = concurrent_mode
+
         self._max_retry_times = max_retry_times
         self._is_print_detail_exception = is_print_detail_exception
         self._qps = qps
@@ -358,8 +370,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             raise ValueError('设置的并发模式不正确')
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
         if self._concurrent_mode == 4:
-            self._run = self._async_run   # 这里做了自动转化，使用async_run代替run
-
+            self._run = self._async_run  # 这里做了自动转化，使用async_run代替run
+        self.__check_monkey_patch()
         self._logger_prefix = logger_prefix
         self._log_level = log_level
         if logger_prefix != '':
@@ -413,6 +425,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.consumer_identification = f'{socket.gethostname()}_{time_util.DatetimeConverter().datetime_str.replace(":", "-")}_{os.getpid()}_{id(self)}'
 
         self.custom_init()
+
+        atexit.register(self.join_shedual_task_thread)
+
+    def __check_monkey_patch(self):
+        if self._concurrent_mode == 2:
+            check_gevent_monkey_patch()
+        elif self._concurrent_mode == 3:
+            check_evenlet_monkey_patch()
+        else:
+            check_not_monkey()
 
     @property
     @decorators.synchronized
@@ -548,9 +570,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._confirm_consume(kw)
                 if self.__get_priority_conf(kw, 'do_task_filtering'):
                     self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
+                result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。 '
-                                  f' {self._get_concurrent_info()}')
+                                  f' 结果是  {result_str_to_be_print} ，  {self._get_concurrent_info()}  ')
             except Exception as e:
                 if isinstance(e, (PyMongoError,
                                   ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
@@ -637,8 +660,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if self.__get_priority_conf(kw, 'do_task_filtering'):
                     # self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
                     await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params)
+                result_str_to_be_print = str(rs)[:100] if len(str(rs)) < 100 else str(rs)[:100] + '  。。。。。  '
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
-                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。  {corotinue_obj}')
+                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,'
+                                  f'入参是 【 {function_only_params} 】 ,结果是 {result_str_to_be_print}  。 {corotinue_obj} ')
             except Exception as e:
                 if isinstance(e, (PyMongoError,
                                   ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
@@ -715,13 +740,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.concurrent_pool.submit(self._run, kw)
 
     def __frequency_control(self, qpsx, msg_schedule_time_intercalx):
-        # 以下是消费函数qps控制代码。
+        # 以下是消费函数qps控制代码。无论是单个消费者空频还是分布式消费控频，都是基于直接计算的，没有依赖redis inrc计数，使得控频性能好。
         if qpsx == 0:
             return
-        if qpsx <= 2:
+        if qpsx <= 5:
             """ 原来的简单版 """
             time.sleep(msg_schedule_time_intercalx)
-        elif 2 < qpsx <= 20:
+        elif 5 < qpsx <= 20:
             """ 改进的控频版,防止网络波动"""
             time_sleep_for_qps_control = max((msg_schedule_time_intercalx - (time.time() - self._last_submit_task_timestamp)) * 0.99, 10 ** -3)
             # print(time.time() - self._last_submit_task_timestamp)
@@ -729,7 +754,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             time.sleep(time_sleep_for_qps_control)
             self._last_submit_task_timestamp = time.time()
         else:
-            """基于计数的控频"""
+            """基于当前消费者计数的控频"""
             if time.time() - self._last_start_count_qps_timestamp > 1:
                 self._has_execute_times_in_recent_second = 1
                 self._last_start_count_qps_timestamp = time.time()
@@ -774,31 +799,28 @@ class ConcurrentModeDispatcher(LoggerMixin):
                             f'为{ConsumersManager.get_concurrent_name_by_concurrent_mode(self._concurrent_mode)}')
 
     def build_pool(self):
-        if self.consumer._threadpool:
-            return self.consumer._threadpool
+        if self.consumer._concurrent_pool:
+            return self.consumer._concurrent_pool
 
         pool_type = None  # 是按照ThreadpoolExecutor写的三个鸭子类，公有方法名和功能写成完全一致，可以互相替换。
         if self._concurrent_mode == 1:
             pool_type = CustomThreadPoolExecutor
             # pool_type = BoundedThreadPoolExecutor
-            check_not_monkey()
         elif self._concurrent_mode == 2:
             pool_type = GeventPoolExecutor
-            check_gevent_monkey_patch()
         elif self._concurrent_mode == 3:
             pool_type = CustomEventletPoolExecutor
-            check_evenlet_monkey_patch()
         elif self._concurrent_mode == 4:
             pool_type = AsyncPoolExecutor
             check_not_monkey()
         if self._concurrent_mode == 4:
-            self.consumer._threadpool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
+            self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
                 self.consumer._concurrent_num, loop=self.consumer._specify_async_loop)
         else:
-            self.consumer._threadpool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
+            self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
                 self.consumer._concurrent_num)
 
-        return self.consumer._threadpool
+        return self.consumer._concurrent_pool
 
     def schedulal_task_with_no_block(self):
         if ConsumersManager.schedual_task_always_use_thread:

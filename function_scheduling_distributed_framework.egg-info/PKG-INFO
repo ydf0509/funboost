@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: function-scheduling-distributed-framework
-Version: 8.6
+Version: 8.9
 Summary: function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way
 Home-page: https://github.com/ydf0509/distributed_framework
 Author: bfzs
@@ -11,6 +11,10 @@ License: BSD License
 Description: # 1.distributed_framework
         
         pip install function_scheduling_distributed_framework --upgrade
+        
+        ### 1.0.0  示意图
+        
+        [![sgV2xP.png](https://s3.ax1x.com/2021/01/19/sgV2xP.png)](https://imgchr.com/i/sgV2xP)
         
         ### 1.0.1  框架用途功能
         
@@ -29,7 +33,8 @@ Description: # 1.distributed_framework
                 支持数十种最负盛名的消息中间件.(除了常规mq，还包括用不同形式的如 数据库 磁盘文件 redis等来模拟消息队列)
         
              并发：
-                支持threading gevent eventlet asyncio 四种并发模式 + 多进程
+                支持threading gevent eventlet asyncio 四种并发模式 叠加 多进程。
+                多进程不是和前面四种模式平行的，是叠加的，例如可以是 多进程 + 协程，多进程 + 多线程。
              
              控频限流：
                 例如十分精确的指定1秒钟运行30次函数（无论函数需要随机运行多久时间，都能精确控制到指定的消费频率；
@@ -104,6 +109,22 @@ Description: # 1.distributed_framework
         
         windows和linux行为100%一致，不会像celery一样，相同代码前提下，很多功能在win上不能运行或出错。
         
+        #### 1.0.1.2 关于特色控频功能
+        
+        ```
+        此功能是框架最好用的功能，控频功能远远强于只能控制并发数量的功能。
+        举个例子，在flask服务端接口中写个 time.sleep，消费函数里面请求这个flask接口，如果服务端反复修改sleep的大小后重新部署web服务，
+        例如分别把sleep 设置成 0.006 0.04 0.7 1 3 13 26 秒 这些值，如何做到无视服务端的修改而消费代码不重启且精确控制消费函数每秒得到7次响应结果呢，
+        传统的设置 线程数 进程数 或者asyncio的并发数，完全没有办法做到每秒都得到7次结果，有人说开7个线程就是每秒 7 tps，这是扯淡，
+        除非服务端flask接口永远都是time.sleep 1秒，如果改成了sleep 其他的值，
+        例如服务端接口中sleep 0.1秒，你开7个线程，每秒就是请求70次了，这样是严重超频，
+        例如服务端接口中sleep 10秒，你开7个线程，每秒平均得到的结果不到 1tps，这样是严重没有达到频率，
+        这在对接第三方供酒店 机票库存供应商的付费api时候，90%的供应商都会根据付费金额不同控制你的每秒调用次数，
+        请求频率大了返回error过多，没得到正确结果，请求频率小了，浪费自己花费的钱财和需要更长的时间执行完任务。
+        
+        此框架使用时候，建议不需要指定并发大小，而是指定qps大小，框架会自动自适应调节真正的并发数量来精确达到指定的运行频率。
+        
+        ```
         
         ### 1.0.2 框架支持的中间件类型
         ```
@@ -128,76 +149,32 @@ Description: # 1.distributed_framework
         
         ### 1.0.3 框架支持的函数调度并发模式种类
         ```
-        1、threading 多线程，使用自定义的可缩小、节制开启新线程的自定义线程池，非直接用官方内置concurrent.futures.ThreadpoolExecutor
+        1、threading 多线程，使用自定义的可缩小、节制开启新线程的自定义线程池，不是直接用官方内置concurrent.futures.ThreadpoolExecutor
+           此线程池非常智能，配合qps参数，任何场景可以无脑开500线程，真正的做到智能扩张，智能自动缩小。
+           这线程池是智能线程池，由于非常好用，为这个线程池做了独立的pypi包，可以单独用于没有使用此框架的项目。
         2、gevent    需要在运行起点的脚本首行打 gevent 猴子补丁。
         3、eventlet  需要在运行起点的脚本首行打 eventlet 猴子补丁。
         4、asyncio  async异步，主要是针对消费函数已经定义成了   async def fun(x)  这种情况，这种情况不能直接使用多线程，
            因为执行  fun(1)  后得到的并不是所想象的函数最终结果，而是得到的一个协程对象，所以针对已经定义成异步函数了的，需要使用此种并发模式。
            框架不鼓励用户定义异步函数，你就用同步的直观方式思维定义函数就行了，其余的并发调度交给框架就行了。
-        5、多进程，这个有用户在if  name 等于 main 里面 自己来开启 mulitiprocessing，因为直接集成到框架里面不行，有很多属性不支持 picke序列化，
-           windwos没有 linux的fork，框架只能支持到linux fork多进程，与其这样，还不如用户自己开多进程 + 上面的 4种并发，
-           这样可以使同样的代码在 linux 和 win 表现一致。例如 有名的celery框架，默认是多进程并发，所以默认无法在win运行， 
-           其实celery 4是可以在win运行 的，只不过你不能设置成默认的 多进程模式，如果设置成 gevent 并发 还是可以在win环境玩celery的，
-            主要是win 不能 fork，只能 spwan，多进程需要picke序列化，consumer对象很多属性不能 picke 序列化，这是个什么意思呢，
-           例如lock对象 redis对象都不能被picke序列化反序列化。
-           
-        ```
-        #### 多进程在win和linux的不同区别举个例子
-        ```
-        python虽然通常来说是跨平台的， 在linux和win的可移植性不是100%的，
-        用脑袋想都知道，如果win和linux的移植性是100%的，为什么部分pip包只支持linux不支持win呢
-        例如 uwsgi  gunicorn  celery  uvloop 一大批包都不支持win，特别是越低层的包对win支持越困难，
-        平常写高层次的代码是不会出现win linux不兼容的，基本不需要考虑win linux，但写了多进程后，一定要格外小心，linux和win的多进程不同之处非常多。
+        5、开启多进程启动多个consumer，此模式是 多进程  + 上面4种的其中一种并发方式，充分利用多核和充分利用io，用法如下。可以实现 多进程 叠加 协程并发。
+        # 这种是多进程方式，一次编写能够兼容win和linux的运行。
+        from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum, run_consumer_with_multi_process
+        import os
         
-        下面举个非常简单的例子，测试win下面跑不通，而linux可以跑的例子吧。分四种情况
-        1、当Process(target=f, args=(x,)).start() 写在 if __name__ == '__main__'里面,
-           x = 2 时候，Process(target=f, args=(x,)).start() 在 win 和 linux都可以运行成功。
-        2、当Process(target=f, args=(x,)).start() 写在 if __name__ == '__main__'里面 ,
-          x = threading.Lock() 时候，Process(target=f, args=(x,)).start() 在win下100%报错，linux则能够成功。
-        
-        3、当Process(target=f, args=(x,)).start() 没有写在 if __name__ == '__main__'，直接写在外面没有缩进, 
-           即使 x = 2 时候，Process(target=f, args=(x,)).start() 在 win 也运行报错。
-        4、当Process(target=f, args=(x,)).start() 没有写在 if __name__ == '__main__'，直接写在外面没有缩进, 
-           无论 x = 2 还是 threading.Lock() 时候，Process(target=f, args=(x,)).start() 在linux都运行正常。
-        
-        所以天天背诵一段 进程 和线程的区别的文字概念，没有个卵用，不多实践对比，只会死记硬背概念会走火入魔并没卵用，也还要多实践测试，
-        如果linux和win的多进程代码表现可移植性是100%，那celery团队就不会头疼celery对win的支持问题的了。
-        
-        说这么多就是说为什么，框架的broker_kind是不能直接支持指定多进程并发，因为这样做，我只能保证相同代码在linux上运行的很好，在win上却肯定出错。
-        如果你要开多进程消费也很简单，自己定义一个函数然后开启多进程就可以啦，下面的代码兼容linux和win，跨平台兼容性高才算好代码。
-        
-        def fun():
-            consume_fun1.consume()
-            consume_fun2.consume()
+        @task_deco('test_multi_process_queue',broker_kind=BrokerEnum.REDIS_ACK_ABLE,
+                   concurrent_mode=ConcurrentModeEnum.THREADING,)
+        def fff(x):
+            print(x * 10,os.getpid())
         
         if __name__ == '__main__':
-            Process(target=fun).start()
+            # run_many_consumer_with_multi_process([consumer_init_params_include_consuming_function(fff)],process_num=6)
+            run_consumer_with_multi_process(fff,6)
         
         ```
         
-        #### python多进程代码在 linux 和 win 巨大区别之举例代码。
-        ```python
-        ## 这段代码分别让 x 等于不同的值和 Process(target=f, args=(x,)).start() 在 if main里面和外面，使用win和linux平台分别测试，就能感受到多进程在linux和win的巨大区别。
-        ## 代码只是举个例子，并不是入参只有是 threding.Lock()才在win下行不通，任意自定义对象包含了threding.Lock属性，如果作为target的args入参都会报错。例如x = Redis()，args为Redis()连接对象也行不通，
-        ##  win下不能运行的入参种类太多了例如生成器对象也不行，只有简单的包括简单数字 字符串 数组 字典啥的非常简单的变量才可以作为args的入参，任何复杂的对象肯定包含了了很多属性，经常在win下报错。
-        from multiprocessing import Process
-        import threading
         
         
-        def f(xx):
-            print(xx)
-        
-        
-        x = threading.Lock()   # 这两行x值的不同是测试的重点之一，threading.Lock 不可picke序列化导致win下100%失败。
-        ## 或者 x = (i for i in range(5)) 在win下也会100%报错
-        # x = 2  # x=2可以在win运行
-        
-        
-        if __name__ == '__main__':
-            Process(target=f, args=(x,)).start()
-        
-        # Process(target=f, args=(x,)).start()  # 此行放不放在 if __name__ == '__main__': 是测试的重点之二。
-        ```
         
         ### 1.0.4  设计规范原则
         ```
@@ -229,8 +206,6 @@ Description: # 1.distributed_framework
         没有大量使用元编程，使代码性能提高，减少代码拼错概率和降低调用难度。
         并且所有重要公有方法和函数设计都不使用*args，**kwargs方式，全部都能使ide智能提示补全参数，一切为了ide智能补全。
         ```
-        
-        # 手机版git上点击下方 view all of README.md
         
         
         # 1.1  pip安装方式
@@ -272,14 +247,13 @@ Description: # 1.distributed_framework
             :param consuming_function: 处理消息的函数。  指定队列名字和指定消费函数这两个参数是必传，必须指定，
                    这2个是这个消费框架的本质核心参数，其他参数都是可选的。
             :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
-            :param threads_num:并发数量，协程或线程。由concurrent_mode决定并发种类。
-            :param concurrent_num:并发数量，这个覆盖threads_num。以后会废弃threads_num参数，因为表达的意思不太准确，不一定是线程模式并发。
+            :param concurrent_num:并发数量，
             :param specify_concurrent_pool:使用指定的线程池（协程池），可以多个消费者共使用一个线程池，不为None时候。threads_num失效
-            :param concurrent_mode:并发模式，1线程 2gevent 3eventlet
+            :param concurrent_mode:并发模式，1线程 2gevent 3eventlet 4 asyncio
             :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
                    可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。
                    主动抛出ExceptionForRequeue异常，则当前消息会重返中间件。
-            :param log_level:框架的日志级别。
+            :param log_level:框架的日志级别,默认是debug级别，可以看到详细的执行信息，如果不想看到太多详细的日志，可以设置为logging.INFO常量(20) 或者数字20。
             :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
             :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频的关键。
             :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，以后废弃msg_schedule_time_intercal这个参数。
@@ -388,9 +362,9 @@ Description: # 1.distributed_framework
         
         #装饰器版，使用方式例如：
         
-        from function_scheduling_distributed_framework import task_deco
+        from function_scheduling_distributed_framework import task_deco,BrokerEnum
         
-        @task_deco('queue_test_f01', qps=0.2, broker_kind=2)  # qps 0.2表示每5秒运行一次函数，broker_kind=2表示使用redis作中间件。
+        @task_deco('queue_test_f01', qps=0.2, broker_kind=BrokerEnum.REDIS_ACK_ABLE)  # qps 0.2表示每5秒运行一次函数，broker_kind=2表示使用redis作中间件。
         def add(a, b):
             print(a + b)
         
@@ -402,13 +376,13 @@ Description: # 1.distributed_framework
         
         ### 2.3 对比常规方式，常规方式使用方式如下
         ```python
-        from function_scheduling_distributed_framework import get_consumer
+        from function_scheduling_distributed_framework import get_consumer,BrokerEnum
         
         def add(a, b):
             print(a + b)
         
         # 需要手动指定consuming_function入参的值。
-        consumer = get_consumer('queue_test_f01', consuming_function=add,qps=0.2, broker_kind=2) 
+        consumer = get_consumer('queue_test_f01', consuming_function=add,qps=0.2, broker_kind=BrokerEnum.REDIS_ACK_ABLE) 
         for i in range(10, 20):
             consumer.publisher_of_same_queue.publish(dict(a=i, b=i * 2)) # consumer.publisher_of_same_queue.publish 发布任务
         consumer.start_consuming_message()   # 使用consumer.start_consuming_message 消费任务
@@ -480,6 +454,73 @@ Description: # 1.distributed_framework
         
         
         ```
+        
+        ### 2.6 多进程并发 + 多线程/协程，代码例子。
+        ```python
+        import time
+        """
+        这种是多进程方式，一次编写能够兼容win和linux的运行。一次性启动6个进程 叠加 多线程 并发。
+        """
+        from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum, run_consumer_with_multi_process
+        import os
+        
+        @task_deco('test_multi_process_queue',broker_kind=BrokerEnum.REDIS_ACK_ABLE,concurrent_mode=ConcurrentModeEnum.THREADING,)
+        def fff(x):
+            print(x * 10,os.getpid())
+        
+        if __name__ == '__main__':
+            # fff.consume()
+            run_consumer_with_multi_process(fff,6) # 一次性启动6个进程 叠加 多线程 并发。
+        
+        ```
+        
+        
+        ### 2.7 演示qps控频和自适应扩大和减小并发数量。
+        
+        ```
+        通过不同的时间观察控制台，可以发现无论f2这个函数需要耗时多久（无论是函数耗时需要远小于1秒还是远大于1秒），框架都能精确控制每秒刚好运行2次。
+        当函数耗时很小的时候，只需要很少的线程就能自动控制函数每秒运行2次。
+        当函数突然需要耗时很大的时候，智能线程池会自动启动更多的线程来达到每秒运行2次的目的。
+        当函数耗时从需要耗时很大变成只需要耗时很小的时候，智能线程池会自动缩小线程数量。
+        总之是围绕qps恒定，会自动变幻线程数量，做到既不多开浪费cpu切换，也不少开造成执行速度慢。
+        ```
+        
+        ```python
+        import time
+        import threading
+        from function_scheduling_distributed_framework import task_deco, BrokerEnum,ConcurrentModeEnum
+        
+        t_start = time.time()
+        
+        @task_deco('queue_test2_qps', qps=2, broker_kind=BrokerEnum.PERSISTQUEUE,concurrent_mode=ConcurrentModeEnum.THREADING,concurrent_num=600 )
+        def f2(a, b):
+            """
+            这个例子是测试函数耗时是动态变化的，这样就不可能通过提前设置参数预估函数固定耗时和搞鬼了。看看能不能实现qps稳定和线程池自动扩大自动缩小
+            要说明的是打印的线程数量也包含了框架启动时候几个其他的线程，所以数量不是刚好和所需的线程计算一样的。
+            """
+            result = a + b
+            sleep_time = 0.01
+            if time.time() - t_start > 60:  # 先测试函数耗时慢慢变大了，框架能不能按需自动增大线程数量
+                sleep_time = 7
+            if time.time() - t_start > 120:
+                sleep_time = 30
+            if time.time() - t_start > 240: # 最后把函数耗时又减小，看看框架能不能自动缩小线程数量。
+                sleep_time = 0.8
+            if time.time() - t_start > 300:
+                sleep_time = None
+            print(f'{time.strftime("%H:%M:%S")}  ，当前线程数量是 {threading.active_count()},   {a} + {b} 的结果是 {result}， sleep {sleep_time} 秒')
+            if sleep_time is not None:
+                time.sleep(sleep_time)  # 模拟做某事需要阻塞n秒种，必须用并发绕过此阻塞。
+            return result
+        
+        
+        if __name__ == '__main__':
+            f2.clear()
+            for i in range(1000):
+                f2.push(i, i * 2)
+            f2.consume()
+        ```
+        
         
         
         ### 3 运行中截图
@@ -1220,6 +1261,38 @@ Description: # 1.distributed_framework
         如果你写一般的代码，那就用同步方式思维来写吧，让分布式函数调度框架来替你自动并发就可以啦。
         如果追求更好的控制和性能，不在乎代码写法上的麻烦，并且asyncio技术掌握的很溜，那就用asyncio的方式吧。 
         ```
+        
+        ### 6.13.3 关于 async 鬓发模式，为什么框架还使用 pyredis pika pymongo，而没有使用aioredis  aiomongo
+        
+        ```
+        异步鬓发模式里面，整个调用链路必须是一旦异步，必须处处异步，在base_consumer.py的AbstractConsumer中，
+        方法 _async_run_consuming_function_with_confirm_and_retry里面使用的还是操作中间件的同步库，
+        
+        主要是因为框架目前支持15种中间件，一个一个的使用异步模式的库操作中间件来实现，比现在代码起码要增加80%，无异于重写一个项目了。
+        异步和同步真的写法语法相差很大的，不信可以比比aiomysql 和pymysql库，aiohttp和requests，如果非常简单能实现异步，
+        那aiohttp和aiomysql作者为什么要写几万行代码来重新实现，不在原来基础上改造个七八行来实现？
+        
+        
+        
+        目前此库对 消息确认 消息重新入队 任务过滤  mongo插入，都是采用的同步库，但是使用了 run_in_executor,
+        把这些操作在异步链路中交给线程池来运行了，同事这个线程池不是官方内置线程池，是智能缩小扩大线程池 ThreadPoolExecutorShrinkAble。
+        run_in_executor 会把一个同步的操作，sumbit提交给线程池，线程池返回的是一个concurrent.futures包的Future对象，
+        run_in_executor包装转化了这个Future(此Future不是asyncio的，不是一个awaitable对象)成为了一个asyncio包的Future对象，asyncio的Future对象可以被await，
+        所以这是非常快捷的同步阻塞函数在异步链路中转同步转异步语法的最佳方式。官方也是这么推荐的。
+        
+        除了框架内部的阻塞函数是run_in_executor快速转化成非阻塞事件循环的，但是主要的用户的消费函数，是使用的真async模式运行在一个loop循环中的，
+        也即是单线陈鬓发运行用户的异步函数。
+        
+        其次框架的同步阻塞函数，都是操作中间件内心的库，异步就是 入队 确认消费 查询是否过滤，这些操作一般都会在1毫秒之内完成，不阻塞太长的事件，
+        即使不适用run_in_executor，直接在异步链路使用这些同步操作，也没太大问题。一旦异步必须处处异步，说的是不能调用耗时太长的同步阻塞函数，
+        1毫秒的无伤大雅，因为celery 1秒钟最多能调度300个 def f： print(hello) 这样的无cpu 无io的函数，此框架调度运行速度任然超过celery。
+        
+             
+        
+        还有一种调度起 async def定义 的消费函数方式是继续开多线程并发，然后使用 临时loop = get_event_loop，loop.run_until_complete，这方式愚蠢了，
+        相当于只是为了运行起这个函数，但全流程丝毫没有丁点异步。
+        ```
+        
         
 Keywords: distributed-framework,function-scheduling,rabbitmq,rocketmq,kafka,nsq,redis,disk,sqlachemy,consume-confirm,timing,task-scheduling,apscheduler
 Platform: all

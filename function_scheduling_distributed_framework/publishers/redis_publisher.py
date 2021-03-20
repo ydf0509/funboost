@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 12:12
+import json
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
 from function_scheduling_distributed_framework.utils import RedisMixin
 
@@ -25,3 +26,4 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
     def close(self):
         # self.redis_db7.connection_pool.disconnect()
         pass
+

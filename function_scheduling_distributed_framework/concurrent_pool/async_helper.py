@@ -1,11 +1,13 @@
 from functools import partial
 import asyncio
+from concurrent.futures import Executor
 from function_scheduling_distributed_framework.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
 
-async_executor_default = ThreadPoolExecutorShrinkAble(20)
+# 没有使用内置的concurrent.futures.ThreadpoolExecutor线程池，而是使用智能伸缩线程池。
+async_executor_default = ThreadPoolExecutorShrinkAble()
 
 
-async def simple_run_in_executor(f, *args, async_executor=None, async_loop=None, **kwargs):
+async def simple_run_in_executor(f, *args, async_executor: Executor = None, async_loop=None, **kwargs):
     """
     一个很强的函数，使任意同步同步函数f，转化成asyncio异步api语法，
     例如 r = await  simple_run_in_executor(block_fun, 20)，可以不阻塞事件循环。
@@ -40,8 +42,8 @@ if __name__ == '__main__':
 
 
     def block_fun(x):
-        time.sleep(5)
         print(x)
+        time.sleep(5)
         return x * 10
 
 
@@ -71,4 +73,3 @@ if __name__ == '__main__':
     print('结束')
 
     time.sleep(200)
-

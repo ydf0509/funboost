@@ -11,5 +11,7 @@ crawl_list_page.push(news_type='drive', page=1, do_page_turning=True)  # 驾驶�
 
 ## 每隔60秒发布第一页任务，一直获取最新的新闻。
 for news_typex in ['news', 'advice', 'drive']:  # 定时任务，语法入参是apscheduler包相同。每隔120秒查询一次首页更新,这个可以不要。
-    fsdf_background_scheduler.add_timing_publish_job(crawl_list_page, 'interval', seconds=120, kwargs={"news_type": news_typex, "page": 1})
+    fsdf_background_scheduler.add_timing_publish_job(crawl_list_page, 'interval', seconds=120, kwargs={"news_type": news_typex, "page": 1,"do_page_turning":False})
 fsdf_background_scheduler.start()  # 启动首页查询有没有新的新闻的定时发布任务
+
+

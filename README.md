@@ -6,18 +6,24 @@ pip install function_scheduling_distributed_framework --upgrade
 
 [![sgV2xP.png](https://s3.ax1x.com/2021/01/19/sgV2xP.png)](https://imgchr.com/i/sgV2xP)
 
-```
-@task_deco("task_queue_name1",qps=2)  # 入参包括20种，运行控制方式非常多，想得到的都会有。
+
+```python
+from function_scheduling_distributed_framework import task_deco, BrokerEnum
+@task_deco("task_queue_name1",qps=2,broker_kind=BrokerEnum.PERSISTQUEUE)  # 入参包括20种，运行控制方式非常多，想得到的都会有。
 def task_fun(x,y):
     print(x + y)
 
 if __name__ == "__main__":
     task_fun.consume()
-
+"""
 对与消费函数框，架内部会生成发布者(生产者)和消费者。
 1.推送。 task_fun.push(1,y=2) 会把 {"x":1,"y":2} (消息也自动包含一些其他信息) 发送到中间件的 task_queue_name1 队列中。
 2.消费。 task_fun.consume() 开始自动从中间件拉取消息，并发的调度运行函数，task_fun(**{"x":1,"y":2})
 整个过程只有这两步，清晰明了，其他的控制方式需要看 task_deco 的中文入参解释，全都很有用。
+"""
+```
+
+
 ```
 ### 1.0.1  框架用途功能
 
@@ -113,6 +119,7 @@ python通用分布式函数调度框架。适用场景范围广泛。
 已经连续超过三个季度稳定高效运行无事故，从没有出现过假死、崩溃、内存泄漏等问题。
 
 windows和linux行为100%一致，不会像celery一样，相同代码前提下，很多功能在win上不能运行或出错。
+```
 
 #### 1.0.1.2 关于特色控频功能
 
@@ -219,16 +226,16 @@ pip install function_scheduling_distributed_framework --upgrade -i https://pypi.
 
 ## 2.1 具体更详细的用法可以看test_frame文件夹里面的几个示例和操作文档.md。
 
-2.1为简单例子,介绍了入参意义，这里是介绍的手动调用猴子补丁函数修改框架配置和非装饰器方式。
+2.1为简单例子,介绍了入参意义，这里是介绍的是手动实例化生成消费者的方式，这个是本质。
 
-下面的2.2 是使用修改你项目根目录下文件distributed_frame_config.py的配置文件的方式，并且生成消费者使用装饰器方式。
+下面的2.2 是装饰器生成消费者的使用方式，这个是简洁一丝丝。
  ```python
 """
 运行后悔自动在你的当前项目根目录下生成一个 distributed_frame_config.py 的文件，在里面修改写配置就好了，框架会自动读取这个文件的配置。
 """
 import time
 
-from function_scheduling_distributed_framework import patch_frame_config, show_frame_config,get_consumer
+from function_scheduling_distributed_framework import get_consumer
 
 # 主要的消费函数，演示做加法，假设需要花10秒钟。
 # 为什么消费举例大多数是time.sleep(n秒钟)，主要是用框架用来验证并发和控频。
@@ -284,6 +291,16 @@ def f2(a, b):
            7使用nsq，8使用kafka，9也是使用redis但支持消费确认。10为sqlachemy，支持mysql sqlite postgre oracel sqlserver
            11使用rocketmq.
     :return AbstractConsumer
+    
+    '''
+    有人会抱怨入参超多很复杂，是因为要实现一切控制方式，实现的运行控制手段非常丰富，所以参数就会多。
+    
+    看这个里面的参数解释非常重要，几乎能想到的控制功能全部都有。比如有人说日志太多，不想看那么详细的提示日志
+    ，早就通过参数提供实现了，自己抱怨参数多又以为没提供这个功能，简直是自相矛盾。
+    
+    想入参参数少那就看readme的6.5 “新增一个10行代码的函数的最精简乞丐版实现的分布式函数执行框架，演示最本质实现原理。“ 
+    这个例子的框架啥控制手段都没有，参数自然就很少。
+    '''
 """
 consumer = get_consumer('queue_test2', consuming_function=f2, broker_kind=6)  
 
@@ -1047,7 +1064,6 @@ requests.get("https://www.baidu.com")需要执行3万行代码，如果不用工
 
 beggar_redis_consumer.py文件的 start_consuming_message函数。
 ```python
-
 def start_consuming_message(queue_name, consume_function, threads_num):
     pool = ThreadPoolExecutor(threads_num)
     while True:

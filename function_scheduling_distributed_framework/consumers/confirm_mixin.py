@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2019/8/23 0023 21:10
-import time
 import json
-import uuid
+import time
+
 from function_scheduling_distributed_framework.utils import RedisMixin, decorators
 
 """
 此模块是依赖redis的确认消费，所以比较复杂。
 """
+
 
 # noinspection PyUnresolvedReferences
 class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
@@ -29,7 +30,6 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
         super().start_consuming_message()
         self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
 
-
     def _add_task_str_to_unack_zset(self, task_str, ):
         self.redis_db_frame.zadd(self._unack_zset_name, task_str, time.time())
 
@@ -37,7 +37,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
         self.redis_db_frame.zrem(self._unack_zset_name, kw['task_str'])
 
     def _requeue_tasks_which_unconfirmed(self):
-        ## 防止在多个进程或多个机器中同时做扫描和放入未确认消费的任务。使用个分布式锁。
+        #防止在多个进程或多个机器中同时做扫描和放入未确认消费的任务。使用个分布式锁。
         lock_key = f'fsdf_lock__requeue_tasks_which_unconfirmed_timeout:{self._queue_name}'
         with decorators.RedisDistributedLockContextManager(self.redis_db_frame, lock_key, ) as lock:
             if lock.has_aquire_lock:
@@ -55,6 +55,8 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
     """
     使用的是根据心跳，判断非活跃消费者，将非活跃消费者对应的unack zset的重新回到消费队列。
     """
+
+    # noinspection PyAttributeOutsideInit
     def custom_init(self):
         self._unack_zset_name = f'{self._queue_name}__unack_id_{self.consumer_identification}'
         self._is_send_consumer_hearbeat_to_redis = True
@@ -80,4 +82,3 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
                     else:
                         pass
                         # print('是活跃消费者')
-

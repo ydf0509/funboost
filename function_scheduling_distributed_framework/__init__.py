@@ -229,7 +229,7 @@ def run_consumer_with_multi_process(task_fun, process_num=1):
     if getattr(task_fun, 'is_decorated_as_consume_function') != True:
         raise ValueError('task_fun 参数必须是一个被 task_deco 装饰的函数')
     if process_num == 1:
-        task_fun.conusme()
+        task_fun.consume()
     else:
         [Process(target=_run_many_consumer_by_init_params,
                  args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start() for _ in range(process_num)]

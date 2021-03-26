@@ -1,9 +1,9 @@
 import requests
 from parsel import Selector
-from function_scheduling_distributed_framework import task_deco, BrokerEnum
+from function_scheduling_distributed_framework import task_deco, BrokerEnum, run_consumer_with_multi_process
 
 
-@task_deco('car_home_list', broker_kind=BrokerEnum.REDIS_ACK_ABLE, max_retry_times=5, qps=3)
+@task_deco('car_home_list', broker_kind=BrokerEnum.REDIS_ACK_ABLE, max_retry_times=5, qps=60)
 def crawl_list_page(news_type, page, do_page_turning=False):
     url = f'https://www.autohome.com.cn/{news_type}/{page}/#liststart'
     resp_text = requests.get(url).text
@@ -19,7 +19,7 @@ def crawl_list_page(news_type, page, do_page_turning=False):
             crawl_list_page.push(news_type, p)  # 列表页翻页。
 
 
-@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=600, qps=20, do_task_filtering=True)
+@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=600, qps=500, do_task_filtering=True)
 def crawl_detail_page(url, title, news_type):
     resp_text = requests.get(url).text
     sel = Selector(resp_text)
@@ -34,3 +34,5 @@ if __name__ == '__main__':
     crawl_list_page.consume()  # 启动列表页消费
     crawl_detail_page.consume()  # 启动详情页消费
 
+    # 这样速度更猛，叠加多进程
+    run_consumer_with_multi_process(crawl_detail_page, 10)

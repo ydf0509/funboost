@@ -226,16 +226,16 @@ pip install function_scheduling_distributed_framework --upgrade -i https://pypi.
 
 ## 2.1 具体更详细的用法可以看test_frame文件夹里面的几个示例和操作文档.md。
 
-2.1为简单例子,介绍了入参意义，这里是介绍的手动调用猴子补丁函数修改框架配置和非装饰器方式。
+2.1为简单例子,介绍了入参意义，这里是介绍的是手动实例化生成消费者的方式，这个是本质。
 
-下面的2.2 是使用修改你项目根目录下文件distributed_frame_config.py的配置文件的方式，并且生成消费者使用装饰器方式。
+下面的2.2 是装饰器生成消费者的使用方式，这个是简洁一丝丝。
  ```python
 """
 运行后悔自动在你的当前项目根目录下生成一个 distributed_frame_config.py 的文件，在里面修改写配置就好了，框架会自动读取这个文件的配置。
 """
 import time
 
-from function_scheduling_distributed_framework import patch_frame_config, show_frame_config,get_consumer
+from function_scheduling_distributed_framework import get_consumer
 
 # 主要的消费函数，演示做加法，假设需要花10秒钟。
 # 为什么消费举例大多数是time.sleep(n秒钟)，主要是用框架用来验证并发和控频。

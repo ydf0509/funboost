@@ -139,7 +139,7 @@ def use_config_form_distributed_frame_config_module():
     # noinspection PyProtectedMember
     sys.stdout.write(
         f'\033[0;93m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;93;100m{inspect_msg}\033[0m\n')
-
+    sys.stdout.flush()
     try:
         # noinspection PyUnresolvedReferences
         # import distributed_frame_config

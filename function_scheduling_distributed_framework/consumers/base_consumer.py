@@ -192,6 +192,7 @@ class ConsumersManager:
         for _, consumer_info in cls.consumers_queue__info_map.items():
             sys.stdout.write(
                 f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}"  \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
+            sys.stdout.flush()
 
     @staticmethod
     def get_concurrent_name_by_concurrent_mode(concurrent_mode):
@@ -387,6 +388,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         sys.stdout.write(
             f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;30;44m此行 '
             f'实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
+        sys.stdout.flush()
 
         self._do_task_filtering = do_task_filtering
         self._redis_filter_key_name = f'filter_zset:{queue_name}' if task_filtering_expire_seconds else f'filter_set:{queue_name}'
@@ -593,7 +595,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
 
         if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
-            # print(function_result_status.get_status_dict(without_datetime_obj=True))
+            # print(function_result_status.get_status_dict(without_datetime_obj=
             with RedisMixin().redis_db_frame.pipeline() as p:
                 # RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
                 # RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)

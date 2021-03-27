@@ -16,4 +16,4 @@ def fff(x):
 if __name__ == '__main__':
     # fff.consume()
 
-    run_consumer_with_multi_process(fff, 1)  # 一次性启动6个进程 叠加 多线程 并发。
+    run_consumer_with_multi_process(fff, 2)  # 一次性启动6个进程 叠加 多线程 并发。

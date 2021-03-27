@@ -5,7 +5,7 @@ import json
 fff.clear()
 
 helper = RedisBulkWriteHelper(RedisMixin().redis_db_frame,10000)
-for i in range(0,1000000):
+for i in range(0,100000):
     helper.add_task(RedisOperation('rpush', fff.consumer.queue_name, json.dumps({"x":i})))
 
 if __name__ == '__main__':

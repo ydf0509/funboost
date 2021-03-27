@@ -11,7 +11,7 @@ import time
 import re
 import importlib
 from pathlib import Path
-from nb_log import nb_print
+from nb_log import nb_print,stderr_write,stdout_write
 from function_scheduling_distributed_framework import frame_config
 
 
@@ -137,9 +137,7 @@ def use_config_form_distributed_frame_config_module():
     """
     # sys.stdout.write(f'\033[0;33m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;30;43m{inspect_msg}\033[0m\n')
     # noinspection PyProtectedMember
-    sys.stdout.write(
-        f'\033[0;93m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;93;100m{inspect_msg}\033[0m\n')
-    sys.stdout.flush()
+    stdout_write( f'\033[0;93m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;93;100m{inspect_msg}\033[0m\n')
     try:
         # noinspection PyUnresolvedReferences
         # import distributed_frame_config

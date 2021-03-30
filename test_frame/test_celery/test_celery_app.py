@@ -55,6 +55,10 @@ def sub(x, y):
     print(f'计算 {x} - {y} 得到的结果是  {x - y}')
     return x - y
 
+@celery_app.task(name='sub啊')
+def print_hello(x):
+    print(f'hello {x}')
+
 
 print(sub)
 

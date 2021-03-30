@@ -6,7 +6,7 @@ pip install function_scheduling_distributed_framework --upgrade
 
 [![sgV2xP.png](https://s3.ax1x.com/2021/01/19/sgV2xP.png)](https://imgchr.com/i/sgV2xP)
 
-
+### 1.0.0.1 简单例子
 ```python
 from function_scheduling_distributed_framework import task_deco, BrokerEnum
 @task_deco("task_queue_name1",qps=2,broker_kind=BrokerEnum.PERSISTQUEUE)  # 入参包括20种，运行控制方式非常多，想得到的都会有。

@@ -465,7 +465,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                         except Exception as e:
                             msg = func.__name__ + '   运行出错\n ' + traceback.format_exc(
                                 limit=10) if is_display_detail_exception else str(e)
-                            self.logger.error(msg)
+                            self.logger.exception(msg)
                         finally:
                             time.sleep(time_sleep)
 

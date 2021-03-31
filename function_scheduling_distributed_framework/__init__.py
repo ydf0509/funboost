@@ -29,6 +29,7 @@ class BrokerEnum:
     REDIS_ACK_ABLE = 9
     SQLACHEMY = 10
     ROCKETMQ = 11
+    REDIS_STREAM = 12
 
 
 class ConcurrentModeEnum:

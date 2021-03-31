@@ -86,7 +86,7 @@ def handle_exception(retry_times=0, error_detail_level=0, is_throw_error=False, 
                     elif error_detail_level == 2:
                         error_info = '错误类型是：' + str(e.__class__) + '  ' + traceback.format_exc()
 
-                    handle_exception_log.error(
+                    handle_exception_log.exception(
                         u'%s\n记录错误日志，调用方法--> [  %s  ] 第  %s  次错误重试， %s\n' % ('- ' * 40, func.__name__, i, error_info))
                     if i == retry_times and is_throw_error:  # 达到最大错误次数后，重新抛出错误
                         raise e

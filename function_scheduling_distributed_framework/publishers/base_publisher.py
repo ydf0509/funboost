@@ -213,7 +213,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     delay = push  # 那就来个别名吧，两者都可以。
 
     @abc.abstractmethod
-    def concrete_realization_of_publish(self, msg):
+    def concrete_realization_of_publish(self, msg:str):
         raise NotImplementedError
 
     @abc.abstractmethod

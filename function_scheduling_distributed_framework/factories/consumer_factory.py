@@ -17,7 +17,7 @@ from function_scheduling_distributed_framework.consumers.redis_consumer import R
 from function_scheduling_distributed_framework.consumers.redis_consumer_ack_able import RedisConsumerAckAble
 from function_scheduling_distributed_framework.consumers.rocketmq_consumer import RocketmqConsumer
 from function_scheduling_distributed_framework.consumers.sqlachemy_consumer import SqlachemyConsumer
-
+from function_scheduling_distributed_framework.consumers.redis_stream_consumer import RedisStreamConsumer
 
 def get_consumer(*args, broker_kind=0, **kwargs):
     """
@@ -39,6 +39,7 @@ def get_consumer(*args, broker_kind=0, **kwargs):
         9: RedisConsumerAckAble,
         10: SqlachemyConsumer,
         11: RocketmqConsumer,
+        12: RedisStreamConsumer
     }
     if broker_kind not in broker_kind__consumer_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')

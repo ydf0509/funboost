@@ -1,5 +1,6 @@
 # coding=utf8
 import redis2 as redis
+import redis3
 from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.utils import decorators
 
@@ -58,3 +59,8 @@ class RedisMixin(object):
     @decorators.cached_method_result
     def redis_db_frame(self):
         return RedisManager(host=frame_config.REDIS_HOST, port=frame_config.REDIS_PORT, password=frame_config.REDIS_PASSWORD, db=frame_config.REDIS_DB).get_redis()
+
+    @property
+    @decorators.cached_method_result
+    def redis_db_frame_version3(self):
+        return redis3.Redis(host=frame_config.REDIS_HOST, port=frame_config.REDIS_PORT, password=frame_config.REDIS_PASSWORD, db=frame_config.REDIS_DB,decode_responses=True)

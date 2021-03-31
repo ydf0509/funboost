@@ -14,6 +14,8 @@ def task_fun(x,y):
     print(x + y)
 
 if __name__ == "__main__":
+    for i in range(100):
+        task_fun.push(i, y=i * 2)
     task_fun.consume()
 """
 对与消费函数框，架内部会生成发布者(生产者)和消费者。

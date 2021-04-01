@@ -30,7 +30,7 @@ from pymongo import IndexModel
 from pymongo.errors import PyMongoError
 
 # noinspection PyUnresolvedReferences
-from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, LoggerMixinDefaultWithFileHandler,stdout_write,stderr_write
+from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.concurrent_pool.async_helper import simple_run_in_executor
 from function_scheduling_distributed_framework.concurrent_pool.async_pool_executor import AsyncPoolExecutor
@@ -190,7 +190,7 @@ class ConsumersManager:
         # nb_print(f'当前解释器内，所有消费者的信息是：\n  {cls.consumers_queue__info_map}')
         nb_print(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}')
         for _, consumer_info in cls.consumers_queue__info_map.items():
-            stdout_write( f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}"  \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
+            stdout_write(f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}"  \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
 
     @staticmethod
     def get_concurrent_name_by_concurrent_mode(concurrent_mode):
@@ -383,8 +383,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                                           log_filename=f'{logger_name}.log' if create_logger_file else None,
                                                                           formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
         # self.logger.info(f'{self.__class__} 在 {current_queue__info_dict["where_to_instantiate"]}  被实例化')
-        stdout_write( f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;30;44m此行 '
-            f'实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
+        stdout_write(f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;30;44m此行 '
+                     f'实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
 
         self._do_task_filtering = do_task_filtering
         self._redis_filter_key_name = f'filter_zset:{queue_name}' if task_filtering_expire_seconds else f'filter_set:{queue_name}'
@@ -881,11 +881,14 @@ def wait_for_possible_has_finish_all_tasks(queue_name: str, minutes: int, send_s
 
 class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandler):
     """
-    分布式环境中的消费者统计。
-    主要是为了兼容模拟mq的中间件（例如redis，他没有实现amqp协议，redis的list结构和真mq差远了），获取一个队列有几个连接活跃消费者数量。
+    为了兼容模拟mq的中间件（例如redis，他没有实现amqp协议，redis的list结构和真mq差远了），获取一个队列有几个连接活跃消费者数量。
+    分布式环境中的消费者统计。主要目的有两点
 
-    获取分布式的消费者数量后，用于分布式qps控频。如果不获取全环境中的消费者数量，则只能用于当前进程中的消费控频。
-    即使只有一台机器，例如把xx.py启动3次，xx.py的consumer设置qps为10，如果不使用分布式控频，会1秒钟最终运行30次函数而不是10次。
+    1、统计活跃消费者数量用于分布式控频。
+        获取分布式的消费者数量后，用于分布式qps控频。如果不获取全环境中的消费者数量，则只能用于当前进程中的消费控频。
+        即使只有一台机器，例如把xx.py启动3次，xx.py的consumer设置qps为10，如果不使用分布式控频，会1秒钟最终运行30次函数而不是10次。
+
+    2、记录分布式环境中的活跃消费者的所有消费者 id，如果消费者id不在此里面说明已掉线或关闭，消息可以重新分发，用于不支持服务端天然消费确认的中间件。
     """
 
     def __init__(self, queue_name: str, consumer_identification: str):

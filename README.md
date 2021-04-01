@@ -1316,3 +1316,28 @@ run_in_executor包装转化了这个Future(此Future不是asyncio的，不是一
 相当于只是为了运行起这个函数，但全流程丝毫没有丁点异步。
 ```
 
+
+## 6.14 2021-04 新增以 redis中间件 stream 数据结构 的消息队列。
+```
+这个是 redis 的 真消息队列，这次是 真mq，
+stream 数据结构功能更加丰富接近 rabbitmq kafka这种真mq的消息队列协议，比 list 做消息队列更强。
+需要redis的服务端5.0版本以上才能使用这个数据结构。
+代码文件在 function_scheduling_distributed_framework/consumers/redis_stream_consumer.py
+
+这个 REDIS_STREAM 中间件和 REDIS_ACK_ABLE 都支持消费确认，不管客户端怎么掉线关闭，都可以确保消息万无一失。
+BrokerEnum.REDIS 中间件 不支持消费确认，随意重启或者断电断线会丢失一批任务。
+```
+
+```python
+from function_scheduling_distributed_framework import task_deco, BrokerEnum
+
+
+@task_deco('queue_test_f01', broker_kind=BrokerEnum.REDIS_STREAM,)
+def f(a, b):
+    print(f'{a} + {b} = {a + b}')
+
+if __name__ == '__main__':
+    for i in range(0, 100):
+        f.push(i , b=i * 2,)
+     f.consume()
+```

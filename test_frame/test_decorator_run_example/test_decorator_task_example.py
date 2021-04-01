@@ -13,7 +13,7 @@ def f(a, b):
     # f.pub(dict(a=a + 10, b=b + 10))
 
 if __name__ == '__main__':
-    f(1000, 2000)
+    # f(1000, 2000)
     # f.clear()
     for i in range(100, 102):
         # f.pub(dict(a=i, b=i * 2))

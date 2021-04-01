@@ -10,7 +10,7 @@ from function_scheduling_distributed_framework.utils import RedisMixin
 
 class RedisConsumer(AbstractConsumer, RedisMixin):
     """
-    redis作为中间件实现的。
+    redis作为中间件实现的，使用redis list 结构实现的。
     """
     BROKER_KIND = 2
 

@@ -602,7 +602,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
 
     async def _async_run(self, kw: dict, ):
-        """这个是为了asyncio模式的"""
+        """虽然和上面有点大面积重复相似，这个是为了asyncio模式的，asyncio模式真的和普通同步模式的代码思维和形式区别太大，
+        框架实现兼容async的消费函数很麻烦复杂，连并发池都要单独写"""
         function_only_params = _delete_keys_and_return_new_dict(kw['body'], )
         # if self.__get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
         #         function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
@@ -634,6 +635,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     async def _async_run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
                                                                    function_result_status: FunctionResultStatus, ):
+        """虽然和上面有点大面积重复相似，这个是为了asyncio模式的，asyncio模式真的和普通同步模式的代码思维和形式区别太大，
+        框架实现兼容async的消费函数很麻烦复杂，连并发池都要单独写"""
         function_only_params = _delete_keys_and_return_new_dict(kw['body'])
         if current_retry_times < self.__get_priority_conf(kw, 'max_retry_times'):
             function_result_status.run_times += 1

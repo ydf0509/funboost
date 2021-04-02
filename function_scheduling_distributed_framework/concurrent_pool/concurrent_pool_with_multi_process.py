@@ -20,7 +20,7 @@ class ConcurrentPoolWithProcess(nb_log.LoggerMixin):
             print(func, args, kwargs)
             pool.submit(func, *args, **kwargs)
 
-    def __init__(self, pool_class: typing.Type= CustomThreadpoolExecutor, max_works=500, process_num=1):
+    def __init__(self, pool_class: typing.Type = CustomThreadpoolExecutor, max_works=500, process_num=1):
         self._multi_process_queue = multiprocessing.Queue(100)
         for _ in range(process_num):
             multiprocessing.Process(target=self._start_a_pool, args=(pool_class, max_works), daemon=False).start()

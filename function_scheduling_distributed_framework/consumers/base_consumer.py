@@ -800,7 +800,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
                             f'为{ConsumersManager.get_concurrent_name_by_concurrent_mode(self._concurrent_mode)}')
 
     def build_pool(self):
-        if self.consumer._concurrent_pool:
+        if self.consumer._concurrent_pool is not None:
             return self.consumer._concurrent_pool
 
         pool_type = None  # 是按照ThreadpoolExecutor写的三个鸭子类，公有方法名和功能写成完全一致，可以互相替换。
@@ -820,7 +820,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
         else:
             self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
                 self.consumer._concurrent_num)
-
+        print(self._concurrent_mode,self.consumer._concurrent_pool)
         return self.consumer._concurrent_pool
 
     def schedulal_task_with_no_block(self):

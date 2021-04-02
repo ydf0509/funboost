@@ -154,6 +154,7 @@ windows和linux行为100%一致，不会像celery一样，相同代码前提下�
 新增支持使用redis作为中间件，但支持消费确认的功能，设置中间件类型为9，不会由于随意关闭和断电每次导致丢失几百个任务。
 支持sqlachemy配置的engine url作为下消息中间件，支持mysql sqlite oracle postgre sqlserver5种数据库。
 支持rocketmq中间件
+支持redis服务端5.0以上版本时候以 redis的真消息队列 stream 数据结构作为分布式消息中间件
 
 切换任意中间件，代码都不需要做任何变化，不需要关注如何使用中间件的细节。
 总体来说首选rabbitmq，这也是不指定broker_kind参数时候的默认的方式。
@@ -289,7 +290,7 @@ def f2(a, b):
     :param broker_kind:中间件种类,。 0 使用pika链接rabbitmqmq，1使用rabbitpy包实现的操作rabbitmnq，2使用redis，
            3使用python内置Queue,4使用amqpstorm包实现的操作rabbitmq，5使用mongo，6使用本机磁盘持久化。
            7使用nsq，8使用kafka，9也是使用redis但支持消费确认。10为sqlachemy，支持mysql sqlite postgre oracel sqlserver
-           11使用rocketmq.
+           11使用rocketmq. 12使用redis的 stream 数据结作为中间件。
     :return AbstractConsumer
     
     '''

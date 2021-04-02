@@ -11,6 +11,7 @@ import copy
 # from multiprocessing import Process
 import datetime
 import json
+import logging
 import sys
 import atexit
 import socket
@@ -164,8 +165,7 @@ class ConsumersManager:
 
     @classmethod
     def join_all_consumer_shedual_task_thread(cls):
-        nb_print(
-            (cls.schedulal_thread_to_be_join, len(cls.schedulal_thread_to_be_join), '模式：', cls.global_concurrent_mode))
+        # nb_print((cls.schedulal_thread_to_be_join, len(cls.schedulal_thread_to_be_join), '模式：', cls.global_concurrent_mode))
         if cls.schedual_task_always_use_thread:
             for t in cls.schedulal_thread_to_be_join:
                 nb_print(t)
@@ -568,10 +568,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._confirm_consume(kw)
                 if self.__get_priority_conf(kw, 'do_task_filtering'):
                     self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
-                result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '
-                self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
-                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。 '
-                                  f' 结果是  {result_str_to_be_print} ，  {self._get_concurrent_info()}  ')
+                if self._log_level <= logging.DEBUG:
+                    result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '
+                    self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
+                                      f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。 '
+                                      f' 结果是  {result_str_to_be_print} ，  {self._get_concurrent_info()}  ')
             except Exception as e:
                 if isinstance(e, (PyMongoError,
                                   ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
@@ -661,10 +662,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if self.__get_priority_conf(kw, 'do_task_filtering'):
                     # self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
                     await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params)
-                result_str_to_be_print = str(rs)[:100] if len(str(rs)) < 100 else str(rs)[:100] + '  。。。。。  '
-                self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
-                                  f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,'
-                                  f'入参是 【 {function_only_params} 】 ,结果是 {result_str_to_be_print}  。 {corotinue_obj} ')
+                if self._log_level <= logging.DEBUG:
+                    result_str_to_be_print = str(rs)[:100] if len(str(rs)) < 100 else str(rs)[:100] + '  。。。。。  '
+                    self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
+                                      f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,'
+                                      f'入参是 【 {function_only_params} 】 ,结果是 {result_str_to_be_print}  。 {corotinue_obj} ')
             except Exception as e:
                 if isinstance(e, (PyMongoError,
                                   ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
@@ -820,7 +822,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
         else:
             self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
                 self.consumer._concurrent_num)
-        print(self._concurrent_mode,self.consumer._concurrent_pool)
+        # print(self._concurrent_mode,self.consumer._concurrent_pool)
         return self.consumer._concurrent_pool
 
     def schedulal_task_with_no_block(self):

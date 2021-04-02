@@ -9,5 +9,5 @@ from function_scheduling_distributed_framework.utils.redis_manager import RedisM
 
 
 
-for _ in range(3):
-    RedisMixin().redis_db_frame_version3.lpush('speed_test_queue',*[f'{{"x":{i}}}'  for i in  range (500000)])
+for _ in range(1):
+    RedisMixin().redis_db_frame_version3.lpush('speed_test_queue',*[f'{{"x":{i}}}'  for i in  range (200)])

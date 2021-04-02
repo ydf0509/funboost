@@ -99,7 +99,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
     """
     BROKER_KIND = 9
 
-    def _shedual_task(self):
+    def _shedual_task000(self):
         # 可以采用lua脚本，也可以采用redis的watch配合pipeline使用。比代码分两行pop和zadd比还能减少一次io交互，还能防止丢失小概率一个任务。
         lua = '''
                      local v = redis.call("lpop", KEYS[1])
@@ -121,6 +121,37 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
                 # print('xiuxi')
                 time.sleep(0.5)
 
+    def _shedual_task(self):
+        lua = '''
+                     local task_list = redis.call("lrange", KEYS[1],0,99)
+                     redis.call("ltrim", KEYS[1],100,-1)
+                     if (#task_list > 0) then
+                        for task_index,task_value in ipairs(task_list)
+                        do
+                            redis.call('zadd',KEYS[2],ARGV[1],task_value)
+                        end
+                        return task_list
+                    else
+                        --local v = redis.call("blpop",KEYS[1],4)
+                        --return v
+                      end
+
+                '''
+        """
+        local v = redis.call("blpop",KEYS[1],60)  # redis 的lua 脚本禁止使用blpop
+        local v = redis.call("lpop",KEYS[1])
+        """
+        script = self.redis_db_frame_version3.register_script(lua)
+        while True:
+            task_str_list = script(keys=[self._queue_name, self._unack_zset_name], args=[time.time()])
+            if task_str_list:
+                self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {task_str_list}  ')
+                for task_str in task_str_list:
+                    task_dict = json.loads(task_str)
+                    kw = {'body': task_dict, 'task_str': task_str}
+                    self._submit_task(kw)
+            else:
+                time.sleep(0.1)
+
     def _requeue(self, kw):
         self.redis_db_frame.rpush(self._queue_name, json.dumps(kw['body']))
-        

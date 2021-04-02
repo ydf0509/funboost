@@ -1,4 +1,6 @@
 # import gevent.monkey;gevent.monkey.patch_all()
+import time
+
 from function_scheduling_distributed_framework import task_deco, BrokerEnum,run_consumer_with_multi_process,ConcurrentModeEnum
 import nb_log
 
@@ -10,7 +12,8 @@ def f_test_speed(x):
     pass
     # logger.debug(x)
     # f_test_speed2.push(x * 10)
-    # print(x)
+    print(x)
+    # time.sleep(20)
 
 
 # @task_deco('speed_test_queue2', broker_kind=BrokerEnum.REDIS, log_level=20, qps=2)
@@ -25,6 +28,6 @@ if __name__ == '__main__':
     # for i in range(1000000):
     #     f_test_speed.push(i)
 
-    f_test_speed.consume()
-    # run_consumer_with_multi_process(f_test_speed,1)
+    # f_test_speed.consume()
+    run_consumer_with_multi_process(f_test_speed,1)
     # # f_test_speed2.consume()

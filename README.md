@@ -15,6 +15,7 @@ pip install function_scheduling_distributed_framework --upgrade
 ```python
 import time
 from function_scheduling_distributed_framework import task_deco, BrokerEnum
+
 @task_deco("task_queue_name1",qps=5,broker_kind=BrokerEnum.PERSISTQUEUE)  # 入参包括20种，运行控制方式非常多，想得到的控制都会有。
 def task_fun(x,y):
     print(f'{x} + { y} = {x + y}')

@@ -8,7 +8,6 @@
 """
 import json
 import time
-
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
 from function_scheduling_distributed_framework.consumers.confirm_mixin import ConsumerConfirmMixinWithTheHelpOfRedis, ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat
 
@@ -151,7 +150,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
                     kw = {'body': task_dict, 'task_str': task_str}
                     self._submit_task(kw)
             else:
-                time.sleep(0.1)
+                time.sleep(0.5)
 
     def _requeue(self, kw):
         self.redis_db_frame.rpush(self._queue_name, json.dumps(kw['body']))

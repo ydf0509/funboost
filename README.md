@@ -7,27 +7,42 @@ pip install function_scheduling_distributed_framework --upgrade
 [![sgV2xP.png](https://s3.ax1x.com/2021/01/19/sgV2xP.png)](https://imgchr.com/i/sgV2xP)
 
 ### 1.0.0.1 简单例子
+```
+以下这只是简单求和例子，实际情况换成任意函数里面写任意逻辑，框架可没有规定只能用于 求和函数 的自动调度并发。
+而是根据实际情况函数的参数个数、函数的内部逻辑功能，全部都由用户自定义，函数里面想写什么就写什么，想干什么就干什么，极端自由。
+也就是框架很容易学和使用，把下面的task_fun函数的入参和内部逻辑换成你自己想写的函数功能就可以了，框架只需要学习task_deco这一个函数的参数就行。
+```
 ```python
+import time
 from function_scheduling_distributed_framework import task_deco, BrokerEnum
-@task_deco("task_queue_name1",qps=2,broker_kind=BrokerEnum.PERSISTQUEUE)  # 入参包括20种，运行控制方式非常多，想得到的都会有。
+@task_deco("task_queue_name1",qps=5,broker_kind=BrokerEnum.PERSISTQUEUE)  # 入参包括20种，运行控制方式非常多，想得到的控制都会有。
 def task_fun(x,y):
-    print(x + y)
-
+    print(f'{x} + { y} = {x + y}')
+    time.sleep(3)   # 框架会自动并发绕开这个阻塞，无论函数内部随机耗时多久都能自动调节并发达到每秒运行 5 次 这个 task_fun 函数的目的。
+    
 if __name__ == "__main__":
     for i in range(100):
-        task_fun.push(i, y=i * 2)
-    task_fun.consume()
+        task_fun.push(i, y=i * 2) # 发布者发布任务
+    task_fun.consume()            # 消费者消费任务
 """
-对与消费函数框，架内部会生成发布者(生产者)和消费者。
-1.推送。 task_fun.push(1,y=2) 会把 {"x":1,"y":2} (消息也自动包含一些其他信息) 发送到中间件的 task_queue_name1 队列中。
+对于消费函数，框架内部会生成发布者(生产者)和消费者。
+1.推送。 task_fun.push(1,y=2) 会把 {"x":1,"y":2} (消息也自动包含一些其他辅助信息) 发送到中间件的 task_queue_name1 队列中。
 2.消费。 task_fun.consume() 开始自动从中间件拉取消息，并发的调度运行函数，task_fun(**{"x":1,"y":2}),每秒运行两次
-整个过程只有这两步，清晰明了，其他的控制方式需要看 task_deco 的中文入参解释，全都很有用。
+整个过程只有这两步，清晰明了，其他的控制方式需要看 task_deco 的中文入参解释，全都参数都很有用。
 """
 ```
 
 ### 1.0.1  框架用途功能
 ```
-python通用分布式函数调度框架。适用场景范围广泛。
+python通用分布式函数调度框架。适用场景范围广泛，
+框架非常适合io密集型(框架支持对函数自动使用 thread gevent eventlet asyncio 并发)
+框架非常适合cpu密集型(框架能够在线程 协程基础上 叠加 多进程 multi_process 并发 ，不仅能够多进程执行任务还能多机器执行任务)。
+不管是函数需要消耗时io还是消耗cpu，用此框架都很合适，因为任务都是在中间件里面，可以自动分布式分发执行。
+此框架是函数的辅助控制倍增器。
+
+框架不适合的场景是 函数极其简单，例如函数只是一行简单的 print hello，函数只需要非常小的cpu和耗时，运行一次函数只消耗了几十hz或者几纳秒，
+此时那就采用直接调用函数就好了，因为框架施加了很多控制功能，当框架的运行逻辑耗时耗cpu 远大于函数本身 时候，使用框架反而会使函数执行变慢。
+
 
 （python框架从全局概念上影响程序的代码组织和运行，包和模块是局部的只影响1个代码文件的几行。）
 
@@ -290,7 +305,7 @@ def f2(a, b):
     :param broker_kind:中间件种类,。 0 使用pika链接rabbitmqmq，1使用rabbitpy包实现的操作rabbitmnq，2使用redis，
            3使用python内置Queue,4使用amqpstorm包实现的操作rabbitmq，5使用mongo，6使用本机磁盘持久化。
            7使用nsq，8使用kafka，9也是使用redis但支持消费确认。10为sqlachemy，支持mysql sqlite postgre oracel sqlserver
-           11使用rocketmq. 12使用redis的 stream 数据结作为中间件。
+           11使用rocketmq. 12使用redis的 stream 数据结作为中间件，这个也支持消费确认。
     :return AbstractConsumer
     
     '''

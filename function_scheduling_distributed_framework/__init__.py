@@ -88,7 +88,7 @@ def task_deco(queue_name, *, function_timeout=0,
     :param broker_kind:中间件种类,。 0 使用pika链接rabbitmqmq，1使用rabbitpy包实现的操作rabbitmnq，2使用redis，
            3使用python内置Queue,4使用amqpstorm包实现的操作rabbitmq，5使用mongo，6使用本机磁盘持久化。
            7使用nsq，8使用kafka，9也是使用redis但支持消费确认。10为sqlachemy，支持mysql sqlite postgre oracel sqlserver
-           11使用rocketmq.
+           11使用rocketmq. 12 使用 redis 的 stream 数据结构，这个也能支持消费确认。
     """
 
     """
@@ -227,8 +227,8 @@ def run_consumer_with_multi_process(task_fun, process_num=1):
            # fff.consume()
            run_consumer_with_multi_process(fff,6) # 一次性启动6个进程 叠加 多线程 并发。
     '''
-    if getattr(task_fun, 'is_decorated_as_consume_function') != True:
-        raise ValueError('task_fun 参数必须是一个被 task_deco 装饰的函数')
+    if not getattr(task_fun, 'is_decorated_as_consume_function'):
+        raise ValueError(f'{task_fun} 参数必须是一个被 task_deco 装饰的函数')
     if process_num == 1:
         task_fun.consume()
     else:

@@ -7,7 +7,7 @@ from function_scheduling_distributed_framework.utils import RedisMixin
 
 class RedisStreamPublisher(AbstractPublisher, RedisMixin):
     """
-    使用redis作为中间件,这个是
+    redis 的 stream 结构 作为中间件实现的。需要redis 5.0以上，redis stream结构 是redis的消息队列，功能远超 list结构。
     """
 
     _has__check_redis_version = False

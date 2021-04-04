@@ -307,6 +307,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。
                这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
         :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。
+
+
+        执行流程为
+        1、 实例化消费者类，设置各种控制属性
+        2、启动 start_consuming_message 启动消费
+        3、start_consuming_message 中 调用 _shedual_task 从中间件循环取消息
+        4、 _shedual_task 中调用 _submit_task，将 任务 添加到并发池中并发运行。
+        5、 函数执行完成后，运行 _confirm_consume , 确认消费。
+        各种中间件的 取消息、确认消费 单独实现，其他逻辑由于采用了模板模式，自动复用代码。
+
         """
         self.init_params = copy.copy(locals())
         self.init_params.pop('self')
@@ -817,10 +827,10 @@ class ConcurrentModeDispatcher(LoggerMixin):
             pool_type = AsyncPoolExecutor
             check_not_monkey()
         if self._concurrent_mode == 4:
-            self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
+            self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool is not None else pool_type(
                 self.consumer._concurrent_num, loop=self.consumer._specify_async_loop)
         else:
-            self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool else pool_type(
+            self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool is not None else pool_type(
                 self.consumer._concurrent_num)
         # print(self._concurrent_mode,self.consumer._concurrent_pool)
         return self.consumer._concurrent_pool

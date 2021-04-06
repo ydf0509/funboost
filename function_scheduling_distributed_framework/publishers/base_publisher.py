@@ -101,7 +101,7 @@ class PublishParamsChecker(LoggerMixin):
 
 
 class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
-    has_init_broker = 0
+
 
     def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True,
                  clear_queue_within_init=False, is_add_publish_time=True, consuming_function: callable = None, ):
@@ -129,6 +129,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # self.rabbit_client = RabbitMqFactory(is_use_rabbitpy=is_use_rabbitpy).get_rabbit_cleint()
         # self.channel = self.rabbit_client.creat_a_channel()
         # self.queue = self.channel.queue_declare(queue=queue_name, durable=True)
+        self.has_init_broker = 0
         self._lock_for_count = Lock()
         self._current_time = None
         self.count_per_minute = None
@@ -181,7 +182,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.publish_msg_num_total += 1
             if time.time() - self._current_time > 10:
                 self.logger.info(
-                    f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 中')
+                    f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 队列中')
                 self._init_count()
         return RedisAsyncResult(task_id)
 
@@ -251,7 +252,7 @@ def deco_mq_conn_error(f):
         # noinspection PyBroadException
         try:
             return f(self, *args, **kwargs)
-        except (PikaAMQPError, amqpstorm.AMQPError) as e:  # except Exception as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
+        except (PikaAMQPError,amqpstorm.AMQPError) as e:  # except Exception as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
             self.logger.error(f'rabbitmq链接出错   ,方法 {f.__name__}  出错 ，{e}')
             self.init_broker()
             return f(self, *args, **kwargs)

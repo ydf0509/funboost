@@ -28,3 +28,5 @@ PyWin32    # windows need because of concurrent-log-handler
 pikav0
 pikav1
 rocketmq
+zmq
+pyzmq

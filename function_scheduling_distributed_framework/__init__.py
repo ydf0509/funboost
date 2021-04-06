@@ -30,6 +30,7 @@ class BrokerEnum:
     SQLACHEMY = 10
     ROCKETMQ = 11
     REDIS_STREAM = 12
+    ZEROMQ = 13
 
 
 class ConcurrentModeEnum:

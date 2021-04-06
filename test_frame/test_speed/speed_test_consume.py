@@ -7,7 +7,7 @@ import nb_log
 logger = nb_log.get_logger('sdsda',is_add_stream_handler=False,log_filename='xxx.log')
 
 
-@task_deco('speed_test_queue', broker_kind=BrokerEnum.REDIS,concurrent_num=2, log_level=10, qps=0,concurrent_mode=ConcurrentModeEnum.THREADING)
+@task_deco('20000', broker_kind=BrokerEnum.ZEROMQ,concurrent_num=2, log_level=10, qps=2,concurrent_mode=ConcurrentModeEnum.THREADING,)
 def f_test_speed(x):
     pass
     # logger.debug(x)
@@ -29,5 +29,5 @@ if __name__ == '__main__':
     #     f_test_speed.push(i)
 
     # f_test_speed.consume()
-    run_consumer_with_multi_process(f_test_speed,1)
+    run_consumer_with_multi_process(f_test_speed,4)
     # # f_test_speed2.consume()

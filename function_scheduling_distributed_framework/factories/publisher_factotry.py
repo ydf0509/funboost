@@ -4,6 +4,7 @@
 import copy
 from typing import Callable
 
+from function_scheduling_distributed_framework.publishers.zeromq_publisher import ZeroMqPublisher
 from function_scheduling_distributed_framework.publishers.kafka_publisher import KafkaPublisher
 from function_scheduling_distributed_framework.publishers.local_python_queue_publisher import LocalPythonQueuePublisher
 from function_scheduling_distributed_framework.publishers.mongomq_publisher import MongoMqPublisher
@@ -47,7 +48,8 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
         9: RedisPublisher,
         10: SqlachemyQueuePublisher,
         11:RocketmqPublisher,
-        12:RedisStreamPublisher
+        12:RedisStreamPublisher,
+        13:ZeroMqPublisher,
     }
     if broker_kind not in broker_kind__publisher_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')

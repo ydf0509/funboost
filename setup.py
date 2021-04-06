@@ -68,6 +68,8 @@ setup(
         'redis',
         'nb_log>=4.3',
         'rocketmq',
+        'zmq',
+        'pyzmq'
     ]
 )
 """

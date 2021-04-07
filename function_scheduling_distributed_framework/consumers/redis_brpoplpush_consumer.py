@@ -35,8 +35,7 @@ class RedisBrpopLpushConsumer(AbstractConsumer, RedisMixin):
 
 
     def _confirm_consume(self, kw):
-        pass  # redis没有确认消费的功能。
-        self.redis_db_frame.lrem(self.queue_name,kw['raw_msg'],num=1)
+        self.redis_db_frame.lrem(f'unack_{self._queue_name}_{self.consumer_identification}',kw['raw_msg'],num=1)
 
     def _requeue(self, kw):
         self.redis_db_frame.rpush(self._queue_name, json.dumps(kw['body']))
@@ -57,32 +56,4 @@ class RedisBrpopLpushConsumer(AbstractConsumer, RedisMixin):
                                             """)
                         self.redis_db_frame.lpush(self._queue_name,*msg_list)
 
-
-
-
-
-
-
-
-
-                xinfo_consumers = self.redis_db_frame_version3.xinfo_consumers(self._queue_name, self.GROUP)
-                # print(current_queue_hearbeat_ids)
-                # print(xinfo_consumers)
-                for xinfo_item in xinfo_consumers:
-                    # print(xinfo_item)
-                    if xinfo_item['idle'] > 7 * 24 * 3600 * 1000 and xinfo_item['pending'] == 0:
-                        self.redis_db_frame_version3.xgroup_delconsumer(self._queue_name, self.GROUP, xinfo_item['name'])
-                    if xinfo_item['name'] not in current_queue_hearbeat_ids and xinfo_item['pending'] > 0:  # 说明这个消费者掉线断开或者关闭了。
-                        pending_msg_list = self.redis_db_frame_version3.xpending_range(
-                            self._queue_name, self.GROUP, '-', '+', 1000, xinfo_item['name'])
-                        if pending_msg_list:
-                            # min_idle_time 不需要，因为加了分布式锁，所以不需要基于idle最小时间的判断，并且启动了基于心跳的确认消费助手，检测消费者掉线或关闭或断开的准确率100%。
-                            xclaim_task_list = self.redis_db_frame_version3.xclaim(self._queue_name, self.GROUP, self.consumer_identification, force=True,
-                                                                                   min_idle_time=0 * 1000, message_ids=[task_item['message_id'] for task_item in pending_msg_list])
-                            if xclaim_task_list:
-                                self.logger.warning(f' {self._queue_name}  的分组 {self.GROUP} 的消费者 {self.consumer_identification} 夺取 断开的消费者 {xinfo_item["name"]}'
-                                                    f'  {len(xclaim_task_list)} 个任务，详细是 {xclaim_task_list} ')
-                                for task in xclaim_task_list:
-                                    kw = {'body': json.loads(task[1]['']), 'msg_id': task[0]}
-                                    self._submit_task(kw)
 

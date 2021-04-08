@@ -23,10 +23,9 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
         self._unack_zset_name = f'{self._queue_name}__unack'
-        self._is_send_consumer_hearbeat_to_redis = True
 
     def start_consuming_message(self):
-        self.logger.warning('启动了任务redis确认消费助手')
+        self._is_send_consumer_hearbeat_to_redis = True
         super().start_consuming_message()
         self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
 
@@ -37,7 +36,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
         self.redis_db_frame.zrem(self._unack_zset_name, kw['task_str'])
 
     def _requeue_tasks_which_unconfirmed(self):
-        #防止在多个进程或多个机器中同时做扫描和放入未确认消费的任务。使用个分布式锁。
+        # 防止在多个进程或多个机器中同时做扫描和放入未确认消费的任务。使用个分布式锁。
         lock_key = f'fsdf_lock__requeue_tasks_which_unconfirmed_timeout:{self._queue_name}'
         with decorators.RedisDistributedLockContextManager(self.redis_db_frame, lock_key, ) as lock:
             if lock.has_aquire_lock:

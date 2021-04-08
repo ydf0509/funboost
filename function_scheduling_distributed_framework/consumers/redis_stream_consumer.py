@@ -25,7 +25,6 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
                                    f'RedisStreamConsumer 使用的是 stream 数据结构')
         self._is_send_consumer_hearbeat_to_redis = True
         super().start_consuming_message()
-        self.logger.warning('启动了任务redis确认消费助手')
         self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
 
     def _shedual_task(self):

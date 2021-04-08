@@ -10,35 +10,32 @@ from function_scheduling_distributed_framework.utils import RedisMixin, decorato
 
 class RedisBrpopLpushConsumer(AbstractConsumer, RedisMixin):
     """
-    redis作为中间件实现的，使用redis list 结构实现的。
-    这个如果消费脚本在运行时候随意反复重启或者非正常关闭或者消费宕机，会丢失大批任务。高可靠需要用rabbitmq或者redis_ack_able或者redis_stream的中间件方式。
+    redis作为中间件实现的，使用redis brpoplpush 实现的，并且使用心跳来解决 关闭/掉线 重新分发问题。
+
     """
     BROKER_KIND = 14
 
     def start_consuming_message(self):
         self._is_send_consumer_hearbeat_to_redis = True
         super().start_consuming_message()
-        self.logger.warning('启动了任务redis确认消费助手')
         self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
-
 
     # noinspection DuplicatedCode
     def _shedual_task(self):
         unack_list_name = f'unack_{self._queue_name}_{self.consumer_identification}'
         while True:
-            result = self.redis_db_frame_version3.brpoplpush(self._queue_name, unack_list_name,timeout=60)
+            result = self.redis_db_frame.brpoplpush(self._queue_name, unack_list_name, timeout=60)
             if result:
-                self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {result[1].decode()}  ')
-                task_dict = json.loads(result[1])
-                kw = {'body': task_dict,'raw_msg':result[1].decode()}
+                self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {result.decode()}  ')
+                task_dict = json.loads(result)
+                kw = {'body': task_dict, 'raw_msg': result}
                 self._submit_task(kw)
 
-
     def _confirm_consume(self, kw):
-        self.redis_db_frame.lrem(f'unack_{self._queue_name}_{self.consumer_identification}',kw['raw_msg'],num=1)
+        self.redis_db_frame.lrem(f'unack_{self._queue_name}_{self.consumer_identification}', kw['raw_msg'], num=1)
 
     def _requeue(self, kw):
-        self.redis_db_frame.rpush(self._queue_name, json.dumps(kw['body']))
+        self.redis_db_frame.lpush(self._queue_name, json.dumps(kw['body']))
 
     def _requeue_tasks_which_unconfirmed(self):
         lock_key = f'fsdf_lock__requeue_tasks_which_unconfirmed:{self._queue_name}'
@@ -50,10 +47,9 @@ class RedisBrpopLpushConsumer(AbstractConsumer, RedisMixin):
                 for current_queue_unacked_msg_queue in current_queue_unacked_msg_queues[1]:
                     current_queue_unacked_msg_queue_str = current_queue_unacked_msg_queue.decode()
                     if current_queue_unacked_msg_queue_str.split(f'unack_{self._queue_name}_')[1] not in current_queue_hearbeat_ids:
-                        msg_list = self.redis_db_frame.lrange(current_queue_unacked_msg_queue_str,0,-1)
+                        msg_list = self.redis_db_frame.lrange(current_queue_unacked_msg_queue_str, 0, -1)
                         self.logger.warning(f"""{current_queue_unacked_msg_queue_str} 是掉线或关闭消费者的待确认任务, 将 一共 {len(msg_list)} 个消息,
                                             详情是 {msg_list} 推送到正常消费队列 {self._queue_name} 队列中。
                                             """)
-                        self.redis_db_frame.lpush(self._queue_name,*msg_list)
-
-
+                        self.redis_db_frame.lpush(self._queue_name, *msg_list)
+                        self.redis_db_frame.delete(current_queue_unacked_msg_queue_str)

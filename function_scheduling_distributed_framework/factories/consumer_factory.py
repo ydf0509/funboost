@@ -13,6 +13,7 @@ from function_scheduling_distributed_framework.consumers.persist_queue_consumer 
 from function_scheduling_distributed_framework.consumers.rabbitmq_amqpstorm_consumer import RabbitmqConsumerAmqpStorm
 from function_scheduling_distributed_framework.consumers.rabbitmq_pika_consumer import RabbitmqConsumer
 from function_scheduling_distributed_framework.consumers.rabbitmq_rabbitpy_consumer import RabbitmqConsumerRabbitpy
+from function_scheduling_distributed_framework.consumers.redis_brpoplpush_consumer import RedisBrpopLpushConsumer
 from function_scheduling_distributed_framework.consumers.redis_consumer import RedisConsumer
 from function_scheduling_distributed_framework.consumers.redis_consumer_ack_able import RedisConsumerAckAble
 from function_scheduling_distributed_framework.consumers.rocketmq_consumer import RocketmqConsumer
@@ -42,7 +43,8 @@ def get_consumer(*args, broker_kind=0, **kwargs):
         10: SqlachemyConsumer,
         11: RocketmqConsumer,
         12: RedisStreamConsumer,
-        13:ZeroMqConsumer,
+        13: ZeroMqConsumer,
+        14: RedisBrpopLpushConsumer
     }
     if broker_kind not in broker_kind__consumer_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')

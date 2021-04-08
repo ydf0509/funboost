@@ -494,6 +494,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if self._is_send_consumer_hearbeat_to_redis:
             self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name, self.consumer_identification)
             self._distributed_consumer_statistics.run()
+            self.logger.warning(f'启动了分布式环境 使用 redis 的键 hearbeat:{self._queue_name} 统计活跃消费者 ，当前消费者唯一标识为 {self.consumer_identification}')
         self.keep_circulating(10, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
         self._redis_filter.delete_expire_filter_task_cycle()
         if self._schedule_tasks_on_main_thread:

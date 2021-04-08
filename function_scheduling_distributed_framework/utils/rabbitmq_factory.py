@@ -51,7 +51,7 @@ class RabbitmqClientPika:
 
 
 class RabbitMqFactory:
-    def __init__(self, heartbeat=60 * 10, is_use_rabbitpy=0):
+    def __init__(self, heartbeat=600 , is_use_rabbitpy=0):
         """
         :param heartbeat:
         :param is_use_rabbitpy: 为0使用pika，多线程不安全。为1使用rabbitpy，多线程安全的包。

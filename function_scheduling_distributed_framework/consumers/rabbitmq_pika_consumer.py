@@ -53,11 +53,13 @@ class RabbitmqConsumer(AbstractConsumer):
             # except pikav0.exceptions.ConnectionClosedByBroker:
             #     break
             # Don't recover on channel errors
-            except pikav0.exceptions.AMQPChannelError:
+            except pikav0.exceptions.AMQPChannelError as e:
                 # break
+                self.logger.error(e)
                 continue
                 # Recover on all other connection errors
-            except pikav0.exceptions.AMQPConnectionError:
+            except pikav0.exceptions.AMQPConnectionError as e:
+                self.logger.error(e)
                 continue
 
     def _confirm_consume000(self, kw):

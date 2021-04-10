@@ -1365,15 +1365,16 @@ if __name__ == '__main__':
     f.consume()
 ```
 
-## 6.14 2021-04 新增以 redis 的 list 为数据结构，但使用 brpoplpush 命令 双队列 作为中间件的消息队列。
+## 6.15 2021-04 新增以 redis 的 list 为数据结构，但使用 brpoplpush 命令 双队列 作为中间件的消息队列。
 
+#####  此 brpoplpush 双队列方式 + 消费者唯一id标识的心跳检测，可以媲美 rabbitmq 的确认消费功能。
 ```
 代码演示省略，设置broker_kind=BrokerEnum.RedisBrpopLpush就行了。 
 @task_deco('queue_test_f01', broker_kind=BrokerEnum.RedisBrpopLpush,)
 ```
 
 
-## 6.15 2021-04 新增以 zeromq 为中间件的消息队列。
+## 6.16 2021-04 新增以 zeromq 为中间件的消息队列。
 ```
 zeromq 和rabbbitmq kafka redis都不同，这个不需要安装一个服务端软件，是纯代码的。
 zeromq方式是启动一个端口，所以queue_name传一个大于20000小于65535的数字，不能传字母。

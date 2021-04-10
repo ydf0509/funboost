@@ -504,14 +504,19 @@ import time
 """
 from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum, run_consumer_with_multi_process
 import os
+import requests
+import threading
 
-@task_deco('test_multi_process_queue',broker_kind=BrokerEnum.REDIS_ACK_ABLE,concurrent_mode=ConcurrentModeEnum.THREADING,)
+@task_deco('test_multi_process_queue',broker_kind=BrokerEnum.REDIS_ACK_ABLE,concurrent_mode=ConcurrentModeEnum.THREADING,qps=100)
 def fff(x):
-    print(x * 10,os.getpid())
+    resp = requests.get('http://www.baidu.com/content-search.xml')
+    print(os.getpid(),threading.get_ident(),resp.text[:5])
+    
 
 if __name__ == '__main__':
     # fff.consume()
-    run_consumer_with_multi_process(fff,6) # 一次性启动6个进程 叠加 多线程 并发。
+    # 一次性启动16个进程 叠加 多线程 并发。此demo可以作为超高速爬虫例子，能充分利用io和cpu，在16核机器上请求效率远远暴击 scrapy 数十倍。
+    run_consumer_with_multi_process(fff,16) 
 
 ```
 

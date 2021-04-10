@@ -102,7 +102,6 @@ class PublishParamsChecker(LoggerMixin):
 
 class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
-
     def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True,
                  clear_queue_within_init=False, is_add_publish_time=True, consuming_function: callable = None, ):
         """
@@ -160,7 +159,6 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         :param msg:
         :param task_id:
-        :param callback_fun: 回调函数
         :param priority_control_config:
         :return:
         """
@@ -214,7 +212,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     delay = push  # 那就来个别名吧，两者都可以。
 
     @abc.abstractmethod
-    def concrete_realization_of_publish(self, msg:str):
+    def concrete_realization_of_publish(self, msg: str):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -252,7 +250,7 @@ def deco_mq_conn_error(f):
         # noinspection PyBroadException
         try:
             return f(self, *args, **kwargs)
-        except (PikaAMQPError,amqpstorm.AMQPError) as e:  # except Exception as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
+        except (PikaAMQPError, amqpstorm.AMQPError) as e:  # except Exception as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
             self.logger.error(f'rabbitmq链接出错   ,方法 {f.__name__}  出错 ，{e}')
             self.init_broker()
             return f(self, *args, **kwargs)

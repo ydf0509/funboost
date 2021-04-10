@@ -1287,7 +1287,7 @@ async def async_f(x):
     #通过 id 可以看到每个并发函数使用的都是同一个loop，而不是采用了愚蠢的临时 asyncio.new_event_loop().run_until_complete(async_f(x)) 方式调度。
     print(x)
 
-if __name__ == '__main__':
+if __name__ == '__main__': 
     async_f.clear()
     for i in range(100):
         async_f.push(i, )

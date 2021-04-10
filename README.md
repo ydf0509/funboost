@@ -1283,6 +1283,8 @@ async def async_f(x):
     # 测试异步阻塞并发， 此处不能写成time.sleep(1),否则无论设置多高的并发，1秒钟最多只能运行1次函数。
     # 同理asyncio 不能和 requests搭配，要和 aiohttp 搭配。
     await asyncio.sleep(1) 
+    print(id(asyncio.get_event_loop()))  
+    #通过 id 可以看到每个并发函数使用的都是同一个loop，而不是采用了愚蠢的临时 asyncio.new_event_loop().run_until_complete(async_f(x)) 方式调度。
     print(x)
 
 if __name__ == '__main__':

@@ -24,7 +24,7 @@ def task_fun(x,y):
 if __name__ == "__main__":
     for i in range(100):
         task_fun.push(i, y=i * 2) # 发布者发布任务
-    task_fun.consume()            # 消费者消费任务
+    task_fun.consume()            # 消费者启动循环调度并发消费任务
 """
 对于消费函数，框架内部会生成发布者(生产者)和消费者。
 1.推送。 task_fun.push(1,y=2) 会把 {"x":1,"y":2} (消息也自动包含一些其他辅助信息) 发送到中间件的 task_queue_name1 队列中。

@@ -1354,6 +1354,7 @@ def f(a, b):
     print(f'{a} + {b} = {a + b}')
 
 if __name__ == '__main__':
-          f.push(i , b=i * 2,)
-     f.consume()
+    for i in range(100):
+        f.push(i , b=i * 2)
+    f.consume()
 ```

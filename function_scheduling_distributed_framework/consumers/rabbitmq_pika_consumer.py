@@ -20,7 +20,7 @@ class RabbitmqConsumer(AbstractConsumer):
     """
     使用pika包实现的。
     """
-    BROKER_KIND = 0
+    BROKER_KIND = 4
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):

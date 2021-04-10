@@ -17,11 +17,11 @@ from function_scheduling_distributed_framework.timing_job import fsdf_background
 
 
 class BrokerEnum:
-    RABBITMQ_PIKA = 0  # 使用pika包操作rabbitmq  作为 分布式消息队列，支持消费确认推荐这个。
+    RABBITMQ_PIKA = 4  # 使用pika包操作rabbitmq  作为 分布式消息队列，。
     RABBITMQ_RABBITPY = 1  # 使用 rabbitpy 包操作rabbitmq  作为 分布式消息队列，支持消费确认。
     REDIS = 2  # 使用 redis 的 list结构，brpop 作为分布式消息队列。随意重启和关闭会丢失大量消息，不支持消费确认。
     LOCAL_PYTHON_QUEUE = 3  # 使用python queue.Queue实现的基于当前python进程的消息队列，不支持跨进程 跨脚本 跨机器共享任务，不支持持久化，适合一次性短期简单任务。
-    RABBITMQ_AMQPSTORM = 4  # 使用 amqpstorm 包操作rabbitmq  作为 分布式消息队列，支持消费确认
+    RABBITMQ_AMQPSTORM = 0  # 使用 amqpstorm 包操作rabbitmq  作为 分布式消息队列，支持消费确认
     MONGOMQ = 5  # 使用mongo的表中的行模拟的 作为分布式消息队列，支持消费确认。
     PERSISTQUEUE = 6  # 使用基于sqlute3模拟消息队列，支持消费确认和持久化，但不支持跨机器共享任务，可以基于本机单机跨脚本和跨进程共享任务，好处是不需要安装中间件。
     NSQ = 7  # 基于nsq作为分布式消息队列，支持消费确认。

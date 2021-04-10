@@ -92,8 +92,8 @@ class ThreadPoolExecutorShrinkAble(Executor, LoggerMixin, LoggerLevelSetterMixin
     # MIN_WORKERS = 5   # 最小值可以设置为0，代表线程池无论多久没有任务最少要保持多少个线程待命。
     # KEEP_ALIVE_TIME = 60  # 这个参数表名，当前线程从queue.get(block=True, timeout=KEEP_ALIVE_TIME)多久没任务，就线程结束。
 
-    MIN_WORKERS = 1
-    KEEP_ALIVE_TIME = 5
+    MIN_WORKERS = 5
+    KEEP_ALIVE_TIME = 60
 
     def __init__(self, max_workers: int = None, thread_name_prefix=''):
         """

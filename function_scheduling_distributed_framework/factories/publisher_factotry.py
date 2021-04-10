@@ -36,11 +36,11 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
     all_kwargs = copy.deepcopy(locals())
     all_kwargs.pop('broker_kind')
     broker_kind__publisher_type_map = {
-        0: RabbitmqPublisher,
+        4: RabbitmqPublisher,
         1: RabbitmqPublisherUsingRabbitpy,
         2: RedisPublisher,
         3: LocalPythonQueuePublisher,
-        4: RabbitmqPublisherUsingAmqpStorm,
+        0: RabbitmqPublisherUsingAmqpStorm,
         5: MongoMqPublisher,
         6: PersistQueuePublisher,
         7: NsqPublisher,

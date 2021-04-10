@@ -30,11 +30,11 @@ def get_consumer(*args, broker_kind=0, **kwargs):
     :return:
     """
     broker_kind__consumer_type_map = {
-        0: RabbitmqConsumer,
+        4: RabbitmqConsumer,
         1: RabbitmqConsumerRabbitpy,
         2: RedisConsumer,
         3: LocalPythonQueueConsumer,
-        4: RabbitmqConsumerAmqpStorm,
+        0: RabbitmqConsumerAmqpStorm,
         5: MongoMqConsumer,
         6: PersistQueueConsumer,
         7: NsqConsumer,

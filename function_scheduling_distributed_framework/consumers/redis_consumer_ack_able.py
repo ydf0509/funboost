@@ -122,8 +122,8 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
 
     def _shedual_task(self):
         lua = '''
-                     local task_list = redis.call("rrange", KEYS[1],0,99)
-                     redis.call("rtrim", KEYS[1],100,-1)
+                     local task_list = redis.call("lrange", KEYS[1],0,99)
+                     redis.call("ltrim", KEYS[1],100,-1)
                      if (#task_list > 0) then
                         for task_index,task_value in ipairs(task_list)
                         do

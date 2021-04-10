@@ -35,4 +35,4 @@ if __name__ == '__main__':
     crawl_detail_page.consume()  # 启动详情页消费
 
     # 这样速度更猛，叠加多进程
-    run_consumer_with_multi_process(crawl_detail_page, 6)
+    run_consumer_with_multi_process(crawl_detail_page, 1)

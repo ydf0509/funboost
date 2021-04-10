@@ -1360,7 +1360,7 @@ if __name__ == '__main__':
 ```
 
 
-## 6.14 2021-04 新增以 zeromq 为中间件的消息队列。
+## 6.15 2021-04 新增以 zeromq 为中间件的消息队列。
 ```
 zeromq 和rabbbitmq kafka redis都不同，这个不需要安装一个服务端软件，是纯代码的。
 zeromq方式是启动一个端口，所以queue_name传一个大于20000小于65535的数字，不能传字母。
@@ -1387,5 +1387,5 @@ if __name__ == '__main__':
 from test_frame.test_broker.test_consume import f
 
 for i in range(100):
-    f.push(i)
+    f.push(i) 
 ```

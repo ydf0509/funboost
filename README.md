@@ -510,7 +510,7 @@ import threading
 @task_deco('test_multi_process_queue',broker_kind=BrokerEnum.REDIS_ACK_ABLE,concurrent_mode=ConcurrentModeEnum.THREADING,qps=100)
 def fff(x):
     resp = requests.get('http://www.baidu.com/content-search.xml')
-    print(os.getpid(),threading.get_ident(),resp.text[:5])
+    print(x,os.getpid(),threading.get_ident(),resp.text[:5])
     
 
 if __name__ == '__main__':

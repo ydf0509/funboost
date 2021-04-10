@@ -515,7 +515,7 @@ def fff(x):
 
 if __name__ == '__main__':
     # fff.consume()
-    # 一次性启动16个进程 叠加 多线程 并发。此demo可以作为超高速爬虫例子，能充分利用io和cpu，在16核机器上请求效率远远暴击 scrapy 数十倍。
+    # 一次性启动16个进程 叠加 多线程 并发。此demo可以作为超高速爬虫例子，能充分利用io和cpu，在16核机器上请求效率远远暴击 scrapy 数十倍，大家可以亲自对比测试。
     run_consumer_with_multi_process(fff,16) 
 
 ```

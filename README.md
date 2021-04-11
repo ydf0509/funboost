@@ -522,8 +522,31 @@ if __name__ == '__main__':
 
 ```
 
+### 2.7 演示rpc模式，即客户端调用远程函数。
 
-### 2.7 演示qps控频和自适应扩大和减小并发数量。
+###### 远程服务端脚本，执行求和逻辑
+```python
+from function_scheduling_distributed_framework import task_deco, BrokerEnum
+
+@task_deco('test_rpc_queue', is_using_rpc_mode=True, broker_kind=BrokerEnum.REDIS_ACK_ABLE)
+def add(a, b):
+    return a + b
+
+if __name__ == '__main__':
+    add.consume()
+```
+
+#######  客户端调用脚本，获取两书之和的结果，执行求和过程是在服务端
+```python
+from test_frame.test_rpc.test_consume import add
+
+for i in range(100):
+    async_result = add.push(i, i * 2)
+    print(async_result.result)
+```
+
+
+### 2.8 演示qps控频和自适应扩大和减小并发数量。
 
 ```
 通过不同的时间观察控制台，可以发现无论f2这个函数需要耗时多久（无论是函数耗时需要远小于1秒还是远大于1秒），框架都能精确控制每秒刚好运行2次。
@@ -568,6 +591,7 @@ if __name__ == '__main__':
         f2.push(i, i * 2)
     f2.consume()
 ```
+
 
 
 

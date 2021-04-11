@@ -30,8 +30,8 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
         while True:
             with self.redis_db_frame_version3.pipeline() as p:
                 get_msg_batch_size = 100
-                p.rrange(self._queue_name, 0, get_msg_batch_size - 1)
-                p.rtrim(self._queue_name, get_msg_batch_size, -1)
+                p.lrange(self._queue_name, 0, get_msg_batch_size - 1)
+                p.ltrim(self._queue_name, get_msg_batch_size, -1)
                 task_str_list = p.execute()[0]
             if task_str_list:
                 self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {task_str_list}  ')

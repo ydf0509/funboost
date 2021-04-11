@@ -524,7 +524,7 @@ if __name__ == '__main__':
 
 ### 2.7 演示rpc模式，即客户端调用远程函数。
 
-###### 远程服务端脚本，执行求和逻辑
+##### 远程服务端脚本，执行求和逻辑
 ```python
 from function_scheduling_distributed_framework import task_deco, BrokerEnum
 
@@ -536,7 +536,7 @@ if __name__ == '__main__':
     add.consume()
 ```
 
-#######  客户端调用脚本，获取两书之和的结果，执行求和过程是在服务端
+##### 客户端调用脚本，获取两书之和的结果，执行求和过程是在服务端
 ```python
 from test_frame.test_rpc.test_consume import add
 

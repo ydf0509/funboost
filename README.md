@@ -66,7 +66,7 @@ celery才需要从配置中写好 include imports  autodiscover_tasks，从而�
 [不规则文件夹层级和名称下的celery使用演示](https://github.com/ydf0509/celery_demo)  
 [https://github.com/ydf0509/celery_demo](https://github.com/ydf0509/celery_demo)  
 
-![](test_frame/jietu/celery_dir2.png)
+![](test_frame/jietu/celery_dir2.png) 
 ```
 可以看代码，当文件夹层级不规则和文件名称不规则时候，要使用celery绝非简单事情，如果你只看普通的celery入门文档，是绝对解决不了
 这种情况下的celery如何正确使用。

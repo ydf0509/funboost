@@ -162,6 +162,7 @@ class ConsumersManager:
     consumers_queue__info_map = dict()
     global_concurrent_mode = None
     schedual_task_always_use_thread = False
+    _has_show_conusmers_info = False
 
     @classmethod
     def join_all_consumer_shedual_task_thread(cls):
@@ -188,9 +189,14 @@ class ConsumersManager:
     @classmethod
     def show_all_consumer_info(cls):
         # nb_print(f'当前解释器内，所有消费者的信息是：\n  {cls.consumers_queue__info_map}')
-        nb_print(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}')
-        for _, consumer_info in cls.consumers_queue__info_map.items():
-            stdout_write(f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}"  \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
+        if not cls._has_show_conusmers_info:
+            nb_print(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}')
+            for _, consumer_info in cls.consumers_queue__info_map.items():
+                stdout_write(f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}" '
+                             f' \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
+            cls._has_show_conusmers_info = True
+
+
 
     @staticmethod
     def get_concurrent_name_by_concurrent_mode(concurrent_mode):
@@ -490,6 +496,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     # noinspection PyAttributeOutsideInit
     def start_consuming_message(self):
+        ConsumersManager.show_all_consumer_info()
         self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
         if self._is_send_consumer_hearbeat_to_redis:
             self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name, self.consumer_identification)

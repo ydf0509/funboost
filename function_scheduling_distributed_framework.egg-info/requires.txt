@@ -1,5 +1,5 @@
 eventlet==0.25.0
-gevent
+gevent==21.1.2
 pymongo==3.5.1
 AMQPStorm==2.7.1
 rabbitpy==2.0.1
@@ -23,5 +23,7 @@ pikav1
 redis2
 redis3
 redis
-nb_log>=3.4
+nb_log>=4.3
 rocketmq
+zmq
+pyzmq

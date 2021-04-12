@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: function-scheduling-distributed-framework
-Version: 9.2
+Version: 9.3
 Summary: function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way
 Home-page: https://github.com/ydf0509/distributed_framework
 Author: bfzs
@@ -16,28 +16,85 @@ Description: # 1.distributed_framework
         
         [![sgV2xP.png](https://s3.ax1x.com/2021/01/19/sgV2xP.png)](https://imgchr.com/i/sgV2xP)
         
-        
+        ### 1.0.0.1 简单例子
+        ```
+        以下这只是简单求和例子，实际情况换成任意函数里面写任意逻辑，框架可没有规定只能用于 求和函数 的自动调度并发。
+        而是根据实际情况函数的参数个数、函数的内部逻辑功能，全部都由用户自定义，函数里面想写什么就写什么，想干什么就干什么，极端自由。
+        也就是框架很容易学和使用，把下面的task_fun函数的入参和内部逻辑换成你自己想写的函数功能就可以了，框架只需要学习task_deco这一个函数的参数就行。
+        ```
         ```python
-        from function_scheduling_distributed_framework import task_deco, BrokerEnum
-        @task_deco("task_queue_name1",qps=2,broker_kind=BrokerEnum.PERSISTQUEUE)  # 入参包括20种，运行控制方式非常多，想得到的都会有。
+        import time
+        from function_scheduling_distributed_framework import task_deco, BrokerEnum 
+        
+        @task_deco("task_queue_name1",qps=5,broker_kind=BrokerEnum.PERSISTQUEUE)  # 入参包括20种，运行控制方式非常多，想得到的控制都会有。
         def task_fun(x,y):
-            print(x + y)
-        
+            print(f'{x} + { y} = {x + y}')
+            time.sleep(3)   # 框架会自动并发绕开这个阻塞，无论函数内部随机耗时多久都能自动调节并发达到每秒运行 5 次 这个 task_fun 函数的目的。
+            
         if __name__ == "__main__":
-            task_fun.consume()
+            for i in range(100):
+                task_fun.push(i, y=i * 2) # 发布者发布任务
+            task_fun.consume()            # 消费者启动循环调度并发消费任务
         """
-        对与消费函数框，架内部会生成发布者(生产者)和消费者。
-        1.推送。 task_fun.push(1,y=2) 会把 {"x":1,"y":2} (消息也自动包含一些其他信息) 发送到中间件的 task_queue_name1 队列中。
-        2.消费。 task_fun.consume() 开始自动从中间件拉取消息，并发的调度运行函数，task_fun(**{"x":1,"y":2})
-        整个过程只有这两步，清晰明了，其他的控制方式需要看 task_deco 的中文入参解释，全都很有用。
+        对于消费函数，框架内部会生成发布者(生产者)和消费者。
+        1.推送。 task_fun.push(1,y=2) 会把 {"x":1,"y":2} (消息也自动包含一些其他辅助信息) 发送到中间件的 task_queue_name1 队列中。
+        2.消费。 task_fun.consume() 开始自动从中间件拉取消息，并发的调度运行函数，task_fun(**{"x":1,"y":2}),每秒运行5次
+        整个过程只有这两步，清晰明了，其他的控制方式需要看 task_deco 的中文入参解释，全都参数都很有用。
         """
+        ```
+        ```
+        如你所见，使用此框架为什么没有配置中间件的 账号 密码 端口号呢。只有运行任何一个导入了框架的脚本文件一次，就会自动生成一个配置文件
+        然后在配置文件中按需修改需要用到的配置就行。
+        
+        @task_deco 和celery的 @app.task 装饰器区别很大，导致写代码方便简化容易很多。没有需要先实例化一个 Celery对象一般叫app变量，
+        然后任何脚本的消费函数都再需要导入这个app，然后@app.task，一点小区别，但造成的两种框架写法难易程度区别很大。
+        使用此框架，不需要固定的项目文件夹目录，任意多层级深层级文件夹不规则python文件名字下写函数都行，
+        celery 实际也可以不规则文件夹和文件名字来写任务函数，但是很难掌握，如果这么写的话，那么在任务注册时候会非常难，
+        一般demo演示文档都不会和你演示这种不规则文件夹和文件名字下写celery消费函数情况，因为如果演示这种情况会非常容易的劝退绝大部分小白。
+        但是如果不精通celery的任务注册导入机制同时又没严格按照死板固定的目录格式来写celery任务，
+        一定会出现令人头疼的 Task of kind 'tasks.add' is not registered, please make sure it's imported. 类似这种错误。
+        主要原因是celery 需要严格Celery类的实例化对象app变量，然后消费函数所在脚本必须import这个app，这还没完，
+        你必须在settings配置文件写 include imports 等配置，否则cmd 启动celery 后台命令时候，celery并不知情哪些文件脚本导入了 app这个变量，
+        当celery框架取出到相关的队列任务时候，就会报错找不到应该用哪个脚本下的哪个函数去运行取出的消息了。
+        你可能会想，为什么celery app 变量的脚本为什么不可以写导入消费函数的import声明呢，比如from dir1.dir2.pyfilename imprt add 了，
+        这样celery运行时候就能找到函数了是不是？那要动脑子想想，如果celery app主文件用了 from dir1.dir2.pyfilename import add，
+        同时消费函数 add 所在的脚本 dir1/dir2/pyfilename.py 又从celery app的猪脚本中导入app，然后把@app.task加到add函数上面 ，
+        那这就是出现了互相导入，a导入b，b导入a的问题了，脚本一启动就报错，正是因为这个互相导入的问题，
+        celery才需要从配置中写好 include imports  autodiscover_tasks，从而实现一方延迟导入以解决互相导入。
+        
+        此框架的装饰器不存在需要一个类似Celery app实例的东西，不会有这个变量将大大减少编程难度，消费函数写在任意深层级不规则文件下都行。
+        
+        ```
+        
+        ##### 例如董伟明的 celery 教程例子的项目目录结构，然后很多练习者需要小心翼翼模仿文件夹层级和py文件名字。
+        
+        ![](./test_frame/jietu/celery_proj_dir.png)
+        
+        
+        
+        ##### 下面这是一个演示不规则文件夹层级和名称的celery使用，大家可以看看如果只看简单celery入门文档，搞不搞得定
+        [不规则文件夹层级和名称下的celery使用演示](https://github.com/ydf0509/celery_demo)  
+        [https://github.com/ydf0509/celery_demo](https://github.com/ydf0509/celery_demo)  
+        
+        ![](test_frame/jietu/celery_dir2.png) 
+        ```
+        可以看代码，当文件夹层级不规则和文件名称不规则时候，要使用celery绝非简单事情，如果你只看普通的celery入门文档，是绝对解决不了
+        这种情况下的celery如何正确使用。
         ```
         
         
-        ```
+        
         ### 1.0.1  框架用途功能
+        ```
+        python通用分布式函数调度框架。适用场景范围广泛，
+        框架非常适合io密集型(框架支持对函数自动使用 thread gevent eventlet asyncio 并发)
+        框架非常适合cpu密集型(框架能够在线程 协程基础上 叠加 多进程 multi_process 并发 ，不仅能够多进程执行任务还能多机器执行任务)。
+        不管是函数需要消耗时io还是消耗cpu，用此框架都很合适，因为任务都是在中间件里面，可以自动分布式分发执行。
+        此框架是函数的辅助控制倍增器。
         
-        python通用分布式函数调度框架。适用场景范围广泛。
+        框架不适合的场景是 函数极其简单，例如函数只是一行简单的 print hello，函数只需要非常小的cpu和耗时，运行一次函数只消耗了几十hz或者几纳秒，
+        此时那就采用直接调用函数就好了，因为框架施加了很多控制功能，当框架的运行逻辑耗时耗cpu 远大于函数本身 时候，使用框架反而会使函数执行变慢。
+        
         
         （python框架从全局概念上影响程序的代码组织和运行，包和模块是局部的只影响1个代码文件的几行。）
         
@@ -150,20 +207,23 @@ Description: # 1.distributed_framework
         
         ### 1.0.2 框架支持的中间件类型
         ```
-        支持python内置Queue对象作为当前解释器下的消息队列。
-        支持sqlite3作为本机持久化消息队列。
-        支持pika包实现的使用rabbitmq作为分布式消息队列。
-        支持rabbitpy包实现的使用rabbitmq作为分布式消息队列。
-        支持amqpstorm包实现的使用rabbitmq作为分布式消息队列。
-        支持redis中间件作为分布式消息队列，设置中间件类型为2。（不支持消费确认，例如把消息取出来了，
-               但函数还在运行中没有运行完成，突然关闭程序或断网断电，会造成部分任务丢失
-               设置的并发数量越大，丢失数量越惨，所以推荐rabbitmq）
-        支持mongodb中间件作为分布式消息队列。
-        支持nsq中间件作为分布式消息队列。
-        支持kafka中间件作为分布式消息队列。
-        新增支持使用redis作为中间件，但支持消费确认的功能，设置中间件类型为9，不会由于随意关闭和断电每次导致丢失几百个任务。
-        支持sqlachemy配置的engine url作为下消息中间件，支持mysql sqlite oracle postgre sqlserver5种数据库。
-        支持rocketmq中间件
+        
+        class BrokerEnum:
+            RABBITMQ_AMQPSTORM = 0  # 使用 amqpstorm 包操作rabbitmq  作为 分布式消息队列，支持消费确认.推荐这个。
+            RABBITMQ_RABBITPY = 1  # 使用 rabbitpy 包操作rabbitmq  作为 分布式消息队列，支持消费确认。
+            REDIS = 2  # 使用 redis 的 list结构，brpop 作为分布式消息队列。随意重启和关闭会丢失大量消息，不支持消费确认。
+            LOCAL_PYTHON_QUEUE = 3  # 使用python queue.Queue实现的基于当前python进程的消息队列，不支持跨进程 跨脚本 跨机器共享任务，不支持持久化，适合一次性短期简单任务。
+            RABBITMQ_PIKA = 4  # 使用pika包操作rabbitmq  作为 分布式消息队列。
+            MONGOMQ = 5  # 使用mongo的表中的行模拟的 作为分布式消息队列，支持消费确认。
+            PERSISTQUEUE = 6  # 使用基于sqlute3模拟消息队列，支持消费确认和持久化，但不支持跨机器共享任务，可以基于本机单机跨脚本和跨进程共享任务，好处是不需要安装中间件。
+            NSQ = 7  # 基于nsq作为分布式消息队列，支持消费确认。
+            KAFKA = 8  # 基于kafka作为分布式消息队列。
+            REDIS_ACK_ABLE = 9  # 基于redis的 list + 临时unack的set队列，采用了 lua脚本操持了取任务和加到pengding为原子性，随意重启和掉线不会丢失任务。
+            SQLACHEMY = 10  # 基于SQLACHEMY 的连接作为分布式消息队列中间件支持持久化和消费确认。支持mysql oracle sqlserver等5种数据库。
+            ROCKETMQ = 11  # 基于 rocketmq 作为分布式消息队列，这个中间件必须在linux下运行，win不支持。
+            REDIS_STREAM = 12  # 基于redis 5.0 版本以后，使用 stream 数据结构作为分布式消息队列，支持消费确认和持久化和分组消费，是redis官方推荐的消息队列形式，比list结构更适合。
+            ZEROMQ = 13  # 基于zeromq作为分布式消息队列，不需要安装中间件，可以支持跨机器但不支持持久化。
+            RedisBrpopLpush = 14  # 基于redis的list结构但是采用brpoplpush 双队列形式，和 redis_ack_able的实现差不多，实现上采用了原生命令就不需要lua脚本来实现取出和加入unack了。
         
         切换任意中间件，代码都不需要做任何变化，不需要关注如何使用中间件的细节。
         总体来说首选rabbitmq，这也是不指定broker_kind参数时候的默认的方式。
@@ -236,16 +296,16 @@ Description: # 1.distributed_framework
         
         ## 2.1 具体更详细的用法可以看test_frame文件夹里面的几个示例和操作文档.md。
         
-        2.1为简单例子,介绍了入参意义，这里是介绍的手动调用猴子补丁函数修改框架配置和非装饰器方式。
+        2.1为简单例子,介绍了入参意义，这里是介绍的是手动实例化生成消费者的方式，这个是本质。
         
-        下面的2.2 是使用修改你项目根目录下文件distributed_frame_config.py的配置文件的方式，并且生成消费者使用装饰器方式。
+        下面的2.2 是装饰器生成消费者的使用方式，这个是简洁一丝丝。
          ```python
         """
         运行后悔自动在你的当前项目根目录下生成一个 distributed_frame_config.py 的文件，在里面修改写配置就好了，框架会自动读取这个文件的配置。
         """
         import time
         
-        from function_scheduling_distributed_framework import patch_frame_config, show_frame_config,get_consumer
+        from function_scheduling_distributed_framework import get_consumer
         
         # 主要的消费函数，演示做加法，假设需要花10秒钟。
         # 为什么消费举例大多数是time.sleep(n秒钟)，主要是用框架用来验证并发和控频。
@@ -299,8 +359,18 @@ Description: # 1.distributed_framework
             :param broker_kind:中间件种类,。 0 使用pika链接rabbitmqmq，1使用rabbitpy包实现的操作rabbitmnq，2使用redis，
                    3使用python内置Queue,4使用amqpstorm包实现的操作rabbitmq，5使用mongo，6使用本机磁盘持久化。
                    7使用nsq，8使用kafka，9也是使用redis但支持消费确认。10为sqlachemy，支持mysql sqlite postgre oracel sqlserver
-                   11使用rocketmq.
+                   11使用rocketmq. 12使用redis的 stream 数据结作为中间件，这个也支持消费确认 。13 zeromq
             :return AbstractConsumer
+            
+            '''
+            有人会抱怨入参超多很复杂，是因为要实现一切控制方式，实现的运行控制手段非常丰富，所以参数就会多。
+            
+            看这个里面的参数解释非常重要，几乎能想到的控制功能全部都有。比如有人说日志太多，不想看那么详细的提示日志
+            ，早就通过参数提供实现了，自己抱怨参数多又以为没提供这个功能，简直是自相矛盾。
+            
+            想入参参数少那就看readme的6.5 “新增一个10行代码的函数的最精简乞丐版实现的分布式函数执行框架，演示最本质实现原理。“ 
+            这个例子的框架啥控制手段都没有，参数自然就很少。
+            '''
         """
         consumer = get_consumer('queue_test2', consuming_function=f2, broker_kind=6)  
         
@@ -481,23 +551,53 @@ Description: # 1.distributed_framework
         ```python
         import time
         """
-        这种是多进程方式，一次编写能够兼容win和linux的运行。一次性启动6个进程 叠加 多线程 并发。
+        这种是多进程方式，一次编写能够兼容win和linux的运行。一次性启动16个进程 叠加 多线程 并发。
         """
         from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum, run_consumer_with_multi_process
         import os
+        import requests
+        import threading
         
-        @task_deco('test_multi_process_queue',broker_kind=BrokerEnum.REDIS_ACK_ABLE,concurrent_mode=ConcurrentModeEnum.THREADING,)
+        @task_deco('test_multi_process_queue',broker_kind=BrokerEnum.REDIS_ACK_ABLE,concurrent_mode=ConcurrentModeEnum.THREADING,qps=100)
         def fff(x):
-            print(x * 10,os.getpid())
+            resp = requests.get('http://www.baidu.com/content-search.xml')
+            print(x,os.getpid(),threading.get_ident(),resp.text[:5])
+            
         
         if __name__ == '__main__':
-            # fff.consume()
-            run_consumer_with_multi_process(fff,6) # 一次性启动6个进程 叠加 多线程 并发。
+            for i in range(10000):
+                fff.push(i)
+            # fff.consume() # 这个是单进程多线程/协程 消费。
+            # 一次性启动16个进程 叠加 多线程 并发。此demo可以作为超高速爬虫例子，能充分利用io和cpu，在16核机器上请求效率远远暴击 scrapy 数十倍，大家可以亲自对比测试。
+            run_consumer_with_multi_process(fff,16) 
         
         ```
         
+        ### 2.7 演示rpc模式，即客户端调用远程函数。
         
-        ### 2.7 演示qps控频和自适应扩大和减小并发数量。
+        ##### 远程服务端脚本，执行求和逻辑。  test_frame\test_rpc\test_consume.py
+        ```python
+        from function_scheduling_distributed_framework import task_deco, BrokerEnum
+        
+        @task_deco('test_rpc_queue', is_using_rpc_mode=True, broker_kind=BrokerEnum.REDIS_ACK_ABLE)
+        def add(a, b):
+            return a + b
+        
+        if __name__ == '__main__':
+            add.consume()
+        ```
+        
+        ##### 客户端调用脚本，获取两书之和的结果，执行求和过程是在服务端。 test_frame\test_rpc\test_publish.py
+        ```python
+        from test_frame.test_rpc.test_consume import add
+        
+        for i in range(100):
+            async_result = add.push(i, i * 2)
+            print(async_result.result)
+        ```
+        
+        
+        ### 2.8 演示qps控频和自适应扩大和减小并发数量。
         
         ```
         通过不同的时间观察控制台，可以发现无论f2这个函数需要耗时多久（无论是函数耗时需要远小于1秒还是远大于1秒），框架都能精确控制每秒刚好运行2次。
@@ -542,6 +642,7 @@ Description: # 1.distributed_framework
                 f2.push(i, i * 2)
             f2.consume()
         ```
+        
         
         
         
@@ -1064,7 +1165,6 @@ Description: # 1.distributed_framework
         
         beggar_redis_consumer.py文件的 start_consuming_message函数。
         ```python
-        
         def start_consuming_message(queue_name, consume_function, threads_num):
             pool = ThreadPoolExecutor(threads_num)
             while True:
@@ -1258,9 +1358,11 @@ Description: # 1.distributed_framework
             # 测试异步阻塞并发， 此处不能写成time.sleep(1),否则无论设置多高的并发，1秒钟最多只能运行1次函数。
             # 同理asyncio 不能和 requests搭配，要和 aiohttp 搭配。
             await asyncio.sleep(1) 
+            print(id(asyncio.get_event_loop()))  
+            #通过 id 可以看到每个并发函数使用的都是同一个loop，而不是采用了愚蠢的临时 asyncio.new_event_loop().run_until_complete(async_f(x)) 方式调度。
             print(x)
         
-        if __name__ == '__main__':
+        if __name__ == '__main__': 
             async_f.clear()
             for i in range(100):
                 async_f.push(i, )
@@ -1284,7 +1386,7 @@ Description: # 1.distributed_framework
         如果追求更好的控制和性能，不在乎代码写法上的麻烦，并且asyncio技术掌握的很溜，那就用asyncio的方式吧。 
         ```
         
-        ### 6.13.3 关于 async 鬓发模式，为什么框架还使用 pyredis pika pymongo，而没有使用aioredis  aiomongo
+        ### 6.13.3 关于 async 并发模式，为什么框架还使用 pyredis pika pymongo，而没有使用aioredis  aiomongo
         
         ```
         异步鬓发模式里面，整个调用链路必须是一旦异步，必须处处异步，在base_consumer.py的AbstractConsumer中，
@@ -1293,7 +1395,6 @@ Description: # 1.distributed_framework
         主要是因为框架目前支持15种中间件，一个一个的使用异步模式的库操作中间件来实现，比现在代码起码要增加80%，无异于重写一个项目了。
         异步和同步真的写法语法相差很大的，不信可以比比aiomysql 和pymysql库，aiohttp和requests，如果非常简单能实现异步，
         那aiohttp和aiomysql作者为什么要写几万行代码来重新实现，不在原来基础上改造个七八行来实现？
-        
         
         
         目前此库对 消息确认 消息重新入队 任务过滤  mongo插入，都是采用的同步库，但是使用了 run_in_executor,
@@ -1305,8 +1406,8 @@ Description: # 1.distributed_framework
         除了框架内部的阻塞函数是run_in_executor快速转化成非阻塞事件循环的，但是主要的用户的消费函数，是使用的真async模式运行在一个loop循环中的，
         也即是单线陈鬓发运行用户的异步函数。
         
-        其次框架的同步阻塞函数，都是操作中间件内心的库，异步就是 入队 确认消费 查询是否过滤，这些操作一般都会在1毫秒之内完成，不阻塞太长的事件，
-        即使不适用run_in_executor，直接在异步链路使用这些同步操作，也没太大问题。一旦异步必须处处异步，说的是不能调用耗时太长的同步阻塞函数，
+        其次框架的同步阻塞函数，都是操作中间件类型的库，异步就是 入队 确认消费 查询是否过滤，这些操作一般都会在1毫秒之内完成，不阻塞太长的事件，
+        即使不使用run_in_executor，直接在异步链路使用这些同步操作，也没太大问题。一旦异步必须处处异步，说的是不能调用耗时太长的同步阻塞函数，
         1毫秒的无伤大雅，因为celery 1秒钟最多能调度300个 def f： print(hello) 这样的无cpu 无io的函数，此框架调度运行速度任然超过celery。
         
              
@@ -1316,6 +1417,69 @@ Description: # 1.distributed_framework
         ```
         
         
+        ## 6.14 2021-04 新增以 redis 的 stream 数据结构 为中间件的消息队列。
+        ```
+        这个是 redis 的 真消息队列，这次是 真mq，
+        stream 数据结构功能更加丰富接近 rabbitmq kafka这种真mq的消息队列协议，比 list 做消息队列更强。
+        需要redis的服务端5.0版本以上才能使用这个数据结构。
+        代码文件在 function_scheduling_distributed_framework/consumers/redis_stream_consumer.py
+        
+        这个 REDIS_STREAM 中间件和 REDIS_ACK_ABLE 都支持消费确认，不管客户端怎么掉线关闭，都可以确保消息万无一失。
+        BrokerEnum.REDIS 中间件 不支持消费确认，随意重启或者断电断线会丢失一批任务。
+        ```
+        
+        ```python
+        from function_scheduling_distributed_framework import task_deco, BrokerEnum
+        
+        
+        @task_deco('queue_test_f01', broker_kind=BrokerEnum.REDIS_STREAM,)
+        def f(a, b):
+            print(f'{a} + {b} = {a + b}')
+        
+        if __name__ == '__main__':
+            for i in range(100):
+                f.push(i , b=i * 2)
+            f.consume()
+        ```
+        
+        ## 6.15 2021-04 新增以 redis 的 list 为数据结构，但使用 brpoplpush 命令 双队列 作为中间件的消息队列。
+        
+        #####  此 brpoplpush 双队列方式 + 消费者唯一id标识的心跳检测，可以媲美 rabbitmq 的确认消费功能。
+        ```
+        代码演示省略，设置broker_kind=BrokerEnum.RedisBrpopLpush就行了。 
+        @task_deco('queue_test_f01', broker_kind=BrokerEnum.RedisBrpopLpush,)
+        ```
+        
+        
+        ## 6.16 2021-04 新增以 zeromq 为中间件的消息队列。
+        ```
+        zeromq 和rabbbitmq kafka redis都不同，这个不需要安装一个服务端软件，是纯代码的。
+        zeromq方式是启动一个端口，所以queue_name传一个大于20000小于65535的数字，不能传字母。
+        ```
+        
+        ##### 消费端代码，启动消费端时候会自动启动 broker 和 server。
+        ```python
+        import time
+        from function_scheduling_distributed_framework import task_deco,BrokerEnum
+        
+        @task_deco('30778',broker_kind=BrokerEnum.ZEROMQ,qps=2)
+        def f(x):
+            time.sleep(1)
+            print(x)
+        
+        
+        if __name__ == '__main__':
+            f.consume()
+        
+        ```
+        
+        ##### 发布端代码
+        ```python
+        from test_frame.test_broker.test_consume import f
+        
+        for i in range(100):
+            f.push(i) 
+        ```
 Keywords: distributed-framework,function-scheduling,rabbitmq,rocketmq,kafka,nsq,redis,disk,sqlachemy,consume-confirm,timing,task-scheduling,apscheduler
 Platform: all
 Classifier: Development Status :: 4 - Beta

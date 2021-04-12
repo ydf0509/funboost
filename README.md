@@ -32,45 +32,7 @@ if __name__ == "__main__":
 整个过程只有这两步，清晰明了，其他的控制方式需要看 task_deco 的中文入参解释，全都参数都很有用。
 """
 ```
-```
-如你所见，使用此框架为什么没有配置中间件的 账号 密码 端口号呢。只有运行任何一个导入了框架的脚本文件一次，就会自动生成一个配置文件
-然后在配置文件中按需修改需要用到的配置就行。
-
-@task_deco 和celery的 @app.task 装饰器区别很大，导致写代码方便简化容易很多。没有需要先实例化一个 Celery对象一般叫app变量，
-然后任何脚本的消费函数都再需要导入这个app，然后@app.task，一点小区别，但造成的两种框架写法难易程度区别很大。
-使用此框架，不需要固定的项目文件夹目录，任意多层级深层级文件夹不规则python文件名字下写函数都行，
-celery 实际也可以不规则文件夹和文件名字来写任务函数，但是很难掌握，如果这么写的话，那么在任务注册时候会非常难，
-一般demo演示文档都不会和你演示这种不规则文件夹和文件名字下写celery消费函数情况，因为如果演示这种情况会非常容易的劝退绝大部分小白。
-但是如果不精通celery的任务注册导入机制同时又没严格按照死板固定的目录格式来写celery任务，
-一定会出现令人头疼的 Task of kind 'tasks.add' is not registered, please make sure it's imported. 类似这种错误。
-主要原因是celery 需要严格Celery类的实例化对象app变量，然后消费函数所在脚本必须import这个app，这还没完，
-你必须在settings配置文件写 include imports 等配置，否则cmd 启动celery 后台命令时候，celery并不知情哪些文件脚本导入了 app这个变量，
-当celery框架取出到相关的队列任务时候，就会报错找不到应该用哪个脚本下的哪个函数去运行取出的消息了。
-你可能会想，为什么celery app 变量的脚本为什么不可以写导入消费函数的import声明呢，比如from dir1.dir2.pyfilename imprt add 了，
-这样celery运行时候就能找到函数了是不是？那要动脑子想想，如果celery app主文件用了 from dir1.dir2.pyfilename import add，
-同时消费函数 add 所在的脚本 dir1/dir2/pyfilename.py 又从celery app的猪脚本中导入app，然后把@app.task加到add函数上面 ，
-那这就是出现了互相导入，a导入b，b导入a的问题了，脚本一启动就报错，正是因为这个互相导入的问题，
-celery才需要从配置中写好 include imports  autodiscover_tasks，从而实现一方延迟导入以解决互相导入。
-
-此框架的装饰器不存在需要一个类似Celery app实例的东西，不会有这个变量将大大减少编程难度，消费函数写在任意深层级不规则文件下都行。
-
-```
-
-##### 例如董伟明的 celery 教程例子的项目目录结构，然后很多练习者需要小心翼翼模仿文件夹层级和py文件名字。
-
-![](./test_frame/jietu/celery_proj_dir.png)
-
-
-
-##### 下面这是一个演示不规则文件夹层级和名称的celery使用，大家可以看看如果只看简单celery入门文档，搞不搞得定
-[不规则文件夹层级和名称下的celery使用演示](https://github.com/ydf0509/celery_demo)  
-[https://github.com/ydf0509/celery_demo](https://github.com/ydf0509/celery_demo)  
-
-![](test_frame/jietu/celery_dir2.png) 
-```
-可以看代码，当文件夹层级不规则和文件名称不规则时候，要使用celery绝非简单事情，如果你只看普通的celery入门文档，是绝对解决不了
-这种情况下的celery如何正确使用。
-```
+- [此框架和celery在写法上的巨大区别，不需要固定的目录结构和文件夹层级](#512)
 
 
 
@@ -765,6 +727,8 @@ def add(a, b):
 此框架单进程情况下执行2万次求和需要时间是7秒。
 如果不信的人可以自己测试一下，如果测试后你的celery单进程(或在单核电脑），你使用任意gvent eventlet threading模式能在30秒内完成2万次求和，
 我愿意转账2000元你，如果你测试后30秒不能完成2万次求和，你只需要转账1000元给我就可以。鄙视又怀疑又不愿意亲自测试的人。
+不是celery不行，而是实现手段上包袱上有区别，如果你直接裸写 redis + lpush + brpop + Threadpoolexecutor,调度上面的函数，
+你会发现你也可以暴击celery几十倍也可以秒杀此框架好多倍，复杂调用链路长的代码一般都会消耗更多的cpu，导致运行耗时变长。
 
 如果有人说，不要限定成不准使用多进程模式只能使用其他并发模式，说这样那就没意义了，
 测试条件要对等，一定要坚持控制变量法，变化的只能是使用上面框架；具体开多少并发，并发模式选择进程还是gevent eventlet threading  中间件类型 中间件地址 这些要全部保持一致。
@@ -961,7 +925,7 @@ while 1：
   ```
   
 
-#### 5.6 框架如何实现定时？
+#### 5.7 框架如何实现定时？
 
 答：使用的是定时发布任务，那么就能定时消费任务了。导入fsdf_background_scheduler然后添加定时发布任务。
 
@@ -989,7 +953,7 @@ if __name__ == '__main__':
 
   ```
   
-#### 5.7 为什么强调是函数调度框架不是类调度框架，不是方法调度框架？你代码里面使用了类，是不是和此框架水火不容了?
+#### 5.8 为什么强调是函数调度框架不是类调度框架，不是方法调度框架？你代码里面使用了类，是不是和此框架水火不容了?
 
 问的是consuming_function的值能不能是一个类或者一个实例方法。
                
@@ -1086,6 +1050,48 @@ if __name__ == '__main__':
         然后我们来和此框架 比较 实现框架难度上、 实现框架的代码行数上、 用户调用的难度上 这些方面。
   ```
    
+### <a id="512">5.12 此框架和celery在写法上的巨大区别，不需要固定的目录结构和文件夹层级</a>
+
+```
+如你所见，使用此框架为什么没有配置中间件的 账号 密码 端口号呢。只有运行任何一个导入了框架的脚本文件一次，就会自动生成一个配置文件
+然后在配置文件中按需修改需要用到的配置就行。
+
+@task_deco 和celery的 @app.task 装饰器区别很大，导致写代码方便简化容易很多。没有需要先实例化一个 Celery对象一般叫app变量，
+然后任何脚本的消费函数都再需要导入这个app，然后@app.task，一点小区别，但造成的两种框架写法难易程度区别很大。
+使用此框架，不需要固定的项目文件夹目录，任意多层级深层级文件夹不规则python文件名字下写函数都行，
+celery 实际也可以不规则文件夹和文件名字来写任务函数，但是很难掌握，如果这么写的话，那么在任务注册时候会非常难，
+一般demo演示文档都不会和你演示这种不规则文件夹和文件名字下写celery消费函数情况，因为如果演示这种情况会非常容易的劝退绝大部分小白。
+但是如果不精通celery的任务注册导入机制同时又没严格按照死板固定的目录格式来写celery任务，
+一定会出现令人头疼的 Task of kind 'tasks.add' is not registered, please make sure it's imported. 类似这种错误。
+主要原因是celery 需要严格Celery类的实例化对象app变量，然后消费函数所在脚本必须import这个app，这还没完，
+你必须在settings配置文件写 include imports 等配置，否则cmd 启动celery 后台命令时候，celery并不知情哪些文件脚本导入了 app这个变量，
+当celery框架取出到相关的队列任务时候，就会报错找不到应该用哪个脚本下的哪个函数去运行取出的消息了。
+你可能会想，为什么celery app 变量的脚本为什么不可以写导入消费函数的import声明呢，比如from dir1.dir2.pyfilename imprt add 了，
+这样celery运行时候就能找到函数了是不是？那要动脑子想想，如果celery app主文件用了 from dir1.dir2.pyfilename import add，
+同时消费函数 add 所在的脚本 dir1/dir2/pyfilename.py 又从celery app的猪脚本中导入app，然后把@app.task加到add函数上面 ，
+那这就是出现了互相导入，a导入b，b导入a的问题了，脚本一启动就报错，正是因为这个互相导入的问题，
+celery才需要从配置中写好 include imports  autodiscover_tasks，从而实现一方延迟导入以解决互相导入。
+
+此框架的装饰器不存在需要一个类似Celery app实例的东西，不会有这个变量将大大减少编程难度，消费函数写在任意深层级不规则文件下都行。
+
+```
+
+##### 例如董伟明的 celery 教程例子的项目目录结构，然后很多练习者需要小心翼翼模仿文件夹层级和py文件名字。
+
+![](./test_frame/jietu/celery_proj_dir.png)
+
+
+
+##### 下面这是一个演示不规则文件夹层级和名称的celery使用，大家可以看看如果只看简单celery入门文档，搞不搞得定
+[不规则文件夹层级和名称下的celery使用演示](https://github.com/ydf0509/celery_demo)  
+[https://github.com/ydf0509/celery_demo](https://github.com/ydf0509/celery_demo)  
+
+![](test_frame/jietu/celery_dir2.png) 
+```
+可以看代码，当文件夹层级不规则和文件名称不规则时候，要使用celery绝非简单事情，如果你只看普通的celery入门文档，是绝对解决不了
+这种情况下的celery如何正确使用。
+```
+
 
 # 6.更新记录。
 ## 6.1 新增第十种Consumer，以redis为中间件，但增加了消费确认，是RedisConsumerAckAble类。

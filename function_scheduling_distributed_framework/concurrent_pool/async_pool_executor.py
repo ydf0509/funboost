@@ -7,10 +7,10 @@ from threading import Thread, Event
 import nb_log  # noqa
 from function_scheduling_distributed_framework.utils.develop_log import develop_logger  # noqa
 
-if os.name == 'posix':
-    import uvloop
-
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+# if os.name == 'posix':
+#     import uvloop
+#
+#     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 """
 # 也可以采用 janus 的 线程安全的queue方式来实现异步池，此queue性能和本模块实现的生产 消费相比，性能并没有提高，所以就不重新用这这个包来实现一次了。

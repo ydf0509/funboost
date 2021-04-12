@@ -33,7 +33,7 @@ if __name__ == "__main__":
 """
 ```
 ```
-如你所见，为什么没有配置中间件的 账号 密码 端口号呢。只有运行任何一个导入了框架的脚本文件一次，就会自动生成一个配置文件
+如你所见，使用此框架为什么没有配置中间件的 账号 密码 端口号呢。只有运行任何一个导入了框架的脚本文件一次，就会自动生成一个配置文件
 然后在配置文件中按需修改需要用到的配置就行。
 
 @task_deco 和celery的 @app.task 装饰器区别很大，导致写代码方便简化容易很多。没有需要先实例化一个 Celery对象一般叫app变量，
@@ -46,6 +46,12 @@ celery 实际也可以不规则文件夹和文件名字来写任务函数，但�
 主要原因是celery 需要严格Celery类的实例化对象app变量，然后消费函数所在脚本必须import这个app，这还没完，
 你必须在settings配置文件写 include imports 等配置，否则cmd 启动celery 后台命令时候，celery并不知情哪些文件脚本导入了 app这个变量，
 当celery框架取出到相关的队列任务时候，就会报错找不到应该用哪个脚本下的哪个函数去运行取出的消息了。
+你可能会想，为什么celery app 变量的脚本为什么不可以写导入消费函数的import声明呢，比如from dir1.dir2.pyfilename imprt add 了，
+这样celery运行时候就能找到函数了是不是？那要动脑子想想，如果celery app主文件用了 from dir1.dir2.pyfilename import add，
+同时消费函数 add 所在的脚本 dir1/dir2/pyfilename.py 又从celery app的猪脚本中导入app，然后把@app.task加到add函数上面 ，
+那这就是出现了互相导入，a导入b，b导入的问题了，脚本一启动就报错，正是因为这个互相导入的问题，
+celery才需要从配置中写好 include imports  autodiscover_tasks，从而实现一方延迟导入以解决互相导入。
+
 此框架的装饰器不存在需要一个类似Celery app实例的东西，不会有这个变量将大大减少编程难度，消费函数写在任意深层级不规则文件下都行。
 
 ```

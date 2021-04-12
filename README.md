@@ -54,7 +54,9 @@ celery 实际也可以不规则文件夹和文件名字来写任务函数，但�
 
 ![](./test_frame/jietu/celery_proj_dir.png)
 
-##### 这是一个演示不规则文件夹层级和名称的celery使用，大家可以看看如果只看简单celery入门文档，搞不搞得定
+
+
+##### 下面这是一个演示不规则文件夹层级和名称的celery使用，大家可以看看如果只看简单celery入门文档，搞不搞得定
 [不规则文件夹层级和名称下的celery使用演示](https://github.com/ydf0509/celery_demo)  
 
 ![](test_frame/jietu/celery_dir2.png)

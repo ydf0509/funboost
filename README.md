@@ -49,7 +49,7 @@ celery 实际也可以不规则文件夹和文件名字来写任务函数，但�
 你可能会想，为什么celery app 变量的脚本为什么不可以写导入消费函数的import声明呢，比如from dir1.dir2.pyfilename imprt add 了，
 这样celery运行时候就能找到函数了是不是？那要动脑子想想，如果celery app主文件用了 from dir1.dir2.pyfilename import add，
 同时消费函数 add 所在的脚本 dir1/dir2/pyfilename.py 又从celery app的猪脚本中导入app，然后把@app.task加到add函数上面 ，
-那这就是出现了互相导入，a导入b，b导入的问题了，脚本一启动就报错，正是因为这个互相导入的问题，
+那这就是出现了互相导入，a导入b，b导入a的问题了，脚本一启动就报错，正是因为这个互相导入的问题，
 celery才需要从配置中写好 include imports  autodiscover_tasks，从而实现一方延迟导入以解决互相导入。
 
 此框架的装饰器不存在需要一个类似Celery app实例的东西，不会有这个变量将大大减少编程难度，消费函数写在任意深层级不规则文件下都行。

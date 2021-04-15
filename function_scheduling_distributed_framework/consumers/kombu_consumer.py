@@ -6,6 +6,8 @@ import json
 from kombu import Connection, Exchange, Queue, Consumer, Producer
 from kombu.transport.virtual.base import Channel
 import kombu
+from nb_log import LogManager
+
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
 from function_scheduling_distributed_framework import frame_config
 
@@ -16,6 +18,12 @@ class KombuConsumer(AbstractConsumer, ):
     """
     BROKER_KIND = 15
 
+    def custom_init(self):
+        logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._queue_name}--{frame_config.KOMBU_URL.split(":")[0]}'
+        self.logger = LogManager(logger_name).get_logger_and_add_handlers(self._log_level,
+                                                                          log_filename=f'{logger_name}.log' if self._create_logger_file else None,
+                                                                          formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
+                                                                          )  #
 
     # noinspection DuplicatedCode
     def _shedual_task(self): # 这个倍while 1 启动的，会自动重连。

@@ -5,6 +5,8 @@ import json
 import nb_log
 from kombu import Connection, Exchange, Queue, Consumer, Producer
 from kombu.transport.virtual.base import Channel
+from nb_log import LogManager
+
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher, deco_mq_conn_error
 from function_scheduling_distributed_framework import frame_config
 
@@ -23,6 +25,13 @@ class KombuPublisher(AbstractPublisher, ):
     """
     使用redis作为中间件,这种是最简单的使用redis的方式，此方式不靠谱很容易丢失大量消息。非要用reids作为中间件，请用其他类型的redis consumer
     """
+
+    def custom_init(self):
+        logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._queue_name}--{frame_config.KOMBU_URL.split(":")[0]}'
+        self.logger = LogManager(logger_name).get_logger_and_add_handlers(self._log_level_int,
+                                                                          log_filename=f'{logger_name}.log' if self._is_add_file_handler else None,
+                                                                          formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
+                                                                          )  #
 
     def init_broker(self):
         self.exchange = Exchange('distributed_framework_exchange', 'direct', durable=True)

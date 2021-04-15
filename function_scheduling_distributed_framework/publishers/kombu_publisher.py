@@ -8,7 +8,7 @@ from kombu.transport.virtual.base import Channel
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher, deco_mq_conn_error
 from function_scheduling_distributed_framework import frame_config
 
-nb_log.get_logger(name=None)
+nb_log.get_logger(name=None,log_level_int=10)
 """
 https://www.cnblogs.com/shenh/p/10497244.html
 
@@ -48,7 +48,7 @@ class KombuPublisher(AbstractPublisher, ):
     def get_message_count(self):
         # queue = self.channel.queue_declare(queue=self._queue_name, durable=True)
         # return queue.method.message_count
-        self.logger.warning(self.channel._size(self._queue_name))
+        # self.logger.warning(self.channel._size(self._queue_name))
         return self.channel._size(self._queue_name)
 
     def close(self):

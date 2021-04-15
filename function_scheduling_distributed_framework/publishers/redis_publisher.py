@@ -8,7 +8,7 @@ from function_scheduling_distributed_framework.utils import RedisMixin
 
 class RedisPublisher(AbstractPublisher, RedisMixin):
     """
-    使用redis作为中间件
+    使用redis作为中间件,这种是最简单的使用redis的方式，此方式不靠谱很容易丢失大量消息。非要用reids作为中间件，请用其他类型的redis consumer
     """
 
     def concrete_realization_of_publish(self, msg):

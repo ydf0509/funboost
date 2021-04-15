@@ -30,8 +30,11 @@ SQLLITE_QUEUES_PATH = '/sqllite_queues'
 
 ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
 
+KOMBU_URL = 'redis://127.0.0.1:6379/7'
+
 # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
 NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7  # 7是简短的不可跳转，5是可点击跳转的
 FSDF_DEVELOP_LOG_LEVEL = 50   # 开发时候的日志，仅供自己用，所以日志级别跳到最高
 
 TIMEZONE = 'Asia/Shanghai'
+

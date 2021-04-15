@@ -254,5 +254,7 @@ def deco_mq_conn_error(f):
             self.logger.error(f'rabbitmq链接出错   ,方法 {f.__name__}  出错 ，{e}')
             self.init_broker()
             return f(self, *args, **kwargs)
+        except Exception as e:
+            self.logger.critical(e,exc_info=True)
 
     return _deco_mq_conn_error

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 13:32
+# @Time    : 2021/04/18 0008 13:32
 import json
 # import time
 from kombu import Connection, Exchange, Queue, Consumer, Producer

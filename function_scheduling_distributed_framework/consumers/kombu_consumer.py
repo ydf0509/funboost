@@ -18,31 +18,29 @@ class KombuConsumer(AbstractConsumer, ):
 
 
     # noinspection DuplicatedCode
-    def _shedual_task(self):
-        while True:
-            def callback(body:dict, message:kombu.transport.virtual.base.Message):
-                print(type(body),body,type(message),message)
-                kw = {'body': body, 'message': message, }
-                self._submit_task(kw)
-            try:
-                self.exchange = Exchange('distributed_framework_exchange', 'direct', durable=True)
-                self.queue = Queue(self._queue_name, exchange=self.exchange, routing_key=self._queue_name)
-                self.conn = Connection(frame_config.KOMBU_URL)
-                self.queue(self.conn).declare()
-                # self.producer = self.conn.Consumer(serializer='json')
-                # self.channel = self.producer.channel  # type: Channel
-                #
-                # self.conn = Connection(frame_config.KOMBU_URL)
-                # # self.queue(self.conn).declare()
-                # self.channel = self.conn.channel()  # type: Channel
-                # # self.channel.exchange_declare(exchange='distributed_framework_exchange', durable=True, type='direct')
-                # self.queue = self.channel.queue_declare(queue=self._queue_name, durable=True)
-                with  self.conn.Consumer(self.queue,callbacks=[callback],no_ack=False)  as consumer:
-                    # Process messages and handle events on all channels
-                    while True:
-                        self.conn.drain_events()
-            except Exception as  e:
-                self.logger.critical(e,exc_info=True)
+    def _shedual_task(self): # 这个倍while 1 启动的，会自动重连。
+        def callback(body:dict, message:kombu.transport.virtual.base.Message):
+            print(type(body),body,type(message),message)
+            kw = {'body': body, 'message': message, }
+            self._submit_task(kw)
+
+        self.exchange = Exchange('distributed_framework_exchange', 'direct', durable=True)
+        self.queue = Queue(self._queue_name, exchange=self.exchange, routing_key=self._queue_name)
+        self.conn = Connection(frame_config.KOMBU_URL)
+        self.queue(self.conn).declare()
+        # self.producer = self.conn.Consumer(serializer='json')
+        # self.channel = self.producer.channel  # type: Channel
+        #
+        # self.conn = Connection(frame_config.KOMBU_URL)
+        # # self.queue(self.conn).declare()
+        # self.channel = self.conn.channel()  # type: Channel
+        # # self.channel.exchange_declare(exchange='distributed_framework_exchange', durable=True, type='direct')
+        # self.queue = self.channel.queue_declare(queue=self._queue_name, durable=True)
+        with  self.conn.Consumer(self.queue,callbacks=[callback],no_ack=False)  as consumer:
+            # Process messages and handle events on all channels
+            while True:
+                self.conn.drain_events()
+
 
 
     def _confirm_consume(self, kw):

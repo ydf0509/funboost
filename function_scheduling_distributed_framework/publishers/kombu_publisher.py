@@ -3,8 +3,12 @@
 # @Time    : 2021-04-15 0008 12:12
 import json
 import nb_log
+
+
+
 from kombu import Connection, Exchange, Queue, Consumer, Producer
 from kombu.transport.virtual.base import Channel
+import kombu
 from nb_log import LogManager
 
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher, deco_mq_conn_error
@@ -20,6 +24,17 @@ https://docs.celeryproject.org/projects/kombu/en/stable/introduction.html
 kombu 教程
 """
 
+class MyBase64():
+    def encode(self, s):
+        # return bytes_to_str(base64.b64encode(str_to_bytes(s)))
+        return s
+
+    def decode(self, s):
+        # return base64.b64decode(str_to_bytes(s))
+        return s
+
+Channel.codecs['base64'] = MyBase64()   # 打猴子补丁，不使用base64更分方便查看内容
+
 
 class KombuPublisher(AbstractPublisher, ):
     """
@@ -32,6 +47,9 @@ class KombuPublisher(AbstractPublisher, ):
                                                                           log_filename=f'{logger_name}.log' if self._is_add_file_handler else None,
                                                                           formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
                                                                           )  #
+
+        self.logger.warning('替换了 kombu 的 base64')
+
 
     def init_broker(self):
         self.exchange = Exchange('distributed_framework_exchange', 'direct', durable=True)

@@ -28,7 +28,7 @@ class KombuConsumer(AbstractConsumer, ):
     # noinspection DuplicatedCode
     def _shedual_task(self): # 这个倍while 1 启动的，会自动重连。
         def callback(body:dict, message:kombu.transport.virtual.base.Message):
-            print(type(body),body,type(message),message)
+            # print(type(body),body,type(message),message)
             kw = {'body': body, 'message': message, }
             self._submit_task(kw)
 

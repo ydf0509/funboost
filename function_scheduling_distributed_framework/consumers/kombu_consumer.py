@@ -7,7 +7,6 @@ from kombu import Connection, Exchange, Queue, Consumer, Producer
 from kombu.transport.virtual.base import Channel
 import kombu
 from nb_log import LogManager
-
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
 from function_scheduling_distributed_framework import frame_config
 
@@ -26,8 +25,8 @@ class KombuConsumer(AbstractConsumer, ):
                                                                           )  #
 
     # noinspection DuplicatedCode
-    def _shedual_task(self): # 这个倍while 1 启动的，会自动重连。
-        def callback(body:dict, message:kombu.transport.virtual.base.Message):
+    def _shedual_task(self):  # 这个倍while 1 启动的，会自动重连。
+        def callback(body: dict, message: kombu.transport.virtual.base.Message):
             # print(type(body),body,type(message),message)
             kw = {'body': body, 'message': message, }
             self._submit_task(kw)
@@ -44,12 +43,10 @@ class KombuConsumer(AbstractConsumer, ):
         # self.channel = self.conn.channel()  # type: Channel
         # # self.channel.exchange_declare(exchange='distributed_framework_exchange', durable=True, type='direct')
         # self.queue = self.channel.queue_declare(queue=self._queue_name, durable=True)
-        with  self.conn.Consumer(self.queue,callbacks=[callback],no_ack=False)  as consumer:
+        with  self.conn.Consumer(self.queue, callbacks=[callback], no_ack=False)  as consumer:
             # Process messages and handle events on all channels
             while True:
                 self.conn.drain_events()
-
-
 
     def _confirm_consume(self, kw):
         pass  # redis没有确认消费的功能。

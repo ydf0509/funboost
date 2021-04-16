@@ -7,6 +7,7 @@ from kombu import Connection, Exchange, Queue, Consumer, Producer
 from kombu.transport.virtual.base import Channel
 import kombu
 from nb_log import LogManager
+
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
 from function_scheduling_distributed_framework import frame_config
 
@@ -18,7 +19,8 @@ class KombuConsumer(AbstractConsumer, ):
     BROKER_KIND = 15
 
     def custom_init(self):
-        logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._queue_name}--{frame_config.KOMBU_URL.split(":")[0]}'
+        self._middware_name = frame_config.KOMBU_URL.split(":")[0]
+        logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._queue_name}--{self._middware_name}'
         self.logger = LogManager(logger_name).get_logger_and_add_handlers(self._log_level,
                                                                           log_filename=f'{logger_name}.log' if self._create_logger_file else None,
                                                                           formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
@@ -28,6 +30,7 @@ class KombuConsumer(AbstractConsumer, ):
     def _shedual_task(self):  # 这个倍while 1 启动的，会自动重连。
         def callback(body: dict, message: kombu.transport.virtual.base.Message):
             # print(type(body),body,type(message),message)
+            self.logger.debug(f""" 从 kombu {self._middware_name} 中取出的消息是 {body}""")
             kw = {'body': body, 'message': message, }
             self._submit_task(kw)
 
@@ -43,7 +46,7 @@ class KombuConsumer(AbstractConsumer, ):
         # self.channel = self.conn.channel()  # type: Channel
         # # self.channel.exchange_declare(exchange='distributed_framework_exchange', durable=True, type='direct')
         # self.queue = self.channel.queue_declare(queue=self._queue_name, durable=True)
-        with  self.conn.Consumer(self.queue, callbacks=[callback], no_ack=False)  as consumer:
+        with  self.conn.Consumer(self.queue, callbacks=[callback], no_ack=False, prefetch_count=100)  as consumer:
             # Process messages and handle events on all channels
             while True:
                 self.conn.drain_events()

@@ -395,6 +395,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # logger_name = f'{logger_prefix}{self.__class__.__name__}--{concurrent_name}--{queue_name}--{self.consuming_function.__name__}'
         logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}'
         # nb_print(logger_name)
+        self._create_logger_file = create_logger_file
+        self._log_level = log_level
         self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level,
                                                                           log_filename=f'{logger_name}.log' if create_logger_file else None,
                                                                           formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )

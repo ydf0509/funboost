@@ -11,6 +11,7 @@ import typing
 from functools import wraps
 from threading import Lock
 import amqpstorm
+from kombu.exceptions import KombuError
 from pika.exceptions import AMQPError as PikaAMQPError
 
 from nb_log import LoggerLevelSetterMixin, LogManager, LoggerMixin
@@ -119,6 +120,9 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             logger_prefix += '--'
         # consuming_function_name = f'--{consuming_function.__name__}' if consuming_function else ''
         # logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}{consuming_function_name}'
+        self._is_add_file_handler = is_add_file_handler
+        self._logger_prefix = logger_prefix
+        self._log_level_int = log_level_int
         logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}'
         self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level_int,
                                                                           log_filename=f'{logger_name}.log' if is_add_file_handler else None,
@@ -243,16 +247,18 @@ def deco_mq_conn_error(f):
     @wraps(f)
     def _deco_mq_conn_error(self, *args, **kwargs):
         if not self.has_init_broker:
-            self.logger.warning(f'对象的方法 【{f.__name__}】 首次使用 rabbitmq channel,进行初始化执行 init_broker 方法')
+            self.logger.warning(f'对象的方法 【{f.__name__}】 首次使用 进行初始化执行 init_broker 方法')
             self.init_broker()
             self.has_init_broker = 1
             return f(self, *args, **kwargs)
         # noinspection PyBroadException
         try:
             return f(self, *args, **kwargs)
-        except (PikaAMQPError, amqpstorm.AMQPError) as e:  # except Exception as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
-            self.logger.error(f'rabbitmq链接出错   ,方法 {f.__name__}  出错 ，{e}')
+        except (PikaAMQPError, amqpstorm.AMQPError,KombuError) as e:  # except Exception as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
+            self.logger.error(f'中间件链接出错   ,方法 {f.__name__}  出错 ，{e}')
             self.init_broker()
             return f(self, *args, **kwargs)
+        except Exception as e:
+            self.logger.critical(e,exc_info=True)
 
     return _deco_mq_conn_error

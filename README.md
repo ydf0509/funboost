@@ -1491,7 +1491,7 @@ for i in range(100):
 
 ## 6.17 2021-04 新增以 操作kombu包 为中间件的消息队列
 ```
-一次性新增操作10种消息队列,.但比较知名的例如rabbitmq redis sqlite3 已经在之前实现了。
+一次性新增操作10种消息队列,.但比较知名的例如rabbitmq redis sqlite3 函数调度框架已经在之前实现了。
 使用方式为设置 @task_deco 装饰器的 broker_kind 为 BrokerEnum.KOMBU
 在你项目根目录下的 distributed_frame_config.py  文件中设置 
 KOMBU_URL = 'redis://127.0.0.1:6379/7' 那么就是使用komb 操作redis。
@@ -1500,9 +1500,11 @@ KOMBU_URL = 'sqla+sqlite:////dssf_sqlite.sqlite',那么就是在你的代码所�
 其余支持的中间件种类大概有10种，不是很常用，可以百度 google查询kombu或者celery的 broker_url 配置方式。
 
 操作 kombu 包，这个包也是celery的中间件依赖包，这个包可以操作10种中间件(例如rabbitmq redis)，
-但没包括分布式函数调度框架的kafka nsq zeromq 等。
+但没包括分布式函数调度框架能支持的kafka nsq zeromq 等。
 
-但是 kombu 包的性能非常差，可以用原生redis的lpush和kombu的publish测试发布
+
+但是 kombu 包的性能非常差，如何测试对比性能呢？
+可以用原生redis的lpush和kombu的publish测试发布
 使用brpop 和 kombu 的 drain_events测试消费，对比差距相差了5到10倍。
 由于性能差，除非是分布式函数调度框架没实现的中间件才选kombu方式(例如kombu支持亚马逊队列  qpid pyro 队列)，
 否则强烈建议使用此框架的操作中间件方式而不是使用kombu。
@@ -1513,4 +1515,34 @@ KOMBU_URL = 'sqla+sqlite:////dssf_sqlite.sqlite',那么就是在你的代码所�
 test_frame\test_celery 下面有celery的发布 消费例子，可以测试对比下速度，同样gevent 并发和redis中间件，
 celery 执行 print hello 这样的最简单任务，单核单进程每秒执行次数过不了300，celery性能真的是太差了。
 
+```
+
+##### 消费
+```python
+import time
+from function_scheduling_distributed_framework import task_deco,BrokerEnum
+
+@task_deco('test_kombu2',broker_kind=BrokerEnum.KOMBU,qps=5,)
+def f(x):
+    time.sleep(60)
+    print(x)
+
+
+if __name__ == '__main__':
+    f.consume()
+```
+
+##### 发布
+```python
+from test_frame.test_broker.test_consume import f
+
+for i in range(10000):
+    f.push(i)
+```
+
+##### 你项目根目录下的 distributed_frame_config.py
+```python
+KOMBU_URL = 'redis://127.0.0.1:6379/7'
+# KOMBU_URL = f'amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VIRTUAL_HOST}'
+# KOMBU_URL = 'sqla+sqlite:////celery_sqlite3.sqlite'  # 4个//// 代表磁盘根目录下生成一个文件。推荐绝对路径。3个///是相对路径。
 ```

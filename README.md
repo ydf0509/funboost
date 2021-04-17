@@ -1487,3 +1487,30 @@ from test_frame.test_broker.test_consume import f
 for i in range(100):
     f.push(i) 
 ```
+
+
+## 6.17 2021-04 新增以 操作kombu包 为中间件的消息队列
+```
+一次性新增操作10种消息队列,.但比较知名的例如rabbitmq redis sqlite3 已经在之前实现了。
+使用方式为设置 @task_deco 装饰器的 broker_kind 为 BrokerEnum.KOMBU
+在你项目根目录下的 distributed_frame_config.py  文件中设置 
+KOMBU_URL = 'redis://127.0.0.1:6379/7' 那么就是使用komb 操作redis。
+KOMBU_URL = 'amqp://username:password@127.0.0.1:5672/',那么就是操纵rabbitmq
+KOMBU_URL = 'sqla+sqlite:////dssf_sqlite.sqlite',那么就是在你的代码所在磁盘的根目录创建一个sqlite文件。四个////表示根目，三个///表示当前目录。
+其余支持的中间件种类大概有10种，不是很常用，可以百度 google查询kombu或者celery的 broker_url 配置方式。
+
+操作 kombu 包，这个包也是celery的中间件依赖包，这个包可以操作10种中间件(例如rabbitmq redis)，
+但没包括分布式函数调度框架的kafka nsq zeromq 等。
+
+但是 kombu 包的性能非常差，可以用原生redis的lpush和kombu的publish测试发布
+使用brpop 和 kombu 的 drain_events测试消费，对比差距相差了5到10倍。
+由于性能差，除非是分布式函数调度框架没实现的中间件才选kombu方式(例如kombu支持亚马逊队列  qpid pyro 队列)，
+否则强烈建议使用此框架的操作中间件方式而不是使用kombu。
+
+可以把@task_deco装饰器的broker_kind参数 设置为 BrokerEnum.REDIS_ACK_ABLE 和BrokerEnum.KOMBU(配置文件的KOMBU_URL配置为redis)，
+进行对比，REDIS_ACK_ABLE的消费速度远远超过 BrokerEnum.KOMBU，所以之前专门测试对比celery和此框架的性能，
+差距很大，光一个 kombu 就拉了celery大腿很多，再加上celery的除了kombu的执行性能也很低，所以celery比此框架慢很多。
+test_frame\test_celery 下面有celery的发布 消费例子，可以测试对比下速度，同样gevent 并发和redis中间件，
+celery 执行 print hello 这样的最简单任务，单核单进程每秒执行次数过不了300，celery性能真的是太差了。
+
+```

@@ -173,6 +173,9 @@ def auto_creat_config_file_to_project_root_path():
     #     nb_print('不希望在本项目里面创建')
     #     return
     if '/lib/python' in sys.path[1] or r'\lib\python' in sys.path[1] or '.zip' in sys.path[1]:
+        raise EnvironmentError('如果是cmd 或者shell启动而不是pycharm 这种ide启动脚本，请先在会话窗口设置临时PYTHONPATH为你的项目路径，'
+                               'windwos 使用 set PYTHONNPATH=你的当前python项目根目录'
+                               'linux 使用 export PYTHONPATH=你的当前你python项目根目录')
         return  # 当没设置pythonpath时候，也不要在 /lib/python36.zip这样的地方创建配置文件。
 
     file_name = Path(sys.path[1]) / Path('distributed_frame_config.py')

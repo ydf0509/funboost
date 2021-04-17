@@ -131,7 +131,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
                         end
                         return task_list
                     else
-                        --local v = redis.call("blpop",KEYS[1],4)
+                        --local v = redis.call("blpop",KEYS[1],4)      
                         --return v
                       end
 

@@ -1,10 +1,17 @@
 import time
 
+import redis
+from function_scheduling_distributed_framework import frame_config
+
 from test_frame.test_speed.speed_test_consume import f_test_speed
+
+redis_db_frame = redis.Redis(host=frame_config.REDIS_HOST, password=frame_config.REDIS_PASSWORD, port=frame_config.REDIS_PORT, db=frame_config.REDIS_DB)
 
 f_test_speed.clear()
 for i in range(500000):
-    f_test_speed.push(i)
+
+    # f_test_speed.push(i)
+    redis_db_frame.lpush('no_frame_queue',f'{{"x":{i}}}')
 
 # from function_scheduling_distributed_framework.utils.redis_manager import RedisMixin
 #

@@ -1,17 +1,66 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2021/04/18 0008 13:32
-import json
 # import time
-from kombu import Connection, Exchange, Queue, Consumer, Producer
-from kombu.transport.virtual.base import Channel
 import kombu
+from kombu import Connection, Exchange, Queue
+from kombu.transport.virtual.base import Channel
 from nb_log import LogManager
 
-from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
 from function_scheduling_distributed_framework import frame_config
+from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
 
 
+def patch_kombu_redis():
+    """
+    给kombu的redis 模式打猴子补丁
+    kombu有bug，redis中间件 unnacked 中的任务即使客户端掉线了后者突然关闭脚本中正在运行的任务，也永远不会被重新消费。
+    这个很难容易验证那个测试，把消费函数写成sleep 100秒，启动20秒后把脚本关掉，取出来的任务在 unacked 队列中那个永远不会被确认消费，也不会被重新消费。
+    """
+    from kombu.transport import redis
+    # from kombu.five import Empty  #
+
+    # noinspection PyUnusedLocal
+    def monkey_get(self, callback, timeout=None):
+        self._in_protected_read = True
+        try:
+            for channel in self._channels:
+                if channel.active_queues:  # BRPOP mode?
+                    if channel.qos.can_consume():
+                        self._register_BRPOP(channel)
+                if channel.active_fanout_queues:  # LISTEN mode?
+                    self._register_LISTEN(channel)
+
+            events = self.poller.poll(timeout)
+            if events:
+                for fileno, event in events:
+                    ret = None
+                    # noinspection PyBroadException,PyUnusedLocal
+                    try:
+                        ret = self.handle_event(fileno, event)
+                    except Exception as e:
+                        pass
+                    if ret:
+                        return
+            # - no new data, so try to restore messages.
+            # - reset active redis commands.
+            self.maybe_restore_messages()
+            # raise Empty()
+            # raise Exception('kombu.five.Empty')
+        finally:
+            self._in_protected_read = False
+            while self.after_read:
+                try:
+                    fun = self.after_read.pop()
+                except KeyError:
+                    break
+                else:
+                    fun()
+
+    redis.MultiChannelPoller.get = monkey_get
+
+
+# noinspection PyAttributeOutsideInit
 class KombuConsumer(AbstractConsumer, ):
     """
 
@@ -20,11 +69,12 @@ class KombuConsumer(AbstractConsumer, ):
 
     def custom_init(self):
         self._middware_name = frame_config.KOMBU_URL.split(":")[0]
-        logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._queue_name}--{self._middware_name}'
+        logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._middware_name}--{self._queue_name}'
         self.logger = LogManager(logger_name).get_logger_and_add_handlers(self._log_level,
                                                                           log_filename=f'{logger_name}.log' if self._create_logger_file else None,
                                                                           formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
                                                                           )  #
+        patch_kombu_redis()
 
     # noinspection DuplicatedCode
     def _shedual_task(self):  # 这个倍while 1 启动的，会自动重连。
@@ -35,9 +85,10 @@ class KombuConsumer(AbstractConsumer, ):
             self._submit_task(kw)
 
         self.exchange = Exchange('distributed_framework_exchange', 'direct', durable=True)
-        self.queue = Queue(self._queue_name, exchange=self.exchange, routing_key=self._queue_name)
-        self.conn = Connection(frame_config.KOMBU_URL)
+        self.queue = Queue(self._queue_name, exchange=self.exchange, routing_key=self._queue_name, auto_delete=False)
+        self.conn = Connection(frame_config.KOMBU_URL, transport_options={"visibility_timeout": 600})  # 默认3600秒unacked重回队列
         self.queue(self.conn).declare()
+
         # self.producer = self.conn.Consumer(serializer='json')
         # self.channel = self.producer.channel  # type: Channel
         #
@@ -46,8 +97,11 @@ class KombuConsumer(AbstractConsumer, ):
         # self.channel = self.conn.channel()  # type: Channel
         # # self.channel.exchange_declare(exchange='distributed_framework_exchange', durable=True, type='direct')
         # self.queue = self.channel.queue_declare(queue=self._queue_name, durable=True)
+
         with  self.conn.Consumer(self.queue, callbacks=[callback], no_ack=False, prefetch_count=100)  as consumer:
             # Process messages and handle events on all channels
+            channel = consumer.channel  # type:Channel
+            channel.body_encoding = 'no_encode'  # 这里改了编码，存到中间件的参数默认把消息base64了，我觉得没必要不方便查看消息明文。
             while True:
                 self.conn.drain_events()
 

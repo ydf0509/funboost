@@ -28,7 +28,7 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
         # consumer 配置 https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
         self._confluent_consumer = ConfluentConsumer({
             'bootstrap.servers': ','.join(frame_config.KAFKA_BOOTSTRAP_SERVERS),
-            'group.id': 'mygroup',
+            'group.id': 'frame_group',
             'auto.offset.reset': 'earliest',
             'enable.auto.commit': False
         })

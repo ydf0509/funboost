@@ -71,12 +71,14 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
                         break
                 if max_consumed_offset:
                     partion_max_consumed_offset_map[partion] = max_consumed_offset
-            self.logger.debug(partion_max_consumed_offset_map)
+            self.logger.info(partion_max_consumed_offset_map)
             # TopicPartition
             offsets = list()
             for partion, max_consumed_offset in partion_max_consumed_offset_map.items():
+                # print(partion,max_consumed_offset)
                 offsets.append(TopicPartition(topic=self._queue_name, partition=partion, offset=max_consumed_offset + 1))
-            self._confluent_consumer.commit(offsets=offsets, asynchronous=False)
+            if len(offsets):
+                self._confluent_consumer.commit(offsets=offsets, asynchronous=False)
             self._recent_commit_time = time.time()
             for partion, offset_list in to_be_remove_from_partion_max_consumed_offset_map.items():
                 for offset in offset_list:

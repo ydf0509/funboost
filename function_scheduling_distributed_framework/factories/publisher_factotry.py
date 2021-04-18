@@ -54,7 +54,8 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
         12: RedisStreamPublisher,
         13: ZeroMqPublisher,
         14: RedisPublisherLpush,
-        15: KombuPublisher
+        15: KombuPublisher,
+        16:KafkaPublisher
     }
     if broker_kind not in broker_kind__publisher_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')

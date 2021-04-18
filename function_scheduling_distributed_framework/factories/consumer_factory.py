@@ -6,6 +6,7 @@ from collections import Callable
 
 from function_scheduling_distributed_framework.consumers.base_consumer import FunctionResultStatusPersistanceConfig
 from function_scheduling_distributed_framework.consumers.kafka_consumer import KafkaConsumer
+from function_scheduling_distributed_framework.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit
 from function_scheduling_distributed_framework.consumers.kombu_consumer import KombuConsumer
 from function_scheduling_distributed_framework.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
 from function_scheduling_distributed_framework.consumers.mongomq_consumer import MongoMqConsumer
@@ -46,7 +47,8 @@ def get_consumer(*args, broker_kind=0, **kwargs):
         12: RedisStreamConsumer,
         13: ZeroMqConsumer,
         14: RedisBrpopLpushConsumer,
-        15:KombuConsumer
+        15:KombuConsumer,
+        16:KafkaConsumerManuallyCommit
     }
     if broker_kind not in broker_kind__consumer_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')

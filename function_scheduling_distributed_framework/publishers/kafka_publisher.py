@@ -28,7 +28,7 @@ class KafkaPublisher(AbstractPublisher, ):
 
         try:
             admin_client = KafkaAdminClient(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
-            admin_client.create_topics([NewTopic(self._queue_name, 16, 1)])
+            admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
         except TopicAlreadyExistsError:
             pass
@@ -51,3 +51,7 @@ class KafkaPublisher(AbstractPublisher, ):
 
     def close(self):
         self._producer.close()
+
+    def _at_exit(self):
+        self._producer.flush()
+        super()._at_exit()

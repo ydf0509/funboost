@@ -196,8 +196,6 @@ class ConsumersManager:
                              f' \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
             cls._has_show_conusmers_info = True
 
-
-
     @staticmethod
     def get_concurrent_name_by_concurrent_mode(concurrent_mode):
         if concurrent_mode == 1:
@@ -381,7 +379,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._is_send_consumer_hearbeat_to_redis = is_send_consumer_hearbeat_to_redis or is_using_distributed_frequency_control
         self._msg_expire_senconds = msg_expire_senconds
 
-        if self._concurrent_mode not in (1, 2, 3, 4):
+        if self._concurrent_mode not in (1, 2, 3, 4, 5):
             raise ValueError('设置的并发模式不正确')
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
         if self._concurrent_mode == 4:
@@ -741,8 +739,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         raise NotImplementedError
 
     def _submit_task(self, kw):
-        # print(kw)
-        # return         
         if self._judge_is_daylight():
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
@@ -760,7 +756,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.__frequency_control(self._qps / active_num, self._msg_schedule_time_intercal * active_num)
         else:
             self.__frequency_control(self._qps, self._msg_schedule_time_intercal)
-        self.concurrent_pool.submit(self._run, kw)
+        if self._concurrent_mode == 5:  # 单线程
+            self._run(kw)
+        else:
+            self.concurrent_pool.submit(self._run, kw)
 
     def __frequency_control(self, qpsx, msg_schedule_time_intercalx):
         # 以下是消费函数qps控制代码。无论是单个消费者空频还是分布式消费控频，都是基于直接计算的，没有依赖redis inrc计数，使得控频性能好。
@@ -851,7 +850,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
             ConsumersManager.schedulal_thread_to_be_join.append(t)
             t.start()
         else:
-            if self._concurrent_mode == 1:
+            if self._concurrent_mode in [1, 4, 5]:
                 t = Thread(target=self.consumer.keep_circulating(1)(self.consumer._shedual_task))
                 ConsumersManager.schedulal_thread_to_be_join.append(t)
                 t.start()
@@ -861,10 +860,11 @@ class ConcurrentModeDispatcher(LoggerMixin):
             elif self._concurrent_mode == 3:
                 g = eventlet.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
                 ConsumersManager.schedulal_thread_to_be_join.append(g)
-            elif self._concurrent_mode == 4:
-                t = Thread(target=self.consumer.keep_circulating(1)(self.consumer._shedual_task))
-                ConsumersManager.schedulal_thread_to_be_join.append(t)
-                t.start()
+            # elif self._concurrent_mode == 4:
+            #     t = Thread(target=self.consumer.keep_circulating(1)(self.consumer._shedual_task))
+            #     ConsumersManager.schedulal_thread_to_be_join.append(t)
+            #     t.start()
+            # elif self._concurrent_mode ==5:
 
 
 # noinspection DuplicatedCode

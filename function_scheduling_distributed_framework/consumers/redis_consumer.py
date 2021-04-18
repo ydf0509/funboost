@@ -50,4 +50,4 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
         pass  # redis没有确认消费的功能。
 
     def _requeue(self, kw):
-        self.redis_db_frame.lpush(self._queue_name, json.dumps(kw['body']))
+        self.redis_db_frame.rpush(self._queue_name, json.dumps(kw['body']))

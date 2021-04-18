@@ -42,6 +42,7 @@ class ConcurrentModeEnum:
     GEVENT = 2
     EVENTLET = 3
     ASYNC = 4
+    SINGLE_THREAD = 5
 
 
 def task_deco(queue_name, *, function_timeout=0,
@@ -119,6 +120,7 @@ def task_deco(queue_name, *, function_timeout=0,
         f.pub(dict(a=i, b=i * 2))
         f.push(i, i * 2)
     f.consume()
+    # run_consumer_with_multi_process(f,8)   # 这个是细粒度 线程 协程并发 同时叠加8个进程，速度炸裂。
     '''
 
     常规方式，使用方式如下

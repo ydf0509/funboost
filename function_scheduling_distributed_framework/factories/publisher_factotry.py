@@ -5,6 +5,7 @@ import copy
 from typing import Callable
 
 from function_scheduling_distributed_framework.publishers.kombu_publisher import KombuPublisher
+from function_scheduling_distributed_framework.publishers.redis_publisher_lpush import RedisPublisherLpush
 from function_scheduling_distributed_framework.publishers.zeromq_publisher import ZeroMqPublisher
 from function_scheduling_distributed_framework.publishers.kafka_publisher import KafkaPublisher
 from function_scheduling_distributed_framework.publishers.local_python_queue_publisher import LocalPythonQueuePublisher
@@ -18,6 +19,7 @@ from function_scheduling_distributed_framework.publishers.redis_publisher import
 from function_scheduling_distributed_framework.publishers.rocketmq_publisher import RocketmqPublisher
 from function_scheduling_distributed_framework.publishers.sqla_queue_publisher import SqlachemyQueuePublisher
 from function_scheduling_distributed_framework.publishers.redis_stream_publisher import RedisStreamPublisher
+
 
 def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=True,
                   clear_queue_within_init=False, is_add_publish_time=True, consuming_function: Callable = None,
@@ -48,11 +50,11 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
         8: KafkaPublisher,
         9: RedisPublisher,
         10: SqlachemyQueuePublisher,
-        11:RocketmqPublisher,
-        12:RedisStreamPublisher,
-        13:ZeroMqPublisher,
-        14:RedisPublisher,
-        15:KombuPublisher
+        11: RocketmqPublisher,
+        12: RedisStreamPublisher,
+        13: ZeroMqPublisher,
+        14: RedisPublisherLpush,
+        15: KombuPublisher
     }
     if broker_kind not in broker_kind__publisher_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')

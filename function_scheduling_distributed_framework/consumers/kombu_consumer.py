@@ -15,7 +15,7 @@ def patch_kombu_redis():
     """
     给kombu的redis 模式打猴子补丁
     kombu有bug，redis中间件 unnacked 中的任务即使客户端掉线了后者突然关闭脚本中正在运行的任务，也永远不会被重新消费。
-    这个很难容易验证那个测试，把消费函数写成sleep 100秒，启动20秒后把脚本关掉，取出来的任务在 unacked 队列中那个永远不会被确认消费，也不会被重新消费。
+    这个很容易验证那个测试，把消费函数写成sleep 100秒，启动20秒后把脚本关掉，取出来的任务在 unacked 队列中那个永远不会被确认消费，也不会被重新消费。
     """
     from kombu.transport import redis
     # from kombu.five import Empty  #

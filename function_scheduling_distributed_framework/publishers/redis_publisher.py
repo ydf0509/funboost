@@ -12,7 +12,7 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
     """
 
     def concrete_realization_of_publish(self, msg):
-        self.redis_db_frame.lpush(self._queue_name, msg)
+        self.redis_db_frame.rpush(self._queue_name, msg)
 
     def clear(self):
         self.redis_db_frame.delete(self._queue_name)

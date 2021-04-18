@@ -740,6 +740,8 @@ def add(a, b):
 我愿意转账2000元你，如果你测试后30秒不能完成2万次求和，你只需要转账1000元给我就可以。鄙视又怀疑又不愿意亲自测试的人。
 不是celery不行，而是实现手段上包袱上有区别，如果你直接裸写 redis + lpush + brpop + Threadpoolexecutor,调度上面的函数，
 你会发现你也可以暴击celery几十倍也可以秒杀此框架好多倍，复杂调用链路长的代码一般都会消耗更多的cpu，导致运行耗时变长。
+celery的kombu性能很差，再加上celery性能也不行，造成celery慢很多，此框架也支持kombu操作中间件，再换成konbu操作redis而不是redispy操作redis时候，
+光用这个kombu性能就会降低4倍了。
 
 如果有人说，不要限定成不准使用多进程模式只能使用其他并发模式，说这样那就没意义了，
 测试条件要对等，一定要坚持控制变量法，变化的只能是使用上面框架；具体开多少并发，并发模式选择进程还是gevent eventlet threading  中间件类型 中间件地址 这些要全部保持一致。
@@ -1533,7 +1535,7 @@ if __name__ == '__main__':
 ```
 
 ##### 发布
-```python
+```python                 
 from test_frame.test_broker.test_consume import f
 
 for i in range(10000):

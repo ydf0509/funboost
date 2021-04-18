@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: function-scheduling-distributed-framework
-Version: 9.3
+Version: 9.4
 Summary: function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way
 Home-page: https://github.com/ydf0509/distributed_framework
 Author: bfzs
@@ -40,47 +40,17 @@ Description: # 1.distributed_framework
         1.推送。 task_fun.push(1,y=2) 会把 {"x":1,"y":2} (消息也自动包含一些其他辅助信息) 发送到中间件的 task_queue_name1 队列中。
         2.消费。 task_fun.consume() 开始自动从中间件拉取消息，并发的调度运行函数，task_fun(**{"x":1,"y":2}),每秒运行5次
         整个过程只有这两步，清晰明了，其他的控制方式需要看 task_deco 的中文入参解释，全都参数都很有用。
+        
+        
+        这个是单个脚本实现了发布和消费，一般都是分离成两个文件的，任务发布和任务消费无需在同一个进程的解释器内部，
+        因为是使用了中间件解耦消息和持久化消息，不要被例子误导成了，发布和消费必须放在同一个脚本里面
+        
         """
-        ```
-        ```
-        如你所见，使用此框架为什么没有配置中间件的 账号 密码 端口号呢。只有运行任何一个导入了框架的脚本文件一次，就会自动生成一个配置文件
-        然后在配置文件中按需修改需要用到的配置就行。
         
-        @task_deco 和celery的 @app.task 装饰器区别很大，导致写代码方便简化容易很多。没有需要先实例化一个 Celery对象一般叫app变量，
-        然后任何脚本的消费函数都再需要导入这个app，然后@app.task，一点小区别，但造成的两种框架写法难易程度区别很大。
-        使用此框架，不需要固定的项目文件夹目录，任意多层级深层级文件夹不规则python文件名字下写函数都行，
-        celery 实际也可以不规则文件夹和文件名字来写任务函数，但是很难掌握，如果这么写的话，那么在任务注册时候会非常难，
-        一般demo演示文档都不会和你演示这种不规则文件夹和文件名字下写celery消费函数情况，因为如果演示这种情况会非常容易的劝退绝大部分小白。
-        但是如果不精通celery的任务注册导入机制同时又没严格按照死板固定的目录格式来写celery任务，
-        一定会出现令人头疼的 Task of kind 'tasks.add' is not registered, please make sure it's imported. 类似这种错误。
-        主要原因是celery 需要严格Celery类的实例化对象app变量，然后消费函数所在脚本必须import这个app，这还没完，
-        你必须在settings配置文件写 include imports 等配置，否则cmd 启动celery 后台命令时候，celery并不知情哪些文件脚本导入了 app这个变量，
-        当celery框架取出到相关的队列任务时候，就会报错找不到应该用哪个脚本下的哪个函数去运行取出的消息了。
-        你可能会想，为什么celery app 变量的脚本为什么不可以写导入消费函数的import声明呢，比如from dir1.dir2.pyfilename imprt add 了，
-        这样celery运行时候就能找到函数了是不是？那要动脑子想想，如果celery app主文件用了 from dir1.dir2.pyfilename import add，
-        同时消费函数 add 所在的脚本 dir1/dir2/pyfilename.py 又从celery app的猪脚本中导入app，然后把@app.task加到add函数上面 ，
-        那这就是出现了互相导入，a导入b，b导入a的问题了，脚本一启动就报错，正是因为这个互相导入的问题，
-        celery才需要从配置中写好 include imports  autodiscover_tasks，从而实现一方延迟导入以解决互相导入。
         
-        此框架的装饰器不存在需要一个类似Celery app实例的东西，不会有这个变量将大大减少编程难度，消费函数写在任意深层级不规则文件下都行。
         
         ```
-        
-        ##### 例如董伟明的 celery 教程例子的项目目录结构，然后很多练习者需要小心翼翼模仿文件夹层级和py文件名字。
-        
-        ![](./test_frame/jietu/celery_proj_dir.png)
-        
-        
-        
-        ##### 下面这是一个演示不规则文件夹层级和名称的celery使用，大家可以看看如果只看简单celery入门文档，搞不搞得定
-        [不规则文件夹层级和名称下的celery使用演示](https://github.com/ydf0509/celery_demo)  
-        [https://github.com/ydf0509/celery_demo](https://github.com/ydf0509/celery_demo)  
-        
-        ![](test_frame/jietu/celery_dir2.png) 
-        ```
-        可以看代码，当文件夹层级不规则和文件名称不规则时候，要使用celery绝非简单事情，如果你只看普通的celery入门文档，是绝对解决不了
-        这种情况下的celery如何正确使用。
-        ```
+        ### - [5.12此框架和celery在写法上的巨大区别，不需要固定的目录结构和文件夹层级](#512)
         
         
         
@@ -224,6 +194,9 @@ Description: # 1.distributed_framework
             REDIS_STREAM = 12  # 基于redis 5.0 版本以后，使用 stream 数据结构作为分布式消息队列，支持消费确认和持久化和分组消费，是redis官方推荐的消息队列形式，比list结构更适合。
             ZEROMQ = 13  # 基于zeromq作为分布式消息队列，不需要安装中间件，可以支持跨机器但不支持持久化。
             RedisBrpopLpush = 14  # 基于redis的list结构但是采用brpoplpush 双队列形式，和 redis_ack_able的实现差不多，实现上采用了原生命令就不需要lua脚本来实现取出和加入unack了。
+            KOMBU = 15   # 操作 kombu 包，这个包也是celery的中间件依赖包，这个包可以操作10种中间件(例如rabbitmq redis)，但没包括分布式函数调度框架的kafka nsq zeromq 等。
+                        # 同时 kombu 包的性能非常差，可以用原生redis的lpush和kombu的publish测试发布，使用brpop 和 kombu 的 drain_events测试消费，对比差距相差了5到10倍。
+                        # 由于性能差，除非是分布式函数调度框架没实现的中间件才选kombu方式(例如kombu支持亚马逊队列  qpid pyro 队列)，否则强烈建议使用此框架的操作中间件方式而不是使用kombu。
         
         切换任意中间件，代码都不需要做任何变化，不需要关注如何使用中间件的细节。
         总体来说首选rabbitmq，这也是不指定broker_kind参数时候的默认的方式。
@@ -775,6 +748,8 @@ Description: # 1.distributed_framework
         此框架单进程情况下执行2万次求和需要时间是7秒。
         如果不信的人可以自己测试一下，如果测试后你的celery单进程(或在单核电脑），你使用任意gvent eventlet threading模式能在30秒内完成2万次求和，
         我愿意转账2000元你，如果你测试后30秒不能完成2万次求和，你只需要转账1000元给我就可以。鄙视又怀疑又不愿意亲自测试的人。
+        不是celery不行，而是实现手段上包袱上有区别，如果你直接裸写 redis + lpush + brpop + Threadpoolexecutor,调度上面的函数，
+        你会发现你也可以暴击celery几十倍也可以秒杀此框架好多倍，复杂调用链路长的代码一般都会消耗更多的cpu，导致运行耗时变长。
         
         如果有人说，不要限定成不准使用多进程模式只能使用其他并发模式，说这样那就没意义了，
         测试条件要对等，一定要坚持控制变量法，变化的只能是使用上面框架；具体开多少并发，并发模式选择进程还是gevent eventlet threading  中间件类型 中间件地址 这些要全部保持一致。
@@ -971,7 +946,7 @@ Description: # 1.distributed_framework
           ```
           
         
-        #### 5.6 框架如何实现定时？
+        #### 5.7 框架如何实现定时？
         
         答：使用的是定时发布任务，那么就能定时消费任务了。导入fsdf_background_scheduler然后添加定时发布任务。
         
@@ -999,7 +974,7 @@ Description: # 1.distributed_framework
         
           ```
           
-        #### 5.7 为什么强调是函数调度框架不是类调度框架，不是方法调度框架？你代码里面使用了类，是不是和此框架水火不容了?
+        #### 5.8 为什么强调是函数调度框架不是类调度框架，不是方法调度框架？你代码里面使用了类，是不是和此框架水火不容了?
         
         问的是consuming_function的值能不能是一个类或者一个实例方法。
                        
@@ -1096,6 +1071,48 @@ Description: # 1.distributed_framework
                 然后我们来和此框架 比较 实现框架难度上、 实现框架的代码行数上、 用户调用的难度上 这些方面。
           ```
            
+        ### <a id="512">5.12 此框架和celery在写法上的巨大区别，不需要固定的目录结构和文件夹层级</a>
+        
+        ```
+        如你所见，使用此框架为什么没有配置中间件的 账号 密码 端口号呢。只有运行任何一个导入了框架的脚本文件一次，就会自动生成一个配置文件
+        然后在配置文件中按需修改需要用到的配置就行。
+        
+        @task_deco 和celery的 @app.task 装饰器区别很大，导致写代码方便简化容易很多。没有需要先实例化一个 Celery对象一般叫app变量，
+        然后任何脚本的消费函数都再需要导入这个app，然后@app.task，一点小区别，但造成的两种框架写法难易程度区别很大。
+        使用此框架，不需要固定的项目文件夹目录，任意多层级深层级文件夹不规则python文件名字下写函数都行，
+        celery 实际也可以不规则文件夹和文件名字来写任务函数，但是很难掌握，如果这么写的话，那么在任务注册时候会非常难，
+        一般demo演示文档都不会和你演示这种不规则文件夹和文件名字下写celery消费函数情况，因为如果演示这种情况会非常容易的劝退绝大部分小白。
+        但是如果不精通celery的任务注册导入机制同时又没严格按照死板固定的目录格式来写celery任务，
+        一定会出现令人头疼的 Task of kind 'tasks.add' is not registered, please make sure it's imported. 类似这种错误。
+        主要原因是celery 需要严格Celery类的实例化对象app变量，然后消费函数所在脚本必须import这个app，这还没完，
+        你必须在settings配置文件写 include imports 等配置，否则cmd 启动celery 后台命令时候，celery并不知情哪些文件脚本导入了 app这个变量，
+        当celery框架取出到相关的队列任务时候，就会报错找不到应该用哪个脚本下的哪个函数去运行取出的消息了。
+        你可能会想，为什么celery app 变量的脚本为什么不可以写导入消费函数的import声明呢，比如from dir1.dir2.pyfilename imprt add 了，
+        这样celery运行时候就能找到函数了是不是？那要动脑子想想，如果celery app主文件用了 from dir1.dir2.pyfilename import add，
+        同时消费函数 add 所在的脚本 dir1/dir2/pyfilename.py 又从celery app的猪脚本中导入app，然后把@app.task加到add函数上面 ，
+        那这就是出现了互相导入，a导入b，b导入a的问题了，脚本一启动就报错，正是因为这个互相导入的问题，
+        celery才需要从配置中写好 include imports  autodiscover_tasks，从而实现一方延迟导入以解决互相导入。
+        
+        此框架的装饰器不存在需要一个类似Celery app实例的东西，不会有这个变量将大大减少编程难度，消费函数写在任意深层级不规则文件下都行。
+        
+        ```
+        
+        ##### 例如董伟明的 celery 教程例子的项目目录结构，然后很多练习者需要小心翼翼模仿文件夹层级和py文件名字。
+        
+        ![](./test_frame/jietu/celery_proj_dir.png)
+        
+        
+        
+        ##### 下面这是一个演示不规则文件夹层级和名称的celery使用，大家可以看看如果只看简单celery入门文档，搞不搞得定
+        [不规则文件夹层级和名称下的celery使用演示](https://github.com/ydf0509/celery_demo)  
+        [https://github.com/ydf0509/celery_demo](https://github.com/ydf0509/celery_demo)  
+        
+        ![](test_frame/jietu/celery_dir2.png) 
+        ```
+        可以看代码，当文件夹层级不规则和文件名称不规则时候，要使用celery绝非简单事情，如果你只看普通的celery入门文档，是绝对解决不了
+        这种情况下的celery如何正确使用。
+        ```
+        
         
         # 6.更新记录。
         ## 6.1 新增第十种Consumer，以redis为中间件，但增加了消费确认，是RedisConsumerAckAble类。
@@ -1479,6 +1496,65 @@ Description: # 1.distributed_framework
         
         for i in range(100):
             f.push(i) 
+        ```
+        
+        
+        ## 6.17 2021-04 新增以 操作kombu包 为中间件的消息队列
+        ```
+        一次性新增操作10种消息队列,.但比较知名的例如rabbitmq redis sqlite3 函数调度框架已经在之前实现了。
+        使用方式为设置 @task_deco 装饰器的 broker_kind 为 BrokerEnum.KOMBU
+        在你项目根目录下的 distributed_frame_config.py  文件中设置 
+        KOMBU_URL = 'redis://127.0.0.1:6379/7' 那么就是使用komb 操作redis。
+        KOMBU_URL = 'amqp://username:password@127.0.0.1:5672/',那么就是操纵rabbitmq
+        KOMBU_URL = 'sqla+sqlite:////dssf_sqlite.sqlite',那么就是在你的代码所在磁盘的根目录创建一个sqlite文件。四个////表示根目，三个///表示当前目录。
+        其余支持的中间件种类大概有10种，不是很常用，可以百度 google查询kombu或者celery的 broker_url 配置方式。
+        
+        操作 kombu 包，这个包也是celery的中间件依赖包，这个包可以操作10种中间件(例如rabbitmq redis)，
+        但没包括分布式函数调度框架能支持的kafka nsq zeromq 等。
+        
+        
+        但是 kombu 包的性能非常差，如何测试对比性能呢？
+        可以用原生redis的lpush和kombu的publish测试发布
+        使用brpop 和 kombu 的 drain_events测试消费，对比差距相差了5到10倍。
+        由于性能差，除非是分布式函数调度框架没实现的中间件才选kombu方式(例如kombu支持亚马逊队列  qpid pyro 队列)，
+        否则强烈建议使用此框架的操作中间件方式而不是使用kombu。
+        
+        可以把@task_deco装饰器的broker_kind参数 设置为 BrokerEnum.REDIS_ACK_ABLE 和BrokerEnum.KOMBU(配置文件的KOMBU_URL配置为redis)，
+        进行对比，REDIS_ACK_ABLE的消费速度远远超过 BrokerEnum.KOMBU，所以之前专门测试对比celery和此框架的性能，
+        差距很大，光一个 kombu 就拉了celery大腿很多，再加上celery的除了kombu的执行性能也很低，所以celery比此框架慢很多。
+        test_frame\test_celery 下面有celery的发布 消费例子，可以测试对比下速度，同样gevent 并发和redis中间件，
+        celery 执行 print hello 这样的最简单任务，单核单进程每秒执行次数过不了300，celery性能真的是太差了。
+        
+        ```
+        
+        ##### 消费
+        ```python
+        import time
+        from function_scheduling_distributed_framework import task_deco,BrokerEnum
+        
+        @task_deco('test_kombu2',broker_kind=BrokerEnum.KOMBU,qps=5,)
+        def f(x):
+            time.sleep(60)
+            print(x)
+        
+        
+        if __name__ == '__main__':
+            f.consume()
+        ```
+        
+        ##### 发布
+        ```python
+        from test_frame.test_broker.test_consume import f
+        
+        for i in range(10000):
+            f.push(i)
+        ```
+        
+        ##### 你项目根目录下的 distributed_frame_config.py
+        ```python
+        KOMBU_URL = 'redis://127.0.0.1:6379/7'
+        # KOMBU_URL = f'amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VIRTUAL_HOST}'
+        # KOMBU_URL = 'sqla+sqlite:////celery_sqlite3.sqlite'  # 4个//// 代表磁盘根目录下生成一个文件。推荐绝对路径。3个///是相对路径。
         ```
 Keywords: distributed-framework,function-scheduling,rabbitmq,rocketmq,kafka,nsq,redis,disk,sqlachemy,consume-confirm,timing,task-scheduling,apscheduler
 Platform: all

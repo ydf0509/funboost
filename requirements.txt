@@ -30,3 +30,4 @@ pikav1
 rocketmq
 zmq
 pyzmq
+kombu==4.6.11

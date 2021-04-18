@@ -27,3 +27,4 @@ nb_log>=4.3
 rocketmq
 zmq
 pyzmq
+kombu==4.6.11

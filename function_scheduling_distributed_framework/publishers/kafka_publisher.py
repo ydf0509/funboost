@@ -54,4 +54,5 @@ class KafkaPublisher(AbstractPublisher, ):
 
     def _at_exit(self):
         self._producer.flush()
+        self.close()
         super()._at_exit()

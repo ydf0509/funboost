@@ -21,7 +21,7 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
     """
     kafla作为中间件实现的。
     """
-    BROKER_KIND = 8
+    BROKER_KIND = 16
 
     def _shedual_task(self):
         self._producer = KafkaProducer(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)

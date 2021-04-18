@@ -11,12 +11,13 @@ from kafka import KafkaProducer, KafkaAdminClient
 from kafka.admin import NewTopic
 # noinspection PyPackageRequirements
 from kafka.errors import TopicAlreadyExistsError
+from confluent_kafka import Producer as ConfluentProducer
 
 from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
 
 
-class KafkaPublisher(AbstractPublisher, ):
+class ConfluentKafkaPublisher(AbstractPublisher, ):
     """
     使用kafka作为中间件
     """
@@ -35,12 +36,13 @@ class KafkaPublisher(AbstractPublisher, ):
         except Exception as e:
             self.logger.exception(e)
         atexit.register(self.close)  # 程序退出前不主动关闭，会报错。
+        self._confluent_producer = ConfluentProducer({'bootstrap.servers': ','.join(frame_config.KAFKA_BOOTSTRAP_SERVERS)})
 
     def concrete_realization_of_publish(self, msg):
         # noinspection PyTypeChecker
         # self.logger.debug(msg)
-        print(msg)
-        self._producer.send(self._queue_name, msg.encode(), )
+        self._confluent_producer.produce(self._queue_name, msg.encode(), )
+        self._confluent_producer.poll(0)
 
     def clear(self):
         self.logger.warning('还没开始实现 kafka 清空 消息')
@@ -55,4 +57,5 @@ class KafkaPublisher(AbstractPublisher, ):
 
     def _at_exit(self):
         self._producer.flush()
+        self._confluent_producer.flush()
         super()._at_exit()

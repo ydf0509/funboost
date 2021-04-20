@@ -509,6 +509,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.keep_circulating(1)(self._shedual_task)()
         else:
             self._concurrent_mode_dispatcher.schedulal_task_with_no_block()
+        setattr(frame_config,'has_start_a_consumer',1)
 
     @abc.abstractmethod
     def _shedual_task(self):

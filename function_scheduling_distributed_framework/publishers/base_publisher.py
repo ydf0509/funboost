@@ -254,11 +254,11 @@ def deco_mq_conn_error(f):
         # noinspection PyBroadException
         try:
             return f(self, *args, **kwargs)
-        except (PikaAMQPError, amqpstorm.AMQPError,KombuError) as e:  # except Exception as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
+        except (PikaAMQPError, amqpstorm.AMQPError, KombuError) as e:  # except Exception as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
             self.logger.error(f'中间件链接出错   ,方法 {f.__name__}  出错 ，{e}')
             self.init_broker()
             return f(self, *args, **kwargs)
         except Exception as e:
-            self.logger.critical(e,exc_info=True)
+            self.logger.critical(e, exc_info=True)
 
     return _deco_mq_conn_error

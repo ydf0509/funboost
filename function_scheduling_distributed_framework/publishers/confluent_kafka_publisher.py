@@ -21,7 +21,7 @@ from function_scheduling_distributed_framework.publishers.base_publisher import 
 
 class ConfluentKafkaPublisher(AbstractPublisher, ):
     """
-    使用kafka作为中间件
+    使用kafka作为中间件，这个confluent_kafka包的性能远强于 kafka-pyhton
     """
 
     # noinspection PyAttributeOutsideInit

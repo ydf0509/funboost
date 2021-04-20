@@ -39,7 +39,7 @@ Channel.codecs['no_encode'] = NoEncode()  # 不使用base64更分方便查看内
 # noinspection PyAttributeOutsideInit
 class KombuPublisher(AbstractPublisher, ):
     """
-    使用redis作为中间件,这种是最简单的使用redis的方式，此方式不靠谱很容易丢失大量消息。非要用reids作为中间件，请用其他类型的redis consumer
+    使用kombu作为中间件,这个能直接一次性支持很多种小众中间件，但性能很差，除非是分布式函数调度框架没实现的中间件种类用户才可以用这种，用户也可以自己对比性能。
     """
 
     def custom_init(self):

@@ -12,7 +12,7 @@ from function_scheduling_distributed_framework import frame_config
 
 class RedisPublisher(AbstractPublisher, RedisMixin):
     """
-    使用redis作为中间件,这种是最简单的使用redis的方式，此方式不靠谱很容易丢失大量消息。非要用reids作为中间件，请用其他类型的redis consumer
+    使用redis作为中间件,
     """
     _push_method = 'rpush'
 
@@ -34,7 +34,8 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
 
     def concrete_realization_of_publish(self, msg):
         # print(getattr(frame_config,'has_start_a_consumer',0))
-        if getattr(frame_config, 'has_start_a_consumer', 0) == 0:  # 加快速度推送，否则每秒只能推送4000次。
+        # 这里的 has_start_a_consumer 是一个标志，附着在此模块的一个标识变量而已，框架自动设定的，不要把这个变量写到模块里面。
+        if getattr(frame_config, 'has_start_a_consumer', 0) == 0:  # 加快速度推送，否则每秒只能推送4000次。如果是独立脚本推送，使用批量推送，如果是消费者中发布任务，为了保持原子性，用原来的单个推送。
             # self._temp_msg_queue.put(msg)
             with self._lock_for_bulk_push:
                 self._temp_msg_list.append(msg)

@@ -8,7 +8,7 @@ from function_scheduling_distributed_framework.publishers.redis_publisher import
 
 class RedisPublisherLpush(RedisPublisher):
     """
-    使用redis作为中间件,这种是最简单的使用redis的方式，此方式不靠谱很容易丢失大量消息。非要用reids作为中间件，请用其他类型的redis consumer
+    使用redis作为中间件,
     """
 
     _push_method = 'lpush'

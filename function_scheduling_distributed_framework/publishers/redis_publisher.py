@@ -59,7 +59,7 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
         pass
 
     def _at_exit(self):
-        time.sleep(2)
+        time.sleep(2) # 不需要
         # self._real_bulk_push_to_broker()
         with self._lock_for_bulk_push:
             self.__bulk_push_and_init()

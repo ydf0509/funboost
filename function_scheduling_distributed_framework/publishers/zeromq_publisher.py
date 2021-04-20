@@ -25,7 +25,7 @@ class ZeroMqPublisher(AbstractPublisher):
         pass
 
     def get_message_count(self):
-        return 0
+        return -1
 
     def close(self):
         pass

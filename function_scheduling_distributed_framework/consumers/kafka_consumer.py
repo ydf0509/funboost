@@ -10,7 +10,7 @@ from function_scheduling_distributed_framework.consumers.base_consumer import Ab
 from function_scheduling_distributed_framework import frame_config
 from nb_log import LogManager
 
-LogManager('kafka').get_logger_and_add_handlers(20)
+LogManager('kafka').get_logger_and_add_handlers(30)
 
 
 class KafkaConsumer(AbstractConsumer):

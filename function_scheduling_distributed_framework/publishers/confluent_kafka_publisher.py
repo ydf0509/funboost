@@ -6,6 +6,8 @@
 import atexit
 
 # noinspection PyPackageRequirements
+import time
+
 from kafka import KafkaProducer, KafkaAdminClient
 # noinspection PyPackageRequirements
 from kafka.admin import NewTopic
@@ -37,12 +39,15 @@ class ConfluentKafkaPublisher(AbstractPublisher, ):
             self.logger.exception(e)
         atexit.register(self.close)  # 程序退出前不主动关闭，会报错。
         self._confluent_producer = ConfluentProducer({'bootstrap.servers': ','.join(frame_config.KAFKA_BOOTSTRAP_SERVERS)})
+        self._recent_produce_time = time.time()
 
     def concrete_realization_of_publish(self, msg):
         # noinspection PyTypeChecker
         # self.logger.debug(msg)
         self._confluent_producer.produce(self._queue_name, msg.encode(), )
-        self._confluent_producer.poll(0)
+        if time.time() - self._recent_produce_time >1:
+            self._confluent_producer.flush()
+            self._recent_produce_time = time.time()
 
     def clear(self):
         self.logger.warning('还没开始实现 kafka 清空 消息')
@@ -50,7 +55,7 @@ class ConfluentKafkaPublisher(AbstractPublisher, ):
         # self.logger.warning(f'将kafka offset 重置到最后位置')
 
     def get_message_count(self):
-        return 0  # 还没找到获取所有分区未消费数量的方法。
+        return -1  # 还没找到获取所有分区未消费数量的方法。
 
     def close(self):
         self._producer.close()

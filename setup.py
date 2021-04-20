@@ -70,7 +70,8 @@ setup(
         'rocketmq',
         'zmq',
         'pyzmq',
-        'kombu==4.6.11'
+        'kombu==4.6.11',
+        'confluent_kafka'
     ]
 )
 """

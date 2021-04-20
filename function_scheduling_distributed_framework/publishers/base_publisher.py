@@ -70,7 +70,7 @@ class PriorityConsumingControlConfig:
 
 class PublishParamsChecker(LoggerMixin):
     """
-    发布的任务的函数参数检查，使发布的任务不会出现错误。
+    发布的任务的函数参数检查，使发布的任务在消费时候不会出现错误。
     """
 
     def __init__(self, func: typing.Callable):

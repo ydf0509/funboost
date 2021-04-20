@@ -7,23 +7,31 @@ from collections import defaultdict, OrderedDict
 import time
 
 from confluent_kafka.cimpl import TopicPartition
-from kafka import KafkaConsumer as OfficialKafkaConsumer, KafkaProducer
+from kafka import KafkaConsumer as OfficialKafkaConsumer, KafkaProducer, KafkaAdminClient
 from confluent_kafka import Consumer as ConfluentConsumer
+from kafka.admin import NewTopic
+from kafka.errors import TopicAlreadyExistsError
 
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
 from function_scheduling_distributed_framework import frame_config
 from nb_log import LogManager
 
-LogManager('kafka').get_logger_and_add_handlers(20)
-
 
 class KafkaConsumerManuallyCommit(AbstractConsumer):
     """
-    kafla作为中间件实现的。
+    confluent_kafla作为中间件实现的。操作kafka中间件的速度比kafka-python快10倍。
+    这个是手动确认，由于是异步在并发池中并发消费，可以防止强制关闭程序造成正在运行的任务丢失，比自动commit好。
     """
     BROKER_KIND = 16
 
     def _shedual_task(self):
+        try:
+            admin_client = KafkaAdminClient(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
+            admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
+            # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
+        except TopicAlreadyExistsError:
+            pass
+
         self._producer = KafkaProducer(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
         # consumer 配置 https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
         self._confluent_consumer = ConfluentConsumer({
@@ -49,14 +57,21 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
             # print('Received message: {}'.format(msg.value().decode('utf-8'))) # noqa
             self._partion__offset_consume_status_map[msg.partition()][msg.offset()] = 0
             kw = {'partition': msg.partition(), 'offset': msg.offset(), 'body': json.loads(msg.value())}  # noqa
+            self.logger.debug(
+                f'从kafka的 [{self._queue_name}] 主题,分区 {msg.partition()} 中 的 offset {msg.offset()} 取出的消息是：  {msg.value()}')  # noqa
             self._submit_task(kw)
 
-            # self.logger.debug(
-            #     f'从kafka的 [{message.topic}] 主题,分区 {message.partition} 中 取出的消息是：  {message.value.decode()}')
+
             # kw = {'consumer': consumer, 'message': message, 'body': json.loads(message.value)}
             # self._submit_task(kw)
 
     def _manually_commit(self):
+        """
+        kafka要求消费线程数量和分区数量是一对一或一对多，不能多对一，消息并发处理收到分区数量的限制，这种是支持超高线程数量消费，所以commit非常复杂。
+        因为这种是支持单分区200线程消费，消费本身和拉取kafka任务不在同一个线程，而且可能offset较大的比offset较小的任务先完成，
+        每隔2秒对1组offset，对连续消费状态是1的最大offset进行commit
+        :return:
+        """
         if time.time() - self._recent_commit_time > 2:
             partion_max_consumed_offset_map = dict()
             to_be_remove_from_partion_max_consumed_offset_map = defaultdict(list)
@@ -71,12 +86,12 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
                         break
                 if max_consumed_offset:
                     partion_max_consumed_offset_map[partion] = max_consumed_offset
-            self.logger.info(partion_max_consumed_offset_map)
+            # self.logger.info(partion_max_consumed_offset_map)
             # TopicPartition
             offsets = list()
             for partion, max_consumed_offset in partion_max_consumed_offset_map.items():
                 # print(partion,max_consumed_offset)
-                offsets.append(TopicPartition(topic=self._queue_name, partition=partion, offset=max_consumed_offset + 1))
+                offsets.append(TopicPartition(topic=self._queue_name, partition=partion, offset=max_consumed_offset+1))
             if len(offsets):
                 self._confluent_consumer.commit(offsets=offsets, asynchronous=False)
             self._recent_commit_time = time.time()

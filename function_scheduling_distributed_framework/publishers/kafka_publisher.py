@@ -48,7 +48,7 @@ class KafkaPublisher(AbstractPublisher, ):
         # self.logger.warning(f'将kafka offset 重置到最后位置')
 
     def get_message_count(self):
-        return 0  # 还没找到获取所有分区未消费数量的方法。
+        return -1 # 还没找到获取所有分区未消费数量的方法。
 
     def close(self):
         self._producer.close()

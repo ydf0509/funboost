@@ -239,7 +239,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def publisher_of_same_queue(self):
         if not self._publisher_of_same_queue:
             self._publisher_of_same_queue = get_publisher(self._queue_name, consuming_function=self.consuming_function,
-                                                          broker_kind=self.BROKER_KIND, log_level_int=self._log_level)
+                                                          broker_kind=self.BROKER_KIND, log_level_int=self._log_level,
+                                                          is_add_file_handler=self._create_logger_file)
             if self._msg_expire_senconds:
                 self._publisher_of_same_queue.set_is_add_publish_time()
         return self._publisher_of_same_queue
@@ -272,7 +273,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                  max_retry_times=3, log_level=10, is_print_detail_exception=True,
                  msg_schedule_time_intercal=0.0, qps: float = 0, is_using_distributed_frequency_control=False,
                  msg_expire_senconds=0, is_send_consumer_hearbeat_to_redis=False,
-                 logger_prefix='', create_logger_file=True, do_task_filtering=False,
+                 logger_prefix='', create_logger_file=False, do_task_filtering=False,
                  task_filtering_expire_seconds=0, is_consuming_function_use_multi_params=True,
                  is_do_not_run_by_specify_time_effect=False,
                  do_not_run_by_specify_time=('10:00:00', '22:00:00'),
@@ -553,11 +554,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._execute_task_times_every_unit_time += 1
             self._consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
             if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
-                self.logger.info(
-                    f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,'
-                    f'函数平均运行耗时 {round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)} 秒，预计'
-                    f'还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / self._execute_task_times_every_unit_time * self._unit_time_for_count)} 时间'
-                    f'才能执行完成 {self._msg_num_in_broker}个剩余的任务 ')
+                msg = f'''{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,
+                    函数平均运行耗时 {round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)} 秒'''
+                if self._msg_num_in_broker != -1:
+                    msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / self._execute_task_times_every_unit_time * self._unit_time_for_count)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
+                self.logger.info(msg)
                 self._current_time_for_execute_task_times_every_unit_time = time.time()
                 self._consuming_function_cost_time_total_every_unit_time = 0
                 self._execute_task_times_every_unit_time = 0
@@ -643,11 +644,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._execute_task_times_every_unit_time += 1
         self._consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
         if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
-            self.logger.info(
-                f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,'
-                f'函数平均运行耗时 {round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)} 秒，预计'
-                f'还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / self._execute_task_times_every_unit_time * self._unit_time_for_count)} 时间'
-                f'才能执行完成 {self._msg_num_in_broker}个剩余的任务 ')
+            msg = f'''{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,
+                               函数平均运行耗时 {round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)} 秒'''
+            if self._msg_num_in_broker != -1:
+                msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / self._execute_task_times_every_unit_time * self._unit_time_for_count)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
+            self.logger.info(msg)
             self._current_time_for_execute_task_times_every_unit_time = time.time()
             self._consuming_function_cost_time_total_every_unit_time = 0
             self._execute_task_times_every_unit_time = 0
@@ -727,7 +728,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def check_heartbeat_and_message_count(self):
         self._msg_num_in_broker = self.publisher_of_same_queue.get_message_count()
         if time.time() - self._last_timestamp_print_msg_num > 60:
-            self.logger.info(f'[{self._queue_name}] 队列中还有 [{self._msg_num_in_broker}] 个任务')
+            if self._msg_num_in_broker != -1:
+                self.logger.info(f'[{self._queue_name}] 队列中还有 [{self._msg_num_in_broker}] 个任务')
             self._last_timestamp_print_msg_num = time.time()
         if self._msg_num_in_broker != 0:
             self._last_timestamp_when_has_task_in_queue = time.time()

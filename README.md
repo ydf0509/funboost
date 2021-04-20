@@ -2,6 +2,7 @@
 
 pip install function_scheduling_distributed_framework --upgrade
 
+[分布式函数调度框架 wiki 文档](https://github.com/ydf0509/distributed_framework/wiki/1.0.0.0-function_scheduling_distributed_framework--%E5%88%86%E5%B8%83%E5%BC%8F%E5%87%BD%E6%95%B0%E8%B0%83%E5%BA%A6%E6%A1%86%E6%9E%B6%E7%AE%80%E4%BB%8B)
 ### 1.0.0  示意图
 
 [![sgV2xP.png](https://s3.ax1x.com/2021/01/19/sgV2xP.png)](https://imgchr.com/i/sgV2xP)
@@ -177,17 +178,25 @@ class BrokerEnum:
     MONGOMQ = 5  # 使用mongo的表中的行模拟的 作为分布式消息队列，支持消费确认。
     PERSISTQUEUE = 6  # 使用基于sqlute3模拟消息队列，支持消费确认和持久化，但不支持跨机器共享任务，可以基于本机单机跨脚本和跨进程共享任务，好处是不需要安装中间件。
     NSQ = 7  # 基于nsq作为分布式消息队列，支持消费确认。
-    KAFKA = 8  # 基于kafka作为分布式消息队列。
+    KAFKA = 8  # 基于kafka作为分布式消息队列，建议使用BrokerEnum.CONFLUENT_KAFKA。
     REDIS_ACK_ABLE = 9  # 基于redis的 list + 临时unack的set队列，采用了 lua脚本操持了取任务和加到pengding为原子性，随意重启和掉线不会丢失任务。
     SQLACHEMY = 10  # 基于SQLACHEMY 的连接作为分布式消息队列中间件支持持久化和消费确认。支持mysql oracle sqlserver等5种数据库。
     ROCKETMQ = 11  # 基于 rocketmq 作为分布式消息队列，这个中间件必须在linux下运行，win不支持。
     REDIS_STREAM = 12  # 基于redis 5.0 版本以后，使用 stream 数据结构作为分布式消息队列，支持消费确认和持久化和分组消费，是redis官方推荐的消息队列形式，比list结构更适合。
     ZEROMQ = 13  # 基于zeromq作为分布式消息队列，不需要安装中间件，可以支持跨机器但不支持持久化。
     RedisBrpopLpush = 14  # 基于redis的list结构但是采用brpoplpush 双队列形式，和 redis_ack_able的实现差不多，实现上采用了原生命令就不需要lua脚本来实现取出和加入unack了。
-    KOMBU = 15   # 操作 kombu 包，这个包也是celery的中间件依赖包，这个包可以操作10种中间件(例如rabbitmq redis)，但没包括分布式函数调度框架的kafka nsq zeromq 等。
-                # 同时 kombu 包的性能非常差，可以用原生redis的lpush和kombu的publish测试发布，使用brpop 和 kombu 的 drain_events测试消费，对比差距相差了5到10倍。
-                # 由于性能差，除非是分布式函数调度框架没实现的中间件才选kombu方式(例如kombu支持亚马逊队列  qpid pyro 队列)，否则强烈建议使用此框架的操作中间件方式而不是使用kombu。
 
+    """
+    操作 kombu 包，这个包也是celery的中间件依赖包，这个包可以操作10种中间件(例如rabbitmq redis)，但没包括分布式函数调度框架的kafka nsq zeromq 等。
+    同时 kombu 包的性能非常差，可以用原生redis的lpush和kombu的publish测试发布，使用brpop 和 kombu 的 drain_events测试消费，对比差距相差了5到10倍。
+    由于性能差，除非是分布式函数调度框架没实现的中间件才选kombu方式(例如kombu支持亚马逊队列  qpid pyro 队列)，否则强烈建议使用此框架的操作中间件方式而不是使用kombu。
+    """
+    KOMBU = 15
+
+    """基于confluent-kafka包，包的性能比kafka-python提升10倍。同时应对反复随意重启部署消费代码的场景，此消费者实现至少消费一次，第8种BrokerEnum.KAFKA是最多消费一次。"""
+    CONFLUENT_KAFKA = 16
+    
+    
 切换任意中间件，代码都不需要做任何变化，不需要关注如何使用中间件的细节。
 总体来说首选rabbitmq，这也是不指定broker_kind参数时候的默认的方式。
 ```
@@ -257,7 +266,7 @@ if __name__ == '__main__':
 pip install function_scheduling_distributed_framework --upgrade -i https://pypi.org/simple 
 
 
-## 2.1 具体更详细的用法可以看test_frame文件夹里面的几个示例和操作文档.md。
+## 2.1 用法例子说明，具体更详细的用法可以看test_frame文件夹里面的几个示例和操作文档.md。
 
 2.1为简单例子,介绍了入参意义，这里是介绍的是手动实例化生成消费者的方式，这个是本质。
 
@@ -1352,7 +1361,7 @@ if __name__ == '__main__':
 而且在框架层面要支持异步也要增加和修改很多，支持异步并不是很容易。这一点连celery5.0目前都还没支持到（据官方文档说5.0要加入支持，但目前的5.0.3还没加入。）
 
 如果消费函数已经写成了async def这种，那么可以设置 concurrent_mode=ConcurrentModeEnum.ASYNC，
-框架会在一个新的线程的loop里面自动运行协程。
+框架会在一个新的线程的loop里面自动运行协程，所有协程任务会自动在一个loop里面运行，不是每次临时都生成新的loop只运行一个当前任务方式。
 ```
 
 ```python

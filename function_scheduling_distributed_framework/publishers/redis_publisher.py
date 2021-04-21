@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 12:12
-import json
-from threading import Lock
-from queue import Queue, Empty
 import time
+# noinspection PyUnresolvedReferences
+from queue import Queue, Empty
+from threading import Lock
+
+from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
 from function_scheduling_distributed_framework.utils import RedisMixin, decorators
-from function_scheduling_distributed_framework import frame_config
 
 
 class RedisPublisher(AbstractPublisher, RedisMixin):
@@ -16,12 +17,14 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
     """
     _push_method = 'rpush'
 
+    # noinspection PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit
     def custom_init(self):
         self._temp_msg_queue = Queue()
         self._temp_msg_list = list()
         self._lock_for_bulk_push = Lock()
         self._last_push_time = time.time()
-        decorators.keep_circulating(time_sleep=0.5, is_display_detail_exception=True, block=False, daemon=False)(self._initiative_bulk_push_to_broker, )
+        decorators.keep_circulating(time_sleep=0.5, is_display_detail_exception=True, block=False,
+                                    daemon=False)(self._initiative_bulk_push_to_broker, )
 
     def __bulk_push_and_init(self):
         if len(self._temp_msg_list) > 0:
@@ -33,9 +36,9 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
             self.__bulk_push_and_init()
 
     def concrete_realization_of_publish(self, msg):
-        # print(getattr(frame_config,'has_start_a_consumer',0))
-        # 这里的 has_start_a_consumer 是一个标志，借用此模块设置的一个标识变量而已，框架运行时候自动设定的，不要把这个变量写到模块里面。
-        if getattr(frame_config, 'has_start_a_consumer', 0) == 0:  # 加快速度推送，否则每秒只能推送4000次。如果是独立脚本推送，使用批量推送，如果是消费者中发布任务，为了保持原子性，用原来的单个推送。
+        # print(getattr(frame_config,'has_start_a_consumer_flag',0))
+        # 这里的 has_start_a_consumer_flag 是一个标志，借用此模块设置的一个标识变量而已，框架运行时候自动设定的，不要把这个变量写到模块里面。
+        if getattr(frame_config, 'has_start_a_consumer_flag', 0) == 0:  # 加快速度推送，否则每秒只能推送4000次。如果是独立脚本推送，使用批量推送，如果是消费者中发布任务，为了保持原子性，用原来的单个推送。
             # self._temp_msg_queue.put(msg)
             with self._lock_for_bulk_push:
                 self._temp_msg_list.append(msg)
@@ -47,8 +50,12 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
 
     def clear(self):
         self.redis_db_frame.delete(self._queue_name)
-        self.redis_db_frame.delete(f'{self._queue_name}__unack')
+        # self.redis_db_frame.delete(f'{self._queue_name}__unack')
+        unack_queue_name_list = self.redis_db_frame.keys(f'{self._queue_name}__unack_id') + self.redis_db_frame.keys(f'unack_{self._queue_name}_')
+        self.redis_db_frame.delete(*unack_queue_name_list)
         self.logger.warning(f'清除 {self._queue_name} 队列中的消息成功')
+        if unack_queue_name_list:
+            self.logger.warning(f'清除 {unack_queue_name_list} 队列中的消息成功')
 
     def get_message_count(self):
         # nb_print(self.redis_db7,self._queue_name)

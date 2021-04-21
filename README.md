@@ -926,7 +926,8 @@ while 1：
          对于不规则文件夹项目的clery使用时如何的麻烦，可以参考 celery_demo项目 https://github.com/ydf0509/celery_demo。
           12）此库支持 asyncio 原始函数，不用用户额外处理 asyncio loop相关麻烦的问题。celery不支持async定义的函数，celery不能把@app.task
              加到一个async def 的函数上面。
-          13) 消息发布性能和消息消费性能远远超过celery数十倍。为此专门开了一个对比项目，发布和消费10万任务，
+          13) 这是最重要的，光使用简单还不够，性能是非常重要的指标。
+             此框架消息发布性能和消息消费性能远远超过celery数十倍。为此专门开了一个对比项目，发布和消费10万任务，
              对分布式函数调度框架和celery进行严格的控制变量法来benchmark，分别测试两个框架的发布和消费性能。 
              对比项目在此，可以直接拉取并分别运行两个项目的发布和消费一共4个脚本。
              https://github.com/ydf0509/distrubuted_framework_vs_celery_benchmark

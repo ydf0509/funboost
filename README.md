@@ -924,7 +924,12 @@ while 1：
             因为没有一个叫做app类似概念的东西，不需要相互导入，启动也是任意文件夹下的任意脚本都可以，自然不需要写什么imports = ['a.b.c']
          11）简单利于团队推广，不需要看复杂的celry 那样的5000页英文文档。
          对于不规则文件夹项目的clery使用时如何的麻烦，可以参考 celery_demo项目 https://github.com/ydf0509/celery_demo。
-          
+          12）此库支持 asyncio 原始函数，不用用户额外处理 asyncio loop相关麻烦的问题。celery不支持async定义的函数，celery不能把@app.task
+             加到一个async def 的函数上面。
+          13) 消息发布性能和消息消费性能远远超过celery数十倍。为此专门开了一个对比项目，发布和消费10万任务，
+             对分布式函数调度框架和celery进行严格的控制变量法来benchmark，分别测试两个框架的发布和消费性能。 
+             对比项目在此，可以直接拉取并分别运行两个项目的发布和消费一共4个脚本。
+             https://github.com/ydf0509/distrubuted_framework_vs_celery_benchmark
  ```
 
 
@@ -1415,7 +1420,9 @@ run_coroutine_threadsafe /wait / wait_for /get_event_loop / new_event_loop / get
 那aiohttp和aiomysql作者为什么要写几万行代码来重新实现，不在原来基础上改造个七八行来实现？
 
 
-目前此库对 消息确认 消息重新入队 任务过滤  mongo插入，都是采用的同步库，但是使用了 run_in_executor,
+
+目前此库对 消息拉取和消息消费完全是属于在两个不同的线程里面，井水不犯河水，所以用同步库拉取消息对asyncio的消费函数没有任何影响，不存在同步库阻塞异步库的问题。
+对于消息确认 消息重新入队 任务过滤  mongo插入，都是采用的同步库，但是使用了 run_in_executor,
 把这些操作在异步链路中交给线程池来运行了，同事这个线程池不是官方内置线程池，是智能缩小扩大线程池 ThreadPoolExecutorShrinkAble。
 run_in_executor 会把一个同步的操作，sumbit提交给线程池，线程池返回的是一个concurrent.futures包的Future对象，
 run_in_executor包装转化了这个Future(此Future不是asyncio的，不是一个awaitable对象)成为了一个asyncio包的Future对象，asyncio的Future对象可以被await，

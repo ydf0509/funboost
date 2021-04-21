@@ -1,7 +1,7 @@
 import gevent.monkey;gevent.monkey.patch_all()
 import time
 from function_scheduling_distributed_framework import task_deco,BrokerEnum,run_consumer_with_multi_process,ConcurrentModeEnum
-@task_deco('test_benchmark9',broker_kind=BrokerEnum.REDIS,qps=0,log_level=20,concurrent_mode=ConcurrentModeEnum.GEVENT,create_logger_file=True)
+@task_deco('test_benchmark9',broker_kind=BrokerEnum.REDIS_ACK_ABLE,qps=0,log_level=20,concurrent_mode=ConcurrentModeEnum.GEVENT,create_logger_file=True)
 def f(x):
     if x == 0:
         print(time.strftime("%H:%M:%S"),'消费第一条')

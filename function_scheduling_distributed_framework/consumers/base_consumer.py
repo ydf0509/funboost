@@ -178,12 +178,12 @@ class ConsumersManager:
                     t.join()
             elif cls.global_concurrent_mode == 2:
                 # cls.logger.info()
-                nb_print(cls.schedulal_thread_to_be_join)
+                # nb_print(cls.schedulal_thread_to_be_join)
                 gevent.joinall(cls.schedulal_thread_to_be_join, raise_error=True, )
             elif cls.global_concurrent_mode == 3:
                 for g in cls.schedulal_thread_to_be_join:
                     # eventlet.greenthread.GreenThread.
-                    nb_print(g)
+                    # nb_print(g)
                     g.wait()
 
     @classmethod

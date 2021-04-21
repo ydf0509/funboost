@@ -18,7 +18,7 @@ class Config2:
     # # task_default_rate_limit = '101/s'
     # task_default_routing_key = 'default'
     # task_eager_propagates = False  # 默认disable
-    task_ignore_result = False
+    task_ignore_result = True
     # task_serializer = 'json'
     # task_time_limit = 70
     # task_soft_time_limit = 60
@@ -33,8 +33,8 @@ class Config2:
         'f1': {"queue": 'queue_f1'},
     }
 
-    task_reject_on_worker_lost = True #配置这两项可以随意停止
-    task_acks_late = True
+    # task_reject_on_worker_lost = True #配置这两项可以随意停止
+    # task_acks_late = True
 
 
 celery_app.config_from_object(Config2)

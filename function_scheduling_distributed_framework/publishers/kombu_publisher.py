@@ -76,14 +76,16 @@ class KombuPublisher(AbstractPublisher, ):
         # queue = self.channel.queue_declare(queue=self._queue_name, durable=True)
         # return queue.method.message_count
         # self.logger.warning(self.channel._size(self._queue_name))
-        if self._kombu_broker_url_prefix == 'amqp':
-            '''amqp tries to use librabbitmq but falls back to pyamqp.'''
-            queue_declare_ok_t_named_tuple = self.channel.queue_declare(queue=self._queue_name, durable=True, auto_delete=False)
-            # queue_declare_ok_t(queue='test_rabbit_queue2', message_count=100000, consumer_count=0)
-            # print(type(queue_declare_ok_t_named_tuple),queue_declare_ok_t_named_tuple)
-            return queue_declare_ok_t_named_tuple.message_count
-        # noinspection PyProtectedMember
-        return self.channel._size(self._queue_name)
+        queue_declare_ok_t_named_tuple = self.channel.queue_declare(queue=self._queue_name, durable=True, auto_delete=False)
+        return queue_declare_ok_t_named_tuple.message_count
+        # if self._kombu_broker_url_prefix == 'amqp' or True:
+        #     '''amqp tries to use librabbitmq but falls back to pyamqp.'''
+        #     queue_declare_ok_t_named_tuple = self.channel.queue_declare(queue=self._queue_name, durable=True, auto_delete=False)
+        #     # queue_declare_ok_t(queue='test_rabbit_queue2', message_count=100000, consumer_count=0)
+        #     # print(type(queue_declare_ok_t_named_tuple),queue_declare_ok_t_named_tuple)
+        #     return queue_declare_ok_t_named_tuple.message_count
+        # # noinspection PyProtectedMember
+        # return self.channel._size(self._queue_name)
 
     def close(self):
         self.channel.close()

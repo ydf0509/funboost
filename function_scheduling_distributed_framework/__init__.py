@@ -43,6 +43,7 @@ class BrokerEnum:
     """基于confluent-kafka包，包的性能比kafka-python提升10倍。同时应对反复随意重启部署消费代码的场景，此消费者实现至少消费一次，第8种BrokerEnum.KAFKA是最多消费一次。"""
     CONFLUENT_KAFKA = 16
 
+
 class ConcurrentModeEnum:
     THREADING = 1
     GEVENT = 2

@@ -64,6 +64,10 @@ print(sub)
 
 if __name__ == '__main__':
     """
+    celery是可以在python脚本直接启动消费的。直接运行此脚本就行。本人非常反感cmd 命令行敲字母。
+    """
+
+    """
     celery multi start
      Pool implementation: prefork (default), eventlet,
                         gevent or solo.
@@ -75,5 +79,8 @@ if __name__ == '__main__':
     """
     # queue_add,queue_sub,queue_f1
     celery_app.worker_main(
-        argv=['worker', '--pool=gevent','--concurrency=50', '-n', 'worker1@%h', '--loglevel=INFO',
+        argv=['worker', '--pool=threads','--concurrency=50', '-n', 'worker1@%h', '--loglevel=DEBUG',
               '--queues=queue_f1,queue_add2,queue_sub2'])
+    import threading
+
+    print(777777777777777)

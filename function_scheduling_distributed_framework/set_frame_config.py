@@ -109,7 +109,7 @@ config_file_content = '''# -*- coding: utf-8 -*-
 # 
 # SQLACHEMY_ENGINE_URL ='sqlite:////sqlachemy_queues/queues.db'
 
-# SQLLITE_QUEUES_PATH = '/sqllite_queues'
+# SQLLITE_QUEUES_PATH = '/sqllite_queues'  # 这里可以自定义persit_queue中间件模式的sqlite3的文件位置。
 
 # ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
 

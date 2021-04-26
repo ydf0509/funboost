@@ -2,6 +2,14 @@
 
 pip install function_scheduling_distributed_framework --upgrade
 
+### 对比celery最显而易见的其中两个优势
+
+#### 1)celery对目录层级文件名称格式要求太高，只适合规划新的项目，对不规则文件夹套用难度高。
+[项目文件夹目录格式不规范下的celery使用演示](https://github.com/ydf0509/celery_demo)
+
+#### 2)任意并发模式，任意中间件类型，发布和消费性能远远超过celery
+[测试分布式函数调度框架和celery的性能对比](https://github.com/ydf0509/distrubuted_framework_vs_celery_benchmark)
+
 [分布式函数调度框架 wiki 文档](https://github.com/ydf0509/distributed_framework/wiki/1.0.0.0-function_scheduling_distributed_framework--%E5%88%86%E5%B8%83%E5%BC%8F%E5%87%BD%E6%95%B0%E8%B0%83%E5%BA%A6%E6%A1%86%E6%9E%B6%E7%AE%80%E4%BB%8B)
 ### 1.0.0  示意图
 
@@ -34,8 +42,11 @@ if __name__ == "__main__":
 
 
 这个是单个脚本实现了发布和消费，一般都是分离成两个文件的，任务发布和任务消费无需在同一个进程的解释器内部，
-因为是使用了中间件解耦消息和持久化消息，不要被例子误导成了，发布和消费必须放在同一个脚本里面
+因为是使用了中间件解耦消息和持久化消息，不要被例子误导成了，以为发布和消费必须放在同一个脚本里面
 
+
+使用方式只需要这一个例子就行了，其他举得例子只是改了下broker_kind和其他参数而已，
+而且装饰器的入参已近解释得非常详细了，框架浓缩到了一个装饰器，并没有用户需要从框架里面要继承什么组合什么的复杂写法。
 """
 
 

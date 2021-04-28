@@ -10,10 +10,10 @@ pip install function_scheduling_distributed_framework --upgrade
 #### 2)任意并发模式，任意中间件类型，发布和消费性能远远超过celery
 [测试分布式函数调度框架和celery的性能对比](https://github.com/ydf0509/distrubuted_framework_vs_celery_benchmark)
 
-![运行视频](./test_frame/jietu/20210428-2_clip.gif)
+![运行视频](test_frame/jietu/20210428-2_clip.gif)
 
 
-##[分布式函数调度框架 wiki 文档](https://github.com/ydf0509/distributed_framework/wiki/1.0.0.0-function_scheduling_distributed_framework--%E5%88%86%E5%B8%83%E5%BC%8F%E5%87%BD%E6%95%B0%E8%B0%83%E5%BA%A6%E6%A1%86%E6%9E%B6%E7%AE%80%E4%BB%8B)
+## [分布式函数调度框架 wiki 文档](https://github.com/ydf0509/distributed_framework/wiki/1.0.0.0-function_scheduling_distributed_framework--%E5%88%86%E5%B8%83%E5%BC%8F%E5%87%BD%E6%95%B0%E8%B0%83%E5%BA%A6%E6%A1%86%E6%9E%B6%E7%AE%80%E4%BB%8B)
 
 
 

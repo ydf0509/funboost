@@ -1,15 +1,13 @@
-import gevent.monkey;gevent.monkey.patch_all()
 import time
+import random
 from function_scheduling_distributed_framework import task_deco,BrokerEnum,run_consumer_with_multi_process,ConcurrentModeEnum
-@task_deco('test_benchmark9',broker_kind=BrokerEnum.KOMBU,qps=0,log_level=10,concurrent_mode=ConcurrentModeEnum.GEVENT,create_logger_file=True)
-def f(x):
-    if x == 0:
-        print(time.strftime("%H:%M:%S"),'消费第一条')
-    if x == 99999:
-        print(time.strftime("%H:%M:%S"),'消费第100000条')
 
-
-    # time.sleep(60)
+@task_deco('test_queue_10',broker_kind=BrokerEnum.REDIS,qps=0,log_level=10,is_print_detail_exception=False)
+def f(x,y):
+    if random.randint(1,11) == 10:
+        raise ValueError('测试出错')
+    print(f''' {x} + {y} = {x + y}''')
+    return x + y
 
 
 if __name__ == '__main__':

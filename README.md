@@ -12,6 +12,7 @@ pip install function_scheduling_distributed_framework --upgrade
 
 ![Image text](test_frame/jietu/20210428-2_clip.gif)
 
+<video src="https://gitee.com/qq909686719/distributed_framework/blob/master/test_frame/jietu/20210428-211001.mp4" controls="controls" width="500" height="300">您的浏览器不支持播放该视频！</video>
 
 ## [分布式函数调度框架 wiki 文档](https://github.com/ydf0509/distributed_framework/wiki/1.0.0.0-function_scheduling_distributed_framework--%E5%88%86%E5%B8%83%E5%BC%8F%E5%87%BD%E6%95%B0%E8%B0%83%E5%BA%A6%E6%A1%86%E6%9E%B6%E7%AE%80%E4%BB%8B)
 

@@ -10,19 +10,14 @@ pip install function_scheduling_distributed_framework --upgrade
 #### 2)任意并发模式，任意中间件类型，发布和消费性能远远超过celery
 [测试分布式函数调度框架和celery的性能对比](https://github.com/ydf0509/distrubuted_framework_vs_celery_benchmark)
 
-[分布式函数调度框架 wiki 文档](https://github.com/ydf0509/distributed_framework/wiki/1.0.0.0-function_scheduling_distributed_framework--%E5%88%86%E5%B8%83%E5%BC%8F%E5%87%BD%E6%95%B0%E8%B0%83%E5%BA%A6%E6%A1%86%E6%9E%B6%E7%AE%80%E4%BB%8B)
-
-<video id="video" controls="" preload="none" poster="http://om2bks7xs.bkt.clouddn.com/2017-08-26-Markdown-Advance-Video.jpg">
-<source id="mp4" src="http://om2bks7xs.bkt.clouddn.com/2017-08-26-Markdown-Advance-Video.mp4" type="video/mp4">
-</video>
+![运行视频](./test_frame/jietu/20210428-2_clip.gif)
 
 
-
-<video id="video" controls="" preload="none">
-    <source id="mp4" src="test_frame/jietu/20210428-211001.mp4" type="video/mp4">
-</video>
+##[分布式函数调度框架 wiki 文档](https://github.com/ydf0509/distributed_framework/wiki/1.0.0.0-function_scheduling_distributed_framework--%E5%88%86%E5%B8%83%E5%BC%8F%E5%87%BD%E6%95%B0%E8%B0%83%E5%BA%A6%E6%A1%86%E6%9E%B6%E7%AE%80%E4%BB%8B)
 
 
+
+##### 流程示意图
 [![sgV2xP.png](https://s3.ax1x.com/2021/01/19/sgV2xP.png)](https://imgchr.com/i/sgV2xP)
 
 ### 1.0.0.1 简单例子

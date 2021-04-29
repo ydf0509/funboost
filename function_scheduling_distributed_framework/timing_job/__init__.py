@@ -14,7 +14,7 @@ from function_scheduling_distributed_framework.consumers.base_consumer import Ab
 
 def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, AbstractConsumer]):
     def _deco(*args, **kwargs):
-        if getattr(consuming_func_decorated_or_consumer, 'is_decorated_as_consume_function') is True:
+        if getattr(consuming_func_decorated_or_consumer, 'is_decorated_as_consume_function',False) is True:
             consuming_func_decorated_or_consumer.push(*args, **kwargs)
         elif isinstance(consuming_func_decorated_or_consumer, AbstractConsumer):
             consuming_func_decorated_or_consumer.publisher_of_same_queue.push(*args, **kwargs)

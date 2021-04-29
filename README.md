@@ -12,7 +12,7 @@ pip install function_scheduling_distributed_framework --upgrade
 
 ![Image text](test_frame/jietu/20210428-2_clip1.gif)
 
-![Image text](https://s31.aconvert.com/convert/p3r68-cdx67/0vc32-6bkqd.gif)
+
 
 
 ## [分布式函数调度框架 wiki 文档](https://github.com/ydf0509/distributed_framework/wiki/1.0.0.0-function_scheduling_distributed_framework--%E5%88%86%E5%B8%83%E5%BC%8F%E5%87%BD%E6%95%B0%E8%B0%83%E5%BA%A6%E6%A1%86%E6%9E%B6%E7%AE%80%E4%BB%8B)

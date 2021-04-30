@@ -1583,3 +1583,6 @@ KOMBU_URL = 'redis://127.0.0.1:6379/7'
 # KOMBU_URL = f'amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VIRTUAL_HOST}'
 # KOMBU_URL = 'sqla+sqlite:////celery_sqlite3.sqlite'  # 4个//// 代表磁盘根目录下生成一个文件。推荐绝对路径。3个///是相对路径。
 ```
+
+
+![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)

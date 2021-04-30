@@ -63,8 +63,9 @@ def patch_kombu_redis():
 # noinspection PyAttributeOutsideInit
 class KombuConsumer(AbstractConsumer, ):
     """
-
+    使用kombu作为中间件,这个能直接一次性支持很多种小众中间件，但性能很差，除非是分布式函数调度框架没实现的中间件种类用户才可以用这种，用户也可以自己对比性能。
     """
+
     BROKER_KIND = 15
 
     def custom_init(self):
@@ -88,16 +89,6 @@ class KombuConsumer(AbstractConsumer, ):
         self.queue = Queue(self._queue_name, exchange=self.exchange, routing_key=self._queue_name, auto_delete=False)
         self.conn = Connection(frame_config.KOMBU_URL, transport_options={"visibility_timeout": 600})  # 默认3600秒unacked重回队列
         self.queue(self.conn).declare()
-
-        # self.producer = self.conn.Consumer(serializer='json')
-        # self.channel = self.producer.channel  # type: Channel
-        #
-        # self.conn = Connection(frame_config.KOMBU_URL)
-        # # self.queue(self.conn).declare()
-        # self.channel = self.conn.channel()  # type: Channel
-        # # self.channel.exchange_declare(exchange='distributed_framework_exchange', durable=True, type='direct')
-        # self.queue = self.channel.queue_declare(queue=self._queue_name, durable=True)
-
         with  self.conn.Consumer(self.queue, callbacks=[callback], no_ack=False, prefetch_count=100)  as consumer:
             # Process messages and handle events on all channels
             channel = consumer.channel  # type:Channel

@@ -4,7 +4,7 @@ from function_scheduling_distributed_framework import task_deco,BrokerEnum,run_c
 from nb_log import stdout_write,print_raw
 
 
-@task_deco('test_rabbit_queue6',broker_kind=BrokerEnum.KOMBU,qps=0,is_using_distributed_frequency_control=True,log_level=20)
+@task_deco('test_rabbit_queue7',broker_kind=BrokerEnum.RABBITMQ_PIKA,qps=1000,log_level=10)
 def test_fun(x):
     # print(x)
     print(x)

@@ -70,7 +70,7 @@ class PriorityConsumingControlConfig:
 
 class PublishParamsChecker(LoggerMixin):
     """
-    发布的任务的函数参数检查，使发布的任务在消费时候不会出现错误。
+    发布的任务的函数参数检查，使发布的任务在消费时候不会出现低级错误。
     """
 
     def __init__(self, func: typing.Callable):
@@ -103,7 +103,7 @@ class PublishParamsChecker(LoggerMixin):
 
 class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
-    def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=False,
+    def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True,
                  clear_queue_within_init=False, is_add_publish_time=True, consuming_function: callable = None, ):
         """
         :param queue_name:

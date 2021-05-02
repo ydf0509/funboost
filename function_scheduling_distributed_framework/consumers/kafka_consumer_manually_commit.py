@@ -61,7 +61,6 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
                 f'从kafka的 [{self._queue_name}] 主题,分区 {msg.partition()} 中 的 offset {msg.offset()} 取出的消息是：  {msg.value()}')  # noqa
             self._submit_task(kw)
 
-
             # kw = {'consumer': consumer, 'message': message, 'body': json.loads(message.value)}
             # self._submit_task(kw)
 
@@ -91,7 +90,7 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
             offsets = list()
             for partion, max_consumed_offset in partion_max_consumed_offset_map.items():
                 # print(partion,max_consumed_offset)
-                offsets.append(TopicPartition(topic=self._queue_name, partition=partion, offset=max_consumed_offset+1))
+                offsets.append(TopicPartition(topic=self._queue_name, partition=partion, offset=max_consumed_offset + 1))
             if len(offsets):
                 self._confluent_consumer.commit(offsets=offsets, asynchronous=False)
             self._recent_commit_time = time.time()

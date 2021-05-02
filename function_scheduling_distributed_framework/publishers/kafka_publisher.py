@@ -23,12 +23,10 @@ class KafkaPublisher(AbstractPublisher, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-
         self._producer = KafkaProducer(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
-
+        self._admin_client = KafkaAdminClient(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
         try:
-            admin_client = KafkaAdminClient(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
-            admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
+            self._admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
         except TopicAlreadyExistsError:
             pass
@@ -39,7 +37,7 @@ class KafkaPublisher(AbstractPublisher, ):
     def concrete_realization_of_publish(self, msg):
         # noinspection PyTypeChecker
         # self.logger.debug(msg)
-        print(msg)
+        # print(msg)
         self._producer.send(self._queue_name, msg.encode(), )
 
     def clear(self):
@@ -48,7 +46,10 @@ class KafkaPublisher(AbstractPublisher, ):
         # self.logger.warning(f'将kafka offset 重置到最后位置')
 
     def get_message_count(self):
-        return -1 # 还没找到获取所有分区未消费数量的方法。
+        # return -1 # 还没找到获取所有分区未消费数量的方法。
+        # print(self._admin_client.list_consumer_group_offsets('frame_group'))
+        # print(self._admin_client.describe_consumer_groups('frame_group'))
+        return -1
 
     def close(self):
         self._producer.close()

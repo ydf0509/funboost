@@ -31,7 +31,8 @@ from pymongo import IndexModel
 from pymongo.errors import PyMongoError
 
 # noinspection PyUnresolvedReferences
-from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write
+from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, \
+    LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write, is_main_process,only_print_on_main_process
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.concurrent_pool.async_helper import simple_run_in_executor
 from function_scheduling_distributed_framework.concurrent_pool.async_pool_executor import AsyncPoolExecutor
@@ -189,8 +190,7 @@ class ConsumersManager:
     @classmethod
     def show_all_consumer_info(cls):
         # nb_print(f'当前解释器内，所有消费者的信息是：\n  {cls.consumers_queue__info_map}')
-        if not cls._has_show_conusmers_info:
-            nb_print(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}')
+        if only_print_on_main_process(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}'):
             for _, consumer_info in cls.consumers_queue__info_map.items():
                 stdout_write(f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}" '
                              f' \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')

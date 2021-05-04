@@ -12,6 +12,7 @@ import re
 import importlib
 from pathlib import Path
 from nb_log import nb_print,stderr_write,stdout_write
+from nb_log.monkey_print import is_main_process,only_print_on_main_process
 from function_scheduling_distributed_framework import frame_config
 
 
@@ -53,7 +54,7 @@ def patch_frame_config(MONGO_CONNECT_URL: str = None,
 
 
 def show_frame_config():
-    nb_print('显示当前的项目中间件配置参数')
+    only_print_on_main_process('显示当前的项目中间件配置参数')
     for var_name in dir(frame_config):
         if var_name.isupper():
             var_value = getattr(frame_config, var_name)
@@ -63,13 +64,12 @@ def show_frame_config():
                     mongo_pass_encryption = f'{"*" * (len(mongo_pass) - 2)}{mongo_pass[-1]}' if len(
                         mongo_pass) > 3 else mongo_pass
                     var_value_encryption = re.sub(r':(\w+)@', f':{mongo_pass_encryption}@', var_value)
-                    nb_print(f'{var_name}:             {var_value_encryption}')
+                    only_print_on_main_process(f'{var_name}:             {var_value_encryption}')
                     continue
             if 'PASS' in var_name and var_value is not None and len(var_value) > 3:  # 对密码打*
-                nb_print(f'{var_name}:                {var_value[0]}{"*" * (len(var_value) - 2)}{var_value[-1]}')
+                only_print_on_main_process(f'{var_name}:                {var_value[0]}{"*" * (len(var_value) - 2)}{var_value[-1]}')
             else:
-                nb_print(f'{var_name}:                {var_value}')
-    print('\n')
+                only_print_on_main_process(f'{var_name}:                {var_value}')
 
 
 config_file_content = '''# -*- coding: utf-8 -*-
@@ -142,13 +142,14 @@ def use_config_form_distributed_frame_config_module():
     """
     # sys.stdout.write(f'\033[0;33m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;30;43m{inspect_msg}\033[0m\n')
     # noinspection PyProtectedMember
-    stdout_write( f'\033[0;93m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;93;100m{inspect_msg}\033[0m\n')
+    if is_main_process():
+        stdout_write( f'\033[0;93m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;93;100m{inspect_msg}\033[0m\n')
     try:
         # noinspection PyUnresolvedReferences
         # import distributed_frame_config
         m = importlib.import_module('distributed_frame_config')
         # nb_print(m.__dict__)
-        nb_print(f'分布式函数调度框架 读取到\n "{m.__file__}:1" 文件里面的变量作为配置了\n')
+        only_print_on_main_process(f'分布式函数调度框架 读取到\n "{m.__file__}:1" 文件里面的变量作为配置了\n')
         for var_namex, var_valuex in m.__dict__.items():
             if var_namex.isupper():
                 setattr(frame_config, var_namex, var_valuex)  # 用用户自定义的配置覆盖框架的默认配置。

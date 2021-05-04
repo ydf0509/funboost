@@ -2,9 +2,12 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 13:32
 import json
-
 # noinspection PyPackageRequirements
-from kafka import KafkaConsumer as OfficialKafkaConsumer, KafkaProducer
+from kafka import KafkaConsumer as OfficialKafkaConsumer, KafkaProducer, KafkaAdminClient
+# noinspection PyPackageRequirements
+from kafka.admin import NewTopic
+# noinspection PyPackageRequirements
+from kafka.errors import TopicAlreadyExistsError
 
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
 from function_scheduling_distributed_framework import frame_config
@@ -20,6 +23,13 @@ class KafkaConsumer(AbstractConsumer):
     BROKER_KIND = 8
 
     def _shedual_task(self):
+        try:
+            admin_client = KafkaAdminClient(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
+            admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
+            # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
+        except TopicAlreadyExistsError:
+            pass
+
         self._producer = KafkaProducer(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
         consumer = OfficialKafkaConsumer(self._queue_name, bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS,
                                          group_id=f'frame_group', enable_auto_commit=True,

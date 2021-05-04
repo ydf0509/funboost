@@ -32,7 +32,7 @@ from pymongo.errors import PyMongoError
 
 # noinspection PyUnresolvedReferences
 from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, \
-    LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write, is_main_process,only_print_on_main_process
+    LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write, is_main_process, only_print_on_main_process
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.concurrent_pool.async_helper import simple_run_in_executor
 from function_scheduling_distributed_framework.concurrent_pool.async_pool_executor import AsyncPoolExecutor
@@ -754,15 +754,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
             self._confirm_consume(kw)
             return 0
+        if self._concurrent_mode == 5:  # 单线程
+            self._run(kw)
+        else:
+            self.concurrent_pool.submit(self._run, kw)
         if self._is_using_distributed_frequency_control:  # 如果是需要分布式控频。
             active_num = self._distributed_consumer_statistics.active_consumer_num
             self.__frequency_control(self._qps / active_num, self._msg_schedule_time_intercal * active_num)
         else:
             self.__frequency_control(self._qps, self._msg_schedule_time_intercal)
-        if self._concurrent_mode == 5:  # 单线程
-            self._run(kw)
-        else:
-            self.concurrent_pool.submit(self._run, kw)
 
     def __frequency_control(self, qpsx, msg_schedule_time_intercalx):
         # 以下是消费函数qps控制代码。无论是单个消费者空频还是分布式消费控频，都是基于直接计算的，没有依赖redis inrc计数，使得控频性能好。

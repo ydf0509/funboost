@@ -61,7 +61,7 @@ class KombuPublisher(AbstractPublisher, ):
         # self.channel = self.conn.channel()  # type: Channel
         # # self.channel.exchange_declare(exchange='distributed_framework_exchange', durable=True, type='direct')
         # self.queue = self.channel.queue_declare(queue=self._queue_name, durable=True)
-        self.logger.warning(f'使用 kombu 库 连接中间件')
+        self.logger.warning(f'使用 kombu 库 连接 {self._kombu_broker_url_prefix} 中间件')
 
     @deco_mq_conn_error
     def concrete_realization_of_publish(self, msg):

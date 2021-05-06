@@ -4,16 +4,16 @@
 import functools
 import json
 from threading import Lock
+from nb_log import LogManager, get_logger
 
 from function_scheduling_distributed_framework.publishers.base_publisher import deco_mq_conn_error
-import pikav0.exceptions
-from pikav0.exceptions import AMQPError
-
+import pikav1.exceptions
+from pikav1.exceptions import AMQPError
+import pikav1
 from function_scheduling_distributed_framework.consumers.base_consumer import AbstractConsumer
-from nb_log import LogManager, get_logger
-from function_scheduling_distributed_framework.utils.rabbitmq_factory import RabbitMqFactory
+from function_scheduling_distributed_framework import frame_config
 
-get_logger('pikav0', log_level_int=20)
+get_logger('pikav1', log_level_int=20)
 
 
 class RabbitmqConsumer(AbstractConsumer):
@@ -41,10 +41,15 @@ class RabbitmqConsumer(AbstractConsumer):
             # 文档例子  https://github.com/pika/pika
             try:
                 self.logger.warning(f'使用pika 链接mq')
-                self.rabbit_client = RabbitMqFactory(is_use_rabbitpy=0).get_rabbit_cleint()
-                self.channel = self.rabbit_client.creat_a_channel()
+                # self.rabbit_client = RabbitMqFactory(is_use_rabbitpy=0).get_rabbit_cleint()
+                # self.channel = self.rabbit_client.creat_a_channel()
+
+                credentials = pikav1.PlainCredentials(frame_config.RABBITMQ_USER, frame_config.RABBITMQ_PASS)
+                self.connection = pikav1.BlockingConnection(pikav1.ConnectionParameters(
+                    frame_config.RABBITMQ_HOST, frame_config.RABBITMQ_PORT, frame_config.RABBITMQ_VIRTUAL_HOST, credentials, heartbeat=60))
+                self.channel = self.connection.channel()
                 self.rabbitmq_queue = self.channel.queue_declare(queue=self._queue_name, durable=True)
-                self.channel.basic_consume(callback,
+                self.channel.basic_consume(on_message_callback = callback,
                                            queue=self._queue_name,
                                            # no_ack=True
                                            )
@@ -53,12 +58,12 @@ class RabbitmqConsumer(AbstractConsumer):
             # except pikav0.exceptions.ConnectionClosedByBroker:
             #     break
             # Don't recover on channel errors
-            except pikav0.exceptions.AMQPChannelError as e:
+            except pikav1.exceptions.AMQPChannelError as e:
                 # break
                 self.logger.error(e)
                 continue
                 # Recover on all other connection errors
-            except pikav0.exceptions.AMQPConnectionError as e:
+            except pikav1.exceptions.AMQPConnectionError as e:
                 self.logger.error(e)
                 continue
 
@@ -70,16 +75,16 @@ class RabbitmqConsumer(AbstractConsumer):
                 self.logger.error(f'pika确认消费失败  {e}')
 
     def _confirm_consume(self, kw):
-        with self._lock_for_pika:
-            self.__ack_message_pika(kw['ch'], kw['method'].delivery_tag)
-        # kw['ch'].connection.add_callback_threadsafe(functools.partial(self.__ack_message_pika, kw['ch'], kw['method'].delivery_tag))
+        # with self._lock_for_pika:
+        #     self.__ack_message_pika(kw['ch'], kw['method'].delivery_tag)
+        kw['ch'].connection.add_callback_threadsafe(functools.partial(self.__ack_message_pika, kw['ch'], kw['method'].delivery_tag))
 
     def _requeue(self, kw):
-        # kw['ch'].connection.add_callback_threadsafe(functools.partial(self.__nack_message_pika, kw['ch'], kw['method'].delivery_tag))
+        kw['ch'].connection.add_callback_threadsafe(functools.partial(self.__nack_message_pika, kw['ch'], kw['method'].delivery_tag))
         # with self._lock_for_pika:
         # return kw['ch'].basic_nack(delivery_tag=kw['method'].delivery_tag)  # 立即重新入队。
-        with self._lock_for_pika:
-            self.__nack_message_pika(kw['ch'], kw['method'].delivery_tag)
+        # with self._lock_for_pika:
+        #     self.__nack_message_pika(kw['ch'], kw['method'].delivery_tag)
 
     def __nack_message_pika(self, channelx, delivery_tagx):
         """Note that `channel` must be the same pika channel instance via which

@@ -26,9 +26,7 @@ class ConfluentKafkaPublisher(AbstractPublisher, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-
         self._producer = KafkaProducer(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
-
         try:
             admin_client = KafkaAdminClient(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
             admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
@@ -45,7 +43,7 @@ class ConfluentKafkaPublisher(AbstractPublisher, ):
         # noinspection PyTypeChecker
         # self.logger.debug(msg)
         self._confluent_producer.produce(self._queue_name, msg.encode(), )
-        if time.time() - self._recent_produce_time >1:
+        if time.time() - self._recent_produce_time > 1:
             self._confluent_producer.flush()
             self._recent_produce_time = time.time()
 

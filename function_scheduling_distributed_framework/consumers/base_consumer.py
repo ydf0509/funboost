@@ -31,7 +31,8 @@ from pymongo import IndexModel
 from pymongo.errors import PyMongoError
 
 # noinspection PyUnresolvedReferences
-from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write
+from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, \
+    LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write, is_main_process,only_print_on_main_process
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.concurrent_pool.async_helper import simple_run_in_executor
 from function_scheduling_distributed_framework.concurrent_pool.async_pool_executor import AsyncPoolExecutor
@@ -189,8 +190,7 @@ class ConsumersManager:
     @classmethod
     def show_all_consumer_info(cls):
         # nb_print(f'当前解释器内，所有消费者的信息是：\n  {cls.consumers_queue__info_map}')
-        if not cls._has_show_conusmers_info:
-            nb_print(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}')
+        if only_print_on_main_process(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}'):
             for _, consumer_info in cls.consumers_queue__info_map.items():
                 stdout_write(f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}" '
                              f' \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
@@ -273,7 +273,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                  max_retry_times=3, log_level=10, is_print_detail_exception=True,
                  msg_schedule_time_intercal=0.0, qps: float = 0, is_using_distributed_frequency_control=False,
                  msg_expire_senconds=0, is_send_consumer_hearbeat_to_redis=False,
-                 logger_prefix='', create_logger_file=False, do_task_filtering=False,
+                 logger_prefix='', create_logger_file=True, do_task_filtering=False,
                  task_filtering_expire_seconds=0, is_consuming_function_use_multi_params=True,
                  is_do_not_run_by_specify_time_effect=False,
                  do_not_run_by_specify_time=('10:00:00', '22:00:00'),
@@ -509,7 +509,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.keep_circulating(1)(self._shedual_task)()
         else:
             self._concurrent_mode_dispatcher.schedulal_task_with_no_block()
-        setattr(frame_config,'has_start_a_consumer_flag',1)
+        setattr(frame_config, 'has_start_a_consumer_flag', 1)
 
     @abc.abstractmethod
     def _shedual_task(self):
@@ -555,8 +555,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._execute_task_times_every_unit_time += 1
             self._consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
             if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
-                msg = f'''{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,
-                    函数平均运行耗时 {round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)} 秒'''
+                msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
+                      f'函数平均运行耗时 {round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)} 秒'
                 if self._msg_num_in_broker != -1:
                     msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / self._execute_task_times_every_unit_time * self._unit_time_for_count)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
                 self.logger.info(msg)
@@ -645,8 +645,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._execute_task_times_every_unit_time += 1
         self._consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
         if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
-            msg = f'''{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,
-                               函数平均运行耗时 {round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)} 秒'''
+            msg = f'''{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,''' + \
+                  f'''函数平均运行耗时 {round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)} 秒'''
             if self._msg_num_in_broker != -1:
                 msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / self._execute_task_times_every_unit_time * self._unit_time_for_count)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
             self.logger.info(msg)

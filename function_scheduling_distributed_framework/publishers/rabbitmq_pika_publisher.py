@@ -2,11 +2,10 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 12:03
 from threading import Lock
-
-from pikav0 import BasicProperties
-
+from pikav1 import BasicProperties
+import pikav1
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher, deco_mq_conn_error
-from function_scheduling_distributed_framework.utils.rabbitmq_factory import RabbitMqFactory
+from function_scheduling_distributed_framework import frame_config
 
 
 class RabbitmqPublisher(AbstractPublisher):
@@ -21,8 +20,10 @@ class RabbitmqPublisher(AbstractPublisher):
     # noinspection PyAttributeOutsideInit
     def init_broker(self):
         self.logger.warning(f'使用pika 链接mq')
-        self.rabbit_client = RabbitMqFactory(is_use_rabbitpy=0).get_rabbit_cleint()
-        self.channel = self.rabbit_client.creat_a_channel()
+        credentials = pikav1.PlainCredentials(frame_config.RABBITMQ_USER, frame_config.RABBITMQ_PASS)
+        self.connection = pikav1.BlockingConnection(pikav1.ConnectionParameters(
+            frame_config.RABBITMQ_HOST, frame_config.RABBITMQ_PORT, frame_config.RABBITMQ_VIRTUAL_HOST, credentials, heartbeat=60))
+        self.channel = self.connection.channel()
         self.queue = self.channel.queue_declare(queue=self._queue_name, durable=True)
 
     # noinspection PyAttributeOutsideInit
@@ -51,6 +52,5 @@ class RabbitmqPublisher(AbstractPublisher):
     # @deco_mq_conn_error
     def close(self):
         self.channel.close()
-        self.rabbit_client.connection.close()
+        self.connection.close()
         self.logger.warning('关闭pika包 链接')
-

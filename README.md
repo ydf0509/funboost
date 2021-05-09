@@ -1122,18 +1122,7 @@ celery才需要从配置中写好 include imports  autodiscover_tasks，从而�
 
 ```
 
-### 5.13  在web中如flask fastapi django 如何搭配使用消费框架的例子。
-```
-在web中推送任务，后台进程消费任务，很多人问怎么在web使用，用法和不与web框架搭配并没有什么不同之处。
 
-演示例子在
-
-test_frame\use_in_flask_tonardo_fastapi
-
-因为发布和消费是使用中间件解耦的，一般可以分成web接口启动一次，后台消费启动一次，需要独立部署两次。
-
-演示了flask 使用app应用上下文。
-```
 
 ##### 例如董伟明的 celery 教程例子的项目目录结构，然后很多练习者需要小心翼翼模仿文件夹层级和py文件名字。
 
@@ -1149,6 +1138,20 @@ test_frame\use_in_flask_tonardo_fastapi
 ```
 可以看代码，当文件夹层级不规则和文件名称不规则时候，要使用celery绝非简单事情，如果你只看普通的celery入门文档，是绝对解决不了
 这种情况下的celery如何正确使用。
+```
+
+
+### 5.13  在web中如flask fastapi django 如何搭配使用消费框架的例子。
+```
+在web中推送任务，后台进程消费任务，很多人问怎么在web使用，用法和不与web框架搭配并没有什么不同之处。
+
+演示例子在
+
+test_frame\use_in_flask_tonardo_fastapi
+
+因为发布和消费是使用中间件解耦的，一般可以分成web接口启动一次，后台消费启动一次，需要独立部署两次。
+
+演示了flask 使用app应用上下文。
 ```
 
 

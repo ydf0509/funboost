@@ -1584,5 +1584,14 @@ KOMBU_URL = 'redis://127.0.0.1:6379/7'
 # KOMBU_URL = 'sqla+sqlite:////celery_sqlite3.sqlite'  # 4个//// 代表磁盘根目录下生成一个文件。推荐绝对路径。3个///是相对路径。
 ```
 
+##6.18 2021-04 新增在web中如flask fastapi django 使用消费框架的例子。
+```
+演示例子在
+test_frame\use_in_flask_tonardo_fastapi
+
+因为发布和消费是使用中间件解耦的，一般可以分成web接口启动一次，后台消费启动一次，需要独立部署两次。
+
+演示了flask 使用app应用上下文。
+```
 
 ![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)

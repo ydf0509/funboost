@@ -24,7 +24,7 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
         self._lock_for_bulk_push = Lock()
         self._last_push_time = time.time()
         decorators.keep_circulating(time_sleep=0.5, is_display_detail_exception=True, block=False,
-                                    daemon=False)(self._initiative_bulk_push_to_broker, )
+                                    daemon=True)(self._initiative_bulk_push_to_broker, )()
 
     def __bulk_push_and_init(self):
         if len(self._temp_msg_list) > 0:

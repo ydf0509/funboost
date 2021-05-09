@@ -30,6 +30,9 @@ class RedisAsyncResult(RedisMixin):
         self.timeout = timeout
         return self
 
+    def is_pending(self):
+        return self.redis_db_frame.exists(self.task_id)
+
     @property
     def status_and_result(self):
         if not self._has_pop:

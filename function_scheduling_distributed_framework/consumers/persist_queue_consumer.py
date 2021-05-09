@@ -16,7 +16,8 @@ class PersistQueueConsumer(AbstractConsumer):
         pub = PersistQueuePublisher(self.queue_name)
         while True:
             item = pub.queue.get()
-            self.logger.debug(f'从本地持久化sqlite的 [{self._queue_name}] 队列中 取出的消息是：   {item}  ')
+            # self.logger.debug(f'从本地持久化sqlite的 [{self._queue_name}] 队列中 取出的消息是：   {item}  ')
+            self._print_message_get_from_broker('本地持久化sqlite',item)
             kw = {'body': json.loads(item), 'q': pub.queue, 'item': item}
             self._submit_task(kw)
 

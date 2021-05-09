@@ -28,7 +28,8 @@ class RedisConsumerAckAble000(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractCo
                 task_str = result[1].decode()
                 # 如果运行了第20行，但没运行下面这一行，仍然有极小概率会丢失1个任务。但比不做控制随意关停，丢失几百个线程你的redis任务强多了。
                 self._add_task_str_to_unack_zset(task_str, )
-                self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：     {task_str}  ')
+                # self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：     {task_str}  ')
+                self._print_message_get_from_broker('reids',task_str)
                 task_dict = json.loads(task_str)
                 kw = {'body': task_dict, 'task_str': task_str}
                 self._submit_task(kw)

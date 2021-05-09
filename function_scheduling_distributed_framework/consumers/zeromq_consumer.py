@@ -93,7 +93,8 @@ class ZeroMqConsumer(AbstractConsumer):
 
         while True:
             message = zsocket.recv()
-            self.logger.debug(f""" 从 zeromq 取出的消息是 {message}""")
+            # self.logger.debug(f""" 从 zeromq 取出的消息是 {message}""")
+            self._print_message_get_from_broker('zeromq',message)
             self._submit_task({'body': json.loads(message)})
             zsocket.send('recv ok'.encode())
 

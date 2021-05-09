@@ -32,7 +32,8 @@ class RabbitmqConsumer(AbstractConsumer):
         # channel.basic_qos(prefetch_count=self._concurrent_num)
         def callback(ch, method, properties, body):
             body = body.decode()
-            self.logger.debug(f'从rabbitmq的 [{self._queue_name}] 队列中 取出的消息是：  {body}')
+            # self.logger.debug(f'从rabbitmq的 [{self._queue_name}] 队列中 取出的消息是：  {body}')
+            self._print_message_get_from_broker('rabbitmq', body)
             body = json.loads(body)
             kw = {'ch': ch, 'method': method, 'properties': properties, 'body': body}
             self._submit_task(kw)
@@ -46,7 +47,7 @@ class RabbitmqConsumer(AbstractConsumer):
 
                 credentials = pikav1.PlainCredentials(frame_config.RABBITMQ_USER, frame_config.RABBITMQ_PASS)
                 self.connection = pikav1.BlockingConnection(pikav1.ConnectionParameters(
-                    frame_config.RABBITMQ_HOST, frame_config.RABBITMQ_PORT, frame_config.RABBITMQ_VIRTUAL_HOST, credentials, heartbeat=60))
+                    frame_config.RABBITMQ_HOST, frame_config.RABBITMQ_PORT, frame_config.RABBITMQ_VIRTUAL_HOST, credentials, heartbeat=600))
                 self.channel = self.connection.channel()
                 self.rabbitmq_queue = self.channel.queue_declare(queue=self._queue_name, durable=True)
                 self.channel.basic_consume(on_message_callback = callback,

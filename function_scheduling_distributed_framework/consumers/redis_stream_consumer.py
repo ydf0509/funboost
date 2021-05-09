@@ -37,7 +37,8 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
             results = self.redis_db_frame_version3.xreadgroup(self.GROUP, self.consumer_identification,
                                                               {self.queue_name: ">"}, count=100, block=60 * 1000)
             if results:
-                self.logger.debug(f'从redis的 [{self._queue_name}] stream 中 取出的消息是：  {results}  ')
+                # self.logger.debug(f'从redis的 [{self._queue_name}] stream 中 取出的消息是：  {results}  ')
+                self._print_message_get_from_broker('redis',results)
                 # print(results[0][1])
                 for msg_id, msg in results[0][1]:
                     kw = {'body': json.loads(msg['']), 'msg_id': msg_id}

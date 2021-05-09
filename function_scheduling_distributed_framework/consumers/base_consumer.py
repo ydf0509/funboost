@@ -32,7 +32,7 @@ from pymongo.errors import PyMongoError
 
 # noinspection PyUnresolvedReferences
 from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, \
-    LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write, is_main_process,only_print_on_main_process
+    LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write, is_main_process, only_print_on_main_process
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.concurrent_pool.async_helper import simple_run_in_executor
 from function_scheduling_distributed_framework.concurrent_pool.async_pool_executor import AsyncPoolExecutor
@@ -270,7 +270,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     # noinspection PyProtectedMember,PyUnresolvedReferences
     def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0, concurrent_num=50,
                  specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=1,
-                 max_retry_times=3, log_level=10, is_print_detail_exception=True,
+                 max_retry_times=3, log_level=10, is_print_detail_exception=True, is_show_message_get_from_broker=False,
                  msg_schedule_time_intercal=0.0, qps: float = 0, is_using_distributed_frequency_control=False,
                  msg_expire_senconds=0, is_send_consumer_hearbeat_to_redis=False,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False,
@@ -293,7 +293,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param concurrent_mode:并发模式，1线程 2gevent 3eventlet 4 asyncio
         :param max_retry_times:
         :param log_level: # 这里是设置消费者 发布者日志级别的，如果不想看到很多的细节显示信息，可以设置为 20 (logging.INFO)。
-        :param is_print_detail_exception:
+        :param is_print_detail_exception:函数出错时候时候显示详细的错误堆栈，占用屏幕太多
+        :param is_show_message_get_from_broker: 从中间件取出消息时候时候打印显示出来
         :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频
         :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，一会废弃msg_schedule_time_intercal这个参数。
         :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis计数），默认只对当前实例化的消费者空频有效。假如实例化了2个qps为10的使用同一队列名的消费者，
@@ -372,6 +373,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._max_retry_times = max_retry_times
         self._is_print_detail_exception = is_print_detail_exception
+        self._is_show_message_get_from_broker = is_show_message_get_from_broker
+
         self._qps = qps
         if qps != 0:
             msg_schedule_time_intercal = 1.0 / qps  # 使用qps覆盖消息调度间隔，以qps为准，以后废弃msg_schedule_time_intercal这个参数。
@@ -518,6 +521,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :return:
         """
         raise NotImplementedError
+
+    def _print_message_get_from_broker(self,broker_name,msg):
+        if isinstance(msg,dict):
+            msg = json.dumps(msg,ensure_ascii= False)
+        if self._is_show_message_get_from_broker:
+            self.logger.debug(f'从 {broker_name} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
 
     def __get_priority_conf(self, kw: dict, broker_task_config_key: str):
         broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)

@@ -57,8 +57,9 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
             # print('Received message: {}'.format(msg.value().decode('utf-8'))) # noqa
             self._partion__offset_consume_status_map[msg.partition()][msg.offset()] = 0
             kw = {'partition': msg.partition(), 'offset': msg.offset(), 'body': json.loads(msg.value())}  # noqa
-            self.logger.debug(
-                f'从kafka的 [{self._queue_name}] 主题,分区 {msg.partition()} 中 的 offset {msg.offset()} 取出的消息是：  {msg.value()}')  # noqa
+            if self._is_show_message_get_from_broker:
+                self.logger.debug(
+                    f'从kafka的 [{self._queue_name}] 主题,分区 {msg.partition()} 中 的 offset {msg.offset()} 取出的消息是：  {msg.value()}')  # noqa
             self._submit_task(kw)
 
             # kw = {'consumer': consumer, 'message': message, 'body': json.loads(message.value)}

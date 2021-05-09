@@ -81,7 +81,8 @@ class KombuConsumer(AbstractConsumer, ):
     def _shedual_task(self):  # 这个倍while 1 启动的，会自动重连。
         def callback(body: dict, message: kombu.transport.virtual.base.Message):
             # print(type(body),body,type(message),message)
-            self.logger.debug(f""" 从 kombu {self._middware_name} 中取出的消息是 {body}""")
+            self._print_message_get_from_broker('kombu',body)
+            # self.logger.debug(f""" 从 kombu {self._middware_name} 中取出的消息是 {body}""")
             kw = {'body': body, 'message': message, }
             self._submit_task(kw)
 

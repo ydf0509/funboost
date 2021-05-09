@@ -23,12 +23,15 @@ class RabbitmqPublisherUsingRabbitpy(AbstractPublisher):
     @deco_mq_conn_error
     def concrete_realization_of_publish(self, msg):
         # noinspection PyTypeChecker
-        self.channel.basic_publish(
+        import time
+        # time.sleep(0.1)
+        print(self.channel.basic_publish(
             exchange='',
             routing_key=self._queue_name,
             body=msg,
             properties={'delivery_mode': 2},
-        )
+        ))
+
 
     @deco_mq_conn_error
     def clear(self):

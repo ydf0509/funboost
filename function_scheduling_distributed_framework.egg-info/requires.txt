@@ -23,7 +23,7 @@ pikav1
 redis2
 redis3
 redis
-nb_log>=4.3
+nb_log>=4.7
 rocketmq
 zmq
 pyzmq

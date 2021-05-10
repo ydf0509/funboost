@@ -1,4 +1,5 @@
 import subprocess
+import time
 
 print(subprocess.getstatusoutput('git pull'))
 
@@ -11,7 +12,9 @@ print(subprocess.getstatusoutput('git diff'))
 
 print(subprocess.getstatusoutput('git push origin'))
 
-print(subprocess.getstatusoutput('git push github'))
+# print(subprocess.getstatusoutput('git push github'))
+
+time.sleep(1000000)
 
 
 

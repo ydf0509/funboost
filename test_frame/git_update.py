@@ -11,7 +11,7 @@ print(subprocess.getstatusoutput('git diff'))
 
 print(subprocess.getstatusoutput('git push origin'))
 
-# print(subprocess.getstatusoutput('git push github'))
+print(subprocess.getstatusoutput('git push github'))
 
 
 

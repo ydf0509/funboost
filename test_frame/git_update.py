@@ -13,7 +13,7 @@ print(subprocess.getstatusoutput('git push origin'))
 
 # print(subprocess.getstatusoutput('git push github'))
 
-time.sleep(1000000)
+time.sleep(100000)
 
 
 

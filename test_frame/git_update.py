@@ -3,7 +3,6 @@ import time
 
 print(subprocess.getstatusoutput('git pull'))
 
-
 print(subprocess.getstatusoutput('git add ../.'))
 
 print(subprocess.getstatusoutput('git commit -m commit'))

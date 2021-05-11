@@ -27,11 +27,14 @@ t0 = time.time()
 
 do_cmd('git pull')
 
+do_cmd('git diff')
+
+
 do_cmd('git add ../.')
 
 do_cmd('git commit -m commit')
 
-do_cmd('git diff')
+
 
 do_cmd('git push origin')
 

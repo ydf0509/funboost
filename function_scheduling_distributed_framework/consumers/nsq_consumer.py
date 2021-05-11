@@ -19,7 +19,7 @@ class NsqConsumer(AbstractConsumer):
 
     def _shedual_task(self):
         consumer = Consumer(self._queue_name, 'frame_channel', frame_config.NSQD_TCP_ADDRESSES,
-                            max_in_flight=self._concurrent_num, heartbeat_interval=600, timeout=600, )
+                            max_in_flight=self._concurrent_num, heartbeat_interval=60, timeout=600, )  # heartbeat_interval 不能设置为600
 
         @consumer.on_message.connect
         def handler(consumerx: Consumer, message: Message):

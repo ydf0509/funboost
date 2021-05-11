@@ -31,7 +31,8 @@ class NsqPublisher(AbstractPublisher, ):
         self.logger.warning(f'清除 {self._queue_name} topic中的消息成功')
 
     def get_message_count(self):
-        return self._nsqd_cleint.stats(self._queue_name)['topics'][0]['message_count']
+        # return self._nsqd_cleint.stats(self._queue_name)['topics'][0]['message_count']
+        return -1
 
     def close(self):
         self._producer.close()

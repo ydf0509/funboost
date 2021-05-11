@@ -45,7 +45,7 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
         self._recent_commit_time = time.time()
         self._partion__offset_consume_status_map = defaultdict(OrderedDict)
         while 1:
-            msg = self._confluent_consumer.poll()
+            msg = self._confluent_consumer.poll(timeout=10)
             self._manually_commit()
             if msg is None:
                 continue

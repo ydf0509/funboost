@@ -29,3 +29,4 @@ class ZeroMqPublisher(AbstractPublisher):
 
     def close(self):
         pass
+

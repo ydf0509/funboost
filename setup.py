@@ -88,6 +88,6 @@ python setup.py sdist & twine upload dist/function_scheduling_distributed_framew
 最快的下载方式，上传立即可安装。阿里云源同步官网pypi间隔要等很久。
 ./pip install function_scheduling_distributed_framework==3.5 -i https://pypi.org/simple   
 最新版下载
-./pip install function_scheduling_distributed_framework --upgrade -i https://pypi.org/simple      
+./pip install function_scheduling_distributed_framework --upgrade -i https://pypi.org/simple       
 """
 

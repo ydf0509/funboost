@@ -23,6 +23,7 @@ def do_cmd(cmd_strx):
     print(retx[1], '\n')
     return retx
 
+t0 = time.time()
 
 do_cmd('git pull')
 
@@ -35,7 +36,7 @@ do_cmd('git diff')
 do_cmd('git push origin')
 
 # print(subprocess.getstatusoutput('git push github'))
-
+print(f'spend_time {time.time() - t0}')
 time.sleep(100000)
 
 

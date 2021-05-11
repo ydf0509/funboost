@@ -2,15 +2,37 @@ import subprocess
 
 import time
 
-print(subprocess.getstatusoutput('git pull'))
+def getstatusoutput(cmd):
+    try:
+        data = subprocess.check_output(cmd, shell=True, universal_newlines=True,
+                                       stderr=subprocess.STDOUT, encoding='utf8')  # 必須設置為utf8， 不然报错了。
+        exitcode = 0
+    except subprocess.CalledProcessError as ex:
+        data = ex.output
+        exitcode = ex.returncode
+    if data[-1:] == '\n':
+        data = data[:-1]
+    return exitcode, data
 
-print(subprocess.getstatusoutput('git add ../.'))
+def do_cmd(cmd_strx):
+    print(f'执行 {cmd_strx}')
+    retx = getstatusoutput(cmd_strx)
+    print(retx[0])
+    # if retx[0] !=0:
+    #     raise ValueError('要检查git提交')
+    print(retx[1], '\n')
+    return retx
 
-print(subprocess.getstatusoutput('git commit -m commit'))
 
-print(subprocess.getstatusoutput('git diff'))
+do_cmd('git pull')
 
-print(subprocess.getstatusoutput('git push origin'))
+do_cmd('git add ../.')
+
+do_cmd('git commit -m commit')
+
+do_cmd('git diff')
+
+do_cmd('git push origin')
 
 # print(subprocess.getstatusoutput('git push github'))
 

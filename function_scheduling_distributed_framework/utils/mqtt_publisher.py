@@ -39,10 +39,6 @@ class MqttPublisher(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin):
         if not isinstance(msg, str):
             raise Exception('推送的不是字符串')
         post_data = {"qos": 1, "retain": False, "topic": topic, "payload": msg}
-        # headers = {
-        #     'authorization': MQTT_PASSWORD,
-        #     'cache-control': "no-cache"
-        # }
         try:  # UnicodeEncodeError: 'latin-1' codec can't encode character '\u6211' in position 145: Body ('我') is not valid Latin-1. Use body.encode('utf-8') if you want to send it encoded in UTF-8.
             resp_dict = json.loads(self.http.request('post', self._mqtt_publish_url, body=json.dumps(post_data),
                                                      headers=self._headers).data)

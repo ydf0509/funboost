@@ -1150,6 +1150,15 @@ celery才需要从配置中写好 include imports  autodiscover_tasks，从而�
 因为发布和消费是使用中间件解耦的，一般可以分成web接口启动一次，后台消费启动一次，需要独立部署两次。
 
 演示了flask 使用app应用上下文。
+
+
+如果在乎前端和celery的结果交互，
+
+function_scheduling_distributed_framework/utils/mqtt_publisher.py 
+非常适合使用mqtt， 前端订阅唯一uuid的topic 然后表单中带上这个topic名字请求python接口 -> 接口中发布任务到rabbitmq或redis消息队列 ->
+后台消费进程执行任务消费,并将结果发布到mqtt的那个唯一uuid的topic -> mqtt 把结果推送到前端。
+
+使用ajax轮训或者后台导入websocket相关的包来做和前端的长耗时任务的交互 是伪命题。
 ```
 
 演示例子在

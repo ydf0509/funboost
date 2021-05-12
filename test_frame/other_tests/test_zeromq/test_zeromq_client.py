@@ -11,3 +11,4 @@ for request in range(1,11):
     socket.send(f"Hello {request}".encode())
     message = socket.recv()
     print("Received reply %s [%s]" % (request, message))
+

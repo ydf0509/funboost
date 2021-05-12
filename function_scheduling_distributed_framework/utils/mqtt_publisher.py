@@ -16,20 +16,20 @@ import decorator_libs
 
 class MqttPublisher(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin):
     """
-    非常适合 前端订阅唯一uuid的topic 然后请求python接口 -> 接口中发布任务到rabbitmq或redis消息队列 -> 后台消费进程执行任务消费,并将结果发布到mqtt的唯一uuid的topic -> mqtt 把结果推送到前端。
+    非常适合 前端订阅唯一uuid的topic 然后表单中带上这个topic名字请求python接口 -> 接口中发布任务到rabbitmq或redis消息队列 ->
+    后台消费进程执行任务消费,并将结果发布到mqtt的那个唯一uuid的topic -> mqtt 把结果推送到前端。
 
-    使用ajax轮训和后台导入websocket相关的包是伪命题。
+    使用ajax轮训或者后台导入websocket相关的包来做和前端的长耗时任务的交互 是伪命题。
     """
 
-    def __init__(self, mqtt_publish_url='http://192.168.6.130:18083/api/v2/mqtt/publish', display_full_msg=False):
+    def __init__(self, mqtt_publish_url='http://192.168.6.130:18083/api/v2/mqtt/publish', user='admin', passwd='public', display_full_msg=False):
         """
-
         :param mqtt_publish_url: mqtt的http接口，这是mqtt中间件自带的，不是重新自己实现的接口。不需要导入paho.mqtt.client,requeests urllib3即可。
         :param display_full_msg: 时候打印发布的任务
         """
         self._mqtt_publish_url = mqtt_publish_url
         self.http = urllib3.PoolManager()
-        self._headers = urllib3.util.make_headers(basic_auth='admin:public')
+        self._headers = urllib3.util.make_headers(basic_auth=f'{user}:{passwd}')
         self._headers['Content-Type'] = 'application/json'
         self._display_full_msg = display_full_msg
 

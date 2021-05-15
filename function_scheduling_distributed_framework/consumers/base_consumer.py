@@ -739,7 +739,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._msg_num_in_broker = self.publisher_of_same_queue.get_message_count()
         if time.time() - self._last_timestamp_print_msg_num > 60:
             if self._msg_num_in_broker != -1:
-                self.logger.info(f'[{self._queue_name}] 队列中还有 [{self._msg_num_in_broker}] 个任务')
+                self.logger.info(f'进程 [{os.getpid()}]  队列 [{self._queue_name}] 中还有 [{self._msg_num_in_broker}] 个任务')
             self._last_timestamp_print_msg_num = time.time()
         if self._msg_num_in_broker != 0:
             self._last_timestamp_when_has_task_in_queue = time.time()

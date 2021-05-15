@@ -3,8 +3,8 @@ import time
 from test_frame.test_broker.test_consume import f
 
 f.clear()
-for i in range(100):
-    time.sleep(0.5)
+for i in range(100000):
+    # time.sleep(0.5)
     if i == 0:
         print(time.strftime("%H:%M:%S"), '发布第一条')
     if i == 99999:

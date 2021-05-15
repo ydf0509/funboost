@@ -30,8 +30,12 @@ SQLLITE_QUEUES_PATH = '/sqllite_queues'
 
 ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
 
+MQTT_HOST = '127.0.0.1'
+MQTT_TCP_PORT = 1883
+
 KOMBU_URL = 'redis://127.0.0.1:6379/0'
 # KOMBU_URL = 'sqla+sqlite:////celery_sqlite3.sqlite'  # 4个//// 代表磁盘根目录下生成一个文件。推荐绝对路径。3个///是相对路径。
+
 
 # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
 NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7  # 7是简短的不可跳转，5是可点击跳转的

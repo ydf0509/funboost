@@ -43,6 +43,11 @@ class BrokerEnum:
     """基于confluent-kafka包，包的性能比kafka-python提升10倍。同时应对反复随意重启部署消费代码的场景，此消费者实现至少消费一次，第8种BrokerEnum.KAFKA是最多消费一次。"""
     CONFLUENT_KAFKA = 16
 
+    """ 基于emq作为中间件的。这个和上面的中间件有很大不同，服务端不存储消息。所以不能先发布几十万个消息，然后再启动消费。mqtt优点是web前后端能交互，
+    前端不能操作redis rabbitmq kafka，但很方便操作mqtt。这种使用场景是高实时的互联网接口。
+    """
+    MQTT = 17
+
 
 class ConcurrentModeEnum:
     THREADING = 1

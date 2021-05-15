@@ -190,11 +190,11 @@ class ConsumersManager:
     @classmethod
     def show_all_consumer_info(cls):
         # nb_print(f'当前解释器内，所有消费者的信息是：\n  {cls.consumers_queue__info_map}')
-        if only_print_on_main_process(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}'):
-            for _, consumer_info in cls.consumers_queue__info_map.items():
-                stdout_write(f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}" '
-                             f' \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
-            cls._has_show_conusmers_info = True
+        # if only_print_on_main_process(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}'):
+        for _, consumer_info in cls.consumers_queue__info_map.items():
+            stdout_write(f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}" '
+                         f' \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
+        cls._has_show_conusmers_info = True
 
     @staticmethod
     def get_concurrent_name_by_concurrent_mode(concurrent_mode):
@@ -379,6 +379,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if qps != 0:
             msg_schedule_time_intercal = 1.0 / qps  # 使用qps覆盖消息调度间隔，以qps为准，以后废弃msg_schedule_time_intercal这个参数。
         self._msg_schedule_time_intercal = msg_schedule_time_intercal if msg_schedule_time_intercal > 0.001 else 0.001
+
         self._is_using_distributed_frequency_control = is_using_distributed_frequency_control
         self._is_send_consumer_hearbeat_to_redis = is_send_consumer_hearbeat_to_redis or is_using_distributed_frequency_control
         self._msg_expire_senconds = msg_expire_senconds
@@ -389,11 +390,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if self._concurrent_mode == 4:
             self._run = self._async_run  # 这里做了自动转化，使用async_run代替run
         self.__check_monkey_patch()
+
         self._logger_prefix = logger_prefix
         self._log_level = log_level
         if logger_prefix != '':
             logger_prefix += '--'
-
         # logger_name = f'{logger_prefix}{self.__class__.__name__}--{concurrent_name}--{queue_name}--{self.consuming_function.__name__}'
         logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}'
         # nb_print(logger_name)
@@ -403,6 +404,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                                           log_filename=f'{logger_name}.log' if create_logger_file else None,
                                                                           formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
         # self.logger.info(f'{self.__class__} 在 {current_queue__info_dict["where_to_instantiate"]}  被实例化')
+
         stdout_write(f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;30;44m此行 '
                      f'实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
 
@@ -522,9 +524,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         raise NotImplementedError
 
-    def _print_message_get_from_broker(self,broker_name,msg):
-        if isinstance(msg,dict):
-            msg = json.dumps(msg,ensure_ascii= False)
+    def _print_message_get_from_broker(self, broker_name, msg):
+        if isinstance(msg, dict):
+            msg = json.dumps(msg, ensure_ascii=False)
         if self._is_show_message_get_from_broker:
             self.logger.debug(f'从 {broker_name} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
 

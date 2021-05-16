@@ -1680,6 +1680,10 @@ f.consume()
 后台消费完成把函数结果发布到mqtt，mqtt推送给前端
 ```
 
+```
+此框架的消费做成了mqtt的共享订阅，例如启动多个重复的消费者脚本，不会所有消费脚本都去重复处理一个消息
+```
+
 ![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)
 
 

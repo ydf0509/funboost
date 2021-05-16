@@ -3,7 +3,8 @@
 # @Time    : 2019/8/8 0008 14:57
 import time
 
-from function_scheduling_distributed_framework import task_deco, BrokerEnum,ConcurrentModeEnum
+from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum
+
 
 # 通过设置broker_kind，一键切换中间件为mq或redis等15种中间件或包。
 # 通过设置concurrent_mode，来设置并发方式，改这一个参数能自动支持threading eventlet gevent asyncio并发
@@ -27,3 +28,4 @@ if __name__ == '__main__':
     for i in range(200):
         f2.push(i, i * 2)
     f2.consume()
+

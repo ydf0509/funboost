@@ -953,7 +953,7 @@ while 1：
             因为没有一个叫做app类似概念的东西，不需要相互导入，启动也是任意文件夹下的任意脚本都可以，自然不需要写什么imports = ['a.b.c']
          11）简单利于团队推广，不需要看复杂的celry 那样的5000页英文文档。
          对于不规则文件夹项目的clery使用时如何的麻烦，可以参考 celery_demo项目 https://github.com/ydf0509/celery_demo。
-          12）此库支持 asyncio 原始函数，不用用户额外处理 asyncio loop相关麻烦的问题。celery不支持async定义的函数，celery不能把@app.task
+          12）此框架原生支持 asyncio 原始函数，不用用户额外处理 asyncio loop相关麻烦的问题。celery不支持async定义的函数，celery不能把@app.task
              加到一个async def 的函数上面。
           13) 这是最重要的，光使用简单还不够，性能是非常重要的指标。
              此框架消息发布性能和消息消费性能远远超过celery数十倍。为此专门开了一个对比项目，发布和消费10万任务，

@@ -921,7 +921,7 @@ while 1：
     虽然生产一般是linux，但开发机器一般是windwos。
  1） 如5.4所写，新增了python内置 queue队列和 基于本机的持久化消息队列。不需要安装中间件，即可使用。
      只要是celery能支持的中间件，这个全部能支持。因为此框架的 BrokerEnum.KOMBU 中间件模式一次性
-     支持了celery所能支持的所有中间件。但celery不支持kafka、nsq、mqtt、zeromq等。
+     支持了celery所能支持的所有中间件。但celery不支持kafka、nsq、mqtt、zeromq、rocketmq等。
  2） 任意中间件和并发模式，发布和消费性能比celery框架大幅度提高。
  3） 公有方法，需要被用户调用的方法或函数一律都没有使用元编程，不需要在消费函数上加app.task这样的装饰器。
     例如不 add.delay(1,2)这样发布任务。 不使用字符串来import 一个模块。

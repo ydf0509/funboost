@@ -21,3 +21,5 @@ function_result_web/
 test_frame/my/
 redis_queue_web/
 test_frame/test_rabbitmq/distributed_frame_config.py
+dist/
+*.egg-info/

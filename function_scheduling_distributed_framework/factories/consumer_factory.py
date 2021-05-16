@@ -24,6 +24,7 @@ from function_scheduling_distributed_framework.consumers.redis_stream_consumer i
 from function_scheduling_distributed_framework.consumers.zeromq_consumer import ZeroMqConsumer
 from function_scheduling_distributed_framework.consumers.mqtt_consumer import MqttConsumer
 
+
 def get_consumer(*args, broker_kind=0, **kwargs):
     """
     :param args: 入参是AbstractConsumer的入参
@@ -47,9 +48,9 @@ def get_consumer(*args, broker_kind=0, **kwargs):
         12: RedisStreamConsumer,
         13: ZeroMqConsumer,
         14: RedisBrpopLpushConsumer,
-        15:KombuConsumer,
-        16:KafkaConsumerManuallyCommit,
-        17:MqttConsumer,
+        15: KombuConsumer,
+        16: KafkaConsumerManuallyCommit,
+        17: MqttConsumer,
     }
     if broker_kind not in broker_kind__consumer_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')

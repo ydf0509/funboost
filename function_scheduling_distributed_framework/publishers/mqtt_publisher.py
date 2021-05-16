@@ -73,10 +73,15 @@ class MqttPublisher(AbstractPublisher, ):
         client = mqtt.Client()
         # client.username_pw_set('admin', password='public')
         client.on_connect = self._on_connect
+        client.on_socket_close = self._on_socket_close
         # client.on_message = on_message
         # print(frame_config.MQTT_HOST)
         client.connect(frame_config.MQTT_HOST, frame_config.MQTT_TCP_PORT, 600)  # 600为keepalive的时间间隔
         self._client = client
+
+    def _on_socket_close(self, client, userdata, socket):
+        self.logger.critical(f'{client, userdata, socket}')
+        self.custom_init()
 
     def _on_connect(self, client, userdata, flags, rc):
         self.logger.info(f'连接mqtt服务端成功, {client, userdata, flags, rc}')

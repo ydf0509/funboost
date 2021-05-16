@@ -17,7 +17,7 @@ class MqttConsumer(AbstractConsumer):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        # fsdf 表示 function_scheduling_distributed_framework
+        # fsdf 表示 function_scheduling_distributed_framework.相当于kafka的消费者组作用。
         # 这个是共享订阅，见  https://blog.csdn.net/emqx_broker/article/details/103027813
         self._topic_shared = f'$share/fsdf/{self._queue_name}'
 
@@ -35,6 +35,7 @@ class MqttConsumer(AbstractConsumer):
 
     def _on_socket_close(self, client, userdata, socket):
         self.logger.critical(f'{client, userdata, socket}')
+        self._shedual_task()
 
     # noinspection PyPep8Naming
     def _on_disconnect(self, client, userdata, reasonCode, properties):

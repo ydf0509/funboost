@@ -1171,6 +1171,30 @@ function_scheduling_distributed_framework/utils/mqtt_publisher.py
 [test_frame\use_in_flask_tonardo_fastapi](test_frame/use_in_flask_tonardo_fastapi)
 
 
+### 5.14  日志的颜色不好看或者觉得太绚丽刺瞎眼。
+```
+
+一 、关于日志颜色是使用的 \033实现的，控制台日志颜色不光是颜色代码决定的，最主要还是和ide的自身配色主题有关系，
+同一个颜色代码，在pycahrm的十几个控制台颜色主题中，表现的都不一样。
+所以代码一运行时候就已经能提示用户怎么设置优化控制台颜色了，文这个问题说明完全没看控制台的提示。
+"""
+1)使用pycharm时候，建议重新自定义设置pycharm的console里面的主题颜色。
+   设置方式为 打开pycharm的 file -> settings -> Editor -> Color Scheme -> Console Colors 选择monokai，
+   并重新修改自定义6个颜色，设置Blue为1585FF，Cyan为06B8B8，Green 为 05A53F，Magenta为 ff1cd5,red为FF0207，yellow为FFB009。         
+2)使用xshell或finashell工具连接linux也可以自定义主题颜色，默认使用shell连接工具的颜色也可以。
+
+颜色效果如连接 https://i.niupic.com/images/2020/11/04/8WZf.png
+
+在当前项目根目录的 nb_log_config.py 中可以修改当get_logger方法不传参时后的默认日志行为。
+"""
+
+
+
+二、关于日志太绚丽，你觉得不需要背景色块，在当前项目根目录的 nb_log_config.py 中可以设置
+DISPLAY_BACKGROUD_COLOR_IN_CONSOLE = False  # 在控制台是否显示彩色块状的日志。为False则不使用大块的背景颜色。
+
+```
+
 # 6.更新记录。
 ## 6.1 新增第十种Consumer，以redis为中间件，但增加了消费确认，是RedisConsumerAckAble类。
 ```

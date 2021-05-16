@@ -12,7 +12,7 @@ pip install function_scheduling_distributed_framework --upgrade
 
 ![Image text](test_frame/jietu/20210428-2_clip1.gif)
 
-[其他优点见 5.5 比celery有哪些功能优点。](#jump55)
+[其他优点见 5.5 比celery有哪些功能优点。](#5.5-比celery有哪些功能优点)
 
 
 ## [分布式函数调度框架 wiki 文档](https://github.com/ydf0509/distributed_framework/wiki/1.0.0.0-function_scheduling_distributed_framework--%E5%88%86%E5%B8%83%E5%BC%8F%E5%87%BD%E6%95%B0%E8%B0%83%E5%BA%A6%E6%A1%86%E6%9E%B6%E7%AE%80%E4%BB%8B)
@@ -912,7 +912,7 @@ while 1：
        总体来说首选rabbitmq，所以这也是不指定broker_kind参数时候的默认的方式。
 ```
 
- #### <span id="jump55">5.5 比celery有哪些功能优点。</span>
+ #### 5.5 比celery有哪些功能优点。
  ```
    答：   1） 如5.4所写，新增了python内置 queue队列和 基于本机的持久化消息队列。不需要安装中间件，即可使用。
          2） 性能比celery框架提高一丝丝。
@@ -1667,3 +1667,51 @@ f.consume()
 ```
 
 ![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+````
+---
+### <span id="jump1">1. 目录1</span>
+---
+### <span id="jump2">2. 目录2</span>

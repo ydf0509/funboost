@@ -1674,49 +1674,6 @@ f.consume()
 
 
 
-[link1](#link1)
-
-[link2](#link2)
-
-```python
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-dsads
-```
-## link1
-
-
-<span id="link2"> 哈哈 </span>
-
-
 
 
 

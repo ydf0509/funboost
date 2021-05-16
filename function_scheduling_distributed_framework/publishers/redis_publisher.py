@@ -13,11 +13,11 @@ from function_scheduling_distributed_framework.utils import RedisMixin, decorato
 
 class RedisPublisher(AbstractPublisher, RedisMixin):
     """
-    使用redis作为中间件,
+    使用redis作为中间件,这个是大幅优化了发布速度的方式。简单的发布是 redis_publisher_0000.py 中的代码方式。
     """
     _push_method = 'rpush'
 
-    # noinspection PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit
+    # noinspection PyAttributeOutsideInit
     def custom_init(self):
         self._temp_msg_queue = Queue()
         self._temp_msg_list = list()

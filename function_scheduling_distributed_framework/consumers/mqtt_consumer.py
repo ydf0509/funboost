@@ -25,9 +25,17 @@ class MqttConsumer(AbstractConsumer):
         # client.username_pw_set('admin', password='public')
         client.on_connect = self._on_connect
         client.on_message = self._on_message
+        client.on_disconnect = self._on_socket_close
+        client.on_socket_close = self._on_socket_close
         client.connect(frame_config.MQTT_HOST, frame_config.MQTT_TCP_PORT, 600)  # 600为keepalive的时间间隔
         client.subscribe(self._topic_shared, qos=0) # on message 是异把消息丢到线程池，本身不可能失败。
-        client.loop_forever()  # 保持连接
+        client.loop_forever(retry_first_connection=True)  # 保持连接
+
+    def _on_socket_close(self,client, userdata, socket):
+        self.logger.critical(f'{client, userdata, socket}')
+
+    def _on_disconnect(self,client, userdata, reasonCode, properties):
+        self.logger.critical(f'{client, userdata, reasonCode, properties}')
 
     def _on_connect(self,client, userdata, flags, rc):
         self.logger.info(f'连接mqtt服务端成功, {client, userdata, flags, rc}')

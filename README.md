@@ -1611,5 +1611,31 @@ KOMBU_URL = 'redis://127.0.0.1:6379/7'
 # KOMBU_URL = 'sqla+sqlite:////celery_sqlite3.sqlite'  # 4个//// 代表磁盘根目录下生成一个文件。推荐绝对路径。3个///是相对路径。
 ```
 
+## 6.18 2021-04 新增以mqtt emq 作为消息中间件
+
+###### 例子，设置 broker_kind=BrokerEnum.MQTT
+
+
+```python
+from function_scheduling_distributed_framework import task_deco,BrokerEnum
+
+@task_deco('mqtt_topic_test',broker_kind=BrokerEnum.MQTT)
+def f(x,y):
+    print(f''' {x} + {y} = {x + y}''')
+    return x + y
+
+for i in range(100):
+    f.push(i,i*2)
+
+f.consume()
+```
+
+```
+这个默认做成服务端不存储消息，mqtt中间件适合前后端实时交互的。可以直接绕开后端flask django 接口，不用写接口，
+前端直接发任务到mqtt，后端订阅，后端完成后，发送结果到唯一任务的topic
+
+当然也可以 前端订阅topic，前端发任务到python flask接口，flask接口中发布任务到rabbitmq redis等，
+后台消费完成把函数结果发布到mqtt，mqtt推送给前端
+```
 
 ![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)

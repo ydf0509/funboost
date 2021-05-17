@@ -1684,6 +1684,13 @@ f.consume()
 此框架的消费做成了mqtt的共享订阅，例如启动多个重复的消费者脚本，不会所有消费脚本都去重复处理一个消息
 ```
 
+
+## 6.19 2021-04 新增以 httpsqs 作为消息中间件
+
+```
+@task_deco('httpsqs_queue_test',broker_kind=BrokerEnum.HTTPSQS)
+```
+
 ![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)
 
 

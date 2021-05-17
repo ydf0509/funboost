@@ -16,7 +16,7 @@ from function_scheduling_distributed_framework import task_deco, BrokerEnum, run
 此框架如果用于爬虫和国内那些90%仿scrapy api的爬虫框架，在思想上完全不同，会使人眼界大开，思想之奔放与被scrapy api束缚死死的那种框架比起来有云泥之别。
 因为国内的框架都是仿scrapy api，必须要继承框架的Spider基类，然后重写 def parse，然后在parse里面yield Request(url,callback=annother_parse)，
 请求逻辑实现被 Request 类束缚得死死的，没有方便自定义的空间，一般都是要写middware拦截http请求的各个流程，写一些逻辑，那种代码极端不自由，而且怎么写middware，
-也是被框架束缚的死死的，很难学。分布式函数调度框架由于是调度函数而不是调度url请求，所以天生不存在这些问题。
+也是被框架束缚的死死的，很难学。分布式函数调度框架由于是自动调度函数而不是自动调度url请求，所以天生不存在这些问题。
 
 
 这个爬虫例子具有代表性，因为实现了演示从列表页到详情页的分布式自动调度。
@@ -40,7 +40,8 @@ def crawl_list_page(news_type, page, do_page_turning=False):
             crawl_list_page.push(news_type, p)  # 列表页翻页。
 
 
-@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=600, qps=0.2, do_task_filtering=True, is_using_distributed_frequency_control=True)
+@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=600, qps=0.2,
+           do_task_filtering=True,is_using_distributed_frequency_control=True)
 def crawl_detail_page(url, title, news_type):
     resp_text = requests.get(url).text
     sel = Selector(resp_text)
@@ -55,3 +56,4 @@ if __name__ == '__main__':
     crawl_list_page.consume()  # 启动列表页消费
     # 这样速度更猛，叠加多进程
     run_consumer_with_multi_process(crawl_detail_page, 2)
+

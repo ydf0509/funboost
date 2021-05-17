@@ -654,7 +654,7 @@ if __name__ == '__main__':
 
 #### 演示获取汽车之家资讯的截图
 
-##### 这是为了截图运行的主要流程节点，把函数qps降低了1000被后截的图。
+##### 这是为了截图运行的主要流程节点，把函数qps降低了1000被后截的图，实际是超高速运行暴击scrapy。
 
 ![Image text](test_frame/car_home_crawler_sample/carhome3.png)
 

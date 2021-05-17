@@ -64,5 +64,4 @@ class HttpsqsPublisher(AbstractPublisher):
         return status_dict['putpos'] - status_dict['getpos']
 
     def close(self):
-        # self.redis_db7.connection_pool.disconnect()
-        pass
+        self.http.clear()

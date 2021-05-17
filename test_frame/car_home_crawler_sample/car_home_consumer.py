@@ -56,6 +56,7 @@ def crawl_detail_page(url, title, news_type):
 if __name__ == '__main__':
     # crawl_list_page('news',1)
     crawl_list_page.consume()  # 启动列表页消费
+    crawl_detail_page.cosume()
     # 这样速度更猛，叠加多进程
-    run_consumer_with_multi_process(crawl_detail_page, 2)
+    # run_consumer_with_multi_process(crawl_detail_page, 8)
 

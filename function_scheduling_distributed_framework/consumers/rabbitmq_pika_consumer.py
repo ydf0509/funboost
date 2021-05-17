@@ -26,7 +26,7 @@ class RabbitmqConsumer(AbstractConsumer):
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
         self._lock_for_pika = Lock()
-        self.logger.error('pika 多线程中操作同一个 channel 有问题，如果使用 rabbitmq 建议设置中间件为 BrokerEnum.RABBITMQ_AMQPSTORM')
+        self.logger.critical('pika 多线程中操作同一个 channel 有问题，如果使用 rabbitmq 建议设置中间件为 BrokerEnum.RABBITMQ_AMQPSTORM')
         os._exit(444) # noqa
 
     def _shedual_task(self):

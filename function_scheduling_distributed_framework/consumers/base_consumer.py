@@ -364,7 +364,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._is_show_message_get_from_broker = is_show_message_get_from_broker
 
         self._qps = qps
-        self._msg_schedule_time_intercal = 0 if  qps==0  else 1.0 /qps
+        self._msg_schedule_time_intercal = 0 if qps == 0 else 1.0 / qps
 
         self._is_using_distributed_frequency_control = is_using_distributed_frequency_control
         self._is_send_consumer_hearbeat_to_redis = is_send_consumer_hearbeat_to_redis or is_using_distributed_frequency_control

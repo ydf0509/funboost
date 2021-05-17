@@ -75,7 +75,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
                     if current_queue_unacked_msg_queue_str.split(f'{self._queue_name}__unack_id_')[1] not in current_queue_hearbeat_ids:
                         self.logger.warning(f'{current_queue_unacked_msg_queue_str} 是掉线或关闭消费者的')
                         for unacked_task_str in self.redis_db_frame.zrevrange(current_queue_unacked_msg_queue_str, 0, 1000):
-                            self.logger.warning(f'从 {current_queue_unacked_msg_queue_str} 向 {self._queue_name} 重新放入未消费确认的任务 {unacked_task_str.decode()}')
+                            self.logger.warning(f'从 {current_queue_unacked_msg_queue_str} 向 {self._queue_name} 重新放入掉线消费者未消费确认的任务 {unacked_task_str.decode()}')
                             self.redis_db_frame.lpush(self._queue_name, unacked_task_str)
                             self.redis_db_frame.zrem(current_queue_unacked_msg_queue_str, unacked_task_str)
                     else:

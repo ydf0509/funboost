@@ -7,7 +7,7 @@ from function_scheduling_distributed_framework.publishers.base_publisher import 
 import http.client
 from urllib.parse import urlencode, quote
 from function_scheduling_distributed_framework import frame_config
-
+import urllib3
 """
 http://blog.zyan.cc/httpsqs/
 """
@@ -23,6 +23,14 @@ class HttpsqsPublisher(AbstractPublisher):
         url = f"/?name={self._queue_name}&opt=maxqueue&num=1000000000&auth={frame_config.HTTPSQS_AUTH}&charset=utf-8"
         conn.request("GET", url)
         self.logger.info(conn.getresponse().read(1000))
+
+        self.http = urllib3.PoolManager(50)
+
+    def opt_httpsqs000(self, opt=None, data=''):
+        data_url_encode = quote(data)
+        resp = self.http.request('get',url=f'http://{frame_config.HTTPSQS_HOST}:{frame_config.HTTPSQS_PORT}' + \
+                                           f"/?name={self._queue_name}&opt={opt}&data={data_url_encode}&auth={frame_config.HTTPSQS_AUTH}&charset=utf-8")
+        return resp.data.decode()
 
     def opt_httpsqs(self, opt=None, data=''):
         conn = http.client.HTTPConnection(host=frame_config.HTTPSQS_HOST, port=frame_config.HTTPSQS_PORT)

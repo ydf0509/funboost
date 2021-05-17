@@ -21,7 +21,7 @@ from function_scheduling_distributed_framework.publishers.rocketmq_publisher imp
 from function_scheduling_distributed_framework.publishers.sqla_queue_publisher import SqlachemyQueuePublisher
 from function_scheduling_distributed_framework.publishers.redis_stream_publisher import RedisStreamPublisher
 from function_scheduling_distributed_framework.publishers.mqtt_publisher import MqttPublisher
-
+from function_scheduling_distributed_framework.publishers.httpsqs_publisher import HttpsqsPublisher
 
 def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=True,
                   clear_queue_within_init=False, is_add_publish_time=True, consuming_function: Callable = None,
@@ -58,7 +58,8 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
         14: RedisPublisherLpush,
         15: KombuPublisher,
         16: ConfluentKafkaPublisher,
-        17: MqttPublisher
+        17: MqttPublisher,
+        18 :HttpsqsPublisher
     }
     if broker_kind not in broker_kind__publisher_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')

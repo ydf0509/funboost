@@ -6,7 +6,7 @@ import os
 
 print(multiprocessing.process.current_process().name)  # MainProcess
 
-@task_deco('test_rabbit_queue7',broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM,qps=20,log_level=10)
+@task_deco('test_rabbit_queue7',broker_kind=BrokerEnum.HTTPSQS,qps=20,log_level=10)
 def test_fun(x):
     pass
     # print(x)

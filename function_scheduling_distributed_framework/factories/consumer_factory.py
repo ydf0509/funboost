@@ -23,7 +23,7 @@ from function_scheduling_distributed_framework.consumers.sqlachemy_consumer impo
 from function_scheduling_distributed_framework.consumers.redis_stream_consumer import RedisStreamConsumer
 from function_scheduling_distributed_framework.consumers.zeromq_consumer import ZeroMqConsumer
 from function_scheduling_distributed_framework.consumers.mqtt_consumer import MqttConsumer
-
+from function_scheduling_distributed_framework.consumers.httpsqs_consumer import HttpsqsConsumer
 
 def get_consumer(*args, broker_kind=0, **kwargs):
     """
@@ -51,6 +51,7 @@ def get_consumer(*args, broker_kind=0, **kwargs):
         15: KombuConsumer,
         16: KafkaConsumerManuallyCommit,
         17: MqttConsumer,
+        18: HttpsqsConsumer,
     }
     if broker_kind not in broker_kind__consumer_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')

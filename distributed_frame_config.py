@@ -41,7 +41,11 @@ KAFKA_BOOTSTRAP_SERVERS = ['192.168.114.130:9092']
 # ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
 
 MQTT_HOST = '192.168.114.130'
+MQTT_TCP_PORT = 1883
 
+HTTPSQS_HOST = '127.0.0.1'
+HTTPSQS_PORT = '1218'
+HTTPSQS_AUTH = '123456'
 
 # nb_log包的第几个日志模板，内置了8个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。第5个模板可以点击跳转到框架内部，但有点占控制台面积，第7个模板简单不可点击跳转到框架内部。
 NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 7

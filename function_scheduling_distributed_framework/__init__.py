@@ -48,6 +48,8 @@ class BrokerEnum:
     """
     MQTT = 17
 
+    HTTPSQS = 18
+
 
 class ConcurrentModeEnum:
     THREADING = 1

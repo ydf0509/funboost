@@ -116,6 +116,10 @@ config_file_content = '''# -*- coding: utf-8 -*-
 # MQTT_HOST = '127.0.0.1'
 # MQTT_TCP_PORT = 1883
 
+# HTTPSQS_HOST = '127.0.0.1'
+# HTTPSQS_PORT = '1218'
+# HTTPSQS_AUTH = '123456'
+
 #KOMBU_URL = 'redis://127.0.0.1:6379/7' 那么就是使用komb 操作redis。
 #KOMBU_URL = 'amqp://username:password@127.0.0.1:5672/',那么就是操纵rabbitmq
 #KOMBU_URL = 'sqla+sqlite:////dssf_sqlite.sqlite',那么就是在你的代码所在磁盘的根目录创建一个sqlite文件。四个////表示根目，三个///表示当前目录。

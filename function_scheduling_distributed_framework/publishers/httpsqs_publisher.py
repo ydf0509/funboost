@@ -24,7 +24,7 @@ class HttpsqsPublisher(AbstractPublisher):
         conn.request("GET", url)
         self.logger.info(conn.getresponse().read(1000))
 
-        self.http = urllib3.PoolManager(50)
+        self.http = urllib3.PoolManager(20)
 
     def opt_httpsqs000(self, opt=None, data=''):
         data_url_encode = quote(data)

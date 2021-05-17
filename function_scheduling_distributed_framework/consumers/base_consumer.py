@@ -254,24 +254,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         :return:
         """
-        """
-        def ff():
-            RabbitmqConsumer('queue_test', consuming_function=f3, concurrent_num=20, msg_schedule_time_intercal=2, log_level=10, logger_prefix='yy平台消费', is_consuming_function_use_multi_params=True).start_consuming_message()
-            RabbitmqConsumer('queue_test2', consuming_function=f4, concurrent_num=20, msg_schedule_time_intercal=4, log_level=10, logger_prefix='zz平台消费', is_consuming_function_use_multi_params=True).start_consuming_message()
-            AbstractConsumer.join_shedual_task_thread()            # 如果开多进程启动消费者，在linux上需要这样写下这一行。
-
-
-        if __name__ == '__main__':
-            [Process(target=ff).start() for _ in range(4)]
-
-        """
         ConsumersManager.join_all_consumer_shedual_task_thread()
 
     # noinspection PyProtectedMember,PyUnresolvedReferences
     def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0, concurrent_num=50,
                  specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=1,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True, is_show_message_get_from_broker=False,
-                 msg_schedule_time_intercal=0.0, qps: float = 0, is_using_distributed_frequency_control=False,
+                 qps: float = 0, is_using_distributed_frequency_control=False,
                  msg_expire_senconds=0, is_send_consumer_hearbeat_to_redis=False,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False,
                  task_filtering_expire_seconds=0, is_consuming_function_use_multi_params=True,
@@ -295,8 +284,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param log_level: # 这里是设置消费者 发布者日志级别的，如果不想看到很多的细节显示信息，可以设置为 20 (logging.INFO)。
         :param is_print_detail_exception:函数出错时候时候显示详细的错误堆栈，占用屏幕太多
         :param is_show_message_get_from_broker: 从中间件取出消息时候时候打印显示出来
-        :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频
-        :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，一会废弃msg_schedule_time_intercal这个参数。
+        :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，以后会废弃msg_schedule_time_intercal这个参数。
         :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis计数），默认只对当前实例化的消费者空频有效。假如实例化了2个qps为10的使用同一队列名的消费者，
                并且都启动，则每秒运行次数会达到20。如果使用分布式空频则所有消费者加起来的总运行次数是10。
         :param is_send_consumer_hearbeat_to_redis   时候将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
@@ -376,9 +364,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._is_show_message_get_from_broker = is_show_message_get_from_broker
 
         self._qps = qps
-        if qps != 0:
-            msg_schedule_time_intercal = 1.0 / qps  # 使用qps覆盖消息调度间隔，以qps为准，以后废弃msg_schedule_time_intercal这个参数。
-        self._msg_schedule_time_intercal = msg_schedule_time_intercal if msg_schedule_time_intercal > 0.001 else 0.001
+        self._msg_schedule_time_intercal = 0 if  qps==0  else 1.0 /qps
 
         self._is_using_distributed_frequency_control = is_using_distributed_frequency_control
         self._is_send_consumer_hearbeat_to_redis = is_send_consumer_hearbeat_to_redis or is_using_distributed_frequency_control

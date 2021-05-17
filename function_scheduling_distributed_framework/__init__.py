@@ -76,7 +76,6 @@ class ConcurrentModeEnum:
 def task_deco(queue_name, *, function_timeout=0,
               concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=1,
               max_retry_times=3, log_level=10, is_print_detail_exception=True, is_show_message_get_from_broker=False,
-              msg_schedule_time_intercal=0.0,
               qps: float = 0, is_using_distributed_frequency_control=False, msg_expire_senconds=0,
               is_send_consumer_hearbeat_to_redis=False,
               logger_prefix='', create_logger_file=True, do_task_filtering=False, task_filtering_expire_seconds=0,
@@ -102,7 +101,6 @@ def task_deco(queue_name, *, function_timeout=0,
     :param log_level:框架的日志级别。logging.DEBUG(10)  logging.DEBUG(10) logging.INFO(20) logging.WARNING(30) logging.ERROR(40) logging.CRITICAL(50)
     :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
     :param is_show_message_get_from_broker: 从中间件取出消息时候时候打印显示出来
-    :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频的关键。
     :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，以后废弃msg_schedule_time_intercal这个参数。
     :param msg_expire_senconds:消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
     :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis计数），默认只对当前实例化的消费者空频有效。假如实例化了2个qps为10的使用同一队列名的消费者，

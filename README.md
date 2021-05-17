@@ -331,7 +331,6 @@ def f2(a, b):
            主动抛出ExceptionForRequeue异常，则当前消息会重返中间件。
     :param log_level:框架的日志级别,默认是debug级别，可以看到详细的执行信息，如果不想看到太多详细的日志，可以设置为logging.INFO常量(20) 或者数字20。
     :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
-    :param msg_schedule_time_intercal:消息调度的时间间隔，用于控频的关键。
     :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，以后废弃msg_schedule_time_intercal这个参数。
     :param msg_expire_senconds:消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
     :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis计数），默认只对当前实例化的消费者空频有效。假如实例化了2个qps为10的使用同一队列名的消费者，

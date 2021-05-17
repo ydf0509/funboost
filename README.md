@@ -12,7 +12,7 @@ pip install function_scheduling_distributed_framework --upgrade
 
 ![Image text](test_frame/jietu/20210428-2_clip1.gif)
 
-
+[其他优点见 5.5 比celery有哪些功能优点。](#jump55)
 
 
 ## [分布式函数调度框架 wiki 文档](https://github.com/ydf0509/distributed_framework/wiki/1.0.0.0-function_scheduling_distributed_framework--%E5%88%86%E5%B8%83%E5%BC%8F%E5%87%BD%E6%95%B0%E8%B0%83%E5%BA%A6%E6%A1%86%E6%9E%B6%E7%AE%80%E4%BB%8B)
@@ -59,8 +59,7 @@ if __name__ == "__main__":
 
 
 ```
-### - [5.12此框架和celery在写法上的巨大区别，不需要固定的目录结构和文件夹层级](#512)
-
+#### [5.12此框架和celery在写法上的巨大区别，不需要固定的目录结构和文件夹层级](#jump512)
 
 
 ### 1.0.1  框架用途功能
@@ -186,37 +185,42 @@ windows和linux行为100%一致，不会像celery一样，相同代码前提下�
 
 ### 1.0.2 框架支持的中间件类型
 ```
+RABBITMQ_AMQPSTORM = 0  # 使用 amqpstorm 包操作rabbitmq  作为 分布式消息队列，支持消费确认.推荐这个。
+RABBITMQ_RABBITPY = 1  # 使用 rabbitpy 包操作rabbitmq  作为 分布式消息队列，支持消费确认。
+REDIS = 2  # 使用 redis 的 list结构，brpop 作为分布式消息队列。随意重启和关闭会丢失大量消息任务，不支持消费确认。
+LOCAL_PYTHON_QUEUE = 3  # 使用python queue.Queue实现的基于当前python进程的消息队列，不支持跨进程 跨脚本 跨机器共享任务，不支持持久化，适合一次性短期简单任务。
+RABBITMQ_PIKA = 4  # 使用pika包操作rabbitmq  作为 分布式消息队列。
+MONGOMQ = 5  # 使用mongo的表中的行模拟的 作为分布式消息队列，支持消费确认。
+PERSISTQUEUE = 6  # 使用基于sqlute3模拟消息队列，支持消费确认和持久化，但不支持跨机器共享任务，可以基于本机单机跨脚本和跨进程共享任务，好处是不需要安装中间件。
+NSQ = 7  # 基于nsq作为分布式消息队列，支持消费确认。
+KAFKA = 8  # 基于kafka作为分布式消息队列，建议使用BrokerEnum.CONFLUENT_KAFKA。
+REDIS_ACK_ABLE = 9  # 基于redis的 list + 临时unack的set队列，采用了 lua脚本操持了取任务和加到pengding为原子性，随意重启和掉线不会丢失任务。
+SQLACHEMY = 10  # 基于SQLACHEMY 的连接作为分布式消息队列中间件支持持久化和消费确认。支持mysql oracle sqlserver等5种数据库。
+ROCKETMQ = 11  # 基于 rocketmq 作为分布式消息队列，这个中间件必须在linux下运行，win不支持。
+REDIS_STREAM = 12  # 基于redis 5.0 版本以后，使用 stream 数据结构作为分布式消息队列，支持消费确认和持久化和分组消费，是redis官方推荐的消息队列形式，比list结构更适合。
+ZEROMQ = 13  # 基于zeromq作为分布式消息队列，不需要安装中间件，可以支持跨机器但不支持持久化。
+RedisBrpopLpush = 14  # 基于redis的list结构但是采用brpoplpush 双队列形式，和 redis_ack_able的实现差不多，实现上采用了原生命令就不需要lua脚本来实现取出和加入unack了。
 
-class BrokerEnum:
-    RABBITMQ_AMQPSTORM = 0  # 使用 amqpstorm 包操作rabbitmq  作为 分布式消息队列，支持消费确认.推荐这个。
-    RABBITMQ_RABBITPY = 1  # 使用 rabbitpy 包操作rabbitmq  作为 分布式消息队列，支持消费确认。
-    REDIS = 2  # 使用 redis 的 list结构，brpop 作为分布式消息队列。随意重启和关闭会丢失大量消息，不支持消费确认。
-    LOCAL_PYTHON_QUEUE = 3  # 使用python queue.Queue实现的基于当前python进程的消息队列，不支持跨进程 跨脚本 跨机器共享任务，不支持持久化，适合一次性短期简单任务。
-    RABBITMQ_PIKA = 4  # 使用pika包操作rabbitmq  作为 分布式消息队列。
-    MONGOMQ = 5  # 使用mongo的表中的行模拟的 作为分布式消息队列，支持消费确认。
-    PERSISTQUEUE = 6  # 使用基于sqlute3模拟消息队列，支持消费确认和持久化，但不支持跨机器共享任务，可以基于本机单机跨脚本和跨进程共享任务，好处是不需要安装中间件。
-    NSQ = 7  # 基于nsq作为分布式消息队列，支持消费确认。
-    KAFKA = 8  # 基于kafka作为分布式消息队列，建议使用BrokerEnum.CONFLUENT_KAFKA。
-    REDIS_ACK_ABLE = 9  # 基于redis的 list + 临时unack的set队列，采用了 lua脚本操持了取任务和加到pengding为原子性，随意重启和掉线不会丢失任务。
-    SQLACHEMY = 10  # 基于SQLACHEMY 的连接作为分布式消息队列中间件支持持久化和消费确认。支持mysql oracle sqlserver等5种数据库。
-    ROCKETMQ = 11  # 基于 rocketmq 作为分布式消息队列，这个中间件必须在linux下运行，win不支持。
-    REDIS_STREAM = 12  # 基于redis 5.0 版本以后，使用 stream 数据结构作为分布式消息队列，支持消费确认和持久化和分组消费，是redis官方推荐的消息队列形式，比list结构更适合。
-    ZEROMQ = 13  # 基于zeromq作为分布式消息队列，不需要安装中间件，可以支持跨机器但不支持持久化。
-    RedisBrpopLpush = 14  # 基于redis的list结构但是采用brpoplpush 双队列形式，和 redis_ack_able的实现差不多，实现上采用了原生命令就不需要lua脚本来实现取出和加入unack了。
+"""
+操作 kombu 包，这个包也是celery的中间件依赖包，这个包可以操作10种中间件(例如rabbitmq redis)，但没包括分布式函数调度框架的kafka nsq zeromq 等。
+同时 kombu 包的性能非常差，可以用原生redis的lpush和kombu的publish测试发布，使用brpop 和 kombu 的 drain_events测试消费，对比差距相差了5到10倍。
+由于性能差，除非是分布式函数调度框架没实现的中间件才选kombu方式(例如kombu支持亚马逊队列  qpid pyro 队列)，否则强烈建议使用此框架的操作中间件方式而不是使用kombu。
+"""
+KOMBU = 15
 
-    """
-    操作 kombu 包，这个包也是celery的中间件依赖包，这个包可以操作10种中间件(例如rabbitmq redis)，但没包括分布式函数调度框架的kafka nsq zeromq 等。
-    同时 kombu 包的性能非常差，可以用原生redis的lpush和kombu的publish测试发布，使用brpop 和 kombu 的 drain_events测试消费，对比差距相差了5到10倍。
-    由于性能差，除非是分布式函数调度框架没实现的中间件才选kombu方式(例如kombu支持亚马逊队列  qpid pyro 队列)，否则强烈建议使用此框架的操作中间件方式而不是使用kombu。
-    """
-    KOMBU = 15
+"""基于confluent-kafka包，包的性能比kafka-python提升10倍。同时应对反复随意重启部署消费代码的场景，此消费者实现至少消费一次，第8种BrokerEnum.KAFKA是最多消费一次。"""
+CONFLUENT_KAFKA = 16
 
-    """基于confluent-kafka包，包的性能比kafka-python提升10倍。同时应对反复随意重启部署消费代码的场景，此消费者实现至少消费一次，第8种BrokerEnum.KAFKA是最多消费一次。"""
-    CONFLUENT_KAFKA = 16
-    
-    
+""" 基于emq作为中间件的。这个和上面的中间件有很大不同，服务端不存储消息。所以不能先发布几十万个消息，然后再启动消费。mqtt优点是web前后端能交互，
+前端不能操作redis rabbitmq kafka，但很方便操作mqtt。这种使用场景是高实时的互联网接口。
+"""
+MQTT = 17
+
+
 切换任意中间件，代码都不需要做任何变化，不需要关注如何使用中间件的细节。
-总体来说首选rabbitmq，这也是不指定broker_kind参数时候的默认的方式。
+总体来说首选rabbitmq，这也是不指定broker_kind参数时候的默认的方式,
+虽然 REDIS_ACK_ABLE REDIS_STREAM RedisBrpopLpush 通过客户端的消费确认，也精确达到了严格消费一次。
+REDIS 是至多消费一次。
 ```
 
 ### 1.0.3 框架支持的函数调度并发模式种类
@@ -907,48 +911,61 @@ while 1：
        所有中间件总结评分：
        总体来说首选rabbitmq，所以这也是不指定broker_kind参数时候的默认的方式。
 ```
- 
- #### 5.5 比celery有哪些功能优点。
+
+#### 5.5比celery有哪些功能优点
+
+##### jump55
  ```
-   答：   1） 如5.4所写，新增了python内置 queue队列和 基于本机的持久化消息队列。不需要安装中间件，即可使用。
-         2） 性能比celery框架提高一丝丝。
-         3） 公有方法，需要被用户调用的方法或函数一律都没有使用元编程，不需要在消费函数上加app.task这样的装饰器。
-            例如不 add.delay(1,2)这样发布任务。 不使用字符串来import 一个模块。
-            过多的元编程过于动态，不仅会降低性能，还会让ide无法补全提示，动态一时爽，重构火葬场不是没原因的。
-         4） 全部公有方法或函数都能在pycharm智能能提示补全参数名称和参数类型。
-            一切为了调用时候方便而不是为了实现时候简略，例如get_consumer函数和AbstractConsumer的入参完全重复了，
-            本来实现的时候可以使用*args **kwargs来省略入参，
-            但这样会造成ide不能补全提示，此框架一切写法只为给调用者带来使用上的方便。不学celery让用户不知道传什么参数。
-            如果拼错了参数，pycharm会显红，大大降低了用户调用出错概率。
-         5）不使用命令行启动，在cmd打那么长的一串命令，容易打错字母。并且让用户不知道如何正确的使用celery命令，不友好。
-            此框架是直接python xx.py 就启动了。
-         6）框架不依赖任何固定的目录结构，无结构100%自由，想把使用框架写在哪里就写在哪里，写在10层级的深层文件夹下都可以。
-            脚本可以四处移动改名。celery想要做到这样，要做额外的处理。
-         7）使用此框架比celery更简单10倍，如例子所示。使用此框架代码绝对比使用celery少几十行。
-         8）消息中间件里面存放的消息任务很小，简单任务 比celery的消息小了50倍。 消息中间件存放的只是函数的参数，
-            辅助参数由consumer自己控制。消息越小，中间件性能压力越小。
-         9）由于消息中间件里面没有存放其他与python 和项目配置有关的信息，这是真正的跨语言的函数调度框架。
-            java人员也可以直接使用java的redis类rabbitmq类，发送json参数到中间件，由python消费。
-            celery里面的那种参数，高达几十项，和项目配置混合了，java人员绝对拼凑不出来这种格式的消息结构。
-         10)celery有应该中心化的celery app实例，函数注册成任务，添加装饰器时候先要导入app，然后@app.task，
-            同时celery启动app时候，调度函数就需要知道函数在哪里，所以celery app所在的py文件也是需要导入消费函数的，否则会
-            celery.exceptions.NotRegistered报错
-            这样以来就发生了务必蛋疼的互相导入的情况，a要导入b，b要导入a，这问题太令人窘迫了，通常解决这种情况是让其中一个模块后导入，
-            这样就能解决互相导入的问题了。celery的做法是，使用imports一个列表，列表的每一项是消费函数所在的模块的字符串表示形式，
-            例如 如果消费函数f1在项目的a文件夹下的b文件夹下的c.py中，消费函数与f2在项目的d文件夹的e.py文件中，
-            为了解决互相导入问题，celery app中需要配置 imports = ["a.b.c",'d.e']，这种import在pycharm下容易打错字，
-            例如scrapy和django的中间件注册方式，也是使用的这种类似的字符串表示导入路径，每添加一个函数，只要不在之前的模块中，就要这么写，
-             不然不写improt的话，那是调度不了消费函数的。此框架原先没有装饰器方式，来加的装饰器方式与celery的用法大不相同，
-            因为没有一个叫做app类似概念的东西，不需要相互导入，启动也是任意文件夹下的任意脚本都可以，自然不需要写什么imports = ['a.b.c']
-         11）简单利于团队推广，不需要看复杂的celry 那样的5000页英文文档。
-         对于不规则文件夹项目的clery使用时如何的麻烦，可以参考 celery_demo项目 https://github.com/ydf0509/celery_demo。
-          12）此库支持 asyncio 原始函数，不用用户额外处理 asyncio loop相关麻烦的问题。celery不支持async定义的函数，celery不能把@app.task
-             加到一个async def 的函数上面。
-          13) 这是最重要的，光使用简单还不够，性能是非常重要的指标。
-             此框架消息发布性能和消息消费性能远远超过celery数十倍。为此专门开了一个对比项目，发布和消费10万任务，
-             对分布式函数调度框架和celery进行严格的控制变量法来benchmark，分别测试两个框架的发布和消费性能。 
-             对比项目在此，可以直接拉取并分别运行两个项目的发布和消费一共4个脚本。
-             https://github.com/ydf0509/distrubuted_framework_vs_celery_benchmark
+   答：   
+ 0）celer4 以后官方放弃对windwos的支持和测试，例如celery的默认多进程模式在windwos启动瞬间就会报错，
+    虽然生产一般是linux，但开发机器一般是windwos。
+ 1） 如5.4所写，新增了python内置 queue队列和 基于本机的持久化消息队列。不需要安装中间件，即可使用。
+     只要是celery能支持的中间件，这个全部能支持。因为此框架的 BrokerEnum.KOMBU 中间件模式一次性
+     支持了celery所能支持的所有中间件。但celery不支持kafka、nsq、mqtt、zeromq、rocketmq等。
+ 2） 任意中间件和并发模式，发布和消费性能比celery框架远远的大幅度提高。
+ 3） 公有方法，需要被用户调用的方法或函数一律都没有使用元编程，不需要在消费函数上加app.task这样的装饰器。
+    例如不 add.delay(1,2)这样发布任务。 不使用字符串来import 一个模块。
+    过多的元编程过于动态，不仅会降低性能，还会让ide无法补全提示，动态一时爽，重构火葬场不是没原因的。
+ 4） 全部公有方法或函数都能在pycharm智能能提示补全参数名称和参数类型。
+    一切为了调用时候方便而不是为了实现时候简略，例如get_consumer函数和AbstractConsumer的入参完全重复了，
+    本来实现的时候可以使用*args **kwargs来省略入参，
+    但这样会造成ide不能补全提示，此框架一切写法只为给调用者带来使用上的方便。不学celery让用户不知道传什么参数。
+    如果拼错了参数，pycharm会显红，大大降低了用户调用出错概率。
+ 5）不使用命令行启动，在cmd打那么长的一串命令，容易打错字母。并且让用户不知道如何正确的使用celery命令，不友好。
+    此框架是直接python xx.py 就启动了。
+ 6）框架不依赖任何固定的目录结构，无结构100%自由，想把使用框架写在哪里就写在哪里，写在10层级的深层文件夹下都可以。
+    脚本可以四处移动改名。celery想要做到这样，要做额外的处理。
+ 7）使用此框架比celery更简单10倍，如例子所示。使用此框架代码绝对比使用celery少几十行。
+ 8）消息中间件里面存放的消息任务很小，简单任务 比celery的消息小了50倍。 消息中间件存放的只是函数的参数，
+    辅助参数由consumer自己控制。消息越小，中间件性能压力越小。
+ 9）由于消息中间件里面没有存放其他与python 和项目配置有关的信息，这是真正的跨语言的函数调度框架。
+    java人员也可以直接使用java的redis类rabbitmq类，发送json参数到中间件，由python消费。
+    celery里面的那种参数，高达几十项，和项目配置混合了，java人员绝对拼凑不出来这种格式的消息结构。
+ 10)celery有应该中心化的celery app实例，函数注册成任务，添加装饰器时候先要导入app，然后@app.task，
+    同时celery启动app时候，调度函数就需要知道函数在哪里，所以celery app所在的py文件也是需要导入消费函数的，否则会
+    celery.exceptions.NotRegistered报错
+    这样以来就发生了务必蛋疼的互相导入的情况，a要导入b，b要导入a，这问题太令人窘迫了，通常解决这种情况是让其中一个模块后导入，
+    这样就能解决互相导入的问题了。celery的做法是，使用imports一个列表，列表的每一项是消费函数所在的模块的字符串表示形式，
+    例如 如果消费函数f1在项目的a文件夹下的b文件夹下的c.py中，消费函数与f2在项目的d文件夹的e.py文件中，
+    为了解决互相导入问题，celery app中需要配置 imports = ["a.b.c",'d.e']，这种import在pycharm下容易打错字，
+    例如scrapy和django的中间件注册方式，也是使用的这种类似的字符串表示导入路径，每添加一个函数，只要不在之前的模块中，就要这么写，
+     不然不写improt的话，那是调度不了消费函数的。此框架原先没有装饰器方式，来加的装饰器方式与celery的用法大不相同，
+    因为没有一个叫做app类似概念的东西，不需要相互导入，启动也是任意文件夹下的任意脚本都可以，自然不需要写什么imports = ['a.b.c']
+ 11）简单利于团队推广，不需要看复杂的celry 那样的5000页英文文档。
+ 对于不规则文件夹项目的clery使用时如何的麻烦，可以参考 celery_demo项目 https://github.com/ydf0509/celery_demo。
+  12）此框架原生支持 asyncio 原始函数，不用用户额外处理 asyncio loop相关麻烦的问题。celery不支持async定义的函数，celery不能把@app.task
+     加到一个async def 的函数上面。
+  13) 这是最重要的，光使用简单还不够，性能是非常重要的指标。
+     此框架消息发布性能和消息消费性能远远超过celery数十倍。为此专门开了一个对比项目，发布和消费10万任务，
+     对分布式函数调度框架和celery进行严格的控制变量法来benchmark，分别测试两个框架的发布和消费性能。 
+     对比项目在此，可以直接拉取并分别运行两个项目的发布和消费一共4个脚本。
+     https://github.com/ydf0509/distrubuted_framework_vs_celery_benchmark
+  14) 此框架比celery对函数的辅助运行控制方式更多，支持celery的所有如 并发 控频 超时杀死 重试 消息过期
+      确认消费 等一切所有功能，同时包括了celery没有支持的功能，例如原生对函数入参的任务过滤等。
+  15) celery不支持分布式全局控频，celery的rate_limit 基于单work控频，如果把脚本在同一台机器启动好几次，
+      或者在多个容器里面启动消费，那么总的qps会乘倍数增长。此框架能支持单个消费者控频，同时也支持分布式全局控频。
+  16） 此框架比celery更简单开启 多进程 + 线程或协程。celery的多进程和多线程是互斥的并发模式，此框架是叠加的。
+      很多任务都是需要 多进程并发利用多核 + 细粒度的线程/协程绕过io 叠加并发 ，才能使运行速度更快。
  ```
 
 
@@ -1096,7 +1113,8 @@ if __name__ == '__main__':
         然后我们来和此框架 比较 实现框架难度上、 实现框架的代码行数上、 用户调用的难度上 这些方面。
   ```
    
-### <a id="512">5.12 此框架和celery在写法上的巨大区别，不需要固定的目录结构和文件夹层级</a>
+#### 5.12 此框架和celery在写法上的巨大区别，不需要固定的目录结构和文件夹层级
+##### jump512
 
 ```
 如你所见，使用此框架为什么没有配置中间件的 账号 密码 端口号呢。只有运行任何一个导入了框架的脚本文件一次，就会自动生成一个配置文件
@@ -1165,6 +1183,30 @@ function_scheduling_distributed_framework/utils/mqtt_publisher.py
 
 [test_frame\use_in_flask_tonardo_fastapi](test_frame/use_in_flask_tonardo_fastapi)
 
+
+### 5.14  日志的颜色不好看或者觉得太绚丽刺瞎眼。
+```
+
+一 、关于日志颜色是使用的 \033实现的，控制台日志颜色不光是颜色代码决定的，最主要还是和ide的自身配色主题有关系，
+同一个颜色代码，在pycahrm的十几个控制台颜色主题中，表现的都不一样。
+所以代码一运行时候就已经能提示用户怎么设置优化控制台颜色了，文这个问题说明完全没看控制台的提示。
+"""
+1)使用pycharm时候，建议重新自定义设置pycharm的console里面的主题颜色。
+   设置方式为 打开pycharm的 file -> settings -> Editor -> Color Scheme -> Console Colors 选择monokai，
+   并重新修改自定义6个颜色，设置Blue为1585FF，Cyan为06B8B8，Green 为 05A53F，Magenta为 ff1cd5,red为FF0207，yellow为FFB009。         
+2)使用xshell或finashell工具连接linux也可以自定义主题颜色，默认使用shell连接工具的颜色也可以。
+
+颜色效果如连接 https://i.niupic.com/images/2020/11/04/8WZf.png
+
+在当前项目根目录的 nb_log_config.py 中可以修改当get_logger方法不传参时后的默认日志行为。
+"""
+
+
+
+二、关于日志太绚丽，你觉得不需要背景色块，在当前项目根目录的 nb_log_config.py 中可以设置
+DISPLAY_BACKGROUD_COLOR_IN_CONSOLE = False  # 在控制台是否显示彩色块状的日志。为False则不使用大块的背景颜色。
+
+```
 
 # 6.更新记录。
 ## 6.1 新增第十种Consumer，以redis为中间件，但增加了消费确认，是RedisConsumerAckAble类。
@@ -1611,5 +1653,39 @@ KOMBU_URL = 'redis://127.0.0.1:6379/7'
 # KOMBU_URL = 'sqla+sqlite:////celery_sqlite3.sqlite'  # 4个//// 代表磁盘根目录下生成一个文件。推荐绝对路径。3个///是相对路径。
 ```
 
+## 6.18 2021-04 新增以mqtt emq 作为消息中间件
+
+###### 例子，设置 broker_kind=BrokerEnum.MQTT
+
+
+```python
+from function_scheduling_distributed_framework import task_deco,BrokerEnum
+
+@task_deco('mqtt_topic_test',broker_kind=BrokerEnum.MQTT)
+def f(x,y):
+    print(f''' {x} + {y} = {x + y}''')
+    return x + y
+
+for i in range(100):
+    f.push(i,i*2)
+
+f.consume()
+```
+
+```
+这个默认做成服务端不存储消息，mqtt中间件适合前后端实时交互的。可以直接绕开后端flask django 接口，不用写接口，
+前端直接发任务到mqtt，后端订阅，后端完成后，发送结果到唯一任务的topic
+
+当然也可以 前端订阅topic，前端发任务到python flask接口，flask接口中发布任务到rabbitmq redis等，
+后台消费完成把函数结果发布到mqtt，mqtt推送给前端
+```
+
+```
+此框架的消费做成了mqtt的共享订阅，例如启动多个重复的消费者脚本，不会所有消费脚本都去重复处理一个消息
+```
 
 ![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)
+
+
+
+

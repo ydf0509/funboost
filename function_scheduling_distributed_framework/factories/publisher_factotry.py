@@ -20,6 +20,7 @@ from function_scheduling_distributed_framework.publishers.redis_publisher import
 from function_scheduling_distributed_framework.publishers.rocketmq_publisher import RocketmqPublisher
 from function_scheduling_distributed_framework.publishers.sqla_queue_publisher import SqlachemyQueuePublisher
 from function_scheduling_distributed_framework.publishers.redis_stream_publisher import RedisStreamPublisher
+from function_scheduling_distributed_framework.publishers.mqtt_publisher import MqttPublisher
 
 
 def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=True,
@@ -40,11 +41,11 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
     all_kwargs = copy.deepcopy(locals())
     all_kwargs.pop('broker_kind')
     broker_kind__publisher_type_map = {
-        4: RabbitmqPublisher,
+        0: RabbitmqPublisherUsingAmqpStorm,
         1: RabbitmqPublisherUsingRabbitpy,
         2: RedisPublisher,
         3: LocalPythonQueuePublisher,
-        0: RabbitmqPublisherUsingAmqpStorm,
+        4: RabbitmqPublisher,
         5: MongoMqPublisher,
         6: PersistQueuePublisher,
         7: NsqPublisher,
@@ -56,7 +57,8 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
         13: ZeroMqPublisher,
         14: RedisPublisherLpush,
         15: KombuPublisher,
-        16:ConfluentKafkaPublisher
+        16: ConfluentKafkaPublisher,
+        17: MqttPublisher
     }
     if broker_kind not in broker_kind__publisher_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')

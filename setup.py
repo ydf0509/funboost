@@ -71,7 +71,8 @@ setup(
         'zmq',
         'pyzmq',
         'kombu==4.6.11',
-        'confluent_kafka'
+        'confluent_kafka',
+        'paho-mqtt',
     ]
 )
 """

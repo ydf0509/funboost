@@ -22,6 +22,7 @@ from function_scheduling_distributed_framework.consumers.rocketmq_consumer impor
 from function_scheduling_distributed_framework.consumers.sqlachemy_consumer import SqlachemyConsumer
 from function_scheduling_distributed_framework.consumers.redis_stream_consumer import RedisStreamConsumer
 from function_scheduling_distributed_framework.consumers.zeromq_consumer import ZeroMqConsumer
+from function_scheduling_distributed_framework.consumers.mqtt_consumer import MqttConsumer
 
 
 def get_consumer(*args, broker_kind=0, **kwargs):
@@ -32,11 +33,11 @@ def get_consumer(*args, broker_kind=0, **kwargs):
     :return:
     """
     broker_kind__consumer_type_map = {
-        4: RabbitmqConsumer,
+        0: RabbitmqConsumerAmqpStorm,
         1: RabbitmqConsumerRabbitpy,
         2: RedisConsumer,
         3: LocalPythonQueueConsumer,
-        0: RabbitmqConsumerAmqpStorm,
+        4: RabbitmqConsumer,
         5: MongoMqConsumer,
         6: PersistQueueConsumer,
         7: NsqConsumer,
@@ -47,8 +48,9 @@ def get_consumer(*args, broker_kind=0, **kwargs):
         12: RedisStreamConsumer,
         13: ZeroMqConsumer,
         14: RedisBrpopLpushConsumer,
-        15:KombuConsumer,
-        16:KafkaConsumerManuallyCommit
+        15: KombuConsumer,
+        16: KafkaConsumerManuallyCommit,
+        17: MqttConsumer,
     }
     if broker_kind not in broker_kind__consumer_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')

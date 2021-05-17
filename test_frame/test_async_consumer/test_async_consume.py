@@ -20,6 +20,7 @@ def f(y):  # 调度同步消费函数
 if __name__ == '__main__':
     async_f.clear()
     f.clear()
+
     for i in range(200):
         async_f.push(i)
         f.push(i * 10)

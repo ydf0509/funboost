@@ -650,11 +650,19 @@ if __name__ == '__main__':
 ![Image text](https://i.niupic.com/images/2019/08/09/_477.png)
 
 ####win之2
-
 ![Image text](https://s1.ax1x.com/2020/06/30/N5yZin.png)
+
+#### 获取汽车之家资讯
+
+##### 这是为了截图运行的主要流程节点，把函数qps降低了1000被后截的图。
+
+![Image text](test_frame/car_home_crawler_sample/carhome3.png)
+
 
 ### 3.1.2 linux运行中截图,使用gevent模式，减法消费控频更厉害，所以执行次数更少。
 ![Image text](https://i.niupic.com/images/2019/09/16/_222.png)
+
+
 
 ### 3.1.3控频功能证明，使用内网连接broker，设置函数的qps为100，来调度需要消耗任意随机时长的函数，能够做到持续精确控频，频率误差小。如果设置每秒精确运行超过5000次以上的固定频率，前提是cpu够强。
 

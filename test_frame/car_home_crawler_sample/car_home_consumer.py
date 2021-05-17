@@ -26,12 +26,12 @@ from function_scheduling_distributed_framework import task_deco, BrokerEnum, run
 """
 
 
-@task_deco('car_home_list', broker_kind=BrokerEnum.REDIS_ACK_ABLE, max_retry_times=5, qps=0.1,concurrent_num=3)
+@task_deco('car_home_list', broker_kind=BrokerEnum.REDIS_ACK_ABLE, max_retry_times=5, qps=5, )
 def crawl_list_page(news_type, page, do_page_turning=False):
     url = f'https://www.autohome.com.cn/{news_type}/{page}/#liststart'
     resp_text = requests.get(url).text
     sel = Selector(resp_text)
-    for li in sel.css('ul.article > li')[:10]:
+    for li in sel.css('ul.article > li'):
         if len(li.extract()) > 100:  # 有的是这样的去掉。 <li id="ad_tw_04" style="display: none;">
             url_detail = 'https:' + li.xpath('./a/@href').extract_first()
             title = li.xpath('./a/h3/text()').extract_first()
@@ -42,8 +42,8 @@ def crawl_list_page(news_type, page, do_page_turning=False):
             crawl_list_page.push(news_type, p)  # 列表页翻页。
 
 
-@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=5, qps=0.2,
-           do_task_filtering=True,is_using_distributed_frequency_control=True)
+@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=20,
+           do_task_filtering=True, is_using_distributed_frequency_control=True)
 def crawl_detail_page(url, title, news_type):
     resp_text = requests.get(url).text
     sel = Selector(resp_text)
@@ -59,4 +59,3 @@ if __name__ == '__main__':
     crawl_detail_page.consume()
     # 这样速度更猛，叠加多进程
     # run_consumer_with_multi_process(crawl_detail_page, 8)
-

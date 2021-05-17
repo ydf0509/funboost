@@ -13,16 +13,17 @@ import decorator_libs
 -p 8883 SSL端口
 """
 
+"""
+非常适合 前端订阅唯一uuid的topic 然后表单中带上这个topic名字请求python接口 -> 接口中发布任务到rabbitmq或redis消息队列 ->
+后台消费进程执行任务消费,并将结果发布到mqtt的那个唯一uuid的topic -> mqtt 把结果推送到前端。
+
+使用ajax轮训或者后台导入websocket相关的包来做和前端的长耗时任务的交互都是伪命题，没有mqtt好。
+"""
+
 
 class MqttPublisher(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin):
-    """
-    非常适合 前端订阅唯一uuid的topic 然后表单中带上这个topic名字请求python接口 -> 接口中发布任务到rabbitmq或redis消息队列 ->
-    后台消费进程执行任务消费,并将结果发布到mqtt的那个唯一uuid的topic -> mqtt 把结果推送到前端。
 
-    使用ajax轮训或者后台导入websocket相关的包来做和前端的长耗时任务的交互 是伪命题。
-    """
-
-    def __init__(self, mqtt_publish_url='http://192.168.6.130:18083/api/v2/mqtt/publish', user='admin', passwd='public', display_full_msg=False):
+    def __init__(self, mqtt_publish_url='http://127.0.0.1:18083/api/v2/mqtt/publish', user='admin', passwd='public', display_full_msg=False):
         """
         :param mqtt_publish_url: mqtt的http接口，这是mqtt中间件自带的，不是重新自己实现的接口。不需要导入paho.mqtt.client,requeests urllib3即可。
         :param display_full_msg: 时候打印发布的任务
@@ -55,5 +56,6 @@ class MqttPublisher(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin):
 
 if __name__ == '__main__':
     with decorator_libs.TimerContextManager():
-        for i in range(20):
-            MqttPublisher().pub_message('/topic_test_uuid123456', 'msg_test3')
+        mp = MqttPublisher('http://192.168.6.130:18083/api/v2/mqtt/publish')
+        for i in range(2000):
+            mp.pub_message('/topic_test_uuid123456', 'msg_test3')

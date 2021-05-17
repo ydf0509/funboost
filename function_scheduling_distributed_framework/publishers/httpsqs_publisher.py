@@ -2,7 +2,6 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 12:12
 import json
-
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
 import http.client
 from urllib.parse import urlencode, quote
@@ -15,7 +14,7 @@ http://blog.zyan.cc/httpsqs/
 
 class HttpsqsPublisher(AbstractPublisher):
     """
-    使用redis作为中间件
+    使用httpsqs作为中间件
     """
 
     def custom_init(self):
@@ -55,7 +54,8 @@ class HttpsqsPublisher(AbstractPublisher):
         text = self.opt_httpsqs('reset')
         if text != 'HTTPSQS_RESET_OK':
             self.logger.critical(text)
-        self.logger.warning(f'清除 {self._queue_name} 队列中的消息成功')
+        else:
+            self.logger.warning(f'清除 {self._queue_name} 队列中的消息成功')
 
     def get_message_count(self):
         text = self.opt_httpsqs('status_json')

@@ -216,6 +216,11 @@ CONFLUENT_KAFKA = 16
 """
 MQTT = 17
 
+HTTPSQS = 18  # 基于httpsqs的
+
+
+消息队列大全  https://taskqueues.com/#brokers
+
 
 切换任意中间件，代码都不需要做任何变化，不需要关注如何使用中间件的细节。
 总体来说首选rabbitmq，这也是不指定broker_kind参数时候的默认的方式,

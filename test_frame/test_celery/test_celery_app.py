@@ -11,14 +11,14 @@ platforms.C_FORCE_ROOT = True
 celery_app = celery.Celery()
 class Config2:
     broker_url = f'redis://:@127.0.0.1:6379/10'  # 使用redis
-    # result_backend = f'redis://:{frame_config.REDIS_PASSWORD}@{frame_config.REDIS_HOST}:{frame_config.REDIS_PORT}/14'  # 使用redis
+    result_backend = f'redis://:@127.0.0.1:6379/11'  # 使用redis
     broker_connection_max_retries = 150  # 默认是100
     # result_serializer = 'json'
     # task_default_queue = 'default'  # 默认celery
     # # task_default_rate_limit = '101/s'
     # task_default_routing_key = 'default'
     # task_eager_propagates = False  # 默认disable
-    task_ignore_result = True
+    # task_ignore_result = False
     # task_serializer = 'json'
     # task_time_limit = 70
     # task_soft_time_limit = 60
@@ -45,6 +45,7 @@ def add(a, b):
     # print(f'消费此消息 {a} + {b} 中。。。。。')
     # time.sleep(100, )  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
     print(f'{int(time.time())} 计算 {a} + {b} 得到的结果是  {a + b}')
+    time.sleep(20)
     return a + b
 
 
@@ -79,7 +80,7 @@ if __name__ == '__main__':
     """
     # queue_add,queue_sub,queue_f1
     celery_app.worker_main(
-        argv=['worker', '--pool=threads','--concurrency=50', '-n', 'worker1@%h', '--loglevel=DEBUG',
+        argv=['worker', '--pool=gevent','--concurrency=50', '-n', 'worker1@%h', '--loglevel=DEBUG',
               '--queues=queue_f1,queue_add2,queue_sub2'])
     import threading
 

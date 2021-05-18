@@ -12,7 +12,10 @@ for i in range(100000):
     # print('生产者添加任务')
     # print(i)
     # result = add.delay(i, i * 2)
+    time.sleep(1)
     result = add.apply_async(args=(i, i * 2))
+    print(result)
+    # print(result.get())
     # print(type(result))
     # sub.delay(i * 10, i * 20)
 

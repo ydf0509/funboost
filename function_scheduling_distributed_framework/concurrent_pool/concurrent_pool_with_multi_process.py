@@ -35,10 +35,10 @@ class ConcurrentPoolWithProcess(nb_log.LoggerMixin):
     def shutdown(self, wait=True):
         pass
 
-
 def test_f(x):
     time.sleep(1)
     print(x * 10, os.getpid())
+
 
 
 async def async_f(x):

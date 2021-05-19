@@ -105,6 +105,9 @@ python通用分布式函数调度框架。适用场景范围广泛，
      定时：
         可以按时间间隔、按指定时间执行一次、按指定时间执行多次，使用的是apscheduler包的方式。
      
+     演示任务：
+         例如规定任务发布后，延迟60秒执行，或者规定18点执行。这个概念和定时任务有一些不同。
+              
      指定时间不运行：
         例如，有些任务你不想在白天运行，可以只在晚上的时间段运行
      
@@ -641,8 +644,50 @@ if __name__ == '__main__':
     f2.consume()
 ```
 
+### 2.9 演示延时运行任务
+```
+因为有很多人有这样的需求，希望发布后不是马上运行，而是延迟60秒或者现在发布晚上18点运行。
+之前已做的功能是定时任务，现在新增延时任务，这两个概念有一些不同。
+
+在需求开发过程中，我们经常会遇到一些类似下面的场景：
+1）外卖订单超过15分钟未支付，自动取消
+2）使用抢票软件订到车票后，1小时内未支付，自动取消
+3）待处理申请超时1天，通知审核人员经理，超时2天通知审核人员总监
+4）客户预定自如房子后，24小时内未支付，房源自动释放
 
 
+分布式函数调度框架的延时任务概念类似celery的countdown和eta入参，  add.apply_async(args=(1, 2),countdown=20)  # 规定取出后20秒再运行
+此框架的入参名称那就也叫 countdown和eta。
+countdown 传一个数字，表示多少秒后运行。
+eta传一个datetime对象表示，精确的运行时间运行一次。
+
+```
+
+##### 消费
+```python
+from function_scheduling_distributed_framework import task_deco,BrokerEnum
+
+@task_deco('test_delay',broker_kind=BrokerEnum.REDIS_ACK_ABLE)
+def f(x):
+    print(x)
+
+if __name__ == '__main__':
+    f.consume()
+```
+
+##### 发布延时任务
+```python
+# 需要用publish，而不是push，这个前面已经说明了，如果要传函数入参本身以外的参数到中间件，需要用publish。
+# 不然框架分不清哪些是函数入参，哪些是控制参数。如果无法理解就，就好好想想琢磨下celery的 apply_async 和 delay的关系。
+
+from test_frame.test_delay_task.test_delay_consume import f
+import datetime
+from function_scheduling_distributed_framework import PriorityConsumingControlConfig
+
+f.publish({'x':1},priority_control_config=PriorityConsumingControlConfig(countdown=5))  # 发布后5秒后在执行。
+f.publish({'x':10},priority_control_config=
+        PriorityConsumingControlConfig(eta=datetime.datetime(2021, 5, 9, 11, 59, 30))) # 按指定的时间运行一次。
+```
 
 ### 3 运行中截图
  
@@ -1720,50 +1765,9 @@ pulsar 的消费者数量可以不受topic 分区数量的限制，比kafka和ra
 
 ```
 
-## 6.21 2021-05 新增延时运行
-```
-因为有很多人有这样的需求，希望发布后不是马上运行，而是延迟60秒或者现在发布晚上18点运行。
-之前已做的功能是定时任务，现在新增延时任务，这两个概念有一些不同。
-
-在需求开发过程中，我们经常会遇到一些类似下面的场景：
-1）外卖订单超过15分钟未支付，自动取消
-2）使用抢票软件订到车票后，1小时内未支付，自动取消
-3）待处理申请超时1天，通知审核人员经理，超时2天通知审核人员总监
-4）客户预定自如房子后，24小时内未支付，房源自动释放
+## 6.21 2021-05 新增延时运行任务,介绍见2.9
 
 
-分布式函数调度框架的延时任务概念类似celery的countdown和eta入参，  add.apply_async(args=(1, 2),countdown=20)  # 规定取出后20秒再运行
-此框架的入参名称那就也叫 countdown和eta。
-countdown 传一个数字，表示多少秒后运行。
-eta传一个datetime对象表示，精确的运行时间运行一次。
-
-```
-
-##### 消费
-```python
-from function_scheduling_distributed_framework import task_deco,BrokerEnum
-
-@task_deco('test_delay',broker_kind=BrokerEnum.REDIS_ACK_ABLE)
-def f(x):
-    print(x)
-
-if __name__ == '__main__':
-    f.consume()
-```
-
-##### 发布延时任务
-```python
-# 需要用publish，不是push，这个前面已经说明了，如果要传函数入参本身以外的参数到中间件，需要用publish。
-# 不然框架分不清哪些是函数入参，哪些是控制参数。如果无法理解就，就好好想想琢磨下celery的 apply_async 和 delay的关系。
-
-from test_frame.test_delay_task.test_delay_consume import f
-import datetime
-from function_scheduling_distributed_framework import PriorityConsumingControlConfig
-
-f.publish({'x':1},priority_control_config=PriorityConsumingControlConfig(countdown=5))  # 取出来后5秒后在执行。
-f.publish({'x':10},priority_control_config=
-        PriorityConsumingControlConfig(eta=datetime.datetime(2021, 5, 19, 11, 59, 30))) # 按指定的时间运行一次。
-```
 
 
 ![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)

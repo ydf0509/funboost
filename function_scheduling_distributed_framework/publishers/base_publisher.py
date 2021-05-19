@@ -80,8 +80,11 @@ class PriorityConsumingControlConfig:
         self.is_print_detail_exception = is_print_detail_exception
         self.msg_expire_senconds = msg_expire_senconds
         self.is_using_rpc_mode = is_using_rpc_mode
+        if countdown and eta:
+            raise ValueError('不能同时设置eta和countdown')
         self.eta = eta
         self.countdown = countdown
+
 
     def to_dict(self):
         if isinstance(self.countdown,datetime.datetime):

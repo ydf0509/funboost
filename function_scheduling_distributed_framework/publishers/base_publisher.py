@@ -63,7 +63,7 @@ class PriorityConsumingControlConfig:
                  is_print_detail_exception: bool = None,
                  msg_expire_senconds: int = None,
                  is_using_rpc_mode: bool = None,
-                 countdown :typing.Union[float,int]= 0,
+                 countdown :typing.Union[float,int]= None,
                  eta : datetime.datetime = None
                  ):
         """
@@ -86,11 +86,11 @@ class PriorityConsumingControlConfig:
         self.eta = eta
         self.countdown = countdown
 
-
     def to_dict(self):
         if isinstance(self.countdown,datetime.datetime):
             self.countdown = time_util.DatetimeConverter(self.countdown).datetime_str
-        return self.__dict__
+        priority_consuming_control_config_dict = {k:v for k,v  in self.__dict__.items() if v is not None} # 中间件消息不要太长。
+        return priority_consuming_control_config_dict
 
 class PublishParamsChecker(LoggerMixin):
     """

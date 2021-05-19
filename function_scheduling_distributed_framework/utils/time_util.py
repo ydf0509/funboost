@@ -78,7 +78,7 @@ class DatetimeConverter:
         elif isinstance(datetimex, (int, float)):
             if datetimex < 1:
                 datetimex += 86400
-            self.datetime_obj = datetime.datetime.fromtimestamp(datetimex)  # 时间戳0在windows会出错。
+            self.datetime_obj = datetime.datetime.fromtimestamp(datetimex,tz=pytz.timezone(frame_config.TIMEZONE))  # 时间戳0在windows会出错。
         elif isinstance(datetimex, datetime.datetime):
             self.datetime_obj = datetimex
         elif datetimex is None:

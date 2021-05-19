@@ -31,6 +31,10 @@ import pymongo
 from pymongo import IndexModel
 from pymongo.errors import PyMongoError
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
+from apscheduler.events import EVENT_JOB_MISSED
+from function_scheduling_distributed_framework.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
+
 # noinspection PyUnresolvedReferences
 from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, \
     LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write, is_main_process, only_print_on_main_process
@@ -53,6 +57,8 @@ from function_scheduling_distributed_framework.utils import decorators, time_uti
 from function_scheduling_distributed_framework.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
 from function_scheduling_distributed_framework.utils.mongo_util import MongoMixin
 from function_scheduling_distributed_framework import frame_config
+
+patch_apscheduler_run_job()
 
 
 def _delete_keys_and_return_new_dict(dictx: dict, keys: list = None):
@@ -432,6 +438,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.consumer_identification = f'{socket.gethostname()}_{time_util.DatetimeConverter().datetime_str.replace(":", "-")}_{os.getpid()}_{id(self)}'
 
         self._delay_task_scheduler = BackgroundScheduler(timezone=frame_config.TIMEZONE)
+        self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))
+        self._delay_task_scheduler.add_listener(self.__apscheduler_job_miss, EVENT_JOB_MISSED)
         self._delay_task_scheduler.start()
 
         self.custom_init()
@@ -573,8 +581,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # noinspection PyBroadException
             t_start = time.time()
             try:
-                function_run = self.consuming_function if self._function_timeout == 0 else self._concurrent_mode_dispatcher.timeout_deco(
-                    self.__get_priority_conf(kw, 'function_timeout'))(self.consuming_function)
+                function_timeout = self.__get_priority_conf(kw, 'function_timeout')
+                function_run = self.consuming_function if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
+                    function_timeout)(self.consuming_function)
                 if self._is_consuming_function_use_multi_params:  # 消费函数使用传统的多参数形式
                     function_result_status.result = function_run(**function_only_params)
                 else:
@@ -742,6 +751,24 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """重新入队"""
         raise NotImplementedError
 
+    def __apscheduler_job_miss(self, event):
+        """
+        这是 apscheduler 包的事件钩子。
+        ev.function_args = job.args
+        ev.function_kwargs = job.kwargs
+        ev.function = job.func
+        :return:
+        """
+        """
+        对于延时任务，框架是力争尽量定时运行，如果是消费积压或者由于用户设置的qps很低或者电脑性能差，导致过期了才轮到那个任务运行，就强行运行一次，不放弃运行。
+        aspcheduler 包对于定时任务消费慢，而导致运行不及时导致轮到任务运行时候已近过期了，是打印一条警告日志，直接放弃运行了。
+        """
+        # print(event.scheduled_run_time)
+        self.logger.critical(f'现在时间是 {time_util.DatetimeConverter().datetime_str} ,此任务设置的延时运行已过期 \n'
+                             f'{event.function_kwargs["kw"]} ，'
+                             f'但框架为了防止是任务积压导致消费延后，所以仍然使其运行一次')
+        event.function(*event.function_args, **event.function_kwargs)
+
     def _submit_task(self, kw):
         if self._judge_is_daylight():
             self._requeue(kw)
@@ -749,7 +776,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             return
         publish_time = _get_publish_time(kw['body'])
         msg_expire_senconds_priority = self.__get_priority_conf(kw, 'msg_expire_senconds')
-        if msg_expire_senconds_priority != 0 and time.time() - msg_expire_senconds_priority > publish_time:
+        if msg_expire_senconds_priority and time.time() - msg_expire_senconds_priority > publish_time:
             self.logger.warning(
                 f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(time.time() - publish_time, 4)} 秒 ,'
                 f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
@@ -758,27 +785,31 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         msg_eta = self.__get_priority_conf(kw, 'eta')
         msg_countdown = self.__get_priority_conf(kw, 'countdown')
         run_date = None
+        print(kw)
         if msg_countdown:
-            run_date = datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE)) + datetime.timedelta(seconds=msg_countdown)
+            run_date = time_util.DatetimeConverter(kw['body']['extra']['publish_time']).datetime_obj + datetime.timedelta(seconds=msg_countdown)
         if msg_eta:
             run_date = time_util.DatetimeConverter(msg_eta).datetime_obj
-        if run_date:
-            # print(repr(run_date),repr(datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))))
-            if run_date.timestamp() > time.time():
+        # print(run_date,time_util.DatetimeConverter().datetime_obj)
+        # print(run_date.timestamp(),time_util.DatetimeConverter().datetime_obj.timestamp())
+        if run_date :
+            if run_date.timestamp() > time_util.DatetimeConverter().datetime_obj.timestamp():
+                # print(repr(run_date),repr(datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))))
                 if self._concurrent_mode == 5:  # 单线程
-                    self._delay_task_scheduler.add_job(self._run, 'date', run_date=run_date, args=(kw,))
+                    self._delay_task_scheduler.add_job(self._run, 'date', run_date=run_date, kwargs={'kw': kw})
                 else:
-                    self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run, kw))
+                    self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw})
             else:
-                self.logger.critical(f'指定的消费时间 {run_date} 小于当前时间 {datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))}')
-                self._confirm_consume(kw)
-                return 0
+                self.logger.critical(f'延时任务取出来就已近过期了 {kw["body"]}')
+                if self._concurrent_mode == 5:  # 单线程
+                    self._run(kw)
+                else:
+                    self.concurrent_pool.submit(self._run, kw)
         else:
             if self._concurrent_mode == 5:  # 单线程
                 self._run(kw)
             else:
                 self.concurrent_pool.submit(self._run, kw)
-        # print(self._delay_task_scheduler.get_jobs())
         if self._is_using_distributed_frequency_control:  # 如果是需要分布式控频。
             active_num = self._distributed_consumer_statistics.active_consumer_num
             self.__frequency_control(self._qps / active_num, self._msg_schedule_time_intercal * active_num)

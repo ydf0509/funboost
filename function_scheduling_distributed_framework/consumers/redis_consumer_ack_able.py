@@ -145,7 +145,8 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
         while True:
             task_str_list = script(keys=[self._queue_name, self._unack_zset_name], args=[time.time()])
             if task_str_list:
-                self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {task_str_list}  ')
+                self._print_message_get_from_broker('redis', task_str_list)
+                # self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {task_str_list}  ')
                 for task_str in task_str_list:
                     task_dict = json.loads(task_str)
                     kw = {'body': task_dict, 'task_str': task_str}

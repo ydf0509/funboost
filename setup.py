@@ -7,13 +7,13 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version=9.7,
+    version=9.9,
     description=(
         'function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way'
     ),
     # long_description=open('README.md', 'r',encoding='utf8').read(),
     keywords=("distributed-framework","function-scheduling", "rabbitmq", "rocketmq","kafka", "nsq","redis","disk",
-              "sqlachemy","consume-confirm", "timing" ,"task-scheduling", "apscheduler"),
+              "sqlachemy","consume-confirm", "timing" ,"task-scheduling", "apscheduler","pulsar","mqtt","kombu"),
     long_description_content_type="text/markdown",
     long_description=open('README.md', 'r', encoding='utf8').read(),
     author='bfzs',
@@ -60,7 +60,7 @@ setup(
         'psutil',
         'sqlalchemy==1.3.10',
         'sqlalchemy_utils==0.36.1',
-        'apscheduler==3.3.1',
+        'apscheduler==3.7.0',
         'pikav0',
         'pikav1',
         'redis2',
@@ -84,7 +84,7 @@ setup(
 打包上传
 python setup.py sdist upload -r pypi
 
-python setup.py sdist & twine upload dist/function_scheduling_distributed_framework-9.7.tar.gz
+python setup.py sdist & twine upload dist/function_scheduling_distributed_framework-9.9.tar.gz
 
 最快的下载方式，上传立即可安装。阿里云源同步官网pypi间隔要等很久。
 ./pip install function_scheduling_distributed_framework==3.5 -i https://pypi.org/simple   

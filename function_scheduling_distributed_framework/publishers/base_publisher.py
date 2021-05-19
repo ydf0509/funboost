@@ -2,6 +2,7 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 11:57
 import abc
+import copy
 import inspect
 import atexit
 import json
@@ -10,12 +11,13 @@ import time
 import typing
 from functools import wraps
 from threading import Lock
+import datetime
 import amqpstorm
 from kombu.exceptions import KombuError
 from pika.exceptions import AMQPError as PikaAMQPError
 
 from nb_log import LoggerLevelSetterMixin, LogManager, LoggerMixin
-from function_scheduling_distributed_framework.utils import decorators, RedisMixin
+from function_scheduling_distributed_framework.utils import decorators, RedisMixin,time_util
 from function_scheduling_distributed_framework import frame_config
 
 
@@ -60,16 +62,35 @@ class PriorityConsumingControlConfig:
     def __init__(self, function_timeout: float = None, max_retry_times: int = None,
                  is_print_detail_exception: bool = None,
                  msg_expire_senconds: int = None,
-                 is_using_rpc_mode: bool = None):
+                 is_using_rpc_mode: bool = None,
+                 countdown :typing.Union[float,int]= None,
+                 eta : datetime.datetime = None
+                 ):
+        """
+
+        :param function_timeout: 超时杀死
+        :param max_retry_times:
+        :param is_print_detail_exception:
+        :param msg_expire_senconds:
+        :param is_using_rpc_mode: rpc模式才能在发布端获取结果
+        :param eta: 规定什么时候运行
+        :param countdown: 规定多少秒后运行
+        """
         self.function_timeout = function_timeout
         self.max_retry_times = max_retry_times
         self.is_print_detail_exception = is_print_detail_exception
         self.msg_expire_senconds = msg_expire_senconds
         self.is_using_rpc_mode = is_using_rpc_mode
+        if countdown and eta:
+            raise ValueError('不能同时设置eta和countdown')
+        self.eta = eta
+        self.countdown = countdown
 
     def to_dict(self):
-        return self.__dict__
-
+        if isinstance(self.countdown,datetime.datetime):
+            self.countdown = time_util.DatetimeConverter(self.countdown).datetime_str
+        priority_consuming_control_config_dict = {k:v for k,v  in self.__dict__.items() if v is not None} # 中间件消息不要太长。
+        return priority_consuming_control_config_dict
 
 class PublishParamsChecker(LoggerMixin):
     """
@@ -181,6 +202,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         if isinstance(msg, str):
             msg = json.loads(msg)
+        msg_function_kw = copy.copy(msg)
         if self.publish_params_checker:
             self.publish_params_checker.check_params(msg)
         task_id = task_id or f'{self._queue_name}_result:{uuid.uuid4()}'
@@ -191,7 +213,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         t_start = time.time()
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
             self.concrete_realization_of_publish)(json.dumps(msg, ensure_ascii=False))
-        self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg}')
+        self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}') # 显示msg太长了。
         with self._lock_for_count:
             self.count_per_minute += 1
             self.publish_msg_num_total += 1

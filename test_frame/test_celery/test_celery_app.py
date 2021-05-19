@@ -80,7 +80,7 @@ if __name__ == '__main__':
     """
     # queue_add,queue_sub,queue_f1
     celery_app.worker_main(
-        argv=['worker', '--pool=gevent','--concurrency=50', '-n', 'worker1@%h', '--loglevel=DEBUG',
+        argv=['worker', '--pool=solo','--concurrency=50', '-n', 'worker1@%h', '--loglevel=DEBUG',
               '--queues=queue_f1,queue_add2,queue_sub2'])
     import threading
 

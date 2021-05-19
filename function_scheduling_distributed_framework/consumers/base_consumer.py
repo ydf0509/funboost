@@ -785,7 +785,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         msg_eta = self.__get_priority_conf(kw, 'eta')
         msg_countdown = self.__get_priority_conf(kw, 'countdown')
         run_date = None
-        print(kw)
+        # print(kw)
         if msg_countdown:
             run_date = time_util.DatetimeConverter(kw['body']['extra']['publish_time']).datetime_obj + datetime.timedelta(seconds=msg_countdown)
         if msg_eta:
@@ -800,7 +800,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 else:
                     self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw})
             else:
-                self.logger.critical(f'延时任务取出来就已近过期了 {kw["body"]}')
+                self.logger.critical(f'延时任务取出来就已经过期了 {kw["body"]}')
                 if self._concurrent_mode == 5:  # 单线程
                     self._run(kw)
                 else:

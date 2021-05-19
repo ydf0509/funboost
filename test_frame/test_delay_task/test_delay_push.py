@@ -6,7 +6,7 @@ from function_scheduling_distributed_framework import PriorityConsumingControlCo
 """
 测试发布延时任务，不是发布后马上就执行函数。
 """
-for i in range(1, 200):
+for i in range(1, 20):
     time.sleep(1)
 
     # 消息发布10秒后再执行。如果消费慢导致任务积压，即使轮到消息消费时候离发布超过10秒了仍然执行。

@@ -5,8 +5,6 @@ from test_frame.test_celery.test_celery_app import add, sub
 
 
 
-
-
 t1 = time.time()
 for i in range(1,2):
     # print('生产者添加任务')

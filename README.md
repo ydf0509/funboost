@@ -663,7 +663,7 @@ eta传一个datetime对象表示，精确的运行时间运行一次。
 
 ```
 
-##### 消费
+##### 消费，消费代码没有任何变化
 ```python
 from function_scheduling_distributed_framework import task_deco,BrokerEnum
 
@@ -1761,7 +1761,7 @@ f.consume()
 pulsar自从出身就不断的再和其他的消息队列(kafka,rocketmq等等)做比较，但是Pulsar的设计思想和大多数的消息队列中间件都不同
 ，具备了高吞吐，低延迟，计算存储分离，多租户，异地复制等功能，所以pulsar也被誉为下一代消息队列中间件
 
-pulsar 的消费者数量可以不受topic 分区数量的限制，比kafka和rabbitmq 强。5年后悔替代kafka rabbitmq。
+pulsar 的消费者数量可以不受topic 分区数量的限制，比kafka和rabbitmq 强。5年后会替代kafka rabbitmq。
 
 ```
 

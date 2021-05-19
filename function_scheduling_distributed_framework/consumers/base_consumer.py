@@ -772,6 +772,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._run(kw)
             else:
                 self.concurrent_pool.submit(self._run, kw)
+        # print(self._delay_task_scheduler.get_jobs())
         if self._is_using_distributed_frequency_control:  # 如果是需要分布式控频。
             active_num = self._distributed_consumer_statistics.active_consumer_num
             self.__frequency_control(self._qps / active_num, self._msg_schedule_time_intercal * active_num)

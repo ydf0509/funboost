@@ -17,7 +17,7 @@ from kombu.exceptions import KombuError
 from pika.exceptions import AMQPError as PikaAMQPError
 
 from nb_log import LoggerLevelSetterMixin, LogManager, LoggerMixin
-from function_scheduling_distributed_framework.utils import decorators, RedisMixin,time_util
+from function_scheduling_distributed_framework.utils import decorators, RedisMixin, time_util
 from function_scheduling_distributed_framework import frame_config
 
 
@@ -63,8 +63,10 @@ class PriorityConsumingControlConfig:
                  is_print_detail_exception: bool = None,
                  msg_expire_senconds: int = None,
                  is_using_rpc_mode: bool = None,
-                 countdown :typing.Union[float,int]= None,
-                 eta : datetime.datetime = None
+
+                 countdown: typing.Union[float, int] = None,
+                 eta: datetime.datetime = None,
+                 execute_delay_task_even_if_when_task_is_expired :bool= True,
                  ):
         """
 
@@ -75,22 +77,32 @@ class PriorityConsumingControlConfig:
         :param is_using_rpc_mode: rpc模式才能在发布端获取结果
         :param eta: 规定什么时候运行
         :param countdown: 规定多少秒后运行
+        :param execute_delay_task_even_if_when_task_is_expired: 这个参数是配合 eta 或 countdown 使用的。是演示任务专用配置
+               如果延时任务，例如规定发布10秒后才运行，但由于消费速度慢导致任务积压，导致任务还没轮到开始消费就已经过了10秒，是否仍然执行此任务。
+               例如规定18点运行，但由于消费速度慢导致任务积压，导致任务还没轮到开始消费就已经过了18点，是否仍然执行此任务，
+               默认是执行，传False则过期后不再运行了。
         """
         self.function_timeout = function_timeout
         self.max_retry_times = max_retry_times
         self.is_print_detail_exception = is_print_detail_exception
         self.msg_expire_senconds = msg_expire_senconds
         self.is_using_rpc_mode = is_using_rpc_mode
+
         if countdown and eta:
             raise ValueError('不能同时设置eta和countdown')
         self.eta = eta
         self.countdown = countdown
+        self.execute_delay_task_even_if_when_task_is_expired = execute_delay_task_even_if_when_task_is_expired
+
 
     def to_dict(self):
-        if isinstance(self.countdown,datetime.datetime):
+        if isinstance(self.countdown, datetime.datetime):
             self.countdown = time_util.DatetimeConverter(self.countdown).datetime_str
-        priority_consuming_control_config_dict = {k:v for k,v  in self.__dict__.items() if v is not None} # 中间件消息不要太长。
+        priority_consuming_control_config_dict = {k: v for k, v in self.__dict__.items() if v is not None}  # 使中间件消息不要太长，框架默认的值不发到中间件。
+        if priority_consuming_control_config_dict['execute_delay_task_even_if_when_task_is_expired'] is True:
+            priority_consuming_control_config_dict.pop('execute_delay_task_even_if_when_task_is_expired')
         return priority_consuming_control_config_dict
+
 
 class PublishParamsChecker(LoggerMixin):
     """
@@ -125,12 +137,12 @@ class PublishParamsChecker(LoggerMixin):
                              f'必须是 {self.all_arg_name_set} 的子集， 必须是 {self.position_arg_name_set} 的超集')
 
 
-class DelayQueue(LoggerMixin,RedisMixin):
-    def __init__(self,delay_queue_name):
+class DelayQueue(LoggerMixin, RedisMixin):
+    def __init__(self, delay_queue_name):
         self.delay_queue_name = delay_queue_name
 
-    def push(self,msg:str,timestamp):
-        self.redis_db_frame_version3.zadd(self.delay_queue_name,{msg:timestamp},)
+    def push(self, msg: str, timestamp):
+        self.redis_db_frame_version3.zadd(self.delay_queue_name, {msg: timestamp}, )
 
     def get_msgs(self):
         pass
@@ -214,7 +226,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         t_start = time.time()
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
             self.concrete_realization_of_publish)(json.dumps(msg, ensure_ascii=False))
-        self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}') # 显示msg太长了。
+        self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}')  # 显示msg太长了。
         with self._lock_for_count:
             self.count_per_minute += 1
             self.publish_msg_num_total += 1

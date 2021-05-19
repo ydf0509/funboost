@@ -764,10 +764,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         aspcheduler 包对于定时任务消费慢，而导致运行不及时导致轮到任务运行时候已近过期了，是打印一条警告日志，直接放弃运行了。
         """
         # print(event.scheduled_run_time)
-        self.logger.critical(f'现在时间是 {time_util.DatetimeConverter().datetime_str} ,此任务设置的延时运行已过期 \n'
-                             f'{event.function_kwargs["kw"]} ，'
-                             f'但框架为了防止是任务积压导致消费延后，所以仍然使其运行一次')
-        event.function(*event.function_args, **event.function_kwargs)
+        if self.__get_priority_conf(event.function_kwargs["kw"], 'execute_delay_task_even_if_when_task_is_expired') is False:
+            self.logger.critical(f'现在时间是 {time_util.DatetimeConverter().datetime_str} ,此任务设置的延时运行已过期 \n'
+                                 f'{event.function_kwargs["kw"]["body"]} ， 此任务放弃执行')
+            self._confirm_consume(event.function_kwargs["kw"])
+        else:
+            self.logger.warning(f'现在时间是 {time_util.DatetimeConverter().datetime_str} ,此任务设置的延时运行已过期 \n'
+                                f'{event.function_kwargs["kw"]["body"]} ，'
+                                f'但框架为了防止是任务积压导致消费延后，所以仍然使其运行一次')
+            event.function(*event.function_args, **event.function_kwargs)
 
     def _submit_task(self, kw):
         if self._judge_is_daylight():
@@ -792,19 +797,25 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             run_date = time_util.DatetimeConverter(msg_eta).datetime_obj
         # print(run_date,time_util.DatetimeConverter().datetime_obj)
         # print(run_date.timestamp(),time_util.DatetimeConverter().datetime_obj.timestamp())
-        if run_date :
-            if run_date.timestamp() > time_util.DatetimeConverter().datetime_obj.timestamp():
+        if run_date:
+            if run_date.timestamp() > time_util.DatetimeConverter().datetime_obj.timestamp():  # noqa
                 # print(repr(run_date),repr(datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))))
                 if self._concurrent_mode == 5:  # 单线程
                     self._delay_task_scheduler.add_job(self._run, 'date', run_date=run_date, kwargs={'kw': kw})
                 else:
                     self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw})
             else:
-                self.logger.critical(f'延时任务取出来就已经过期了 {kw["body"]}')
-                if self._concurrent_mode == 5:  # 单线程
-                    self._run(kw)
+                if self.__get_priority_conf(kw, 'execute_delay_task_even_if_when_task_is_expired') is False:
+                    self.logger.critical(f'现在时间是 {time_util.DatetimeConverter().datetime_str} ,此任务设置的延时运行已过期 \n'
+                                         f'{kw["body"]} ， 此任务放弃执行')
+                    self._confirm_consume(kw)
                 else:
-                    self.concurrent_pool.submit(self._run, kw)
+                    self.logger.warning(f'现在时间是 {time_util.DatetimeConverter().datetime_str} ,此任务设置的延时运行已过期 \n'
+                                        f'{kw["body"]} ，但框架为了防止是任务积压导致消费延后，所以仍然使其运行一次')
+                    if self._concurrent_mode == 5:  # 单线程
+                        self._run(kw)
+                    else:
+                        self.concurrent_pool.submit(self._run, kw)
         else:
             if self._concurrent_mode == 5:  # 单线程
                 self._run(kw)

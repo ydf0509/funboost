@@ -10,12 +10,13 @@ import time
 import typing
 from functools import wraps
 from threading import Lock
+import datetime
 import amqpstorm
 from kombu.exceptions import KombuError
 from pika.exceptions import AMQPError as PikaAMQPError
 
 from nb_log import LoggerLevelSetterMixin, LogManager, LoggerMixin
-from function_scheduling_distributed_framework.utils import decorators, RedisMixin
+from function_scheduling_distributed_framework.utils import decorators, RedisMixin,time_util
 from function_scheduling_distributed_framework import frame_config
 
 
@@ -60,16 +61,32 @@ class PriorityConsumingControlConfig:
     def __init__(self, function_timeout: float = None, max_retry_times: int = None,
                  is_print_detail_exception: bool = None,
                  msg_expire_senconds: int = None,
-                 is_using_rpc_mode: bool = None):
+                 is_using_rpc_mode: bool = None,
+                 countdown :typing.Union[float,int]= 0,
+                 eta : datetime.datetime = None
+                 ):
+        """
+
+        :param function_timeout: 超时杀死
+        :param max_retry_times:
+        :param is_print_detail_exception:
+        :param msg_expire_senconds:
+        :param is_using_rpc_mode: rpc模式才能在发布端获取结果
+        :param eta: 规定什么时候运行
+        :param countdown: 规定多少秒后运行
+        """
         self.function_timeout = function_timeout
         self.max_retry_times = max_retry_times
         self.is_print_detail_exception = is_print_detail_exception
         self.msg_expire_senconds = msg_expire_senconds
         self.is_using_rpc_mode = is_using_rpc_mode
+        self.eta = eta
+        self.countdown = countdown
 
     def to_dict(self):
+        if isinstance(self.countdown,datetime.datetime):
+            self.countdown = time_util.DatetimeConverter(self.countdown).datetime_str
         return self.__dict__
-
 
 class PublishParamsChecker(LoggerMixin):
     """

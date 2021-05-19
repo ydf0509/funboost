@@ -10,6 +10,7 @@ import abc
 import copy
 # from multiprocessing import Process
 import datetime
+import pytz
 import json
 import logging
 import sys
@@ -29,7 +30,7 @@ import asyncio
 import pymongo
 from pymongo import IndexModel
 from pymongo.errors import PyMongoError
-
+from apscheduler.schedulers.background import BackgroundScheduler
 # noinspection PyUnresolvedReferences
 from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, \
     LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write, is_main_process, only_print_on_main_process
@@ -430,6 +431,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self.consumer_identification = f'{socket.gethostname()}_{time_util.DatetimeConverter().datetime_str.replace(":", "-")}_{os.getpid()}_{id(self)}'
 
+        self._delay_task_scheduler = BackgroundScheduler(timezone=frame_config.TIMEZONE)
+        self._delay_task_scheduler.start()
+
         self.custom_init()
 
         atexit.register(self.join_shedual_task_thread)
@@ -519,7 +523,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def __get_priority_conf(self, kw: dict, broker_task_config_key: str):
         broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)
         if broker_task_config is None:
-            return getattr(self, f'_{broker_task_config_key}')
+            return getattr(self, f'_{broker_task_config_key}',None)
         else:
             return broker_task_config
 
@@ -751,10 +755,23 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
             self._confirm_consume(kw)
             return 0
-        if self._concurrent_mode == 5:  # 单线程
-            self._run(kw)
+        msg_eta = self.__get_priority_conf(kw, 'eta')
+        msg_countdown = self.__get_priority_conf(kw, 'countdown')
+        run_date = None
+        if msg_countdown:
+            run_date = datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE)) + datetime.timedelta(seconds=msg_countdown)
+        if msg_eta:
+            run_date = time_util.DatetimeConverter(msg_eta).datetime_obj
+        if run_date:
+            if self._concurrent_mode == 5:  # 单线程
+                self._delay_task_scheduler.add_job(self._run,'date', run_date=run_date, args=(kw,))
+            else:
+                self._delay_task_scheduler.add_job(self.concurrent_pool.submit,'date', run_date=run_date, args=(self._run, kw))
         else:
-            self.concurrent_pool.submit(self._run, kw)
+            if self._concurrent_mode == 5:  # 单线程
+                self._run(kw)
+            else:
+                self.concurrent_pool.submit(self._run, kw)
         if self._is_using_distributed_frequency_control:  # 如果是需要分布式控频。
             active_num = self._distributed_consumer_statistics.active_consumer_num
             self.__frequency_control(self._qps / active_num, self._msg_schedule_time_intercal * active_num)

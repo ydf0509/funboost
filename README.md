@@ -1042,7 +1042,8 @@ if __name__ == '__main__':
     3) 比如例子的add方法是一个是实例方法，看起来好像传个y的值就可以，实际是add要接受两个入参，一个是self，一个是y。如果把self推到消息队列，那就不好玩了。
        对象的序列化浪费磁盘空间，浪费网速传输大体积消息，浪费cpu 序列化和反序列化。所以此框架的入参已近说明了，
        仅仅支持能够被json序列化的东西，像普通的自定义类型的对象就不能被json序列化了。
-        celery也是这样的，演示的例子也是用函数（也可以是静态方法），而不是类或者实例方法，这不是刻意要和celery一样，原因已经说了，自己好好体会好好想想原因吧。
+        celery也是这样的，演示的例子也是用函数（也可以是静态方法），而不是类或者实例方法，
+        这不是刻意要和celery一样，原因已经说了，自己好好体会好好想想原因吧。
     
     框架如何调用你代码里面的类。
     假设你的代码是：
@@ -1051,12 +1052,14 @@ if __name__ == '__main__':
            self.x = x
         
        def add(self,y):
-           print( self.x + y)
+           return self.x + y
     
-    那么你需要再写一个函数
+    那么你不能 a =A(1) ; a.add.push(2),因为self也是入参之一，不能只发布y，要吧a对象(self)也发布本进来。
+    所以你需要再写一个函数
     def your_task(x,y):
         return  A(x).add(y)
-    然后把这个your_task函数传给框架就可以了。所以此框架和你在项目里面写类不是冲突的，本人是100%推崇oop编程，非常鲜明的反对极端面向过程编程写代码。
+    然后把这个your_task函数传给框架就可以了。所以此框架和你在项目里面写类不是冲突的，
+    本人是100%推崇oop编程，非常鲜明的反对极端面向过程编程写代码。
   ```
   
   #### 5.8 是怎么调度一个函数的。
@@ -1702,6 +1705,66 @@ f.consume()
 ```
 @task_deco('httpsqs_queue_test',broker_kind=BrokerEnum.HTTPSQS)
 ```
+
+## 6.20 2021-04 新增支持下一代分布式消息系统 pulsar 。
+```
+@task_deco('httpsqs_queue_test',broker_kind=BrokerEnum.PULSAR)
+
+使用此中间件，代码必须在linux mac上运行。
+
+在开源的业界已经有这么多消息队列中间件了，pulsar作为一个新势力到底有什么优点呢？
+pulsar自从出身就不断的再和其他的消息队列(kafka,rocketmq等等)做比较，但是Pulsar的设计思想和大多数的消息队列中间件都不同
+，具备了高吞吐，低延迟，计算存储分离，多租户，异地复制等功能，所以pulsar也被誉为下一代消息队列中间件
+
+pulsar 的消费者数量可以不受topic 分区数量的限制，比kafka和rabbitmq 强。5年后悔替代kafka rabbitmq。
+
+```
+
+## 6.21 2021-05 新增延时运行
+```
+因为有很多人有这样的需求，希望发布后不是马上运行，而是延迟60秒或者现在发布晚上18点运行。
+之前已做的功能是定时任务，现在新增延时任务，这两个概念有一些不同。
+
+在需求开发过程中，我们经常会遇到一些类似下面的场景：
+1）外卖订单超过15分钟未支付，自动取消
+2）使用抢票软件订到车票后，1小时内未支付，自动取消
+3）待处理申请超时1天，通知审核人员经理，超时2天通知审核人员总监
+4）客户预定自如房子后，24小时内未支付，房源自动释放
+
+
+分布式函数调度框架的延时任务概念类似celery的countdown和eta入参，  add.apply_async(args=(1, 2),countdown=20)  # 规定取出后20秒再运行
+此框架的入参名称那就也叫 countdown和eta。
+countdown 传一个数字，表示多少秒后运行。
+eta传一个datetime对象表示，精确的运行时间运行一次。
+
+```
+
+##### 消费
+```python
+from function_scheduling_distributed_framework import task_deco,BrokerEnum
+
+@task_deco('test_delay',broker_kind=BrokerEnum.REDIS_ACK_ABLE)
+def f(x):
+    print(x)
+
+if __name__ == '__main__':
+    f.consume()
+```
+
+##### 发布延时任务
+```python
+# 需要用publish，不是push，这个前面已经说明了，如果要传函数入参本身以外的参数到中间件，需要用publish。
+# 不然框架分不清哪些是函数入参，哪些是控制参数。如果无法理解就，就好好想想琢磨下celery的 apply_async 和 delay的关系。
+
+from test_frame.test_delay_task.test_delay_consume import f
+import datetime
+from function_scheduling_distributed_framework import PriorityConsumingControlConfig
+
+f.publish({'x':1},priority_control_config=PriorityConsumingControlConfig(countdown=5))  # 取出来后5秒后在执行。
+f.publish({'x':10},priority_control_config=
+        PriorityConsumingControlConfig(eta=datetime.datetime(2021, 5, 19, 11, 59, 30))) # 按指定的时间运行一次。
+```
+
 
 ![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)
 

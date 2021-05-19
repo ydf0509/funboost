@@ -27,13 +27,15 @@ from threading import Lock, Thread
 import eventlet
 import gevent
 import asyncio
-import pymongo
-from pymongo import IndexModel
-from pymongo.errors import PyMongoError
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
 from apscheduler.events import EVENT_JOB_MISSED
 from function_scheduling_distributed_framework.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
+
+import pymongo
+from pymongo import IndexModel
+from pymongo.errors import PyMongoError
 
 # noinspection PyUnresolvedReferences
 from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, \
@@ -73,7 +75,7 @@ def _delete_keys_and_return_new_dict(dictx: dict, keys: list = None):
 
 
 class ExceptionForRetry(Exception):
-    """为了重试的，抛出错误。只是定义了一个子类，用不用都可以"""
+    """为了重试的，抛出错误。只是定义了一个子类，用不用都可以，函数出任何类型错误了框架都会自动重试"""
 
 
 class ExceptionForRequeue(Exception):

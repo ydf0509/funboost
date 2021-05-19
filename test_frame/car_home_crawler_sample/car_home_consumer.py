@@ -26,7 +26,7 @@ from function_scheduling_distributed_framework import task_deco, BrokerEnum, run
 """
 
 
-@task_deco('car_home_list', broker_kind=BrokerEnum.RedisBrpopLpush, max_retry_times=5, qps=0.1, concurrent_num=5)
+@task_deco('car_home_list', broker_kind=BrokerEnum.RedisBrpopLpush, max_retry_times=5, qps=2)
 def crawl_list_page(news_type, page, do_page_turning=False):
     url = f'https://www.autohome.com.cn/{news_type}/{page}/#liststart'
     resp_text = requests.get(url).text
@@ -42,7 +42,7 @@ def crawl_list_page(news_type, page, do_page_turning=False):
             crawl_list_page.push(news_type, p)  # 列表页翻页。
 
 
-@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=0.2, concurrent_num=5,
+@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=6,
            do_task_filtering=True, is_using_distributed_frequency_control=True)
 def crawl_detail_page(url, title, news_type):
     resp_text = requests.get(url).text

@@ -119,8 +119,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True,
                  clear_queue_within_init=False, is_add_publish_time=True, consuming_function: callable = None, ):
-        """
-        :param queue_name:
+           :param queue_name:
         :param log_level_int:
         :param logger_prefix:
         :param is_add_file_handler:

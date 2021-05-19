@@ -515,7 +515,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         raise NotImplementedError
 
     def _print_message_get_from_broker(self, broker_name, msg):
-        if isinstance(msg, dict):
+        if isinstance(msg, (dict, list)):
             msg = json.dumps(msg, ensure_ascii=False)
         if self._is_show_message_get_from_broker:
             self.logger.debug(f'从 {broker_name} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
@@ -523,7 +523,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def __get_priority_conf(self, kw: dict, broker_task_config_key: str):
         broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)
         if broker_task_config is None:
-            return getattr(self, f'_{broker_task_config_key}',None)
+            return getattr(self, f'_{broker_task_config_key}', None)
         else:
             return broker_task_config
 
@@ -763,10 +763,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if msg_eta:
             run_date = time_util.DatetimeConverter(msg_eta).datetime_obj
         if run_date:
-            if self._concurrent_mode == 5:  # 单线程
-                self._delay_task_scheduler.add_job(self._run,'date', run_date=run_date, args=(kw,))
+            # print(repr(run_date),repr(datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))))
+            if run_date.timestamp() > time.time():
+                if self._concurrent_mode == 5:  # 单线程
+                    self._delay_task_scheduler.add_job(self._run, 'date', run_date=run_date, args=(kw,))
+                else:
+                    self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run, kw))
             else:
-                self._delay_task_scheduler.add_job(self.concurrent_pool.submit,'date', run_date=run_date, args=(self._run, kw))
+                self.logger.critical(f'指定的消费时间 {run_date} 小于当前时间 {datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))}')
+                self._confirm_consume(kw)
+                return 0
         else:
             if self._concurrent_mode == 5:  # 单线程
                 self._run(kw)

@@ -3,6 +3,8 @@ import typing
 import datetime
 import time
 import re
+import pytz
+from function_scheduling_distributed_framework import frame_config
 
 from function_scheduling_distributed_framework.utils import nb_print
 
@@ -80,7 +82,7 @@ class DatetimeConverter:
         elif isinstance(datetimex, datetime.datetime):
             self.datetime_obj = datetimex
         elif datetimex is None:
-            self.datetime_obj = datetime.datetime.now()
+            self.datetime_obj = datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))
         else:
             raise ValueError('实例化时候的传参不符合规定')
 

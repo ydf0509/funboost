@@ -2,6 +2,7 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 11:57
 import abc
+import copy
 import inspect
 import atexit
 import json
@@ -202,6 +203,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         if isinstance(msg, str):
             msg = json.loads(msg)
+        msg_function_kw = copy.copy(msg)
         if self.publish_params_checker:
             self.publish_params_checker.check_params(msg)
         task_id = task_id or f'{self._queue_name}_result:{uuid.uuid4()}'
@@ -212,7 +214,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         t_start = time.time()
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
             self.concrete_realization_of_publish)(json.dumps(msg, ensure_ascii=False))
-        self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg}')
+        self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}') # 显示msg太长了。
         with self._lock_for_count:
             self.count_per_minute += 1
             self.publish_msg_num_total += 1

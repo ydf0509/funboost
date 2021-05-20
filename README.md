@@ -789,7 +789,7 @@ for i in range(1, 20):
 
 
 
-### 3.1.3控频功能证明，使用外网连接远程broker,持续qps控频。
+### 3.1.3控频功能展示，使用外网连接远程broker,持续qps控频。
 ```
 设置函数的qps为100，来调度需要消耗任意随机时长的函数，能够做到持续精确控频，频率误差小。
 如果设置每秒精确运行超过500000次以上的固定频率，前提是cpu够强机器数量多，
@@ -818,7 +818,7 @@ if __name__ == '__main__':
     test_fun.consume()
     # run_consumer_with_multi_process(test_fun,1)
 ```
-
+##### 持续控频曲线
 ![Image text](test_frame/test_rabbitmq/img_2.png)
 
 ```

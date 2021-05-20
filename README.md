@@ -667,6 +667,59 @@ if __name__ == '__main__':
     f2.consume()
 ```
 
+#### 2.8.2控频功能证明，使用外网连接远程broker,持续qps控频。
+```
+设置函数的qps为100，来调度需要消耗任意随机时长的函数，能够做到持续精确控频，频率误差小。
+如果设置每秒精确运行超过500000次以上的固定频率，前提是cpu够强机器数量多，
+并开启分布式控频为True,is_using_distributed_frequency_control=True,。
+
+如果任务不是很重型很耗cpu，此框架单个消费进程可以控制每秒运行次数的qps 从0.01到1000很容易。
+当设置qps为0.01时候，指定的是每100秒运行1次，qps为100指的是每一秒运行100次。
+
+```
+
+```python
+import time
+import random
+from function_scheduling_distributed_framework import task_deco,BrokerEnum,run_consumer_with_multi_process
+
+@task_deco('test_rabbit_queue7',broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM,qps=100,log_level=20)
+def test_fun(x):
+    # time.sleep(2.9)
+    # sleep时间随机从0.1毫秒到5秒任意徘徊。传统的恒定并发数量的线程池对未知的耗时任务，持续100次每秒的精确控频无能为力。
+    # 但此框架只要简单设置一个qps就自动达到了这个目的。
+    random_sleep = random.randrange(1,50000) / 10000
+    time.sleep(random_sleep)  
+    print(x,random_sleep)
+
+if __name__ == '__main__':
+    test_fun.consume()
+    # run_consumer_with_multi_process(test_fun,1)
+```
+##### 持续控频曲线
+![Image text](test_frame/test_rabbitmq/img_2.png)
+
+```
+此框架针对不同指定不同qps频次大小的时候做了不同的三种处理方式。
+框架的控频是直接基于代码计数，而非使用redis 的incr计数，因为python操作一次redis指令要消耗800行代码左右，
+如果所有任务都高频率incr很消耗python脚本的cpu也对redis服务端产生灾难压力。
+例如假设有50个不同的函数，分别都要做好几千qps的控频，如果采用incr计数，光是incr指令每秒就要操作10万次redis，
+所以如果用redis的incr计数控频就是个灾难，redis incr的计数只适合 1到10大小的qps，不适合 0.01 qps 和 1000 qps这样的任务。
+
+同时此框架也能很方便的达到 5万 qps的目的，装饰器设置qps=50000 和 is_using_distributed_frequency_control=True,
+然后只需要部署很多个进程 + 多台机器，框架通过redis统计活跃消费者数量，来自动调节每台机器的qps，框架的分布式控频开销非常十分低，
+因为分布式控频使用的仍然不是redis的incr计数，而是基于每个消费者的心跳来统计活跃消费者数量，然后给每个进程分配qps的，依然基于本地代码计数。
+
+例如部署100个进程(如果机器是128核的，一台机器足以，或者20台8核机器也可以)
+以20台8核机器为例子，如果把机器减少到15台或增加机器到30台，随便减少部署的机器数量或者随便增加机器的数量，
+代码都不需要做任何改动和重新部署，框架能够自动调节来保持持续5万次每秒来执行函数，不用担心部署多了30台机器，实际运行qps就变成了10几万。
+(前提是不要把机器减少到10台以下，因为这里假设这个函数是一个稍微耗cpu耗时的函数，要保证所有资源硬件加起来有实力支撑5万次每秒执行函数)
+
+每台机器都运行 run_consumer_with_multi_process(test_fun,8)，只要10台以上1000台以下随意随时随地增大减小运行机器数量，
+代码不需要做任何修改变化，就能很方便的达到每秒运行5万次函数的目的。
+```
+
+
 ### 2.9 演示延时运行任务
 ```
 因为有很多人有这样的需求，希望发布后不是马上运行，而是延迟60秒或者现在发布晚上18点运行。
@@ -786,61 +839,6 @@ for i in range(1, 20):
 
 ### 3.1.2 linux运行中截图,使用gevent模式，减法消费控频更厉害，所以执行次数更少。
 ![Image text](https://i.niupic.com/images/2019/09/16/_222.png)
-
-
-
-### 3.1.3控频功能展示，使用外网连接远程broker,持续qps控频。
-```
-设置函数的qps为100，来调度需要消耗任意随机时长的函数，能够做到持续精确控频，频率误差小。
-如果设置每秒精确运行超过500000次以上的固定频率，前提是cpu够强机器数量多，
-并开启分布式控频为True,is_using_distributed_frequency_control=True,。
-
-如果任务不是很重型很耗cpu，此框架单个消费进程可以控制每秒运行次数的qps 从0.01到1000很容易。
-当设置qps为0.01时候，指定的是每100秒运行1次，qps为100指的是每一秒运行100次。
-
-```
-
-```python
-import time
-import random
-from function_scheduling_distributed_framework import task_deco,BrokerEnum,run_consumer_with_multi_process
-
-@task_deco('test_rabbit_queue7',broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM,qps=100,log_level=20)
-def test_fun(x):
-    # time.sleep(2.9)
-    # sleep时间随机从0.1毫秒到5秒任意徘徊。传统的恒定并发数量的线程池对未知的耗时任务，持续100次每秒的精确控频无能为力。
-    # 但此框架只要简单设置一个qps就自动达到了这个目的。
-    random_sleep = random.randrange(1,50000) / 10000
-    time.sleep(random_sleep)  
-    print(x,random_sleep)
-
-if __name__ == '__main__':
-    test_fun.consume()
-    # run_consumer_with_multi_process(test_fun,1)
-```
-##### 持续控频曲线
-![Image text](test_frame/test_rabbitmq/img_2.png)
-
-```
-此框架针对不同指定不同qps频次大小的时候做了不同的三种处理方式。
-框架的控频是直接基于代码计数，而非使用redis 的incr计数，因为python操作一次redis指令要消耗800行代码左右，
-如果所有任务都高频率incr很消耗python脚本的cpu也对redis服务端产生灾难压力。
-例如假设有50个不同的函数，分别都要做好几千qps的控频，如果采用incr计数，光是incr指令每秒就要操作10万次redis，
-所以如果用redis的incr计数控频就是个灾难，redis incr的计数只适合 1到10大小的qps，不适合 0.01 qps 和 1000 qps这样的任务。
-
-同时此框架也能很方便的达到 5万 qps的目的，装饰器设置qps=50000 和 is_using_distributed_frequency_control=True,
-然后只需要部署很多个进程 + 多台机器，框架通过redis统计活跃消费者数量，来自动调节每台机器的qps，框架的分布式控频开销非常十分低，
-因为分布式控频使用的仍然不是redis的incr计数，而是基于每个消费者的心跳来统计活跃消费者数量，然后给每个进程分配qps的，依然基于本地代码计数。
-
-例如部署100个进程(如果机器是128核的，一台机器足以，或者20台8核机器也可以)
-以20台8核机器为例子，如果把机器减少到15台或增加机器到30台，随便减少部署的机器数量或者随便增加机器的数量，
-代码都不需要做任何改动和重新部署，框架能够自动调节来保持持续5万次每秒来执行函数，不用担心部署多了30台机器，实际运行qps就变成了10几万。
-(前提是不要把机器减少到10台以下，因为这里假设这个函数是一个稍微耗cpu耗时的函数，要保证所有资源硬件加起来有实力支撑5万次每秒执行函数)
-
-每台机器都运行 run_consumer_with_multi_process(test_fun,8)，只要10台以上1000台以下随意随时随地增大减小运行机器数量，
-代码不需要做任何修改变化，就能很方便的达到每秒运行5万次函数的目的。
-```
-
 
 
 ### 3.1.4 函数执行结果及状态搜索查看

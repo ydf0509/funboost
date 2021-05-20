@@ -707,6 +707,10 @@ from function_scheduling_distributed_framework import PriorityConsumingControlCo
 
 """
 测试发布延时任务，不是发布后马上就执行函数。
+
+execute_delay_task_even_if_when_task_is_expired 指的是如果消费时候，已近超过了指定的延时，
+是否强制运行，还是放弃。例如消息积压厉害，你指定一个消息发布10秒后运行，但轮到消息被消费时候离发布已近过了
+90秒，是否强制运行还是放弃。
 """
 for i in range(1, 200):
     time.sleep(1)
@@ -728,6 +732,9 @@ for i in range(1, 200):
         execute_delay_task_even_if_when_task_is_expired=False))  # 按指定的时间运行一次。
 
 ```
+
+![Image text](test_frame/test_delay_task/test_delay.png)
+
 
 ### 3 运行中截图
  

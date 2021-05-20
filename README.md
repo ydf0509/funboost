@@ -819,7 +819,7 @@ if __name__ == '__main__':
     # run_consumer_with_multi_process(test_fun,1)
 ```
 
-![Image text](test_frame/test_rabbitmq/img_1.png)
+![Image text](test_frame/test_rabbitmq/img_2.png)
 
 ```
 此框架针对不同指定不同qps频次大小的时候做了不同的三种处理方式。

@@ -3,6 +3,8 @@
 https://blog.csdn.net/pchwenwenti/article/details/83143345
 
 pip install pulsar-cleint
+
+http://192.168.6.130:9527/#/login?redirect=%2Fmanagement%2Ftenants
 """
 
 import pulsar

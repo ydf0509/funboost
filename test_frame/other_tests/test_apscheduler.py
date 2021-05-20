@@ -35,9 +35,9 @@ scheduler.add_listener(job_miss, EVENT_JOB_MISSED)
 scheduler.start()
 
 with decorator_libs.TimerContextManager():
-    for i in range(10000):
+    for i in range(10):
         run_date = datetime.datetime(2021, 5, 19, 18, 56, 30) + datetime.timedelta(seconds=i)
-        scheduler.add_job(func,'date',run_date=run_date , args=(i, i,run_date))
+        scheduler.add_job(func,'date',run_date=run_date , args=(i, i,run_date),misfire_grace_time=None)
 
 
 print(datetime.datetime.now())

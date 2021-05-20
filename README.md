@@ -610,6 +610,14 @@ from test_frame.test_rpc.test_consume import add
 for i in range(100):
     async_result = add.push(i, i * 2)
     print(async_result.result)
+    
+    
+    # 如果add函数的@task_deco装饰器参数没有设置 is_using_rpc_mode=True，则在发布时候也可以指定使用rpc模式。
+    async_result = add.publish(dict(a=i*10, b=i * 20),priority_control_config = \
+                                PriorityConsumingControlConfig(is_using_rpc_mode=True))
+    print(async_result.status_and_result)
+
+    
 ```
 
 
@@ -663,11 +671,16 @@ if __name__ == '__main__':
 ```
 因为有很多人有这样的需求，希望发布后不是马上运行，而是延迟60秒或者现在发布晚上18点运行。
 然来是希望用户自己亲自在消费函数内部写个sleep(60)秒再执行业务逻辑，来达到延时执行的目的，
-但这样会占据大量的并发线程/协程,如果是用户消费函数内部写sleep7200秒这么长的时间，那
+但这样会被sleep占据大量的并发线程/协程,如果是用户消费函数内部写sleep7200秒这么长的时间，那
 sleep等待会占据99.9%的并发工作线程/协程的时间，导致真正的执行函数的速度大幅度下降，所以框架
 现在从框架层面新增这个延时任务的功能。
 
 之前已做的功能是定时任务，现在新增延时任务，这两个概念有一些不同。
+
+定时任务一般情况下是配置为周期重复性任务，延时任务是一次性任务。
+1）框架实现定时任务原理是定时发布，自然而然就能达到定时消费的目的。
+2）框架实现延时任务的原理是马上立即发布，当消费者取出消息后，并不是立刻去运行，
+   而是使用定时运行一次的方式延迟这个任务的运行。
 
 在需求开发过程中，我们经常会遇到一些类似下面的场景：
 1）外卖订单超过15分钟未支付，自动取消
@@ -708,32 +721,47 @@ from function_scheduling_distributed_framework import PriorityConsumingControlCo
 """
 测试发布延时任务，不是发布后马上就执行函数。
 
-execute_delay_task_even_if_when_task_is_expired 指的是如果消费时候，已近超过了指定的延时，
-是否强制运行，还是放弃。例如消息积压厉害，你指定一个消息发布10秒后运行，但轮到消息被消费时候离发布已近过了
-90秒，是否强制运行还是放弃。
+countdown 和 eta 只能设置一个。
+countdown 指的是 离发布多少秒后执行，
+eta是指定的精确时间运行一次。
+
+misfire_grace_time 是指定消息轮到被消费时候，如果已经超过了应该运行的时间多少秒之内，仍然执行。
+misfire_grace_time 如果设置为None，则消息一定会被运行，不会由于大连消息积压导致消费时候已近太晚了而取消运行。
+misfire_grace_time 如果不为None，必须是大于等于1的整数，此值表示消息轮到消费时候超过本应该运行的时间的多少秒内仍然执行。
+此值的数字设置越小，如果由于消费慢的原因，就有越大概率导致消息被丢弃不运行。如果此值设置为1亿，则几乎不会导致放弃运行(1亿的作用接近于None了)
+如果还是不懂这个值的作用，可以百度 apscheduler 包的 misfire_grace_time 概念
+
 """
-for i in range(1, 200):
+for i in range(1, 20):
     time.sleep(1)
 
-    # 消息发布10秒后再执行。如果消费慢导致任务积压，即使轮到消息消费时候离发布超过10秒了仍然执行。
-    f.publish({'x': i}, priority_control_config=PriorityConsumingControlConfig(countdown=10)) # 离发布10秒钟运行
+    # 消息发布10秒后再执行。如果消费慢导致任务积压，misfire_grace_time为None，即使轮到消息消费时候离发布超过10秒了仍然执行。
+    f.publish({'x': i}, priority_control_config=PriorityConsumingControlConfig(countdown=10))
 
-    # 规定消息在17点56分30秒运行，如果消费慢导致任务积压，即使轮到消息消费时候已经过了17点56分30秒仍然执行。
+    # 规定消息在17点56分30秒运行，如果消费慢导致任务积压，misfire_grace_time为None，即使轮到消息消费时候已经过了17点56分30秒仍然执行。
     f.publish({'x': i * 10}, priority_control_config=PriorityConsumingControlConfig(
-        eta=datetime.datetime(2021, 5, 19, 17, 56, 30) + datetime.timedelta(seconds=i))) # 按指定的时间运行一次
+        eta=datetime.datetime(2021, 5, 19, 17, 56, 30) + datetime.timedelta(seconds=i)))
 
-    # 消息发布10秒后再执行。如果消费慢导致任务积压，如果轮到消息消费时候离发布超过10秒了则放弃执行。
+    # 消息发布10秒后再执行。如果消费慢导致任务积压，misfire_grace_time为30，如果轮到消息消费时候离发布超过40 (10+30) 秒了则放弃执行，
+    # 如果轮到消息消费时候离发布时间是20秒，由于 20 < (10 + 30)，则仍然执行
     f.publish({'x': i * 100}, priority_control_config=PriorityConsumingControlConfig(
-        countdown=10, execute_delay_task_even_if_when_task_is_expired=False)) # 离发布10秒钟运行
+        countdown=10, misfire_grace_time=30))
 
-    # 规定消息在17点56分30秒运行，如果消费慢导致任务积压，如果轮到消息消费时候已经过了17点56分30秒，则放弃执行。
+    # 规定消息在17点56分30秒运行，如果消费慢导致任务积压，如果轮到消息消费时候已经过了17点57分00秒，
+    # misfire_grace_time为30，如果轮到消息消费时候超过了17点57分0秒 则放弃执行，
+    # 如果如果轮到消息消费时候是17点56分50秒则执行。
     f.publish({'x': i * 1000}, priority_control_config=PriorityConsumingControlConfig(
         eta=datetime.datetime(2021, 5, 19, 17, 56, 30) + datetime.timedelta(seconds=i),
-        execute_delay_task_even_if_when_task_is_expired=False))  # 按指定的时间运行一次。
+        misfire_grace_time=30)) 
+    
+    # 这个设置了消息由于推挤导致运行的时候比本应该运行的时间如果小于1亿秒，就仍然会被执行，所以几乎肯定不会被放弃运行
+    f.publish({'x': i * 10000}, priority_control_config=PriorityConsumingControlConfig(
+        eta=datetime.datetime(2021, 5, 19, 17, 56, 30) + datetime.timedelta(seconds=i),
+        misfire_grace_time=100000000))  
+
 
 ```
 
-![Image text](test_frame/test_delay_task/test_delay.png)
 
 
 ### 3 运行中截图
@@ -761,9 +789,12 @@ for i in range(1, 200):
 
 
 
-### 3.1.3控频功能证明，使用内网连接broker，设置函数的qps为100，来调度需要消耗任意随机时长的函数，能够做到持续精确控频，频率误差小。如果设置每秒精确运行超过5000次以上的固定频率，前提是cpu够强。
-
-![Image text](https://i.niupic.com/images/2019/12/16/69QI.png)
+### 3.1.3控频功能证明，使用外网连接远程broker,持续qps控频。
+```
+设置函数的qps为100，来调度需要消耗任意随机时长的函数，能够做到持续精确控频，频率误差小。
+如果设置每秒精确运行超过5000次以上的固定频率，前提是cpu够强。
+```
+![Image text](test_frame/test_rabbitmq/img.png)
 
 ### 3.1.4 函数执行结果及状态搜索查看
 (需要设置函数状态持久化为True才支持此项功能，默认不开启函数状态结果持久化，

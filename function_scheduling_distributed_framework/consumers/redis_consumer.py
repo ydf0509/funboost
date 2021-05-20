@@ -21,7 +21,7 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
             result = self.redis_db_frame.blpop(self._queue_name, timeout=60)
             if result:
                 # self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {result[1].decode()}  ')
-                self._print_message_get_from_broker('reids',result[1].decode())
+                self._print_message_get_from_broker('reids', result[1].decode())
                 task_dict = json.loads(result[1])
                 kw = {'body': task_dict}
                 self._submit_task(kw)
@@ -36,7 +36,7 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
                 task_str_list = p.execute()[0]
             if task_str_list:
                 # self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {task_str_list}  ')
-                self._print_message_get_from_broker('redis',task_str_list)
+                self._print_message_get_from_broker('redis', task_str_list)
                 for task_str in task_str_list:
                     kw = {'body': json.loads(task_str)}
                     self._submit_task(kw)
@@ -44,7 +44,7 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
                 result = self.redis_db_frame.brpop(self._queue_name, timeout=60)
                 if result:
                     # self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {result[1].decode()}  ')
-                    self._print_message_get_from_broker('redis',result[1].decode())
+                    self._print_message_get_from_broker('redis', result[1].decode())
                     task_dict = json.loads(result[1])
                     kw = {'body': task_dict}
                     self._submit_task(kw)

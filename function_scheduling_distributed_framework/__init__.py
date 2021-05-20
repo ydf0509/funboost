@@ -62,7 +62,9 @@ class BrokerEnum:
     """
     MQTT = 17
 
-    HTTPSQS = 18
+    HTTPSQS = 18  # httpsqs，基于http协议操作
+    
+    PULSAR = 20 # 最有潜力的下一代分布式消息系统。5年后会同时取代rabbitmq和kafka。
 
 
 class ConcurrentModeEnum:

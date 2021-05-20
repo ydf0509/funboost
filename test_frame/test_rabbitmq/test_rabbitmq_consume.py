@@ -6,7 +6,7 @@ import os
 
 print(multiprocessing.process.current_process().name)  # MainProcess
 
-@task_deco('test_rabbit_queue7',broker_kind=BrokerEnum.HTTPSQS,qps=20,log_level=10)
+@task_deco('test_rabbit_queue7',broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM,qps=100,log_level=10)
 def test_fun(x):
     pass
     # print(x)
@@ -14,4 +14,4 @@ def test_fun(x):
     # time.sleep(20)
 
 if __name__ == '__main__':
-    run_consumer_with_multi_process(test_fun,10)
+    run_consumer_with_multi_process(test_fun,1)

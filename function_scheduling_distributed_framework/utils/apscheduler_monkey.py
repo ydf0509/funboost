@@ -25,6 +25,7 @@ def my_run_job(job, jobstore_alias, run_times, logger_name):
     for run_time in run_times:
         # See if the job missed its run time window, and handle
         # possible misfires accordingly
+        # print(job.misfire_grace_time) # add_job不设置时候默认为1秒。
         if job.misfire_grace_time is not None:
             # print(job,dir(job),job.args,job.kwargs)
             difference = datetime.now(utc) - run_time

@@ -440,7 +440,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.consumer_identification = f'{socket.gethostname()}_{time_util.DatetimeConverter().datetime_str.replace(":", "-")}_{os.getpid()}_{id(self)}'
 
         self._delay_task_scheduler = BackgroundScheduler(timezone=frame_config.TIMEZONE)
-        self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))
+        self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
         self._delay_task_scheduler.add_listener(self.__apscheduler_job_miss, EVENT_JOB_MISSED)
         self._delay_task_scheduler.start()
 
@@ -509,7 +509,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._distributed_consumer_statistics.run()
             self.logger.warning(f'启动了分布式环境 使用 redis 的键 hearbeat:{self._queue_name} 统计活跃消费者 ，当前消费者唯一标识为 {self.consumer_identification}')
         self.keep_circulating(10, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
-        self._redis_filter.delete_expire_filter_task_cycle()
+        if self._do_task_filtering:
+            self._redis_filter.delete_expire_filter_task_cycle()  # 这个默认是RedisFilter类，是个pass不运行。所以用别的消息中间件模式，不需要安装和配置redis。
         if self._schedule_tasks_on_main_thread:
             self.keep_circulating(1)(self._shedual_task)()
         else:
@@ -761,11 +762,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         ev.function = job.func
         :return:
         """
-        """
-        对于延时任务，框架是力争尽量定时运行，如果是消费积压或者由于用户设置的qps很低或者电脑性能差，导致过期了才轮到那个任务运行，就强行运行一次，不放弃运行。
-        aspcheduler 包对于定时任务消费慢，而导致运行不及时导致轮到任务运行时候已近过期了，是打印一条警告日志，直接放弃运行了。
-        """
         # print(event.scheduled_run_time)
+        misfire_grace_time = self.__get_priority_conf(event.function_kwargs["kw"], 'misfire_grace_time')
+        self.logger.critical(f'现在时间是 {time_util.DatetimeConverter().datetime_str} ,'
+                             f'比此任务规定的本应该的运行时间 {event.scheduled_run_time} 相比 超过了指定的 {misfire_grace_time} 秒,放弃执行此任务 \n'
+                             f'{event.function_kwargs["kw"]["body"]} ')
+        self._confirm_consume(event.function_kwargs["kw"])
+
+        '''
         if self.__get_priority_conf(event.function_kwargs["kw"], 'execute_delay_task_even_if_when_task_is_expired') is False:
             self.logger.critical(f'现在时间是 {time_util.DatetimeConverter().datetime_str} ,此任务设置的延时运行已过期 \n'
                                  f'{event.function_kwargs["kw"]["body"]} ， 此任务放弃执行')
@@ -775,6 +779,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                 f'{event.function_kwargs["kw"]["body"]} ，'
                                 f'但框架为了防止是任务积压导致消费延后，所以仍然使其运行一次')
             event.function(*event.function_args, **event.function_kwargs)
+        '''
 
     def _submit_task(self, kw):
         if self._judge_is_daylight():
@@ -791,6 +796,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             return 0
         msg_eta = self.__get_priority_conf(kw, 'eta')
         msg_countdown = self.__get_priority_conf(kw, 'countdown')
+        misfire_grace_time = self.__get_priority_conf(kw, 'misfire_grace_time')
+
         run_date = None
         # print(kw)
         if msg_countdown:
@@ -800,24 +807,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # print(run_date,time_util.DatetimeConverter().datetime_obj)
         # print(run_date.timestamp(),time_util.DatetimeConverter().datetime_obj.timestamp())
         if run_date:
-            if run_date.timestamp() > time_util.DatetimeConverter().datetime_obj.timestamp():  # noqa
-                # print(repr(run_date),repr(datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))))
-                if self._concurrent_mode == 5:  # 单线程
-                    self._delay_task_scheduler.add_job(self._run, 'date', run_date=run_date, kwargs={'kw': kw})
-                else:
-                    self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw})
+            # print(repr(run_date),repr(datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))))
+            if self._concurrent_mode == 5:  # 单线程
+                self._delay_task_scheduler.add_job(self._run, 'date', run_date=run_date, kwargs={'kw': kw},
+                                                   misfire_grace_time=misfire_grace_time)
             else:
-                if self.__get_priority_conf(kw, 'execute_delay_task_even_if_when_task_is_expired') is False:
-                    self.logger.critical(f'现在时间是 {time_util.DatetimeConverter().datetime_str} ,此任务设置的延时运行已过期 \n'
-                                         f'{kw["body"]} ， 此任务放弃执行')
-                    self._confirm_consume(kw)
-                else:
-                    self.logger.warning(f'现在时间是 {time_util.DatetimeConverter().datetime_str} ,此任务设置的延时运行已过期 \n'
-                                        f'{kw["body"]} ，但框架为了防止是任务积压导致消费延后，所以仍然使其运行一次')
-                    if self._concurrent_mode == 5:  # 单线程
-                        self._run(kw)
-                    else:
-                        self.concurrent_pool.submit(self._run, kw)
+                self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw},
+                                                   misfire_grace_time=misfire_grace_time)
         else:
             if self._concurrent_mode == 5:  # 单线程
                 self._run(kw)

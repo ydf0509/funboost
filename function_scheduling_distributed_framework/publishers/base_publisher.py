@@ -66,7 +66,7 @@ class PriorityConsumingControlConfig:
 
                  countdown: typing.Union[float, int] = None,
                  eta: datetime.datetime = None,
-                 execute_delay_task_even_if_when_task_is_expired :bool= True,
+                 misfire_grace_time :typing.Union[int,None] = None,
                  ):
         """
 
@@ -77,10 +77,20 @@ class PriorityConsumingControlConfig:
         :param is_using_rpc_mode: rpc模式才能在发布端获取结果
         :param eta: 规定什么时候运行
         :param countdown: 规定多少秒后运行
-        :param execute_delay_task_even_if_when_task_is_expired: 这个参数是配合 eta 或 countdown 使用的。是演示任务专用配置
-               如果延时任务，例如规定发布10秒后才运行，但由于消费速度慢导致任务积压，导致任务还没轮到开始消费就已经过了10秒，是否仍然执行此任务。
-               例如规定18点运行，但由于消费速度慢导致任务积压，导致任务还没轮到开始消费就已经过了18点，是否仍然执行此任务，
-               默认是执行，传False则过期后不再运行了。
+        # execute_delay_task_even_if_when_task_is_expired
+        :param misfire_grace_time: 单位为秒。这个参数是配合 eta 或 countdown 使用的。是延时任务专用配置.
+
+               一个延时任务，例如规定发布10秒后才运行，但由于消费速度慢导致任务积压，导致任务还没轮到开始消费就已经过了30秒，
+               如果 misfire_grace_time 配置的值是大于20则会依旧运行。如果配置的值是5，那么由于10 + 5 < 30,所以不会执行。
+
+               例如规定18点运行，但由于消费速度慢导致任务积压，导致任务还没轮到开始消费就已经过了18点10分
+               ，如果 misfire_grace_time设置为700，则这个任务会被执行，如果设置为300，忧郁18点10分超过了18点5分，就不会执行。
+
+               misfire_grace_time 如果设置为None，则任务永远不会过期，一定会被执行。
+               misfire_grace_time 的值要么是大于1的整数， 要么等于None
+
+               此含义也可以百度 apscheduler包的 misfire_grace_time 参数的含义。
+
         """
         self.function_timeout = function_timeout
         self.max_retry_times = max_retry_times
@@ -92,15 +102,14 @@ class PriorityConsumingControlConfig:
             raise ValueError('不能同时设置eta和countdown')
         self.eta = eta
         self.countdown = countdown
-        self.execute_delay_task_even_if_when_task_is_expired = execute_delay_task_even_if_when_task_is_expired
-
+        self.misfire_grace_time = misfire_grace_time
+        if misfire_grace_time is not None and misfire_grace_time < 1:
+            raise ValueError(f'misfire_grace_time 的值要么是大于1的整数， 要么等于None')
 
     def to_dict(self):
         if isinstance(self.countdown, datetime.datetime):
             self.countdown = time_util.DatetimeConverter(self.countdown).datetime_str
         priority_consuming_control_config_dict = {k: v for k, v in self.__dict__.items() if v is not None}  # 使中间件消息不要太长，框架默认的值不发到中间件。
-        if priority_consuming_control_config_dict['execute_delay_task_even_if_when_task_is_expired'] is True:
-            priority_consuming_control_config_dict.pop('execute_delay_task_even_if_when_task_is_expired')
         return priority_consuming_control_config_dict
 
 

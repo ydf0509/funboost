@@ -812,7 +812,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if run_date:
             # print(repr(run_date),repr(datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))))
             self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw},
-                                                   misfire_grace_time=misfire_grace_time)
+                                               misfire_grace_time=misfire_grace_time)
         else:
             self.concurrent_pool.submit(self._run, kw)
 
@@ -867,7 +867,8 @@ class ConcurrentModeDispatcher(LoggerMixin):
         if ConsumersManager.global_concurrent_mode is not None and self.consumer._concurrent_mode != ConsumersManager.global_concurrent_mode:
             ConsumersManager.show_all_consumer_info()
             # print({self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode})
-            if not {self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode}.issubset({1, 4}):
+            if not {self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode}.issubset({1, 4, 5}):
+                # threding、asyncio、solo 这几种模式可以共存。但同一个解释器不能同时选择 gevent + 其它并发模式，也不能 eventlet + 其它并发模式。
                 raise ValueError('由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，'
                                  '搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种')
         self._concurrent_mode = ConsumersManager.global_concurrent_mode = self.consumer._concurrent_mode

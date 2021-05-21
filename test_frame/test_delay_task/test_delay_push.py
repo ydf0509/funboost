@@ -44,5 +44,5 @@ for i in range(1, 20):
     # 这个设置了消息由于消息堆积导致运行的时候比本应该运行的时间如果小于1亿秒，就仍然会被执行，所以几乎肯定不会被放弃运行
     f.publish({'x': i * 10000}, priority_control_config=PriorityConsumingControlConfig(
         eta=datetime.datetime(2021, 5, 19, 17, 56, 30) + datetime.timedelta(seconds=i),
-        misfire_grace_time=100000000))  # 按指定的时间运行一次。
+        misfire_grace_time=100000000))   # 按指定的时间运行一次。
     

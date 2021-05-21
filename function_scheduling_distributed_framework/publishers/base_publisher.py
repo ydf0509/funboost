@@ -66,7 +66,7 @@ class PriorityConsumingControlConfig:
 
                  countdown: typing.Union[float, int] = None,
                  eta: datetime.datetime = None,
-                 misfire_grace_time :typing.Union[int,None] = None,
+                 misfire_grace_time: typing.Union[int, None] = None,
                  ):
         """
 

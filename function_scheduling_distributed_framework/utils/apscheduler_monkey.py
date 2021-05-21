@@ -6,6 +6,8 @@ import sys
 from pytz import utc
 import six
 
+import apscheduler
+
 from apscheduler.events import (
     JobExecutionEvent, EVENT_JOB_MISSED, EVENT_JOB_ERROR, EVENT_JOB_EXECUTED)
 
@@ -78,7 +80,7 @@ def my_run_job(job, jobstore_alias, run_times, logger_name):
     return events
 
 
-import apscheduler
+
 
 
 def patch_run_job():

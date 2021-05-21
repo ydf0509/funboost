@@ -6,11 +6,11 @@
 整个流程最难的都在这里面。因为要实现多种并发模型，和对函数施加20运行种控制方式，所以代码非常长。
 """
 
-# import datetime
 import abc
 import copy
 # from multiprocessing import Process
 import datetime
+import pytz
 import json
 import logging
 import sys
@@ -22,12 +22,16 @@ import time
 import traceback
 from collections import Callable
 from functools import wraps
-
 import threading
 from threading import Lock, Thread
-import asyncio
 import eventlet
 import gevent
+import asyncio
+
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
+from apscheduler.events import EVENT_JOB_MISSED
+from function_scheduling_distributed_framework.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
 
 import pymongo
 from pymongo import IndexModel
@@ -50,13 +54,13 @@ from function_scheduling_distributed_framework.concurrent_pool.custom_threadpool
     CustomThreadPoolExecutor, check_not_monkey
 # from function_scheduling_distributed_framework.concurrent_pool.concurrent_pool_with_multi_process import ConcurrentPoolWithProcess
 from function_scheduling_distributed_framework.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
-
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
-
 from function_scheduling_distributed_framework.utils import decorators, time_util, RedisMixin
 from function_scheduling_distributed_framework.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
 from function_scheduling_distributed_framework.utils.mongo_util import MongoMixin
 from function_scheduling_distributed_framework import frame_config
+
+patch_apscheduler_run_job()
 
 
 def _delete_keys_and_return_new_dict(dictx: dict, keys: list = None):
@@ -243,7 +247,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     @decorators.synchronized
     def publisher_of_same_queue(self):
         if not self._publisher_of_same_queue:
-            print(self.BROKER_KIND)
             self._publisher_of_same_queue = get_publisher(self._queue_name, consuming_function=self.consuming_function,
                                                           broker_kind=self.BROKER_KIND, log_level_int=self._log_level,
                                                           is_add_file_handler=self._create_logger_file)
@@ -436,6 +439,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self.consumer_identification = f'{socket.gethostname()}_{time_util.DatetimeConverter().datetime_str.replace(":", "-")}_{os.getpid()}_{id(self)}'
 
+        self._delay_task_scheduler = BackgroundScheduler(timezone=frame_config.TIMEZONE)
+        self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
+        self._delay_task_scheduler.add_listener(self.__apscheduler_job_miss, EVENT_JOB_MISSED)
+        self._delay_task_scheduler.start()
+
         self.custom_init()
 
         atexit.register(self.join_shedual_task_thread)
@@ -494,17 +502,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     # noinspection PyAttributeOutsideInit
     def start_consuming_message(self):
-        # apscheduler 导入耗时过大需要3秒，为了程序启动快，延迟导入。
-        from apscheduler.schedulers.background import BackgroundScheduler
-        from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
-        from apscheduler.events import EVENT_JOB_MISSED
-        from function_scheduling_distributed_framework.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
-        patch_apscheduler_run_job()
-        self._delay_task_scheduler = BackgroundScheduler(timezone=frame_config.TIMEZONE)
-        self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
-        self._delay_task_scheduler.add_listener(self.__apscheduler_job_miss, EVENT_JOB_MISSED)
-        self._delay_task_scheduler.start()
-
         ConsumersManager.show_all_consumer_info()
         self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
         if self._is_send_consumer_hearbeat_to_redis:

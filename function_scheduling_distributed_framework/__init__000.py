@@ -3,6 +3,7 @@ from multiprocessing import Process
 from typing import List
 import copy
 # noinspection PyUnresolvedReferences
+import apscheduler
 from function_scheduling_distributed_framework.set_frame_config import patch_frame_config, show_frame_config
 # import frame_config
 from function_scheduling_distributed_framework.consumers.base_consumer import ExceptionForRequeue, ExceptionForRetry, \
@@ -62,8 +63,8 @@ class BrokerEnum:
     MQTT = 17
 
     HTTPSQS = 18  # httpsqs，基于http协议操作
-
-    PULSAR = 20  # 最有潜力的下一代分布式消息系统。5年后会同时取代rabbitmq和kafka。
+    
+    PULSAR = 20 # 最有潜力的下一代分布式消息系统。5年后会同时取代rabbitmq和kafka。
 
 
 class ConcurrentModeEnum:

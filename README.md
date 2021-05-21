@@ -551,11 +551,11 @@ def consume_func(x, y):
 
 
 if __name__ == '__main__':
-    fsdf_background_scheduler.add_job(timing_publish_deco(consume_func), 'interval', id='3_second_job', seconds=3, kwargs={"x": 5, "y": 6})  # 每隔3秒发布一次任务，自然就能每隔3秒消费一次任务了。
-    fsdf_background_scheduler.add_job(timing_publish_deco(consume_func), 'date', run_date=datetime.datetime(2020, 7, 24, 13, 53, 6), args=(5, 6,))  # 定时，只执行一次
-    fsdf_background_scheduler.add_timing_publish_job(consume_func, 'cron', day_of_week='*', hour=14, minute=51, second=20, args=(5, 6,))  # 定时，每天的11点32分20秒都执行一次。
+    fsdf_background_scheduler().add_job(timing_publish_deco(consume_func), 'interval', id='3_second_job', seconds=3, kwargs={"x": 5, "y": 6})  # 每隔3秒发布一次任务，自然就能每隔3秒消费一次任务了。
+    fsdf_background_scheduler().add_job(timing_publish_deco(consume_func), 'date', run_date=datetime.datetime(2020, 7, 24, 13, 53, 6), args=(5, 6,))  # 定时，只执行一次
+    fsdf_background_scheduler().add_timing_publish_job(consume_func, 'cron', day_of_week='*', hour=14, minute=51, second=20, args=(5, 6,))  # 定时，每天的11点32分20秒都执行一次。
     # 启动定时
-    fsdf_background_scheduler.start()
+    fsdf_background_scheduler().start()
 
     # 启动消费
     consume_func.consume()
@@ -667,7 +667,7 @@ if __name__ == '__main__':
     f2.consume()
 ```
 
-#### 2.8.2控频功能证明，使用外网连接远程broker,持续qps控频。
+#### 2.8.2 对函数耗时随机性大的控频功能证明，使用外网连接远程broker,持续qps控频。
 ```
 设置函数的qps为100，来调度需要消耗任意随机时长的函数，能够做到持续精确控频，频率误差小。
 如果设置每秒精确运行超过500000次以上的固定频率，前提是cpu够强机器数量多，
@@ -696,7 +696,7 @@ if __name__ == '__main__':
     test_fun.consume()
     # run_consumer_with_multi_process(test_fun,1)
 ```
-##### 持续控频曲线
+##### 对耗时波动大的函数持续控频曲线
 ![Image text](test_frame/test_rabbitmq/img_2.png)
 
 ```
@@ -1185,11 +1185,11 @@ def consume_func(x, y):
 
 
 if __name__ == '__main__':
-    fsdf_background_scheduler.add_job(timing_publish_deco(consume_func), 'interval', id='3_second_job', seconds=3, kwargs={"x": 5, "y": 6})  # 每隔3秒发布一次任务，自然就能每隔3秒消费一次任务了。
-    fsdf_background_scheduler.add_job(timing_publish_deco(consume_func), 'date', run_date=datetime.datetime(2020, 7, 24, 13, 53, 6), args=(5, 6,))  # 定时，只执行一次
-    fsdf_background_scheduler.add_timing_publish_job(consume_func, 'cron', day_of_week='*', hour=14, minute=51, second=20, args=(5, 6,))  # 定时，每天的11点32分20秒都执行一次。
+    fsdf_background_scheduler().add_job(timing_publish_deco(consume_func), 'interval', id='3_second_job', seconds=3, kwargs={"x": 5, "y": 6})  # 每隔3秒发布一次任务，自然就能每隔3秒消费一次任务了。
+    fsdf_background_scheduler().add_job(timing_publish_deco(consume_func), 'date', run_date=datetime.datetime(2020, 7, 24, 13, 53, 6), args=(5, 6,))  # 定时，只执行一次
+    fsdf_background_scheduler().add_timing_publish_job(consume_func, 'cron', day_of_week='*', hour=14, minute=51, second=20, args=(5, 6,))  # 定时，每天的11点32分20秒都执行一次。
     # 启动定时
-    fsdf_background_scheduler.start()
+    fsdf_background_scheduler().start()
 
     # 启动消费
     consume_func.consume()
@@ -1222,12 +1222,63 @@ if __name__ == '__main__':
        def add(self,y):
            return self.x + y
     
-    那么你不能 a =A(1) ; a.add.push(2),因为self也是入参之一，不能只发布y，要吧a对象(self)也发布本进来。
-    所以你需要再写一个函数
-    def your_task(x,y):
-        return  A(x).add(y)
-    然后把这个your_task函数传给框架就可以了。所以此框架和你在项目里面写类不是冲突的，
-    本人是100%推崇oop编程，非常鲜明的反对极端面向过程编程写代码。
+    那么你不能 a =A(1) ; a.add.push(2),因为self也是入参之一，不能只发布y，要吧a对象(self)也发布进来。
+    add(2)的结果是不确定的，他是受到a对象的x属性的影响的，如果x的属性是100，那么a.add(2)的结果是102.
+    如果框架对实例方法，自动发布对象本身作为第一个入参到中间件，那么就需要采用pickle序列化，picke序列化对象，
+    消耗的cpu很大，占用的消息体积也很大，而且相当一大部分的对象压根无法支持pickle序列化。
+    无法支持序列化的对象我举个例子，
+    
+import pickle
+import threading
+import redis
+
+class CannotPickleObject:
+    def __init__(self):
+        self._lock = threading.Lock()
+
+
+class CannotPickleObject2:
+    def __init__(self):
+        self._redis = redis.Redis()
+
+print(pickle.dumps(CannotPickleObject())) # 报错，因为lock对象无法pickle
+print(pickle.dumps(CannotPickleObject2())) # 报错，因为redis客户端对象也有一个属性是lock对象。
+
+以上这两个对象如果你想实例化，那就是天方夜谭，不可能绝对不可能。
+真实场景下，一个类的对象包含了很多属性，而属性指向另一个对象，另一个对象的属性指向下一个对象，
+只要其中某一个属性的对象不可pickle序列化，那么此对象就无法pickle序列化。
+pickle序列化并不是全能的，所以经常才出现python在win下的多进程启动报错，
+因为windows开多进程需要序列化入参，但复杂的入参，例如不是简单的数字 字母，而是一个自定义对象，
+万一这个对象无法序列化，那么win上启动多进程就会直接报错。
+
+         
+所以如果为了调度上面的class A的add方法，你需要再写一个函数
+def your_task(x,y):
+    return  A(x).add(y)
+然后把这个your_task函数传给框架就可以了。所以此框架和你在项目里面写类不是冲突的，
+本人是100%推崇oop编程，非常鲜明的反对极端面向过程编程写代码，但是此框架鼓励你写函数而不是类+实例方法。
+框架能支持@staticmethod装饰的静态方法，不支持实例方法，因为静态方法的第一个入参不是self。
+    
+    
+如果对以上为什么不支持实例方法解释还是无法搞明白，主要是说明没静下心来仔细想想，
+如果是你设计框架，你会怎么让框架支持实例方法？
+
+statckflow上提问，celery为什么不支持实例方法加@task
+https://stackoverflow.com/questions/39490052/how-to-make-any-method-from-view-model-as-celery-task
+
+celery的作者的回答是：
+
+You can create tasks out of methods. The bad thing about this is that the object itself gets passed around 
+(because the state of the object in worker has to be same as the state of the caller) 
+in order for it to be called, so you lose some flexibility. So your object has to be pickled every 
+time, which is why I am against this solution. Of course this concerns only class methods, s
+tatic methods have no such problem.
+
+Another solution, which I like, is to create separate tasks.py or class based tasks and call the methods 
+from within them. This way, you will have FULL control over Analytics object within your worker.
+
+这段英文的意思和我上面解释的完全一样。所以主要是你没仔细思考想想为什么不支持实例方法。
+  
   ```
   
   #### 5.8 是怎么调度一个函数的。

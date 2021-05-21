@@ -13,6 +13,8 @@ from pythonjsonlogger.jsonlogger import JsonFormatter
 
 
 def get_host_ip():
+    # import time
+    # t1 = time.time()
     ip = ''
     host_name = ''
     # noinspection PyBroadException
@@ -24,6 +26,7 @@ def get_host_ip():
         sc.close()
     except Exception:
         pass
+    # print(time.time() -t1 )
     return ip, host_name
 
 

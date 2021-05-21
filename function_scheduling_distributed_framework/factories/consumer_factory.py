@@ -4,6 +4,26 @@
 import copy
 from collections import Callable
 
+from function_scheduling_distributed_framework.consumers.kafka_consumer import KafkaConsumer
+from function_scheduling_distributed_framework.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit
+from function_scheduling_distributed_framework.consumers.kombu_consumer import KombuConsumer
+from function_scheduling_distributed_framework.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
+from function_scheduling_distributed_framework.consumers.mongomq_consumer import MongoMqConsumer
+from function_scheduling_distributed_framework.consumers.nsq_consumer import NsqConsumer
+from function_scheduling_distributed_framework.consumers.persist_queue_consumer import PersistQueueConsumer
+from function_scheduling_distributed_framework.consumers.rabbitmq_amqpstorm_consumer import RabbitmqConsumerAmqpStorm
+from function_scheduling_distributed_framework.consumers.rabbitmq_pika_consumer import RabbitmqConsumer
+from function_scheduling_distributed_framework.consumers.rabbitmq_rabbitpy_consumer import RabbitmqConsumerRabbitpy
+from function_scheduling_distributed_framework.consumers.redis_brpoplpush_consumer import RedisBrpopLpushConsumer
+from function_scheduling_distributed_framework.consumers.redis_consumer import RedisConsumer
+from function_scheduling_distributed_framework.consumers.redis_consumer_ack_able import RedisConsumerAckAble
+from function_scheduling_distributed_framework.consumers.rocketmq_consumer import RocketmqConsumer
+from function_scheduling_distributed_framework.consumers.sqlachemy_consumer import SqlachemyConsumer
+from function_scheduling_distributed_framework.consumers.redis_stream_consumer import RedisStreamConsumer
+from function_scheduling_distributed_framework.consumers.zeromq_consumer import ZeroMqConsumer
+from function_scheduling_distributed_framework.consumers.mqtt_consumer import MqttConsumer
+from function_scheduling_distributed_framework.consumers.httpsqs_consumer import HttpsqsConsumer
+
 
 def get_consumer(*args, broker_kind=0, **kwargs):
     """
@@ -12,27 +32,6 @@ def get_consumer(*args, broker_kind=0, **kwargs):
     :param kwargs:
     :return:
     """
-
-    # 这里改成为延迟导入，而不是一开头就导入，是为了程序启动速度快。
-    from function_scheduling_distributed_framework.consumers.kafka_consumer import KafkaConsumer
-    from function_scheduling_distributed_framework.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit
-    from function_scheduling_distributed_framework.consumers.kombu_consumer import KombuConsumer
-    from function_scheduling_distributed_framework.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
-    from function_scheduling_distributed_framework.consumers.mongomq_consumer import MongoMqConsumer
-    from function_scheduling_distributed_framework.consumers.nsq_consumer import NsqConsumer
-    from function_scheduling_distributed_framework.consumers.persist_queue_consumer import PersistQueueConsumer
-    from function_scheduling_distributed_framework.consumers.rabbitmq_amqpstorm_consumer import RabbitmqConsumerAmqpStorm
-    from function_scheduling_distributed_framework.consumers.rabbitmq_pika_consumer import RabbitmqConsumer
-    from function_scheduling_distributed_framework.consumers.rabbitmq_rabbitpy_consumer import RabbitmqConsumerRabbitpy
-    from function_scheduling_distributed_framework.consumers.redis_brpoplpush_consumer import RedisBrpopLpushConsumer
-    from function_scheduling_distributed_framework.consumers.redis_consumer import RedisConsumer
-    from function_scheduling_distributed_framework.consumers.redis_consumer_ack_able import RedisConsumerAckAble
-    from function_scheduling_distributed_framework.consumers.rocketmq_consumer import RocketmqConsumer
-    from function_scheduling_distributed_framework.consumers.sqlachemy_consumer import SqlachemyConsumer
-    from function_scheduling_distributed_framework.consumers.redis_stream_consumer import RedisStreamConsumer
-    from function_scheduling_distributed_framework.consumers.zeromq_consumer import ZeroMqConsumer
-    from function_scheduling_distributed_framework.consumers.mqtt_consumer import MqttConsumer
-    from function_scheduling_distributed_framework.consumers.httpsqs_consumer import HttpsqsConsumer
 
     broker_kind__consumer_type_map = {
         0: RabbitmqConsumerAmqpStorm,

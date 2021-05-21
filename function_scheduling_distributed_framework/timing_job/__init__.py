@@ -4,7 +4,8 @@
 import time
 from typing import Union
 import threading
-from functools import lru_cache
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.util import undefined
 
 from function_scheduling_distributed_framework import frame_config
 
@@ -13,6 +14,7 @@ from function_scheduling_distributed_framework.consumers.base_consumer import Ab
 
 def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, AbstractConsumer]):
     def _deco(*args, **kwargs):
+        if getattr(consuming_func_decorated_or_consumer, 'is_decorated_as_consume_function',False) is True:
         if getattr(consuming_func_decorated_or_consumer, 'is_decorated_as_consume_function', False) is True:
             consuming_func_decorated_or_consumer.push(*args, **kwargs)
         elif isinstance(consuming_func_decorated_or_consumer, AbstractConsumer):
@@ -23,68 +25,31 @@ def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, Ab
     return _deco
 
 
-# class FsdfBackgroundScheduler(BackgroundScheduler):
-#     """
-#     自定义的，添加一个方法add_timing_publish_job
-#     """
-#
-#     def add_timing_publish_job(self, func, trigger=None, args=None, kwargs=None, id=None, name=None,
-#                                misfire_grace_time=undefined, coalesce=undefined, max_instances=undefined,
-#                                next_run_time=undefined, jobstore='default', executor='default',
-#                                replace_existing=False, **trigger_args):
-#         return self.add_job(timing_publish_deco(func), trigger, args, kwargs, id, name,
-#                             misfire_grace_time, coalesce, max_instances,
-#                             next_run_time, jobstore, executor,
-#                             replace_existing, **trigger_args)
-#
-#     def start(self):
-#         def _block_exit():
-#             while True:
-#                 time.sleep(3600)
-#
-#         threading.Thread(target=_block_exit).start()  # 不希望定时退出。
-#         super(FsdfBackgroundScheduler, self).start()
-
-
-# fsdf_background_scheduler = FsdfBackgroundScheduler(timezone=frame_config.TIMEZONE)
-
-@lru_cache() # 可以理解为单例scheduler，一直调用fsdf_background_scheduler()，只返回同一个schduler。
-def fsdf_background_scheduler():
+class FsdfBackgroundScheduler(BackgroundScheduler):
     """
-    导入apscheduler包需要花3秒，严重影响代码启动速度，所以延迟导入，
-    注意fsdf_background_scheduler是一个函数，不是最终的scheduler类型的对象，必须 fsdf_background_scheduler()。
-
-    :return:
+    自定义的，添加一个方法add_timing_publish_job
     """
 
-    from apscheduler.schedulers.background import BackgroundScheduler
-    from apscheduler.util import undefined
+    def add_timing_publish_job(self, func, trigger=None, args=None, kwargs=None, id=None, name=None,
+                               misfire_grace_time=undefined, coalesce=undefined, max_instances=undefined,
+                               next_run_time=undefined, jobstore='default', executor='default',
+                               replace_existing=False, **trigger_args):
+        return self.add_job(timing_publish_deco(func), trigger, args, kwargs, id, name,
+                            misfire_grace_time, coalesce, max_instances,
+                            next_run_time, jobstore, executor,
+                            replace_existing, **trigger_args)
 
-    class FsdfBackgroundScheduler(BackgroundScheduler):
-        """
-        自定义的，添加一个方法add_timing_publish_job
-        """
-        frame_contab_scheduler = None
+    def start(self):
+        def _block_exit():
+            while True:
+                time.sleep(3600)
 
-        def add_timing_publish_job(self, func, trigger=None, args=None, kwargs=None, id=None, name=None,
-                                   misfire_grace_time=undefined, coalesce=undefined, max_instances=undefined,
-                                   next_run_time=undefined, jobstore='default', executor='default',
-                                   replace_existing=False, **trigger_args):
-            return self.add_job(timing_publish_deco(func), trigger, args, kwargs, id, name,
-                                misfire_grace_time, coalesce, max_instances,
-                                next_run_time, jobstore, executor,
-                                replace_existing, **trigger_args)
+        threading.Thread(target=_block_exit).start()  # 不希望定时退出。
+        super(FsdfBackgroundScheduler, self).start()
 
-        def start(self):
-            def _block_exit():
-                while True:
-                    time.sleep(3600)
 
-            threading.Thread(target=_block_exit).start()  # 不希望定时退出。
-            super(FsdfBackgroundScheduler, self).start()
-
-    return FsdfBackgroundScheduler()
-
+fsdf_background_scheduler = FsdfBackgroundScheduler(timezone=frame_config.TIMEZONE)
+# fsdf_background_scheduler = FsdfBackgroundScheduler()
 
 # apscheduler 包的动态修改定时  reschedule_job
 """
@@ -115,19 +80,20 @@ if __name__ == '__main__':
 
 
     # 定时每隔3秒执行一次。
-    fsdf_background_scheduler().add_job(timing_publish_deco(consume_func),
+    fsdf_background_scheduler.add_job(timing_publish_deco(consume_func),
                                       'interval', id='3_second_job', seconds=3, kwargs={"x": 5, "y": 6})
 
     # 定时，只执行一次
-    fsdf_background_scheduler().add_job(timing_publish_deco(consume_func),
+    fsdf_background_scheduler.add_job(timing_publish_deco(consume_func),
                                       'date', run_date=datetime.datetime(2020, 7, 24, 13, 53, 6), args=(5, 6,))
 
     # 定时，每天的11点32分20秒都执行一次。
-    fsdf_background_scheduler().add_timing_publish_job(consume_func,
+    fsdf_background_scheduler.add_timing_publish_job(consume_func,
                                                      'cron', day_of_week='*', hour=18, minute=22, second=20, args=(5, 6,))
 
     # 启动定时
-    fsdf_background_scheduler().start()
+    fsdf_background_scheduler.start()
 
     # 启动消费
     consume_func.consume()
+

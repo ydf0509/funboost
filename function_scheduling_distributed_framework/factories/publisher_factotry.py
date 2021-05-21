@@ -4,6 +4,25 @@
 import copy
 from typing import Callable
 
+from function_scheduling_distributed_framework.publishers.confluent_kafka_publisher import ConfluentKafkaPublisher
+from function_scheduling_distributed_framework.publishers.kombu_publisher import KombuPublisher
+from function_scheduling_distributed_framework.publishers.redis_publisher_lpush import RedisPublisherLpush
+from function_scheduling_distributed_framework.publishers.zeromq_publisher import ZeroMqPublisher
+from function_scheduling_distributed_framework.publishers.kafka_publisher import KafkaPublisher
+from function_scheduling_distributed_framework.publishers.local_python_queue_publisher import LocalPythonQueuePublisher
+from function_scheduling_distributed_framework.publishers.mongomq_publisher import MongoMqPublisher
+from function_scheduling_distributed_framework.publishers.nsq_publisher import NsqPublisher
+from function_scheduling_distributed_framework.publishers.persist_queue_publisher import PersistQueuePublisher
+from function_scheduling_distributed_framework.publishers.rabbitmq_amqpstorm_publisher import RabbitmqPublisherUsingAmqpStorm
+from function_scheduling_distributed_framework.publishers.rabbitmq_pika_publisher import RabbitmqPublisher
+from function_scheduling_distributed_framework.publishers.rabbitmq_rabbitpy_publisher import RabbitmqPublisherUsingRabbitpy
+from function_scheduling_distributed_framework.publishers.redis_publisher import RedisPublisher
+from function_scheduling_distributed_framework.publishers.rocketmq_publisher import RocketmqPublisher
+from function_scheduling_distributed_framework.publishers.sqla_queue_publisher import SqlachemyQueuePublisher
+from function_scheduling_distributed_framework.publishers.redis_stream_publisher import RedisStreamPublisher
+from function_scheduling_distributed_framework.publishers.mqtt_publisher import MqttPublisher
+from function_scheduling_distributed_framework.publishers.httpsqs_publisher import HttpsqsPublisher
+
 
 def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=True,
                   clear_queue_within_init=False, is_add_publish_time=True, consuming_function: Callable = None,
@@ -23,27 +42,6 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
 
     all_kwargs = copy.deepcopy(locals())
     all_kwargs.pop('broker_kind')
-
-    # 这里改成为延迟导入，而不是一开头就导入，是为了程序启动速度快。
-    from function_scheduling_distributed_framework.publishers.confluent_kafka_publisher import ConfluentKafkaPublisher
-    from function_scheduling_distributed_framework.publishers.kombu_publisher import KombuPublisher
-    from function_scheduling_distributed_framework.publishers.redis_publisher_lpush import RedisPublisherLpush
-    from function_scheduling_distributed_framework.publishers.zeromq_publisher import ZeroMqPublisher
-    from function_scheduling_distributed_framework.publishers.kafka_publisher import KafkaPublisher
-    from function_scheduling_distributed_framework.publishers.local_python_queue_publisher import LocalPythonQueuePublisher
-    from function_scheduling_distributed_framework.publishers.mongomq_publisher import MongoMqPublisher
-    from function_scheduling_distributed_framework.publishers.nsq_publisher import NsqPublisher
-    from function_scheduling_distributed_framework.publishers.persist_queue_publisher import PersistQueuePublisher
-    from function_scheduling_distributed_framework.publishers.rabbitmq_amqpstorm_publisher import RabbitmqPublisherUsingAmqpStorm
-    from function_scheduling_distributed_framework.publishers.rabbitmq_pika_publisher import RabbitmqPublisher
-    from function_scheduling_distributed_framework.publishers.rabbitmq_rabbitpy_publisher import RabbitmqPublisherUsingRabbitpy
-    from function_scheduling_distributed_framework.publishers.redis_publisher import RedisPublisher
-    from function_scheduling_distributed_framework.publishers.rocketmq_publisher import RocketmqPublisher
-    from function_scheduling_distributed_framework.publishers.sqla_queue_publisher import SqlachemyQueuePublisher
-    from function_scheduling_distributed_framework.publishers.redis_stream_publisher import RedisStreamPublisher
-    from function_scheduling_distributed_framework.publishers.mqtt_publisher import MqttPublisher
-    from function_scheduling_distributed_framework.publishers.httpsqs_publisher import HttpsqsPublisher
-
     broker_kind__publisher_type_map = {
         0: RabbitmqPublisherUsingAmqpStorm,
         1: RabbitmqPublisherUsingRabbitpy,

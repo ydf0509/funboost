@@ -14,7 +14,6 @@ from function_scheduling_distributed_framework.consumers.base_consumer import Ab
 
 def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, AbstractConsumer]):
     def _deco(*args, **kwargs):
-        if getattr(consuming_func_decorated_or_consumer, 'is_decorated_as_consume_function',False) is True:
         if getattr(consuming_func_decorated_or_consumer, 'is_decorated_as_consume_function', False) is True:
             consuming_func_decorated_or_consumer.push(*args, **kwargs)
         elif isinstance(consuming_func_decorated_or_consumer, AbstractConsumer):
@@ -44,30 +43,14 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
             while True:
                 time.sleep(3600)
 
-        threading.Thread(target=_block_exit).start()  # 不希望定时退出。
+        threading.Thread(target=_block_exit).start()  # 既不希望用BlockingScheduler阻塞主进程也不希望定时退出。
         super(FsdfBackgroundScheduler, self).start()
 
 
 fsdf_background_scheduler = FsdfBackgroundScheduler(timezone=frame_config.TIMEZONE)
 # fsdf_background_scheduler = FsdfBackgroundScheduler()
 
-# apscheduler 包的动态修改定时  reschedule_job
-"""
-SCHEDULER_JOBSTORES = {
-    'default': RedisJobStore(),
-}
 
-scheduler = BackgroundScheduler(jobstores=SCHEDULER_JOBSTORES,)
-
-def f(x):
-    print(x)
-
-job = scheduler.add_job(f ,'date', run_date=datetime(2021, 1, 22, 14, 28, 6), args=(5, ))
-scheduler.start()
-time.sleep(5)
-scheduler.reschedule_job(job.id,trigger='date',run_date=datetime(2021, 1, 21, 15, 29, 16), )
-
-"""
 if __name__ == '__main__':
     # 定时运行消费演示
     import datetime
@@ -96,4 +79,3 @@ if __name__ == '__main__':
 
     # 启动消费
     consume_func.consume()
-

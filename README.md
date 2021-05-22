@@ -776,6 +776,8 @@ from function_scheduling_distributed_framework import PriorityConsumingControlCo
 
 countdown 和 eta 只能设置一个。
 countdown 指的是 离发布多少秒后执行，
+
+
 eta是指定的精确时间运行一次。
 
 misfire_grace_time 是指定消息轮到被消费时候，如果已经超过了应该运行的时间多少秒之内，仍然执行。

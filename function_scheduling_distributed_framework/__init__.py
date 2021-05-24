@@ -243,9 +243,9 @@ class IdeAutoCompleteHelper(LoggerMixin):
         self.start_consuming_message = self.consume = self.start = self.consumer.start_consuming_message
 
         self.publisher = consuming_func_decorated.publisher  # type: AbstractPublisher
-        self.publish = self.pub = self.publisher.publish
-        self.push = self.delay = self.publisher.push
-        self.clear = self.clear_queue = self.publisher.clear
+        self.publish = self.pub = self.publisher.publish  # type: AbstractPublisher.publish
+        self.push = self.delay = self.publisher.push  # type: AbstractPublisher.push
+        self.clear = self.clear_queue = self.publisher.clear  # type: AbstractPublisher.clear
 
         # self.multi_process_start = partial(run_consumer_with_multi_process,consuming_func_decorated)
         self.multi_process_conusme = self.multi_process_start

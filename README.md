@@ -588,6 +588,7 @@ def ff(x, y):
 
 
 if __name__ == '__main__':
+    ff.clear() # 清除
     # ff.publish()
     for i in range(1000):
         ff.push(i, y=i * 2)
@@ -1164,6 +1165,7 @@ while 1：
       很多任务都是需要 多进程并发利用多核 + 细粒度的线程/协程绕过io 叠加并发 ，才能使运行速度更快。
  ```
 
+#### [关于框架代码补全与celery的对比](#jump515)
 
 #### 5.6 框架是使用什么序列化协议来序列化消息的。
 
@@ -1434,7 +1436,7 @@ function_scheduling_distributed_framework/utils/mqtt_publisher.py
 [test_frame\use_in_flask_tonardo_fastapi](test_frame/use_in_flask_tonardo_fastapi)
 
 
-### 5.14  日志的颜色不好看或者觉得太绚丽刺瞎眼。
+### 5.14  日志的颜色不好看或者觉得太绚丽刺瞎眼，想要调整。
 ```
 
 一 、关于日志颜色是使用的 \033实现的，控制台日志颜色不光是颜色代码决定的，最主要还是和ide的自身配色主题有关系，
@@ -1457,6 +1459,44 @@ function_scheduling_distributed_framework/utils/mqtt_publisher.py
 DISPLAY_BACKGROUD_COLOR_IN_CONSOLE = False  # 在控制台是否显示彩色块状的日志。为False则不使用大块的背景颜色。
 
 ```
+
+### 5.15  框架的代码补全和celery对比
+##### jump515
+```
+1、配置文件方式的代码补全，此框架使用固定的项目根目录下的 distributed_frame_config.py 补全，
+   不会造成不知道有哪些配置项可以配置，celery的配置项有100多个，用户不知道能配置什么。
+   
+2、启动方式补全，celery采用celery -A celeryproj work + 一大串cmd命令行，很容易打错字母，或者不知道
+   celery命令行可以接哪些参数。次框架使用 fun.consume()/fun.multi_process_consume()启动消费，
+   运行直接 python xx.py方式启动
+   
+3、发布参数补全，对于简单的只发布函数入参，celery使用delay发布，此框架使用push发布，一般delay5个字母不会敲错。
+   对于除了需要发布函数入参还要发布函数任务控制配置的发布，此框架使用publish不仅可以补全函数名本身还能补全函数入参。
+   celery使用 add.apply_async 发布，不仅apply_async函数名本身无法补全，最主要是apply_async入参达到20种，不能补全
+   的话造成完全无法知道发布任务时候可以传哪些任务控制配置，无法补全时候容易敲错入参字母，导致配置没生效。
+   举个其他包的例子是例如 requests.get 函数，由于无法补全如果用户把headers写成header或者haeders,函数不能报错导致请求头设置无效。
+   此框架的发布publish方法不仅函数名本身可以补全，发布任务控制的配置也都可以补全。
+   
+
+4、消费任务函数装饰器代码补全，celery使用@app.task，源码入参是 def task(self, *args, **opts),那么args和opts到底能传什么参数，
+  从方法本身的注释来看无法找到，即使跳转到源码去也没有说明，task能传什么参数，实际上可以传递大约20种参数，主要是任务控制参数。
+  此框架的@task_deco装饰器的 20个函数入参和入参类型全部可以自动补全提示，以及入参意义注释使用ctrl + shift + i 快捷键可以看得很清楚。
+  
+5、此框架能够在pycharm下自动补全的原因主要是适当的做了一些调整，以及主要的面向用户的公有方法宁愿重复声明入参，也不使用*args **kwargs这种。
+
+  举个例子说明是 @task_deco这个装饰器(这里假设装饰到fun函数上)，
+  此装饰器的入参和get_consumer工厂函数一模一样，但是为了补全方便没有采用*args **kwargs来达到精简源码的目的，
+  因为这个装饰器是真个框架最最最重要的，所以这个是重复吧所有入参都声明了一遍。
+  
+  对于被装饰的消费函数，此装饰器会自动动态的添加很多方法和属性，附着到被装饰的任务函数上面。
+  这些动态运行时添加到 fun函数的，pycharm本来是无法自动补全提示的，但框架对_deco内部函数返回值添加了一个返回类型声明 -> IdeAutoCompleteHelper，
+  IdeAutoCompleteHelper这个对象具有的方法方法和属性都使用# type: 语法注释了类型，而且所有属性和方法刚好是附着到fun上面的方法和属性，
+  所以类似fun.clear fun.publish fun.consume  fun.multi_process_conusme 这些方法名本身和他的入参都能够很好的自动补全。
+  
+6、自动补全为什么重要？对于入参丰富动不动高达20种入参，且会被频繁使用的重要函数，如果不能自动补全，用户无法知道有哪些方法名 方法能传什么参数 或
+  者敲了错误的方法名和入参。如果自动补全不重要，那为什么不用vim和txt写python代码，说不重要的人，那以后就别用pycharm vscode这些ide写代码。
+```
+
 
 # 6.更新记录。
 ## 6.1 新增第十种Consumer，以redis为中间件，但增加了消费确认，是RedisConsumerAckAble类。

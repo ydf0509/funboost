@@ -1,12 +1,7 @@
-from function_scheduling_distributed_framework.utils import RedisMixin
-from function_scheduling_distributed_framework.utils.bulk_operation import RedisOperation,RedisBulkWriteHelper
-from test_frame.test_with_multi_process.test_consume import fff
-import json
-fff.clear()
+from test_frame.test_with_multi_process.test_consume import ff
 
-helper = RedisBulkWriteHelper(RedisMixin().redis_db_frame,10000)
-for i in range(0,100000):
-    helper.add_task(RedisOperation('rpush', fff.consumer.queue_name, json.dumps({"x":i})))
+for i in range(1000, 10000):
+    ff.push(i, y=i * 2)
 
-if __name__ == '__main__':
-    pass
+    # 这个与push相比是复杂的发布，第一个参数是函数本身的入参字典，后面的参数为任务控制参数，例如可以设置task_id，设置延时任务，设置是否使用rpc模式等。
+    ff.publish({'x': i * 10, 'y': i * 2}, priority_control_config=PriorityConsumingControlConfig(countdown=10, misfire_grace_time=30))

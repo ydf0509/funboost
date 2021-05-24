@@ -1,24 +1,31 @@
 import time
+from function_scheduling_distributed_framework import task_deco, BrokerEnum, IdeAutoCompleteHelper, PriorityConsumingControlConfig, run_consumer_with_multi_process
 
 """
-这种是多进程方式，一次编写能够兼容win和linux的运行。一次性启动16个进程 叠加 多线程 并发。
+演示多进程启动消费，多进程和 asyncio/threading/gevnt/evntlet是叠加关系，不是平行的关系。
 """
-from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum, run_consumer_with_multi_process
-import os
-import requests
-import threading
 
 
-@task_deco('test_multi_process_queue', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_mode=ConcurrentModeEnum.THREADING, qps=10)
-def fff(x):
-    # resp = requests.get('http://www.baidu.com/content-search.xml')
-    resp = requests.get('http://127.0.0.1')
-    print(x, os.getpid(), threading.get_ident(), resp.text[:5])
+# qps=5，is_using_distributed_frequency_control=True 分布式控频每秒执行5次。
+# 如果is_using_distributed_frequency_control不设置为True,默认每个进程都会每秒执行5次。
+@task_deco('test_queue', broker_kind=BrokerEnum.REDIS, qps=5, is_using_distributed_frequency_control=True)
+def ff(x, y):
+    import os
+    time.sleep(2)
+    print(os.getpid(), x, y)
 
 
 if __name__ == '__main__':
-    # for i in range(10000):
-    #     fff.push(i)
-    # fff.consume() # 这个是单进程多线程/协程 消费。
-    # 一次性启动16个进程 叠加 多线程 并发。此demo可以作为超高速爬虫例子，能充分利用io和cpu，在16核机器上请求效率远远暴击 scrapy 数十倍，大家可以亲自对比测试。
-    run_consumer_with_multi_process(fff, 4)
+    # ff.publish()
+    for i in range(1000):
+        ff.push(i, y=i * 2)
+
+        # 这个与push相比是复杂的发布，第一个参数是函数本身的入参字典，后面的参数为任务控制参数，例如可以设置task_id，设置延时任务，设置是否使用rpc模式等。
+        ff.publish({'x': i * 10, 'y': i * 2}, priority_control_config=PriorityConsumingControlConfig(countdown=1, misfire_grace_time=15))
+
+    ff(666, 888)  # 直接运行函数
+    ff.start()  # 和 conusme()等效
+    ff.consume()  # 和 start()等效
+    run_consumer_with_multi_process(ff, 2)  # 启动两个进程
+    ff.multi_process_start(2)  # 启动两个进程，和上面的run_consumer_with_multi_process等效,现在新增这个multi_process_start方法。
+    IdeAutoCompleteHelper(ff).multi_process_start(3)  # IdeAutoCompleteHelper 可以补全提示，但现在装饰器加了类型注释，ff. 已近可以在pycharm下补全了。

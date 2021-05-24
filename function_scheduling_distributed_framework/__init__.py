@@ -1,8 +1,10 @@
-from functools import update_wrapper, wraps
+from functools import update_wrapper, wraps, partial
 from multiprocessing import Process
 from typing import List
 import copy
 # noinspection PyUnresolvedReferences
+import nb_log
+
 from function_scheduling_distributed_framework.set_frame_config import patch_frame_config, show_frame_config
 # import frame_config
 from function_scheduling_distributed_framework.consumers.base_consumer import ExceptionForRequeue, ExceptionForRetry, \
@@ -13,6 +15,9 @@ from function_scheduling_distributed_framework.factories.consumer_factory import
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.utils import nb_print, patch_print, LogManager, get_logger, LoggerMixin
 from function_scheduling_distributed_framework.timing_job import fsdf_background_scheduler, timing_publish_deco
+
+# 有的包默认没加handlers，原始的日志不漂亮且不可跳转不知道哪里发生的。这里把warnning级别以上的日志默认加上handlers。
+nb_log.get_logger(name=None, log_level_int=30, log_filename='pywarning.log')
 
 
 class BrokerEnum:
@@ -149,6 +154,7 @@ def task_deco(queue_name, *, function_timeout=0,
         f.pub(dict(a=i, b=i * 2))
         f.push(i, i * 2)
     f.consume()
+    # f.multi_process_conusme(8)             # # 这个是新加的方法，细粒度 线程 协程并发 同时叠加8个进程，速度炸裂。主要是无需导入run_consumer_with_multi_process函数。
     # run_consumer_with_multi_process(f,8)   # 这个是细粒度 线程 协程并发 同时叠加8个进程，速度炸裂。
     '''
 
@@ -162,6 +168,7 @@ def task_deco(queue_name, *, function_timeout=0,
     for i in range(10, 20):
         consumer.publisher_of_same_queue.publish(dict(a=i, b=i * 2))
     consumer.start_consuming_message()
+    #run_consumer_with_multi_process(consumer,4) # 一次性启动4个进程。
     '''
 
     装饰器版本的 task_deco 入参 和 get_consumer 入参99%一致，唯一不同的是 装饰器版本加在了函数上自动知道消费函数了，
@@ -170,7 +177,8 @@ def task_deco(queue_name, *, function_timeout=0,
     # 装饰器版本能够自动知道消费函数，防止task_deco按照get_consumer的入参重复传参了consuming_function。
     consumer_init_params = copy.copy(locals())
 
-    def _deco(func):
+    def _deco(func) -> IdeAutoCompleteHelper:  # 加这个-> 可以实现pycahrm动态补全
+
         func.init_params = consumer_init_params
         consumer = get_consumer(consuming_function=func, **consumer_init_params)
         func.is_decorated_as_consume_function = True
@@ -181,12 +189,13 @@ def task_deco(queue_name, *, function_timeout=0,
         func.publish = func.pub = consumer.publisher_of_same_queue.publish
         func.push = func.delay = consumer.publisher_of_same_queue.push
         func.clear = func.clear_queue = consumer.publisher_of_same_queue.clear
+        func.multi_process_start = func.multi_process_conusme = partial(run_consumer_with_multi_process, func)
 
-        @wraps(func)
-        def __deco(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        return __deco  # 两种方式都可以
+        # @wraps(func)
+        # def __deco(*args, **kwargs):  # 这样函数的id变化了，导致win在装饰器内部开多进程不方便。
+        #     return func(*args, **kwargs)
+        return func
+        # return __deco  # noqa # 两种方式都可以
         # return update_wrapper(__deco, func)
 
     return _deco
@@ -237,6 +246,12 @@ class IdeAutoCompleteHelper(LoggerMixin):
         self.publish = self.pub = self.publisher.publish
         self.push = self.delay = self.publisher.push
         self.clear = self.clear_queue = self.publisher.clear
+
+        # self.multi_process_start = partial(run_consumer_with_multi_process,consuming_func_decorated)
+        self.multi_process_conusme = self.multi_process_start
+
+    def multi_process_start(self, process_num):
+        run_consumer_with_multi_process(self.consuming_func_decorated, process_num)
 
 
 def _run_many_consumer_by_init_params(consumer_init_params_list: List[dict]):

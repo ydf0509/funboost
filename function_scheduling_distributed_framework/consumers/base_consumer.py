@@ -31,6 +31,8 @@ import asyncio
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
 from apscheduler.events import EVENT_JOB_MISSED
+
+from function_scheduling_distributed_framework.concurrent_pool.single_thread_executor import SoloExecutor
 from function_scheduling_distributed_framework.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
 
 import pymongo
@@ -794,10 +796,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
             self._confirm_consume(kw)
             return 0
+
         msg_eta = self.__get_priority_conf(kw, 'eta')
         msg_countdown = self.__get_priority_conf(kw, 'countdown')
         misfire_grace_time = self.__get_priority_conf(kw, 'misfire_grace_time')
-
         run_date = None
         # print(kw)
         if msg_countdown:
@@ -806,19 +808,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             run_date = time_util.DatetimeConverter(msg_eta).datetime_obj
         # print(run_date,time_util.DatetimeConverter().datetime_obj)
         # print(run_date.timestamp(),time_util.DatetimeConverter().datetime_obj.timestamp())
+        # print(self.concurrent_pool)
         if run_date:
             # print(repr(run_date),repr(datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))))
-            if self._concurrent_mode == 5:  # 单线程
-                self._delay_task_scheduler.add_job(self._run, 'date', run_date=run_date, kwargs={'kw': kw},
-                                                   misfire_grace_time=misfire_grace_time)
-            else:
-                self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw},
-                                                   misfire_grace_time=misfire_grace_time)
+            self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw},
+                                               misfire_grace_time=misfire_grace_time)
         else:
-            if self._concurrent_mode == 5:  # 单线程
-                self._run(kw)
-            else:
-                self.concurrent_pool.submit(self._run, kw)
+            self.concurrent_pool.submit(self._run, kw)
+
         if self._is_using_distributed_frequency_control:  # 如果是需要分布式控频。
             active_num = self._distributed_consumer_statistics.active_consumer_num
             self.__frequency_control(self._qps / active_num, self._msg_schedule_time_intercal * active_num)
@@ -870,7 +867,8 @@ class ConcurrentModeDispatcher(LoggerMixin):
         if ConsumersManager.global_concurrent_mode is not None and self.consumer._concurrent_mode != ConsumersManager.global_concurrent_mode:
             ConsumersManager.show_all_consumer_info()
             # print({self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode})
-            if not {self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode}.issubset({1, 4}):
+            if not {self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode}.issubset({1, 4, 5}):
+                # threding、asyncio、solo 这几种模式可以共存。但同一个解释器不能同时选择 gevent + 其它并发模式，也不能 eventlet + 其它并发模式。
                 raise ValueError('由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，'
                                  '搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种')
         self._concurrent_mode = ConsumersManager.global_concurrent_mode = self.consumer._concurrent_mode
@@ -898,7 +896,8 @@ class ConcurrentModeDispatcher(LoggerMixin):
             pool_type = CustomEventletPoolExecutor
         elif self._concurrent_mode == 4:
             pool_type = AsyncPoolExecutor
-            check_not_monkey()
+        elif self._concurrent_mode == 5:
+            pool_type = SoloExecutor
         if self._concurrent_mode == 4:
             self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool is not None else pool_type(
                 self.consumer._concurrent_num, loop=self.consumer._specify_async_loop)

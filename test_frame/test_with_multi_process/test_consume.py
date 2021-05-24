@@ -24,8 +24,8 @@ if __name__ == '__main__':
         ff.publish({'x': i * 10, 'y': i * 2}, priority_control_config=PriorityConsumingControlConfig(countdown=1, misfire_grace_time=15))
 
     ff(666, 888)  # 直接运行函数
-    ff.start()  # 和 conusme()等效
-    ff.consume()  # 和 start()等效
+    # ff.start()  # 和 conusme()等效
+    # ff.consume()  # 和 start()等效
     run_consumer_with_multi_process(ff, 2)  # 启动两个进程
-    ff.multi_process_start(2)  # 启动两个进程，和上面的run_consumer_with_multi_process等效,现在新增这个multi_process_start方法。
-    IdeAutoCompleteHelper(ff).multi_process_start(3)  # IdeAutoCompleteHelper 可以补全提示，但现在装饰器加了类型注释，ff. 已近可以在pycharm下补全了。
+    # ff.multi_process_start(2)  # 启动两个进程，和上面的run_consumer_with_multi_process等效,现在新增这个multi_process_start方法。
+    # IdeAutoCompleteHelper(ff).multi_process_start(3)  # IdeAutoCompleteHelper 可以补全提示，但现在装饰器加了类型注释，ff. 已近可以在pycharm下补全了。

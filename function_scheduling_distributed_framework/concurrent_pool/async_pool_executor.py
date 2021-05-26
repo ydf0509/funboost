@@ -1,16 +1,16 @@
 import atexit
 import os
 import asyncio
+import threading
 import time
 import traceback
 from threading import Thread, Event
 import nb_log  # noqa
-from function_scheduling_distributed_framework.utils.develop_log import develop_logger  # noqa
 
 # if os.name == 'posix':
 #     import uvloop
 #
-#     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+#     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())  # 打猴子补丁最好放在代码顶层，否则很大机会出问题。
 
 """
 # 也可以采用 janus 的 线程安全的queue方式来实现异步池，此queue性能和本模块实现的生产 消费相比，性能并没有提高，所以就不重新用这这个包来实现一次了。
@@ -68,7 +68,7 @@ class AsyncPoolExecutor2:
         self.loop.close()
 
 
-class AsyncPoolExecutor:
+class AsyncPoolExecutor(nb_log.LoggerMixin):
     """
     使api和线程池一样，最好的性能做法是submit也弄成 async def，生产和消费在同一个线程同一个loop一起运行，但会对调用链路的兼容性产生破坏，从而调用方式不兼容线程池。
     """
@@ -89,15 +89,21 @@ class AsyncPoolExecutor:
         self._can_be_closed_flag = False
         atexit.register(self.shutdown)
 
-    def submit2(self, func, *args, **kwargs):
+        self._event = threading.Event()
+        print(self._event.is_set())
+        self._event.set()
+
+    def submit00(self, func, *args, **kwargs):
         # future = asyncio.run_coroutine_threadsafe(self._produce(func, *args, **kwargs), self.loop) # 这个方法也有缺点，消耗的性能巨大。
         # future.result()  # 阻止过快放入，放入超过队列大小后，使submit阻塞。
 
         # asyncio.ensure_future(self._produce(func, *args, **kwargs),loop=self.loop) # 这样快，但不能阻塞导致快速放入。
         # 这个submit提交方法性能比submit2的 run_coroutine_threadsafe 性能好
+
         while self._queue.full():
-            time.sleep(0.0001)
-        asyncio.ensure_future(self._produce(func, *args, **kwargs), loop=self.loop)
+            time.sleep(0.001)
+        # print(func, self._queue.qsize(), self._queue.full())
+        asyncio.ensure_future(self._produce((func, args, kwargs)), loop=self.loop)
 
     def submit(self, func, *args, **kwargs):
         future = asyncio.run_coroutine_threadsafe(self._produce(func, *args, **kwargs), self.loop)  # 这个 run_coroutine_threadsafe 方法也有缺点，消耗的性能巨大。
@@ -109,12 +115,14 @@ class AsyncPoolExecutor:
     async def _consume(self):
         while True:
             func, args, kwargs = await self._queue.get()
-            if func == 'stop':
+            if isinstance(func, str) and func.startswith('stop'):
+                self.logger.debug(func)
                 break
             try:
                 await func(*args, **kwargs)
             except Exception as e:
                 traceback.print_exc()
+            # self._queue.task_done()
 
     async def __run(self):
         for _ in range(self._size):
@@ -129,12 +137,14 @@ class AsyncPoolExecutor:
         self._can_be_closed_flag = True
 
     def shutdown(self):
-        for _ in range(self._size):
-            self.submit('stop', )
-        while not self._can_be_closed_flag:
-            time.sleep(0.1)
-        self.loop.close()
-        print('关闭循环')
+        if self.loop.is_running():  # 这个可能是atregster触发，也可能是用户手动调用，需要判断一下，不能关闭两次。
+            for i in range(self._size):
+                self.submit(f'stop{i}', )
+            while not self._can_be_closed_flag:
+                time.sleep(0.1)
+            self.loop.stop()
+            self.loop.close()
+            print('关闭循环')
 
 
 class AsyncProducerConsumer:
@@ -216,25 +226,30 @@ if __name__ == '__main__':
         from function_scheduling_distributed_framework.concurrent_pool import CustomThreadPoolExecutor as ThreadPoolExecutor
 
         async def f(x):
+            await asyncio.sleep(10)
             print('打印', x)
             # await asyncio.sleep(1)
             # raise Exception('aaa')
 
         def f2(x):
+            time.sleep(0.001)
             print('打印', x)
 
         print(1111)
+
+        t1 = time.time()
         pool = AsyncPoolExecutor(200)
         # pool = ThreadPoolExecutor(200)  # 协程不能用线程池运行，否则压根不会执行print打印，对于一部函数 f(x)得到的是一个协程，必须进一步把协程编排成任务放在loop循环里面运行。
         for i in range(1, 50001):
             print('放入', i)
             pool.submit(f, i)
         # time.sleep(5)
-        pool.submit(f, 'hi')
-        pool.submit(f, 'hi2')
-        pool.submit(f, 'hi3')
-        print(2222)
-        # pool.shutdown()
+        # pool.submit(f, 'hi')
+        # pool.submit(f, 'hi2')
+        # pool.submit(f, 'hi3')
+        # print(2222)
+        pool.shutdown()
+        print(time.time() - t1)
 
 
     async def _my_fun(item):

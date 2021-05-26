@@ -873,7 +873,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
                                  '搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种')
         self._concurrent_mode = ConsumersManager.global_concurrent_mode = self.consumer._concurrent_mode
         self.timeout_deco = None
-        if self._concurrent_mode == 1:
+        if self._concurrent_mode in (1, 5):
             self.timeout_deco = decorators.timeout
         elif self._concurrent_mode == 2:
             self.timeout_deco = gevent_timeout_deco

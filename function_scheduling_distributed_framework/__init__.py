@@ -114,22 +114,21 @@ class IdeAutoCompleteHelper(LoggerMixin):
 
         """
         self.is_decorated_as_consume_function = consuming_func_decorated.is_decorated_as_consume_function
-
         self.consuming_func_decorated = consuming_func_decorated
 
         self.consumer = consuming_func_decorated.consumer  # type: AbstractConsumer
-        self.start_consuming_message = self.consume = self.start = self.consumer.start_consuming_message
 
         self.publisher = consuming_func_decorated.publisher  # type: AbstractPublisher
-        self.publish = self.pub = self.publisher.publish  # type: AbstractPublisher.publish
+        self.publish = self.pub = self.apply_async = self.publisher.publish  # type: AbstractPublisher.publish
         self.push = self.delay = self.publisher.push  # type: AbstractPublisher.push
         self.clear = self.clear_queue = self.publisher.clear  # type: AbstractPublisher.clear
 
-        # self.multi_process_start = partial(run_consumer_with_multi_process,consuming_func_decorated)
-        self.multi_process_conusme = self.multi_process_start
+        self.start_consuming_message = self.consume = self.start = self.consumer.start_consuming_message
 
-    def multi_process_start(self, process_num):
+    def multi_process_consume(self, process_num=1):
         run_consumer_with_multi_process(self.consuming_func_decorated, process_num)
+
+    multi_process_start = multi_process_consume
 
     def __call__(self, *args, **kwargs):
         return self.consuming_func_decorated(*args, **kwargs)
@@ -146,7 +145,7 @@ def task_deco(queue_name, *, function_timeout=0,
               schedule_tasks_on_main_thread=False,
               function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600),
               is_using_rpc_mode=False,
-              broker_kind=0) -> IdeAutoCompleteHelper:
+              broker_kind=0):
     """
     # 为了代码提示好，这里重复一次入参意义。被此装饰器装饰的函数f，函数f对象本身自动加了一些方法，例如f.push 、 f.consume等。
     :param queue_name: 队列名字。
@@ -240,11 +239,13 @@ def task_deco(queue_name, *, function_timeout=0,
         func.is_decorated_as_consume_function = True
         func.consumer = consumer
         # 下面这些连等主要是由于元编程造成的不能再ide下智能补全，参数太长很难手动拼写出来
-        func.start_consuming_message = func.consume = func.start = consumer.start_consuming_message
+
         func.publisher = consumer.publisher_of_same_queue
-        func.publish = func.pub = consumer.publisher_of_same_queue.publish
+        func.publish = func.pub = func.apply_async = consumer.publisher_of_same_queue.publish
         func.push = func.delay = consumer.publisher_of_same_queue.push
         func.clear = func.clear_queue = consumer.publisher_of_same_queue.clear
+
+        func.start_consuming_message = func.consume = func.start = consumer.start_consuming_message
         func.multi_process_start = func.multi_process_conusme = partial(run_consumer_with_multi_process, func)
 
         # @wraps(func)

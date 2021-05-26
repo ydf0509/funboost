@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version=9.9,
+    version=10.0,
     description=(
         'function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way'
     ),
@@ -66,7 +66,7 @@ setup(
         'redis2',
         'redis3',
         'redis',
-        'nb_log>=4.7',
+        'nb_log>=4.9',
         'rocketmq',
         'zmq',
         'pyzmq',
@@ -84,7 +84,7 @@ setup(
 打包上传
 python setup.py sdist upload -r pypi
 
-python setup.py sdist & twine upload dist/function_scheduling_distributed_framework-9.9.tar.gz
+python setup.py sdist & twine upload dist/function_scheduling_distributed_framework-10.0.tar.gz
 
 最快的下载方式，上传立即可安装。阿里云源同步官网pypi间隔要等很久。
 ./pip install function_scheduling_distributed_framework==3.5 -i https://pypi.org/simple   

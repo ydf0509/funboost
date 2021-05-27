@@ -246,7 +246,7 @@ def task_deco(queue_name, *, function_timeout=0,
         func.clear = func.clear_queue = consumer.publisher_of_same_queue.clear
 
         func.start_consuming_message = func.consume = func.start = consumer.start_consuming_message
-        func.multi_process_start = func.multi_process_conusme = partial(run_consumer_with_multi_process, func)
+        func.multi_process_start = func.multi_process_consume = partial(run_consumer_with_multi_process, func)
 
         # @wraps(func)
         # def __deco(*args, **kwargs):  # 这样函数的id变化了，导致win在装饰器内部开多进程不方便。

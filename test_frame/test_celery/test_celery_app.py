@@ -40,12 +40,12 @@ class Config2:
 celery_app.config_from_object(Config2)
 
 
-@celery_app.task(name='求和啊', )  # REMIND rate_limit在这里写，也可以在调用时候写test_task.apply_async(args=(1,2),expires=3)
+@celery_app.task(name='求和啊',rate_limit='100/s' )  # REMIND rate_limit在这里写，也可以在调用时候写test_task.apply_async(args=(1,2),expires=3)
 def add(a, b):
     # print(f'消费此消息 {a} + {b} 中。。。。。')
     # time.sleep(100, )  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
     print(f'{int(time.time())} 计算 {a} + {b} 得到的结果是  {a + b}')
-    time.sleep(20)
+    time.sleep(0.7)
     return a + b
 
 
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     """
     # queue_add,queue_sub,queue_f1
     celery_app.worker_main(
-        argv=['worker', '--pool=solo','--concurrency=50', '-n', 'worker1@%h', '--loglevel=DEBUG',
+        argv=['worker', '--pool=gevent','--concurrency=500', '-n', 'worker1@%h', '--loglevel=DEBUG',
               '--queues=queue_f1,queue_add2,queue_sub2'])
     import threading
 

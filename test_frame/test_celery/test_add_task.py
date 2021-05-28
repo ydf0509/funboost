@@ -6,12 +6,12 @@ from test_frame.test_celery.test_celery_app import add, sub
 
 
 t1 = time.time()
-for i in range(1,2):
+for i in range(1,20000):
     # print('生产者添加任务')
     # print(i)
     # result = add.delay(i, i * 2)
-    time.sleep(1)
-    result = add.apply_async(args=(i, i * 2),countdown=20)
+    time.sleep(0.01)
+    result = add.apply_async(args=(i, i * 2),countdown=0)
     # result = add.apply_async(args=(i, i * 2), )
     print(result)
     # print(result.get())

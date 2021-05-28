@@ -1216,7 +1216,25 @@ while 1：
       或者在多个容器里面启动消费，那么总的qps会乘倍数增长。此框架能支持单个消费者控频，同时也支持分布式全局控频。
   16） 此框架比celery更简单开启 多进程 + 线程或协程。celery的多进程和多线程是互斥的并发模式，此框架是叠加的。
       很多任务都是需要 多进程并发利用多核 + 细粒度的线程/协程绕过io 叠加并发 ，才能使运行速度更快。
-
+  17) 此框架精确控频率精确度达到99.9%，celery控频相当不准确，最多到达60%左右，两框架同样是做简单的加法然后sleep0.7秒，都设置500并发。
+  
+      @task_deco('test_queue66', broker_kind=BrokerEnum.REDIS, qps=100)
+      def f(x, y):
+        print(f''' {int(time.time())} 计算  {x} + {y} = {x + y}''')
+        time.sleep(0.7)
+        return x + y
+      在pycahrm控制台搜索 某一秒的时间戳 + 计算 作为关键字查询，分布式函数调度框架启动5秒后，以后持续每一秒都是100次，未出现过99和101的现象。
+      
+      @celery_app.task(name='求和啊',rate_limit='100/s' ) 
+    def add(a, b):
+        print(f'{int(time.time())} 计算 {a} + {b} 得到的结果是  {a + b}')
+        time.sleep(0.7)
+        return a + b
+    在pycahrm控制台搜索 某一秒的时间戳 + 计算 作为关键字查询，celery框架，每一秒求和次数都是飘忽不定的，而且是六十几徘徊，
+    如果celery能控制到95至105次每秒徘徊波动还能接受，类似现象还有celery设置rate_limit=50/s，实际32次每秒徘徊，
+    设置rate_limit=30/s，实际18-22次每秒徘徊，可见celery的控频相当差。
+    
+        
  ```
 
 #### [关于框架代码补全与celery的对比](#jump515)

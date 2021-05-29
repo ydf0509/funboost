@@ -2,7 +2,7 @@
 
 ##### pip install function_scheduling_distributed_framework --upgrade
 
-##### 分布式执行函数，支持5种并发模式，20种消息中间件，20种任务控制功能。
+##### 分布式函数调度框架，支持5种并发模式，20种消息中间件，20种任务控制功能。
 
 ### 对比celery最显而易见的其中两个优势
 

@@ -45,7 +45,7 @@ def add(a, b):
     # print(f'消费此消息 {a} + {b} 中。。。。。')
     # time.sleep(100, )  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
     print(f'{int(time.time())} 计算 {a} + {b} 得到的结果是  {a + b}')
-    time.sleep(0.7)
+    time.sleep(1)
     return a + b
 
 

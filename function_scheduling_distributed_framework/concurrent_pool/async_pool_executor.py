@@ -116,7 +116,7 @@ class AsyncPoolExecutor(nb_log.LoggerMixin):
         while True:
             func, args, kwargs = await self._queue.get()
             if isinstance(func, str) and func.startswith('stop'):
-                self.logger.debug(func)
+                # self.logger.debug(func)
                 break
             try:
                 await func(*args, **kwargs)
@@ -226,7 +226,7 @@ if __name__ == '__main__':
         from function_scheduling_distributed_framework.concurrent_pool import CustomThreadPoolExecutor as ThreadPoolExecutor
 
         async def f(x):
-            await asyncio.sleep(10)
+            await asyncio.sleep(0.1)
             print('打印', x)
             # await asyncio.sleep(1)
             # raise Exception('aaa')

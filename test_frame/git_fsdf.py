@@ -25,7 +25,7 @@ def do_cmd(cmd_strx):
 
 t0 = time.time()
 
-do_cmd('git pull origin')
+do_cmd('git pull')
 
 do_cmd('git diff')
 

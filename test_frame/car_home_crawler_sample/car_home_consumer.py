@@ -1,6 +1,6 @@
 import requests
 from parsel import Selector
-from function_scheduling_distributed_framework import task_deco, BrokerEnum, run_consumer_with_multi_process
+from function_scheduling_distributed_framework import task_deco, BrokerEnum, IdeAutoCompleteHelper
 
 """
 演示分布式函数调度框架来驱动爬虫函数，使用此框架可以达使爬虫任务 自动调度、 分布式运行、确认消费万无一失、超高速自动并发、精确控频、
@@ -35,7 +35,8 @@ from function_scheduling_distributed_framework import task_deco, BrokerEnum, run
 因为此框架带有20多种控制功能，所以普通爬虫框架能实现的控制，这个全部都自带了。
 """
 
-@task_deco('car_home_list', broker_kind=BrokerEnum.RedisBrpopLpush, max_retry_times=5, qps=2)
+
+@task_deco('car_home_list', broker_kind=BrokerEnum.RedisBrpopLpush, max_retry_times=5, qps=0.5)
 def crawl_list_page(news_type, page, do_page_turning=False):
     url = f'https://www.autohome.com.cn/{news_type}/{page}/#liststart'
     resp_text = requests.get(url).text
@@ -51,7 +52,7 @@ def crawl_list_page(news_type, page, do_page_turning=False):
             crawl_list_page.push(news_type, p)  # 列表页翻页。
 
 
-@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=6,
+@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=3,
            do_task_filtering=True, is_using_distributed_frequency_control=True)
 def crawl_detail_page(url, title, news_type):
     resp_text = requests.get(url).text
@@ -67,4 +68,4 @@ if __name__ == '__main__':
     crawl_list_page.consume()  # 启动列表页消费
     crawl_detail_page.consume()
     # 这样速度更猛，叠加多进程
-    run_consumer_with_multi_process(crawl_detail_page, 2)
+    crawl_detail_page.multi_process_consume(2)

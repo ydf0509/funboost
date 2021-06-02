@@ -35,6 +35,7 @@ from function_scheduling_distributed_framework import task_deco, BrokerEnum, run
 因为此框架带有20多种控制功能，所以普通爬虫框架能实现的控制，这个全部都自带了。
 """
 
+
 @task_deco('car_home_list', broker_kind=BrokerEnum.RedisBrpopLpush, max_retry_times=5, qps=2)
 def crawl_list_page(news_type, page, do_page_turning=False):
     url = f'https://www.autohome.com.cn/{news_type}/{page}/#liststart'
@@ -67,4 +68,4 @@ if __name__ == '__main__':
     crawl_list_page.consume()  # 启动列表页消费
     crawl_detail_page.consume()
     # 这样速度更猛，叠加多进程
-    run_consumer_with_multi_process(crawl_detail_page, 2)
+    crawl_detail_page.multi_process_consume(4)

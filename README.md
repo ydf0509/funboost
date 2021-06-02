@@ -666,6 +666,7 @@ if __name__ == '__main__':
 ##### 客户端调用脚本，获取两书之和的结果，执行求和过程是在服务端。 test_frame\test_rpc\test_publish.py
 
 ```python
+from function_scheduling_distributed_framework import PriorityConsumingControlConfig
 from test_frame.test_rpc.test_consume import add
 
 for i in range(100):

@@ -12,3 +12,4 @@ for i in range(100):
     logger.warning('黄色yello，有警告了。 ' * 4)
     logger.error('粉红色说明代码有错误。 ' * 4)
     logger.critical('血红色，说明发生了严重错误。 ' * 4)
+    print('导入一次nb_log之后，项目所有文件的print是强化版的可点击精确跳转文件行号的')

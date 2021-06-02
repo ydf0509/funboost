@@ -1,6 +1,11 @@
 # 1.分布式函数调度框架简介
 
-## 1.0
+## 1.0 github地址和文档地址
+
+[分布式函数调度框架文档地址](https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/index.html)
+
+[分布式函数调度框架github地址](https://github.com/ydf0509/distributed_framework)
+
 ## 1.1 安装方式
 
 pip install function_scheduling_distributed_framework --upgrade

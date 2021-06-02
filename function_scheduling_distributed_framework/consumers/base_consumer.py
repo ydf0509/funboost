@@ -552,13 +552,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         return concurrent_info
 
     def _run(self, kw: dict, ):
-        function_only_params = _delete_keys_and_return_new_dict(kw['body'], )
-        if self.__get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
-                function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
-            self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
-            self._confirm_consume(kw)
-            return
-
         t_start_run_fun = time.time()
         self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times=0,
                                                             function_result_status=FunctionResultStatus(
@@ -638,19 +631,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
 
     async def _async_run(self, kw: dict, ):
-        """虽然和上面有点大面积重复相似，这个是为了asyncio模式的，asyncio模式真的和普通同步模式的代码思维和形式区别太大，
-        框架实现兼容async的消费函数很麻烦复杂，连并发池都要单独写"""
-        function_only_params = _delete_keys_and_return_new_dict(kw['body'], )
-        # if self.__get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
-        #         function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
-        if self.__get_priority_conf(kw, 'do_task_filtering'):
-            is_exists = await simple_run_in_executor(self._redis_filter.check_value_exists,
-                                                     function_only_params)
-            if is_exists:
-                self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
-                # self._confirm_consume(kw)
-                await simple_run_in_executor(self._confirm_consume, kw)
-                return
+        # """虽然和上面有点大面积重复相似，这个是为了asyncio模式的，asyncio模式真的和普通同步模式的代码思维和形式区别太大，
+        # 框架实现兼容async的消费函数很麻烦复杂，连并发池都要单独写"""
         t_start_run_fun = time.time()
         await self._async_run_consuming_function_with_confirm_and_retry(kw, current_retry_times=0,
                                                                         function_result_status=FunctionResultStatus(
@@ -787,6 +769,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if self._judge_is_daylight():
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
+            return
+        function_only_params = _delete_keys_and_return_new_dict(kw['body'], )
+        if self.__get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
+                function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
+            self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
+            self._confirm_consume(kw)
             return
         publish_time = _get_publish_time(kw['body'])
         msg_expire_senconds_priority = self.__get_priority_conf(kw, 'msg_expire_senconds')

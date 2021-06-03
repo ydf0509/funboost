@@ -40,9 +40,9 @@ def send_main_with_app_context(msg):
         mail.send(message)
 
 
-"""
-如果你想再封装一点
-"""
+
+#############################  如果你想再封装一点，就加个通用上下文装饰器开始  ################################
+
 def your_app_context_deco(flask_appx: flask.Flask):
     def _deco(fun):
         def __deco(*args, **kwargs):
@@ -65,7 +65,10 @@ def send_main_with_app_context2(msg):
     message = Message(subject='title', recipients=['367224698@qq.com'], body=msg)
     mail.send(message)
 
+#############################  如果你想再封装一点，就加个通用上下文装饰器结束  ################################
 
+
+# 这是falsk接口，在接口中发布任务到消息队列
 @app.route('/')
 def send_email_api():
     """

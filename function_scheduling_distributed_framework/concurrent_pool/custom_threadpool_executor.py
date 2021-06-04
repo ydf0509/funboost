@@ -38,9 +38,9 @@ _threads_queues = weakref.WeakKeyDictionary()
 
 def check_not_monkey():
     if check_gevent_monkey_patch(raise_exc=False):
-        raise Exception('请不要打gevent包的补丁')
+        raise Exception('指定使用多线程模式时候，请不要打gevent包的补丁')
     if check_evenlet_monkey_patch(raise_exc=False):
-        raise Exception('请不要打evenlet包的补丁')
+        raise Exception('指定使用多线程模式时候，请不要打evenlet包的补丁')
 
 
 def _python_exit():

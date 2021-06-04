@@ -50,7 +50,7 @@ def gevent_timeout_deco(timeout_t):
 
 class GeventPoolExecutor(gevent_pool.Pool):
     def __init__(self, size=None, greenlet_class=None):
-        # check_gevent_monkey_patch()
+        check_gevent_monkey_patch() # basecomer.py中检查。
         super().__init__(size, greenlet_class)
         atexit.register(self.shutdown)
 

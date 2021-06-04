@@ -63,6 +63,20 @@ def print_hello(x):
 
 print(sub)
 
+def patch_celery_console(celery_instance:celery.Celery):
+    import logging
+    from nb_log.handlers import ColorHandler
+    logging.StreamHandler = ColorHandler  # 解决celery的颜色不好看的问题
+
+    #设置celery的conf配置项，解决日志可点击跳转问题。
+    # print(celery_app.conf)
+    celery_instance.conf.worker_task_log_format = '%(asctime)s - %(name)s - "%(pathname)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(message)s'
+    celery_instance.conf.worker_log_format = '%(asctime)s - %(name)s - "%(pathname)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(message)s'
+
+    #禁止print重定向，不希望print被转化成celery日志。配置这个。
+    celery_instance.conf.worker_redirect_stdouts = False
+
+
 if __name__ == '__main__':
     """
     celery是可以在python脚本直接启动消费的。直接运行此脚本就行。本人非常反感cmd 命令行敲字母。
@@ -79,6 +93,7 @@ if __name__ == '__main__':
               '--queues=queue_add', '--detach','--logfile=/pythonlogs/celery_add.log'])
     """
     # queue_add,queue_sub,queue_f1
+    patch_celery_console(celery_app)
     celery_app.worker_main(
         argv=['worker', '--pool=gevent','--concurrency=500', '-n', 'worker1@%h', '--loglevel=DEBUG',
               '--queues=queue_f1,queue_add2,queue_sub2'])

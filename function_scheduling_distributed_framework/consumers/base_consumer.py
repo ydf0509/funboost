@@ -505,6 +505,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     # noinspection PyAttributeOutsideInit
     def start_consuming_message(self):
         ConsumersManager.show_all_consumer_info()
+        self._concurrent_mode_dispatcher.check_all_concurrent_mode()
         self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
         if self._is_send_consumer_hearbeat_to_redis:
             self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name, self.consumer_identification)
@@ -852,14 +853,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
 
     def __init__(self, consumerx: AbstractConsumer):
         self.consumer = consumerx
-        if ConsumersManager.global_concurrent_mode is not None and self.consumer._concurrent_mode != ConsumersManager.global_concurrent_mode:
-            ConsumersManager.show_all_consumer_info()
-            # print({self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode})
-            if not {self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode}.issubset({1, 4, 5}):
-                # threding、asyncio、solo 这几种模式可以共存。但同一个解释器不能同时选择 gevent + 其它并发模式，也不能 eventlet + 其它并发模式。
-                raise ValueError('由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，'
-                                 '搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种')
-        self._concurrent_mode = ConsumersManager.global_concurrent_mode = self.consumer._concurrent_mode
+        self._concurrent_mode = self.consumer._concurrent_mode
         self.timeout_deco = None
         if self._concurrent_mode in (1, 5):
             self.timeout_deco = decorators.timeout
@@ -869,6 +863,17 @@ class ConcurrentModeDispatcher(LoggerMixin):
             self.timeout_deco = evenlet_timeout_deco
         self.logger.warning(f'{self.consumer} 设置并发模式'
                             f'为{ConsumersManager.get_concurrent_name_by_concurrent_mode(self._concurrent_mode)}')
+
+    def check_all_concurrent_mode(self):
+        if ConsumersManager.global_concurrent_mode is not None and self.consumer._concurrent_mode != ConsumersManager.global_concurrent_mode:
+            ConsumersManager.show_all_consumer_info()
+            # print({self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode})
+            if not {self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode}.issubset({1, 4, 5}):
+                # threding、asyncio、solo 这几种模式可以共存。但同一个解释器不能同时选择 gevent + 其它并发模式，也不能 eventlet + 其它并发模式。
+                raise ValueError('由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，'
+                                 '搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种')
+
+        ConsumersManager.global_concurrent_mode = self.consumer._concurrent_mode
 
     def build_pool(self):
         if self.consumer._concurrent_pool is not None:
@@ -890,6 +895,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
             self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool is not None else pool_type(
                 self.consumer._concurrent_num, loop=self.consumer._specify_async_loop)
         else:
+            # print(pool_type)
             self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool is not None else pool_type(
                 self.consumer._concurrent_num)
         # print(self._concurrent_mode,self.consumer._concurrent_pool)

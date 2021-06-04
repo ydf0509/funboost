@@ -10,6 +10,7 @@ import abc
 import copy
 # from multiprocessing import Process
 import datetime
+# noinspection PyUnresolvedReferences
 import pytz
 import json
 import logging
@@ -202,9 +203,10 @@ class ConsumersManager:
     def show_all_consumer_info(cls):
         # nb_print(f'当前解释器内，所有消费者的信息是：\n  {cls.consumers_queue__info_map}')
         # if only_print_on_main_process(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}'):
-        for _, consumer_info in cls.consumers_queue__info_map.items():
-            stdout_write(f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}" '
-                         f' \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
+        if not cls._has_show_conusmers_info:
+            for _, consumer_info in cls.consumers_queue__info_map.items():
+                stdout_write(f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}" '
+                             f' \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
         cls._has_show_conusmers_info = True
 
     @staticmethod
@@ -386,7 +388,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
         if self._concurrent_mode == 4:
             self._run = self._async_run  # 这里做了自动转化，使用async_run代替run
-        self.__check_monkey_patch()
 
         self._logger_prefix = logger_prefix
         self._log_level = log_level
@@ -505,7 +506,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     # noinspection PyAttributeOutsideInit
     def start_consuming_message(self):
         ConsumersManager.show_all_consumer_info()
-        self._concurrent_mode_dispatcher.check_all_concurrent_mode()
+        try:
+            self._concurrent_mode_dispatcher.check_all_concurrent_mode()
+            self.__check_monkey_patch()
+        except Exception:
+            traceback.print_exc()
+            os._exit(4444)  # noqa
         self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
         if self._is_send_consumer_hearbeat_to_redis:
             self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name, self.consumer_identification)
@@ -871,7 +877,9 @@ class ConcurrentModeDispatcher(LoggerMixin):
             if not {self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode}.issubset({1, 4, 5}):
                 # threding、asyncio、solo 这几种模式可以共存。但同一个解释器不能同时选择 gevent + 其它并发模式，也不能 eventlet + 其它并发模式。
                 raise ValueError('由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，'
-                                 '搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种')
+                                 '搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种(或可以共存),'
+                                 'asyncio threading single_thread 并发模式可以共存，但gevent和threading不可以共存，'
+                                 'gevent和eventlet不可以共存')
 
         ConsumersManager.global_concurrent_mode = self.consumer._concurrent_mode
 

@@ -1,9 +1,9 @@
 import time
 
 from function_scheduling_distributed_framework import task_deco, BrokerEnum,ConcurrentModeEnum
-# import gevent.monkey;gevent.monkey.patch_all()
+import gevent.monkey;gevent.monkey.patch_all()
 
-@task_deco('queue_test_step1', qps=0.5, broker_kind=BrokerEnum.REDIS_ACK_ABLE)
+@task_deco('queue_test_step1', qps=0.5, broker_kind=BrokerEnum.REDIS_ACK_ABLE,concurrent_mode=ConcurrentModeEnum.GEVENT)
 def step1(x):
     print(f'x 的值是 {x}')
     if x == 0:

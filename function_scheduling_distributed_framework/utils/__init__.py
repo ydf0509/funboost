@@ -24,8 +24,9 @@ class _CustomEncoder(json.JSONEncoder):
 
 
 # noinspection PyProtectedMember,PyPep8,PyRedundantParentheses
-def _dumps(obj, skipkeys=False, ensure_ascii=False, check_circular=True, allow_nan=True, cls=_CustomEncoder, indent=None, separators=None,
+def _dumps(obj, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, cls=_CustomEncoder, indent=None, separators=None,
            default=None, sort_keys=False, **kw):
+    # 全局patch ensure_ascii = False 会引起极少数库不兼容。
     if (not skipkeys and ensure_ascii and check_circular and allow_nan and cls is None and indent is None and separators is None and default is None and not sort_keys and not kw):
         return json._default_encoder.encode(obj)
     if cls is None:

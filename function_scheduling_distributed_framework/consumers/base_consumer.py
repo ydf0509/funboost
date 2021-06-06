@@ -5,7 +5,7 @@
 所有中间件类型消费者的抽象基类。使实现不同中间件的消费者尽可能代码少。
 整个流程最难的都在这里面。因为要实现多种并发模型，和对函数施加20运行种控制方式，所以代码非常长。
 """
-
+import typing
 import abc
 import copy
 # from multiprocessing import Process
@@ -418,6 +418,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._lock_for_count_execute_task_times_every_unit_time = Lock()
         self._current_time_for_execute_task_times_every_unit_time = time.time()
         self._consuming_function_cost_time_total_every_unit_time = 0
+        self._last_execute_task_time = time.time()  # 最近一次执行任务的时间。
 
         self._msg_num_in_broker = 0
         self._last_timestamp_when_has_task_in_queue = 0
@@ -568,11 +569,17 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         with self._lock_for_count_execute_task_times_every_unit_time:
             self._execute_task_times_every_unit_time += 1
             self._consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
+            self._last_execute_task_time = time.time()
             if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
+                avarage_function_spend_time = round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)
                 msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
-                      f'函数平均运行耗时 {round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)} 秒'
+                      f'函数平均运行耗时 {avarage_function_spend_time} 秒'
                 if self._msg_num_in_broker != -1:
-                    msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / self._execute_task_times_every_unit_time * self._unit_time_for_count)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
+                    if getattr(self, '_distributed_consumer_statistics'):
+                        active_consumer_num = self._distributed_consumer_statistics.active_consumer_num
+                    else:
+                        active_consumer_num = 1
+                    msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
                 self.logger.info(msg)
                 self._current_time_for_execute_task_times_every_unit_time = time.time()
                 self._consuming_function_cost_time_total_every_unit_time = 0
@@ -648,11 +655,17 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # 异步调度不存在线程并发，不需要加锁。
         self._execute_task_times_every_unit_time += 1
         self._consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
+        self._last_execute_task_time = time.time()
         if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
-            msg = f'''{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,''' + \
-                  f'''函数平均运行耗时 {round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)} 秒'''
+            avarage_function_spend_time = round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)
+            msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
+                  f'函数平均运行耗时 {avarage_function_spend_time} 秒'
             if self._msg_num_in_broker != -1:
-                msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / self._execute_task_times_every_unit_time * self._unit_time_for_count)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
+                if getattr(self, '_distributed_consumer_statistics'):
+                    active_consumer_num = self._distributed_consumer_statistics.active_consumer_num
+                else:
+                    active_consumer_num = 1
+                msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
             self.logger.info(msg)
             self._current_time_for_execute_task_times_every_unit_time = time.time()
             self._consuming_function_cost_time_total_every_unit_time = 0
@@ -850,8 +863,46 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 f'现在时间是 {time_util.DatetimeConverter()} ，现在时间是在 {self._do_not_run_by_specify_time} 之间，不运行')
             return True
 
+    def wait_for_possible_has_finish_all_tasks(self, minutes: int = 3):
+        """
+        判断队列所有任务是否消费完成了。
+        由于是异步消费，和存在队列一边被消费，一边在推送，或者还有结尾少量任务还在确认消费者实际还没彻底运行完成。  但有时候需要判断 所有任务，务是否完成，提供一个不精确的判断，要搞清楚原因和场景后再慎用。
+        一般是和celery一样，是永久运行的后台任务，永远无限死循环去任务执行任务，但有的人有判断是否执行完成的需求。
+        :param minutes: 消费者连续多少分钟没执行任务任务 并且 消息队列中间件中没有，就判断为消费完成。
+        :return:
+
+        """
+        if minutes <= 1:
+            raise ValueError('疑似完成任务，判断时间最少需要设置为3分钟内,最好是是10分钟')
+        no_task_time = 0
+        while 1:
+            # noinspection PyBroadException
+            message_count = self._msg_num_in_broker
+            # print(message_count,self._last_execute_task_time,time.time() - self._last_execute_task_time)
+            if message_count == 0 and self._last_execute_task_time != 0 and (time.time() - self._last_execute_task_time) > minutes * 60:
+                no_task_time += 30
+            else:
+                no_task_time = 0
+            time.sleep(30)
+            if no_task_time > minutes * 60:
+                break
+
     def __str__(self):
         return f'队列为 {self.queue_name} 函数为 {self.consuming_function} 的消费者'
+
+
+def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3):
+    """
+   判断多个消费者是否消费完成了。
+   由于是异步消费，和存在队列一边被消费，一边在推送，或者还有结尾少量任务还在确认消费者实际还没彻底运行完成。  但有时候需要判断 所有任务，务是否完成，提供一个不精确的判断，要搞清楚原因和场景后再慎用。
+   一般是和celery一样，是永久运行的后台任务，永远无限死循环去任务执行任务，但有的人有判断是否执行完成的需求。
+   :param minutes: 消费者连续多少分钟没执行任务任务 并且 消息队列中间件中没有，就判断为消费完成。
+   :return:
+
+    """
+    with BoundedThreadPoolExecutor(len(consumer_list)) as pool:
+        for consumer in consumer_list:
+            pool.submit(consumer.wait_for_possible_has_finish_all_tasks(minutes))
 
 
 # noinspection PyProtectedMember
@@ -930,40 +981,6 @@ class ConcurrentModeDispatcher(LoggerMixin):
             #     ConsumersManager.schedulal_thread_to_be_join.append(t)
             #     t.start()
             # elif self._concurrent_mode ==5:
-
-
-# noinspection DuplicatedCode
-def wait_for_possible_has_finish_all_tasks(queue_name: str, minutes: int, send_stop_to_broker=0,
-                                           broker_kind: int = 0, ):
-    """
-      由于是异步消费，和存在队列一边被消费，一边在推送，或者还有结尾少量任务还在确认消费者实际还没彻底运行完成。  但有时候需要判断 所有任务，务是否完成，提供一个不精确的判断，要搞清楚原因和场景后再慎用。
-    :param queue_name: 队列名字
-    :param minutes: 连续多少分钟没任务就判断为消费已完成
-    :param send_stop_to_broker :发送停止标志到中间件，这回导致消费退出循环调度。
-    :param broker_kind: 中间件种类
-    :return:
-    """
-    if minutes <= 1:
-        raise ValueError('疑似完成任务，判断时间最少需要设置为2分钟内,最好是是10分钟')
-    pb = get_publisher(queue_name, broker_kind=broker_kind)
-    no_task_time = 0
-    while 1:
-        # noinspection PyBroadException
-        try:
-            message_count = pb.get_message_count()
-        except Exception as e:
-            nb_print(e)
-            message_count = -1
-        if message_count == 0:
-            no_task_time += 30
-        else:
-            no_task_time = 0
-        time.sleep(30)
-        if no_task_time > minutes * 60:
-            break
-    if send_stop_to_broker:
-        pb.publish({'stop': 1})
-    pb.close()
 
 
 class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandler):

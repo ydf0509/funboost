@@ -61,6 +61,13 @@ def print_hello(x):
     print(f'hello {x}')
 
 
+@celery.shared_task(name='无apptask')
+def test_shere_deco(x):
+    print(x)
+
+
+
+
 print(sub)
 
 def patch_celery_console(celery_instance:celery.Celery):

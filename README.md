@@ -2,9 +2,9 @@
 
 ## 1.0 github地址和文档地址
 
-[分布式函数调度框架文档地址](https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/index.html)
+###[分布式函数调度框架文档地址](https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/index.html)
 
-[分布式函数调度框架github地址](https://github.com/ydf0509/distributed_framework)
+###[分布式函数调度框架github地址](https://github.com/ydf0509/distributed_framework)
 
 ## 1.1 安装方式
 
@@ -36,7 +36,7 @@ pip install function_scheduling_distributed_framework --upgrade
 
 ### 1.2.2 框架支持20种中间件
 
-框架支持 rabbitmq redis sqlite sqlachemy kafka pulsar mongodb 等作为消息中间件。
+框架支持 rabbitmq redis python自带的queue.Queue  sqlite sqlachemy kafka pulsar mongodb 等作为消息中间件。
 
 同时此框架也支持操作 kombu 库作为中间件,所以此框架能够支持的中间件类型只会比celery更多。
 
@@ -222,7 +222,7 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 
 这是最简单的框架，只有@task_deco 1行代码需要学习。说的是这是最简单框架，这不是最简单的python包。
 如果连只有一个重要函数的框架都学不会，那就学不会学习得了更复杂的其他框架了，大部分框架都很复杂比学习一个包难很多。
-大部分框架，都要深入使用里面的很多个类，还需要继承组合一顿。 
+大部分框架，都要深入使用里面的很多个类，还需要继承组合一顿。
 ```
 
 ![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)

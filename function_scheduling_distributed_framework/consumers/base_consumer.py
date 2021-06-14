@@ -576,7 +576,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
                       f'函数平均运行耗时 {avarage_function_spend_time} 秒'
                 if self._msg_num_in_broker != -1:
-                    if getattr(self, '_distributed_consumer_statistics'):
+                    if hasattr(self, '_distributed_consumer_statistics'):
                         active_consumer_num = self._distributed_consumer_statistics.active_consumer_num
                     else:
                         active_consumer_num = 1
@@ -662,7 +662,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
                   f'函数平均运行耗时 {avarage_function_spend_time} 秒'
             if self._msg_num_in_broker != -1:
-                if getattr(self, '_distributed_consumer_statistics'):
+                if hasattr(self, '_distributed_consumer_statistics'):
                     active_consumer_num = self._distributed_consumer_statistics.active_consumer_num
                 else:
                     active_consumer_num = 1

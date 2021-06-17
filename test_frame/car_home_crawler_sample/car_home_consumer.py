@@ -36,11 +36,8 @@ from function_scheduling_distributed_framework import task_deco, BrokerEnum, Ide
 """
 
 
-<<<<<<< HEAD
-@task_deco('car_home_list', broker_kind=BrokerEnum.RedisBrpopLpush, max_retry_times=5, qps=2)
-=======
+
 @task_deco('car_home_list', broker_kind=BrokerEnum.RedisBrpopLpush, max_retry_times=5, qps=0.5)
->>>>>>> d574fe2acee764e89dd2b7ee5af0c12833d5f2d5
 def crawl_list_page(news_type, page, do_page_turning=False):
     url = f'https://www.autohome.com.cn/{news_type}/{page}/#liststart'
     resp_text = requests.get(url).text
@@ -72,8 +69,5 @@ if __name__ == '__main__':
     crawl_list_page.consume()  # 启动列表页消费
     crawl_detail_page.consume()
     # 这样速度更猛，叠加多进程
-<<<<<<< HEAD
     crawl_detail_page.multi_process_consume(4)
-=======
-    crawl_detail_page.multi_process_consume(2)
->>>>>>> d574fe2acee764e89dd2b7ee5af0c12833d5f2d5
+

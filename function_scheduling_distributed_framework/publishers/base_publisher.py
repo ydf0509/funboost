@@ -147,17 +147,6 @@ class PublishParamsChecker(LoggerMixin):
                              f'必须是 {self.all_arg_name_set} 的子集， 必须是 {self.position_arg_name_set} 的超集')
 
 
-class DelayQueue(LoggerMixin, RedisMixin):
-    def __init__(self, delay_queue_name):
-        self.delay_queue_name = delay_queue_name
-
-    def push(self, msg: str, timestamp):
-        self.redis_db_frame_version3.zadd(self.delay_queue_name, {msg: timestamp}, )
-
-    def get_msgs(self):
-        pass
-
-
 class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True,

@@ -3,8 +3,12 @@
 """
 
 import time
+from datetime import timedelta
+
 import celery
 from celery import platforms
+
+import celery_helper
 
 platforms.C_FORCE_ROOT = True
 # celery_app = celery.Celery('test_frame.test_celery.test_celery_app')
@@ -83,7 +87,13 @@ def patch_celery_console(celery_instance:celery.Celery):
     #禁止print重定向，不希望print被转化成celery日志。配置这个。
     celery_instance.conf.worker_redirect_stdouts = False
 
-
+celery_app.conf.beat_schedule = {
+    'add-every-30-seconds': {
+        'task': '求和啊',
+        'schedule': timedelta(seconds=2),
+        'args': (10000, 20000)
+    }}
+celery_helper.auto_register_tasks_and_set_routes()
 if __name__ == '__main__':
     """
     celery是可以在python脚本直接启动消费的。直接运行此脚本就行。本人非常反感cmd 命令行敲字母。

@@ -52,4 +52,4 @@ class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher):
     def close(self):
         self.channel.close()
         self.connection.close()
-        self.logger.warning('关闭rabbitpy包 链接mq')
+        self.logger.warning('关闭amqpstorm包 链接mq')

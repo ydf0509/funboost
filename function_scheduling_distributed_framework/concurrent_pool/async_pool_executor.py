@@ -52,7 +52,7 @@ class AsyncPoolExecutor2:
 
     def submit(self, func, *args, **kwargs):
         while self._sem.locked():
-            time.sleep(0.01)
+            time.sleep(0.001)
         asyncio.run_coroutine_threadsafe(self._run_func(func, *args, **kwargs), self.loop)
 
     async def _run_func(self, func, *args, **kwargs):
@@ -83,6 +83,7 @@ class AsyncPoolExecutor(nb_log.LoggerMixin):
         self.loop = loop or asyncio.new_event_loop()
         self._sem = asyncio.Semaphore(self._size, loop=self.loop)
         self._queue = asyncio.Queue(maxsize=size, loop=self.loop)
+        self._lock = threading.Lock()
         t = Thread(target=self._start_loop_in_new_thread)
         t.setDaemon(True)  # 设置守护线程是为了有机会触发atexit，使程序自动结束，不用手动调用shutdown
         t.start()
@@ -93,19 +94,17 @@ class AsyncPoolExecutor(nb_log.LoggerMixin):
         print(self._event.is_set())
         self._event.set()
 
-    def submit00(self, func, *args, **kwargs):
-        # future = asyncio.run_coroutine_threadsafe(self._produce(func, *args, **kwargs), self.loop) # 这个方法也有缺点，消耗的性能巨大。
-        # future.result()  # 阻止过快放入，放入超过队列大小后，使submit阻塞。
-
-        # asyncio.ensure_future(self._produce(func, *args, **kwargs),loop=self.loop) # 这样快，但不能阻塞导致快速放入。
-        # 这个submit提交方法性能比submit2的 run_coroutine_threadsafe 性能好
-
-        while self._queue.full():
-            time.sleep(0.001)
-        # print(func, self._queue.qsize(), self._queue.full())
-        asyncio.ensure_future(self._produce((func, args, kwargs)), loop=self.loop)
-
     def submit(self, func, *args, **kwargs):
+        # 这个性能比下面的采用 run_coroutine_threadsafe + result返回快了3倍多。
+        with self._lock:
+            while 1:
+                if not self._queue.full():
+                    self.loop.call_soon_threadsafe(self._queue.put_nowait, (func, args, kwargs))
+                    break
+                else:
+                    time.sleep(0.01)
+
+    def submit000(self, func, *args, **kwargs):
         future = asyncio.run_coroutine_threadsafe(self._produce(func, *args, **kwargs), self.loop)  # 这个 run_coroutine_threadsafe 方法也有缺点，消耗的性能巨大。
         future.result()  # 阻止过快放入，放入超过队列大小后，使submit阻塞。
 
@@ -224,25 +223,27 @@ class AsyncProducerConsumer:
 if __name__ == '__main__':
     def test_async_pool_executor():
         from function_scheduling_distributed_framework.concurrent_pool import CustomThreadPoolExecutor as ThreadPoolExecutor
-
+        # from concurrent.futures.thread import ThreadPoolExecutor
         async def f(x):
-            await asyncio.sleep(0.1)
+            # await asyncio.sleep(0.1)
+            pass
             print('打印', x)
             # await asyncio.sleep(1)
             # raise Exception('aaa')
 
         def f2(x):
-            time.sleep(0.001)
+            pass
+            # time.sleep(0.001)
             print('打印', x)
 
         print(1111)
 
         t1 = time.time()
-        pool = AsyncPoolExecutor(200)
-        # pool = ThreadPoolExecutor(200)  # 协程不能用线程池运行，否则压根不会执行print打印，对于一部函数 f(x)得到的是一个协程，必须进一步把协程编排成任务放在loop循环里面运行。
+        # pool = AsyncPoolExecutor(200)
+        pool = ThreadPoolExecutor(200)  # 协程不能用线程池运行，否则压根不会执行print打印，对于一部函数 f(x)得到的是一个协程，必须进一步把协程编排成任务放在loop循环里面运行。
         for i in range(1, 50001):
             print('放入', i)
-            pool.submit(f, i)
+            pool.submit(f2, i)
         # time.sleep(5)
         # pool.submit(f, 'hi')
         # pool.submit(f, 'hi2')

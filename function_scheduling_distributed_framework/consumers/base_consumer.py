@@ -888,6 +888,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             if no_task_time > minutes * 60:
                 break
 
+    def clear_filter_tasks(self):
+        RedisMixin().redis_db_frame.delete(self._redis_filter_key_name)
+        self.logger.warning(f'清空 {self._redis_filter_key_name} 键的任务过滤')
+
     def __str__(self):
         return f'队列为 {self.queue_name} 函数为 {self.consuming_function} 的消费者'
 

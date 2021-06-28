@@ -2,9 +2,20 @@
 
 ## 1.0 github地址和文档地址
 
-###[分布式函数调度框架文档地址](https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/index.html)
+### 1.0.1 [分布式函数调度框架文档地址](https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/index.html)
 
-###[分布式函数调度框架github地址](https://github.com/ydf0509/distributed_framework)
+```
+文档很长，但归根结底只需要学习 1.3 里面的这1个例子就行，主要是修改下@task_deco的各种参数，
+通过不同的入参，实践测试下各种控制功能。
+
+对比 celery 有20种改善，其中之一是无依赖文件夹层级和文件夹名字 文件名字。
+首先能把  https://github.com/ydf0509/celery_demo
+这个例子的已经写好的不规则目录层级和文件名字的函数用celery框架玩起来，才能说是了解celery，
+否则如果项目文件夹层级和文件名字不规矩，后期再用celery，会把celery新手折磨得想死，
+很多新手需要小心翼翼模仿网上说的项目目录结构，以为不按照那么规划目录和命名就玩不起来，本身说明celery很坑。
+```
+
+### 1.0.2 [分布式函数调度框架github地址](https://github.com/ydf0509/distributed_framework)
 
 ## 1.1 安装方式
 

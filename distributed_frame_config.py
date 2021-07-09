@@ -15,6 +15,7 @@
 # 以下为配置，请按需修改。
 
 # MONGO_CONNECT_URL = f'mongodb://yourname:yourpassword@127.0.01:27017/admin'
+MONGO_CONNECT_URL = f'mongodb://192.168.6.131:27017/'
 # 
 # RABBITMQ_USER = 'rabbitmq_user'
 # RABBITMQ_PASS = 'rabbitmq_pass'

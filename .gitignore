@@ -17,7 +17,7 @@ hotelApi/
 my_patch_frame_config0000.py
 my_patch_frame_config_beifen.py
 test_frame/my_patch_frame_config.py
-function_result_web000000000/
+function_result_web000/
 test_frame/my/
 redis_queue_web/
 test_frame/test_rabbitmq/distributed_frame_config.py

@@ -12,7 +12,7 @@ from wtforms.validators import DataRequired, Length
 from flask_login import login_user, logout_user, login_required, LoginManager, UserMixin
 
 from function_scheduling_distributed_framework import nb_print
-from function_result_web.functions import get_cols, query_result, get_speed, Statistic
+from function_scheduling_distributed_framework.function_result_web.functions import get_cols, query_result, get_speed, Statistic
 
 app = Flask(__name__)
 app.secret_key = 'mtfy54321'
@@ -24,19 +24,23 @@ login_manager.login_message_category = 'info'
 login_manager.login_message = 'Access denied.'
 login_manager.init_app(app)
 
+
 class User(UserMixin):
     pass
 
+
 users = [
-    {'id':'Tom', 'user_name': 'Tom', 'password': '111111'},
-    {'id':'Michael', 'user_name': 'Michael', 'password': '123456'},
-    {'id': 'user', 'user_name': 'user', 'password': 'mtfy123'}
+    {'id': 'Tom', 'user_name': 'Tom', 'password': '111111'},
+    {'id': 'user', 'user_name': 'user', 'password': 'mtfy123'},
+    {'id': 'admin', 'user_name': 'admin', 'password': '123456'}
 ]
+
 
 def query_user(user_name):
     for user in users:
         if user_name == user['user_name']:
             return user
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -44,6 +48,7 @@ def load_user(user_id):
         curr_user = User()
         curr_user.id = user_id
         return curr_user
+
 
 class LoginForm(FlaskForm):
     user_name = StringField(u'用户名', validators=[DataRequired(), Length(3, 64)])
@@ -69,11 +74,11 @@ def login():
 
                 # 通过Flask-Login的login_user方法登录用户
                 nb_print(form.remember_me.data)
-                login_user(curr_user,remember=form.remember_me.data,duration=datetime.timedelta(days=7))
+                login_user(curr_user, remember=form.remember_me.data, duration=datetime.timedelta(days=7))
 
                 return redirect(url_for('index'))
 
-            flash('用户名或密码错误',category='error')
+            flash('用户名或密码错误', category='error')
 
             # if form.user_name.data == 'user' and form.password.data == 'mtfy123':
             #     login_user(form.user_name.data, form.remember_me.data)
@@ -84,16 +89,19 @@ def login():
 
     return render_template('login.html', form=form)
 
+
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('login'))
 
+
 @app.route('/')
 @login_required
 def index():
     return render_template('index.html')
+
 
 @app.route('/query_cols')
 @login_required
@@ -114,6 +122,7 @@ def query_result_view():
 def speed_stats():
     return jsonify(get_speed(**request.values.to_dict()))
 
+
 @app.route('/speed_statistic_for_echarts')
 @login_required
 def speed_statistic_for_echarts():
@@ -127,5 +136,16 @@ if __name__ == '__main__':
     with app.test_request_context():
         print(url_for('query_cols_view'))
 
-    app.run(debug=True, threaded=True,host='0.0.0.0',port=27018)
-    #gunicorn -w 9 -k gevent --bind 0.0.0.0:27018 function_result_web.app:app
+    app.run(debug=True, threaded=True, host='0.0.0.0', port=27018)
+
+    '''
+    # 第一步 export PYTHONPATH=你的项目根目录 ，这么做是为了这个web可以读取到你项目根目录下的distributed_frame_config.py里面的配置
+    # 例如 export PYTHONPATH=/home/ydf/codes/ydfhome
+      或者  export PYTHONPATH=./   (./是相对路径，前提是已近cd到你的项目根目录了，也可以写绝对路径全路径)
+    
+    第二步   
+    win上这么做 python3 -m function_scheduling_distributed_framework.function_result_web.app 
+    
+    linux上可以这么做性能好一些，也可以按win的做。
+    gunicorn -w 4 --threads=30 --bind 0.0.0.0:27018 function_scheduling_distributed_framework.function_result_web.app:app
+    '''

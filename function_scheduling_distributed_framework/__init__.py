@@ -16,6 +16,7 @@ from function_scheduling_distributed_framework.factories.consumer_factory import
 from function_scheduling_distributed_framework.utils import nb_print, patch_print, LogManager, get_logger, LoggerMixin
 from function_scheduling_distributed_framework.timing_job import fsdf_background_scheduler, timing_publish_deco
 
+
 # 有的包默认没加handlers，原始的日志不漂亮且不可跳转不知道哪里发生的。这里把warnning级别以上的日志默认加上handlers。
 nb_log.get_logger(name=None, log_level_int=30, log_filename='pywarning.log')
 

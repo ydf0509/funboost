@@ -10,7 +10,7 @@ import abc
 import copy
 # from multiprocessing import Process
 import datetime
-# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences,PyPackageRequirements
 import pytz
 import json
 import logging
@@ -507,6 +507,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     # noinspection PyAttributeOutsideInit
     def start_consuming_message(self):
         ConsumersManager.show_all_consumer_info()
+        # noinspection PyBroadException
         try:
             self._concurrent_mode_dispatcher.check_all_concurrent_mode()
             self.__check_monkey_patch()
@@ -869,7 +870,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         判断队列所有任务是否消费完成了。
         由于是异步消费，和存在队列一边被消费，一边在推送，或者还有结尾少量任务还在确认消费者实际还没彻底运行完成。  但有时候需要判断 所有任务，务是否完成，提供一个不精确的判断，要搞清楚原因和场景后再慎用。
         一般是和celery一样，是永久运行的后台任务，永远无限死循环去任务执行任务，但有的人有判断是否执行完成的需求。
-        :param minutes: 消费者连续多少分钟没执行任务任务 并且 消息队列中间件中没有，就判断为消费完成。
+        :param minutes: 消费者连续多少分钟没执行任务任务 并且 消息队列中间件中没有，就判断为消费完成，为了防止是长耗时任务，一般判断完成是真正提供的minutes的2个周期时间。
         :return:
 
         """
@@ -901,7 +902,8 @@ def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typin
    判断多个消费者是否消费完成了。
    由于是异步消费，和存在队列一边被消费，一边在推送，或者还有结尾少量任务还在确认消费者实际还没彻底运行完成。  但有时候需要判断 所有任务，务是否完成，提供一个不精确的判断，要搞清楚原因和场景后再慎用。
    一般是和celery一样，是永久运行的后台任务，永远无限死循环去任务执行任务，但有的人有判断是否执行完成的需求。
-   :param minutes: 消费者连续多少分钟没执行任务任务 并且 消息队列中间件中没有，就判断为消费完成。
+   :param consumer_list: 多个消费者列表
+   :param minutes: 消费者连续多少分钟没执行任务任务 并且 消息队列中间件中没有，就判断为消费完成。为了防止是长耗时任务，一般判断完成是真正提供的minutes的2个周期时间。
    :return:
 
     """

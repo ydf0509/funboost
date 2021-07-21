@@ -128,6 +128,8 @@ class IdeAutoCompleteHelper(LoggerMixin):
 
         self.clear_filter_tasks = self.consumer.clear_filter_tasks
 
+        self.wait_for_possible_has_finish_all_tasks = self.consumer.wait_for_possible_has_finish_all_tasks
+
     def multi_process_consume(self, process_num=1):
         run_consumer_with_multi_process(self.consuming_func_decorated, process_num)
 
@@ -252,6 +254,8 @@ def task_deco(queue_name, *, function_timeout=0,
         func.multi_process_start = func.multi_process_consume = partial(run_consumer_with_multi_process, func)
 
         func.clear_filter_tasks = consumer.clear_filter_tasks
+
+        func.wait_for_possible_has_finish_all_tasks = consumer.wait_for_possible_has_finish_all_tasks
 
         # @wraps(func)
         # def __deco(*args, **kwargs):  # 这样函数的id变化了，导致win在装饰器内部开多进程不方便。

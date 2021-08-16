@@ -550,6 +550,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         else:
             return broker_task_config
 
+    # noinspection PyMethodMayBeStatic
     def _get_concurrent_info(self):
         concurrent_info = ''
         '''  影响了日志长度和一丝丝性能。

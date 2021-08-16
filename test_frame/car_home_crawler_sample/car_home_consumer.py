@@ -36,7 +36,6 @@ from function_scheduling_distributed_framework import task_deco, BrokerEnum, Ide
 """
 
 
-
 @task_deco('car_home_list', broker_kind=BrokerEnum.RedisBrpopLpush, max_retry_times=5, qps=2)
 def crawl_list_page(news_type, page, do_page_turning=False):
     url = f'https://www.autohome.com.cn/{news_type}/{page}/#liststart'
@@ -70,4 +69,3 @@ if __name__ == '__main__':
     crawl_detail_page.consume()
     # 这样速度更猛，叠加多进程
     crawl_detail_page.multi_process_consume(4)
-    

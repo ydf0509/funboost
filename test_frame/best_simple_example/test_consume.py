@@ -15,7 +15,7 @@ from function_scheduling_distributed_framework import task_deco, BrokerEnum, Con
 # 还有其他30种函数运行控制参数，看代码里面的函数入参说明，说的非常详细了。
 @task_deco('queue_test2', qps=6, broker_kind=BrokerEnum.PERSISTQUEUE)
 def f2(a, b):
-    sleep_time = 5
+    sleep_time = 7
     result = a + b
     print(f'消费此消息 {a} + {b} 中。。。。。,此次需要消耗 {sleep_time} 秒')
     time.sleep(sleep_time)  # 模拟做某事需要阻塞n秒种，必须用并发绕过此阻塞。
@@ -28,4 +28,6 @@ if __name__ == '__main__':
     for i in range(200):
         f2.push(i, i * 2)
     f2.consume()
+
+
 

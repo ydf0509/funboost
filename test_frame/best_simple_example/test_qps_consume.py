@@ -10,6 +10,7 @@ t_start = time.time()
 @task_deco('queue_test2_qps', qps=2, broker_kind=BrokerEnum.PERSISTQUEUE,concurrent_mode=ConcurrentModeEnum.THREADING,concurrent_num=600 )
 def f2(a, b):
     """
+    concurrent_num = 600 不用怕，因为这是智能线程池，如果函数耗时短，不会真开那么多线程。
     这个例子是测试函数耗时是动态变化的，这样就不可能通过提前设置参数预估函数固定耗时和搞鬼了。看看能不能实现qps稳定和线程池自动扩大自动缩小
     要说明的是打印的线程数量也包含了框架启动时候几个其他的线程，所以数量不是刚好和所需的线程计算一样的。
 
@@ -32,7 +33,6 @@ def f2(a, b):
     if sleep_time is not None:
         time.sleep(sleep_time)  # 模拟做某事需要阻塞n秒种，必须用并发绕过此阻塞。
     return result
-
 
 if __name__ == '__main__':
     f2.clear()

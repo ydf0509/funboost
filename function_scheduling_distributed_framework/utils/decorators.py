@@ -243,7 +243,7 @@ class TimerContextManager(LoggerMixin):
 
 class RedisDistributedLockContextManager(LoggerMixin):
     """
-    分布式redis锁自动管理.
+    分布式redis锁上下文管理.
     """
 
     def __init__(self, redis_client, redis_lock_key, expire_seconds=30):
@@ -261,6 +261,9 @@ class RedisDistributedLockContextManager(LoggerMixin):
         if identifier_in_redis and identifier_in_redis.decode() == self.identifier:
             self.has_aquire_lock = True
         return self
+
+    def __bool__(self):
+        return self.has_aquire_lock
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.has_aquire_lock:

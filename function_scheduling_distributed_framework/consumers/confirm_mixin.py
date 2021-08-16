@@ -16,8 +16,10 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
     """
     使用redis的zset结构，value为任务，score为时间戳，这样具有良好的按时间范围搜索特性和删除特性。
     把这个抽离出来了。，是因为这个不仅可以给redis做消息确认，也可以给其他不支持消费确认的消息中间件增加消费确认。
+
     """
     # 超时未确认的时间，例如取出来后600秒都没有确认消费，就重新消费。这在rabbitmq和nsq对应的相同功能参数是heartbeat_interval。
+    # 这个弊端很多，例如一个函数本身就需要10分钟以上，重回队列会造成死循环消费。已近废弃了。基于消费者的心跳是确认消费好的方式。
     UNCONFIRMED_TIMEOUT = 600
 
     # noinspection PyAttributeOutsideInit

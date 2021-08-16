@@ -552,6 +552,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _get_concurrent_info(self):
         concurrent_info = ''
+        '''  影响了日志长度和一丝丝性能。
         if self._concurrent_mode == 1:
             concurrent_info = f'[{threading.current_thread()}  {threading.active_count()}]'
         elif self._concurrent_mode == 2:
@@ -559,6 +560,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         elif self._concurrent_mode == 3:
             # noinspection PyArgumentList
             concurrent_info = f'[{eventlet.getcurrent()}  {threading.active_count()}]'
+        '''
         return concurrent_info
 
     def _run(self, kw: dict, ):

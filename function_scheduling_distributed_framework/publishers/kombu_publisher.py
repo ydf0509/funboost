@@ -77,6 +77,7 @@ class KombuPublisher(AbstractPublisher, ):
         # return queue.method.message_count
         # self.logger.warning(self.channel._size(self._queue_name))
         queue_declare_ok_t_named_tuple = self.channel.queue_declare(queue=self._queue_name, durable=True, auto_delete=False)
+        # print(queue_declare_ok_t_named_tuple)
         return queue_declare_ok_t_named_tuple.message_count
         # if self._kombu_broker_url_prefix == 'amqp' or True:
         #     '''amqp tries to use librabbitmq but falls back to pyamqp.'''

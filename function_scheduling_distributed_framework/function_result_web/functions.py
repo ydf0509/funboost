@@ -43,11 +43,11 @@ def query_result(col_name, start_time, end_time, is_success, function_params: st
         condition.update({"success": False})
     if function_params.strip():
         condition.update({'params_str': {'$regex': function_params.strip()}})
-    nb_print(col_name)
-    nb_print(condition)
+    # nb_print(col_name)
+    # nb_print(condition)
     # results = list(db.get_collection(col_name).find(condition, ).sort([('insert_time', -1)]).skip(int(page) * 100).limit(100))
-    with decorators.TimerContextManager():
-        results = list(db.get_collection(col_name).find(condition, {'insert_time': 0, 'utime': 0}).skip(int(page) * 100).limit(100))
+    # with decorators.TimerContextManager():
+    results = list(db.get_collection(col_name).find(condition, {'insert_time': 0, 'utime': 0}).skip(int(page) * 100).limit(100))
     # nb_print(result)
     return results
 
@@ -60,7 +60,7 @@ def get_speed(col_name, start_time, end_time):
     # condition = {
     #     'insert_time_str': {'$gt': time_util.DatetimeConverter(time.time() - 60).datetime_str},
     # }
-    nb_print(condition)
+    # nb_print(condition)
     with decorators.TimerContextManager():
         success_num = db.get_collection(col_name).count({**{'success': True}, **condition})
         fail_num = db.get_collection(col_name).count({**{'success': False}, **condition})

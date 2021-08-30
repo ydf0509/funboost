@@ -22,11 +22,12 @@ from function_scheduling_distributed_framework.publishers.sqla_queue_publisher i
 from function_scheduling_distributed_framework.publishers.redis_stream_publisher import RedisStreamPublisher
 from function_scheduling_distributed_framework.publishers.mqtt_publisher import MqttPublisher
 from function_scheduling_distributed_framework.publishers.httpsqs_publisher import HttpsqsPublisher
+from function_scheduling_distributed_framework import frame_config
 
 
 def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=True,
                   clear_queue_within_init=False, is_add_publish_time=True, consuming_function: Callable = None,
-                  broker_kind=0):
+                  broker_kind: int = None):
     """
     :param queue_name:
     :param log_level_int:
@@ -63,6 +64,8 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
         17: MqttPublisher,
         18: HttpsqsPublisher
     }
+    if broker_kind is None:
+        broker_kind = frame_config.DEFAULT_BROKER_KIND
     if broker_kind not in broker_kind__publisher_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')
     return broker_kind__publisher_type_map[broker_kind](**all_kwargs)

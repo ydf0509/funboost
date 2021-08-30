@@ -23,9 +23,10 @@ from function_scheduling_distributed_framework.consumers.redis_stream_consumer i
 from function_scheduling_distributed_framework.consumers.zeromq_consumer import ZeroMqConsumer
 from function_scheduling_distributed_framework.consumers.mqtt_consumer import MqttConsumer
 from function_scheduling_distributed_framework.consumers.httpsqs_consumer import HttpsqsConsumer
+from function_scheduling_distributed_framework import frame_config
 
 
-def get_consumer(*args, broker_kind=0, **kwargs):
+def get_consumer(*args, broker_kind: int = None, **kwargs):
     """
     :param args: 入参是AbstractConsumer的入参
     :param broker_kind:
@@ -54,6 +55,8 @@ def get_consumer(*args, broker_kind=0, **kwargs):
         17: MqttConsumer,
         18: HttpsqsConsumer,
     }
+    if broker_kind is None:
+        broker_kind = frame_config.DEFAULT_BROKER_KIND
     if broker_kind not in broker_kind__consumer_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')
     return broker_kind__consumer_type_map[broker_kind](*args, **kwargs)

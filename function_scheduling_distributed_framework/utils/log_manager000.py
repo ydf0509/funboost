@@ -749,7 +749,7 @@ class ColorHandler(logging.Handler):
             if record.levelno == 10:
                 # msg_color = ('\033[0;32m%s\033[0m' % msg)  # 绿色
                 msg_color = ('\033[%s;%sm%s\033[0m' % (
-                self._display_method, 34 if self._is_pycharm_2019 else 32, msg))  # 绿色
+                    self._display_method, 34 if self._is_pycharm_2019 else 32, msg))  # 绿色
             elif record.levelno == 20:
                 msg_color = ('\033[%s;%sm%s\033[0m' % (self._display_method, self.bule, msg))  # 青蓝色 36    96
             elif record.levelno == 30:
@@ -1255,8 +1255,8 @@ class LogManager(object):
         :return:
         """
         if handler_class not in (
-        logging.StreamHandler, ColorHandler, MongoHandler, ConcurrentRotatingFileHandler, MongoHandler,
-        CompatibleSMTPSSLHandler, ElasticHandler, DingTalkHandler, KafkaHandler):
+                logging.StreamHandler, ColorHandler, MongoHandler, ConcurrentRotatingFileHandler, MongoHandler,
+                CompatibleSMTPSSLHandler, ElasticHandler, DingTalkHandler, KafkaHandler):
             raise TypeError('设置的handler类型不正确')
         for handler in self.logger.handlers:
             if isinstance(handler, handler_class):

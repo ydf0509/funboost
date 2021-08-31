@@ -56,5 +56,5 @@ class ConcurrentModeEnum:
     THREADING = 1
     GEVENT = 2
     EVENTLET = 3
-    ASYNC = 4
+    ASYNC = 4  # asyncio并发，适用于async def定义的函数。
     SINGLE_THREAD = 5

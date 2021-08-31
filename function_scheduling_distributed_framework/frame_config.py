@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-# @Author  : ydf
-# @Time    : 2019/8/8 0008 9:51
 
 from function_scheduling_distributed_framework.constant import BrokerEnum
 

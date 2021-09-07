@@ -263,7 +263,7 @@ def fabric_deploy(task_fun, host, port, user, password, process_num=8):
     t_start = time.perf_counter()
     uploader = ParamikoFolderUploader(host, port, user, password, python_proj_dir, remote_dir)
     uploader.upload()
-    logger.info(f'上传 本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹 耗时 {round(time.perf_counter() - time.perf_counter(), 3)} 秒')
+    logger.info(f'上传 本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹耗时 {round(time.perf_counter() - t_start, 3)} 秒')
     # conn.run(f'''export PYTHONPATH={remote_dir}:$PYTHONPATH''')
 
     # 获取被调用函数所在模块文件名

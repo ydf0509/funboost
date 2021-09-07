@@ -31,4 +31,4 @@ if __name__ == '__main__':
     for i in range(200):
         f2.push(i, i * 2)
     f2.consume()
-    fabric_deploy(f2,'192.168.6.133',22,'ydf','372148',process_num=8)
+    fabric_deploy(f2,'192.168.6.133',22,'ydf','372148',process_num=4)

@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from functools import update_wrapper, wraps, partial
 from multiprocessing import Process
 from typing import List
@@ -22,6 +23,8 @@ from function_scheduling_distributed_framework.constant import BrokerEnum, Concu
 
 # 有的包默认没加handlers，原始的日志不漂亮且不可跳转不知道哪里发生的。这里把warnning级别以上的日志默认加上handlers。
 nb_log.get_logger(name=None, log_level_int=30, log_filename='pywarning.log')
+
+logger = nb_log.get_logger('function_scheduling_distributed_framework')
 
 
 class IdeAutoCompleteHelper(LoggerMixin):
@@ -256,9 +259,11 @@ def fabric_deploy(task_fun, host, port, user, password, process_num=8):
         remote_dir = f'/codes/{python_proj_dir_short}'
     else:
         remote_dir = f'/home/{user}/codes/{python_proj_dir_short}'
-    print(python_proj_dir, remote_dir)
+    logger.warning(f'将本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹。')
+    t_start = time.perf_counter()
     uploader = ParamikoFolderUploader(host, port, user, password, python_proj_dir, remote_dir)
     uploader.upload()
+    logger.info(f'上传 本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹 耗时 {round(time.perf_counter() - time.perf_counter(), 3)} 秒')
     # conn.run(f'''export PYTHONPATH={remote_dir}:$PYTHONPATH''')
 
     # 获取被调用函数所在模块文件名
@@ -269,11 +274,11 @@ def fabric_deploy(task_fun, host, port, user, password, process_num=8):
     queue_name = task_fun.consumer.queue_name
 
     kill_shell = f'''ps -aux|grep fsdfmark_{queue_name}|grep -v grep|awk '{{print $2}}' |xargs kill -9'''
-    print(kill_shell)
+    logger.warning(f'{kill_shell} 命令杀死 fsdfmark_{queue_name} 标识的进程')
     uploader.ssh.exec_command(kill_shell)
 
     shell_str = f'''export PYTHONPATH={remote_dir}:$PYTHONPATH ; python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark fsdfmark_{queue_name} '''
-    print(shell_str)
+    logger.warning(f'使用语句 {shell_str} 在远程机器 {host} 上启动任务消费')
     conn = Connection(host, port=port, user=user, connect_kwargs={"password": password}, )
     conn.run(shell_str, encoding='utf-8')
     # uploader.ssh.exec_command(shell_str)

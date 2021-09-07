@@ -34,7 +34,7 @@ computer_ip, computer_name = get_host_ip()
 # 还有其他30种函数运行控制参数，看代码里面的函数入参说明，说的非常详细了。
 
 # @task_deco('queue_test2', )  # @task_deco必须参数只有一个。
-@task_deco('queue_test26', qps=0.2, broker_kind=BrokerEnum.REDIS)
+@task_deco('queue_test28', qps=0.2, broker_kind=BrokerEnum.REDIS)
 def f2(a, b):
     sleep_time = 7
     result = a + b

@@ -1,5 +1,6 @@
 import os
 import sys
+import threading
 import time
 from functools import update_wrapper, wraps, partial
 from multiprocessing import Process
@@ -259,34 +260,37 @@ def fabric_deploy(task_fun, host, port, user, password,
 
     python_proj_dir = sys.path[1].replace('\\', '/') + '/'
     python_proj_dir_short = python_proj_dir.split('/')[-2]
-
-    if user == 'root':
-        remote_dir = f'/codes/{python_proj_dir_short}'
-    else:
-        remote_dir = f'/home/{user}/codes/{python_proj_dir_short}'
-    logger.warning(f'将本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹。')
-    t_start = time.perf_counter()
-    uploader = ParamikoFolderUploader(host, port, user, password, python_proj_dir, remote_dir,
-                                      path_pattern_exluded_tuple, file_suffix_tuple_exluded,
-                                      only_upload_within_the_last_modify_time, file_volume_limit)
-    uploader.upload()
-    logger.info(f'上传 本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹耗时 {round(time.perf_counter() - t_start, 3)} 秒')
-    # conn.run(f'''export PYTHONPATH={remote_dir}:$PYTHONPATH''')
-
     # 获取被调用函数所在模块文件名
     file_name = sys._getframe(1).f_code.co_filename.replace('\\', '/')  # noqa
     relative_file_name = re.sub(f'^{python_proj_dir}', '', file_name)
     relative_module = relative_file_name.replace('/', '.')[:-3]  # -3是去掉.py
-    func_name = task_fun.__name__
-    queue_name = task_fun.consumer.queue_name
+    if user == 'root':
+        remote_dir = f'/codes/{python_proj_dir_short}'
+    else:
+        remote_dir = f'/home/{user}/codes/{python_proj_dir_short}'
 
-    conn = Connection(host, port=port, user=user, connect_kwargs={"password": password}, )
-    kill_shell = f'''ps -aux|grep fsdfmark_{queue_name}|grep -v grep|awk '{{print $2}}' |xargs kill -9'''
-    logger.warning(f'{kill_shell} 命令杀死 fsdfmark_{queue_name} 标识的进程')
-    uploader.ssh.exec_command(kill_shell)
-    # conn.run(kill_shell, encoding='utf-8')
+    def _inner():
+        logger.warning(f'将本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹。')
+        t_start = time.perf_counter()
+        uploader = ParamikoFolderUploader(host, port, user, password, python_proj_dir, remote_dir,
+                                          path_pattern_exluded_tuple, file_suffix_tuple_exluded,
+                                          only_upload_within_the_last_modify_time, file_volume_limit)
+        uploader.upload()
+        logger.info(f'上传 本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹耗时 {round(time.perf_counter() - t_start, 3)} 秒')
+        # conn.run(f'''export PYTHONPATH={remote_dir}:$PYTHONPATH''')
 
-    shell_str = f'''export PYTHONPATH={remote_dir}:$PYTHONPATH ;cd {remote_dir}; python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark fsdfmark_{queue_name} '''
-    logger.warning(f'使用语句 {shell_str} 在远程机器 {host} 上启动任务消费')
-    conn.run(shell_str, encoding='utf-8')
-    # uploader.ssh.exec_command(shell_str)
+        func_name = task_fun.__name__
+        queue_name = task_fun.consumer.queue_name
+
+        conn = Connection(host, port=port, user=user, connect_kwargs={"password": password}, )
+        kill_shell = f'''ps -aux|grep fsdfmark_{queue_name}|grep -v grep|awk '{{print $2}}' |xargs kill -9'''
+        logger.warning(f'{kill_shell} 命令杀死 fsdfmark_{queue_name} 标识的进程')
+        uploader.ssh.exec_command(kill_shell)
+        # conn.run(kill_shell, encoding='utf-8')
+
+        shell_str = f'''export PYTHONPATH={remote_dir}:$PYTHONPATH ;cd {remote_dir}; python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark fsdfmark_{queue_name} '''
+        logger.warning(f'使用语句 {shell_str} 在远程机器 {host} 上启动任务消费')
+        conn.run(shell_str, encoding='utf-8')
+        # uploader.ssh.exec_command(shell_str)
+
+    threading.Thread(target=_inner).start()

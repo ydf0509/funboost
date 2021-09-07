@@ -47,11 +47,11 @@ def f2(a, b):
 if __name__ == '__main__':
     print(f2.__name__)
     f2.clear()
-    for i in range(2000):
+    for i in range(20000):
         f2.push(i, i * 2)
-    # f2.consume()
-    # # # 192.168.114.135  192.168.6.133
-    # fabric_deploy(f2,'192.168.114.135',22,'ydf','372148',process_num=2)
+    f2.consume()
+    # # 192.168.114.135  192.168.6.133
+    fabric_deploy(f2,'192.168.114.135',22,'ydf','372148',process_num=2)
     fabric_deploy(f2, '106.55.244.110', 22, 'root', '(H8{Q$%Bb2_|nSg}',
-                  only_upload_within_the_last_modify_time=3650*24*60*60 ,
-                  file_volume_limit=100*1000,process_num=3)
+                  only_upload_within_the_last_modify_time=1*24*60*60 ,
+                  file_volume_limit=100*1000,process_num=2)

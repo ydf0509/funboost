@@ -8,11 +8,9 @@ from collections import defaultdict, OrderedDict
 # noinspection PyPackageRequirements
 import time
 
-from confluent_kafka.cimpl import TopicPartition
-
 # noinspection PyPackageRequirements
 from kafka import KafkaProducer, KafkaAdminClient
-from confluent_kafka import Consumer as ConfluentConsumer
+
 # noinspection PyPackageRequirements
 from kafka.admin import NewTopic
 # noinspection PyPackageRequirements
@@ -31,6 +29,8 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
     BROKER_KIND = 16
 
     def _shedual_task(self):
+
+        from confluent_kafka import Consumer as ConfluentConsumer  # 这个包不好安装，用户用这个中间件的时候自己再想办法安装。
         try:
             admin_client = KafkaAdminClient(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
             admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
@@ -78,6 +78,7 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
         每隔2秒对1组offset，对连续消费状态是1的最大offset进行commit
         :return:
         """
+        from confluent_kafka.cimpl import TopicPartition  # 这个包不好安装，用户用这个中间件的时候自己再想办法安装。
         if time.time() - self._recent_commit_time > 2:
             partion_max_consumed_offset_map = dict()
             to_be_remove_from_partion_max_consumed_offset_map = defaultdict(list)

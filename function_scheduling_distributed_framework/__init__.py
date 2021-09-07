@@ -247,7 +247,12 @@ def run_consumer_with_multi_process(task_fun, process_num=1):
                  args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start() for _ in range(process_num)]
 
 
-def fabric_deploy(task_fun, host, port, user, password, process_num=8):
+def fabric_deploy(task_fun, host, port, user, password,
+                  path_pattern_exluded_tuple=('/.git/', '/.idea/',),
+                  file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
+                  only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
+                  file_volume_limit=1000 * 1000,
+                  process_num=8):
     import re
     from fabric2 import Connection
     from function_scheduling_distributed_framework.utils.paramiko_util import ParamikoFolderUploader
@@ -261,7 +266,9 @@ def fabric_deploy(task_fun, host, port, user, password, process_num=8):
         remote_dir = f'/home/{user}/codes/{python_proj_dir_short}'
     logger.warning(f'将本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹。')
     t_start = time.perf_counter()
-    uploader = ParamikoFolderUploader(host, port, user, password, python_proj_dir, remote_dir)
+    uploader = ParamikoFolderUploader(host, port, user, password, python_proj_dir, remote_dir,
+                                      path_pattern_exluded_tuple, file_suffix_tuple_exluded,
+                                      only_upload_within_the_last_modify_time, file_volume_limit)
     uploader.upload()
     logger.info(f'上传 本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹耗时 {round(time.perf_counter() - t_start, 3)} 秒')
     # conn.run(f'''export PYTHONPATH={remote_dir}:$PYTHONPATH''')
@@ -279,7 +286,7 @@ def fabric_deploy(task_fun, host, port, user, password, process_num=8):
     uploader.ssh.exec_command(kill_shell)
     # conn.run(kill_shell, encoding='utf-8')
 
-    shell_str = f'''export PYTHONPATH={remote_dir}:$PYTHONPATH ; python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark fsdfmark_{queue_name} '''
+    shell_str = f'''export PYTHONPATH={remote_dir}:$PYTHONPATH ;cd {remote_dir}; python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark fsdfmark_{queue_name} '''
     logger.warning(f'使用语句 {shell_str} 在远程机器 {host} 上启动任务消费')
     conn.run(shell_str, encoding='utf-8')
     # uploader.ssh.exec_command(shell_str)

@@ -273,12 +273,13 @@ def fabric_deploy(task_fun, host, port, user, password, process_num=8):
     func_name = task_fun.__name__
     queue_name = task_fun.consumer.queue_name
 
+    conn = Connection(host, port=port, user=user, connect_kwargs={"password": password}, )
     kill_shell = f'''ps -aux|grep fsdfmark_{queue_name}|grep -v grep|awk '{{print $2}}' |xargs kill -9'''
     logger.warning(f'{kill_shell} 命令杀死 fsdfmark_{queue_name} 标识的进程')
     uploader.ssh.exec_command(kill_shell)
+    # conn.run(kill_shell, encoding='utf-8')
 
     shell_str = f'''export PYTHONPATH={remote_dir}:$PYTHONPATH ; python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark fsdfmark_{queue_name} '''
     logger.warning(f'使用语句 {shell_str} 在远程机器 {host} 上启动任务消费')
-    conn = Connection(host, port=port, user=user, connect_kwargs={"password": password}, )
     conn.run(shell_str, encoding='utf-8')
     # uploader.ssh.exec_command(shell_str)

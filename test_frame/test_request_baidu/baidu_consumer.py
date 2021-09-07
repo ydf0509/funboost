@@ -19,7 +19,7 @@ def request_url(url):
 
 if __name__ == '__main__':
     request_url.clear()
-    for i in range(1000000):
+    for i in range(100000):
         request_url.push('http://mini.eastday.com/assets/v1/js/search_word.js')
 
-    request_url.multi_process_consume(24)
+    request_url.multi_process_consume(2)

@@ -1,0 +1,52 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>python分布式函数调度框架</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="keywords" content="python 分布式 高并发 消息队列 框架"/>
+
+</head>
+<body>
+<h1>python分布式函数调度框架</h1>
+<div class="main-agileinfo">
+    <h2>立即登录</h2>
+    <form action="login" method="post">
+		{{ form.csrf_token }}
+        <input type="text" name="user_name" class="name" placeholder="用户名" required="">
+        <input type="password" name="password" class="password" placeholder="密码" required="">
+        <ul>
+            <li>
+<!--                <input type="checkbox" id="remember_me" name="remember_me" value="">-->
+<!--                <label for="remember_me"><span></span>记住我</label>-->
+<!--                <input name="remember_me" type="hidden" value="false">-->
+
+<input name="remember_me" type="checkbox" value="false" id="remember_me">
+                <label for="remember_me"><span></span>记住我</label>
+
+
+            </li>
+        </ul>
+        <!--            <a href="#">忘记密码?</a><br>-->
+        <div class="clear"></div>
+        {% with messages = get_flashed_messages(category_filter=["error"]) %}
+        {% if messages %}
+        <span style="color:red;">
+            {% for message in messages %}
+                {{ message }}
+            <!-- <div class="alert alert-warning">{{ message }} </div> -->
+            {% endfor %}
+            </span>
+        {% endif %}
+        {% endwith %}
+        <input type="submit" value="登录" onclick="document.getElementById('remember_me').value=document.getElementById('remember_me').checked;">
+
+
+    </form>
+</div>
+<div class="footer-w3l">
+    <p class="agile"> &copy; 2019 分布式函数调度框架</p>
+</div>
+</body>
+</html>

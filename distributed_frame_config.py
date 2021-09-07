@@ -17,10 +17,16 @@ RABBITMQ_HOST = '127.0.0.1'
 RABBITMQ_PORT = 5672
 RABBITMQ_VIRTUAL_HOST = 'rabbitmq_virtual_host'
 
-REDIS_HOST = '127.0.0.1'
-REDIS_PASSWORD = ''
+# REDIS_HOST = '127.0.0.1'
+# REDIS_PASSWORD = ''
+# REDIS_PORT = 6379
+# REDIS_DB = 7
+
+REDIS_HOST = '106.55.244.110'
+REDIS_PASSWORD = '372148'
 REDIS_PORT = 6379
 REDIS_DB = 7
+
 
 NSQD_TCP_ADDRESSES = ['127.0.0.1:4150']
 NSQD_HTTP_CLIENT_HOST = '127.0.0.1'
@@ -31,7 +37,7 @@ KAFKA_BOOTSTRAP_SERVERS = ['127.0.0.1:9092']
 SQLACHEMY_ENGINE_URL = 'sqlite:////sqlachemy_queues/queues.db'
 
 # persist_queue中间件时候采用本机sqlite的方式，数据库文件生成的位置。如果linux账号在根目录没权限建文件夹，可以换文件夹。
-SQLLITE_QUEUES_PATH = '/sqllite_queues'
+SQLLITE_QUEUES_PATH = '/home/ydf/sqllite_queues'
 
 ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
 

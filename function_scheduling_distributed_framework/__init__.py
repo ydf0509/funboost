@@ -1,3 +1,5 @@
+import os
+import sys
 from functools import update_wrapper, wraps, partial
 from multiprocessing import Process
 from typing import List
@@ -12,14 +14,14 @@ from function_scheduling_distributed_framework.consumers.base_consumer import Ex
 from function_scheduling_distributed_framework.publishers.base_publisher import PriorityConsumingControlConfig, AbstractPublisher
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
 from function_scheduling_distributed_framework.factories.consumer_factory import get_consumer
+
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.utils import nb_print, patch_print, LogManager, get_logger, LoggerMixin
 from function_scheduling_distributed_framework.timing_job import fsdf_background_scheduler, timing_publish_deco
-from function_scheduling_distributed_framework.constant import BrokerEnum,ConcurrentModeEnum
+from function_scheduling_distributed_framework.constant import BrokerEnum, ConcurrentModeEnum
 
 # 有的包默认没加handlers，原始的日志不漂亮且不可跳转不知道哪里发生的。这里把warnning级别以上的日志默认加上handlers。
 nb_log.get_logger(name=None, log_level_int=30, log_filename='pywarning.log')
-
 
 
 class IdeAutoCompleteHelper(LoggerMixin):
@@ -92,7 +94,7 @@ def task_deco(queue_name, *, function_timeout=0,
               schedule_tasks_on_main_thread=False,
               function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600),
               is_using_rpc_mode=False,
-              broker_kind:int=None):
+              broker_kind: int = None):
     """
     # 为了代码提示好，这里重复一次入参意义。被此装饰器装饰的函数f，函数f对象本身自动加了一些方法，例如f.push 、 f.consume等。
     :param queue_name: 队列名字。
@@ -240,3 +242,38 @@ def run_consumer_with_multi_process(task_fun, process_num=1):
     else:
         [Process(target=_run_many_consumer_by_init_params,
                  args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start() for _ in range(process_num)]
+
+
+def fabric_deploy(task_fun, host, port, user, password, process_num=8):
+    import re
+    from fabric2 import Connection
+    from function_scheduling_distributed_framework.utils.paramiko_util import ParamikoFolderUploader
+
+    python_proj_dir = sys.path[1].replace('\\', '/') + '/'
+    python_proj_dir_short = python_proj_dir.split('/')[-2]
+
+    if user == 'root':
+        remote_dir = f'/codes/{python_proj_dir_short}'
+    else:
+        remote_dir = f'/home/{user}/codes/{python_proj_dir_short}'
+    print(python_proj_dir, remote_dir)
+    uploader = ParamikoFolderUploader(host, port, user, password, python_proj_dir, remote_dir)
+    uploader.upload()
+    # conn.run(f'''export PYTHONPATH={remote_dir}:$PYTHONPATH''')
+
+    # 获取被调用函数所在模块文件名
+    file_name = sys._getframe(1).f_code.co_filename.replace('\\', '/')  # noqa
+    relative_file_name = re.sub(f'^{python_proj_dir}', '', file_name)
+    relative_module = relative_file_name.replace('/', '.')[:-3]  # -3是去掉.py
+    func_name = task_fun.__name__
+    queue_name = task_fun.consumer.queue_name
+
+    kill_shell = f'''ps -aux|grep fsdfmark_{queue_name}|grep -v grep|awk '{{print $2}}' |xargs kill -9'''
+    print(kill_shell)
+    uploader.ssh.exec_command(kill_shell)
+
+    shell_str = f'''export PYTHONPATH={remote_dir}:$PYTHONPATH ; python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark fsdfmark_{queue_name} '''
+    print(shell_str)
+    conn = Connection(host, port=port, user=user, connect_kwargs={"password": password}, )
+    conn.run(shell_str, encoding='utf-8')
+    # uploader.ssh.exec_command(shell_str)

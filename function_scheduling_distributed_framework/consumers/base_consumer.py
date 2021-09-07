@@ -618,7 +618,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if self._log_level <= logging.DEBUG:
                     result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '
                     self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
-                                      f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 【 {function_only_params} 】。 '
+                                      f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 {function_only_params}  '
                                       f' 结果是  {result_str_to_be_print} ，  {self._get_concurrent_info()}  ')
             except Exception as e:
                 if isinstance(e, (PyMongoError,
@@ -627,13 +627,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     time.sleep(1)  # 防止快速无限出错入队出队，导致cpu和中间件忙
                     return self._requeue(kw)
                 self.logger.error(f'函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次发生错误，'
-                                  f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是 【 {function_only_params} 】   \n 原因是 {type(e)} {e} ',
+                                  f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是  {function_only_params}    \n 原因是 {type(e)} {e} ',
                                   exc_info=self.__get_priority_conf(kw, 'is_print_detail_exception'))
                 function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
                 return self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times + 1, function_result_status, )
         else:
             self.logger.critical(
-                f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是 【 {function_only_params} 】')
+                f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} ')
             self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
             if self.__get_priority_conf(kw, 'do_task_filtering'):
                 self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
@@ -718,13 +718,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     # return self._requeue(kw)
                     return await simple_run_in_executor(self._requeue, kw)
                 self.logger.error(f'函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次发生错误，'
-                                  f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是 【 {function_only_params} 】   \n 原因是 {type(e)} {e} ',
+                                  f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是  {function_only_params}    \n 原因是 {type(e)} {e} ',
                                   exc_info=self.__get_priority_conf(kw, 'is_print_detail_exception'))
                 function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
                 return await self._async_run_consuming_function_with_confirm_and_retry(kw, current_retry_times + 1, function_result_status, )
         else:
             self.logger.critical(
-                f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是 【 {function_only_params} 】')
+                f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} ')
             # self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
             await simple_run_in_executor(self._confirm_consume, kw)
             if self.__get_priority_conf(kw, 'do_task_filtering'):

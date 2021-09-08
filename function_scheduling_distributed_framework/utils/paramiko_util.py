@@ -2,7 +2,6 @@ import os
 import re
 import sys
 import time
-from pathlib import Path
 from nb_log import LoggerMixin
 import paramiko
 
@@ -30,6 +29,10 @@ class ParamikoFolderUploader(LoggerMixin):
         :param only_upload_within_the_last_modify_time: 仅仅上传最近多少天修改的文件
         :param file_volume_limit: 大于这个体积的不上传，单位b。
         """
+        self._host = host
+        self._port = port
+        self._user = user
+        self._password = password
 
         self._local_dir = str(local_dir).replace('\\', '/')
         if not self._local_dir.endswith('/'):
@@ -83,6 +86,9 @@ class ParamikoFolderUploader(LoggerMixin):
             parrent_dir = os.path.split(dir)[0]
             self._make_dir(parrent_dir, final_dir)
 
+    def _sftp_put(self, file_full_name, remote_full_file_name):
+        self.sftp.put(file_full_name, remote_full_file_name)
+
     def upload(self):
         for parent, dirnames, filenames in os.walk(self._local_dir):
             for filename in filenames:
@@ -90,11 +96,11 @@ class ParamikoFolderUploader(LoggerMixin):
                 if not self._judge_need_filter_a_file(file_full_name):
                     remote_full_file_name = re.sub(f'^{self._local_dir}', self._remote_dir, file_full_name)
                     try:
-                        self.sftp.put(file_full_name, remote_full_file_name)
+                        self._sftp_put(file_full_name, remote_full_file_name)
                     except (FileNotFoundError,) as e:
                         # self.logger.warning(remote_full_file_name)
                         self._make_dir(os.path.split(remote_full_file_name)[0], os.path.split(remote_full_file_name)[0])
-                        self.sftp.put(file_full_name, remote_full_file_name)
+                        self._sftp_put(file_full_name, remote_full_file_name)
                 else:
                     # self.logger.warning(f'此文件 {file_full_name} 符合过滤要求，不执行上传')
                     pass

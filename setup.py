@@ -73,6 +73,7 @@ setup(
         'kombu==4.6.11',
         # 'confluent_kafka==1.7.0',
         'paho-mqtt',
+        'fabric2==2.6.0'  #有的机器包rust错误， 这样做 curl https://sh.rustup.rs -sSf | sh
     ]
 )
 """

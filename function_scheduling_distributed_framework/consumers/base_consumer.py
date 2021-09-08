@@ -41,7 +41,7 @@ from pymongo import IndexModel
 from pymongo.errors import PyMongoError
 
 # noinspection PyUnresolvedReferences
-from nb_log import LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, \
+from nb_log import get_logger, LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, \
     LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write, is_main_process, only_print_on_main_process
 # noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.concurrent_pool.async_helper import simple_run_in_executor
@@ -276,7 +276,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                  qps: float = 0, is_using_distributed_frequency_control=False,
                  msg_expire_senconds=0, is_send_consumer_hearbeat_to_redis=False,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False,
-                 task_filtering_expire_seconds=0, is_consuming_function_use_multi_params=True,
+                 task_filtering_expire_seconds=0,
                  is_do_not_run_by_specify_time_effect=False,
                  do_not_run_by_specify_time=('10:00:00', '22:00:00'),
                  schedule_tasks_on_main_thread=False,
@@ -307,7 +307,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param task_filtering_expire_seconds:任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ，
                30分钟前发布过1 + 2 的任务，现在仍然执行，
                如果是30分钟以内发布过这个任务，则不执行1 + 2，现在把这个逻辑集成到框架，一般用于接口价格缓存。
-        :is_consuming_function_use_multi_params  函数的参数是否是传统的多参数，不为单个body字典表示多个参数。
         :param is_do_not_run_by_specify_time_effect :是否使不运行的时间段生效
         :param do_not_run_by_specify_time   :不运行的时间段
         :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
@@ -398,9 +397,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # nb_print(logger_name)
         self._create_logger_file = create_logger_file
         self._log_level = log_level
-        self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level,
-                                                                          log_filename=f'{logger_name}.log' if create_logger_file else None,
-                                                                          formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+        self.logger = get_logger(logger_name, log_level_int=log_level, log_filename=f'{logger_name}.log' if create_logger_file else None,
+                                 formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
         # self.logger.info(f'{self.__class__} 在 {current_queue__info_dict["where_to_instantiate"]}  被实例化')
 
         stdout_write(f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;30;44m此行 '
@@ -410,8 +408,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._redis_filter_key_name = f'filter_zset:{queue_name}' if task_filtering_expire_seconds else f'filter_set:{queue_name}'
         filter_class = RedisFilter if task_filtering_expire_seconds == 0 else RedisImpermanencyFilter
         self._redis_filter = filter_class(self._redis_filter_key_name, task_filtering_expire_seconds)
-
-        self._is_consuming_function_use_multi_params = is_consuming_function_use_multi_params
 
         self._unit_time_for_count = 10  # 每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。
         self._execute_task_times_every_unit_time = 0  # 每单位时间执行了多少次任务。
@@ -601,11 +597,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 function_timeout = self.__get_priority_conf(kw, 'function_timeout')
                 function_run = self.consuming_function if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
                     function_timeout)(self.consuming_function)
-                if self._is_consuming_function_use_multi_params:  # 消费函数使用传统的多参数形式
-                    function_result_status.result = function_run(**function_only_params)
-                else:
-                    function_result_status.result = function_run(
-                        function_only_params)  # 消费函数使用单个参数，参数自身是一个字典，由键值对表示各个参数。
+                function_result_status.result = function_run(**function_only_params)
                 if asyncio.iscoroutine(function_result_status.result):
                     self.logger.critical(f'异步的协程消费函数必须使用 async 并发模式并发,请设置 '
                                          f'消费函数 {self.consuming_function.__name__} 的concurrent_mode 为4')
@@ -937,10 +929,10 @@ class ConcurrentModeDispatcher(LoggerMixin):
             # print({self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode})
             if not {self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode}.issubset({1, 4, 5}):
                 # threding、asyncio、solo 这几种模式可以共存。但同一个解释器不能同时选择 gevent + 其它并发模式，也不能 eventlet + 其它并发模式。
-                raise ValueError('由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，'
-                                 '搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种(或可以共存),'
-                                 'asyncio threading single_thread 并发模式可以共存，但gevent和threading不可以共存，'
-                                 'gevent和eventlet不可以共存')
+                raise ValueError('''由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，
+                                 搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种(或可以共存),
+                                 asyncio threading single_thread 并发模式可以共存，但gevent和threading不可以共存，
+                                 gevent和eventlet不可以共存''')
 
         ConsumersManager.global_concurrent_mode = self.consumer._concurrent_mode
 

@@ -2,10 +2,11 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 14:57
 import time
-import  socket
+import socket
 from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum, fabric_deploy
 
 import os
+
 
 def get_host_ip():
     ip = ''
@@ -34,14 +35,20 @@ computer_ip, computer_name = get_host_ip()
 # 还有其他30种函数运行控制参数，看代码里面的函数入参说明，说的非常详细了。
 
 # @task_deco('queue_test2', )  # @task_deco必须参数只有一个。
-@task_deco('queue_test28', qps=0.2, broker_kind=BrokerEnum.REDIS)
+@task_deco('queue_test30', qps=0.2, broker_kind=BrokerEnum.REDIS)
 def f2(a, b):
     sleep_time = 7
     result = a + b
-    print(f'机器：{get_host_ip()} 进程：{os.getpid()}， 消费此消息 {a} + {b} 中。。。。。,此次需要消耗 {sleep_time} 秒')
+    # print(f'机器：{get_host_ip()} 进程：{os.getpid()}， 消费此消息 {a} + {b} 中。。。。。,此次需要消耗 {sleep_time} 秒')
     time.sleep(sleep_time)  # 模拟做某事需要阻塞n秒种，必须用并发绕过此阻塞。
     print(f'机器：{get_host_ip()} 进程：{os.getpid()}，{a} + {b} 的结果是 {result}')
     return result
+
+
+@task_deco('queue_test31', qps=0.2, broker_kind=BrokerEnum.REDIS)
+def f3(a, b):
+    print(f'机器：{get_host_ip()} 进程：{os.getpid()}，{a} - {b} 的结果是 {a - b}')
+    return a - b
 
 
 if __name__ == '__main__':
@@ -49,9 +56,11 @@ if __name__ == '__main__':
     f2.clear()
     for i in range(20000):
         f2.push(i, i * 2)
+        f3.push(i, i * 2)
     f2.consume()
+    f3.multi_process_consume(2)
     # # 192.168.114.135  192.168.6.133
-    fabric_deploy(f2,'192.168.114.135',22,'ydf','372148',process_num=2)
-    fabric_deploy(f2, '106.55.244.110', 22, 'root', '(H8{Q$%Bb2_|nSg}',
-                  only_upload_within_the_last_modify_time=1*24*60*60 ,
-                  file_volume_limit=100*1000,process_num=2)
+    f2.fabric_deploy('192.168.6.133', 22, 'ydf', '372148', process_num=2)
+    f3.fabric_deploy('106.44.xxx.110', 22, 'root', 'fdsfdsfdsad',
+                     only_upload_within_the_last_modify_time=1 * 24 * 60 * 60,
+                     file_volume_limit=100 * 1000, process_num=2)

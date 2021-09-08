@@ -267,13 +267,14 @@ def fabric_deploy(task_fun, host, port, user, password,
                   process_num=8):
     """
     不依赖阿里云codepipeline 和任何运维发布管理工具，只需要在python代码层面就能实现多机器远程部署。
+    这实现了函数级别的精确部署，而非是部署一个 .py的代码，远程部署一个函数实现难度比远程部署一个脚本更高一点，部署更灵活。
 
     之前有人问怎么方便的部署在多台机器，一般用阿里云codepipeline  k8s自动部署。被部署的远程机器必须是linux，不能是windwos。
     但是有的人是直接操作多台物理机，有些不方便，现在直接加一个利用python代码本身实现的跨机器自动部署并运行函数任务。
 
     自动根据任务函数所在文件，转化成python模块路径，实现函数级别的精确部署，比脚本级别的部署更精确到函数。
     例如 test_frame/test_fabric_deploy/test_deploy1.py的fun2函数 自动转化成 from test_frame.test_fabric_deploy.test_deploy1 import f2
-
+    从而自动生成部署语句
     export PYTHONPATH=/home/ydf/codes/distributed_framework:$PYTHONPATH ;cd /home/ydf/codes/distributed_framework;
     python3 -c "from test_frame.test_fabric_deploy.test_deploy1 import f2;f2.multi_process_consume(2)"  -fsdfmark fsdf_fabric_mark_queue_test30
 
@@ -296,7 +297,7 @@ def fabric_deploy(task_fun, host, port, user, password,
     :return:
 
 
-    task_fun.fabric_deploy('192.168.6.133', 22, 'ydf', '372148', process_num=2) 只需要这样就可以自动部署在远程机器运行，无需任何额外操作。
+    task_fun.fabric_deploy('192.168.6.133', 22, 'ydf', '123456', process_num=2) 只需要这样就可以自动部署在远程机器运行，无需任何额外操作。
     """
     python_proj_dir = sys.path[1].replace('\\', '/') + '/'
     python_proj_dir_short = python_proj_dir.split('/')[-2]

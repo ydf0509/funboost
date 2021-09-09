@@ -330,7 +330,8 @@ def fabric_deploy(task_fun, host, port, user, password,
         uploader.ssh.exec_command(kill_shell)
         # conn.run(kill_shell, encoding='utf-8')
 
-        shell_str = f'''export PYTHONPATH={remote_dir}:$PYTHONPATH ;cd {remote_dir}; python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark {process_mark}  '''
+        python_exec_str = f''' python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark {process_mark} '''
+        shell_str = f'''export is_fsdf_remote_run=1;export PYTHONPATH={remote_dir}:$PYTHONPATH ;cd {remote_dir}; {python_exec_str}'''
         extra_shell_str2 = extra_shell_str  # 内部函数对外部变量不能直接改。
         if not extra_shell_str2.endswith(';') and extra_shell_str != '':
             extra_shell_str2 += ';'

@@ -58,3 +58,6 @@ class ConcurrentModeEnum:
     EVENTLET = 3
     ASYNC = 4  # asyncio并发，适用于async def定义的函数。
     SINGLE_THREAD = 5
+
+
+# is_fsdf_remote_run = 0

@@ -2,7 +2,7 @@ import os
 import re
 import sys
 import time
-from nb_log import LoggerMixin
+from nb_log import LoggerMixin, get_logger
 import paramiko
 
 
@@ -70,7 +70,7 @@ class ParamikoFolderUploader(LoggerMixin):
             return True
         return False
 
-    def _make_dir(self, dir, final_dir):
+    def _make_dir(self, dirc, final_dir):
         """
         sftp.mkdir 不能直接越级创建深层级文件夹。
         :param dir:
@@ -79,15 +79,12 @@ class ParamikoFolderUploader(LoggerMixin):
         """
         # print(dir,final_dir)
         try:
-            self.sftp.mkdir(dir)
-            if dir != final_dir:
+            self.sftp.mkdir(dirc)
+            if dirc != final_dir:
                 self._make_dir(final_dir, final_dir)
         except (FileNotFoundError,):
-            parrent_dir = os.path.split(dir)[0]
+            parrent_dir = os.path.split(dirc)[0]
             self._make_dir(parrent_dir, final_dir)
-
-    def _sftp_put(self, file_full_name, remote_full_file_name):
-        self.sftp.put(file_full_name, remote_full_file_name)
 
     def upload(self):
         for parent, dirnames, filenames in os.walk(self._local_dir):
@@ -96,16 +93,13 @@ class ParamikoFolderUploader(LoggerMixin):
                 if not self._judge_need_filter_a_file(file_full_name):
                     remote_full_file_name = re.sub(f'^{self._local_dir}', self._remote_dir, file_full_name)
                     try:
-                        self._sftp_put(file_full_name, remote_full_file_name)
+                        self.sftp.put(file_full_name, remote_full_file_name)
                     except (FileNotFoundError,) as e:
                         # self.logger.warning(remote_full_file_name)
                         self._make_dir(os.path.split(remote_full_file_name)[0], os.path.split(remote_full_file_name)[0])
-                        self._sftp_put(file_full_name, remote_full_file_name)
-                else:
-                    # self.logger.warning(f'此文件 {file_full_name} 符合过滤要求，不执行上传')
-                    pass
+                        self.sftp.put(file_full_name, remote_full_file_name)
 
 
 if __name__ == '__main__':
-    uploader = ParamikoFolderUploader('192.168.6.133', 22, 'ydf', '372148', sys.path[1], '/home/ydf/codes/dssf6/')
+    uploader = ParamikoFolderUploader('192.168.6.133', 22, 'ydf', '372148', sys.path[1], '/home/ydf/codes/dssf/')
     uploader.upload()

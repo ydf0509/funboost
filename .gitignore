@@ -24,3 +24,4 @@ test_frame/test_rabbitmq/distributed_frame_config.py
 dist/
 *.egg-info/
 not_up_git/
+distributed_frame_config.py

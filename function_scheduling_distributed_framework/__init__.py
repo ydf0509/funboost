@@ -88,7 +88,7 @@ class IdeAutoCompleteHelper(LoggerMixin):
                       path_pattern_exluded_tuple=('/.git/', '/.idea/', '/dist/', '/build/'),
                       file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
                       only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
-                      file_volume_limit=1000 * 1000, extra_shell_str='',
+                      file_volume_limit=1000 * 1000, sftp_log_level=20, extra_shell_str='',
                       invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
                       process_num=1):
         """
@@ -269,7 +269,7 @@ def fabric_deploy(task_fun, host, port, user, password,
                   path_pattern_exluded_tuple=('/.git/', '/.idea/', '/dist/', '/build/'),
                   file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
                   only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
-                  file_volume_limit=1000 * 1000, extra_shell_str='',
+                  file_volume_limit=1000 * 1000, sftp_log_level=20, extra_shell_str='',
                   invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
                   process_num=1):
     """
@@ -299,6 +299,7 @@ def fabric_deploy(task_fun, host, port, user, password,
     :param file_suffix_tuple_exluded:排除的后缀
     :param only_upload_within_the_last_modify_time:只上传多少秒以内的文件，如果完整运行上传过一次后，之后可以把值改小，避免每次全量上传。
     :param file_volume_limit:大于这个体积的不上传，因为python代码文件很少超过1M
+    :param sftp_log_level: 文件上传日志级别  10为logging.DEBUG 20为logging.INFO  30 为logging.WARNING
     :param extra_shell_str :自动部署前额外执行的命令，例如可以设置环境变量什么的
     :param invoke_runner_kwargs : invoke包的runner.py 模块的 run()方法的所有一切入参,例子只写了几个入参，实际可以传入十几个入参，大家可以自己琢磨fabric包的run方法，按需传入。
                                  hide 是否隐藏远程机器的输出，值可以为 False不隐藏远程主机的输出  “out”为只隐藏远程机器的正常输出，“err”为只隐藏远程机器的错误输出，True，隐藏远程主机的一切输出
@@ -326,7 +327,7 @@ def fabric_deploy(task_fun, host, port, user, password,
         t_start = time.perf_counter()
         uploader = ParamikoFolderUploader(host, port, user, password, python_proj_dir, remote_dir,
                                           path_pattern_exluded_tuple, file_suffix_tuple_exluded,
-                                          only_upload_within_the_last_modify_time, file_volume_limit)
+                                          only_upload_within_the_last_modify_time, file_volume_limit, sftp_log_level)
         uploader.upload()
         logger.info(f'上传 本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹耗时 {round(time.perf_counter() - t_start, 3)} 秒')
         # conn.run(f'''export PYTHONPATH={remote_dir}:$PYTHONPATH''')

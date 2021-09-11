@@ -105,7 +105,8 @@ class ParamikoFolderUploader(LoggerMixin, LoggerLevelSetterMixin):
                         self._make_dir(os.path.split(remote_full_file_name)[0], os.path.split(remote_full_file_name)[0])
                         self.sftp.put(file_full_name, remote_full_file_name)
                 else:
-                    self.logger.debug(f'根据过滤规则，不上传这个文件 {file_full_name}')
+                    if '/.git' not in file_full_name and '.pyc' not in file_full_name:
+                        self.logger.debug(f'根据过滤规则，不上传这个文件 {file_full_name}')
 
 
 if __name__ == '__main__':

@@ -90,14 +90,12 @@ class IdeAutoCompleteHelper(LoggerMixin):
                       only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
                       file_volume_limit=1000 * 1000, extra_shell_str='',
                       invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
-                      process_num=8):
+                      process_num=1):
         """
         入参见 fabric_deploy 函数。
         """
         in_kwargs = locals()
         in_kwargs.pop('self')
-        in_kwargs.pop('invoke_runner_kwargs')
-        in_kwargs.update(invoke_runner_kwargs)
         fabric_deploy(self.consuming_func_decorated, **in_kwargs)
 
     multi_process_start = multi_process_consume
@@ -273,7 +271,7 @@ def fabric_deploy(task_fun, host, port, user, password,
                   only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
                   file_volume_limit=1000 * 1000, extra_shell_str='',
                   invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
-                  process_num=8):
+                  process_num=1):
     """
     不依赖阿里云codepipeline 和任何运维发布管理工具，只需要在python代码层面就能实现多机器远程部署。
     这实现了函数级别的精确部署，而非是部署一个 .py的代码，远程部署一个函数实现难度比远程部署一个脚本更高一点，部署更灵活。
@@ -315,7 +313,7 @@ def fabric_deploy(task_fun, host, port, user, password,
     python_proj_dir = sys.path[1].replace('\\', '/') + '/'
     python_proj_dir_short = python_proj_dir.split('/')[-2]
     # 获取被调用函数所在模块文件名
-    file_name = sys._getframe(1).f_code.co_filename.replace('\\', '/')  # noqa
+    file_name = sys._getframe(1).f_code.co_filename.replace('\\', '/')  # noqa\
     relative_file_name = re.sub(f'^{python_proj_dir}', '', file_name)
     relative_module = relative_file_name.replace('/', '.')[:-3]  # -3是去掉.py
     if user == 'root':  # 文件夹会被自动创建，无需用户创建。

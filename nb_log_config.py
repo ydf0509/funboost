@@ -81,13 +81,15 @@ if os.name == 'posix':  # linux非root用户和mac用户无法操作 /pythonlogs
     home_path = os.environ.get("HOME", '/')  # 这个是获取linux系统的当前用户的主目录，不需要亲自设置
     LOG_PATH = Path(home_path) / Path('pythonlogs')  # linux mac 权限很严格，非root权限不能在/pythonlogs写入，修改一下默认值。
 
-LOG_FILE_HANDLER_TYPE = 1  # 1 2 3 4
+LOG_FILE_HANDLER_TYPE = 1  # 1 2 3 4 5
 """
-LOG_FILE_HANDLER_TYPE 这个值可以设置为 1 2 3 4 四种值，
-1为使用多进程安全按日志文件大小切割的文件日志
+LOG_FILE_HANDLER_TYPE 这个值可以设置为 1 2 3 4 5 四种值，
+1为使用多进程安全按日志文件大小切割的文件日志,这是本人实现的批量写入日志，减少操作文件锁次数，测试10进程快速写入文件，win上性能比第5种提高了100倍，linux提升5倍
 2为多进程安全按天自动切割的文件日志，同一个文件，每天生成一个日志
 3为不自动切割的单个文件的日志(不切割文件就不会出现所谓进程安不安全的问题) 
 4为 WatchedFileHandler，这个是需要在linux下才能使用，需要借助lograte外力进行日志文件的切割，多进程安全。
+5 为第三方的concurrent_log_handler.ConcurrentRotatingFileHandler按日志文件大小切割的文件日志，
+   这个是采用了文件锁，多进程安全切割，文件锁在linux上使用fcntl性能还行，win上使用win32con性能非常惨。按大小切割建议不要选第5个个filehandler而是选择第1个。
 """
 
 LOG_LEVEL_FILTER = logging.DEBUG  # 默认日志级别，低于此级别的日志不记录了。例如设置为INFO，那么logger.debug的不会记录，只会记录logger.info以上级别的。
@@ -121,6 +123,8 @@ FORMATTER_DICT = {
         "%Y-%m-%d %H:%M:%S"),  # 对5改进，带进程和线程显示的日志模板。
     10: logging.Formatter(
         '[p%(process)d_t%(thread)d] %(asctime)s - %(name)s - "%(filename)s:%(lineno)d" - %(levelname)s - %(message)s', "%Y-%m-%d %H:%M:%S"),  # 对7改进，带进程和线程显示的日志模板。
+    11: logging.Formatter(
+        f'({computer_ip},{computer_name})-[p%(process)d_t%(thread)d] %(asctime)s - %(name)s - "%(filename)s:%(lineno)d" - %(levelname)s - %(message)s', "%Y-%m-%d %H:%M:%S"),  # 对7改进，带进程和线程显示的日志模板以及ip和主机名。
 }
 
 FORMATTER_KIND = 5  # 如果get_logger_and_add_handlers不指定日志模板，则默认选择第几个模板

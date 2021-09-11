@@ -22,7 +22,7 @@ def f(x, y):
 
 if __name__ == '__main__':
     f.clear()
-    for i in range(10000):
+    for i in range(100):
         f.push(i, i * 2)
     f.consume()
     f.fabric_deploy('192.168.114.137',22,'ydf','372148')

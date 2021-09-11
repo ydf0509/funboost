@@ -85,14 +85,14 @@ class IdeAutoCompleteHelper(LoggerMixin):
 
     # noinspection PyDefaultArgument
     def fabric_deploy(self, host, port, user, password,
-                      path_pattern_exluded_tuple=('/.git/', '/.idea/',),
+                      path_pattern_exluded_tuple=('/.git/', '/.idea/', '/dist/', '/build/'),
                       file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
                       only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
                       file_volume_limit=1000 * 1000, extra_shell_str='',
                       invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
                       process_num=1):
         """
-        入参见 fabric_deploy 函数。
+        入参见 fabric_deploy 函数。这里重复入参是为了代码在pycharm补全提示。
         """
         in_kwargs = locals()
         in_kwargs.pop('self')
@@ -266,7 +266,7 @@ def run_consumer_with_multi_process(task_fun, process_num=1):
 
 # noinspection PyDefaultArgument
 def fabric_deploy(task_fun, host, port, user, password,
-                  path_pattern_exluded_tuple=('/.git/', '/.idea/',),
+                  path_pattern_exluded_tuple=('/.git/', '/.idea/', '/dist/', '/build/'),
                   file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
                   only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
                   file_volume_limit=1000 * 1000, extra_shell_str='',
@@ -304,7 +304,7 @@ def fabric_deploy(task_fun, host, port, user, password,
                                  hide 是否隐藏远程机器的输出，值可以为 False不隐藏远程主机的输出  “out”为只隐藏远程机器的正常输出，“err”为只隐藏远程机器的错误输出，True，隐藏远程主机的一切输出
                                  pty 的意思是，远程机器的部署的代码进程是否随着当前脚本的结束而结束。如果为True，本机代码结束远程进程就会结束。如果为False，即使本机代码被关闭结束，远程机器还在运行代码。
                                  warn 的意思是如果远程机器控制台返回了异常码本机代码是否立即退出。warn为True这只是警告一下，warn为False,远程机器返回异常code码则本机代码直接终止退出。
-    :param process_num:启动几个进程
+    :param process_num:启动几个进程，要达到最大cpu性能就开启cpu核数个进程就可以了。每个进程内部都有任务函数本身指定的并发方式和并发数量，所以是多进程+线程/协程。
     :return:
 
 

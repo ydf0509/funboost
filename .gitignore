@@ -25,3 +25,4 @@ dist/
 *.egg-info/
 not_up_git/
 distributed_frame_config.py
+auto_run_on_remote_config.py

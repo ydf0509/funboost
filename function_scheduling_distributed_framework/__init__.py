@@ -83,11 +83,13 @@ class IdeAutoCompleteHelper(LoggerMixin):
     def multi_process_consume(self, process_num=1):
         run_consumer_with_multi_process(self.consuming_func_decorated, process_num)
 
+    # noinspection PyDefaultArgument
     def fabric_deploy(self, host, port, user, password,
                       path_pattern_exluded_tuple=('/.git/', '/.idea/',),
                       file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
                       only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
                       file_volume_limit=1000 * 1000, extra_shell_str='',
+                      invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
                       process_num=8):
         in_kwargs = locals()
         in_kwargs.pop('self')
@@ -259,11 +261,13 @@ def run_consumer_with_multi_process(task_fun, process_num=1):
                  args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start() for _ in range(process_num)]
 
 
+# noinspection PyDefaultArgument
 def fabric_deploy(task_fun, host, port, user, password,
                   path_pattern_exluded_tuple=('/.git/', '/.idea/',),
                   file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
                   only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
                   file_volume_limit=1000 * 1000, extra_shell_str='',
+                  invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
                   process_num=8):
     """
     不依赖阿里云codepipeline 和任何运维发布管理工具，只需要在python代码层面就能实现多机器远程部署。
@@ -293,6 +297,10 @@ def fabric_deploy(task_fun, host, port, user, password,
     :param only_upload_within_the_last_modify_time:只上传多少秒以内的文件，如果完整运行上传过一次后，之后可以把值改小，避免每次全量上传。
     :param file_volume_limit:大于这个体积的不上传，因为python代码文件很少超过1M
     :param extra_shell_str :自动部署前额外执行的命令，例如可以设置环境变量什么的
+    :param invoke_runner_kwargs : invoke包的runner.py 模块的 run()方法的所有一切入参,例子只写了几个入参，实际可以传入十几个入参，大家可以自己琢磨fabric包的run方法，按需传入。
+                                 hide 是否隐藏远程机器的输出，值可以为 False不隐藏远程主机的输出  “out”为只隐藏远程机器的正常输出，“err”为只隐藏远程机器的错误输出，True，隐藏远程主机的一切输出
+                                 pty 的意思是，远程机器的部署的代码进程是否随着当前脚本的结束而结束。如果为True，本机代码结束远程进程就会结束。如果为False，即使本机代码被关闭结束，远程机器还在运行代码。
+                                 warn 的意思是如果远程机器控制台返回了异常码本机代码是否立即退出。warn为True这只是警告一下，warn为False,远程机器返回异常code码则本机代码直接终止退出。
     :param process_num:启动几个进程
     :return:
 
@@ -328,16 +336,16 @@ def fabric_deploy(task_fun, host, port, user, password,
         kill_shell = f'''ps -aux|grep {process_mark}|grep -v grep|awk '{{print $2}}' |xargs kill -9'''
         logger.warning(f'{kill_shell} 命令杀死 {process_mark} 标识的进程')
         uploader.ssh.exec_command(kill_shell)
-        # conn.run(kill_shell, encoding='utf-8')
+        # conn.run(kill_shell, encoding='utf-8',warn=True)  # 不想提示，免得烦扰用户以为有什么异常了。所以用上面的paramiko包的ssh.exec_command
 
-        python_exec_str = f''' python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark {process_mark} '''
-        shell_str = f'''export is_fsdf_remote_run=1;export PYTHONPATH={remote_dir}:$PYTHONPATH ;cd {remote_dir}; {python_exec_str}'''
+        python_exec_str = f'''export is_fsdf_remote_run=1;export PYTHONPATH={remote_dir}:$PYTHONPATH ;python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark {process_mark} '''
+        shell_str = f'''cd {remote_dir}; {python_exec_str}'''
         extra_shell_str2 = extra_shell_str  # 内部函数对外部变量不能直接改。
         if not extra_shell_str2.endswith(';') and extra_shell_str != '':
             extra_shell_str2 += ';'
         shell_str = extra_shell_str2 + shell_str
         logger.warning(f'使用语句 {shell_str} 在远程机器 {host} 上启动任务消费')
-        conn.run(shell_str, encoding='utf-8')
+        conn.run(shell_str, encoding='utf-8', **invoke_runner_kwargs)
         # uploader.ssh.exec_command(shell_str)
 
     threading.Thread(target=_inner).start()

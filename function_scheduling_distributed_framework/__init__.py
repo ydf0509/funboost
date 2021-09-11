@@ -91,8 +91,13 @@ class IdeAutoCompleteHelper(LoggerMixin):
                       file_volume_limit=1000 * 1000, extra_shell_str='',
                       invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
                       process_num=8):
+        """
+        入参见 fabric_deploy 函数。
+        """
         in_kwargs = locals()
         in_kwargs.pop('self')
+        in_kwargs.pop('invoke_runner_kwargs')
+        in_kwargs.update(invoke_runner_kwargs)
         fabric_deploy(self.consuming_func_decorated, **in_kwargs)
 
     multi_process_start = multi_process_consume

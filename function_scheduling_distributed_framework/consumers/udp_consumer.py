@@ -17,7 +17,7 @@ class UDPConsumer(AbstractConsumer, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        """ queue_name 要设置为例如  127.0.0.1:5689"""
+        """ udp为消息队列中间件 时候 queue_name 要设置为例如  127.0.0.1:5689"""
         self.__udp_client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         ip__port_str = self.queue_name.split(':')
         self.__ip_port = (ip__port_str[0], int(ip__port_str[1]))

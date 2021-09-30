@@ -8,4 +8,5 @@ def f(x):
 
 if __name__ == '__main__':
     f.consume()
-    f.push('hello')
+    for i in range(10):
+        f.push(f'hello {i}')

@@ -584,7 +584,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                         active_consumer_num = self._distributed_consumer_statistics.active_consumer_num
                     else:
                         active_consumer_num = 1
-                    msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
+                    # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
+                    msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / (self._execute_task_times_every_unit_time / self._unit_time_for_count) / active_consumer_num)}''' + \
+                           f''' 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
                 self.logger.info(msg)
                 self._current_time_for_execute_task_times_every_unit_time = time.time()
                 self._consuming_function_cost_time_total_every_unit_time = 0
@@ -666,7 +668,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     active_consumer_num = self._distributed_consumer_statistics.active_consumer_num
                 else:
                     active_consumer_num = 1
-                msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
+                # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
+                msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / (self._execute_task_times_every_unit_time / self._unit_time_for_count) / active_consumer_num)} ''' + \
+                       ''' 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
             self.logger.info(msg)
             self._current_time_for_execute_task_times_every_unit_time = time.time()
             self._consuming_function_cost_time_total_every_unit_time = 0

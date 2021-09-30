@@ -20,6 +20,7 @@ from function_scheduling_distributed_framework.consumers.redis_consumer_ack_able
 from function_scheduling_distributed_framework.consumers.rocketmq_consumer import RocketmqConsumer
 from function_scheduling_distributed_framework.consumers.sqlachemy_consumer import SqlachemyConsumer
 from function_scheduling_distributed_framework.consumers.redis_stream_consumer import RedisStreamConsumer
+from function_scheduling_distributed_framework.consumers.udp_consumer import UDPConsumer
 from function_scheduling_distributed_framework.consumers.zeromq_consumer import ZeroMqConsumer
 from function_scheduling_distributed_framework.consumers.mqtt_consumer import MqttConsumer
 from function_scheduling_distributed_framework.consumers.httpsqs_consumer import HttpsqsConsumer
@@ -54,6 +55,7 @@ def get_consumer(*args, broker_kind: int = None, **kwargs):
         16: KafkaConsumerManuallyCommit,
         17: MqttConsumer,
         18: HttpsqsConsumer,
+        21: UDPConsumer,
     }
     if broker_kind is None:
         broker_kind = frame_config.DEFAULT_BROKER_KIND

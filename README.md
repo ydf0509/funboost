@@ -25,7 +25,11 @@ pip install function_scheduling_distributed_framework --upgrade
 
 ## 1.2 框架功能介绍
 
-分布式函数调度框架，支持5种并发模式，20种消息中间件，20种任务控制功能。
+分布式函数调度框架，支持5种并发模式，20+种消息中间件，20种任务控制功能。
+
+有了这个框架，用户再也无需亲自手写操作进程、线程、协程的并发的代码了。
+
+有了这个框架，用户再也无需亲自手写操作redis rabbitmq socket kafka 了。
 
 [![sgV2xP.png](https://z3.ax1x.com/2021/01/19/sgV2xP.png)](https://imgtu.com/i/sgV2xP)
 

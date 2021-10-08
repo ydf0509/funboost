@@ -4,6 +4,7 @@
 import copy
 from collections import Callable
 
+from function_scheduling_distributed_framework.consumers.http_consumer import HTTPConsumer
 from function_scheduling_distributed_framework.consumers.kafka_consumer import KafkaConsumer
 from function_scheduling_distributed_framework.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit
 from function_scheduling_distributed_framework.consumers.kombu_consumer import KombuConsumer
@@ -58,6 +59,7 @@ def get_consumer(*args, broker_kind: int = None, **kwargs):
         18: HttpsqsConsumer,
         21: UDPConsumer,
         22: TCPConsumer,
+        23:HTTPConsumer,
     }
     if broker_kind is None:
         broker_kind = frame_config.DEFAULT_BROKER_KIND

@@ -33,7 +33,7 @@ class TCPConsumer(AbstractConsumer, ):
         self._server = server
         while True:
             tcp_cli_sock, addr = self._server.accept()
-            Thread(target=self.__handle_conn, args=(tcp_cli_sock,)).start()
+            Thread(target=self.__handle_conn, args=(tcp_cli_sock,)).start() # 服务端多线程，可以同时处理多个tcp客户端发来的消息。
 
     def __handle_conn(self, tcp_cli_sock):
         try:
@@ -56,3 +56,4 @@ class TCPConsumer(AbstractConsumer, ):
 
     def _requeue(self, kw):
         pass
+

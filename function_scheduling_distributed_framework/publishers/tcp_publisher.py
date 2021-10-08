@@ -5,26 +5,30 @@ import socket
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
 
 
-class UDPPublisher(AbstractPublisher, ):
+class TCPPublisher(AbstractPublisher, ):
     """
     使用redis作为中间件,这个是大幅优化了发布速度的方式。简单的发布是 redis_publisher_0000.py 中的代码方式。
     """
 
-    BROKER_KIND = 22
+    BROKER_KIND = 21
 
     BUFSIZE = 10240
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        """ udp为消息队列中间件 时候 queue_name 要设置为例如  127.0.0.1:5689"""
-        self.__udp_client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        ip__port_str = self.queue_name.split(':')
-        self.__ip_port = (ip__port_str[0], int(ip__port_str[1]))
-        self.__udp_client.connect(self.__ip_port)
+        """ tcp为消息队列中间件 时候 queue_name 要设置为例如  127.0.0.1:5689"""
+        pass
 
     def concrete_realization_of_publish(self, msg):
-        self.__udp_client.send(msg.encode('utf-8'), )
-        data = self.__udp_client.recv(self.BUFSIZE)
+        if not hasattr(self,'_tcp_cli_sock'):
+            ip__port_str = self.queue_name.split(':')
+            ip_port = (ip__port_str[0], int(ip__port_str[1]))
+            tcp_cli_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            tcp_cli_sock.connect(ip_port)
+            self._tcp_cli_sock = tcp_cli_sock
+
+        self._tcp_cli_sock.send(msg.encode())
+        data1 = self._tcp_cli_sock.recv(self.BUFSIZE)
 
     def clear(self):
         pass  # udp没有保存消息
@@ -35,4 +39,4 @@ class UDPPublisher(AbstractPublisher, ):
 
     def close(self):
         # self.redis_db7.connection_pool.disconnect()
-        self.__udp_client.close()
+        self._tcp_cli_sock.close()

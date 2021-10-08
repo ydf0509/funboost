@@ -21,10 +21,11 @@ class UDPConsumer(AbstractConsumer, ):
         self.__udp_client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         ip__port_str = self.queue_name.split(':')
         self.__ip_port = (ip__port_str[0], int(ip__port_str[1]))
+        self.__udp_client.connect(self.__ip_port)
 
     # noinspection DuplicatedCode
     def _shedual_task(self):
-        ip_port = self.__ip_port
+        ip_port = ('', self.__ip_port[1])
         # ip_port = ('', 9999)
         server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # udp协议
         server.bind(ip_port)
@@ -32,7 +33,7 @@ class UDPConsumer(AbstractConsumer, ):
             data, client_addr = server.recvfrom(self.BUFSIZE)
             # print('server收到的数据', data)
             self._print_message_get_from_broker(f'udp {ip_port}', data.decode())
-            server.sendto(''.encode(), client_addr)
+            server.sendto('has_recived'.encode(), client_addr)
             kw = {'body': json.loads(data)}
             self._submit_task(kw)
 
@@ -40,5 +41,5 @@ class UDPConsumer(AbstractConsumer, ):
         pass  # 没有确认消费的功能。
 
     def _requeue(self, kw):
-        self.__udp_client.sendto(json.dumps(kw['body']).encode(), self.__ip_port)
-        data, server_addr = self.__udp_client.recvfrom(self.BUFSIZE)
+        self.__udp_client.send(json.dumps(kw['body']).encode())
+        data = self.__udp_client.recv(self.BUFSIZE)

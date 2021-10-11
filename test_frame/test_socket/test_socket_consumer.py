@@ -1,15 +1,18 @@
-from function_scheduling_distributed_framework import task_deco, BrokerEnum
-from auto_run_on_remote import run_current_script_on_remote
+import time
+
+from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum
 
 
-
-@task_deco('10.0.126.147:5691', broker_kind=BrokerEnum.HTTP, log_level=10)
-def f(x):
+@task_deco('10.0.126.147:5691', broker_kind=BrokerEnum.REDIS, qps=0.5, concurrent_mode=ConcurrentModeEnum.ASYNC, is_print_detail_exception=True,max_retry_times=3)
+async def f(x):
+    # time.sleep(7)
+    if x % 10 == 0:
+        raise ValueError('测试函数出错')
     print(x)
+    return x * 10
 
 
 if __name__ == '__main__':
-    # run_current_script_on_remote()
     f.consume()
     for i in range(10):
-        f.push(f'hello {i}')
+        f.push(i)

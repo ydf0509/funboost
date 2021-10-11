@@ -91,7 +91,7 @@ class AsyncPoolExecutor(nb_log.LoggerMixin):
         atexit.register(self.shutdown)
 
         self._event = threading.Event()
-        print(self._event.is_set())
+        # print(self._event.is_set())
         self._event.set()
 
     def submit(self, func, *args, **kwargs):

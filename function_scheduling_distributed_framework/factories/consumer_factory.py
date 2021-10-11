@@ -59,7 +59,7 @@ def get_consumer(*args, broker_kind: int = None, **kwargs):
         18: HttpsqsConsumer,
         21: UDPConsumer,
         22: TCPConsumer,
-        23:HTTPConsumer,
+        23: HTTPConsumer,
     }
     if broker_kind is None:
         broker_kind = frame_config.DEFAULT_BROKER_KIND

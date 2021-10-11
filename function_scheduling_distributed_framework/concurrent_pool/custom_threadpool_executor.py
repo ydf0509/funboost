@@ -87,7 +87,7 @@ def set_threadpool_executor_shrinkable(min_works=1, keep_alive_time=5):
 
 
 class ThreadPoolExecutorShrinkAble(Executor, LoggerMixin, LoggerLevelSetterMixin):
-    # 为了和官方自带的THredpoolexecutor保持完全一致的鸭子类，参数设置成死的，不然用户传参了。
+    # 为了和官方自带的THredpoolexecutor保持完全一致的鸭子类，参数设置成死的，不让用户传参了。
     # 建议用猴子补丁修改这两个参数，为了保持入参api和内置的concurrent.futures 相同。
     # MIN_WORKERS = 5   # 最小值可以设置为0，代表线程池无论多久没有任务最少要保持多少个线程待命。
     # KEEP_ALIVE_TIME = 60  # 这个参数表名，当前线程从queue.get(block=True, timeout=KEEP_ALIVE_TIME)多久没任务，就线程结束。

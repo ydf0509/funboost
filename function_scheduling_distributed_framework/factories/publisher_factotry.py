@@ -68,7 +68,7 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
         18: HttpsqsPublisher,
         21: UDPPublisher,
         22: TCPPublisher,
-        23:HTTPPublisher,
+        23: HTTPPublisher,
     }
     if broker_kind is None:
         broker_kind = frame_config.DEFAULT_BROKER_KIND

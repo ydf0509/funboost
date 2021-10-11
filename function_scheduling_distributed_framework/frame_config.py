@@ -10,7 +10,7 @@ from function_scheduling_distributed_framework.constant import BrokerEnum
 
 '''
 
-# 如果@task_deco装饰器没有亲自指定beoker_kind入参，则默认使用DEFAULT_BROKER_KIND这个中间件。
+# 如果@task_deco装饰器没有亲自指定broker_kind入参，则默认使用DEFAULT_BROKER_KIND这个中间件。
 # 强烈推荐安装rabbitmq然后使用 BrokerEnum.RABBITMQ_AMQPSTORM 这个中间件,
 # 次之 BrokerEnum.REDIS_ACK_ABLE中间件，kafka则推荐 BrokerEnum.CONFLUENT_KAFKA。
 # BrokerEnum.PERSISTQUEUE 的优点是基于单机磁盘的消息持久化，不需要安装消息中间件软件就能使用，但不是跨机器的真分布式。

@@ -851,7 +851,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def __frequency_control(self, qpsx, msg_schedule_time_intercalx):
         # 以下是消费函数qps控制代码。无论是单个消费者空频还是分布式消费控频，都是基于直接计算的，没有依赖redis inrc计数，使得控频性能好。
-        if qpsx == 0:
+        if qpsx == 0: # 不需要控频的时候，就不需要休眠。
             return
         if qpsx <= 5:
             """ 原来的简单版 """
@@ -864,7 +864,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             time.sleep(time_sleep_for_qps_control)
             self._last_submit_task_timestamp = time.time()
         else:
-            """基于当前消费者计数的控频"""
+            """基于当前消费者计数的控频，qps很大时候需要使用这种"""
             if time.time() - self._last_start_count_qps_timestamp > 1:
                 self._has_execute_times_in_recent_second = 1
                 self._last_start_count_qps_timestamp = time.time()

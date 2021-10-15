@@ -7,7 +7,7 @@ from function_scheduling_distributed_framework.publishers.base_publisher import 
 
 class TCPPublisher(AbstractPublisher, ):
     """
-    使用redis作为中间件,这个是大幅优化了发布速度的方式。简单的发布是 redis_publisher_0000.py 中的代码方式。
+    使用tco作为中间件,不支持持久化，支持分布式
     """
 
     BROKER_KIND = 21

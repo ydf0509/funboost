@@ -17,6 +17,12 @@
 
 ### 1.0.2 [分布式函数调度框架github地址](https://github.com/ydf0509/distributed_framework)
 
+### 1.0.3 [分布式函数调度框架qq群](https://qm.qq.com/cgi-bin/qm/qr?k=unA_o_L3sv5yushJzYGUTAwSzZ7GhUhq&jump_from=webapi)
+现在新建一个qq群 189603256
+
+[点击加入 python万能分布式函数调度框架qq群](https://qm.qq.com/cgi-bin/qm/qr?k=unA_o_L3sv5yushJzYGUTAwSzZ7GhUhq&jump_from=webapi)
+
+
 ## 1.1 安装方式
 
 pip install function_scheduling_distributed_framework --upgrade

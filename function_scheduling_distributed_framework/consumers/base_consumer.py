@@ -109,9 +109,9 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         function_params = _delete_keys_and_return_new_dict(params, )
         self.params = function_params
         self.params_str = json.dumps(function_params, ensure_ascii=False)
-        self.result = ''
+        self.result = None
         self.run_times = 0
-        self.exception = ''
+        self.exception = None
         self.time_start = time.time()
         self.time_cost = None
         self.success = False
@@ -166,6 +166,10 @@ class ResultPersistenceHelper(MongoMixin):
             item2 = copy.copy(item)
             if not self.function_result_status_persistance_conf.is_save_result:
                 item2['result'] = '不保存结果'
+            if item2['result'] is None:
+                item2['result'] = ''
+            if item2['exception'] is None:
+                item2['exception'] = ''
             self._mongo_bulk_write_helper.add_task(InsertOne(item2))  # 自动离散批量聚合方式。
             # self.task_status_col.insert_one(item2)
 

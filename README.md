@@ -59,9 +59,14 @@ pip install function_scheduling_distributed_framework --upgrade
 
 ### 1.2.2 框架支持20种中间件
 
-框架支持 rabbitmq redis python自带的queue.Queue  sqlite sqlachemy kafka pulsar mongodb 等作为消息中间件。
+框架支持 rabbitmq redis python自带的queue.Queue  sqlite sqlachemy kafka pulsar mongodb 直接socket 等作为消息中间件。
 
 同时此框架也支持操作 kombu 库作为中间件,所以此框架能够支持的中间件类型只会比celery更多。
+
+框架支持的中间件种类大全和选型见文档3.1章节的介绍:   
+
+[3.1 各种中间件选择的场景和优势](https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/articles/c3.html#id2) 
+
 
 ### 1.2.3 框架对任务支持20种控制功能。
 
@@ -187,6 +192,7 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
 以下这只是简单求和例子，实际情况换成任意函数里面写任意逻辑，框架可没有规定只能用于 求和函数 的自动调度并发。
 而是根据实际情况函数的参数个数、函数的内部逻辑功能，全部都由用户自定义，函数里面想写什么就写什么，想干什么就干什么，极端自由。
 也就是框架很容易学和使用，把下面的task_fun函数的入参和内部逻辑换成你自己想写的函数功能就可以了，框架只需要学习task_deco这一个函数的参数就行。
+测试使用的时候函数里面加上sleep模拟阻塞，从而更好的了解框架的并发和各种控制功能。
 
 有一点要说明的是框架的消息中间件的ip 端口 密码 等配置是在你第一次运行代码时候，在你当前项目的根目录下生成的 distributed_frame_config.py 按需设置。
 ```

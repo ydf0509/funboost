@@ -18,7 +18,7 @@ LogManager('kafka').get_logger_and_add_handlers(30)
 
 class KafkaConsumer(AbstractConsumer):
     """
-    kafla作为中间件实现的。
+    kafka作为中间件实现的。自动确认消费，最多消费一次，随意重启会丢失正在大批正在运行的任务。推荐使用 confluent_kafka 中间件，kafka_consumer_manually_commit.py。
     """
     BROKER_KIND = 8
 

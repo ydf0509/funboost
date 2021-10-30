@@ -33,3 +33,4 @@ pyzmq
 kombu==4.6.11
 confluent_kafka==1.5.0
 paho-mqtt
+aiohttp

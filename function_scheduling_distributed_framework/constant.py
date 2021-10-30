@@ -14,7 +14,7 @@ class BrokerEnum:
     MONGOMQ = 5  # 使用mongo的表中的行模拟的 作为分布式消息队列，支持消费确认。
 
     PERSISTQUEUE = 6  # 使用基于sqlute3模拟消息队列，支持消费确认和持久化，但不支持跨机器共享任务，可以基于本机单机跨脚本和跨进程共享任务，好处是不需要安装中间件。
-    SQLITE_QUEUE = PERSISTQUEUE
+    SQLITE_QUEUE = PERSISTQUEUE # PERSISTQUEUE的别名
 
     NSQ = 7  # 基于nsq作为分布式消息队列，支持消费确认。
 
@@ -47,9 +47,15 @@ class BrokerEnum:
     """
     MQTT = 17
 
-    HTTPSQS = 18  # httpsqs，基于http协议操作
+    HTTPSQS = 18  # httpsqs中间件实现的，基于http协议操作，dcoker安装此中间件简单。
 
-    PULSAR = 20  # 最有潜力的下一代分布式消息系统。5年后会同时取代rabbitmq和kafka。
+    UDP = 21  # 基于socket udp 实现的，需要先启动消费端再启动发布，支持分布式但不支持持久化，好处是不需要安装消息队列中间件软件。
+
+    TCP = 22  # 基于socket tcp 实现的，需要先启动消费端再启动发布，支持分布式但不支持持久化，好处是不需要安装消息队列中间件软件。
+
+    HTTP = 23 # 基于http实现的，发布使用的urllib3，消费服务端使用的aiohttp.server实现的，支持分布式但不支持持久化，好处是不需要安装消息队列中间件软件。
+
+    PULSAR = 20  # 最有潜力的下一代分布式消息系统。5年后会同时取代rabbitmq和kafka。python安装包太大，安装麻烦，暂时不包含这个。
 
 
 class ConcurrentModeEnum:

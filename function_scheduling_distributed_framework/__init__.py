@@ -363,3 +363,4 @@ def kill_all_remote_tasks(host, port, user, password):
     logger.warning(f'{kill_shell} 命令杀死 {fsdf_fabric_mark_all} 标识的进程')
     uploader.ssh.exec_command(kill_shell)
     logger.warning(f'杀死 {host}  机器所有的 {fsdf_fabric_mark_all} 标识的进程')
+

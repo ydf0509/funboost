@@ -4,6 +4,7 @@
 import copy
 from collections import Callable
 
+from function_scheduling_distributed_framework.consumers.http_consumer import HTTPConsumer
 from function_scheduling_distributed_framework.consumers.kafka_consumer import KafkaConsumer
 from function_scheduling_distributed_framework.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit
 from function_scheduling_distributed_framework.consumers.kombu_consumer import KombuConsumer
@@ -20,6 +21,8 @@ from function_scheduling_distributed_framework.consumers.redis_consumer_ack_able
 from function_scheduling_distributed_framework.consumers.rocketmq_consumer import RocketmqConsumer
 from function_scheduling_distributed_framework.consumers.sqlachemy_consumer import SqlachemyConsumer
 from function_scheduling_distributed_framework.consumers.redis_stream_consumer import RedisStreamConsumer
+from function_scheduling_distributed_framework.consumers.tcp_consumer import TCPConsumer
+from function_scheduling_distributed_framework.consumers.udp_consumer import UDPConsumer
 from function_scheduling_distributed_framework.consumers.zeromq_consumer import ZeroMqConsumer
 from function_scheduling_distributed_framework.consumers.mqtt_consumer import MqttConsumer
 from function_scheduling_distributed_framework.consumers.httpsqs_consumer import HttpsqsConsumer
@@ -54,6 +57,9 @@ def get_consumer(*args, broker_kind: int = None, **kwargs):
         16: KafkaConsumerManuallyCommit,
         17: MqttConsumer,
         18: HttpsqsConsumer,
+        21: UDPConsumer,
+        22: TCPConsumer,
+        23: HTTPConsumer,
     }
     if broker_kind is None:
         broker_kind = frame_config.DEFAULT_BROKER_KIND

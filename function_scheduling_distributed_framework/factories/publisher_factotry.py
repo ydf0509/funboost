@@ -5,8 +5,11 @@ import copy
 from typing import Callable
 
 from function_scheduling_distributed_framework.publishers.confluent_kafka_publisher import ConfluentKafkaPublisher
+from function_scheduling_distributed_framework.publishers.http_publisher import HTTPPublisher
 from function_scheduling_distributed_framework.publishers.kombu_publisher import KombuPublisher
 from function_scheduling_distributed_framework.publishers.redis_publisher_lpush import RedisPublisherLpush
+from function_scheduling_distributed_framework.publishers.tcp_publisher import TCPPublisher
+from function_scheduling_distributed_framework.publishers.udp_publisher import UDPPublisher
 from function_scheduling_distributed_framework.publishers.zeromq_publisher import ZeroMqPublisher
 from function_scheduling_distributed_framework.publishers.kafka_publisher import KafkaPublisher
 from function_scheduling_distributed_framework.publishers.local_python_queue_publisher import LocalPythonQueuePublisher
@@ -62,7 +65,10 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
         15: KombuPublisher,
         16: ConfluentKafkaPublisher,
         17: MqttPublisher,
-        18: HttpsqsPublisher
+        18: HttpsqsPublisher,
+        21: UDPPublisher,
+        22: TCPPublisher,
+        23: HTTPPublisher,
     }
     if broker_kind is None:
         broker_kind = frame_config.DEFAULT_BROKER_KIND

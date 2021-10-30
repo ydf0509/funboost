@@ -83,12 +83,17 @@ class IdeAutoCompleteHelper(LoggerMixin):
     def multi_process_consume(self, process_num=1):
         run_consumer_with_multi_process(self.consuming_func_decorated, process_num)
 
+    # noinspection PyDefaultArgument
     def fabric_deploy(self, host, port, user, password,
-                      path_pattern_exluded_tuple=('/.git/', '/.idea/',),
+                      path_pattern_exluded_tuple=('/.git/', '/.idea/', '/dist/', '/build/'),
                       file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
                       only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
-                      file_volume_limit=1000 * 1000, extra_shell_str='',
-                      process_num=8):
+                      file_volume_limit=1000 * 1000, sftp_log_level=20, extra_shell_str='',
+                      invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
+                      process_num=1):
+        """
+        入参见 fabric_deploy 函数。这里重复入参是为了代码在pycharm补全提示。
+        """
         in_kwargs = locals()
         in_kwargs.pop('self')
         fabric_deploy(self.consuming_func_decorated, **in_kwargs)
@@ -259,12 +264,14 @@ def run_consumer_with_multi_process(task_fun, process_num=1):
                  args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start() for _ in range(process_num)]
 
 
+# noinspection PyDefaultArgument
 def fabric_deploy(task_fun, host, port, user, password,
-                  path_pattern_exluded_tuple=('/.git/', '/.idea/',),
+                  path_pattern_exluded_tuple=('/.git/', '/.idea/', '/dist/', '/build/'),
                   file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
                   only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
-                  file_volume_limit=1000 * 1000, extra_shell_str='',
-                  process_num=8):
+                  file_volume_limit=1000 * 1000, sftp_log_level=20, extra_shell_str='',
+                  invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
+                  process_num=1):
     """
     不依赖阿里云codepipeline 和任何运维发布管理工具，只需要在python代码层面就能实现多机器远程部署。
     这实现了函数级别的精确部署，而非是部署一个 .py的代码，远程部署一个函数实现难度比远程部署一个脚本更高一点，部署更灵活。
@@ -292,8 +299,13 @@ def fabric_deploy(task_fun, host, port, user, password,
     :param file_suffix_tuple_exluded:排除的后缀
     :param only_upload_within_the_last_modify_time:只上传多少秒以内的文件，如果完整运行上传过一次后，之后可以把值改小，避免每次全量上传。
     :param file_volume_limit:大于这个体积的不上传，因为python代码文件很少超过1M
+    :param sftp_log_level: 文件上传日志级别  10为logging.DEBUG 20为logging.INFO  30 为logging.WARNING
     :param extra_shell_str :自动部署前额外执行的命令，例如可以设置环境变量什么的
-    :param process_num:启动几个进程
+    :param invoke_runner_kwargs : invoke包的runner.py 模块的 run()方法的所有一切入参,例子只写了几个入参，实际可以传入十几个入参，大家可以自己琢磨fabric包的run方法，按需传入。
+                                 hide 是否隐藏远程机器的输出，值可以为 False不隐藏远程主机的输出  “out”为只隐藏远程机器的正常输出，“err”为只隐藏远程机器的错误输出，True，隐藏远程主机的一切输出
+                                 pty 的意思是，远程机器的部署的代码进程是否随着当前脚本的结束而结束。如果为True，本机代码结束远程进程就会结束。如果为False，即使本机代码被关闭结束，远程机器还在运行代码。
+                                 warn 的意思是如果远程机器控制台返回了异常码本机代码是否立即退出。warn为True这只是警告一下，warn为False,远程机器返回异常code码则本机代码直接终止退出。
+    :param process_num:启动几个进程，要达到最大cpu性能就开启cpu核数个进程就可以了。每个进程内部都有任务函数本身指定的并发方式和并发数量，所以是多进程+线程/协程。
     :return:
 
 
@@ -302,7 +314,7 @@ def fabric_deploy(task_fun, host, port, user, password,
     python_proj_dir = sys.path[1].replace('\\', '/') + '/'
     python_proj_dir_short = python_proj_dir.split('/')[-2]
     # 获取被调用函数所在模块文件名
-    file_name = sys._getframe(1).f_code.co_filename.replace('\\', '/')  # noqa
+    file_name = sys._getframe(1).f_code.co_filename.replace('\\', '/')  # noqa\
     relative_file_name = re.sub(f'^{python_proj_dir}', '', file_name)
     relative_module = relative_file_name.replace('/', '.')[:-3]  # -3是去掉.py
     if user == 'root':  # 文件夹会被自动创建，无需用户创建。
@@ -315,7 +327,7 @@ def fabric_deploy(task_fun, host, port, user, password,
         t_start = time.perf_counter()
         uploader = ParamikoFolderUploader(host, port, user, password, python_proj_dir, remote_dir,
                                           path_pattern_exluded_tuple, file_suffix_tuple_exluded,
-                                          only_upload_within_the_last_modify_time, file_volume_limit)
+                                          only_upload_within_the_last_modify_time, file_volume_limit, sftp_log_level)
         uploader.upload()
         logger.info(f'上传 本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹耗时 {round(time.perf_counter() - t_start, 3)} 秒')
         # conn.run(f'''export PYTHONPATH={remote_dir}:$PYTHONPATH''')
@@ -328,16 +340,16 @@ def fabric_deploy(task_fun, host, port, user, password,
         kill_shell = f'''ps -aux|grep {process_mark}|grep -v grep|awk '{{print $2}}' |xargs kill -9'''
         logger.warning(f'{kill_shell} 命令杀死 {process_mark} 标识的进程')
         uploader.ssh.exec_command(kill_shell)
-        # conn.run(kill_shell, encoding='utf-8')
+        # conn.run(kill_shell, encoding='utf-8',warn=True)  # 不想提示，免得烦扰用户以为有什么异常了。所以用上面的paramiko包的ssh.exec_command
 
-        python_exec_str = f''' python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark {process_mark} '''
-        shell_str = f'''export is_fsdf_remote_run=1;export PYTHONPATH={remote_dir}:$PYTHONPATH ;cd {remote_dir}; {python_exec_str}'''
+        python_exec_str = f'''export is_fsdf_remote_run=1;export PYTHONPATH={remote_dir}:$PYTHONPATH ;python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark {process_mark} '''
+        shell_str = f'''cd {remote_dir}; {python_exec_str}'''
         extra_shell_str2 = extra_shell_str  # 内部函数对外部变量不能直接改。
         if not extra_shell_str2.endswith(';') and extra_shell_str != '':
             extra_shell_str2 += ';'
         shell_str = extra_shell_str2 + shell_str
         logger.warning(f'使用语句 {shell_str} 在远程机器 {host} 上启动任务消费')
-        conn.run(shell_str, encoding='utf-8')
+        conn.run(shell_str, encoding='utf-8', **invoke_runner_kwargs)
         # uploader.ssh.exec_command(shell_str)
 
     threading.Thread(target=_inner).start()

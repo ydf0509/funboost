@@ -25,5 +25,5 @@ if __name__ == '__main__':
     for i in range(100):
         f.push(i, i * 2)
     f.consume()
-    f.fabric_deploy('192.168.114.137',22,'ydf','372148',sftp_log_level=10)
+    f.fabric_deploy('192.168.114.137',22,'ydf','372148',sftp_log_level=10,file_volume_limit=100 *1000)
     # f.multi_process_consume(2)

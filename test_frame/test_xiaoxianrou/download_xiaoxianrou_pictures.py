@@ -19,7 +19,7 @@ def cralw_list_page(page_index):
         crawl_detail_page.push(detail_sel.xpath('./@href').extract_first(), detail_sel.xpath('./@title').extract_first(), 1, is_first_picture=True)
 
 
-@task_deco('xiaoxianrou_detail_page', qps=3,)
+@task_deco('xiaoxianrou_detail_page', qps=3, )
 def crawl_detail_page(url, title, picture_index, is_first_picture=False):
     resp = requests.get(url)
     sel = Selector(resp.content.decode('gbk'))
@@ -30,15 +30,16 @@ def crawl_detail_page(url, title, picture_index, is_first_picture=False):
             next_pic_page_url = url[:-5] + f'_{p}.html'
             crawl_detail_page.push(next_pic_page_url, title, picture_index=p)
     pic_url = sel.xpath('//p[@align="center"]/a/img/@src').extract_first()
-    downlaod_picture.push(pic_url,title,picture_index)
+    downlaod_picture.push(pic_url, title, picture_index)
 
 
-@task_deco('xiaoxianrou_download_pictiure',qps=1,is_print_detail_exception=False)
-def downlaod_picture(pic_url,title,picture_index):
+@task_deco('xiaoxianrou_download_pictiure', qps=1, is_print_detail_exception=False)
+def downlaod_picture(pic_url, title, picture_index):
     print(pic_url)
     resp_pic = requests.get(pic_url)
     Path(f'./pictures/{title}/').mkdir(parents=True, exist_ok=True)
     (Path(f'./pictures/{title}/') / Path(f'./{title}_{picture_index}.jpg')).write_bytes(resp_pic.content)  # 保存图片。
+
 
 if __name__ == '__main__':
     # cralw_list_page(1)

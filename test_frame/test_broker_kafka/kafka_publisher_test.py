@@ -1,8 +1,7 @@
-from  test_frame.test_broker_kafka.kafka_cosumer_test import f
+from kafka_cosumer_test import f
 
-
-i = 203
-f.push(i)
+# i = 203
+# f.push(i)
 
 
 for i in range(200):

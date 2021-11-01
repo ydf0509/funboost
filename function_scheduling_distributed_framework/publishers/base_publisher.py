@@ -63,9 +63,9 @@ class RedisAsyncResult(RedisMixin):
         :param callback_func: 函数结果回调函数，使回调函数自动在线程池中并发运行。
         :return:
         """
-        from test_frame.test_rpc.test_consume import add
 
         ''' 用法例如
+        from test_frame.test_rpc.test_consume import add
         def show_result(status_and_result: dict):
             """
             :param status_and_result: 一个字典包括了函数入参、函数结果、函数是否运行成功、函数运行异常类型

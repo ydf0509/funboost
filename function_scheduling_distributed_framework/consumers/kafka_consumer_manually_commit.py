@@ -25,6 +25,8 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
     confluent_kafla作为中间件实现的。操作kafka中间件的速度比kafka-python快10倍。
     这个是自动间隔2秒的手动确认，由于是异步在并发池中并发消费，可以防止强制关闭程序造成正在运行的任务丢失，比自动commit好。
     如果使用kafka，推荐这个。
+
+    可以让消费函数内部 sleep 60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group frame_group 来证实自动确认消费和手动确认消费的区别。
     """
     BROKER_KIND = 16
 

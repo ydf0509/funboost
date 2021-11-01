@@ -19,6 +19,8 @@ LogManager('kafka').get_logger_and_add_handlers(30)
 class KafkaConsumer(AbstractConsumer):
     """
     kafka作为中间件实现的。自动确认消费，最多消费一次，随意重启会丢失正在大批正在运行的任务。推荐使用 confluent_kafka 中间件，kafka_consumer_manually_commit.py。
+
+    可以让消费函数内部 sleep60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group frame_group 来证实自动确认消费和手动确认消费的区别。
     """
     BROKER_KIND = 8
 

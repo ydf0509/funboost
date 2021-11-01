@@ -114,12 +114,14 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         self.exception = None
         self.time_start = time.time()
         self.time_cost = None
+        self.time_end = None
         self.success = False
         self.total_thread = threading.active_count()
         self.set_log_level(20)
 
     def get_status_dict(self, without_datetime_obj=False):
-        self.time_cost = round(time.time() - self.time_start, 3)
+        self.time_end = time.time()
+        self.time_cost = round(self.time_end - self.time_start, 3)
         item = self.__dict__
         item['host_name'] = self.host_name
         item['host_process'] = self.host_process
@@ -146,8 +148,31 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         return item
 
 
+class FunctionResultStatusPersistanceConfig(LoggerMixin):
+    def __init__(self, is_save_status: bool, is_save_result: bool, expire_seconds: int = 7 * 24 * 3600, is_use_bulk_insert=True):
+        """
+        :param is_save_status:
+        :param is_save_result:
+        :param expire_seconds: 设置统计的过期时间，在mongo里面自动会移除这些过期的执行记录。
+        :param is_use_bulk_insert : 是否使用批量插入来保存结果，批量插入是每隔2秒钟保存一次最近2秒内的所有的函数消费状态结果。为False则，每完成一次函数就实时写入一次到mongo。
+        """
+
+        if not is_save_status and is_save_result:
+            raise ValueError(f'你设置的是不保存函数运行状态但保存函数运行结果。不允许你这么设置')
+        self.is_save_status = is_save_status
+        self.is_save_result = is_save_result
+        if expire_seconds > 10 * 24 * 3600:
+            self.logger.warning(f'你设置的过期时间为 {expire_seconds} ,设置的时间过长。 ')
+        self.expire_seconds = expire_seconds
+        self.is_use_bulk_insert = is_use_bulk_insert
+
+    def to_dict(self):
+        return {"is_save_status": self.is_save_status,
+                'is_save_result': self.is_save_result, 'expire_seconds': self.expire_seconds}
+
+
 class ResultPersistenceHelper(MongoMixin):
-    def __init__(self, function_result_status_persistance_conf, queue_name):
+    def __init__(self, function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig, queue_name):
         self.function_result_status_persistance_conf = function_result_status_persistance_conf
         if self.function_result_status_persistance_conf.is_save_status:
             task_status_col = self.mongo_db_task_status.get_collection(queue_name)
@@ -156,7 +181,7 @@ class ResultPersistenceHelper(MongoMixin):
                                             IndexModel([("params_str", pymongo.TEXT)]), IndexModel([("success", 1)])
                                             ], )
             task_status_col.create_index([("utime", 1)],
-                                         expireAfterSeconds=function_result_status_persistance_conf.expire_seconds)  # 只保留7天。
+                                         expireAfterSeconds=function_result_status_persistance_conf.expire_seconds)  # 只保留7天(用户自定义的)。
             self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
             self.task_status_col = task_status_col
 
@@ -170,8 +195,10 @@ class ResultPersistenceHelper(MongoMixin):
                 item2['result'] = ''
             if item2['exception'] is None:
                 item2['exception'] = ''
-            self._mongo_bulk_write_helper.add_task(InsertOne(item2))  # 自动离散批量聚合方式。
-            # self.task_status_col.insert_one(item2)
+            if self.function_result_status_persistance_conf.is_use_bulk_insert:
+                self._mongo_bulk_write_helper.add_task(InsertOne(item2))  # 自动离散批量聚合方式。
+            else:
+                self.task_status_col.insert_one(item2)
 
 
 class ConsumersManager:
@@ -223,27 +250,6 @@ class ConsumersManager:
             return 'evenlet'
         elif concurrent_mode == 4:
             return 'async'
-
-
-class FunctionResultStatusPersistanceConfig(LoggerMixin):
-    def __init__(self, is_save_status: bool, is_save_result: bool, expire_seconds: int):
-        """
-        :param is_save_status:
-        :param is_save_result:
-        :param expire_seconds: 设置统计的过期时间，在mongo里面自动会移除这些过期的执行记录。
-        """
-
-        if not is_save_status and is_save_result:
-            raise ValueError(f'你设置的是不保存函数运行状态但保存函数运行结果。不允许你这么设置')
-        self.is_save_status = is_save_status
-        self.is_save_result = is_save_result
-        if expire_seconds > 10 * 24 * 3600:
-            self.logger.warning(f'你设置的过期时间为 {expire_seconds} ,设置的时间过长。 ')
-        self.expire_seconds = expire_seconds
-
-    def to_dict(self):
-        return {"is_save_status": self.is_save_status,
-                'is_save_result': self.is_save_result, 'expire_seconds': self.expire_seconds}
 
 
 # noinspection DuplicatedCode
@@ -583,6 +589,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             if current_function_result_status.success is True or current_retry_times == max_retry_times:
                 break
 
+        self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
         if current_function_result_status.success is False and current_retry_times == max_retry_times:
             self.logger.critical(
                 f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} ')
@@ -598,7 +605,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                         json.dumps(current_function_result_status.get_status_dict(without_datetime_obj=True)))
                 p.expire(kw['body']['extra']['task_id'], 600)
                 p.execute()
-        self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
 
         with self._lock_for_count_execute_task_times_every_unit_time:
             self._execute_task_times_every_unit_time += 1
@@ -674,6 +680,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                                                                              )
             if current_function_result_status.success is True or current_retry_times == max_retry_times:
                 break
+
+        # self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
+        await simple_run_in_executor(self._result_persistence_helper.save_function_result_to_mongo, current_function_result_status)
         if current_function_result_status.success is False and current_retry_times == max_retry_times:
             self.logger.critical(
                 f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} ')
@@ -691,8 +700,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     p.execute()
 
             await simple_run_in_executor(push_result)
-        # self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
-        await simple_run_in_executor(self._result_persistence_helper.save_function_result_to_mongo, current_function_result_status)
 
         # 异步调度不存在线程并发，不需要加锁。
         self._execute_task_times_every_unit_time += 1

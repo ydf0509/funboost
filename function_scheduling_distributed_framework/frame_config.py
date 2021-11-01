@@ -4,7 +4,10 @@ from function_scheduling_distributed_framework.constant import BrokerEnum
 
 '''
 你项目根目录下自动生成的 distributed_frame_config.py 文件中修改配置，会被自动读取到。
-此文件按需修改，例如你使用redis中间件作为消息队列，可以不用管rabbitmq mongodb kafka的配置。
+
+此文件按需修改，例如你使用redis中间件作为消息队列，可以不用管rabbitmq mongodb kafka啥的配置。
+但有两个功能例外，如果你需要使用rpc模式或者分布式控频功能，无论设置使用何种消息队列中间件都需要把redis连接配置好，
+如果@task_deco装饰器设置is_using_rpc_mode为True或者 is_using_distributed_frequency_control为True则需要把redis连接配置好，默认是False。
 
 框架使用文档是 https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/
 
@@ -16,13 +19,13 @@ from function_scheduling_distributed_framework.constant import BrokerEnum
 # BrokerEnum.PERSISTQUEUE 的优点是基于单机磁盘的消息持久化，不需要安装消息中间件软件就能使用，但不是跨机器的真分布式。
 DEFAULT_BROKER_KIND = BrokerEnum.PERSISTQUEUE
 
-MONGO_CONNECT_URL = f'mongodb://myUserAdmin:8mwTdy1klnSYepNo@{"192.168.199.202"}:27016/admin'
+MONGO_CONNECT_URL =  f'mongodb://192.168.6.133:27017' # 如果有密码连接 'mongodb://myUserAdmin:8mwTdy1klnSYepNo@192.168.199.202:27016/admin'
 
 RABBITMQ_USER = 'rabbitmq_user'
 RABBITMQ_PASS = 'rabbitmq_pass'
 RABBITMQ_HOST = '127.0.0.1'
 RABBITMQ_PORT = 5672
-RABBITMQ_VIRTUAL_HOST = 'rabbitmq_virtual_host'  # 这个是rabbitmq的虚拟子host需要用户自己创建，如果你想直接用rabbitmq的根host而不是使用虚拟host，这里写 / 即可。
+RABBITMQ_VIRTUAL_HOST = '/'  # my_host # 这个是rabbitmq的虚拟子host用户自己创建的，如果你想直接用rabbitmq的根host而不是使用虚拟子host，这里写 / 即可。
 
 REDIS_HOST = '127.0.0.1'
 REDIS_PASSWORD = ''

@@ -12,8 +12,8 @@ setup(
         'function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way'
     ),
     # long_description=open('README.md', 'r',encoding='utf8').read(),
-    keywords=("distributed-framework","function-scheduling", "rabbitmq", "rocketmq","kafka", "nsq","redis","disk",
-              "sqlachemy","consume-confirm", "timing" ,"task-scheduling", "apscheduler","pulsar","mqtt","kombu"),
+    keywords=("distributed-framework", "function-scheduling", "rabbitmq", "rocketmq", "kafka", "nsq", "redis", "disk",
+              "sqlachemy", "consume-confirm", "timing", "task-scheduling", "apscheduler", "pulsar", "mqtt", "kombu"),
     long_description_content_type="text/markdown",
     long_description=open('README.md', 'r', encoding='utf8').read(),
     author='bfzs',
@@ -70,10 +70,11 @@ setup(
         'rocketmq',
         'zmq',
         'pyzmq',
-        'kombu==4.6.11',
+        'kombu',  # 'kombu==4.6.11',
         # 'confluent_kafka==1.7.0',
         'paho-mqtt',
-        'fabric2==2.6.0'  #有的机器包rust错误， 这样做 curl https://sh.rustup.rs -sSf | sh
+        'setuptools_rust',
+        'fabric2==2.6.0'  # 有的机器包rust错误， 这样做 curl https://sh.rustup.rs -sSf | sh
     ]
 )
 """
@@ -95,4 +96,3 @@ python setup.py sdist & twine upload dist/function_scheduling_distributed_framew
 最新版下载
 ./pip install function_scheduling_distributed_framework --upgrade -i https://pypi.org/simple       
 """
-

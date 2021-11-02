@@ -81,7 +81,7 @@ class KombuConsumer(AbstractConsumer, ):
     def _shedual_task(self):  # 这个倍while 1 启动的，会自动重连。
         def callback(body: dict, message: kombu.transport.virtual.base.Message):
             # print(type(body),body,type(message),message)
-            self._print_message_get_from_broker('kombu',body)
+            self._print_message_get_from_broker('kombu', body)
             # self.logger.debug(f""" 从 kombu {self._middware_name} 中取出的消息是 {body}""")
             kw = {'body': body, 'message': message, }
             self._submit_task(kw)
@@ -90,7 +90,7 @@ class KombuConsumer(AbstractConsumer, ):
         self.queue = Queue(self._queue_name, exchange=self.exchange, routing_key=self._queue_name, auto_delete=False)
         self.conn = Connection(frame_config.KOMBU_URL, transport_options={"visibility_timeout": 600})  # 默认3600秒unacked重回队列
         self.queue(self.conn).declare()
-        with  self.conn.Consumer(self.queue, callbacks=[callback], no_ack=False, prefetch_count=100)  as consumer:
+        with  self.conn.Consumer(self.queue, callbacks=[callback], no_ack=False, prefetch_count=100) as consumer:
             # Process messages and handle events on all channels
             channel = consumer.channel  # type:Channel
             channel.body_encoding = 'no_encode'  # 这里改了编码，存到中间件的参数默认把消息base64了，我觉得没必要不方便查看消息明文。

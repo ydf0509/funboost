@@ -36,6 +36,7 @@ class HTTPConsumer(AbstractConsumer, ):
 
         routes = web.RouteTableDef()
 
+        # noinspection PyUnusedLocal
         @routes.get('/')
         async def hello(request):
             return web.Response(text="Hello, from function_scheduling_distributed_framework")

@@ -19,8 +19,9 @@ class TCPPublisher(AbstractPublisher, ):
         """ tcp为消息队列中间件 时候 queue_name 要设置为例如  127.0.0.1:5689"""
         pass
 
+    # noinspection PyAttributeOutsideInit
     def concrete_realization_of_publish(self, msg):
-        if not hasattr(self,'_tcp_cli_sock'):
+        if not hasattr(self, '_tcp_cli_sock'):
             ip__port_str = self.queue_name.split(':')
             ip_port = (ip__port_str[0], int(ip__port_str[1]))
             tcp_cli_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -28,7 +29,7 @@ class TCPPublisher(AbstractPublisher, ):
             self._tcp_cli_sock = tcp_cli_sock
 
         self._tcp_cli_sock.send(msg.encode())
-        data1 = self._tcp_cli_sock.recv(self.BUFSIZE)
+        self._tcp_cli_sock.recv(self.BUFSIZE)
 
     def clear(self):
         pass  # udp没有保存消息

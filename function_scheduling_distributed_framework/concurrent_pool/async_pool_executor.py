@@ -1,10 +1,9 @@
 import atexit
-import os
 import asyncio
 import threading
 import time
 import traceback
-from threading import Thread, Event
+from threading import Thread
 import nb_log  # noqa
 
 # if os.name == 'posix':
@@ -117,6 +116,7 @@ class AsyncPoolExecutor(nb_log.LoggerMixin):
             if isinstance(func, str) and func.startswith('stop'):
                 # self.logger.debug(func)
                 break
+            # noinspection PyBroadException,PyUnusedLocal
             try:
                 await func(*args, **kwargs)
             except Exception as e:
@@ -160,7 +160,7 @@ class AsyncProducerConsumer:
         """
 
         :param items: 要消费的参数列表
-        :param time_interval_produce: 添加任务的时间间隔
+        :param concurrent_num: 并发数量
         :param consume_fun_specify: 指定的异步消费函数对象，如果不指定就要继承并重写consume_fun函数。
         """
         self.queue = asyncio.Queue()
@@ -224,6 +224,7 @@ if __name__ == '__main__':
     def test_async_pool_executor():
         from function_scheduling_distributed_framework.concurrent_pool import CustomThreadPoolExecutor as ThreadPoolExecutor
         # from concurrent.futures.thread import ThreadPoolExecutor
+        # noinspection PyUnusedLocal
         async def f(x):
             # await asyncio.sleep(0.1)
             pass

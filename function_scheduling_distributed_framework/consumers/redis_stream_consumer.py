@@ -9,7 +9,7 @@ from function_scheduling_distributed_framework.utils import RedisMixin, decorato
 
 class RedisStreamConsumer(AbstractConsumer, RedisMixin):
     """
-    redis 的 stream 结构 作为中间件实现的。需要redis 5.0以上，redis stream结构 是redis的消息队列，功能远超 list结构。
+    redis 的 stream 结构 作为中间件实现的。需要redis 5.0以上，redis stream结构 是redis的消息队列，概念类似kafka，功能远超 list结构。
     """
     BROKER_KIND = 12
     GROUP = 'distributed_frame_group'
@@ -38,7 +38,7 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
                                                               {self.queue_name: ">"}, count=100, block=60 * 1000)
             if results:
                 # self.logger.debug(f'从redis的 [{self._queue_name}] stream 中 取出的消息是：  {results}  ')
-                self._print_message_get_from_broker('redis',results)
+                self._print_message_get_from_broker('redis', results)
                 # print(results[0][1])
                 for msg_id, msg in results[0][1]:
                     kw = {'body': json.loads(msg['']), 'msg_id': msg_id}
@@ -77,8 +77,10 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
                             self._queue_name, self.GROUP, '-', '+', 1000, xinfo_item['name'])
                         if pending_msg_list:
                             # min_idle_time 不需要，因为加了分布式锁，所以不需要基于idle最小时间的判断，并且启动了基于心跳的确认消费助手，检测消费者掉线或关闭或断开的准确率100%。
-                            xclaim_task_list = self.redis_db_frame_version3.xclaim(self._queue_name, self.GROUP, self.consumer_identification, force=True,
-                                                                                   min_idle_time=0 * 1000, message_ids=[task_item['message_id'] for task_item in pending_msg_list])
+                            xclaim_task_list = self.redis_db_frame_version3.xclaim(self._queue_name, self.GROUP,
+                                                                                   self.consumer_identification, force=True,
+                                                                                   min_idle_time=0 * 1000,
+                                                                                   message_ids=[task_item['message_id'] for task_item in pending_msg_list])
                             if xclaim_task_list:
                                 self.logger.warning(f' {self._queue_name}  的分组 {self.GROUP} 的消费者 {self.consumer_identification} 夺取 断开的消费者 {xinfo_item["name"]}'
                                                     f'  {len(xclaim_task_list)} 个任务，详细是 {xclaim_task_list} ')

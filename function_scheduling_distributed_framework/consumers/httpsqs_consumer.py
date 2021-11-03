@@ -14,6 +14,7 @@ class HttpsqsConsumer(AbstractConsumer):
     BROKER_KIND = 18
 
     def custom_init(self):
+        # noinspection PyAttributeOutsideInit
         self.httpsqs_publisher = HttpsqsPublisher(self._queue_name)
 
     # noinspection DuplicatedCode

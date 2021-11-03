@@ -90,7 +90,7 @@ class KombuConsumer(AbstractConsumer, ):
         self.queue = Queue(self._queue_name, exchange=self.exchange, routing_key=self._queue_name, auto_delete=False)
         self.conn = Connection(frame_config.KOMBU_URL, transport_options={"visibility_timeout": 600})  # 默认3600秒unacked重回队列
         self.queue(self.conn).declare()
-        with  self.conn.Consumer(self.queue, callbacks=[callback], no_ack=False, prefetch_count=100) as consumer:
+        with self.conn.Consumer(self.queue, callbacks=[callback], no_ack=False, prefetch_count=100) as consumer:
             # Process messages and handle events on all channels
             channel = consumer.channel  # type:Channel
             channel.body_encoding = 'no_encode'  # 这里改了编码，存到中间件的参数默认把消息base64了，我觉得没必要不方便查看消息明文。

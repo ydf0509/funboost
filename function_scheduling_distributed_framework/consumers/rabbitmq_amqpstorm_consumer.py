@@ -19,7 +19,7 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
         def callback(amqpstorm_message: amqpstorm.Message):
             body = amqpstorm_message.body
             # self.logger.debug(f'从rabbitmq的 [{self._queue_name}] 队列中 取出的消息是：  {body}')
-            self._print_message_get_from_broker('rabbitmq',body)
+            self._print_message_get_from_broker('rabbitmq', body)
             body = json.loads(body)
             kw = {'amqpstorm_message': amqpstorm_message, 'body': body}
             self._submit_task(kw)
@@ -39,5 +39,3 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
 
     def _requeue(self, kw):
         kw['amqpstorm_message'].nack(requeue=True)
-
-

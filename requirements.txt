@@ -13,7 +13,7 @@ pysnooper==0.0.11
 tomorrow3==1.1.0
 concurrent-log-handler==0.9.9
 elasticsearch
-requests
+requests~=2.18.4
 psutil
 Flask
 flask_bootstrap
@@ -34,3 +34,7 @@ kombu==4.6.11
 confluent_kafka==1.5.0
 paho-mqtt
 aiohttp
+setuptools~=39.0.1
+urllib3~=1.22
+six~=1.11.0
+redis3

@@ -24,7 +24,7 @@ class UDPPublisher(AbstractPublisher, ):
 
     def concrete_realization_of_publish(self, msg):
         self.__udp_client.send(msg.encode('utf-8'), )
-        data = self.__udp_client.recv(self.BUFSIZE)
+        self.__udp_client.recv(self.BUFSIZE)
 
     def clear(self):
         pass  # udp没有保存消息

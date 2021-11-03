@@ -11,6 +11,7 @@ from function_scheduling_distributed_framework.utils import LogManager
 
 LogManager('persistqueue').get_logger_and_add_handlers(10)
 
+
 # noinspection PyProtectedMember
 class PersistQueuePublisher(AbstractPublisher):
     """

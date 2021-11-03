@@ -13,11 +13,12 @@ class SqlachemyQueuePublisher(AbstractPublisher):
     这个是使用数据库表模拟的消息队列。这不是突发奇想一意孤行，很多包库都实现了这。
     """
 
+    # noinspection PyAttributeOutsideInit
     def custom_init(self):
         self.queue = sqla_queue.SqlaQueue(self._queue_name, frame_config.SQLACHEMY_ENGINE_URL)
 
     def concrete_realization_of_publish(self, msg):
-        self.queue.push(dict(body=msg,status=sqla_queue.TaskStatus.TO_BE_CONSUMED))
+        self.queue.push(dict(body=msg, status=sqla_queue.TaskStatus.TO_BE_CONSUMED))
 
     def clear(self):
         self.queue.clear_queue()

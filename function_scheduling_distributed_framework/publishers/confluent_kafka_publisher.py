@@ -24,12 +24,12 @@ if os.name == 'nt':
 
 import atexit
 import time
+# noinspection PyPackageRequirements
 from kafka import KafkaProducer, KafkaAdminClient
 # noinspection PyPackageRequirements
 from kafka.admin import NewTopic
 # noinspection PyPackageRequirements
 from kafka.errors import TopicAlreadyExistsError
-
 
 from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
@@ -56,6 +56,7 @@ class ConfluentKafkaPublisher(AbstractPublisher, ):
         self._confluent_producer = ConfluentProducer({'bootstrap.servers': ','.join(frame_config.KAFKA_BOOTSTRAP_SERVERS)})
         self._recent_produce_time = time.time()
 
+    # noinspection PyAttributeOutsideInit
     def concrete_realization_of_publish(self, msg):
         # noinspection PyTypeChecker
         # self.logger.debug(msg)

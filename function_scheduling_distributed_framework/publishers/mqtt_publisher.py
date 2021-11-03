@@ -69,6 +69,7 @@ class MqttPublisher(AbstractPublisher, ):
     使用 emq 作为中间件
     """
 
+    # noinspection PyAttributeOutsideInit
     def custom_init(self):
         client = mqtt.Client()
         # client.username_pw_set('admin', password='public')

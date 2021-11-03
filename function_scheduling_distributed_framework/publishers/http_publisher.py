@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 12:12
-import socket
+
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
 from urllib3 import PoolManager
 

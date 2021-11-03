@@ -6,6 +6,7 @@ from typing import Union
 import threading
 
 from apscheduler.schedulers.background import BackgroundScheduler
+# noinspection PyProtectedMember
 from apscheduler.util import undefined
 
 from function_scheduling_distributed_framework import frame_config
@@ -30,6 +31,7 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
     自定义的，添加一个方法add_timing_publish_job
     """
 
+    # noinspection PyShadowingBuiltins
     def add_timing_publish_job(self, func, trigger=None, args=None, kwargs=None, id=None, name=None,
                                misfire_grace_time=undefined, coalesce=undefined, max_instances=undefined,
                                next_run_time=undefined, jobstore='default', executor='default',

@@ -14,7 +14,7 @@ from threading import Lock
 import datetime
 import amqpstorm
 from kombu.exceptions import KombuError
-from pika.exceptions import AMQPError as PikaAMQPError
+from pikav1.exceptions import AMQPError as PikaAMQPError
 
 from nb_log import LoggerLevelSetterMixin, LogManager, LoggerMixin
 from function_scheduling_distributed_framework.utils import decorators, RedisMixin, time_util

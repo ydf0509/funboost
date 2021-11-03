@@ -10,15 +10,16 @@ from function_scheduling_distributed_framework.utils import RedisMixin
 
 # @task_deco('test_queue66', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=5, log_level=10, is_print_detail_exception=False, is_show_message_get_from_broker=False,
 #            is_using_distributed_frequency_control=True)
-@task_deco('test_queue66c', broker_kind=BrokerEnum.KOMBU, log_level=10, concurrent_mode=ConcurrentModeEnum.THREADING, qps=0)
+@task_deco('test_queue66c', qps=1/30)
 def f(x, y):
+    print(f'函数开始执行时间 {time.strftime("%H:%M:%S")}')
     # time.sleep(10)
     # if x %10 == 0:
     #     print(x)
 
     print(f''' pid:{os.getpid()}, {int(time.time())} 计算  {x} + {y} = {x + y}''')
     # time.sleep(0.7)
-    time.sleep(6)
+    # time.sleep(6)
     print(x, y)
     return x + y
 

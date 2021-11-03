@@ -8,9 +8,11 @@ from function_scheduling_distributed_framework import frame_config
 from function_scheduling_distributed_framework.publishers.base_publisher import AbstractPublisher
 
 
+
 class RocketmqPublisher(AbstractPublisher, ):
     group_id__rocketmq_producer = {}
 
+    # noinspection PyAttributeOutsideInit
     def custom_init(self):
         try:
             from rocketmq.client import Producer

@@ -8,13 +8,14 @@ from datetime import timedelta
 import celery
 from celery import platforms
 
-import celery_helper
+# import celery_helper
 
 platforms.C_FORCE_ROOT = True
 # celery_app = celery.Celery('test_frame.test_celery.test_celery_app')
 celery_app = celery.Celery()
 class Config2:
-    broker_url = f'redis://:@127.0.0.1:6379/10'  # 使用redis
+    # broker_url = f'redis://:@127.0.0.1:6379/10'  # 使用redis
+    broker_url = f'amqp://admin:372148@106.55.244.110'  #
     # result_backend = f'redis://:@127.0.0.1:6379/11'  # 使用redis
     broker_connection_max_retries = 150  # 默认是100
     # result_serializer = 'json'
@@ -32,7 +33,7 @@ class Config2:
     # worker_redirect_stdouts_level = 'WARNING'
     # worker_timer_precision = 0.1  # 默认1秒
     task_routes = {
-        '求和啊': {"queue": "queue_add2", },
+        '求和啊': {"queue": "queue_add3", },
         'sub啊': {"queue": 'queue_sub2'},
         'f1': {"queue": 'queue_f1'},
     }
@@ -48,8 +49,9 @@ celery_app.config_from_object(Config2)
 def add(a, b):
     # print(f'消费此消息 {a} + {b} 中。。。。。')
     # time.sleep(100, )  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
-    print(f'{int(time.time())} 计算 {a} + {b} 得到的结果是  {a + b}')
-    time.sleep(1)
+    print(f'{time.strftime("%H:%M:%S")} 开始计算 {a} + {b} ')
+    time.sleep(700)
+    print(f'{time.strftime("%H:%M:%S")} 计算 {a} + {b} 得到的结果是  {a + b}')
     return a + b
 
 
@@ -93,7 +95,7 @@ celery_app.conf.beat_schedule = {
         'schedule': timedelta(seconds=2),
         'args': (10000, 20000)
     }}
-celery_helper.auto_register_tasks_and_set_routes()
+# celery_helper.auto_register_tasks_and_set_routes()
 if __name__ == '__main__':
     """
     celery是可以在python脚本直接启动消费的。直接运行此脚本就行。本人非常反感cmd 命令行敲字母。
@@ -110,10 +112,10 @@ if __name__ == '__main__':
               '--queues=queue_add', '--detach','--logfile=/pythonlogs/celery_add.log'])
     """
     # queue_add,queue_sub,queue_f1
-    patch_celery_console(celery_app)
+    # patch_celery_console(celery_app)
     celery_app.worker_main(
         argv=['worker', '--pool=gevent','--concurrency=500', '-n', 'worker1@%h', '--loglevel=DEBUG',
-              '--queues=queue_f1,queue_add2,queue_sub2'])
+              '--queues=queue_f1,queue_add3,queue_sub2'])
     import threading
 
     print(777777777777777)

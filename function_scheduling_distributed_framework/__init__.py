@@ -1,20 +1,19 @@
-import re
-import sys
-import threading
-import time
 from functools import update_wrapper, wraps, partial
 from multiprocessing import Process
 from typing import List
 import copy
 # noinspection PyUnresolvedReferences
 import nb_log
-from fabric2 import Connection
+
+from function_scheduling_distributed_framework.helpers import fabric_deploy, kill_all_remote_tasks, multi_process_pub_params_list
 from function_scheduling_distributed_framework.utils.paramiko_util import ParamikoFolderUploader
 
 from function_scheduling_distributed_framework.set_frame_config import patch_frame_config, show_frame_config
 # import frame_config
-from function_scheduling_distributed_framework.consumers.base_consumer import ExceptionForRequeue, ExceptionForRetry, \
-    AbstractConsumer, ConsumersManager, FunctionResultStatusPersistanceConfig
+from function_scheduling_distributed_framework.consumers.base_consumer import (ExceptionForRequeue, ExceptionForRetry,
+                                                                               AbstractConsumer, ConsumersManager,
+                                                                               FunctionResultStatusPersistanceConfig,
+                                                                               wait_for_possible_has_finish_all_tasks_by_conusmer_list)
 from function_scheduling_distributed_framework.publishers.base_publisher import PriorityConsumingControlConfig, AbstractPublisher
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
 from function_scheduling_distributed_framework.factories.consumer_factory import get_consumer
@@ -82,6 +81,9 @@ class IdeAutoCompleteHelper(LoggerMixin):
 
     def multi_process_consume(self, process_num=1):
         run_consumer_with_multi_process(self.consuming_func_decorated, process_num)
+
+    def multi_process_pub_params_list(self, params_list, process_num=16):
+        multi_process_pub_params_list(self.consuming_func_decorated, params_list=params_list, process_num=process_num)
 
     # noinspection PyDefaultArgument
     def fabric_deploy(self, host, port, user, password,
@@ -211,6 +213,7 @@ def task_deco(queue_name, *, function_timeout=0,
         func.publisher = consumer.publisher_of_same_queue
         func.publish = func.pub = func.apply_async = consumer.publisher_of_same_queue.publish
         func.push = func.delay = consumer.publisher_of_same_queue.push
+        func.multi_process_pub_params_list = partial(multi_process_pub_params_list, func)
         func.clear = func.clear_queue = consumer.publisher_of_same_queue.clear
 
         func.start_consuming_message = func.consume = func.start = consumer.start_consuming_message
@@ -262,105 +265,3 @@ def run_consumer_with_multi_process(task_fun, process_num=1):
     else:
         [Process(target=_run_many_consumer_by_init_params,
                  args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start() for _ in range(process_num)]
-
-
-# noinspection PyDefaultArgument
-def fabric_deploy(task_fun, host, port, user, password,
-                  path_pattern_exluded_tuple=('/.git/', '/.idea/', '/dist/', '/build/'),
-                  file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
-                  only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
-                  file_volume_limit=1000 * 1000, sftp_log_level=20, extra_shell_str='',
-                  invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
-                  process_num=1):
-    """
-    不依赖阿里云codepipeline 和任何运维发布管理工具，只需要在python代码层面就能实现多机器远程部署。
-    这实现了函数级别的精确部署，而非是部署一个 .py的代码，远程部署一个函数实现难度比远程部署一个脚本更高一点，部署更灵活。
-
-    之前有人问怎么方便的部署在多台机器，一般用阿里云codepipeline  k8s自动部署。被部署的远程机器必须是linux，不能是windwos。
-    但是有的人是直接操作多台物理机，有些不方便，现在直接加一个利用python代码本身实现的跨机器自动部署并运行函数任务。
-
-    自动根据任务函数所在文件，转化成python模块路径，实现函数级别的精确部署，比脚本级别的部署更精确到函数。
-    例如 test_frame/test_fabric_deploy/test_deploy1.py的fun2函数 自动转化成 from test_frame.test_fabric_deploy.test_deploy1 import f2
-    从而自动生成部署语句
-    export PYTHONPATH=/home/ydf/codes/distributed_framework:$PYTHONPATH ;cd /home/ydf/codes/distributed_framework;
-    python3 -c "from test_frame.test_fabric_deploy.test_deploy1 import f2;f2.multi_process_consume(2)"  -fsdfmark fsdf_fabric_mark_queue_test30
-
-    这个是可以直接在远程机器上运行函数任务。无需用户亲自部署代码和启动代码。自动上传代码，自动设置环境变量，自动导入函数，自动运行。
-    这个原理是使用python -c 实现的精确到函数级别的部署，不是python脚本级别的部署。
-    可以很灵活的指定在哪台机器运行什么函数，开几个进程。这个比celery更为强大，celery需要登录到每台机器，手动下载代码并部署在多台机器，celery不支持代码自动运行在别的机器上
-
-
-    :param task_fun:被@task_deco 装饰的函数
-    :param host: 需要部署的远程linux机器的 ip
-    :param port:需要部署的远程linux机器的 port
-    :param user: 需要部署的远程linux机器的用户名
-    :param password:需要部署的远程linux机器的密码
-    :param path_pattern_exluded_tuple:排除的文件夹或文件路径
-    :param file_suffix_tuple_exluded:排除的后缀
-    :param only_upload_within_the_last_modify_time:只上传多少秒以内的文件，如果完整运行上传过一次后，之后可以把值改小，避免每次全量上传。
-    :param file_volume_limit:大于这个体积的不上传，因为python代码文件很少超过1M
-    :param sftp_log_level: 文件上传日志级别  10为logging.DEBUG 20为logging.INFO  30 为logging.WARNING
-    :param extra_shell_str :自动部署前额外执行的命令，例如可以设置环境变量什么的
-    :param invoke_runner_kwargs : invoke包的runner.py 模块的 run()方法的所有一切入参,例子只写了几个入参，实际可以传入十几个入参，大家可以自己琢磨fabric包的run方法，按需传入。
-                                 hide 是否隐藏远程机器的输出，值可以为 False不隐藏远程主机的输出  “out”为只隐藏远程机器的正常输出，“err”为只隐藏远程机器的错误输出，True，隐藏远程主机的一切输出
-                                 pty 的意思是，远程机器的部署的代码进程是否随着当前脚本的结束而结束。如果为True，本机代码结束远程进程就会结束。如果为False，即使本机代码被关闭结束，远程机器还在运行代码。
-                                 warn 的意思是如果远程机器控制台返回了异常码本机代码是否立即退出。warn为True这只是警告一下，warn为False,远程机器返回异常code码则本机代码直接终止退出。
-    :param process_num:启动几个进程，要达到最大cpu性能就开启cpu核数个进程就可以了。每个进程内部都有任务函数本身指定的并发方式和并发数量，所以是多进程+线程/协程。
-    :return:
-
-
-    task_fun.fabric_deploy('192.168.6.133', 22, 'ydf', '123456', process_num=2) 只需要这样就可以自动部署在远程机器运行，无需任何额外操作。
-    """
-    python_proj_dir = sys.path[1].replace('\\', '/') + '/'
-    python_proj_dir_short = python_proj_dir.split('/')[-2]
-    # 获取被调用函数所在模块文件名
-    file_name = sys._getframe(1).f_code.co_filename.replace('\\', '/')  # noqa\
-    relative_file_name = re.sub(f'^{python_proj_dir}', '', file_name)
-    relative_module = relative_file_name.replace('/', '.')[:-3]  # -3是去掉.py
-    if user == 'root':  # 文件夹会被自动创建，无需用户创建。
-        remote_dir = f'/codes/{python_proj_dir_short}'
-    else:
-        remote_dir = f'/home/{user}/codes/{python_proj_dir_short}'
-
-    def _inner():
-        logger.warning(f'将本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹。')
-        t_start = time.perf_counter()
-        uploader = ParamikoFolderUploader(host, port, user, password, python_proj_dir, remote_dir,
-                                          path_pattern_exluded_tuple, file_suffix_tuple_exluded,
-                                          only_upload_within_the_last_modify_time, file_volume_limit, sftp_log_level)
-        uploader.upload()
-        logger.info(f'上传 本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹耗时 {round(time.perf_counter() - t_start, 3)} 秒')
-        # conn.run(f'''export PYTHONPATH={remote_dir}:$PYTHONPATH''')
-
-        func_name = task_fun.__name__
-        queue_name = task_fun.consumer.queue_name
-
-        process_mark = f'fsdf_fabric_mark__{queue_name}__{func_name}'
-        conn = Connection(host, port=port, user=user, connect_kwargs={"password": password}, )
-        kill_shell = f'''ps -aux|grep {process_mark}|grep -v grep|awk '{{print $2}}' |xargs kill -9'''
-        logger.warning(f'{kill_shell} 命令杀死 {process_mark} 标识的进程')
-        uploader.ssh.exec_command(kill_shell)
-        # conn.run(kill_shell, encoding='utf-8',warn=True)  # 不想提示，免得烦扰用户以为有什么异常了。所以用上面的paramiko包的ssh.exec_command
-
-        python_exec_str = f'''export is_fsdf_remote_run=1;export PYTHONPATH={remote_dir}:$PYTHONPATH ;python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark {process_mark} '''
-        shell_str = f'''cd {remote_dir}; {python_exec_str}'''
-        extra_shell_str2 = extra_shell_str  # 内部函数对外部变量不能直接改。
-        if not extra_shell_str2.endswith(';') and extra_shell_str != '':
-            extra_shell_str2 += ';'
-        shell_str = extra_shell_str2 + shell_str
-        logger.warning(f'使用语句 {shell_str} 在远程机器 {host} 上启动任务消费')
-        conn.run(shell_str, encoding='utf-8', **invoke_runner_kwargs)
-        # uploader.ssh.exec_command(shell_str)
-
-    threading.Thread(target=_inner).start()
-
-
-def kill_all_remote_tasks(host, port, user, password):
-    """ 这个要小心用，杀死所有的远程部署的任务,一般不需要使用到"""
-    uploader = ParamikoFolderUploader(host, port, user, password, '', '')
-    fsdf_fabric_mark_all = 'fsdf_fabric_mark__'
-    kill_shell = f'''ps -aux|grep {fsdf_fabric_mark_all}|grep -v grep|awk '{{print $2}}' |xargs kill -9'''
-    logger.warning(f'{kill_shell} 命令杀死 {fsdf_fabric_mark_all} 标识的进程')
-    uploader.ssh.exec_command(kill_shell)
-    logger.warning(f'杀死 {host}  机器所有的 {fsdf_fabric_mark_all} 标识的进程')
-

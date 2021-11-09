@@ -38,3 +38,4 @@ setuptools~=39.0.1
 urllib3~=1.22
 six~=1.11.0
 redis3
+fabric2

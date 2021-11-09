@@ -13,6 +13,67 @@ from function_scheduling_distributed_framework.utils.paramiko_util import Parami
 logger = nb_log.get_logger('function_scheduling_distributed_framework')
 
 
+def _run_many_consumer_by_init_params(consumer_init_params_list: List[dict]):
+    from function_scheduling_distributed_framework import get_consumer, ConsumersManager
+    for consumer_init_params in consumer_init_params_list:
+        get_consumer(**consumer_init_params).start_consuming_message()
+    ConsumersManager.join_all_consumer_shedual_task_thread()
+
+
+def run_consumer_with_multi_process(task_fun, process_num=1):
+    """
+    :param task_fun:被 task_deco 装饰器装饰的消费函数
+    :param process_num:开启多个进程。  主要是 多进程并发  + 4种细粒度并发(threading gevent eventlet asyncio)。叠加并发。
+    这种是多进程方式，一次编写能够兼容win和linux的运行。一次性启动6个进程 叠加 多线程 并发。
+    """
+    '''
+       from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum, run_consumer_with_multi_process
+       import os
+
+       @task_deco('test_multi_process_queue',broker_kind=BrokerEnum.REDIS_ACK_ABLE,concurrent_mode=ConcurrentModeEnum.THREADING,)
+       def fff(x):
+           print(x * 10,os.getpid())
+
+       if __name__ == '__main__':
+           # fff.consume()
+           run_consumer_with_multi_process(fff,6) # 一次性启动6个进程 叠加 多线程 并发。
+    '''
+    if not getattr(task_fun, 'is_decorated_as_consume_function'):
+        raise ValueError(f'{task_fun} 参数必须是一个被 task_deco 装饰的函数')
+    if process_num == 1:
+        task_fun.consume()
+    else:
+        [Process(target=_run_many_consumer_by_init_params,
+                 args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start() for _ in range(process_num)]
+
+
+def _multi_process_pub_params_list_by_consumer_init_params(consumer_init_params: dict, msgs: List[dict]):
+    from function_scheduling_distributed_framework import get_consumer
+    consumer = get_consumer(**consumer_init_params)
+    publisher = consumer.publisher_of_same_queue
+    publisher.set_log_level(20)  # 超高速发布，如果打印详细debug日志会卡死屏幕和降低代码速度。
+    for msg in msgs:
+        publisher.publish(msg)
+
+
+def multi_process_pub_params_list(task_fun, params_list, process_num=16):
+    """超高速多进程发布任务，充分利用多核"""
+    if not getattr(task_fun, 'is_decorated_as_consume_function'):
+        raise ValueError(f'{task_fun} 参数必须是一个被 task_deco 装饰的函数')
+    params_list_len = len(params_list)
+    if params_list_len < 1000 * 100:
+        raise ValueError(f'要要发布的任务数量是 {params_list_len} 个,要求必须至少发布10万任务才使用此方法')
+    ava_len = params_list_len // process_num + 1
+    with ProcessPoolExecutor(process_num) as pool:
+        t0 = time.time()
+        for i in range(process_num):
+            msgs = params_list[i * ava_len: (i + 1) * ava_len]
+            # print(msgs)
+            pool.submit(_multi_process_pub_params_list_by_consumer_init_params,
+                        {**{'consuming_function': task_fun}, **task_fun.init_params}, msgs)
+        logger.info(f'发布 {params_list_len} 个任务耗时 {time.time() - t0} 秒')
+
+
 # noinspection PyDefaultArgument
 def fabric_deploy(task_fun, host, port, user, password,
                   path_pattern_exluded_tuple=('/.git/', '/.idea/', '/dist/', '/build/'),
@@ -112,31 +173,3 @@ def kill_all_remote_tasks(host, port, user, password):
     logger.warning(f'{kill_shell} 命令杀死 {fsdf_fabric_mark_all} 标识的进程')
     uploader.ssh.exec_command(kill_shell)
     logger.warning(f'杀死 {host}  机器所有的 {fsdf_fabric_mark_all} 标识的进程')
-
-
-def _multi_process_pub_params_list_by_consumer_init_params(consumer_init_params: dict, msgs: List[dict]):
-    from function_scheduling_distributed_framework import get_consumer
-    consumer = get_consumer(**consumer_init_params)
-    publisher = consumer.publisher_of_same_queue
-    publisher.set_log_level(20)  # 超高速发布，如果打印详细debug日志会卡死屏幕和降低代码速度。
-    for msg in msgs:
-        publisher.publish(msg)
-    msgs =[]
-
-def multi_process_pub_params_list(task_fun, params_list, process_num=16):
-    """超高速多进程发布任务，充分利用多核"""
-    if not getattr(task_fun, 'is_decorated_as_consume_function'):
-        raise ValueError(f'{task_fun} 参数必须是一个被 task_deco 装饰的函数')
-    params_list_len = len(params_list)
-    if params_list_len < 1000 * 100:
-        raise ValueError(f'要要发布的任务数量是 {params_list_len} 个,要求必须至少发布10万任务才使用此方法')
-    ava_len = params_list_len // process_num + 1
-    with ProcessPoolExecutor(process_num) as pool:
-        t0 = time.time()
-        for i in range(process_num):
-            msgs = params_list[i * ava_len : (i + 1) * ava_len]
-            # print(msgs)
-            pool.submit(_multi_process_pub_params_list_by_consumer_init_params,
-                        {**{'consuming_function': task_fun}, **task_fun.init_params}, msgs)
-        logger.info(f'发布 {params_list_len} 个任务耗时 {time.time() - t0} 秒')
-    params_list =[]

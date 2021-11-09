@@ -1,15 +1,13 @@
 from functools import update_wrapper, wraps, partial
-from multiprocessing import Process
-from typing import List
 import copy
 # noinspection PyUnresolvedReferences
 import nb_log
 
-from function_scheduling_distributed_framework.helpers import fabric_deploy, kill_all_remote_tasks, multi_process_pub_params_list
+from function_scheduling_distributed_framework.helpers import (fabric_deploy, kill_all_remote_tasks,
+                                                               multi_process_pub_params_list,
+                                                               run_consumer_with_multi_process)
 from function_scheduling_distributed_framework.utils.paramiko_util import ParamikoFolderUploader
-
 from function_scheduling_distributed_framework.set_frame_config import patch_frame_config, show_frame_config
-# import frame_config
 from function_scheduling_distributed_framework.consumers.base_consumer import (ExceptionForRequeue, ExceptionForRetry,
                                                                                AbstractConsumer, ConsumersManager,
                                                                                FunctionResultStatusPersistanceConfig,
@@ -80,9 +78,20 @@ class IdeAutoCompleteHelper(LoggerMixin):
         self.wait_for_possible_has_finish_all_tasks = self.consumer.wait_for_possible_has_finish_all_tasks
 
     def multi_process_consume(self, process_num=1):
+        """超高速多进程消费"""
         run_consumer_with_multi_process(self.consuming_func_decorated, process_num)
 
     def multi_process_pub_params_list(self, params_list, process_num=16):
+        """超高速多进程发布，例如先快速发布1000万个任务到中间件，以后慢慢消费"""
+        """
+        用法例如，快速20进程发布1000万任务，充分利用多核加大cpu使用率。
+        @task_deco('test_queue66c', qps=1/30,broker_kind=BrokerEnum.KAFKA_CONFLUENT)
+        def f(x, y):
+            print(f'函数开始执行时间 {time.strftime("%H:%M:%S")}')
+        if __name__ == '__main__':
+            f.multi_process_pub_params_list([{'x':i,'y':i*3}  for i in range(10000000)],process_num=20)
+            f.consume()
+        """
         multi_process_pub_params_list(self.consuming_func_decorated, params_list=params_list, process_num=process_num)
 
     # noinspection PyDefaultArgument
@@ -232,36 +241,3 @@ def task_deco(queue_name, *, function_timeout=0,
         # return update_wrapper(__deco, func)
 
     return _deco  # noqa
-
-
-def _run_many_consumer_by_init_params(consumer_init_params_list: List[dict]):
-    for consumer_init_params in consumer_init_params_list:
-        get_consumer(**consumer_init_params).start_consuming_message()
-    ConsumersManager.join_all_consumer_shedual_task_thread()
-
-
-def run_consumer_with_multi_process(task_fun, process_num=1):
-    """
-    :param task_fun:被 task_deco 装饰器装饰的消费函数
-    :param process_num:开启多个进程。  主要是 多进程并发  + 4种细粒度并发(threading gevent eventlet asyncio)。叠加并发。
-    这种是多进程方式，一次编写能够兼容win和linux的运行。一次性启动6个进程 叠加 多线程 并发。
-    """
-    '''
-       from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum, run_consumer_with_multi_process
-       import os
-
-       @task_deco('test_multi_process_queue',broker_kind=BrokerEnum.REDIS_ACK_ABLE,concurrent_mode=ConcurrentModeEnum.THREADING,)
-       def fff(x):
-           print(x * 10,os.getpid())
-
-       if __name__ == '__main__':
-           # fff.consume()
-           run_consumer_with_multi_process(fff,6) # 一次性启动6个进程 叠加 多线程 并发。
-    '''
-    if not getattr(task_fun, 'is_decorated_as_consume_function'):
-        raise ValueError(f'{task_fun} 参数必须是一个被 task_deco 装饰的函数')
-    if process_num == 1:
-        task_fun.consume()
-    else:
-        [Process(target=_run_many_consumer_by_init_params,
-                 args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start() for _ in range(process_num)]

@@ -1,9 +1,9 @@
 # coding=utf-8
 import subprocess
-
+import os
 import time
 
-
+os.environ["path"] = r'C:\Program Files\Git\mingw64\libexec\git-core'
 def getstatusoutput(cmd):
     try:
         data = subprocess.check_output(cmd, shell=True, universal_newlines=True,

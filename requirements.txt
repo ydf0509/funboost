@@ -11,7 +11,7 @@ redis
 decorator==4.4.0
 pysnooper==0.0.11
 tomorrow3==1.1.0
-concurrent-log-handler==0.9.9
+concurrent-log-handler==0.9.19
 elasticsearch
 requests~=2.18.4
 psutil

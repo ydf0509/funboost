@@ -3,11 +3,11 @@ import subprocess
 import os
 import time
 
-os.environ["path"] = r'C:\Program Files\Git\mingw64\libexec\git-core'
+# os.environ["path"] = r'C:\Program Files\Git\mingw64\libexec\git-core'
 def getstatusoutput(cmd):
     try:
         data = subprocess.check_output(cmd, shell=True, universal_newlines=True,
-                                       stderr=subprocess.STDOUT, encoding='utf-8')
+                                       stderr=subprocess.STDOUT, encoding='utf8')
         exitcode = 0
     except subprocess.CalledProcessError as ex:
         data = ex.output

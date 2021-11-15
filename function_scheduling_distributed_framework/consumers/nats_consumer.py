@@ -11,8 +11,8 @@ class NatsConsumer(AbstractConsumer):
     BROKER_KIND = 24
 
     def _shedual_task(self):
-        self.nats_client = NATSClient(frame_config.NATS_URL)
-        self.nats_client.connect()
+        nats_client = NATSClient(frame_config.NATS_URL)
+        nats_client.connect()
 
         def callback(msg: NATSMessage):
             # print(type(msg))
@@ -21,8 +21,8 @@ class NatsConsumer(AbstractConsumer):
             kw = {'body': json.loads(msg.payload)}
             self._submit_task(kw)
 
-        self.nats_client.subscribe(subject=self.queue_name, callback=callback)
-        self.nats_client.wait()
+        nats_client.subscribe(subject=self.queue_name, callback=callback)
+        nats_client.wait()
 
     def _confirm_consume(self, kw):
         pass

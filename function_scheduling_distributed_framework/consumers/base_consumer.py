@@ -307,7 +307,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param log_level: # 这里是设置消费者 发布者日志级别的，如果不想看到很多的细节显示信息，可以设置为 20 (logging.INFO)。
         :param is_print_detail_exception:函数出错时候时候显示详细的错误堆栈，占用屏幕太多
         :param is_show_message_get_from_broker: 从中间件取出消息时候时候打印显示出来
-        :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，以后会废弃msg_schedule_time_intercal这个参数。
+        :param qps:指定1秒内的函数执行次数，例如可以是小数0.01代表每100秒执行一次，也可以是50代表1秒执行50次.为0则不控频。
         :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis计数），默认只对当前实例化的消费者空频有效。假如实例化了2个qps为10的使用同一队列名的消费者，
                并且都启动，则每秒运行次数会达到20。如果使用分布式空频则所有消费者加起来的总运行次数是10。
         :param is_send_consumer_hearbeat_to_redis   时候将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。

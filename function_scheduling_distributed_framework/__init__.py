@@ -2,12 +2,11 @@ from functools import update_wrapper, wraps, partial
 import copy
 # noinspection PyUnresolvedReferences
 import nb_log
-
+from function_scheduling_distributed_framework.set_frame_config import patch_frame_config, show_frame_config
 from function_scheduling_distributed_framework.helpers import (fabric_deploy, kill_all_remote_tasks,
                                                                multi_process_pub_params_list,
                                                                run_consumer_with_multi_process)
 from function_scheduling_distributed_framework.utils.paramiko_util import ParamikoFolderUploader
-from function_scheduling_distributed_framework.set_frame_config import patch_frame_config, show_frame_config
 from function_scheduling_distributed_framework.consumers.base_consumer import (ExceptionForRequeue, ExceptionForRetry,
                                                                                AbstractConsumer, ConsumersManager,
                                                                                FunctionResultStatusPersistanceConfig,
@@ -142,7 +141,7 @@ def task_deco(queue_name, *, function_timeout=0,
     :param log_level:框架的日志级别。logging.DEBUG(10)  logging.DEBUG(10) logging.INFO(20) logging.WARNING(30) logging.ERROR(40) logging.CRITICAL(50)
     :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
     :param is_show_message_get_from_broker: 从中间件取出消息时候时候打印显示出来
-    :param qps:指定1秒内的函数执行次数，qps会覆盖msg_schedule_time_intercal，以后废弃msg_schedule_time_intercal这个参数。
+    :param qps:指定1秒内的函数执行次数，例如可以是小数0.01代表每100秒执行一次，也可以是50代表1秒执行50次.为0则不控频。
     :param msg_expire_senconds:消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
     :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis计数），默认只对当前实例化的消费者空频有效。假如实例化了2个qps为10的使用同一队列名的消费者，
                并且都启动，则每秒运行次数会达到20。如果使用分布式空频则所有消费者加起来的总运行次数是10。

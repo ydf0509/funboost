@@ -12,11 +12,9 @@ import re
 import importlib
 from pathlib import Path
 from shutil import copyfile
-from nb_log import nb_print,stderr_write,stdout_write
-from nb_log.monkey_print import is_main_process,only_print_on_main_process
+from nb_log import nb_print, stderr_write, stdout_write
+from nb_log.monkey_print import is_main_process, only_print_on_main_process
 from function_scheduling_distributed_framework import frame_config
-
-
 
 
 # noinspection PyPep8Naming
@@ -37,9 +35,12 @@ def patch_frame_config(MONGO_CONNECT_URL: str = None,
                        NSQD_TCP_ADDRESSES: list = None,
                        NSQD_HTTP_CLIENT_HOST: str = None,
                        NSQD_HTTP_CLIENT_PORT: int = None,
+
                        KAFKA_BOOTSTRAP_SERVERS: list = None,
 
-                       SQLACHEMY_ENGINE_URL='sqlite:////sqlachemy_queues/queues.db'
+                       SQLACHEMY_ENGINE_URL='sqlite:////sqlachemy_queues/queues.db',
+
+                       **other_configs,  # 其他入参可以是其他中间件的配置名字，例如 MQTT_HOST
 
                        ):
     """
@@ -47,6 +48,8 @@ def patch_frame_config(MONGO_CONNECT_URL: str = None,
     :return:
     """
     kw = copy.copy(locals())
+    kw.update(kw['other_configs'])
+    kw.pop('other_configs')
     for var_name, var_value in kw.items():
         if var_value is not None:
             setattr(frame_config, var_name, var_value)
@@ -73,7 +76,6 @@ def show_frame_config():
                 only_print_on_main_process(f'{var_name}:                {var_value}')
 
 
-
 def use_config_form_distributed_frame_config_module():
     """
     自动读取配置。会优先读取启动脚本的目录的distributed_frame_config.py文件。没有则读取项目根目录下的distributed_frame_config.py
@@ -91,21 +93,23 @@ def use_config_form_distributed_frame_config_module():
     # sys.stdout.write(f'\033[0;33m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;30;43m{inspect_msg}\033[0m\n')
     # noinspection PyProtectedMember
     if is_main_process():
-        stdout_write( f'\033[0;93m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;93;100m{inspect_msg}\033[0m\n')
+        stdout_write(f'\033[0;93m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;93;100m{inspect_msg}\033[0m\n')
     try:
         # noinspection PyUnresolvedReferences
         # import distributed_frame_config
         m = importlib.import_module('distributed_frame_config')
-        # nb_print(m.__dict__)
+        importlib.reload(m)   # 这行是防止用户在导入框架之前，写了 from distributed_frame_config import REDIS_HOST 这种，导致 m.__dict__.items() 不包括所有配置变量了。
+        # print(dir(m))
+        # nb_print(m.__dict__.items())
         only_print_on_main_process(f'分布式函数调度框架 读取到\n "{m.__file__}:1" 文件里面的变量作为优先配置了\n')
         for var_namex, var_valuex in m.__dict__.items():
+            # print(frame_config, var_namex, var_valuex)
             if var_namex.isupper():
                 setattr(frame_config, var_namex, var_valuex)  # 用用户自定义的配置覆盖框架的默认配置。
     except ModuleNotFoundError:
         nb_print(
             f'''分布式函数调度框架检测到 你的项目根目录 {project_root_path} 和当前文件夹 {current_script_path}  下没有 distributed_frame_config.py 文件，\n\n''')
         auto_creat_config_file_to_project_root_path()
-
 
     show_frame_config()
 
@@ -130,7 +134,7 @@ def auto_creat_config_file_to_project_root_path():
         return  # 当没设置pythonpath时候，也不要在 /lib/python36.zip这样的地方创建配置文件。
 
     file_name = Path(sys.path[1]) / Path('distributed_frame_config.py')
-    copyfile(Path(__file__).absolute().parent / Path('frame_config.py'),file_name)
+    copyfile(Path(__file__).absolute().parent / Path('frame_config.py'), file_name)
     nb_print(f'在  {Path(sys.path[1])} 目录下自动生成了一个文件， 请查看或修改 \n "{file_name}:1" 文件')
     # with (file_name).open(mode='w', encoding='utf8') as f:
     #     nb_print(f'在 {file_name} 目录下自动生成了一个文件， 请查看或修改 \n "{file_name}:1" 文件')

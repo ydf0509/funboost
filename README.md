@@ -3,6 +3,7 @@
 ## 1.0 github地址和文档地址
 
 ### 1.0.1 [分布式函数调度框架文档地址](https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/index.html)
+[查看分布式函数调度框架文档](https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/index.html)
 
 ```
 文档很长，但归根结底只需要学习 1.3 里面的这1个例子就行，主要是修改下@task_deco的各种参数，
@@ -16,11 +17,12 @@
 ```
 
 ### 1.0.2 [分布式函数调度框架github地址](https://github.com/ydf0509/distributed_framework)
+[查看分布式函数调度框架github项目](https://github.com/ydf0509/distributed_framework)
 
 ### 1.0.3 [分布式函数调度框架qq群](https://qm.qq.com/cgi-bin/qm/qr?k=unA_o_L3sv5yushJzYGUTAwSzZ7GhUhq&jump_from=webapi)
 现在新建一个qq群 189603256
 
-[点击加入 python万能分布式函数调度框架qq群](https://qm.qq.com/cgi-bin/qm/qr?k=unA_o_L3sv5yushJzYGUTAwSzZ7GhUhq&jump_from=webapi)
+[comment]: <> ([点击加入 python万能分布式函数调度框架qq群]&#40;https://qm.qq.com/cgi-bin/qm/qr?k=unA_o_L3sv5yushJzYGUTAwSzZ7GhUhq&jump_from=webapi&#41;)
 
 
 ## 1.1 安装方式
@@ -98,7 +100,7 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
         多进程不是和前面四种模式平行的，是叠加的，例如可以是 多进程 + 协程，多进程 + 多线程。
      
      控频限流：
-        例如十分精确的指定1秒钟运行30次函数（无论函数需要随机运行多久时间，都能精确控制到指定的消费频率；
+        例如十分精确的指定1秒钟运行30次函数或者0.02次函数（无论函数需要随机运行多久时间，都能精确控制到指定的消费频率；
        
      分布式控频限流：
         例如一个脚本反复启动多次或者多台机器多个容器在运行，如果要严格控制总的qps，能够支持分布式控频限流。

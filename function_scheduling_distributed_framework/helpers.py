@@ -37,6 +37,7 @@ def run_consumer_with_multi_process(task_fun, process_num=1):
        if __name__ == '__main__':
            # fff.consume()
            run_consumer_with_multi_process(fff,6) # 一次性启动6个进程 叠加 多线程 并发。
+           fff.multi_process_conusme(6)    # 这也是一次性启动6个进程 叠加 多线程 并发。
     '''
     if not getattr(task_fun, 'is_decorated_as_consume_function'):
         raise ValueError(f'{task_fun} 参数必须是一个被 task_deco 装饰的函数')

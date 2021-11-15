@@ -52,6 +52,8 @@ HTTPSQS_HOST = '127.0.0.1'
 HTTPSQS_PORT = '1218'
 HTTPSQS_AUTH = '123456'
 
+NATS_URL = 'nats://192.168.6.134:4222'
+
 KOMBU_URL = 'redis://127.0.0.1:6379/0'
 # KOMBU_URL =  'sqla+sqlite:////dssf_kombu_sqlite.sqlite'  # 4个//// 代表磁盘根目录下生成一个文件。推荐绝对路径。3个///是相对路径。
 

@@ -10,6 +10,7 @@ from function_scheduling_distributed_framework.consumers.kafka_consumer_manually
 from function_scheduling_distributed_framework.consumers.kombu_consumer import KombuConsumer
 from function_scheduling_distributed_framework.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
 from function_scheduling_distributed_framework.consumers.mongomq_consumer import MongoMqConsumer
+from function_scheduling_distributed_framework.consumers.nats_consumer import NatsConsumer
 from function_scheduling_distributed_framework.consumers.nsq_consumer import NsqConsumer
 from function_scheduling_distributed_framework.consumers.persist_queue_consumer import PersistQueueConsumer
 from function_scheduling_distributed_framework.consumers.rabbitmq_amqpstorm_consumer import RabbitmqConsumerAmqpStorm
@@ -60,6 +61,7 @@ def get_consumer(*args, broker_kind: int = None, **kwargs):
         21: UDPConsumer,
         22: TCPConsumer,
         23: HTTPConsumer,
+        24: NatsConsumer,
     }
     if broker_kind is None:
         broker_kind = frame_config.DEFAULT_BROKER_KIND

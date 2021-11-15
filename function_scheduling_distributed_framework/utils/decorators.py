@@ -22,7 +22,7 @@ from tomorrow3 import threads as tomorrow_threads
 
 from function_scheduling_distributed_framework.utils import LogManager, nb_print, LoggerMixin
 # noinspection PyUnresolvedReferences
-from function_scheduling_distributed_framework.utils.custom_pysnooper import _snoop_can_click, snoop_deco, patch_snooper_max_variable_length
+# from function_scheduling_distributed_framework.utils.custom_pysnooper import _snoop_can_click, snoop_deco, patch_snooper_max_variable_length
 
 os_name = os.name
 nb_print(f' 操作系统类型是  {os_name}')
@@ -554,84 +554,6 @@ def timeout(seconds):
     return timeout_decorator
 
 
-def browse_history(logger, request, route, method, express=''):
-    """
-    用户浏览记录装饰器
-    :param logger:
-    :param request:
-    :param route:请求路由
-    :param method: GET or POST
-    :param express: 代码表达式,这里动态执行代码
-    :return:
-    """
-
-    def decorate(func):
-        # noinspection PyPep8Naming
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            bhv_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-            token = request.headers.get('x-access-token', '')
-            if token:
-                # noinspection PyBroadException
-                try:
-                    # noinspection PyUnresolvedReferences
-                    userId = jwt.decode(token, token_secret_key)['user']['userId']
-                except Exception:
-                    userId = ''
-            else:
-                userId = ''
-
-            if method == 'POST':
-                request_params = json.loads(request.get_data().decode("utf-8"))
-
-            else:
-                request_params = request.args
-
-            back = func(*args, **kwargs)
-            if express:  # 为了兼容不同场景,这里只能动态写代码插入
-                exec(express)
-            else:
-                userlog = {'user_id': userId, 'bhv_time': bhv_time, 'location': '', 'action_id': route,
-                           "action": request_params}
-                logger.info(json.dumps(userlog))
-            return back
-
-        return wrapper
-
-    return decorate
-
-
-flask_error_logger = LogManager('flask_error').get_logger_and_add_handlers(log_filename='flask_error.log')
-
-
-def api_return_deco(v):
-    """
-    对flask的返回 加一个固定的状态码。在测试环境即使是非debug，直接在错误信息中返回错误堆栈。在生产环境使用随机四位字母 加 错误信息的base64作为错误信息。
-    :param v:视图函数
-    :return:
-    """
-    env = 'test'
-
-    @wraps(v)
-    def _api_return_deco(*args, **kwargs):
-        # noinspection PyBroadException
-        try:
-            data = v(*args, **kwargs)
-            return json.dumps({
-                "code": 200,
-                "data": data,
-                "message": "SUCCESS"}, ensure_ascii=False)
-        except Exception as e:
-            except_str0 = f'请求路径：{flask_request.path}  请求参数：{json.dumps(flask_request.values.to_dict())} ,出错了 {type(e)} {e} {traceback.format_exc()}'.replace('\n', '<br>')
-            flask_error_logger.exception(except_str0)
-            exception_str_encode = base64.b64encode(except_str0.encode()).decode().replace('=', '').strip()
-            message = except_str0 if env == 'test' else f'''{"".join(random.sample("abcdefghijklmnopqrstABCDEFGHIJKLMNOPQRST", 4))}{exception_str_encode}'''
-            return json.dumps({
-                "code": 500,
-                "data": None,
-                "message": message}, ensure_ascii=False)
-
-    return _api_return_deco
 
 
 # noinspection PyMethodMayBeStatic

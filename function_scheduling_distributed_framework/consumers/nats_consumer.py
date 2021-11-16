@@ -25,7 +25,7 @@ class NatsConsumer(AbstractConsumer):
         nats_client.wait()
 
     def _confirm_consume(self, kw):
-        pass
+        pass   # 没有确认消费
 
     def _requeue(self, kw):
         self.publisher_of_same_queue.publish(kw['body'])

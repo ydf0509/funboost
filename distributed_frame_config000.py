@@ -20,7 +20,7 @@ from function_scheduling_distributed_framework.constant import BrokerEnum
 # BrokerEnum.PERSISTQUEUE 的优点是基于单机磁盘的消息持久化，不需要安装消息中间件软件就能使用，但不是跨机器的真分布式。
 DEFAULT_BROKER_KIND = BrokerEnum.PERSISTQUEUE
 
-MONGO_CONNECT_URL = f'mongodb://192.168.6.133:27017'
+MONGO_CONNECT_URL = f'mongodb://192.168.6.134:27017'
 
 # RABBITMQ_USER = 'rabbitmq_user'
 # RABBITMQ_PASS = 'rabbitmq_pass'
@@ -29,8 +29,8 @@ MONGO_CONNECT_URL = f'mongodb://192.168.6.133:27017'
 # RABBITMQ_VIRTUAL_HOST = 'rabbitmq_virtual_host'
 
 RABBITMQ_USER = 'admin'
-RABBITMQ_PASS = '372148'
-RABBITMQ_HOST = '106.55.244.110'
+RABBITMQ_PASS = 'xxx'
+RABBITMQ_HOST = '106.xx.244.xx'
 RABBITMQ_PORT = 5672
 RABBITMQ_VIRTUAL_HOST = '/'
 
@@ -44,7 +44,7 @@ NSQD_TCP_ADDRESSES = ['127.0.0.1:4150']
 NSQD_HTTP_CLIENT_HOST = '127.0.0.1'
 NSQD_HTTP_CLIENT_PORT = 4151
 
-KAFKA_BOOTSTRAP_SERVERS = ['192.168.6.133:9092']
+KAFKA_BOOTSTRAP_SERVERS = ['192.168.6.134:9092']
 
 SQLACHEMY_ENGINE_URL = 'sqlite:////sqlachemy_queues/queues.db'
 

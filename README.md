@@ -19,8 +19,9 @@
 ### 1.0.2 [分布式函数调度框架github地址](https://github.com/ydf0509/distributed_framework)
 [查看分布式函数调度框架github项目](https://github.com/ydf0509/distributed_framework)
 
-### 1.0.3 [分布式函数调度框架qq群](https://qm.qq.com/cgi-bin/qm/qr?k=unA_o_L3sv5yushJzYGUTAwSzZ7GhUhq&jump_from=webapi)
-现在新建一个qq群 189603256
+[//]: # (### 1.0.3 [分布式函数调度框架qq群]&#40;https://qm.qq.com/cgi-bin/qm/qr?k=unA_o_L3sv5yushJzYGUTAwSzZ7GhUhq&jump_from=webapi&#41;)
+
+[//]: # (现在新建一个qq群 189603256)
 
 [comment]: <> ([点击加入 python万能分布式函数调度框架qq群]&#40;https://qm.qq.com/cgi-bin/qm/qr?k=unA_o_L3sv5yushJzYGUTAwSzZ7GhUhq&jump_from=webapi&#41;)
 
@@ -57,8 +58,16 @@ pip install function_scheduling_distributed_framework --upgrade
 <div   style=" font-size: xx-large; font-family: 黑体,serif; "> single_thread </div>
 
 <br>
-<div >除此之外，直接内置方便的支持 多进程 叠加 以上5种并发，多进程和以上细粒度并发是叠加的而不是平行的二选一关系。</div>
+<div style=" font-size: 18px; font-family: 黑体,serif; ">除此之外，直接内置方便的支持 多进程multiprocess 叠加 以上5种并发，多进程和以上细粒度并发是叠加的而不是平行的二选一关系。</div>
 <br><br>
+
+```
+总结一下那就是此框架可以适应所有编程场景，无论是io密集 cpu密集 还是cpu io双密集场景，框架能非常简便的应对任意场景。
+框架的 单线程  多线程  gevent eventlet  asyncio 多进程  这些并发模型，囊括了目前python界所有的并发方式。
+框架能自动实现 单线程  ，多线程， gevent ， eventlet ，asyncio ，多进程 并发 ，
+多进程 + 单线程 ，多进程 + 多线程，多进程 + gevent,  多进程 + eventlet  ，多进程 + asyncio 的组合并发
+这么多并发方式能够满足任意编程场景。
+```
 
 ### 1.2.2 框架支持20种中间件
 

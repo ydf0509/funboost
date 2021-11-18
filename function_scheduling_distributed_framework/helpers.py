@@ -52,7 +52,7 @@ def _multi_process_pub_params_list_by_consumer_init_params(consumer_init_params:
     from function_scheduling_distributed_framework import get_consumer
     consumer = get_consumer(**consumer_init_params)
     publisher = consumer.publisher_of_same_queue
-    publisher.set_log_level(20)  # 超高速发布，如果打印详细debug日志会卡死屏幕和降低代码速度。
+    publisher.set_log_level(20)  # 超高速发布，如果打印详细debug日志会卡死屏幕和严重降低代码速度。
     for msg in msgs:
         publisher.publish(msg)
 
@@ -72,7 +72,7 @@ def multi_process_pub_params_list(task_fun, params_list, process_num=16):
             # print(msgs)
             pool.submit(_multi_process_pub_params_list_by_consumer_init_params,
                         {**{'consuming_function': task_fun}, **task_fun.init_params}, msgs)
-        logger.info(f'发布 {params_list_len} 个任务耗时 {time.time() - t0} 秒')
+    logger.info(f'\n 通过 multi_process_pub_params_list 多进程子进程的发布方式，发布了 {params_list_len} 个任务。耗时 {time.time() - t0} 秒')
 
 
 # noinspection PyDefaultArgument

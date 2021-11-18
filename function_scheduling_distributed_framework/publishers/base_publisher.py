@@ -234,9 +234,9 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 priority_control_config: PriorityConsumingControlConfig = None):
         """
 
-        :param msg:
-        :param task_id:
-        :param priority_control_config:
+        :param msg:函数的入参字典或者字典转json。,例如消费函数是 def add(x,y)，你就发布 {"x":1,"y":2}
+        :param task_id:可以指定task_id,也可以不指定就随机生产uuid
+        :param priority_control_config:优先级配置，消息可以携带优先级配置，覆盖task_deco的配置。
         :return:
         """
         if isinstance(msg, str):

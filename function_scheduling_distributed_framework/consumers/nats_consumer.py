@@ -11,7 +11,8 @@ class NatsConsumer(AbstractConsumer):
     BROKER_KIND = 24
 
     def _shedual_task(self):
-        nats_client = NATSClient(frame_config.NATS_URL)
+        # print(88888888888888)
+        nats_client = NATSClient(frame_config.NATS_URL,socket_timeout=600,socket_keepalive=True)
         nats_client.connect()
 
         def callback(msg: NATSMessage):

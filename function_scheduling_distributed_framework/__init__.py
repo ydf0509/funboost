@@ -25,6 +25,7 @@ nb_log.get_logger(name=None, log_level_int=30, log_filename='pywarning.log')
 
 logger = nb_log.get_logger('function_scheduling_distributed_framework')
 
+logger.debug(f'\n 分布式函数调度框架文档地址：  https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/')
 
 class IdeAutoCompleteHelper(LoggerMixin):
     """

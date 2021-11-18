@@ -1,0 +1,6 @@
+{
+    "python.formatting.provider": "autopep8",
+    // "python.pythonPath": "D:\\miniconda3\\python.exe",
+    // "python.envFile": "${workspaceFolder}/.env",
+    "terminal.integrated.env.windows": {"PYTHONPATH":"F:/coding2/distributed_framework;${env:PYTHONPATH}"}
+}

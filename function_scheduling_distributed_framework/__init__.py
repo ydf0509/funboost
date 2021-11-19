@@ -116,7 +116,7 @@ class IdeAutoCompleteHelper(LoggerMixin):
 
 
 def task_deco(queue_name, *, function_timeout=0,
-              concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=1,
+              concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=ConcurrentModeEnum.THREADING,
               max_retry_times=3, log_level=10, is_print_detail_exception=True, is_show_message_get_from_broker=False,
               qps: float = 0, is_using_distributed_frequency_control=False, msg_expire_senconds=0,
               is_send_consumer_hearbeat_to_redis=False,

@@ -154,7 +154,7 @@ class FunctionResultStatusPersistanceConfig(LoggerMixin):
         :param is_save_status:
         :param is_save_result:
         :param expire_seconds: 设置统计的过期时间，在mongo里面自动会移除这些过期的执行记录。
-        :param is_use_bulk_insert : 是否使用批量插入来保存结果，批量插入是每隔2秒钟保存一次最近2秒内的所有的函数消费状态结果。为False则，每完成一次函数就实时写入一次到mongo。
+        :param is_use_bulk_insert : 是否使用批量插入来保存结果，批量插入是每隔2秒钟保存一次最近0.5秒内的所有的函数消费状态结果。为False则，每完成一次函数就实时写入一次到mongo。
         """
 
         if not is_save_status and is_save_result:
@@ -171,9 +171,12 @@ class FunctionResultStatusPersistanceConfig(LoggerMixin):
                 'is_save_result': self.is_save_result, 'expire_seconds': self.expire_seconds}
 
 
-class ResultPersistenceHelper(MongoMixin):
+class ResultPersistenceHelper(MongoMixin, LoggerMixin):
     def __init__(self, function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig, queue_name):
         self.function_result_status_persistance_conf = function_result_status_persistance_conf
+        self._bulk_list = []
+        self._bulk_list_lock = Lock()
+        self._last_bulk_insert_time = 0
         if self.function_result_status_persistance_conf.is_save_status:
             task_status_col = self.mongo_db_task_status.get_collection(queue_name)
             # params_str 如果很长，必须使用TEXt或HASHED索引。
@@ -182,8 +185,9 @@ class ResultPersistenceHelper(MongoMixin):
                                             ], )
             task_status_col.create_index([("utime", 1)],
                                          expireAfterSeconds=function_result_status_persistance_conf.expire_seconds)  # 只保留7天(用户自定义的)。
-            self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
+            # self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
             self.task_status_col = task_status_col
+            self.logger.info(f"函数运行状态结果将保存至mongo的 task_status 库的 {queue_name} 集合中，请确认 distributed_frame_config.py文件中配置的 MONGO_CONNECT_URL")
 
     def save_function_result_to_mongo(self, function_result_status: FunctionResultStatus):
         if self.function_result_status_persistance_conf.is_save_status:
@@ -196,9 +200,15 @@ class ResultPersistenceHelper(MongoMixin):
             if item2['exception'] is None:
                 item2['exception'] = ''
             if self.function_result_status_persistance_conf.is_use_bulk_insert:
-                self._mongo_bulk_write_helper.add_task(InsertOne(item2))  # 自动离散批量聚合方式。
+                # self._mongo_bulk_write_helper.add_task(InsertOne(item2))  # 自动离散批量聚合方式。
+                with self._bulk_list_lock:
+                    self._bulk_list.append(InsertOne(item2))
+                    if time.time() - self._last_bulk_insert_time > 0.5:
+                        self.task_status_col.bulk_write(self._bulk_list, ordered=False)
+                        self._bulk_list.clear()
+                        self._last_bulk_insert_time = time.time()
             else:
-                self.task_status_col.insert_one(item2)
+                self.task_status_col.insert_one(item2)  # 立即试试插入。
 
 
 class ConsumersManager:
@@ -360,6 +370,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if r'function_scheduling_distributed_framework\__init__.py' in file_name or 'function_scheduling_distributed_framework/__init__.py' in file_name:
             line = sys._getframe(2).f_back.f_lineno
             file_name = sys._getframe(3).f_code.co_filename
+        if r'function_scheduling_distributed_framework\helpers.py' in file_name or 'function_scheduling_distributed_framework/helpers.py' in file_name:
+            line = sys._getframe(3).f_back.f_lineno
+            file_name = sys._getframe(4).f_code.co_filename
         current_queue__info_dict['where_to_instantiate'] = f'{file_name}:{line}'
 
         self._queue_name = queue_name

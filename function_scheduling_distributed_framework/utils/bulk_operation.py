@@ -75,7 +75,7 @@ class BaseBulkHelper(LoggerMixin, metaclass=abc.ABCMeta):
         # self.logger.debug(base_operation)
 
     # @decorators.tomorrow_threads(100)
-    @decorators.keep_circulating(1,block=False,daemon=True)  # redis异常或网络异常，使其自动恢复。
+    @decorators.keep_circulating(1, block=False, daemon=True)  # redis异常或网络异常，使其自动恢复。
     def __excute_bulk_operation_in_other_thread(self):
         while True:
             if self._to_be_request_queue.qsize() >= self._threshold or time.time() > self._current_time + self._max_time_interval:
@@ -85,7 +85,7 @@ class BaseBulkHelper(LoggerMixin, metaclass=abc.ABCMeta):
                 # break
             time.sleep(10 ** -1)
 
-    @decorators.keep_circulating(60,block=False,daemon=True)
+    @decorators.keep_circulating(60, block=False, daemon=True)
     def __check_queue_size(self):
         if self._to_be_request_queue.qsize() > 0:
             self._last_has_task_time = time.time()
@@ -111,7 +111,7 @@ class MongoBulkWriteHelper(BaseBulkHelper):
             t_start = time.time()
             count = 0
             request_list = []
-            for _ in range(0,self._threshold):
+            for _ in range(0, self._threshold):
                 try:
                     request = self._to_be_request_queue.get_nowait()
                     # print(request)

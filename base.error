@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "c:\Users\Administrator\.vscode\extensions\ms-python.python-2021.11.1422169775\pythonFiles\shell_exec.py", line 26, in <module>
-    subprocess.check_call(shell_args, stdout=sys.stdout, stderr=sys.stderr)
-  File "C:\Users\Administrator\Miniconda3\lib\subprocess.py", line 291, in check_call
-    raise CalledProcessError(retcode, cmd)
-subprocess.CalledProcessError: Command '['conda', 'install', '-c', 'conda-forge', '--name', 'base', '--update-deps', '--force-reinstall', 'ipykernel', '-y', 'C:/Users/ADMINI~1/AppData/Local/Temp/tmp-102260CgvbmtpqHkX9.logconda', 'activate']' returned non-zero exit status 2.

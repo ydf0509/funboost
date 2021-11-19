@@ -4,7 +4,7 @@ import time
 import sys
 print(sys.path)
 
-# from nb_log import get_logger
+from nb_log import get_logger
 
 # logger = get_logger('lalala',log_filename='jinzhifengzhuang.log',formatter_template=5)
 

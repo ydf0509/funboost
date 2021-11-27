@@ -14,8 +14,8 @@ print(BrokerEnum.NATS)
 
 # @task_deco('test_queue66', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=5, log_level=10, is_print_detail_exception=False, is_show_message_get_from_broker=False,
 #            is_using_distributed_frequency_control=True)
-@task_deco('test_queue70c', qps=10,broker_kind=BrokerEnum.SQLACHEMY,concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,log_level=10,
-           function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True,is_use_bulk_insert=True))
+@task_deco('test_queue70c', qps=10,broker_kind=BrokerEnum.KOMBU,concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,log_level=10,
+           function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False,False,is_use_bulk_insert=True))
 def f(x, y):
     # print(f'函数开始执行时间 {time.strftime("%H:%M:%S")}')
     # time.sleep(10)

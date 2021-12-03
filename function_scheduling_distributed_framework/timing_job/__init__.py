@@ -48,6 +48,7 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
 
         threading.Thread(target=_block_exit).start()  # 既不希望用BlockingScheduler阻塞主进程也不希望定时退出。
         super(FsdfBackgroundScheduler, self).start()
+        # _block_exit()   # python3.9 判断守护线程结束必须主线程在运行，否则结尾
 
 
 fsdf_background_scheduler = FsdfBackgroundScheduler(timezone=frame_config.TIMEZONE)

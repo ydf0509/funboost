@@ -180,12 +180,15 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
         self._last_bulk_insert_time = 0
         if self.function_result_status_persistance_conf.is_save_status:
             task_status_col = self.mongo_db_task_status.get_collection(queue_name)
-            # params_str 如果很长，必须使用TEXt或HASHED索引。
-            task_status_col.create_indexes([IndexModel([("insert_time_str", -1)]), IndexModel([("insert_time", -1)]),
-                                            IndexModel([("params_str", pymongo.TEXT)]), IndexModel([("success", 1)])
-                                            ], )
-            task_status_col.create_index([("utime", 1)],
-                                         expireAfterSeconds=function_result_status_persistance_conf.expire_seconds)  # 只保留7天(用户自定义的)。
+            try:
+                # params_str 如果很长，必须使用TEXt或HASHED索引。
+                task_status_col.create_indexes([IndexModel([("insert_time_str", -1)]), IndexModel([("insert_time", -1)]),
+                                                IndexModel([("params_str", pymongo.TEXT)]), IndexModel([("success", 1)])
+                                                ], )
+                task_status_col.create_index([("utime", 1)],
+                                             expireAfterSeconds=function_result_status_persistance_conf.expire_seconds)  # 只保留7天(用户自定义的)。
+            except pymongo.errors.OperationFailure as e: # 新的mongo服务端，重复创建已存在索引会报错，try一下。
+                self.logger.warning(e)
             # self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
             self.task_status_col = task_status_col
             self.logger.info(f"函数运行状态结果将保存至mongo的 task_status 库的 {queue_name} 集合中，请确认 distributed_frame_config.py文件中配置的 MONGO_CONNECT_URL")
@@ -319,8 +322,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param is_print_detail_exception:函数出错时候时候显示详细的错误堆栈，占用屏幕太多
         :param is_show_message_get_from_broker: 从中间件取出消息时候时候打印显示出来
         :param qps:指定1秒内的函数执行次数，例如可以是小数0.01代表每100秒执行一次，也可以是50代表1秒执行50次.为0则不控频。
-        :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis计数），默认只对当前实例化的消费者空频有效。假如实例化了2个qps为10的使用同一队列名的消费者，
-               并且都启动，则每秒运行次数会达到20。如果使用分布式空频则所有消费者加起来的总运行次数是10。
+        :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis统计消费者数量，然后频率平分），默认只对当前实例化的消费者空频有效。
+            假如实例化了2个qps为10的使用同一队列名的消费者，并且都启动，则每秒运行次数会达到20。如果使用分布式空频则所有消费者加起来的总运行次数是10。
         :param is_send_consumer_hearbeat_to_redis   时候将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
         :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
         :param create_logger_file : 是否创建文件日志

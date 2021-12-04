@@ -14,7 +14,7 @@ print(BrokerEnum.NATS)
 
 # @task_deco('test_queue66', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=5, log_level=10, is_print_detail_exception=False, is_show_message_get_from_broker=False,
 #            is_using_distributed_frequency_control=True)
-@task_deco('test_queue70c', qps=10,broker_kind=BrokerEnum.KOMBU,concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,log_level=10,
+@task_deco('test_queue70c', qps=10,broker_kind=BrokerEnum.SQLITE_QUEUE,concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,log_level=10,
            function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False,False,is_use_bulk_insert=True))
 def f(x, y):
     # print(f'函数开始执行时间 {time.strftime("%H:%M:%S")}')
@@ -32,7 +32,7 @@ def f(x, y):
 if __name__ == '__main__':
     # pass
     # f.clear()
-    for i in range(100000):
+    for i in range(100):
         f.push(i, y=i * 2)
     # f.multi_process_pub_params_list([{'x':i,'y':i*3}   for i in range(100000)],process_num=2)
     # r.lpush(json.dumps({'x':i,'y':i*2}))

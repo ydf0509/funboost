@@ -25,6 +25,7 @@ nb_log.get_logger(name=None, log_level_int=30, log_filename='pywarning.log')
 
 logger = nb_log.get_logger('function_scheduling_distributed_framework')
 
+logger.debug(f'\n 分布式函数调度框架文档地址：  https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/')
 
 class IdeAutoCompleteHelper(LoggerMixin):
     """
@@ -115,7 +116,7 @@ class IdeAutoCompleteHelper(LoggerMixin):
 
 
 def task_deco(queue_name, *, function_timeout=0,
-              concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=1,
+              concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=ConcurrentModeEnum.THREADING,
               max_retry_times=3, log_level=10, is_print_detail_exception=True, is_show_message_get_from_broker=False,
               qps: float = 0, is_using_distributed_frequency_control=False, msg_expire_senconds=0,
               is_send_consumer_hearbeat_to_redis=False,
@@ -143,8 +144,8 @@ def task_deco(queue_name, *, function_timeout=0,
     :param is_show_message_get_from_broker: 从中间件取出消息时候时候打印显示出来
     :param qps:指定1秒内的函数执行次数，例如可以是小数0.01代表每100秒执行一次，也可以是50代表1秒执行50次.为0则不控频。
     :param msg_expire_senconds:消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
-    :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis计数），默认只对当前实例化的消费者空频有效。假如实例化了2个qps为10的使用同一队列名的消费者，
-               并且都启动，则每秒运行次数会达到20。如果使用分布式空频则所有消费者加起来的总运行次数是10。
+    :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis统计消费者数量，然后频率平分），默认只对当前实例化的消费者空频有效。
+            假如实例化了2个qps为10的使用同一队列名的消费者，并且都启动，则每秒运行次数会达到20。如果使用分布式空频则所有消费者加起来的总运行次数是10。
     :param is_send_consumer_hearbeat_to_redis   时候将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
     :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
     :param create_logger_file : 是否创建文件日志

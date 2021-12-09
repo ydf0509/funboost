@@ -59,10 +59,12 @@ from function_scheduling_distributed_framework.concurrent_pool.custom_threadpool
 from function_scheduling_distributed_framework.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from function_scheduling_distributed_framework.factories.publisher_factotry import get_publisher
 from function_scheduling_distributed_framework.utils import decorators, time_util, RedisMixin
+# noinspection PyUnresolvedReferences
 from function_scheduling_distributed_framework.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
 from function_scheduling_distributed_framework.utils.mongo_util import MongoMixin
 from function_scheduling_distributed_framework import frame_config
-from function_scheduling_distributed_framework.constant import ConcurrentModeEnum,BrokerEnum
+# noinspection PyUnresolvedReferences
+from function_scheduling_distributed_framework.constant import ConcurrentModeEnum, BrokerEnum
 
 patch_apscheduler_run_job()
 
@@ -118,6 +120,7 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         self.time_end = None
         self.success = False
         self.total_thread = threading.active_count()
+        self.has_requeue = False
         self.set_log_level(20)
 
     def get_status_dict(self, without_datetime_obj=False):
@@ -187,7 +190,7 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
                                                 ], )
                 task_status_col.create_index([("utime", 1)],
                                              expireAfterSeconds=function_result_status_persistance_conf.expire_seconds)  # 只保留7天(用户自定义的)。
-            except pymongo.errors.OperationFailure as e: # 新的mongo服务端，重复创建已存在索引会报错，try一下。
+            except pymongo.errors.OperationFailure as e:  # 新的mongo服务端，每次启动重复创建已存在索引会报错，try一下。
                 self.logger.warning(e)
             # self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
             self.task_status_col = task_status_col
@@ -603,7 +606,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                                                                      self.queue_name, self.consuming_function.__name__,
                                                                                                      kw['body']),
                                                                                                  )
-            if current_function_result_status.success is True or current_retry_times == max_retry_times:
+            if current_function_result_status.success is True or current_retry_times == max_retry_times or current_function_result_status.has_requeue:
                 break
 
         self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
@@ -673,7 +676,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                               ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
                 self.logger.critical(f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}，消息重新入队')
                 time.sleep(1)  # 防止快速无限出错入队出队，导致cpu和中间件忙
-                return self._requeue(kw)
+                self._requeue(kw)
+                function_result_status.has_requeue = True
+                return function_result_status
             self.logger.error(f'函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次运行发生错误，'
                               f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是  {function_only_params}    \n 原因是 {type(e)} {e} ',
                               exc_info=self.__get_priority_conf(kw, 'is_print_detail_exception'))
@@ -695,7 +700,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                                                                                  self.queue_name, self.consuming_function.__name__,
                                                                                                                  kw['body']),
                                                                                                              )
-            if current_function_result_status.success is True or current_retry_times == max_retry_times:
+            if current_function_result_status.success is True or current_retry_times == max_retry_times or current_function_result_status.has_requeue:
                 break
 
         # self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
@@ -718,7 +723,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
             await simple_run_in_executor(push_result)
 
-        # 异步调度不存在线程并发，不需要加锁。
+        # 异步执行不存在线程并发，不需要加锁。
         self._execute_task_times_every_unit_time += 1
         self._consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
         self._last_execute_task_time = time.time()
@@ -778,7 +783,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 # time.sleep(1)  # 防止快速无限出错入队出队，导致cpu和中间件忙
                 await asyncio.sleep(1)
                 # return self._requeue(kw)
-                return await simple_run_in_executor(self._requeue, kw)
+                await simple_run_in_executor(self._requeue, kw)
+                function_result_status.has_requeue = True
+                return function_result_status
             self.logger.error(f'函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次运行发生错误，'
                               f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是  {function_only_params}    \n 原因是 {type(e)} {e} ',
                               exc_info=self.__get_priority_conf(kw, 'is_print_detail_exception'))

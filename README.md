@@ -69,6 +69,9 @@ pip install function_scheduling_distributed_framework --upgrade
 这么多并发方式能够满足任意编程场景。
 ```
 
+以下两种方式，都是10线程加python内存queue方式运行f函数，有了此框架，用户无需代码手写手动操作线程 协程 进程并发。
+![img_14.png](img_14.png)
+
 ### 1.2.2 框架支持20种中间件
 
 框架支持 rabbitmq redis python自带的queue.Queue  sqlite sqlachemy kafka pulsar mongodb 直接socket 等作为消息中间件。

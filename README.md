@@ -39,7 +39,7 @@ pip install function_scheduling_distributed_framework --upgrade
 
 有了这个框架，用户再也无需亲自手写操作进程、线程、协程的并发的代码了。
 
-有了这个框架，用户再也无需亲自手写操作redis rabbitmq socket kafka 了。
+有了这个框架，用户再也无需亲自手写操作redis rabbitmq socket kafka 了 。
 
 [![sgV2xP.png](https://z3.ax1x.com/2021/01/19/sgV2xP.png)](https://imgtu.com/i/sgV2xP)
 

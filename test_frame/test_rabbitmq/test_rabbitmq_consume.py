@@ -2,7 +2,7 @@ import time
 import random
 from function_scheduling_distributed_framework import task_deco,BrokerEnum
 
-@task_deco('test_rabbit_queue7',broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM,)
+@task_deco('test_rabbit_queue7f',broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM,)
 def test_fun(x):
     # time.sleep(2.9)
     # sleep时间随机从0.1毫秒到5秒任意徘徊,最小耗时和最大耗时差距达到了5万倍。

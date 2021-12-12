@@ -7,13 +7,13 @@ from setuptools import setup, find_packages
 
 setup(
     name='function_scheduling_distributed_framework',  #
-    version=12.6,
+    version='12.7',
     description=(
         'function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way'
     ),
     # long_description=open('README.md', 'r',encoding='utf8').read(),
-    keywords=("distributed-framework", "function-scheduling", "rabbitmq", "rocketmq", "kafka", "nsq", "redis", "disk",
-              "sqlachemy", "consume-confirm", "timing", "task-scheduling", "apscheduler", "pulsar", "mqtt", "kombu"),
+    keywords=["distributed-framework", "function-scheduling", "rabbitmq", "rocketmq", "kafka", "nsq", "redis", "disk",
+              "sqlachemy", "consume-confirm", "timing", "task-scheduling", "apscheduler", "pulsar", "mqtt", "kombu"],
     long_description_content_type="text/markdown",
     long_description=open('README.md', 'r', encoding='utf8').read(),
     author='bfzs',
@@ -50,6 +50,9 @@ setup(
         # 'pysnooper==0.0.11',
         'Flask',
         'flask_bootstrap',
+        'flask_wtf',
+        'wtforms',
+        'flask_login',
         'tomorrow3==1.1.0',
         'persist-queue>=0.4.2',
         'elasticsearch',
@@ -88,7 +91,7 @@ setup(
 python setup.py sdist upload -r pypi
 
 # python setup.py bdist_wheel
-python setup.py bdist_wheel ; python -m twine upload dist/function_scheduling_distributed_framework-12.6-py3-none-any.whl
+python setup.py bdist_wheel ; python -m twine upload dist/function_scheduling_distributed_framework-12.7-py3-none-any.whl
 python setup.py sdist & twine upload dist/function_scheduling_distributed_framework-10.9.tar.gz
 
 最快的下载方式，上传立即可安装。阿里云源同步官网pypi间隔要等很久。

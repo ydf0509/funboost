@@ -39,7 +39,7 @@ pip install function_scheduling_distributed_framework --upgrade
 
 有了这个框架，用户再也无需亲自手写操作进程、线程、协程的并发的代码了。
 
-有了这个框架，用户再也无需亲自手写操作redis rabbitmq socket kafka 了。
+有了这个框架，用户再也无需亲自手写操作redis rabbitmq socket kafka 了 。
 
 [![sgV2xP.png](https://z3.ax1x.com/2021/01/19/sgV2xP.png)](https://imgtu.com/i/sgV2xP)
 
@@ -68,6 +68,9 @@ pip install function_scheduling_distributed_framework --upgrade
 多进程 + 单线程 ，多进程 + 多线程，多进程 + gevent,  多进程 + eventlet  ，多进程 + asyncio 的组合并发
 这么多并发方式能够满足任意编程场景。
 ```
+
+以下两种方式，都是10线程加python内存queue方式运行f函数，有了此框架，用户无需代码手写手动操作线程 协程 进程并发。
+![img_14.png](img_14.png)
 
 ### 1.2.2 框架支持20种中间件
 

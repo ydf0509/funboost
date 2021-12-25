@@ -1,12 +1,13 @@
+
 # 1.分布式函数调度框架简介
 
 ## 1.0 github地址和文档地址
 
-### 1.0.1 [分布式函数调度框架文档地址](https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/index.html)
-[查看分布式函数调度框架文档](https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/index.html)
+### 1.0.1 [分布式函数调度框架文档地址](https://funboost.readthedocs.io/zh_CN/latest/index.html)
+[查看分布式函数调度框架文档](https://funboost.readthedocs.io/zh_CN/latest/index.html)
 
 ```
-文档很长，但归根结底只需要学习 1.3 里面的这1个例子就行，主要是修改下@task_deco的各种参数，
+文档很长，但归根结底只需要学习 1.3 里面的这1个例子就行，主要是修改下@boost的各种参数，
 通过不同的入参，实践测试下各种控制功能。
 
 对比 celery 有20种改善，其中之一是无依赖文件夹层级和文件夹名字 文件名字。
@@ -16,8 +17,8 @@
 很多新手需要小心翼翼模仿网上说的项目目录结构，以为不按照那么规划目录和命名就玩不起来，本身说明celery很坑。
 ```
 
-### 1.0.2 [分布式函数调度框架github地址](https://github.com/ydf0509/distributed_framework)
-[查看分布式函数调度框架github项目](https://github.com/ydf0509/distributed_framework)
+### 1.0.2 [分布式函数调度框架github地址](https://github.com/ydf0509/funboost)
+[查看分布式函数调度框架github项目](https://github.com/ydf0509/funboost)
 
 [//]: # (### 1.0.3 [分布式函数调度框架qq群]&#40;https://qm.qq.com/cgi-bin/qm/qr?k=unA_o_L3sv5yushJzYGUTAwSzZ7GhUhq&jump_from=webapi&#41;)
 
@@ -26,9 +27,32 @@
 [//]:# ([点击加入 python万能分布式函数调度框架qq群]&#40;https://qm.qq.com/cgi-bin/qm/qr?k=unA_o_L3sv5yushJzYGUTAwSzZ7GhUhq&jump_from=webapi&#41;)
 
 
+### 1.0.3 funboost 框架 和 function_scheduling_distributed_framework 框架 关系说明
+
+<p style="color: crimson;font-size: larger">框架取名说明:</p>
+<pre style="color: darkorchid ;font-size:medium">
+funboost是function_scheduling_distributed_framework框架的新名字,把框架名字长度减小.
+funboost名字是两个单词,fun是function指的是python函数,boost是加速的意思,合一起是加速函数并发运行.
+</pre>
+
+<p style="color: crimson;font-size: larger">两个框架的兼容性说明:</p>
+<pre style="color: darkorchid;font-size:medium">
+funboost 和 function_scheduling_distributed_framework 项目的代码一模一样,以后新代码只更新funboost项目。
+from funboost import xx 和  from function_scheduling_distributed_framework import xx 是完全一模一样的.
+boost是task_deco的别名，两个都可以使用。在消费函数上写@boost 和 @task_deco是一模一样的，两个都可以使用。
+所以在有的文档或者截图中如果写 
+from  function_scheduling_distributed_framework import task_deco , @task_deco
+用户需要知道效果和from funboost import boost , @boost 是一模一样的。
+</pre>
+
+
+
+<span style="font-size:20px">旧框架地址：<span><a href="https://github.com/ydf0509/distributed_framework" style="font-size: 25px">function_scheduling_distributed_framework框架地址链接</a>
+
+
 ## 1.1 安装方式
 
-pip install function_scheduling_distributed_framework --upgrade
+pip install funboost --upgrade
 
 
 
@@ -193,7 +217,7 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
 
      远程服务器部署消费函数：
         代码里面 task_fun.fabric_deploy('192.168.6.133', 22, 'xiaomin', '123456', process_num=2) 只需要这样就可以自动将函数部署在远程机器运行，
-        无需任何额外操作，不需要借助阿里云codepipeline发版工具 和 任何运维发版管理工具，就能轻松将函数运行在多台远程机器。task_fun指的是被@task_deco装饰的函数
+        无需任何额外操作，不需要借助阿里云codepipeline发版工具 和 任何运维发版管理工具，就能轻松将函数运行在多台远程机器。task_fun指的是被@boost装饰的函数
 
 </pre>
 
@@ -206,7 +230,7 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
 ```
 以下这只是简单求和例子，实际情况换成任意函数里面写任意逻辑，框架可没有规定只能用于 求和函数 的自动调度并发。
 而是根据实际情况函数的参数个数、函数的内部逻辑功能，全部都由用户自定义，函数里面想写什么就写什么，想干什么就干什么，极端自由。
-也就是框架很容易学和使用，把下面的task_fun函数的入参和内部逻辑换成你自己想写的函数功能就可以了，框架只需要学习task_deco这一个函数的参数就行。
+也就是框架很容易学和使用，把下面的task_fun函数的入参和内部逻辑换成你自己想写的函数功能就可以了，框架只需要学习boost这一个函数的参数就行。
 测试使用的时候函数里面加上sleep模拟阻塞，从而更好的了解框架的并发和各种控制功能。
 
 有一点要说明的是框架的消息中间件的ip 端口 密码 等配置是在你第一次运行代码时候，在你当前项目的根目录下生成的 distributed_frame_config.py 按需设置。
@@ -214,7 +238,7 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
 
 ```python
 import time
-from function_scheduling_distributed_framework import boost, BrokerEnum
+from funboost import boost, BrokerEnum
 
 
 @boost("task_queue_name1", qps=5, broker_kind=BrokerEnum.PERSISTQUEUE)  # 入参包括20种，运行控制方式非常多，想得到的控制都会有。
@@ -273,7 +297,7 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 ## 1.5 框架学习方式
 
 ```
-把1.3的求和例子，通过修改task_deco装饰器额参数和sleep大小反复测试两数求和，
+把1.3的求和例子，通过修改boost装饰器额参数和sleep大小反复测试两数求和，
 从而体会框架的分布式 并发 控频。
 
 这是最简单的框架，只有@boost 1行代码需要学习。说的是这是最简单框架，这不是最简单的python包。

@@ -1,0 +1,47 @@
+## 这里的不用管，可能没及时更新维护， pip install function_scheduling_distributed_framework 自动安装所有依赖包
+
+eventlet==0.31.0
+gevent==21.1.2
+pymongo==3.5.1
+AMQPStorm==2.7.1
+rabbitpy==2.0.1
+gnsq==1.0.1
+kafka-python==1.4.6
+mongo-mq==0.0.1
+persist-queue>=0.4.2
+redis
+decorator==4.4.0
+# pysnooper==0.0.11
+tomorrow3==1.1.0
+concurrent-log-handler==0.9.19
+elasticsearch
+requests
+psutil
+Flask
+flask_bootstrap
+flask_wtf
+wtforms
+flask_login
+sqlalchemy
+sqlalchemy_utils==0.36.1
+apscheduler==3.7.0
+PyWin32    # windows need because of concurrent-log-handler
+# pip install -r requirements.text -i http://mirrors.aliyun.com/pypi/simple/
+pikav0
+pikav1
+rocketmq
+zmq
+pyzmq
+kombu==4.6.11
+confluent_kafka==1.5.0
+paho-mqtt
+aiohttp
+setuptools~=39.0.1
+urllib3~=1.22
+six~=1.11.0
+redis3
+fabric2
+nats-python
+
+
+## 这里的不用管，可能没及时更新维护， pip install function_scheduling_distributed_framework 自动安装所有依赖包

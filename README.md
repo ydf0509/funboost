@@ -3,8 +3,8 @@
 
 ## 1.0 github地址和文档地址
 
-### 1.0.1 [分布式函数调度框架文档地址](https://funboost.readthedocs.io/zh_CN/latest/index.html)
-[查看分布式函数调度框架文档](https://funboost.readthedocs.io/zh_CN/latest/index.html)
+### 1.0.1 [分布式函数调度框架文档地址](https://funboost.readthedocs.io/zh/latest/index.html)
+[查看分布式函数调度框架文档](https://funboost.readthedocs.io/zh/latest/index.html)
 
 ```
 文档很长，但归根结底只需要学习 1.3 里面的这1个例子就行，主要是修改下@boost的各种参数，
@@ -29,7 +29,7 @@
 
 ### 1.0.3 funboost 框架 和 function_scheduling_distributed_framework 框架 关系说明
 
-<p style="color: crimson;font-size: larger">框架取名说明:</p>
+<p style="color: crimson;font-size: larger">funboost框架取名说明:</p>
 <pre style="color: darkorchid ;font-size:medium">
 funboost是function_scheduling_distributed_framework框架的新名字,把框架名字长度减小.
 funboost名字是两个单词,fun是function指的是python函数,boost是加速的意思,合一起是加速函数并发运行.

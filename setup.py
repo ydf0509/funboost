@@ -6,13 +6,13 @@ from setuptools import setup, find_packages
 #     long_description = fh.read()
 
 setup(
-    name='function_scheduling_distributed_framework',  #
-    version='12.8',
+    name='funboost',  #
+    version='13.0',
     description=(
-        'function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way'
+        'funboost  is function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way'
     ),
     # long_description=open('README.md', 'r',encoding='utf8').read(),
-    keywords=["distributed-framework", "function-scheduling", "rabbitmq", "rocketmq", "kafka", "nsq", "redis", "disk",
+    keywords=["funboost","distributed-framework", "function-scheduling", "rabbitmq", "rocketmq", "kafka", "nsq", "redis", "disk",
               "sqlachemy", "consume-confirm", "timing", "task-scheduling", "apscheduler", "pulsar", "mqtt", "kombu"],
     long_description_content_type="text/markdown",
     long_description=open('README.md', 'r', encoding='utf8').read(),
@@ -26,7 +26,7 @@ setup(
     # packages=['function_scheduling_distributed_framework'], # 这样内层级文件夹的没有打包进去。
     include_package_data=True,
     platforms=["all"],
-    url='https://github.com/ydf0509/distributed_framework',
+    url='https://github.com/ydf0509/funboost',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Operating System :: OS Independent',
@@ -92,11 +92,11 @@ setup(
 python setup.py sdist upload -r pypi
 
 # python setup.py bdist_wheel
-python setup.py bdist_wheel ; python -m twine upload dist/function_scheduling_distributed_framework-12.8-py3-none-any.whl
-python setup.py sdist & twine upload dist/function_scheduling_distributed_framework-10.9.tar.gz
+python setup.py bdist_wheel && python -m twine upload dist/funboost-13.0-py3-none-any.whl
+python setup.py sdist & twine upload dist/funboost-10.9.tar.gz
 
 最快的下载方式，上传立即可安装。阿里云源同步官网pypi间隔要等很久。
-./pip install function_scheduling_distributed_framework==3.5 -i https://pypi.org/simple   
+./pip install funboost==3.5 -i https://pypi.org/simple   
 最新版下载
-./pip install function_scheduling_distributed_framework --upgrade -i https://pypi.org/simple       
+./pip install funboost --upgrade -i https://pypi.org/simple       
 """

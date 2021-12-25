@@ -1,9 +1,9 @@
 # 定时运行消费演示之1，最好是看另外一个演示版本test_timer2.py
 import datetime
-from function_scheduling_distributed_framework import task_deco, BrokerEnum, fsdf_background_scheduler
+from funboost import boost, BrokerEnum, fsdf_background_scheduler
 
 
-@task_deco('queue_test_666', broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
+@boost('queue_test_666', broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
 def consume_func(x, y):
     print(f'{x} + {y} = {x + y}')
 

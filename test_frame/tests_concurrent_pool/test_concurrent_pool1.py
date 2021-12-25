@@ -1,7 +1,7 @@
 import time
 import asyncio
-from function_scheduling_distributed_framework.concurrent_pool import *
-from function_scheduling_distributed_framework.utils.decorators import TimerContextManager
+from funboost.concurrent_pool import *
+from funboost.utils.decorators import TimerContextManager
 import aiohttp
 import requests
 import sys

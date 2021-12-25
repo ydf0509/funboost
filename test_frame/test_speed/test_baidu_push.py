@@ -1,4 +1,4 @@
-from function_scheduling_distributed_framework.utils.redis_manager import RedisMixin
+from funboost.utils.redis_manager import RedisMixin
 
 
 

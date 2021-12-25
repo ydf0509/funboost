@@ -2,7 +2,7 @@
 测试非装饰器版本方式，注意对比装饰器版本test_decorator_task_example.py
 """
 
-from function_scheduling_distributed_framework import get_consumer
+from funboost import get_consumer
 
 
 def f(a, b):

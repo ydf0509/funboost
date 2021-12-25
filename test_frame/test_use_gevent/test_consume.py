@@ -5,8 +5,8 @@
 import eventlet;eventlet.monkey_patch(all=True)
 import time
 
-from function_scheduling_distributed_framework import get_consumer,ConcurrentModeEnum
-from function_scheduling_distributed_framework.utils import LogManager
+from funboost import get_consumer,ConcurrentModeEnum
+from funboost.utils import LogManager
 
 
 

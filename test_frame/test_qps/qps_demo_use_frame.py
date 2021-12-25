@@ -15,7 +15,7 @@ flask_veiw_mock 接口耗时50 秒时候，控制台每秒打印8次 hello world
 有些人到现在还没明白并发数量和qps(每秒执行多少次)之间的区别，并发数量只有在函数耗时刚好精确等于1秒时候才等于qps。
 """
 import time
-from function_scheduling_distributed_framework import task_deco,BrokerEnum
+from funboost import boost,BrokerEnum
 
 
 def flask_veiw_mock(x):
@@ -24,7 +24,7 @@ def flask_veiw_mock(x):
     # time.sleep(10)  # 通过不同的sleep大小来模拟服务端响应需要消耗的时间
     return f"hello world {x}"
 
-@task_deco("test_qps",broker_kind=BrokerEnum.MEMORY_QUEUE,qps=8)
+@boost("test_qps", broker_kind=BrokerEnum.MEMORY_QUEUE, qps=8)
 def request_flask_api(x):
     response = flask_veiw_mock(x)
     print(time.strftime("%H:%M:%S"), '   ', response)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 14:57
-from function_scheduling_distributed_framework import PriorityConsumingControlConfig
+from funboost import PriorityConsumingControlConfig
 from test_frame.test_rpc.test_consume import add
 
 

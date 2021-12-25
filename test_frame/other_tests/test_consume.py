@@ -3,12 +3,12 @@
 # @Time    : 2019/8/8 0008 14:57
 import time
 import random
-from function_scheduling_distributed_framework import task_deco, LogManager,BrokerEnum
+from funboost import boost, LogManager,BrokerEnum
 
 
 
 
-@task_deco('queue_test2', qps=30, broker_kind=BrokerEnum.REDIS,)  # 通过设置broker_kind，一键切换中间件为mq或redis等13种中间件或包。
+@boost('queue_test2', qps=30, broker_kind=BrokerEnum.REDIS, )  # 通过设置broker_kind，一键切换中间件为mq或redis等13种中间件或包。
 def f2(a, b):
     print(f'消费此消息 {a} + {b} 中。。。。。')
     time.sleep(random.randint(1,1000)/100.0)  # 模拟做某事需要随机消耗一段时间的，精确控频

@@ -3,10 +3,10 @@
 """
 import time
 
-from function_scheduling_distributed_framework import task_deco, IdeAutoCompleteHelper, BrokerEnum
+from funboost import boost, IdeAutoCompleteHelper, BrokerEnum
 
 
-@task_deco('queue_test_f01', broker_kind=BrokerEnum.REDIS_STREAM,log_level=10)
+@boost('queue_test_f01', broker_kind=BrokerEnum.REDIS_STREAM, log_level=10)
 def f(a, b):
     print(f'{a} + {b} = {a + b}')
 

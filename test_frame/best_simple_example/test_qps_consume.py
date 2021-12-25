@@ -3,11 +3,11 @@
 # @Time    : 2019/8/8 0008 14:57
 import time
 import threading
-from function_scheduling_distributed_framework import task_deco, BrokerEnum,ConcurrentModeEnum
+from funboost import boost, BrokerEnum,ConcurrentModeEnum
 
 t_start = time.time()
 
-@task_deco('queue_test2_qps', qps=2, broker_kind=BrokerEnum.PERSISTQUEUE,concurrent_mode=ConcurrentModeEnum.THREADING,concurrent_num=600 )
+@boost('queue_test2_qps', qps=2, broker_kind=BrokerEnum.PERSISTQUEUE, concurrent_mode=ConcurrentModeEnum.THREADING, concurrent_num=600)
 def f2(a, b):
     """
     concurrent_num = 600 不用怕，因为这是智能线程池，如果函数耗时短，不会真开那么多线程。

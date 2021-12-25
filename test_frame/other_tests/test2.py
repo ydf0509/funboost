@@ -12,7 +12,7 @@ t1 = time.time()
 #
 # # @pysnooper_click_able.snoop(depth=10000)
 # def f():
-#     import function_scheduling_distributed_framework
+#     import funboost
 #
 #
 # f()
@@ -33,10 +33,10 @@ t1 = time.time()
 # print(pickle.dumps(CannotPickleObject()))
 # print(pickle.dumps(CannotPickleObject2()))
 
-from function_scheduling_distributed_framework import task_deco, BrokerEnum, IdeAutoCompleteHelper, PriorityConsumingControlConfig, run_consumer_with_multi_process
+from funboost import boost, BrokerEnum, IdeAutoCompleteHelper, PriorityConsumingControlConfig, run_consumer_with_multi_process
 
 
-@task_deco('test_queue', broker_kind=BrokerEnum.REDIS)
+@boost('test_queue', broker_kind=BrokerEnum.REDIS)
 def ff(x, y):
     import os
     time.sleep(10)

@@ -1,6 +1,6 @@
 ﻿import time
 from functools import wraps
-from function_scheduling_distributed_framework import task_deco
+from funboost import boost
 
 def my_deco(f):
     wraps(f)
@@ -11,7 +11,7 @@ def my_deco(f):
     return _inner
 
 
-@task_deco('test2deco')
+@boost('test2deco')
 @my_deco
 def fun(x):
     time.sleep(10)

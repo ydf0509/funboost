@@ -3,8 +3,8 @@
 # @Time    : 2019/9/18 0018 12:15
 import time
 
-from function_scheduling_distributed_framework import nb_print
-from function_scheduling_distributed_framework.utils.resource_monitoring import ResourceMonitor
+from funboost import nb_print
+from funboost.utils.resource_monitoring import ResourceMonitor
 
 
 

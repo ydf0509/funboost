@@ -1,4 +1,4 @@
-from function_scheduling_distributed_framework import PriorityConsumingControlConfig,IdeAutoCompleteHelper
+from funboost import PriorityConsumingControlConfig,IdeAutoCompleteHelper
 from test_frame.test_with_multi_process.test_consume import ff
 
 for i in range(1000, 10000):

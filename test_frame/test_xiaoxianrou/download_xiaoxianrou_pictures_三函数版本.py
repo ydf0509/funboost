@@ -1,4 +1,4 @@
-from function_scheduling_distributed_framework import task_deco
+from funboost import boost
 import re
 import requests
 from parsel import Selector
@@ -9,7 +9,7 @@ http://www.5442tu.com/mingxing/list_2_1.html  下载所有明星图片
 """
 
 
-@task_deco('xiaoxianrou_list_page', qps=0.5)
+@boost('xiaoxianrou_list_page', qps=0.5)
 def cralw_list_page(page_index):
     url = f'http://www.5442tu.com/mingxing/list_2_{page_index}.html'
     resp = requests.get(url)
@@ -19,7 +19,7 @@ def cralw_list_page(page_index):
         crawl_detail_page.push(detail_sel.xpath('./@href').extract_first(), detail_sel.xpath('./@title').extract_first(), 1, is_first_picture=True)
 
 
-@task_deco('xiaoxianrou_detail_page', qps=3, )
+@boost('xiaoxianrou_detail_page', qps=3, )
 def crawl_detail_page(url, title, picture_index, is_first_picture=False):
     resp = requests.get(url)
     sel = Selector(resp.content.decode('gbk'))
@@ -33,7 +33,7 @@ def crawl_detail_page(url, title, picture_index, is_first_picture=False):
     downlaod_picture.push(pic_url, title, picture_index)
 
 
-@task_deco('xiaoxianrou_download_pictiure', qps=1, is_print_detail_exception=False)
+@boost('xiaoxianrou_download_pictiure', qps=1, is_print_detail_exception=False)
 def downlaod_picture(pic_url, title, picture_index):
     print(pic_url)
     resp_pic = requests.get(pic_url)

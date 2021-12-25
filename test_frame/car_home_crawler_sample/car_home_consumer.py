@@ -1,6 +1,6 @@
 import requests
 from parsel import Selector
-from function_scheduling_distributed_framework import task_deco, BrokerEnum, IdeAutoCompleteHelper
+from funboost import boost, BrokerEnum, IdeAutoCompleteHelper
 
 """
 演示分布式函数调度框架来驱动爬虫函数，使用此框架可以达使爬虫任务 自动调度、 分布式运行、确认消费万无一失、超高速自动并发、精确控频、
@@ -19,7 +19,7 @@ from function_scheduling_distributed_framework import task_deco, BrokerEnum, Ide
 也是被框架束缚的死死的，很难学。分布式函数调度框架由于是自动调度函数而不是自动调度url请求，所以天生不存在这些问题。
 
 用其他爬虫框架需要继承BaseSpider类，重写一大堆方法写一大堆中间件方法和配置文件，在很多个文件夹中来回切换写代码。
-而用这个爬虫，只需要学习 @task_deco 一个装饰器就行，代码行数大幅度减少，随意重启代码任务万无一失，大幅度减少操心。
+而用这个爬虫，只需要学习 @boost 一个装饰器就行，代码行数大幅度减少，随意重启代码任务万无一失，大幅度减少操心。
 
 这个爬虫例子具有代表性，因为实现了演示从列表页到详情页的分布式自动调度。
 
@@ -36,7 +36,7 @@ from function_scheduling_distributed_framework import task_deco, BrokerEnum, Ide
 """
 
 
-@task_deco('car_home_list', broker_kind=BrokerEnum.RedisBrpopLpush, max_retry_times=5, qps=2)
+@boost('car_home_list', broker_kind=BrokerEnum.RedisBrpopLpush, max_retry_times=5, qps=2)
 def crawl_list_page(news_type, page, do_page_turning=False):
     url = f'https://www.autohome.com.cn/{news_type}/{page}/#liststart'
     resp_text = requests.get(url).text
@@ -52,8 +52,8 @@ def crawl_list_page(news_type, page, do_page_turning=False):
             crawl_list_page.push(news_type, p)  # 列表页翻页。
 
 
-@task_deco('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=3,
-           do_task_filtering=True, is_using_distributed_frequency_control=True)
+@boost('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=3,
+       do_task_filtering=True, is_using_distributed_frequency_control=True)
 def crawl_detail_page(url, title, news_type):
     resp_text = requests.get(url).text
     sel = Selector(resp_text)

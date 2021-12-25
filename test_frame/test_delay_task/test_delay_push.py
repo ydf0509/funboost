@@ -3,7 +3,7 @@
 from test_frame.test_delay_task.test_delay_consume import f
 import datetime
 import time
-from function_scheduling_distributed_framework import PriorityConsumingControlConfig
+from funboost import PriorityConsumingControlConfig
 
 """
 测试发布延时任务，不是发布后马上就执行函数。

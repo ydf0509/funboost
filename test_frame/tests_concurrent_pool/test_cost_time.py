@@ -1,4 +1,4 @@
-from function_scheduling_distributed_framework.concurrent_pool.custom_threadpool_executor import CustomThreadpoolExecutor
+from funboost.concurrent_pool.custom_threadpool_executor import CustomThreadpoolExecutor
 
 import time
 

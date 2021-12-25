@@ -1,13 +1,13 @@
 # import gevent.monkey;gevent.monkey.patch_all()
 import time
 
-from function_scheduling_distributed_framework import task_deco, BrokerEnum,run_consumer_with_multi_process,ConcurrentModeEnum
+from funboost import boost, BrokerEnum,run_consumer_with_multi_process,ConcurrentModeEnum
 import nb_log
 
 logger = nb_log.get_logger('sdsda',is_add_stream_handler=False,log_filename='xxx.log')
 
 
-@task_deco('20000', broker_kind=BrokerEnum.REDIS,concurrent_num=2, log_level=20, qps=0,concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,)
+@boost('20000', broker_kind=BrokerEnum.REDIS, concurrent_num=2, log_level=20, qps=0, concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, )
 def f_test_speed(x):
     pass
     # logger.debug(x)
@@ -16,7 +16,7 @@ def f_test_speed(x):
     # time.sleep(20)
 
 
-# @task_deco('speed_test_queue2', broker_kind=BrokerEnum.REDIS, log_level=20, qps=2)
+# @boost('speed_test_queue2', broker_kind=BrokerEnum.REDIS, log_level=20, qps=2)
 # def f_test_speed2(y):
 #     pass
 #     print(y)

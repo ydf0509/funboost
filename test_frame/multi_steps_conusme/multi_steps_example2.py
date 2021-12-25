@@ -1,4 +1,4 @@
-from function_scheduling_distributed_framework import get_consumer, task_deco
+from funboost import get_consumer, boost
 
 
 def step1(x):

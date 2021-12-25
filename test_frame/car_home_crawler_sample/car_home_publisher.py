@@ -1,4 +1,4 @@
-from function_scheduling_distributed_framework import fsdf_background_scheduler
+from funboost import fsdf_background_scheduler
 from test_frame.car_home_crawler_sample.car_home_consumer import crawl_list_page, crawl_detail_page
 
 crawl_list_page.clear()  # 清空列表页

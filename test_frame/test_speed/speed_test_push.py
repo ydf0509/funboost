@@ -1,7 +1,7 @@
 import time
 
 import redis
-from function_scheduling_distributed_framework import frame_config
+from funboost import frame_config
 
 from test_frame.test_speed.speed_test_consume import f_test_speed
 
@@ -13,7 +13,7 @@ for i in range(500000):
     f_test_speed.push(i)
     # redis_db_frame.lpush('no_frame_queue',f'{{"x":{i}}}')
 
-# from function_scheduling_distributed_framework.utils.redis_manager import RedisMixin
+# from funboost.utils.redis_manager import RedisMixin
 #
 #
 #

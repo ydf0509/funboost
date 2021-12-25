@@ -3,9 +3,9 @@
 # @Time    : 2019/8/8 0008 14:57
 from multiprocessing import Process
 import time
-from function_scheduling_distributed_framework import get_consumer, get_publisher, AbstractConsumer
-from function_scheduling_distributed_framework.consumers.redis_consumer import RedisConsumer
-from function_scheduling_distributed_framework.utils import LogManager
+from funboost import get_consumer, get_publisher, AbstractConsumer
+from funboost.consumers.redis_consumer import RedisConsumer
+from funboost.utils import LogManager
 
 
 

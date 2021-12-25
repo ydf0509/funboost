@@ -3,9 +3,9 @@
 """
 import time
 
-from function_scheduling_distributed_framework import task_deco,BrokerEnum
+from funboost import boost,BrokerEnum
 
-@task_deco('test_cost_long_time_fun_queue2',broker_kind=BrokerEnum.REDIS_ACK_ABLE,concurrent_num=5)
+@boost('test_cost_long_time_fun_queue2', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=5)
 def cost_long_time_fun(x):
     print(f'正在消费 {x} 中 。。。。')
     time.sleep(3)

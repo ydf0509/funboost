@@ -6,7 +6,7 @@
 测试改版的pysnooper装饰器。
 '''
 import requests
-from function_scheduling_distributed_framework.utils import RedisMixin, pysnooper_ydf, LogManager
+from funboost.utils import RedisMixin, pysnooper_ydf, LogManager
 
 
 

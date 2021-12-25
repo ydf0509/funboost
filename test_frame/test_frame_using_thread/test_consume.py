@@ -5,9 +5,9 @@
 import time
 import random
 
-from function_scheduling_distributed_framework import get_consumer, AbstractConsumer
-from function_scheduling_distributed_framework.consumers.base_consumer import ConsumersManager, FunctionResultStatusPersistanceConfig
-from function_scheduling_distributed_framework.utils import LogManager
+from funboost import get_consumer, AbstractConsumer
+from funboost.consumers.base_consumer import ConsumersManager, FunctionResultStatusPersistanceConfig
+from funboost.utils import LogManager
 
 
 

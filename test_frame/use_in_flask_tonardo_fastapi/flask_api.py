@@ -1,7 +1,7 @@
 import flask
 from flask_mail import Mail, Message
-from function_scheduling_distributed_framework import task_deco, BrokerEnum, PriorityConsumingControlConfig
-from function_scheduling_distributed_framework.publishers.base_publisher import RedisAsyncResult
+from funboost import boost, BrokerEnum, PriorityConsumingControlConfig
+from funboost.publishers.base_publisher import RedisAsyncResult
 
 app = flask.Flask(__name__)
 
@@ -17,7 +17,7 @@ app.config.update(
 mail = Mail(app)
 
 
-@task_deco(queue_name='flask_test_queue', broker_kind=BrokerEnum.REDIS)
+@boost(queue_name='flask_test_queue', broker_kind=BrokerEnum.REDIS)
 def send_email(msg):
     """
     演示一般性大部分任务，如果函数不需要使用app上下文
@@ -27,7 +27,7 @@ def send_email(msg):
     print(f'发送邮件  {msg}')
 
 
-@task_deco(queue_name='flask_test_queue', broker_kind=BrokerEnum.REDIS)
+@boost(queue_name='flask_test_queue', broker_kind=BrokerEnum.REDIS)
 def send_main_with_app_context(msg):
     """
     演示使用 flask_mail ，此包需要用到app上下文
@@ -54,7 +54,7 @@ def your_app_context_deco(flask_appx: flask.Flask):
     return _deco
 
 
-@task_deco(queue_name='flask_test_queue', broker_kind=BrokerEnum.REDIS)
+@boost(queue_name='flask_test_queue', broker_kind=BrokerEnum.REDIS)
 @your_app_context_deco(app)
 def send_main_with_app_context2(msg):
     """

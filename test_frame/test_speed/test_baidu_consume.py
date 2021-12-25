@@ -1,7 +1,7 @@
 # import gevent.monkey;gevent.monkey.patch_all()
 import time
 
-from function_scheduling_distributed_framework import task_deco, BrokerEnum,run_consumer_with_multi_process,ConcurrentModeEnum
+from funboost import boost, BrokerEnum,run_consumer_with_multi_process,ConcurrentModeEnum
 import urllib3
 import requests
 http = urllib3.PoolManager()
@@ -9,9 +9,9 @@ http = urllib3.PoolManager()
 
 
 
-@task_deco('speed_baidu', broker_kind=BrokerEnum.REDIS,
-           log_level=20, concurrent_num=60,concurrent_mode=ConcurrentModeEnum.THREADING,
-           is_using_distributed_frequency_control=True,is_print_detail_exception=False)
+@boost('speed_baidu', broker_kind=BrokerEnum.REDIS,
+       log_level=20, concurrent_num=60, concurrent_mode=ConcurrentModeEnum.THREADING,
+       is_using_distributed_frequency_control=True, is_print_detail_exception=False)
 def baidu_speed(x,):
     # print(x)
     try:

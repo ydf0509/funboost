@@ -5,14 +5,13 @@ import os
 import time
 import random
 # from distributed_frame_config import REDIS_HOST
-from function_scheduling_distributed_framework import task_deco, BrokerEnum, ConcurrentModeEnum,FunctionResultStatusPersistanceConfig
-from function_scheduling_distributed_framework.utils import RedisMixin
+from funboost import boost, BrokerEnum, ConcurrentModeEnum,FunctionResultStatusPersistanceConfig
+from funboost.utils import RedisMixin
 
 
-# @task_deco('test_queue66', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=5, log_level=10, is_print_detail_exception=False, is_show_message_get_from_broker=False,
+# @boost('test_queue66', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=5, log_level=10, is_print_detail_exception=False, is_show_message_get_from_broker=False,
 #            is_using_distributed_frequency_control=True)
-@task_deco('test_queue70c', qps=30,broker_kind=BrokerEnum.MEMORY_QUEUE,concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,log_level=10,
-           function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True,is_use_bulk_insert=True))
+@boost('test_queue70c', qps=30, broker_kind=BrokerEnum.MEMORY_QUEUE, )
 def f(x,y):
     return x+y
 
@@ -21,7 +20,7 @@ def f(x,y):
 if __name__ == '__main__':
     # pass
     # f.clear()
-    for i in range(10000):
+    for i in range(1000):
         f.push(i, i * 2)
 
     f.consume()

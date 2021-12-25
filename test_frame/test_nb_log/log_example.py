@@ -4,7 +4,7 @@ from nb_log import get_logger
 
 print('导入nb_log之后的print是强化版的可点击跳转的')
 
-logger = get_logger('lalala', log_filename='lalala.log')
+logger = get_logger('lalala', log_filename='lalala.log',is_add_elastic_handler=True)
 
 for i in range(3):
     logger.debug(f'debug是绿色，说明是调试的，代码ok。 ' * 4)

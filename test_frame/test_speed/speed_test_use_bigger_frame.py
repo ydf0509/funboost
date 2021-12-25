@@ -1,4 +1,4 @@
-from function_scheduling_distributed_framework.beggar_version_implementation.beggar_redis_consumer import start_consuming_message
+from funboost.beggar_version_implementation.beggar_redis_consumer import start_consuming_message
 
 
 def f(x):

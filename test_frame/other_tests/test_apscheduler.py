@@ -1,4 +1,4 @@
-from function_scheduling_distributed_framework.utils.apscheduler_monkey import patch_run_job
+from funboost.utils.apscheduler_monkey import patch_run_job
 patch_run_job()
 
 from apscheduler.events import EVENT_JOB_MISSED

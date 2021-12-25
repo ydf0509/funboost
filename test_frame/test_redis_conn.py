@@ -6,7 +6,7 @@
 
 
 
-from function_scheduling_distributed_framework.utils import RedisMixin
+from funboost.utils import RedisMixin
 
 
 

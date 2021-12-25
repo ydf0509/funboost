@@ -3,7 +3,7 @@
 # @Time    : 2019/8/8 0008 14:57
 
 from test_frame.test_frame_using_thread.test_consume import consumer_add, consumer_sub
-from function_scheduling_distributed_framework.publishers.base_publisher import PriorityConsumingControlConfig
+from funboost.publishers.base_publisher import PriorityConsumingControlConfig
 
 pb_add = consumer_add.bulid_a_new_publisher_of_same_queue()
 pb_add.clear()

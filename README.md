@@ -1,6 +1,9 @@
 
 # 1.分布式函数调度框架简介
 
+funboost的旧框架名字是： [function_scheduling_distributed_framework](https://github.com/ydf0509/distributed_framework)
+
+
 ## 1.0 github地址和文档地址
 
 ### 1.0.1 [分布式函数调度框架文档地址](https://funboost.readthedocs.io/zh/latest/index.html)

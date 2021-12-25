@@ -20,7 +20,7 @@ def f(x,y):
 if __name__ == '__main__':
     # pass
     # f.clear()
-    for i in range(1000):
+    for i in range(10):
         f.push(i, i * 2)
 
     f.consume()

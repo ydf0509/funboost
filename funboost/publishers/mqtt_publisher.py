@@ -2,7 +2,7 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 12:12
 from funboost.publishers.base_publisher import AbstractPublisher
-from funboost import frame_config
+from funboost import funboost_config_deafult
 
 """
 首先安装mqtt模块：
@@ -77,7 +77,7 @@ class MqttPublisher(AbstractPublisher, ):
         client.on_socket_close = self._on_socket_close
         # client.on_message = on_message
         # print(frame_config.MQTT_HOST)
-        client.connect(frame_config.MQTT_HOST, frame_config.MQTT_TCP_PORT, 600)  # 600为keepalive的时间间隔
+        client.connect(funboost_config_deafult.MQTT_HOST, funboost_config_deafult.MQTT_TCP_PORT, 600)  # 600为keepalive的时间间隔
         self._client = client
 
     def _on_socket_close(self, client, userdata, socket):

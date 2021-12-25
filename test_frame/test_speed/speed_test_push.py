@@ -1,11 +1,11 @@
 import time
 
 import redis
-from funboost import frame_config
+from funboost import funboost_config_deafult
 
 from test_frame.test_speed.speed_test_consume import f_test_speed
 
-redis_db_frame = redis.Redis(host=frame_config.REDIS_HOST, password=frame_config.REDIS_PASSWORD, port=frame_config.REDIS_PORT, db=frame_config.REDIS_DB)
+redis_db_frame = redis.Redis(host=funboost_config_deafult.REDIS_HOST, password=funboost_config_deafult.REDIS_PASSWORD, port=funboost_config_deafult.REDIS_PORT, db=funboost_config_deafult.REDIS_DB)
 
 # f_test_speed.clear()
 for i in range(500000):

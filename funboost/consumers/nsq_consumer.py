@@ -4,7 +4,7 @@
 import json
 from gnsq import Consumer, Message
 
-from funboost import frame_config
+from funboost import funboost_config_deafult
 from funboost.consumers.base_consumer import AbstractConsumer
 from nb_log import LogManager
 
@@ -18,7 +18,7 @@ class NsqConsumer(AbstractConsumer):
     BROKER_KIND = 7
 
     def _shedual_task(self):
-        consumer = Consumer(self._queue_name, 'frame_channel', frame_config.NSQD_TCP_ADDRESSES,
+        consumer = Consumer(self._queue_name, 'frame_channel', funboost_config_deafult.NSQD_TCP_ADDRESSES,
                             max_in_flight=self._concurrent_num, heartbeat_interval=60, timeout=600, )  # heartbeat_interval 不能设置为600
 
         @consumer.on_message.connect

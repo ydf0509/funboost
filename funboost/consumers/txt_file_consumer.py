@@ -4,7 +4,7 @@ import json
 from persistqueue.serializers import json as json_serializer
 
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost import frame_config
+from funboost import funboost_config_deafult
 
 
 class TxtFileConsumer(AbstractConsumer, ):
@@ -15,7 +15,7 @@ class TxtFileConsumer(AbstractConsumer, ):
     BROKER_KIND = 25
 
     def _shedual_task(self):
-        queue = Queue(str((Path(frame_config.TXT_FILE_PATH) / self.queue_name).absolute()), autosave=True, serializer=json_serializer)
+        queue = Queue(str((Path(funboost_config_deafult.TXT_FILE_PATH) / self.queue_name).absolute()), autosave=True, serializer=json_serializer)
         while True:
             item = queue.get()
             self._print_message_get_from_broker('txt文件', item)

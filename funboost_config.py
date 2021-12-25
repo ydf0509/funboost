@@ -8,7 +8,7 @@ from funboost.constant import BrokerEnum
 '''
 
 '''
-你项目根目录下自动生成的 distributed_frame_config.py 文件中修改配置，会被自动读取到。
+你项目根目录下自动生成的 funboost_config.py 文件中修改配置，会被自动读取到。
 
 此文件按需修改，例如你使用redis中间件作为消息队列，可以不用管rabbitmq mongodb kafka啥的配置。
 但有3个功能例外，如果你需要使用rpc模式或者分布式控频或者任务过滤功能，无论设置使用何种消息队列中间件都需要把redis连接配置好，

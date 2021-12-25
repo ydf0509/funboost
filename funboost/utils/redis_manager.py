@@ -1,7 +1,7 @@
 # coding=utf8
 import redis2 as redis
 import redis3
-from funboost import frame_config
+from funboost import funboost_config_deafult
 from funboost.utils import decorators
 
 
@@ -38,29 +38,29 @@ class RedisMixin(object):
     @property
     @decorators.cached_method_result
     def redis_db0(self):
-        return RedisManager(host=frame_config.REDIS_HOST, port=frame_config.REDIS_PORT, password=frame_config.REDIS_PASSWORD, db=0).get_redis()
+        return RedisManager(host=funboost_config_deafult.REDIS_HOST, port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD, db=0).get_redis()
 
     @property
     @decorators.cached_method_result
     def redis_db8(self):
-        return RedisManager(host=frame_config.REDIS_HOST, port=frame_config.REDIS_PORT, password=frame_config.REDIS_PASSWORD, db=8).get_redis()
+        return RedisManager(host=funboost_config_deafult.REDIS_HOST, port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD, db=8).get_redis()
 
     @property
     @decorators.cached_method_result
     def redis_db7(self):
-        return RedisManager(host=frame_config.REDIS_HOST, port=frame_config.REDIS_PORT, password=frame_config.REDIS_PASSWORD, db=7).get_redis()
+        return RedisManager(host=funboost_config_deafult.REDIS_HOST, port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD, db=7).get_redis()
 
     @property
     @decorators.cached_method_result
     def redis_db6(self):
-        return RedisManager(host=frame_config.REDIS_HOST, port=frame_config.REDIS_PORT, password=frame_config.REDIS_PASSWORD, db=6).get_redis()
+        return RedisManager(host=funboost_config_deafult.REDIS_HOST, port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD, db=6).get_redis()
 
     @property
     @decorators.cached_method_result
     def redis_db_frame(self):
-        return RedisManager(host=frame_config.REDIS_HOST, port=frame_config.REDIS_PORT, password=frame_config.REDIS_PASSWORD, db=frame_config.REDIS_DB).get_redis()
+        return RedisManager(host=funboost_config_deafult.REDIS_HOST, port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD, db=funboost_config_deafult.REDIS_DB).get_redis()
 
     @property
     @decorators.cached_method_result
     def redis_db_frame_version3(self):
-        return redis3.Redis(host=frame_config.REDIS_HOST, port=frame_config.REDIS_PORT, password=frame_config.REDIS_PASSWORD, db=frame_config.REDIS_DB,decode_responses=True)
+        return redis3.Redis(host=funboost_config_deafult.REDIS_HOST, port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD, db=funboost_config_deafult.REDIS_DB, decode_responses=True)

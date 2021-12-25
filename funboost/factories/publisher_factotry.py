@@ -27,7 +27,7 @@ from funboost.publishers.sqla_queue_publisher import SqlachemyQueuePublisher
 from funboost.publishers.redis_stream_publisher import RedisStreamPublisher
 from funboost.publishers.mqtt_publisher import MqttPublisher
 from funboost.publishers.httpsqs_publisher import HttpsqsPublisher
-from funboost import frame_config
+from funboost import funboost_config_deafult
 
 
 def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=True,
@@ -75,7 +75,7 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
         25: TxtFilePublisher,
     }
     if broker_kind is None:
-        broker_kind = frame_config.DEFAULT_BROKER_KIND
+        broker_kind = funboost_config_deafult.DEFAULT_BROKER_KIND
     if broker_kind not in broker_kind__publisher_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')
     return broker_kind__publisher_type_map[broker_kind](**all_kwargs)

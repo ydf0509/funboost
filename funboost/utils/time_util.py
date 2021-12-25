@@ -4,7 +4,7 @@ import datetime
 import time
 import re
 import pytz
-from funboost import frame_config
+from funboost import funboost_config_deafult
 
 from funboost.utils import nb_print
 
@@ -78,11 +78,11 @@ class DatetimeConverter:
         elif isinstance(datetimex, (int, float)):
             if datetimex < 1:
                 datetimex += 86400
-            self.datetime_obj = datetime.datetime.fromtimestamp(datetimex,tz=pytz.timezone(frame_config.TIMEZONE))  # 时间戳0在windows会出错。
+            self.datetime_obj = datetime.datetime.fromtimestamp(datetimex, tz=pytz.timezone(funboost_config_deafult.TIMEZONE))  # 时间戳0在windows会出错。
         elif isinstance(datetimex, datetime.datetime):
             self.datetime_obj = datetimex
         elif datetimex is None:
-            self.datetime_obj = datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))
+            self.datetime_obj = datetime.datetime.now(tz=pytz.timezone(funboost_config_deafult.TIMEZONE))
         else:
             raise ValueError('实例化时候的传参不符合规定')
 

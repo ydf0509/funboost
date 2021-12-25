@@ -7,7 +7,7 @@ from kombu import Connection, Exchange, Queue
 from kombu.transport.virtual.base import Channel
 from nb_log import LogManager
 
-from funboost import frame_config
+from funboost import funboost_config_deafult
 from funboost.consumers.base_consumer import AbstractConsumer
 
 
@@ -69,11 +69,11 @@ class KombuConsumer(AbstractConsumer, ):
     BROKER_KIND = 15
 
     def custom_init(self):
-        self._middware_name = frame_config.KOMBU_URL.split(":")[0]
+        self._middware_name = funboost_config_deafult.KOMBU_URL.split(":")[0]
         logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._middware_name}--{self._queue_name}'
         self.logger = LogManager(logger_name).get_logger_and_add_handlers(self._log_level,
                                                                           log_filename=f'{logger_name}.log' if self._create_logger_file else None,
-                                                                          formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
+                                                                          formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
                                                                           )  #
         patch_kombu_redis()
 
@@ -88,7 +88,7 @@ class KombuConsumer(AbstractConsumer, ):
 
         self.exchange = Exchange('distributed_framework_exchange', 'direct', durable=True)
         self.queue = Queue(self._queue_name, exchange=self.exchange, routing_key=self._queue_name, auto_delete=False)
-        self.conn = Connection(frame_config.KOMBU_URL, transport_options={"visibility_timeout": 600})  # 默认3600秒unacked重回队列
+        self.conn = Connection(funboost_config_deafult.KOMBU_URL, transport_options={"visibility_timeout": 600})  # 默认3600秒unacked重回队列
         self.queue(self.conn).declare()
         with self.conn.Consumer(self.queue, callbacks=[callback], no_ack=False, prefetch_count=100) as consumer:
             # Process messages and handle events on all channels

@@ -1,6 +1,6 @@
 ﻿from pynats import NATSClient  # noqa
 from funboost.publishers.base_publisher import AbstractPublisher
-from funboost import frame_config
+from funboost import funboost_config_deafult
 
 
 class NatsPublisher(AbstractPublisher, ):
@@ -10,7 +10,7 @@ class NatsPublisher(AbstractPublisher, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        self.nats_client = NATSClient(frame_config.NATS_URL)
+        self.nats_client = NATSClient(funboost_config_deafult.NATS_URL)
         self.nats_client.connect()
 
     def concrete_realization_of_publish(self, msg):

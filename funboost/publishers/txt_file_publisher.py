@@ -8,7 +8,7 @@ from nb_filelock import FileLock
 from persistqueue import Queue
 from persistqueue.serializers import json as json_serializer
 
-from funboost import frame_config
+from funboost import funboost_config_deafult
 from funboost.publishers.base_publisher import AbstractPublisher
 
 
@@ -19,7 +19,7 @@ class TxtFilePublisher(AbstractPublisher, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        self._file_queue_path = str((Path(frame_config.TXT_FILE_PATH) / self.queue_name).absolute())
+        self._file_queue_path = str((Path(funboost_config_deafult.TXT_FILE_PATH) / self.queue_name).absolute())
         # Path(self._file_queue_path).mkdir(exist_ok=True)
         self.file_queue = Queue(self._file_queue_path,
                                 autosave=True, serializer=json_serializer)

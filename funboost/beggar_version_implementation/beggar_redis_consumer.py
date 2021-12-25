@@ -16,11 +16,11 @@
 import json
 import redis
 from concurrent.futures import ThreadPoolExecutor
-from funboost import patch_print, frame_config
+from funboost import patch_print, funboost_config_deafult
 
 
 
-redis_db_frame = redis.Redis(host=frame_config.REDIS_HOST, password=frame_config.REDIS_PASSWORD, port=frame_config.REDIS_PORT, db=frame_config.REDIS_DB)
+redis_db_frame = redis.Redis(host=funboost_config_deafult.REDIS_HOST, password=funboost_config_deafult.REDIS_PASSWORD, port=funboost_config_deafult.REDIS_PORT, db=funboost_config_deafult.REDIS_DB)
 
 
 class BeggarRedisConsumer:

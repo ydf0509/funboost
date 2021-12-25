@@ -5,7 +5,7 @@ import json
 import time
 
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost import frame_config
+from funboost import funboost_config_deafult
 from funboost.publishers.rocketmq_publisher import RocketmqPublisher
 
 
@@ -22,7 +22,7 @@ class RocketmqConsumer(AbstractConsumer):
             # print(traceback.format_exc())
             raise ImportError(f'rocketmq包 只支持linux和mac {e}')
         consumer = PushConsumer(f'g-{self._queue_name}')
-        consumer.set_namesrv_addr(frame_config.ROCKETMQ_NAMESRV_ADDR)
+        consumer.set_namesrv_addr(funboost_config_deafult.ROCKETMQ_NAMESRV_ADDR)
         consumer.set_thread_count(1)
         consumer.set_message_batch_max_size(self._concurrent_num)
 

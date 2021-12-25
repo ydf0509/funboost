@@ -17,7 +17,7 @@ from kafka.admin import NewTopic
 from kafka.errors import TopicAlreadyExistsError
 
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost import frame_config
+from funboost import funboost_config_deafult
 
 
 class KafkaConsumerManuallyCommit(AbstractConsumer):
@@ -34,16 +34,16 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
 
         from confluent_kafka import Consumer as ConfluentConsumer  # 这个包不好安装，用户用这个中间件的时候自己再想办法安装。
         try:
-            admin_client = KafkaAdminClient(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
+            admin_client = KafkaAdminClient(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
             admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
         except TopicAlreadyExistsError:
             pass
 
-        self._producer = KafkaProducer(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
+        self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         # consumer 配置 https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
         self._confluent_consumer = ConfluentConsumer({
-            'bootstrap.servers': ','.join(frame_config.KAFKA_BOOTSTRAP_SERVERS),
+            'bootstrap.servers': ','.join(funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS),
             'group.id': 'frame_group',
             'auto.offset.reset': 'earliest',
             'enable.auto.commit': False

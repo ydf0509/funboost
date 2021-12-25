@@ -5,7 +5,7 @@ import pikav0 as pika
 import rabbitpy
 from pikav0.adapters.blocking_connection import BlockingChannel
 
-from funboost import frame_config
+from funboost import funboost_config_deafult
 
 
 class RabbitmqClientRabbitPy:
@@ -57,13 +57,13 @@ class RabbitMqFactory:
         :param is_use_rabbitpy: 为0使用pika，多线程不安全。为1使用rabbitpy，多线程安全的包。
         """
         if is_use_rabbitpy:
-            self.rabbit_client = RabbitmqClientRabbitPy(frame_config.RABBITMQ_USER, frame_config.RABBITMQ_PASS,
-                                                        frame_config.RABBITMQ_HOST, frame_config.RABBITMQ_PORT,
-                                                        frame_config.RABBITMQ_VIRTUAL_HOST, heartbeat)
+            self.rabbit_client = RabbitmqClientRabbitPy(funboost_config_deafult.RABBITMQ_USER, funboost_config_deafult.RABBITMQ_PASS,
+                                                        funboost_config_deafult.RABBITMQ_HOST, funboost_config_deafult.RABBITMQ_PORT,
+                                                        funboost_config_deafult.RABBITMQ_VIRTUAL_HOST, heartbeat)
         else:
-            self.rabbit_client = RabbitmqClientPika(frame_config.RABBITMQ_USER, frame_config.RABBITMQ_PASS,
-                                                    frame_config.RABBITMQ_HOST, frame_config.RABBITMQ_PORT,
-                                                    frame_config.RABBITMQ_VIRTUAL_HOST, heartbeat)
+            self.rabbit_client = RabbitmqClientPika(funboost_config_deafult.RABBITMQ_USER, funboost_config_deafult.RABBITMQ_PASS,
+                                                    funboost_config_deafult.RABBITMQ_HOST, funboost_config_deafult.RABBITMQ_PORT,
+                                                    funboost_config_deafult.RABBITMQ_VIRTUAL_HOST, heartbeat)
 
     def get_rabbit_cleint(self):
         return self.rabbit_client

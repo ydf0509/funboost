@@ -31,7 +31,7 @@ from kafka.admin import NewTopic
 # noinspection PyPackageRequirements
 from kafka.errors import TopicAlreadyExistsError
 
-from funboost import frame_config
+from funboost import funboost_config_deafult
 from funboost.publishers.base_publisher import AbstractPublisher
 
 
@@ -43,9 +43,9 @@ class ConfluentKafkaPublisher(AbstractPublisher, ):
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
         from confluent_kafka import Producer as ConfluentProducer
-        self._producer = KafkaProducer(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
+        self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         try:
-            admin_client = KafkaAdminClient(bootstrap_servers=frame_config.KAFKA_BOOTSTRAP_SERVERS)
+            admin_client = KafkaAdminClient(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
             admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
         except TopicAlreadyExistsError:
@@ -53,7 +53,7 @@ class ConfluentKafkaPublisher(AbstractPublisher, ):
         except Exception as e:
             self.logger.exception(e)
         atexit.register(self.close)  # 程序退出前不主动关闭，会报错。
-        self._confluent_producer = ConfluentProducer({'bootstrap.servers': ','.join(frame_config.KAFKA_BOOTSTRAP_SERVERS)})
+        self._confluent_producer = ConfluentProducer({'bootstrap.servers': ','.join(funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)})
         self._recent_produce_time = time.time()
 
     # noinspection PyAttributeOutsideInit

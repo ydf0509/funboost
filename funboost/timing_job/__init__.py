@@ -9,7 +9,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 # noinspection PyProtectedMember
 from apscheduler.util import undefined
 
-from funboost import frame_config
+from funboost import funboost_config_deafult
 
 from funboost.consumers.base_consumer import AbstractConsumer
 
@@ -51,7 +51,7 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
         # _block_exit()   # python3.9 判断守护线程结束必须主线程在运行，否则结尾
 
 
-fsdf_background_scheduler = FsdfBackgroundScheduler(timezone=frame_config.TIMEZONE)
+fsdf_background_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE)
 # fsdf_background_scheduler = FsdfBackgroundScheduler()
 
 

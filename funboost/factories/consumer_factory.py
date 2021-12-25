@@ -28,7 +28,7 @@ from funboost.consumers.udp_consumer import UDPConsumer
 from funboost.consumers.zeromq_consumer import ZeroMqConsumer
 from funboost.consumers.mqtt_consumer import MqttConsumer
 from funboost.consumers.httpsqs_consumer import HttpsqsConsumer
-from funboost import frame_config
+from funboost import funboost_config_deafult
 
 
 def get_consumer(*args, broker_kind: int = None, **kwargs):
@@ -66,7 +66,7 @@ def get_consumer(*args, broker_kind: int = None, **kwargs):
         25:TxtFileConsumer,
     }
     if broker_kind is None:
-        broker_kind = frame_config.DEFAULT_BROKER_KIND
+        broker_kind = funboost_config_deafult.DEFAULT_BROKER_KIND
     if broker_kind not in broker_kind__consumer_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')
     return broker_kind__consumer_type_map[broker_kind](*args, **kwargs)

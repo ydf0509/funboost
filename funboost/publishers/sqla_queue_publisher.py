@@ -2,7 +2,7 @@
 # @Author  : ydf
 # @Time    : 2019/8/8 0008 13:05
 from funboost.utils import sqla_queue
-from funboost import frame_config
+from funboost import funboost_config_deafult
 from funboost.publishers.base_publisher import AbstractPublisher
 
 
@@ -15,7 +15,7 @@ class SqlachemyQueuePublisher(AbstractPublisher):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        self.queue = sqla_queue.SqlaQueue(self._queue_name, frame_config.SQLACHEMY_ENGINE_URL)
+        self.queue = sqla_queue.SqlaQueue(self._queue_name, funboost_config_deafult.SQLACHEMY_ENGINE_URL)
 
     def concrete_realization_of_publish(self, msg):
         self.queue.push(dict(body=msg, status=sqla_queue.TaskStatus.TO_BE_CONSUMED))

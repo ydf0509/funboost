@@ -8,7 +8,7 @@ from funboost.constant import BrokerEnum
 '''
 
 '''
-你项目根目录下自动生成的 distributed_frame_config.py 文件中修改配置，会被自动读取到。
+你项目根目录下自动生成的 funboost_config.py 文件中修改配置，会被自动读取到。
 
 此文件按需修改，例如你使用redis中间件作为消息队列，可以不用管rabbitmq mongodb kafka啥的配置。
 但有3个功能例外，如果你需要使用rpc模式或者分布式控频或者任务过滤功能，无论设置使用何种消息队列中间件都需要把redis连接配置好，
@@ -19,7 +19,7 @@ from funboost.constant import BrokerEnum
 
 '''
 
-# 如果@task_deco装饰器没有亲自指定broker_kind入参，则默认使用DEFAULT_BROKER_KIND这个中间件。
+# 如果@boost装饰器没有亲自指定broker_kind入参，则默认使用DEFAULT_BROKER_KIND这个中间件。
 # 强烈推荐安装rabbitmq然后使用 BrokerEnum.RABBITMQ_AMQPSTORM 这个中间件,
 # 次之 BrokerEnum.REDIS_ACK_ABLE中间件，kafka则推荐 BrokerEnum.CONFLUENT_KAFKA。
 # BrokerEnum.PERSISTQUEUE 的优点是基于单机磁盘的消息持久化，不需要安装消息中间件软件就能使用，但不是跨机器的真分布式。

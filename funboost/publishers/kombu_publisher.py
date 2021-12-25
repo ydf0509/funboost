@@ -9,7 +9,7 @@ from kombu.transport.virtual.base import Channel
 from nb_log import LogManager
 
 from funboost.publishers.base_publisher import AbstractPublisher, deco_mq_conn_error
-from funboost import frame_config
+from funboost import funboost_config_deafult
 
 # nb_log.get_logger(name=None,log_level_int=10)
 """
@@ -43,17 +43,17 @@ class KombuPublisher(AbstractPublisher, ):
     """
 
     def custom_init(self):
-        self._kombu_broker_url_prefix = frame_config.KOMBU_URL.split(":")[0]
+        self._kombu_broker_url_prefix = funboost_config_deafult.KOMBU_URL.split(":")[0]
         logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._kombu_broker_url_prefix}--{self._queue_name}'
         self.logger = LogManager(logger_name).get_logger_and_add_handlers(self._log_level_int,
                                                                           log_filename=f'{logger_name}.log' if self._is_add_file_handler else None,
-                                                                          formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
+                                                                          formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
                                                                           )  #
 
     def init_broker(self):
         self.exchange = Exchange('distributed_framework_exchange', 'direct', durable=True)
         self.queue = Queue(self._queue_name, exchange=self.exchange, routing_key=self._queue_name, auto_delete=False)
-        self.conn = Connection(frame_config.KOMBU_URL)
+        self.conn = Connection(funboost_config_deafult.KOMBU_URL)
         self.queue(self.conn).declare()
         self.producer = self.conn.Producer(serializer='json')
         self.channel = self.producer.channel  # type: Channel

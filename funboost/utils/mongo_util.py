@@ -2,7 +2,7 @@
 # @Author  : ydf
 # @Time    : 2019/9/17 0017 15:26
 import pymongo
-from funboost import frame_config
+from funboost import funboost_config_deafult
 from funboost.utils import decorators
 
 
@@ -13,7 +13,7 @@ class MongoMixin:
     @property
     @decorators.cached_method_result
     def mongo_client(self):
-        return pymongo.MongoClient(frame_config.MONGO_CONNECT_URL, connect=False)  # connect等于False原因见注释
+        return pymongo.MongoClient(funboost_config_deafult.MONGO_CONNECT_URL, connect=False)  # connect等于False原因见注释
 
     @property
     @decorators.cached_method_result

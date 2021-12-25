@@ -18,7 +18,7 @@ from pikav1.exceptions import AMQPError as PikaAMQPError
 
 from nb_log import LoggerLevelSetterMixin, LogManager, LoggerMixin
 from funboost.utils import decorators, RedisMixin, time_util
-from funboost import frame_config
+from funboost import funboost_config_deafult
 from funboost.concurrent_pool import CustomThreadPoolExecutor
 
 
@@ -218,7 +218,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}'
         self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level_int,
                                                                           log_filename=f'{logger_name}.log' if is_add_file_handler else None,
-                                                                          formatter_template=frame_config.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
+                                                                          formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
                                                                           )  #
         self.publish_params_checker = PublishParamsChecker(consuming_function) if consuming_function else None
         # self.rabbit_client = RabbitMqFactory(is_use_rabbitpy=is_use_rabbitpy).get_rabbit_cleint()

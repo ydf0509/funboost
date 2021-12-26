@@ -1,6 +1,8 @@
 
 # 1.分布式函数调度框架简介
 
+<p style="color: red">厕所验车 </p>
+
 funboost的旧框架名字是function_scheduling_distributed_framework ,地址： [https://github.com/ydf0509/distributed_framework](https://github.com/ydf0509/distributed_framework)
 
 

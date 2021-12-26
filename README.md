@@ -1,22 +1,8 @@
 
 # 1.分布式函数调度框架简介
 
-<p style="color: red">厕所验车 </p>
-
-```html
-<p style="color: red">厕所验车2 </p>
-```
-<code style="color: #0086fd">
-```diff
-+ 人闲桂花落，
-- 夜静春山空。
-! 月出惊山鸟，
-# 时鸣春涧中。
-```
-</code>
-
-
-funboost的旧框架名字是function_scheduling_distributed_framework ,地址： [https://github.com/ydf0509/distributed_framework](https://github.com/ydf0509/distributed_framework)
+funboost的旧框架名字是function_scheduling_distributed_framework , 关系和兼容性见1.0.3介绍。
+旧框架地址： [https://github.com/ydf0509/distributed_framework](https://github.com/ydf0509/distributed_framework)
 
 
 ## 1.0 github地址和文档地址
@@ -60,7 +46,7 @@ from funboost import xx 和  from function_scheduling_distributed_framework impo
 boost是task_deco的别名，两个都可以使用。在消费函数上写@boost 和 @task_deco是一模一样的，两个都可以使用。
 所以在有的文档或者截图中如果写 
 from  function_scheduling_distributed_framework import task_deco , @task_deco
-用户需要知道效果和from funboost import boost , @boost 是一模一样的。
+用户需要知道效果和from funboost import boost , @boost 是一模一样的。兼容性100%
 </pre>
 
 

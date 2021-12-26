@@ -3,6 +3,19 @@
 
 <p style="color: red">厕所验车 </p>
 
+```html
+<p style="color: red">厕所验车2 </p>
+```
+<code style="color: #0086fd">
+```diff
++ 人闲桂花落，
+- 夜静春山空。
+! 月出惊山鸟，
+# 时鸣春涧中。
+```
+</code>
+
+
 funboost的旧框架名字是function_scheduling_distributed_framework ,地址： [https://github.com/ydf0509/distributed_framework](https://github.com/ydf0509/distributed_framework)
 
 

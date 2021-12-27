@@ -1131,14 +1131,51 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
         else:
             return [idx.decode() for idx in self.redis_db_frame.smembers(self._redis_key_name)]
 
-    def get_all_hearbeat_dict_by_queue_name(self):
+    def get_all_hearbeat_dict_by_queue_name(self) -> typing.List[typing.Dict]:
+        """
+        使用此方法需要相应函数的@boost装饰器  is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息
+        根据队列名查询有哪些活跃的消费者进程
+
+        返回结果例子：
+        ['{"computer_ip": "10.0.195.220", "computer_name": "LAPTOP-7V78BBO2", "consumer_id": 1963691145288,
+        "consumer_uuid": "7bbc2613-fb51-45d0-bba1-5745610c97dd", "hearbeat_datetime_str": "2021-12-27 18:43:51",
+        "hearbeat_timestamp": 1640601831.828885, "process_id": 16896, "queue_name": "test_queue72c",
+         "start_datetime_str": "2021-12-27 18:43:31", "start_timestamp": 1640601811.5244126}',
+
+         '{"computer_ip": "10.0.195.220", "computer_name": "LAPTOP-7V78BBO2", "consumer_id": 2847941691784,
+          "consumer_uuid": "e7ab79e4-51ad-4ed3-9e80-9b61037ff83d", "hearbeat_datetime_str": "2021-12-27 18:43:51",
+          "hearbeat_timestamp": 1640601831.8498905, "process_id": 28324, "queue_name": "test_queue72c",
+          "start_datetime_str": "2021-12-27 18:43:31", "start_timestamp": 1640601811.5244126}',
+
+          '{"computer_ip": "172.16.0.9", "computer_name": "VM_0_9_centos", "consumer_id": 140558753950160,
+          "consumer_uuid": "8ca03fc8-c2fe-4905-97e2-7092ac4dee98", "hearbeat_datetime_str": "2021-12-27 18:43:50",
+          "hearbeat_timestamp": 1640601830.0730562, "process_id": 5587, "queue_name": "test_queue72c",
+          "start_datetime_str": "2021-12-27 17:37:39", "start_timestamp": 1640597859.3914642}',
+
+          '{"computer_ip": "10.0.195.220", "computer_name": "LAPTOP-7V78BBO2", "consumer_id": 2733890198088,
+          "consumer_uuid": "a3519255-f68f-4911-8555-8e93def705e6", "hearbeat_datetime_str": "2021-12-27 18:43:52",
+          "hearbeat_timestamp": 1640601832.7811027, "process_id": 8920, "queue_name": "test_queue72c",
+          "start_datetime_str": "2021-12-27 18:43:32", "start_timestamp": 1640601812.481627}',
+
+          '{"computer_ip": "172.16.0.9", "computer_name": "VM_0_9_centos", "consumer_id": 140558386393552,
+           "consumer_uuid": "bc4cb1bd-6ab5-4638-b531-e71a72390cee", "hearbeat_datetime_str": "2021-12-27 18:43:53",
+           "hearbeat_timestamp": 1640601833.1770551, "process_id": 5586, "queue_name": "test_queue72c",
+            "start_datetime_str": "2021-12-27 17:37:39", "start_timestamp": 1640597859.3828638}']
+
+        """
         if self._queue_name is None:
             raise ValueError('根据队列名获取活跃消费进程信息时候，DistributedConsumerStatistics实例化时候必须传入队列名')
         results = self.redis_db_frame.smembers(self._queue__consumer_identification_map_key_name)
-        return [result.decode() for result in results]
+        return [json.loads(result) for result in results]
 
-    def get_all_hearbeat_dict_by_ip(self, ip=None):
-        ip = ip or nb_log_config_default.computer_ip  # 不传参就查本机ip使用funboost框架运行了哪些消费进程，传参则查询任意机器的消费者进程信息。
+    def get_all_hearbeat_dict_by_ip(self, ip=None) -> typing.List[typing.Dict]:
+        """
+        使用此方法需要相应函数的@boost装饰器  is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息
+        根据机器的ip查询有哪些活跃的消费者进程，ip不传参就查本机ip使用funboost框架运行了哪些消费进程，传参则查询任意机器的消费者进程信息。
+
+        返回结果的格式和上面的 get_all_hearbeat_dict_by_queue_name 方法相同。
+        """
+        ip = ip or nb_log_config_default.computer_ip
         redis_key = f'funboost_hearbeat_server__dict:{ip}'
         results = self.redis_db_frame.smembers(redis_key)
-        return [result.decode() for result in results]
+        return [json.loads(result) for result in results]

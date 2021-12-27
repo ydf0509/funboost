@@ -1072,7 +1072,7 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
     2、记录分布式环境中的活跃消费者的所有消费者 id，如果消费者id不在此里面说明已掉线或关闭，消息可以重新分发，用于不支持服务端天然消费确认的中间件。
     """
 
-    def __init__(self, queue_name: str, consumer_identification: str = None, consumer_identification_map: dict = None):
+    def __init__(self, queue_name: str = None, consumer_identification: str = None, consumer_identification_map: dict = None):
         self._consumer_identification = consumer_identification
         self._consumer_identification_map = consumer_identification_map
         self._queue_name = queue_name
@@ -1132,9 +1132,13 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
             return [idx.decode() for idx in self.redis_db_frame.smembers(self._redis_key_name)]
 
     def get_all_hearbeat_dict_by_queue(self):
+        if self._queue_name is None:
+            raise ValueError('根据队列名获取活跃消费进程信息时候，DistributedConsumerStatistics实例化时候必须传入队列名')
         results = self.redis_db_frame.smembers(self._queue__consumer_identification_map_key_name)
         return [result.decode() for result in results]
 
-    def get_all_hearbeat_dict_by_local_ip(self):
-        results = self.redis_db_frame.smembers(self._server__consumer_identification_map_key_name)
+    def get_all_hearbeat_dict_by_ip(self, ip=None):
+        ip = ip or nb_log_config_default.computer_ip  # 不传参就查本机ip使用funboost框架运行了哪些消费进程，传参则查询任意机器的消费者进程信息。
+        redis_key = f'funboost_hearbeat_server__dict:{ip}'
+        results = self.redis_db_frame.smembers(redis_key)
         return [result.decode() for result in results]

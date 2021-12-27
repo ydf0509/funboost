@@ -1072,7 +1072,7 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
     2、记录分布式环境中的活跃消费者的所有消费者 id，如果消费者id不在此里面说明已掉线或关闭，消息可以重新分发，用于不支持服务端天然消费确认的中间件。
     """
 
-    def __init__(self, queue_name: str, consumer_identification: str=None, consumer_identification_map: dict=None):
+    def __init__(self, queue_name: str, consumer_identification: str = None, consumer_identification_map: dict = None):
         self._consumer_identification = consumer_identification
         self._consumer_identification_map = consumer_identification_map
         self._queue_name = queue_name
@@ -1138,5 +1138,3 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
     def get_all_hearbeat_dict_by_local_ip(self):
         results = self.redis_db_frame.smembers(self._server__consumer_identification_map_key_name)
         return [result.decode() for result in results]
-
-

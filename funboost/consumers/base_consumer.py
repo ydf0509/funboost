@@ -1136,7 +1136,7 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
 
     def get_all_hearbeat_dict_by_queue_name(self) -> typing.List[typing.Dict]:
         """
-        使用此方法需要相应函数的@boost装饰器  is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息.
+        使用此方法需要相应函数的@boost装饰器设置  is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息.
         要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息
         根据队列名查询有哪些活跃的消费者进程
 
@@ -1217,7 +1217,7 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
 
     def get_all_hearbeat_dict_by_ip(self, ip=None) -> typing.List[typing.Dict]:
         """
-        使用此方法需要相应函数的@boost装饰器  is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
+        使用此方法需要相应函数的@boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
         要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息
 
         根据机器的ip查询有哪些活跃的消费者进程，ip不传参就查本机ip使用funboost框架运行了哪些消费进程，传参则查询任意机器的消费者进程信息。

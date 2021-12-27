@@ -8,6 +8,7 @@
 import typing
 import abc
 import copy
+from pathlib import Path
 # from multiprocessing import Process
 import datetime
 # noinspection PyUnresolvedReferences,PyPackageRequirements
@@ -488,6 +489,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                             'start_timestamp': time.time(),
                                             'hearbeat_datetime_str': time_util.DatetimeConverter().datetime_str,
                                             'hearbeat_timestamp': time.time(),
+                                            'consuming_function': self.consuming_function.__name__,
+                                            'code_filename': Path(self.consuming_function.__code__.co_filename).as_posix()
                                             }
 
         self._delay_task_scheduler = BackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE)
@@ -1137,30 +1140,73 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
         根据队列名查询有哪些活跃的消费者进程
 
         返回结果例子：
-        ['{"computer_ip": "10.0.195.220", "computer_name": "LAPTOP-7V78BBO2", "consumer_id": 1963691145288,
-        "consumer_uuid": "7bbc2613-fb51-45d0-bba1-5745610c97dd", "hearbeat_datetime_str": "2021-12-27 18:43:51",
-        "hearbeat_timestamp": 1640601831.828885, "process_id": 16896, "queue_name": "test_queue72c",
-         "start_datetime_str": "2021-12-27 18:43:31", "start_timestamp": 1640601811.5244126}',
-
-         '{"computer_ip": "10.0.195.220", "computer_name": "LAPTOP-7V78BBO2", "consumer_id": 2847941691784,
-          "consumer_uuid": "e7ab79e4-51ad-4ed3-9e80-9b61037ff83d", "hearbeat_datetime_str": "2021-12-27 18:43:51",
-          "hearbeat_timestamp": 1640601831.8498905, "process_id": 28324, "queue_name": "test_queue72c",
-          "start_datetime_str": "2021-12-27 18:43:31", "start_timestamp": 1640601811.5244126}',
-
-          '{"computer_ip": "172.16.0.9", "computer_name": "VM_0_9_centos", "consumer_id": 140558753950160,
-          "consumer_uuid": "8ca03fc8-c2fe-4905-97e2-7092ac4dee98", "hearbeat_datetime_str": "2021-12-27 18:43:50",
-          "hearbeat_timestamp": 1640601830.0730562, "process_id": 5587, "queue_name": "test_queue72c",
-          "start_datetime_str": "2021-12-27 17:37:39", "start_timestamp": 1640597859.3914642}',
-
-          '{"computer_ip": "10.0.195.220", "computer_name": "LAPTOP-7V78BBO2", "consumer_id": 2733890198088,
-          "consumer_uuid": "a3519255-f68f-4911-8555-8e93def705e6", "hearbeat_datetime_str": "2021-12-27 18:43:52",
-          "hearbeat_timestamp": 1640601832.7811027, "process_id": 8920, "queue_name": "test_queue72c",
-          "start_datetime_str": "2021-12-27 18:43:32", "start_timestamp": 1640601812.481627}',
-
-          '{"computer_ip": "172.16.0.9", "computer_name": "VM_0_9_centos", "consumer_id": 140558386393552,
-           "consumer_uuid": "bc4cb1bd-6ab5-4638-b531-e71a72390cee", "hearbeat_datetime_str": "2021-12-27 18:43:53",
-           "hearbeat_timestamp": 1640601833.1770551, "process_id": 5586, "queue_name": "test_queue72c",
-            "start_datetime_str": "2021-12-27 17:37:39", "start_timestamp": 1640597859.3828638}']
+        [{
+                "code_filename": "/codes/funboost/test_frame/my/test_consume.py",
+                "computer_ip": "172.16.0.9",
+                "computer_name": "VM_0_9_centos",
+                "consumer_id": 140477437684048,
+                "consumer_uuid": "79473629-b417-4115-b516-4365b3cdf383",
+                "consuming_function": "f2",
+                "hearbeat_datetime_str": "2021-12-27 19:22:04",
+                "hearbeat_timestamp": 1640604124.4643965,
+                "process_id": 9665,
+                "queue_name": "test_queue72c",
+                "start_datetime_str": "2021-12-27 19:21:24",
+                "start_timestamp": 1640604084.0780013
+            }, {
+                "code_filename": "D:/codes/funboost/test_frame/my/test_consume.py",
+                "computer_ip": "10.0.195.220",
+                "computer_name": "LAPTOP-7V78BBO2",
+                "consumer_id": 1332888312008,
+                "consumer_uuid": "08b8150a-94bc-458f-824a-527eec56909f",
+                "consuming_function": "f2",
+                "hearbeat_datetime_str": "2021-12-27 19:22:05",
+                "hearbeat_timestamp": 1640604125.8598604,
+                "process_id": 35976,
+                "queue_name": "test_queue72c",
+                "start_datetime_str": "2021-12-27 19:21:45",
+                "start_timestamp": 1640604105.4926813
+            }, {
+                "code_filename": "/codes/funboost/test_frame/my/test_consume.py",
+                "computer_ip": "172.16.0.9",
+                "computer_name": "VM_0_9_centos",
+                "consumer_id": 140477070063568,
+                "consumer_uuid": "18905526-dfe7-44f3-b52a-59e33880283a",
+                "consuming_function": "f2",
+                "hearbeat_datetime_str": "2021-12-27 19:22:04",
+                "hearbeat_timestamp": 1640604124.526051,
+                "process_id": 9664,
+                "queue_name": "test_queue72c",
+                "start_datetime_str": "2021-12-27 19:21:24",
+                "start_timestamp": 1640604084.125191
+            }, {
+                "code_filename": "D:/codes/funboost/test_frame/my/test_consume.py",
+                "computer_ip": "10.0.195.220",
+                "computer_name": "LAPTOP-7V78BBO2",
+                "consumer_id": 2042841045256,
+                "consumer_uuid": "efa247ff-73bb-4ab2-a130-cc043e07b071",
+                "consuming_function": "f2",
+                "hearbeat_datetime_str": "2021-12-27 19:22:05",
+                "hearbeat_timestamp": 1640604125.8458576,
+                "process_id": 25760,
+                "queue_name": "test_queue72c",
+                "start_datetime_str": "2021-12-27 19:21:45",
+                "start_timestamp": 1640604105.4936779
+            }, {
+                "code_filename": "D:/codes/funboost/test_frame/my/test_consume.py",
+                "computer_ip": "10.0.195.220",
+                "computer_name": "LAPTOP-7V78BBO2",
+                "consumer_id": 2798478268744,
+                "consumer_uuid": "e0435fc4-b6f7-4a6b-9497-b8519419e405",
+                "consuming_function": "f2",
+                "hearbeat_datetime_str": "2021-12-27 19:22:05",
+                "hearbeat_timestamp": 1640604125.8598604,
+                "process_id": 36708,
+                "queue_name": "test_queue72c",
+                "start_datetime_str": "2021-12-27 19:21:45",
+                "start_timestamp": 1640604105.4936779
+            }
+        ]
 
         """
         if self._queue_name is None:

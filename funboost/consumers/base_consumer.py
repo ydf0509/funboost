@@ -1131,7 +1131,7 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
         else:
             return [idx.decode() for idx in self.redis_db_frame.smembers(self._redis_key_name)]
 
-    def get_all_hearbeat_dict_by_queue(self):
+    def get_all_hearbeat_dict_by_queue_name(self):
         if self._queue_name is None:
             raise ValueError('根据队列名获取活跃消费进程信息时候，DistributedConsumerStatistics实例化时候必须传入队列名')
         results = self.redis_db_frame.smembers(self._queue__consumer_identification_map_key_name)

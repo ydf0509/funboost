@@ -229,6 +229,9 @@ class ConsumersManager:
 
     @classmethod
     def join_all_consumer_shedual_task_thread(cls):
+        '''实现这个主要是为了兼容linux和win，在开启多进程时候兼容。在linux下如果子进程中即使有在一个非守护线程里面运行while 1的逻辑，代码也会很快结束。所以必须把所有循环拉取消息的线程join
+        否则如果只是为了兼容win，压根不需要这里多此一举
+        '''
         # nb_print((cls.schedulal_thread_to_be_join, len(cls.schedulal_thread_to_be_join), '模式：', cls.global_concurrent_mode))
         if cls.schedual_task_always_use_thread:
             for t in cls.schedulal_thread_to_be_join:

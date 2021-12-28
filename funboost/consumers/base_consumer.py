@@ -1092,7 +1092,7 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
         decorators.keep_circulating(5, block=False)(self._show_active_consumer_num)()  # 主要是为快速频繁统计分布式消费者个数，快速调整分布式qps控频率。
 
     def _send_heartbeat_with_dict_value(self, redis_key, ):
-        # 根据机器心跳的，值是字典，按一个机器或者一个队列运行了哪些进程。
+        # 发送当前消费者进程心跳的，值是字典，按一个机器或者一个队列运行了哪些进程。
 
         results = self.redis_db_frame.smembers(redis_key)
         with self.redis_db_frame.pipeline() as p:
@@ -1145,7 +1145,7 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHand
         results = self.redis_db_frame.smembers(redis_key)
         # print(type(results))
         # print(results)
-        # 如果所有机器所有进程都全部关掉了，就没办法还剩一个线程执行删除了，这里还需要判断一次。
+        # 如果所有机器所有进程都全部关掉了，就没办法还剩一个线程执行删除了，这里还需要判断一次15秒。
         active_consumers_processor_info_list = []
         for result in results:
             result_dict = json.loads(result)

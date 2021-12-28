@@ -1,3 +1,0 @@
-import asyncio
-
-asyncio.run()

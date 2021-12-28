@@ -1,0 +1,422 @@
+
+
+/*-- Reset-Code --*/
+	html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,dl,dt,dd,ol,nav ul,nav li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,embed,figure,figcaption,footer,header,hgroup,menu,nav,output,ruby,section,summary,time,mark,audio,video{margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline;}
+	article, aside, details, figcaption, figure,footer, header, hgroup, menu, nav, section {display: block;}
+	ol,ul{list-style:none;margin:0px;padding:0px;}
+	blockquote,q{quotes:none;}
+	blockquote:before,blockquote:after,q:before,q:after{content:'';content:none;}
+	table{border-collapse:collapse;border-spacing:0;}
+	/* start editing from here */
+	a{text-decoration:none;}
+	.txt-rt{text-align:right;}/* text align right */
+	.txt-lt{text-align:left;}/* text align left */
+	.txt-center{text-align:center;}/* text align center */
+	.float-rt{float:right;}/* float right */
+	.float-lt{float:left;}/* float left */
+	.clear{clear:both;}/* clear float */
+	.pos-relative{position:relative;}/* Position Relative */
+	.pos-absolute{position:absolute;}/* Position Absolute */
+	.vertical-base{vertical-align:baseline;}/* vertical align baseline */
+	.vertical-top{vertical-align:top;}/* vertical align top */
+	nav.vertical ul li{display:block;}/* vertical menu */
+	nav.horizontal ul li{display: inline-block;}/* horizontal menu */
+	img{max-width:100%;}
+/*-- //Reset-Code --*/
+body {
+font-family:Verdana;
+	background:url('../images/bg.jpg') no-repeat 0px 0px;
+	background-size: cover;
+	
+	background-attachment: fixed;
+    background-position: center;
+}
+h1,h2,h3,h4,h5,h6{
+	 'Lato', sans-serif;
+	
+}
+h1 {
+    text-align: center;
+    font-size: 42px;
+    margin-top: 50px;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+}
+
+.main-agileinfo{
+	margin:10% auto 13%;
+	width:28%;
+}
+.main-agileinfo h2{
+	color:#fff;
+	font-size:30px;
+	margin-bottom:30px;
+}
+input[type="text"],input[type="password"]{
+	width:87.5%;
+	padding: 15px 45px 15px 10px;
+	background: rgba(255, 255, 255, 0.15);
+	background:#fff;
+	border:none;
+	outline:none;
+	font-size:14px;
+	margin-bottom:20px;
+	background: rgb(255, 255, 255) url("../images/user.png") no-repeat 412px 11px;
+}
+input[type="password"]{
+	background: rgb(255, 255, 255) url("../images/password.png") no-repeat 412px 11px;
+}
+form ul {
+	float: left;
+}
+ul li {
+	list-style: none;
+	display: inline-block;
+}
+ul li input[type="checkbox"] {
+	display: none;
+}
+ul li input[type="checkbox"]+label {
+	position: relative;
+	padding-left: 25px;
+	border: #F0F8FF;
+	color: #FFFFFF;
+	display: inline-block;
+	font-size: 14px;
+
+}
+ul li input[type="checkbox"]+label span:first-child {
+	width: 13px;
+	height: 13px;
+	display: inline-block;
+	border: 1px solid #FFFFFF;
+	position: absolute;
+	top: 1px;
+	left: 4px;
+	bottom: 4px;
+}
+ul li input[type="checkbox"]:checked+label span:first-child:before {
+	content: "";
+	background: url(../images/tick.png)no-repeat;
+	position: absolute;
+	left: 2px;
+	top: 2px;
+	font-size: 10px;
+	width: 10px;
+	height: 10px;
+}
+
+form a {
+	color: #EEE;
+	float: right;
+	font-size: 14px;
+
+}
+input[type="submit"]{
+	background:#e91e63;
+	padding:13px 0;
+	font-size:16px;
+	color:#fff;
+	cursor:pointer;
+	outline:none;
+	transition: 0.5s all;
+	-webkit-transition: 0.5s all;
+	-moz-transition: 0.5s all;
+	-o-transition: 0.5s all;
+	-ms-transition: 0.5s all;
+	width:100%;
+	border:none;
+	margin-top:25px;
+}
+
+input[type="submit"]:hover{
+	background:#081148;
+}
+.footer-w3l p{
+	font-size:14px;
+	line-height:25px;
+	color:#fff;
+	text-align:center;
+	margin-bottom:15px;
+}
+.footer-w3l p a{
+	color:#fff;
+}
+.footer-w3l p a:hover{
+	text-decoration:underline;
+}
+/*-- Responsive --*/
+@media(max-width:1440px){
+	input[type="text"], input[type="password"] {
+		width: 86.5%;
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 370px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 370px 11px;
+	}
+}
+@media(max-width:1366px){
+	input[type="text"], input[type="password"] {
+		width: 85.5%;
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 350px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 350px 11px;
+	}
+}
+@media(max-width:1280px){
+	.main-agileinfo {
+		width: 30%;
+	}
+	input[type="text"], input[type="password"] {
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 349px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 349px 11px;
+	}
+}
+@media(max-width:1080px){
+	.main-agileinfo {
+		width: 35%;
+	}
+	input[type="text"], input[type="password"] {
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 345px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 345px 11px;
+	}
+}
+@media(max-width:1024px){
+	input[type="text"], input[type="password"] {
+		width: 84.5%;
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 325px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 325px 11px;
+	}
+}
+@media(max-width:991px){
+	.main-agileinfo {
+		width: 36%;
+	}
+	input[type="text"], input[type="password"] {
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 324px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 324px 11px;
+	}
+}
+@media(max-width:966px){
+	h1 {
+		font-size: 40px;
+		letter-spacing: 4px;
+	}
+	input[type="text"], input[type="password"] {
+		width: 84%;
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 313px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 313px 11px;
+	}
+}
+@media(max-width:900px){
+	.main-agileinfo {
+		width: 38%;
+	}
+	input[type="text"], input[type="password"] {
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 308px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 308px 11px;
+	}
+}
+@media(max-width:800px){
+	.main-agileinfo {
+		width: 43%;
+	}
+	input[type="text"], input[type="password"] {
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 310px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 310px 11px;
+	}
+}
+@media(max-width:768px){
+	.main-agileinfo {
+		width: 45%;
+	}
+	input[type="text"], input[type="password"] {
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 313px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 313px 11px;
+	}
+}
+@media(max-width:736px){
+	.main-agileinfo {
+		width: 47%;
+	}
+	input[type="text"], input[type="password"] {
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 304px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 304px 11px;
+	}
+}
+@media(max-width:667px){
+	h1 {
+		font-size: 38px;
+		letter-spacing: 3.5px;
+	}
+	.main-agileinfo {
+		width: 51%;
+	}
+	input[type="text"], input[type="password"] {
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 300px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 300px 11px;
+	}
+}
+@media(max-width:640px){
+	.main-agileinfo {
+		width: 53%;
+	}
+	input[type="text"], input[type="password"] {
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 304px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 304px 11px;
+	}
+}
+@media(max-width:600px){
+	h1{
+		margin-top:40px;
+	}
+	.main-agileinfo {
+		width: 57%;
+		margin: 8% auto 10%;
+	}
+	input[type="text"], input[type="password"] {
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 299px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 299px 11px;
+	}
+}
+@media(max-width:568px){
+	h1 {
+		font-size: 36px;
+		letter-spacing: 3px;
+	}
+	.main-agileinfo h2 {
+		font-size: 27.5px;
+	}
+	.main-agileinfo {
+		width: 61%;
+	}
+	input[type="text"], input[type="password"] {
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 303px 11px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 303px 11px;
+	}
+}
+@media(max-width:480px){
+	h1 {
+		font-size: 33px;
+	}
+	.main-agileinfo h2 {
+		font-size: 26.5px;
+	}
+	.main-agileinfo {
+		width: 68%;
+	}
+	input[type="text"], input[type="password"] {
+		width: 83%;
+	}
+	.footer-w3l p {
+		width: 97%;
+		margin: 0 auto;
+	}
+}
+@media(max-width:414px){
+	h1 {
+		font-size: 28px;
+	}
+	.main-agileinfo h2 {
+		font-size: 25.5px;
+	}
+	input[type="text"], input[type="password"] {
+		padding: 12px 45px 12px 10px;
+		width:80.5%;
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 248px 9px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 248px 9px;
+	}
+	input[type="submit"] {
+		padding: 11px 0;
+	}
+	
+}
+@media(max-width:384px){
+	h1 {
+		font-size: 26px;
+	}
+	.main-agileinfo h2 {
+		font-size: 23.5px;
+	}
+	input[type="text"], input[type="password"] {
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 227px 8px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 227px 8px;
+	}
+	
+}
+@media(max-width:375px){
+input[type="text"], input[type="password"] {
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 225px 8px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 225px 8px;
+	}
+}
+@media(max-width:320px){
+	h1 {
+		font-size: 24px;
+		letter-spacing:1.5px;
+	}
+	.main-agileinfo {
+		width: 78%;
+	}
+	.main-agileinfo h2 {
+		font-size: 21.5px;
+	}
+	input[type="text"], input[type="password"] {
+		width: 77.5%;
+	}
+	ul li input[type="checkbox"]+label span:first-child {
+		width: 12px;
+		height: 12px;
+	}
+	ul li input[type="checkbox"]+label {
+		padding-left: 20px;
+		font-size: 12px;
+	}		
+	form a {
+		font-size: 12px;
+	}
+	input[type="text"], input[type="password"] {
+		background: rgb(255, 255, 255) url("../images/user.png") no-repeat 215px 8px;
+	}
+	input[type="password"]{
+		background: rgb(255, 255, 255) url("../images/password.png") no-repeat 215px 8px;
+	}
+	ul li input[type="checkbox"]:checked+label span:first-child:before {
+		left: 1px;
+		top: 2px;
+	}
+}

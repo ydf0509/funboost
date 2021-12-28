@@ -1,0 +1,2 @@
+测试使用gevent并发模式。设置concurent_mode为2
+默认是使用了线程。

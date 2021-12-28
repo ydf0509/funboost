@@ -12,7 +12,7 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
     redis 的 stream 结构 作为中间件实现的。需要redis 5.0以上，redis stream结构 是redis的消息队列，概念类似kafka，功能远超 list结构。
     """
     BROKER_KIND = 12
-    GROUP = 'distributed_frame_group'
+    GROUP = 'funboost_group'
 
     def start_consuming_message(self):
         redis_server_info_dict = self.redis_db_frame_version3.info()
@@ -60,7 +60,7 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
         #                                     min_idle_time=0, message_ids=[kw['msg_id']]))
 
     def _requeue_tasks_which_unconfirmed(self):
-        lock_key = f'fsdf_lock__requeue_tasks_which_unconfirmed:{self._queue_name}'
+        lock_key = f'funboost_lock__requeue_tasks_which_unconfirmed:{self._queue_name}'
         with decorators.RedisDistributedLockContextManager(self.redis_db_frame, lock_key, ) as lock:
             if lock.has_aquire_lock:
                 self._distributed_consumer_statistics.send_heartbeat()

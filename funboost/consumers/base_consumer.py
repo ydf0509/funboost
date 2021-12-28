@@ -8,6 +8,7 @@
 import typing
 import abc
 import copy
+from pathlib import Path
 # from multiprocessing import Process
 import datetime
 # noinspection PyUnresolvedReferences,PyPackageRequirements
@@ -42,7 +43,8 @@ from pymongo.errors import PyMongoError
 
 # noinspection PyUnresolvedReferences
 from nb_log import get_logger, LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, \
-    LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write, is_main_process, only_print_on_main_process
+    LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write, is_main_process, \
+    only_print_on_main_process, nb_log_config_default
 # noinspection PyUnresolvedReferences
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
@@ -158,7 +160,7 @@ class FunctionResultStatusPersistanceConfig(LoggerMixin):
         :param is_save_status:
         :param is_save_result:
         :param expire_seconds: 设置统计的过期时间，在mongo里面自动会移除这些过期的执行记录。
-        :param is_use_bulk_insert : 是否使用批量插入来保存结果，批量插入是每隔2秒钟保存一次最近0.5秒内的所有的函数消费状态结果。为False则，每完成一次函数就实时写入一次到mongo。
+        :param is_use_bulk_insert : 是否使用批量插入来保存结果，批量插入是每隔0.5秒钟保存一次最近0.5秒内的所有的函数消费状态结果。为False则，每完成一次函数就实时写入一次到mongo。
         """
 
         if not is_save_status and is_save_result:
@@ -194,7 +196,7 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
                 self.logger.warning(e)
             # self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
             self.task_status_col = task_status_col
-            self.logger.info(f"函数运行状态结果将保存至mongo的 task_status 库的 {queue_name} 集合中，请确认 distributed_frame_config.py文件中配置的 MONGO_CONNECT_URL")
+            self.logger.info(f"函数运行状态结果将保存至mongo的 task_status 库的 {queue_name} 集合中，请确认 funboost.py文件中配置的 MONGO_CONNECT_URL")
 
     def save_function_result_to_mongo(self, function_result_status: FunctionResultStatus):
         if self.function_result_status_persistance_conf.is_save_status:
@@ -475,7 +477,21 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._publisher_of_same_queue = None
 
-        self.consumer_identification = f'{socket.gethostname()}_{time_util.DatetimeConverter().datetime_str.replace(":", "-")}_{os.getpid()}_{id(self)}'
+        self.consumer_identification = f'{nb_log_config_default.computer_name}_{nb_log_config_default.computer_ip}_' \
+                                       f'{time_util.DatetimeConverter().datetime_str.replace(":", "-")}_{os.getpid()}_{id(self)}'
+        self.consumer_identification_map = {'queue_name': self.queue_name,
+                                            'computer_name': nb_log_config_default.computer_name,
+                                            'computer_ip': nb_log_config_default.computer_ip,
+                                            'process_id': os.getpid(),
+                                            'consumer_id': id(self),
+                                            'consumer_uuid': str(uuid.uuid4()),
+                                            'start_datetime_str': time_util.DatetimeConverter().datetime_str,
+                                            'start_timestamp': time.time(),
+                                            'hearbeat_datetime_str': time_util.DatetimeConverter().datetime_str,
+                                            'hearbeat_timestamp': time.time(),
+                                            'consuming_function': self.consuming_function.__name__,
+                                            'code_filename': Path(self.consuming_function.__code__.co_filename).as_posix()
+                                            }
 
         self._delay_task_scheduler = BackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE)
         self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
@@ -550,7 +566,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             os._exit(4444)  # noqa
         self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
         if self._is_send_consumer_hearbeat_to_redis:
-            self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name, self.consumer_identification)
+            self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name, self.consumer_identification, self.consumer_identification_map)
             self._distributed_consumer_statistics.run()
             self.logger.warning(f'启动了分布式环境 使用 redis 的键 hearbeat:{self._queue_name} 统计活跃消费者 ，当前消费者唯一标识为 {self.consumer_identification}')
         self.keep_circulating(10, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
@@ -896,7 +912,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             """ 原来的简单版 """
             time.sleep(msg_schedule_time_intercalx)
         elif 5 < qpsx <= 20:
-            """ 改进的控频版,防止消息队列中间件网络波动，例如1000qps使用redis,不能每次间隔1毫秒取下一条消息，如果取某条消息有消息超过了1毫秒，后面不能匀速间隔1毫秒获取，time.sleep不能休眠一个负数来让时光倒流"""
+            """ 改进的控频版,防止消息队列中间件网络波动，例如1000qps使用redis,不能每次间隔1毫秒取下一条消息，
+            如果取某条消息有消息超过了1毫秒，后面不能匀速间隔1毫秒获取，time.sleep不能休眠一个负数来让时光倒流"""
             time_sleep_for_qps_control = max((msg_schedule_time_intercalx - (time.time() - self._last_submit_task_timestamp)) * 0.99, 10 ** -3)
             # print(time.time() - self._last_submit_task_timestamp)
             # print(time_sleep_for_qps_control)
@@ -1058,27 +1075,52 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
     2、记录分布式环境中的活跃消费者的所有消费者 id，如果消费者id不在此里面说明已掉线或关闭，消息可以重新分发，用于不支持服务端天然消费确认的中间件。
     """
 
-    def __init__(self, queue_name: str, consumer_identification: str):
+    def __init__(self, queue_name: str = None, consumer_identification: str = None, consumer_identification_map: dict = None):
         self._consumer_identification = consumer_identification
+        self._consumer_identification_map = consumer_identification_map
         self._queue_name = queue_name
-        self._redis_key_name = f'hearbeat:{queue_name}'
+        self._redis_key_name = f'funboost_hearbeat_queue__str:{queue_name}'
         self.active_consumer_num = 1
         self._last_show_consumer_num_timestamp = 0
+
+        self._queue__consumer_identification_map_key_name = f'funboost_hearbeat_queue__dict:{self._queue_name}'
+        self._server__consumer_identification_map_key_name = f'funboost_hearbeat_server__dict:{nb_log_config_default.computer_ip}'
 
     def run(self):
         self.send_heartbeat()
         decorators.keep_circulating(10, block=False)(self.send_heartbeat)()
-        decorators.keep_circulating(5, block=False)(self._show_active_consumer_num)()
+        decorators.keep_circulating(5, block=False)(self._show_active_consumer_num)()  # 主要是为快速频繁统计分布式消费者个数，快速调整分布式qps控频率。
+
+    def _send_heartbeat_with_dict_value(self, redis_key, ):
+        # 根据机器心跳的，值是字典，按一个机器或者一个队列运行了哪些进程。
+
+        results = self.redis_db_frame.smembers(redis_key)
+        with self.redis_db_frame.pipeline() as p:
+            for result in results:
+                result_dict = json.loads(result)
+                if time.time() - result_dict['hearbeat_timestamp'] > 15 \
+                        or self._consumer_identification_map['consumer_uuid'] == result_dict['consumer_uuid']:
+                    # 因为这个是10秒钟运行一次，15秒还没更新，那肯定是掉线了。如果消费者本身是自己也先删除。
+                    p.srem(redis_key, result)
+            self._consumer_identification_map['hearbeat_datetime_str'] = time_util.DatetimeConverter().datetime_str
+            self._consumer_identification_map['hearbeat_timestamp'] = time.time()
+            value = json.dumps(self._consumer_identification_map, sort_keys=True)
+            p.sadd(redis_key, value)
+            p.execute()
 
     def send_heartbeat(self):
+        # 根据队列名心跳的，值是字符串，方便值作为其他redis的键名
         results = self.redis_db_frame.smembers(self._redis_key_name)
         with self.redis_db_frame.pipeline() as p:
             for result in results:
                 if time.time() - float(result.decode().split('&&')[-1]) > 15 or \
-                        self._consumer_identification == result.decode().split('&&')[0]:
+                        self._consumer_identification == result.decode().split('&&')[0]:  # 因为这个是10秒钟运行一次，15秒还没更新，那肯定是掉线了。如果消费者本身是自己也先删除。
                     p.srem(self._redis_key_name, result)
             p.sadd(self._redis_key_name, f'{self._consumer_identification}&&{time.time()}')
             p.execute()
+
+        self._send_heartbeat_with_dict_value(self._queue__consumer_identification_map_key_name)
+        self._send_heartbeat_with_dict_value(self._server__consumer_identification_map_key_name)
 
     def _show_active_consumer_num(self):
         self.active_consumer_num = self.redis_db_frame.scard(self._redis_key_name) or 1
@@ -1091,3 +1133,86 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
             return [idx.decode().split('&&')[0] for idx in self.redis_db_frame.smembers(self._redis_key_name)]
         else:
             return [idx.decode() for idx in self.redis_db_frame.smembers(self._redis_key_name)]
+
+
+class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHandler):
+    """
+    获取分布式环境中的消费进程信息。
+    使用这里面的4个方法需要相应函数的@boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
+    """
+
+    def _get_all_hearbeat_info_by_redis_key_name(self, redis_key):
+        results = self.redis_db_frame.smembers(redis_key)
+        # print(type(results))
+        # print(results)
+        # 如果所有机器所有进程都全部关掉了，就没办法还剩一个线程执行删除了，这里还需要判断一次。
+        active_consumers_processor_info_list = []
+        for result in results:
+            result_dict = json.loads(result)
+            if time.time() - result_dict['hearbeat_timestamp'] < 15:
+                active_consumers_processor_info_list.append(result_dict)
+        return active_consumers_processor_info_list
+
+    def get_all_hearbeat_info_by_queue_name(self, queue_name) -> typing.List[typing.Dict]:
+        """
+        使用此方法需要相应函数的@boost装饰器设置  is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息.
+        要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息
+        根据队列名查询有哪些活跃的消费者进程
+
+        返回结果例子：
+        [{
+                "code_filename": "/codes/funboost/test_frame/my/test_consume.py",
+                "computer_ip": "172.16.0.9",
+                "computer_name": "VM_0_9_centos",
+                "consumer_id": 140477437684048,
+                "consumer_uuid": "79473629-b417-4115-b516-4365b3cdf383",
+                "consuming_function": "f2",
+                "hearbeat_datetime_str": "2021-12-27 19:22:04",
+                "hearbeat_timestamp": 1640604124.4643965,
+                "process_id": 9665,
+                "queue_name": "test_queue72c",
+                "start_datetime_str": "2021-12-27 19:21:24",
+                "start_timestamp": 1640604084.0780013
+            }, ...............]
+        """
+        redis_key = f'funboost_hearbeat_queue__dict:{queue_name}'
+        return self._get_all_hearbeat_info_by_redis_key_name(redis_key)
+
+    def get_all_hearbeat_info_by_ip(self, ip=None) -> typing.List[typing.Dict]:
+        """
+        使用此方法需要相应函数的@boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
+        要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息
+
+        根据机器的ip查询有哪些活跃的消费者进程，ip不传参就查本机ip使用funboost框架运行了哪些消费进程，传参则查询任意机器的消费者进程信息。
+        返回结果的格式和上面的 get_all_hearbeat_dict_by_queue_name 方法相同。
+        """
+        ip = ip or nb_log_config_default.computer_ip
+        redis_key = f'funboost_hearbeat_server__dict:{ip}'
+        return self._get_all_hearbeat_info_by_redis_key_name(redis_key)
+
+    def _get_all_hearbeat_info_partition_by_redis_key_prefix(self, redis_key_prefix):
+        keys = self.redis_db_frame.scan(0, f'{redis_key_prefix}*', 10000)[1]
+        infos_map = {}
+        for key in keys:
+            key = key.decode()
+            infos = self.redis_db_frame.smembers(key)
+            dict_key = key.replace(redis_key_prefix, '')
+            infos_map[dict_key] = []
+            for info_str in infos:
+                info_dict = json.loads(info_str)
+                if time.time() - info_dict['hearbeat_timestamp'] < 15:
+                    infos_map[dict_key].append(info_dict)
+        return infos_map
+
+    def get_all_hearbeat_info_partition_by_queue_name(self) -> typing.Dict[typing.AnyStr, typing.List[typing.Dict]]:
+        """获取所有队列对应的活跃消费者进程信息，按队列名划分,不需要传入队列名，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对"""
+
+        infos_map = self._get_all_hearbeat_info_partition_by_redis_key_prefix('funboost_hearbeat_queue__dict:')
+        self.logger.info(f'获取所有队列对应的活跃消费者进程信息，按队列名划分，结果是 {json.dumps(infos_map, indent=4)}')
+        return infos_map
+
+    def get_all_hearbeat_info_partition_by_ip(self) -> typing.Dict[typing.AnyStr, typing.List[typing.Dict]]:
+        """获取所有机器ip对应的活跃消费者进程信息，按机器ip划分,不需要传入机器ip，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对"""
+        infos_map = self._get_all_hearbeat_info_partition_by_redis_key_prefix('funboost_hearbeat_server__dict:')
+        self.logger.info(f'获取所有机器ip对应的活跃消费者进程信息，按机器ip划分，结果是 {json.dumps(infos_map, indent=4)}')
+        return infos_map

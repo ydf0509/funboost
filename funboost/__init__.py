@@ -10,7 +10,8 @@ from funboost.utils.paramiko_util import ParamikoFolderUploader
 from funboost.consumers.base_consumer import (ExceptionForRequeue, ExceptionForRetry,
                                               AbstractConsumer, ConsumersManager,
                                               FunctionResultStatusPersistanceConfig,
-                                              wait_for_possible_has_finish_all_tasks_by_conusmer_list)
+                                              wait_for_possible_has_finish_all_tasks_by_conusmer_list,
+                                              ActiveCousumerProcessInfoGetter)
 from funboost.publishers.base_publisher import (PriorityConsumingControlConfig,
                                                 AbstractPublisher, AsyncResult, HasNotAsyncResult)
 from funboost.factories.publisher_factotry import get_publisher
@@ -26,7 +27,8 @@ nb_log.get_logger(name=None, log_level_int=30, log_filename='pywarning.log')
 
 logger = nb_log.get_logger('funboost')
 
-logger.debug(f'\n 分布式函数调度框架文档地址：  https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/')
+logger.debug(f'\n 分布式函数调度框架文档地址：  https://funboost.readthedocs.io/zh_CN/latest/')
+
 
 class IdeAutoCompleteHelper(LoggerMixin):
     """
@@ -64,6 +66,8 @@ class IdeAutoCompleteHelper(LoggerMixin):
         """
         self.is_decorated_as_consume_function = consuming_func_decorated.is_decorated_as_consume_function
         self.consuming_func_decorated = consuming_func_decorated
+
+        self.queue_name = consuming_func_decorated.queue_name
 
         self.consumer = consuming_func_decorated.consumer  # type: AbstractConsumer
 
@@ -116,7 +120,6 @@ class IdeAutoCompleteHelper(LoggerMixin):
         return self.consuming_func_decorated(*args, **kwargs)
 
 
-
 def boost(queue_name, *, function_timeout=0,
           concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=ConcurrentModeEnum.THREADING,
           max_retry_times=3, log_level=10, is_print_detail_exception=True, is_show_message_get_from_broker=False,
@@ -128,7 +131,6 @@ def boost(queue_name, *, function_timeout=0,
           function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600),
           is_using_rpc_mode=False,
           broker_kind: int = None):
-
     """
     # 为了代码提示好，这里重复一次入参意义。被此装饰器装饰的函数f，函数f对象本身自动加了一些方法，例如f.push 、 f.consume等。
     :param queue_name: 队列名字。
@@ -218,6 +220,7 @@ def boost(queue_name, *, function_timeout=0,
         consumer = get_consumer(consuming_function=func, **consumer_init_params)
         func.is_decorated_as_consume_function = True
         func.consumer = consumer
+        func.queue_name = queue_name
         # 下面这些连等主要是由于元编程造成的不能再ide下智能补全，参数太长很难手动拼写出来
 
         func.publisher = consumer.publisher_of_same_queue
@@ -244,4 +247,4 @@ def boost(queue_name, *, function_timeout=0,
     return _deco  # noqa
 
 
-task_deco =  boost  # 两个装饰器名字都可以。task_deco是原来名字，boost是新名字，兼容一下。
+task_deco = boost  # 两个装饰器名字都可以。task_deco是原来名字，兼容一下。

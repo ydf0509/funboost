@@ -1,2 +1,2 @@
 include README.md
-recursive-include function_scheduling_distributed_framework/function_result_web *
+recursive-include funboost/function_result_web *

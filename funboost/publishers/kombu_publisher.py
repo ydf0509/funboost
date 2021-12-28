@@ -51,7 +51,7 @@ class KombuPublisher(AbstractPublisher, ):
                                                                           )  #
 
     def init_broker(self):
-        self.exchange = Exchange('distributed_framework_exchange', 'direct', durable=True)
+        self.exchange = Exchange('funboost_exchange', 'direct', durable=True)
         self.queue = Queue(self._queue_name, exchange=self.exchange, routing_key=self._queue_name, auto_delete=False)
         self.conn = Connection(funboost_config_deafult.KOMBU_URL)
         self.queue(self.conn).declare()

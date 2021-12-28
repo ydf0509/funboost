@@ -217,7 +217,7 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
                         self._bulk_list.clear()
                         self._last_bulk_insert_time = time.time()
             else:
-                self.task_status_col.insert_one(item2)  # 立即试试插入。
+                self.task_status_col.insert_one(item2)  # 立即实时插入。
 
 
 class ConsumersManager:

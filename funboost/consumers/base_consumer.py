@@ -1136,6 +1136,11 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
 
 
 class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHandler):
+    """
+    获取分布式环境中的消费进程信息。
+    使用这里面的4个方法需要相应函数的@boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
+    """
+
     def _get_all_hearbeat_info_by_redis_key_name(self, redis_key):
         results = self.redis_db_frame.smembers(redis_key)
         # print(type(results))

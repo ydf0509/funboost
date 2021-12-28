@@ -244,4 +244,4 @@ def boost(queue_name, *, function_timeout=0,
     return _deco  # noqa
 
 
-task_deco =  boost  # 两个装饰器名字都可以。task_deco是原来名字，兼容一下。
+task_deco =  boost  # 两个装饰器名字都可以。task_deco是原来名字，boost是新名字，兼容一下。

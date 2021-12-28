@@ -160,7 +160,7 @@ class FunctionResultStatusPersistanceConfig(LoggerMixin):
         :param is_save_status:
         :param is_save_result:
         :param expire_seconds: 设置统计的过期时间，在mongo里面自动会移除这些过期的执行记录。
-        :param is_use_bulk_insert : 是否使用批量插入来保存结果，批量插入是每隔2秒钟保存一次最近0.5秒内的所有的函数消费状态结果。为False则，每完成一次函数就实时写入一次到mongo。
+        :param is_use_bulk_insert : 是否使用批量插入来保存结果，批量插入是每隔0.5秒钟保存一次最近0.5秒内的所有的函数消费状态结果。为False则，每完成一次函数就实时写入一次到mongo。
         """
 
         if not is_save_status and is_save_result:
@@ -1134,7 +1134,21 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
         else:
             return [idx.decode() for idx in self.redis_db_frame.smembers(self._redis_key_name)]
 
-    def get_all_hearbeat_dict_by_queue_name(self) -> typing.List[typing.Dict]:
+
+class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHandler):
+    def _get_all_hearbeat_info_by_redis_key_name(self, redis_key):
+        results = self.redis_db_frame.smembers(redis_key)
+        # print(type(results))
+        # print(results)
+        # 如果所有机器所有进程都全部关掉了，就没办法还剩一个线程执行删除了，这里还需要判断一次。
+        active_consumers_processor_info_list = []
+        for result in results:
+            result_dict = json.loads(result)
+            if time.time() - result_dict['hearbeat_timestamp'] < 15:
+                active_consumers_processor_info_list.append(result_dict)
+        return active_consumers_processor_info_list
+
+    def get_all_hearbeat_info_by_queue_name(self, queue_name) -> typing.List[typing.Dict]:
         """
         使用此方法需要相应函数的@boost装饰器设置  is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息.
         要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息
@@ -1154,68 +1168,12 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
                 "queue_name": "test_queue72c",
                 "start_datetime_str": "2021-12-27 19:21:24",
                 "start_timestamp": 1640604084.0780013
-            }, {
-                "code_filename": "D:/codes/funboost/test_frame/my/test_consume.py",
-                "computer_ip": "10.0.195.220",
-                "computer_name": "LAPTOP-7V78BBO2",
-                "consumer_id": 1332888312008,
-                "consumer_uuid": "08b8150a-94bc-458f-824a-527eec56909f",
-                "consuming_function": "f2",
-                "hearbeat_datetime_str": "2021-12-27 19:22:05",
-                "hearbeat_timestamp": 1640604125.8598604,
-                "process_id": 35976,
-                "queue_name": "test_queue72c",
-                "start_datetime_str": "2021-12-27 19:21:45",
-                "start_timestamp": 1640604105.4926813
-            }, {
-                "code_filename": "/codes/funboost/test_frame/my/test_consume.py",
-                "computer_ip": "172.16.0.9",
-                "computer_name": "VM_0_9_centos",
-                "consumer_id": 140477070063568,
-                "consumer_uuid": "18905526-dfe7-44f3-b52a-59e33880283a",
-                "consuming_function": "f2",
-                "hearbeat_datetime_str": "2021-12-27 19:22:04",
-                "hearbeat_timestamp": 1640604124.526051,
-                "process_id": 9664,
-                "queue_name": "test_queue72c",
-                "start_datetime_str": "2021-12-27 19:21:24",
-                "start_timestamp": 1640604084.125191
-            }, {
-                "code_filename": "D:/codes/funboost/test_frame/my/test_consume.py",
-                "computer_ip": "10.0.195.220",
-                "computer_name": "LAPTOP-7V78BBO2",
-                "consumer_id": 2042841045256,
-                "consumer_uuid": "efa247ff-73bb-4ab2-a130-cc043e07b071",
-                "consuming_function": "f2",
-                "hearbeat_datetime_str": "2021-12-27 19:22:05",
-                "hearbeat_timestamp": 1640604125.8458576,
-                "process_id": 25760,
-                "queue_name": "test_queue72c",
-                "start_datetime_str": "2021-12-27 19:21:45",
-                "start_timestamp": 1640604105.4936779
-            }, {
-                "code_filename": "D:/codes/funboost/test_frame/my/test_consume.py",
-                "computer_ip": "10.0.195.220",
-                "computer_name": "LAPTOP-7V78BBO2",
-                "consumer_id": 2798478268744,
-                "consumer_uuid": "e0435fc4-b6f7-4a6b-9497-b8519419e405",
-                "consuming_function": "f2",
-                "hearbeat_datetime_str": "2021-12-27 19:22:05",
-                "hearbeat_timestamp": 1640604125.8598604,
-                "process_id": 36708,
-                "queue_name": "test_queue72c",
-                "start_datetime_str": "2021-12-27 19:21:45",
-                "start_timestamp": 1640604105.4936779
-            }
-        ]
-
+            }, ...............]
         """
-        if self._queue_name is None:
-            raise ValueError('根据队列名获取活跃消费进程信息时候，DistributedConsumerStatistics实例化时候必须传入队列名')
-        results = self.redis_db_frame.smembers(self._queue__consumer_identification_map_key_name)
-        return [json.loads(result) for result in results]
+        redis_key = f'funboost_hearbeat_queue__dict:{queue_name}'
+        return self._get_all_hearbeat_info_by_redis_key_name(redis_key)
 
-    def get_all_hearbeat_dict_by_ip(self, ip=None) -> typing.List[typing.Dict]:
+    def get_all_hearbeat_info_by_ip(self, ip=None) -> typing.List[typing.Dict]:
         """
         使用此方法需要相应函数的@boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
         要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息
@@ -1225,5 +1183,31 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
         """
         ip = ip or nb_log_config_default.computer_ip
         redis_key = f'funboost_hearbeat_server__dict:{ip}'
-        results = self.redis_db_frame.smembers(redis_key)
-        return [json.loads(result) for result in results]
+        return self._get_all_hearbeat_info_by_redis_key_name(redis_key)
+
+    def _get_all_hearbeat_info_partition_by_redis_key_prefix(self, redis_key_prefix):
+        keys = self.redis_db_frame.scan(0, f'{redis_key_prefix}*', 10000)[1]
+        infos_map = {}
+        for key in keys:
+            key = key.decode()
+            infos = self.redis_db_frame.smembers(key)
+            dict_key = key.replace(redis_key_prefix, '')
+            infos_map[dict_key] = []
+            for info_str in infos:
+                info_dict = json.loads(info_str)
+                if time.time() - info_dict['hearbeat_timestamp'] < 15:
+                    infos_map[dict_key].append(info_dict)
+        return infos_map
+
+    def get_all_hearbeat_info_partition_by_queue_name(self) -> typing.Dict[typing.AnyStr, typing.List[typing.Dict]]:
+        """获取所有队列对应的活跃消费者进程信息，按队列名划分,不需要传入队列名，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对"""
+
+        infos_map = self._get_all_hearbeat_info_partition_by_redis_key_prefix('funboost_hearbeat_queue__dict:')
+        self.logger.info(f'获取所有队列对应的活跃消费者进程信息，按队列名划分，结果是 {json.dumps(infos_map, indent=4)}')
+        return infos_map
+
+    def get_all_hearbeat_info_partition_by_ip(self) -> typing.Dict[typing.AnyStr, typing.List[typing.Dict]]:
+        """获取所有机器ip对应的活跃消费者进程信息，按机器ip划分,不需要传入机器ip，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对"""
+        infos_map = self._get_all_hearbeat_info_partition_by_redis_key_prefix('funboost_hearbeat_server__dict:')
+        self.logger.info(f'获取所有机器ip对应的活跃消费者进程信息，按机器ip划分，结果是 {json.dumps(infos_map, indent=4)}')
+        return infos_map

@@ -11,7 +11,7 @@ from funboost.consumers.base_consumer import (ExceptionForRequeue, ExceptionForR
                                               AbstractConsumer, ConsumersManager,
                                               FunctionResultStatusPersistanceConfig,
                                               wait_for_possible_has_finish_all_tasks_by_conusmer_list,
-                                              DistributedConsumerStatistics)
+                                              ActiveCousumerProcessInfoGetter)
 from funboost.publishers.base_publisher import (PriorityConsumingControlConfig,
                                                 AbstractPublisher, AsyncResult, HasNotAsyncResult)
 from funboost.factories.publisher_factotry import get_publisher

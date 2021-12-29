@@ -1137,8 +1137,10 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
 
 class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHandler):
     """
-    获取分布式环境中的消费进程信息。
-    使用这里面的4个方法需要相应函数的@boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
+    获取分布式环境中的活跃消费进程信息。
+
+    使用这里面的4个方法需要相应函数的 @boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
+    要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息
     """
 
     def _get_all_hearbeat_info_by_redis_key_name(self, redis_key):
@@ -1155,8 +1157,6 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHand
 
     def get_all_hearbeat_info_by_queue_name(self, queue_name) -> typing.List[typing.Dict]:
         """
-        使用此方法需要相应函数的@boost装饰器设置  is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息.
-        要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息
         根据队列名查询有哪些活跃的消费者进程
 
         返回结果例子：
@@ -1180,10 +1180,6 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHand
 
     def get_all_hearbeat_info_by_ip(self, ip=None) -> typing.List[typing.Dict]:
         """
-        使用此方法需要相应函数的@boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
-        要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息
-
-        根据机器的ip查询有哪些活跃的消费者进程，ip不传参就查本机ip使用funboost框架运行了哪些消费进程，传参则查询任意机器的消费者进程信息。
         返回结果的格式和上面的 get_all_hearbeat_dict_by_queue_name 方法相同。
         """
         ip = ip or nb_log_config_default.computer_ip
@@ -1206,7 +1202,6 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHand
 
     def get_all_hearbeat_info_partition_by_queue_name(self) -> typing.Dict[typing.AnyStr, typing.List[typing.Dict]]:
         """获取所有队列对应的活跃消费者进程信息，按队列名划分,不需要传入队列名，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对"""
-
         infos_map = self._get_all_hearbeat_info_partition_by_redis_key_prefix('funboost_hearbeat_queue__dict:')
         self.logger.info(f'获取所有队列对应的活跃消费者进程信息，按队列名划分，结果是 {json.dumps(infos_map, indent=4)}')
         return infos_map

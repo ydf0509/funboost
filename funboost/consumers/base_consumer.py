@@ -217,7 +217,7 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
                         self._bulk_list.clear()
                         self._last_bulk_insert_time = time.time()
             else:
-                self.task_status_col.insert_one(item2)  # 立即试试插入。
+                self.task_status_col.insert_one(item2)  # 立即实时插入。
 
 
 class ConsumersManager:
@@ -229,6 +229,9 @@ class ConsumersManager:
 
     @classmethod
     def join_all_consumer_shedual_task_thread(cls):
+        '''实现这个主要是为了兼容linux和win，在开启多进程时候兼容。在linux下如果子进程中即使有在一个非守护线程里面运行while 1的逻辑，代码也会很快结束。所以必须把所有循环拉取消息的线程join
+        否则如果只是为了兼容win，压根不需要这里多此一举
+        '''
         # nb_print((cls.schedulal_thread_to_be_join, len(cls.schedulal_thread_to_be_join), '模式：', cls.global_concurrent_mode))
         if cls.schedual_task_always_use_thread:
             for t in cls.schedulal_thread_to_be_join:
@@ -1075,7 +1078,7 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
     2、记录分布式环境中的活跃消费者的所有消费者 id，如果消费者id不在此里面说明已掉线或关闭，消息可以重新分发，用于不支持服务端天然消费确认的中间件。
     """
 
-    def __init__(self, queue_name: str = None, consumer_identification: str = None, consumer_identification_map: dict = None):
+    def __init__(self, queue_name: str, consumer_identification: str, consumer_identification_map: dict):
         self._consumer_identification = consumer_identification
         self._consumer_identification_map = consumer_identification_map
         self._queue_name = queue_name
@@ -1092,7 +1095,7 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
         decorators.keep_circulating(5, block=False)(self._show_active_consumer_num)()  # 主要是为快速频繁统计分布式消费者个数，快速调整分布式qps控频率。
 
     def _send_heartbeat_with_dict_value(self, redis_key, ):
-        # 根据机器心跳的，值是字典，按一个机器或者一个队列运行了哪些进程。
+        # 发送当前消费者进程心跳的，值是字典，按一个机器或者一个队列运行了哪些进程。
 
         results = self.redis_db_frame.smembers(redis_key)
         with self.redis_db_frame.pipeline() as p:
@@ -1137,9 +1140,9 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
 
 class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHandler):
     """
-    获取分布式环境中的活跃消费进程信息。
 
-    使用这里面的4个方法需要相应函数的 @boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
+    获取分布式环境中的消费进程信息。
+    使用这里面的4个方法需要相应函数的@boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
     要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息
     """
 
@@ -1147,7 +1150,7 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHand
         results = self.redis_db_frame.smembers(redis_key)
         # print(type(results))
         # print(results)
-        # 如果所有机器所有进程都全部关掉了，就没办法还剩一个线程执行删除了，这里还需要判断一次。
+        # 如果所有机器所有进程都全部关掉了，就没办法还剩一个线程执行删除了，这里还需要判断一次15秒。
         active_consumers_processor_info_list = []
         for result in results:
             result_dict = json.loads(result)
@@ -1158,7 +1161,6 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHand
     def get_all_hearbeat_info_by_queue_name(self, queue_name) -> typing.List[typing.Dict]:
         """
         根据队列名查询有哪些活跃的消费者进程
-
         返回结果例子：
         [{
                 "code_filename": "/codes/funboost/test_frame/my/test_consume.py",
@@ -1180,6 +1182,7 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHand
 
     def get_all_hearbeat_info_by_ip(self, ip=None) -> typing.List[typing.Dict]:
         """
+        根据机器的ip查询有哪些活跃的消费者进程，ip不传参就查本机ip使用funboost框架运行了哪些消费进程，传参则查询任意机器的消费者进程信息。
         返回结果的格式和上面的 get_all_hearbeat_dict_by_queue_name 方法相同。
         """
         ip = ip or nb_log_config_default.computer_ip

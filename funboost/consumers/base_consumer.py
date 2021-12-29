@@ -1210,7 +1210,7 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHand
         return infos_map
 
     def get_all_hearbeat_info_partition_by_ip(self) -> typing.Dict[typing.AnyStr, typing.List[typing.Dict]]:
-        """获取所有机器ip对应的活跃消费者进程信息，按机器ip划分,不需要传入机器ip，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对"""
+        """获取所有机器ip对应的活跃消费者进程信息，按机器ip划分,不需要传入机器ip，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对 """
         infos_map = self._get_all_hearbeat_info_partition_by_redis_key_prefix('funboost_hearbeat_server__dict:')
         self.logger.info(f'获取所有机器ip对应的活跃消费者进程信息，按机器ip划分，结果是 {json.dumps(infos_map, indent=4)}')
         return infos_map

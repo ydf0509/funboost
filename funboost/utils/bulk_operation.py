@@ -42,16 +42,18 @@ class BaseBulkHelper(LoggerMixin, metaclass=abc.ABCMeta):
     bulk_helper_map = {}
 
     def __new__(cls, base_object, *args, **kwargs):
-        if str(base_object) not in cls.bulk_helper_map:  # 加str是由于有一些类型的实例不能被hash作为字典的键
+        cls_key = f'{str(base_object)}-{os.getpid()}'
+        if cls_key not in cls.bulk_helper_map:  # 加str是由于有一些类型的实例不能被hash作为字典的键
             self = super().__new__(cls)
             return self
         else:
-            return cls.bulk_helper_map[str(base_object)]
+            return cls.bulk_helper_map[cls_key]
 
     def __init__(self, base_object: Union[collection.Collection, redis.Redis], threshold: int = 100, max_time_interval=10, is_print_log: bool = True):
-        if str(base_object) not in self.bulk_helper_map:
+        cls_key = f'{str(base_object)}-{os.getpid()}'
+        if cls_key not in self.bulk_helper_map:
             self._custom_init(base_object, threshold, max_time_interval, is_print_log)
-            self.bulk_helper_map[str(base_object)] = self
+            self.bulk_helper_map[cls_key] = self
 
     def _custom_init(self, base_object, threshold, max_time_interval, is_print_log):
         self.base_object = base_object

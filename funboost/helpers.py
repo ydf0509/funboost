@@ -82,6 +82,7 @@ def fabric_deploy(task_fun, host, port, user, password,
                   only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
                   file_volume_limit=1000 * 1000, sftp_log_level=20, extra_shell_str='',
                   invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
+                  python_interpreter ='python3',
                   process_num=1):
     """
     不依赖阿里云codepipeline 和任何运维发布管理工具，只需要在python代码层面就能实现多机器远程部署。
@@ -112,6 +113,7 @@ def fabric_deploy(task_fun, host, port, user, password,
     :param file_volume_limit:大于这个体积的不上传，因为python代码文件很少超过1M
     :param sftp_log_level: 文件上传日志级别  10为logging.DEBUG 20为logging.INFO  30 为logging.WARNING
     :param extra_shell_str :自动部署前额外执行的命令，例如可以设置环境变量什么的
+    :param python_interpreter: python解释器路径，如果linux安装了多个python环境可以指定绝对路径。
     :param invoke_runner_kwargs : invoke包的runner.py 模块的 run()方法的所有一切入参,例子只写了几个入参，实际可以传入十几个入参，大家可以自己琢磨fabric包的run方法，按需传入。
                                  hide 是否隐藏远程机器的输出，值可以为 False不隐藏远程主机的输出  “out”为只隐藏远程机器的正常输出，“err”为只隐藏远程机器的错误输出，True，隐藏远程主机的一切输出
                                  pty 的意思是，远程机器的部署的代码进程是否随着当前脚本的结束而结束。如果为True，本机代码结束远程进程就会结束。如果为False，即使本机代码被关闭结束，远程机器还在运行代码。
@@ -153,7 +155,7 @@ def fabric_deploy(task_fun, host, port, user, password,
         uploader.ssh.exec_command(kill_shell)
         # conn.run(kill_shell, encoding='utf-8',warn=True)  # 不想提示，免得烦扰用户以为有什么异常了。所以用上面的paramiko包的ssh.exec_command
 
-        python_exec_str = f'''export is_fsdf_remote_run=1;export PYTHONPATH={remote_dir}:$PYTHONPATH ;python3 -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark {process_mark} '''
+        python_exec_str = f'''export is_fsdf_remote_run=1;export PYTHONPATH={remote_dir}:$PYTHONPATH ;{python_interpreter} -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -fsdfmark {process_mark} '''
         shell_str = f'''cd {remote_dir}; {python_exec_str}'''
         extra_shell_str2 = extra_shell_str  # 内部函数对外部变量不能直接改。
         if not extra_shell_str2.endswith(';') and extra_shell_str != '':

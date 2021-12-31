@@ -106,6 +106,7 @@ class IdeAutoCompleteHelper(LoggerMixin):
                       only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
                       file_volume_limit=1000 * 1000, sftp_log_level=20, extra_shell_str='',
                       invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
+                      python_interpreter='python3',
                       process_num=1):
         """
         入参见 fabric_deploy 函数。这里重复入参是为了代码在pycharm补全提示。

@@ -155,12 +155,12 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
 
 
 class FunctionResultStatusPersistanceConfig(LoggerMixin):
-    def __init__(self, is_save_status: bool, is_save_result: bool, expire_seconds: int = 7 * 24 * 3600, is_use_bulk_insert=True):
+    def __init__(self, is_save_status: bool, is_save_result: bool, expire_seconds: int = 7 * 24 * 3600, is_use_bulk_insert=False):
         """
         :param is_save_status:
         :param is_save_result:
         :param expire_seconds: 设置统计的过期时间，在mongo里面自动会移除这些过期的执行记录。
-        :param is_use_bulk_insert : 是否使用批量插入来保存结果，批量插入是每隔0.5秒钟保存一次最近0.5秒内的所有的函数消费状态结果。为False则，每完成一次函数就实时写入一次到mongo。
+        :param is_use_bulk_insert : 是否使用批量插入来保存结果，批量插入是每隔0.5秒钟保存一次最近0.5秒内的所有的函数消费状态结果，始终会出现最后0.5秒内的执行结果没及时插入mongo。为False则，每完成一次函数就实时写入一次到mongo。
         """
 
         if not is_save_status and is_save_result:
@@ -229,9 +229,9 @@ class ConsumersManager:
 
     @classmethod
     def join_all_consumer_shedual_task_thread(cls):
-        '''实现这个主要是为了兼容linux和win，在开启多进程时候兼容。在linux下如果子进程中即使有在一个非守护线程里面运行while 1的逻辑，代码也会很快结束。所以必须把所有循环拉取消息的线程join
+        """实现这个主要是为了兼容linux和win，在开启多进程时候兼容。在linux下如果子进程中即使有在一个非守护线程里面运行while 1的逻辑，代码也会很快结束。所以必须把所有循环拉取消息的线程join
         否则如果只是为了兼容win，压根不需要这里多此一举
-        '''
+        """
         # nb_print((cls.schedulal_thread_to_be_join, len(cls.schedulal_thread_to_be_join), '模式：', cls.global_concurrent_mode))
         if cls.schedual_task_always_use_thread:
             for t in cls.schedulal_thread_to_be_join:
@@ -568,10 +568,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             traceback.print_exc()
             os._exit(4444)  # noqa
         self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
+
+        self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name, self.consumer_identification, self.consumer_identification_map)
         if self._is_send_consumer_hearbeat_to_redis:
-            self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name, self.consumer_identification, self.consumer_identification_map)
             self._distributed_consumer_statistics.run()
             self.logger.warning(f'启动了分布式环境 使用 redis 的键 hearbeat:{self._queue_name} 统计活跃消费者 ，当前消费者唯一标识为 {self.consumer_identification}')
+
         self.keep_circulating(10, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
         if self._do_task_filtering:
             self._redis_filter.delete_expire_filter_task_cycle()  # 这个默认是RedisFilter类，是个pass不运行。所以用别的消息中间件模式，不需要安装和配置redis。
@@ -657,13 +659,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 avarage_function_spend_time = round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)
                 msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
                       f'函数平均运行耗时 {avarage_function_spend_time} 秒'
-                if self._msg_num_in_broker != -1:
-                    if hasattr(self, '_distributed_consumer_statistics'):
-                        active_consumer_num = self._distributed_consumer_statistics.active_consumer_num
-                    else:
-                        active_consumer_num = 1
+                if self._msg_num_in_broker != -1:  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
                     # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
-                    msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / (self._execute_task_times_every_unit_time / self._unit_time_for_count) / active_consumer_num)}''' + \
+                    need_time = time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / (self._execute_task_times_every_unit_time / self._unit_time_for_count) /
+                                                                        self._distributed_consumer_statistics.active_consumer_num)
+                    msg += f''' ，预计还需要 {need_time}''' + \
                            f''' 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
                 self.logger.info(msg)
                 self._current_time_for_execute_task_times_every_unit_time = time.time()
@@ -755,13 +755,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
                   f'函数平均运行耗时 {avarage_function_spend_time} 秒'
             if self._msg_num_in_broker != -1:
-                if hasattr(self, '_distributed_consumer_statistics'):
-                    active_consumer_num = self._distributed_consumer_statistics.active_consumer_num
-                else:
-                    active_consumer_num = 1
-                # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
-                msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / (self._execute_task_times_every_unit_time / self._unit_time_for_count) / active_consumer_num)} ''' + \
-                       f''' 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
+                if self._msg_num_in_broker != -1:  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
+                    # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
+                    need_time = time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / (self._execute_task_times_every_unit_time / self._unit_time_for_count) /
+                                                                        self._distributed_consumer_statistics.active_consumer_num)
+                    msg += f''' ，预计还需要 {need_time}''' + \
+                           f''' 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
             self.logger.info(msg)
             self._current_time_for_execute_task_times_every_unit_time = time.time()
             self._consuming_function_cost_time_total_every_unit_time = 0

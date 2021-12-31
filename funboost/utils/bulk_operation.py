@@ -8,6 +8,7 @@
 """
 import atexit
 import re
+import os
 from elasticsearch import helpers
 from threading import Thread
 from typing import Union

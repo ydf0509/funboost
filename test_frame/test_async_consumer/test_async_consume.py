@@ -1,8 +1,9 @@
 import time
 import asyncio
 from funboost import boost, BrokerEnum, ConcurrentModeEnum
+from auto_run_on_remote import run_current_script_on_remote
 
-
+run_current_script_on_remote()
 @boost('test_async_queue', concurrent_mode=ConcurrentModeEnum.ASYNC, qps=3, broker_kind=BrokerEnum.PERSISTQUEUE, concurrent_num=60)
 async def async_f(x):   # 调度异步消费函数
     print(x)

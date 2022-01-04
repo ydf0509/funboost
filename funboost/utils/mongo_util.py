@@ -19,3 +19,4 @@ class MongoMixin:
     @decorators.cached_method_result
     def mongo_db_task_status(self):
         return self.mongo_client.get_database('task_status')
+

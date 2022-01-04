@@ -7,7 +7,7 @@ from functools import wraps
 import queue
 from concurrent.futures import ThreadPoolExecutor, Future
 # noinspection PyProtectedMember
-from concurrent.futures.thread import _WorkItem
+from concurrent.futures.thread import _WorkItem  # noqa
 
 from nb_log import LogManager
 
@@ -46,6 +46,6 @@ if __name__ == '__main__':
     def fun():
         print(1 / 0)
 
-
+    # 如果是官方线程池，这样不报错你还以为代码没毛病呢。
     pool = BoundedThreadPoolExecutor(10)
     pool.submit(fun)

@@ -49,7 +49,7 @@ SQLACHEMY_ENGINE_URL = 'sqlite:////sqlachemy_queues/queues.db'
 # persist_quque中间件时候采用本机sqlite的方式，数据库文件生成的位置。如果linux账号在根目录没权限建文件夹，可以换文件夹。
 SQLLITE_QUEUES_PATH = '/sqllite_queues'
 
-TXT_FILE_PATH = Path(__file__).parent /'txt_queues'
+TXT_FILE_PATH = Path(__file__).parent /'txt_queues'  # 不建议使用这个txt模拟消息队列中间件，本地持久化优先选择 PERSIST_QUQUE 中间件。
 
 ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
 

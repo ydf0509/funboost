@@ -3,6 +3,7 @@ import copy
 # noinspection PyUnresolvedReferences
 import nb_log
 from funboost.set_frame_config import patch_frame_config, show_frame_config
+from funboost.funboost_config_deafult import BoostDecoratorDefaultParams
 from funboost.helpers import (fabric_deploy, kill_all_remote_tasks,
                               multi_process_pub_params_list,
                               run_consumer_with_multi_process)
@@ -121,21 +122,27 @@ class IdeAutoCompleteHelper(LoggerMixin):
         return self.consuming_func_decorated(*args, **kwargs)
 
 
-def boost(queue_name, *, function_timeout=0,
-          concurrent_num=50, specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=ConcurrentModeEnum.THREADING,
-          max_retry_times=3, log_level=10, is_print_detail_exception=True, is_show_message_get_from_broker=False,
-          qps: float = 0, is_using_distributed_frequency_control=False, msg_expire_senconds=0,
-          is_send_consumer_hearbeat_to_redis=False,
-          logger_prefix='', create_logger_file=True, do_task_filtering=False, task_filtering_expire_seconds=0,
-          is_do_not_run_by_specify_time_effect=False, do_not_run_by_specify_time=('10:00:00', '22:00:00'),
-          schedule_tasks_on_main_thread=False,
-          function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600),
-          is_using_rpc_mode=False,
-          broker_kind: int = None):
+class _Undefined:
+    pass
+
+
+def boost(queue_name, *, function_timeout=_Undefined,
+          concurrent_num=_Undefined, specify_concurrent_pool=_Undefined, specify_async_loop=_Undefined, concurrent_mode=_Undefined,
+          max_retry_times=_Undefined, log_level=_Undefined, is_print_detail_exception=_Undefined, is_show_message_get_from_broker=_Undefined,
+          qps: float = _Undefined, is_using_distributed_frequency_control=_Undefined, msg_expire_senconds=_Undefined,
+          is_send_consumer_hearbeat_to_redis=_Undefined,
+          logger_prefix='', create_logger_file=_Undefined, do_task_filtering=_Undefined, task_filtering_expire_seconds=_Undefined,
+          is_do_not_run_by_specify_time_effect=_Undefined, do_not_run_by_specify_time=_Undefined,
+          schedule_tasks_on_main_thread=_Undefined,
+          function_result_status_persistance_conf=_Undefined,
+          is_using_rpc_mode=_Undefined,
+          broker_kind: int = _Undefined,
+          boost_decorator_default_params=BoostDecoratorDefaultParams()
+          ):
     """
     # 为了代码提示好，这里重复一次入参意义。被此装饰器装饰的函数f，函数f对象本身自动加了一些方法，例如f.push 、 f.consume等。
     :param queue_name: 队列名字。
-    :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
+    :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。设置后代码性能会变差，非必要不要轻易设置。
     # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
     # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
     :param concurrent_num:并发数量
@@ -153,8 +160,8 @@ def boost(queue_name, *, function_timeout=0,
     :param msg_expire_senconds:消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
     :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis统计消费者数量，然后频率平分），默认只对当前实例化的消费者空频有效。
             假如实例化了2个qps为10的使用同一队列名的消费者，并且都启动，则每秒运行次数会达到20。如果使用分布式空频则所有消费者加起来的总运行次数是10。
-    :param is_send_consumer_hearbeat_to_redis   时候将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
-    :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
+    :param is_send_consumer_hearbeat_to_redis   是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
+    :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志前缀
     :param create_logger_file : 是否创建文件日志
     :param do_task_filtering :是否执行基于函数参数的任务过滤
     :param task_filtering_expire_seconds:任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ，
@@ -162,7 +169,7 @@ def boost(queue_name, *, function_timeout=0,
            如果是30分钟以内发布过这个任务，则不执行1 + 2，现在把这个逻辑集成到框架，一般用于接口价格缓存。
     :param is_do_not_run_by_specify_time_effect :是否使不运行的时间段生效
     :param do_not_run_by_specify_time   :不运行的时间段
-    :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
+    :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。fun.consume()就阻塞了，这之后的代码不会运行
     :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。
            这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
     :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。。
@@ -213,8 +220,15 @@ def boost(queue_name, *, function_timeout=0,
     所以不需要传consuming_function参数。
     """
     # 装饰器版本能够自动知道消费函数，防止boost按照get_consumer的入参重复传参了consuming_function。
-    consumer_init_params = copy.copy(locals())
-
+    consumer_init_params_include_boost_decorator_default_params = copy.copy(locals())
+    consumer_init_params0 = copy.copy(consumer_init_params_include_boost_decorator_default_params)
+    consumer_init_params0.pop('boost_decorator_default_params')
+    consumer_init_params = copy.copy(consumer_init_params0)
+    for k,v in consumer_init_params0.items():
+        if v == _Undefined:
+            # print(k,v,boost_decorator_default_params[k])
+            consumer_init_params[k] = boost_decorator_default_params[k]
+    # print(consumer_init_params)
     def _deco(func) -> IdeAutoCompleteHelper:  # 加这个-> 可以实现pycahrm动态补全
 
         func.init_params = consumer_init_params

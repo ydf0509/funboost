@@ -35,6 +35,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPo
 from apscheduler.events import EVENT_JOB_MISSED
 
 from funboost.concurrent_pool.single_thread_executor import SoloExecutor
+from funboost.helpers import FunctionResultStatusPersistanceConfig
 from funboost.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
 
 import pymongo
@@ -152,29 +153,6 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         # self.logger.warning(item['_id'])
         # self.logger.warning(item)
         return item
-
-
-class FunctionResultStatusPersistanceConfig(LoggerMixin):
-    def __init__(self, is_save_status: bool, is_save_result: bool, expire_seconds: int = 7 * 24 * 3600, is_use_bulk_insert=False):
-        """
-        :param is_save_status:
-        :param is_save_result:
-        :param expire_seconds: 设置统计的过期时间，在mongo里面自动会移除这些过期的执行记录。
-        :param is_use_bulk_insert : 是否使用批量插入来保存结果，批量插入是每隔0.5秒钟保存一次最近0.5秒内的所有的函数消费状态结果，始终会出现最后0.5秒内的执行结果没及时插入mongo。为False则，每完成一次函数就实时写入一次到mongo。
-        """
-
-        if not is_save_status and is_save_result:
-            raise ValueError(f'你设置的是不保存函数运行状态但保存函数运行结果。不允许你这么设置')
-        self.is_save_status = is_save_status
-        self.is_save_result = is_save_result
-        if expire_seconds > 10 * 24 * 3600:
-            self.logger.warning(f'你设置的过期时间为 {expire_seconds} ,设置的时间过长。 ')
-        self.expire_seconds = expire_seconds
-        self.is_use_bulk_insert = is_use_bulk_insert
-
-    def to_dict(self):
-        return {"is_save_status": self.is_save_status,
-                'is_save_result': self.is_save_result, 'expire_seconds': self.expire_seconds}
 
 
 class ResultPersistenceHelper(MongoMixin, LoggerMixin):
@@ -446,6 +424,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         stdout_write(f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;30;44m此行 '
                      f'实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
+        current_queue__info_dict_for_json = {}
+        for k, v in current_queue__info_dict.items():
+            # only_print_on_main_process(f'{k} :  {v}')
+            if isinstance(v, (bool, tuple, dict, float, int)):
+                current_queue__info_dict_for_json[k] = v
+            else:
+                current_queue__info_dict_for_json[k] = str(v)
+        only_print_on_main_process(f'{current_queue__info_dict["queue_name"]} 的消费者配置:\n', json.dumps(current_queue__info_dict_for_json, ensure_ascii=False, indent=4))
 
         self._do_task_filtering = do_task_filtering
         self._redis_filter_key_name = f'filter_zset:{queue_name}' if task_filtering_expire_seconds else f'filter_set:{queue_name}'

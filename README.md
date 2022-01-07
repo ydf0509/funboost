@@ -51,7 +51,7 @@ from  function_scheduling_distributed_framework import task_deco , @task_deco
 
 
 
-<span style="font-size:20px">旧框架地址：<span><a href="https://github.com/ydf0509/distributed_framework" style="font-size: 25px">function_scheduling_distributed_framework框架地址链接</a>
+<span style="font-size:25px">旧框架地址：<span><a href="https://github.com/ydf0509/distributed_framework" style="font-size: 25px">function_scheduling_distributed_framework框架地址链接</a>
 
 
 ## 1.1 安装方式
@@ -98,7 +98,9 @@ pip install funboost --upgrade
 ```
 
 以下两种方式，都是10线程加python内存queue方式运行f函数，有了此框架，用户无需代码手写手动操作线程 协程 进程并发。
-[![o5lEEq.png](https://s1.ax1x.com/2021/12/10/o5lEEq.png)](https://imgtu.com/i/o5lEEq)
+[![T69zJP.png](https://s4.ax1x.com/2021/12/28/T69zJP.png)](https://imgtu.com/i/T69zJP)
+<br>
+[![T6CPsg.md.png](https://s4.ax1x.com/2021/12/28/T6CPsg.md.png)](https://imgtu.com/i/T6CPsg)
 
 ### 1.2.2 框架支持20种中间件
 
@@ -231,13 +233,15 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
 
 ## 1.3 框架使用例子
 
+使用之前先学习 PYTHONPATH的概念  [https://github.com/ydf0509/pythonpathdemo](https://github.com/ydf0509/pythonpathdemo)
+
 ```
 以下这只是简单求和例子，实际情况换成任意函数里面写任意逻辑，框架可没有规定只能用于 求和函数 的自动调度并发。
 而是根据实际情况函数的参数个数、函数的内部逻辑功能，全部都由用户自定义，函数里面想写什么就写什么，想干什么就干什么，极端自由。
 也就是框架很容易学和使用，把下面的task_fun函数的入参和内部逻辑换成你自己想写的函数功能就可以了，框架只需要学习boost这一个函数的参数就行。
 测试使用的时候函数里面加上sleep模拟阻塞，从而更好的了解框架的并发和各种控制功能。
 
-有一点要说明的是框架的消息中间件的ip 端口 密码 等配置是在你第一次运行代码时候，在你当前项目的根目录下生成的 distributed_frame_config.py 按需设置。
+有一点要说明的是框架的消息中间件的ip 端口 密码 等配置是在你第一次运行代码时候，在你当前项目的根目录下生成的 funboost_config.py 按需设置。
 ```
 
 ```python
@@ -269,8 +273,9 @@ if __name__ == "__main__":
 因为是使用了中间件解耦消息和持久化消息，不要被例子误导成了，以为发布和消费必须放在同一个脚本里面
 
 
-使用方式只需要这一个例子就行了，其他举得例子只是改了下broker_kind和其他参数而已，
+框架使用方式基本上只需要练习这一个例子就行了，其他举得例子只是改了下broker_kind和其他参数而已，
 而且装饰器的入参已近解释得非常详细了，框架浓缩到了一个装饰器，并没有用户需要从框架里面要继承什么组合什么的复杂写法。
+用户可以修改此函数的sleep大小和@boost的数十种入参来学习 验证 测试框架的功能。
 """
 ```
 

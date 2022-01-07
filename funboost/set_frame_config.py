@@ -98,13 +98,13 @@ def use_config_form_funboost_config_module():
         # noinspection PyUnresolvedReferences
         # import funboost_config
         m = importlib.import_module('funboost_config')
-        importlib.reload(m)   # 这行是防止用户在导入框架之前，写了 from funboost_config import REDIS_HOST 这种，导致 m.__dict__.items() 不包括所有配置变量了。
+        importlib.reload(m)  # 这行是防止用户在导入框架之前，写了 from funboost_config import REDIS_HOST 这种，导致 m.__dict__.items() 不包括所有配置变量了。
         # print(dir(m))
         # nb_print(m.__dict__.items())
         only_print_on_main_process(f'分布式函数调度框架 读取到\n "{m.__file__}:1" 文件里面的变量作为优先配置了\n')
         for var_namex, var_valuex in m.__dict__.items():
-            # print(frame_config, var_namex, var_valuex)
-            if var_namex.isupper():
+            # print(m, var_namex, var_valuex)
+            if var_namex.isupper() or var_namex == 'BoostDecoratorDefaultParams':
                 setattr(funboost_config_deafult, var_namex, var_valuex)  # 用用户自定义的配置覆盖框架的默认配置。
     except ModuleNotFoundError:
         nb_print(
@@ -130,7 +130,10 @@ def auto_creat_config_file_to_project_root_path():
                                windwos 使用 set PYTHONNPATH=你的当前python项目根目录,
                                linux 使用 export PYTHONPATH=你的当前你python项目根目录,
                                PYTHONPATH 作用是python的基本常识，请百度一下。
-                               需要在会话窗口命令行设置临时的环境变量，而不是修改linux配置文件的方式设置永久环境变量，每个python项目的PYTHONPATH都要不一样，不要在配置文件写死''')
+                               需要在会话窗口命令行设置临时的环境变量，而不是修改linux配置文件的方式设置永久环境变量，每个python项目的PYTHONPATH都要不一样，不要在配置文件写死
+                               
+                               懂PYTHONPATH 的重要性和妙用见： https://github.com/ydf0509/pythonpathdemo
+                               ''')
         return  # 当没设置pythonpath时候，也不要在 /lib/python36.zip这样的地方创建配置文件。
 
     file_name = Path(sys.path[1]) / Path('funboost_config.py')

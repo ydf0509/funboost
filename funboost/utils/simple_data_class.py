@@ -1,7 +1,8 @@
 import copy
 class DataClassBase:
     """
-    使用类实现的
+    使用类实现的 简单数据类。
+    也可以使用装饰器来实现数据类
     """
     def __new__(cls, **kwargs):
         self = super().__new__(cls)
@@ -23,3 +24,16 @@ class DataClassBase:
 
     def __getitem__(self, item):
         return getattr(self,item)
+
+
+if __name__ == '__main__':
+    class A(DataClassBase):
+        x =1
+        y = 2
+
+    print(A())
+    print(A(y=3))
+    print(A(y=5).get_dict())
+
+    print(A()['y'])
+    print(A().y)

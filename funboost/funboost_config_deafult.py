@@ -87,6 +87,7 @@ BoostDecoratorDefaultParams是
 这里的值不用配置，在boost装饰器中可以为每个消费者指定不同的入参，
 除非你嫌弃每个 boost 装饰器相同入参太多了，可以设置这里的全局默认值。
 
+boost入参可以ide跳转到boost函数的docstring查看
 boost入参也可以看文档3.3章节  https://funboost.readthedocs.io/zh/latest/articles/c3.html  
 """
 

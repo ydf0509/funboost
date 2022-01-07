@@ -127,3 +127,4 @@ class BoostDecoratorDefaultParams(DataClassBase):
     schedule_tasks_on_main_thread = False  # 直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。fun.consume()就阻塞了，这之后的代码不会运行
 
     broker_kind: int = None  # 中间件种类，支持30种消息队列。 入参见 BrokerEnum枚举类的属性。例如 BrokerEnum.REDIS
+

@@ -92,48 +92,39 @@ boost入参也可以看文档3.3章节  https://funboost.readthedocs.io/zh/lates
 
 
 class BoostDecoratorDefaultParams(DataClassBase):
-    '''
-    这个concurrent_mode是并发模式,有5种细粒度并发模式，可以叠加多进程并发。
-    1线程(ConcurrentModeEnum.THREADING) 2 gevent(ConcurrentModeEnum.GEVENT)
-    3 eventlet(ConcurrentModeEnum.EVENTLET) 4 asyncio(ConcurrentModeEnum.ASYNC) 5单线程(ConcurrentModeEnum.SINGLE_THREAD)
-    '''
     concurrent_mode = ConcurrentModeEnum.THREADING
-    concurrent_num = 50  # 并发数量，值得是线程/协程数量
-    specify_concurrent_pool = None  # 使用指定的线程池（协程池），可以多个消费者共使用一个线程池，不为None时候。threads_num失效，具体看文档
-    specify_async_loop = None  # 指定的async的loop循环，设置并发模式为async才能起作用。
-    qps: float = 0  # 指定1秒内的函数执行次数，例如可以是小数0.01代表每100秒执行一次，也可以是50代表1秒执行50次.为0则不控频。
-    is_using_distributed_frequency_control = False  # 是否使用分布式空频（依赖redis统计消费者数量，然后频率平分），默认只对当前实例化的消费者空频有效。
+    concurrent_num = 50
+    specify_concurrent_pool = None
+    specify_async_loop = None
+    qps: float = 0
+    is_using_distributed_frequency_control = False
 
-    max_retry_times = 3  # 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
+    max_retry_times = 3
 
-    function_timeout = 0  # 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。设置后代码性能会变差，非必要不要轻易设置。
+    function_timeout = 0
 
-    log_level = 10  # 框架的日志级别。logging.DEBUG(10)  logging.DEBUG(10) logging.INFO(20) logging.WARNING(30) logging.ERROR(40) logging.CRITICAL(50)
-    logger_prefix = ''  # 日志前缀，可使不同的消费者生成不同的日志前缀
-    create_logger_file = True  # 是否创建文件日志，文件日志的文件夹位置由 nb_log_config 中的 LOG_PATH 决定
-    is_show_message_get_from_broker = False  # 从中间件取出消息时候时候打印显示出来
-    is_print_detail_exception = True  # 是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
+    log_level = 10
+    logger_prefix = ''
+    create_logger_file = True
+    is_show_message_get_from_broker = False
+    is_print_detail_exception = True
 
-    msg_expire_senconds = 0  # 消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
+    msg_expire_senconds = 0
 
-    is_send_consumer_hearbeat_to_redis = False  # 是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
+    is_send_consumer_hearbeat_to_redis = False
 
-    do_task_filtering = False  # 是否执行基于函数参数的任务过滤
-    '''
-    task_filtering_expire_seconds是任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ，
-    30分钟前发布过1 + 2 的任务，现在仍然执行，
-    如果是30分钟以内发布过这个任务，则不执行1 + 2，现在把这个逻辑集成到框架，一般用于接口价格缓存。'''
+    do_task_filtering = False
     task_filtering_expire_seconds = 0
 
-    function_result_status_persistance_conf = FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600)  # 配置。是否保存函数的入参，运行结果和运行状态到mongodb。
+    function_result_status_persistance_conf = FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600)
 
-    is_using_rpc_mode = False  # 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。。
+    is_using_rpc_mode = False
 
-    is_do_not_run_by_specify_time_effect = False  # 是否使不运行的时间段生效
-    do_not_run_by_specify_time = ('10:00:00', '22:00:00')  # 不运行的时间段
+    is_do_not_run_by_specify_time_effect = False
+    do_not_run_by_specify_time = ('10:00:00', '22:00:00')
 
-    schedule_tasks_on_main_thread = False  # 直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。fun.consume()就阻塞了，这之后的代码不会运行
+    schedule_tasks_on_main_thread = False
 
-    broker_kind: int = None  # 中间件种类，支持30种消息队列。 入参见 BrokerEnum枚举类的属性。例如 BrokerEnum.REDIS
+    broker_kind: int = None
 
 # *********************************************** 以上是 boost装饰器的默认全局配置 *******************************************

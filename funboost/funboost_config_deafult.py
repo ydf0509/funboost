@@ -96,15 +96,18 @@ class BoostDecoratorDefaultParams(DataClassBase):
     is_using_distributed_frequency_control = False  # 是否使用分布式空频（依赖redis统计消费者数量，然后频率平分），默认只对当前实例化的消费者空频有效。
 
     max_retry_times = 3  # 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
+
     function_timeout = 0  # 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。设置后代码性能会变差，非必要不要轻易设置。
-    is_print_detail_exception = True  # 是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
+
 
     log_level = 10  # 框架的日志级别。logging.DEBUG(10)  logging.DEBUG(10) logging.INFO(20) logging.WARNING(30) logging.ERROR(40) logging.CRITICAL(50)
     logger_prefix = ''  # 日志前缀，可使不同的消费者生成不同的日志前缀
     create_logger_file = True  # 是否创建文件日志，文件日志的文件夹位置由 nb_log_config 中的 LOG_PATH 决定
     is_show_message_get_from_broker = False  # 从中间件取出消息时候时候打印显示出来
+    is_print_detail_exception = True  # 是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
 
     msg_expire_senconds = 0  # 消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
+
     is_send_consumer_hearbeat_to_redis = False  # 是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
 
     do_task_filtering = False  # 是否执行基于函数参数的任务过滤

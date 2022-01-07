@@ -21,6 +21,9 @@ from funboost.utils.simple_data_class import DataClassBase
 
 '''
 
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  以下是中间件连接配置    $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+
 # 如果@boost装饰器没有亲自指定broker_kind入参，则默认使用DEFAULT_BROKER_KIND这个中间件。
 # 强烈推荐安装rabbitmq然后使用 BrokerEnum.RABBITMQ_AMQPSTORM 这个中间件,
 # 次之 BrokerEnum.REDIS_ACK_ABLE中间件，kafka则推荐 BrokerEnum.CONFLUENT_KAFKA。
@@ -74,11 +77,17 @@ FSDF_DEVELOP_LOG_LEVEL = 50  # 开发时候的日志，仅供我自己用，所�
 
 TIMEZONE = 'Asia/Shanghai'
 
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 以上是中间件连接配置    $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+
+# *********************************************** 以下是 boost装饰器的默认全局配置 *******************************************
 """
 BoostDecoratorDefaultParams是
 @boost装饰器默认的全局入参。如果boost没有亲自指定某个入参，就自动使用这里的配置。
 这里的值不用配置，在boost装饰器中可以为每个消费者指定不同的入参，
 除非你嫌弃每个 boost 装饰器相同入参太多了，可以设置这里的全局默认值。
+
+boost入参也可以看文档3.3章节  https://funboost.readthedocs.io/zh/latest/articles/c3.html  
 """
 
 
@@ -98,7 +107,6 @@ class BoostDecoratorDefaultParams(DataClassBase):
     max_retry_times = 3  # 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
 
     function_timeout = 0  # 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。设置后代码性能会变差，非必要不要轻易设置。
-
 
     log_level = 10  # 框架的日志级别。logging.DEBUG(10)  logging.DEBUG(10) logging.INFO(20) logging.WARNING(30) logging.ERROR(40) logging.CRITICAL(50)
     logger_prefix = ''  # 日志前缀，可使不同的消费者生成不同的日志前缀
@@ -128,3 +136,4 @@ class BoostDecoratorDefaultParams(DataClassBase):
 
     broker_kind: int = None  # 中间件种类，支持30种消息队列。 入参见 BrokerEnum枚举类的属性。例如 BrokerEnum.REDIS
 
+# *********************************************** 以上是 boost装饰器的默认全局配置 *******************************************

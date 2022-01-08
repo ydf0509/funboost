@@ -25,6 +25,7 @@ class BrokerEnum:
     KAFKA_CONFLUENT = CONFLUENT_KAFKA
 
     REDIS_ACK_ABLE = 9  # 基于redis的 list + 临时unack的set队列，采用了 lua脚本操持了取任务和加到pengding为原子性，随意重启和掉线不会丢失任务。
+    # 集群里面的所有电脑或服务器时间一定要设置成自动获取，不然会发生消费重复问题，单台没事。
 
     SQLACHEMY = 10  # 基于SQLACHEMY 的连接作为分布式消息队列中间件支持持久化和消费确认。支持mysql oracle sqlserver等5种数据库。
 
@@ -58,7 +59,7 @@ class BrokerEnum:
 
     NATS = 24  # 高性能中间件nats,中间件服务端性能很好,。
 
-    TXT_FILE = 25 # 磁盘txt文件作为消息队列，支持单机持久化，不支持多机分布式
+    TXT_FILE = 25  # 磁盘txt文件作为消息队列，支持单机持久化，不支持多机分布式
 
     PULSAR = 20  # 最有潜力的下一代分布式消息系统。5年后会同时取代rabbitmq和kafka。目前python客户端只支持linux，win不行
 

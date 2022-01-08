@@ -11,12 +11,12 @@ from funboost.utils import RedisMixin
 
 # @boost('test_queue66', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=5, log_level=10, is_print_detail_exception=False, is_show_message_get_from_broker=False,
 #            is_using_distributed_frequency_control=True)
-@boost('test_queue70c', qps=30, broker_kind=BrokerEnum.MEMORY_QUEUE, is_send_consumer_hearbeat_to_redis=True)
+@boost('test_queue70c', qps=1, broker_kind=BrokerEnum.REDIS_ACK_ABLE, is_send_consumer_hearbeat_to_redis=True)
 def f(x, y):
     return x + y
 
 
-@boost('test_queue72c', qps=30, broker_kind=BrokerEnum.MEMORY_QUEUE, is_send_consumer_hearbeat_to_redis=True)
+@boost('test_queue72c', qps=3, broker_kind=BrokerEnum.REDIS_ACK_ABLE, is_send_consumer_hearbeat_to_redis=True)
 def f2(a, b):
     return a - b
 
@@ -24,7 +24,7 @@ def f2(a, b):
 if __name__ == '__main__':
     # pass
     # f.clear()
-    for i in range(10):
+    for i in range(100):
         f.push(i, i * 2)
         f2.push(i, i * 2)
 

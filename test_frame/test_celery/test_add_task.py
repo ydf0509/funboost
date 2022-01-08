@@ -1,7 +1,7 @@
 import time
 import nb_log
 
-from test_frame.test_celery.test_celery_app import add, sub
+from test_frame.test_celery.test_celery_app import add, sub,sync_fun
 
 
 
@@ -11,12 +11,14 @@ for i in range(1,20):
     # print(i)
     # result = add.delay(i, i * 2)
     # time.sleep(0.01)
-    result = add.apply_async(args=(i, i * 2),countdown=0)
+    # result = add.apply_async(args=(i, i * 2),countdown=0)
     # result = add.apply_async(args=(i, i * 2), )
-    print(result)
+    # print(result)
     # print(result.get())
     # print(type(result))
     # sub.delay(i * 10, i * 20)
+
+    sync_fun.delay(i)
 
 
 print(time.time() - t1)

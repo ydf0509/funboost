@@ -1,12 +1,17 @@
 """
 主要用用来测试相同基准下的celery和此框架的性能对比。
 """
-
+import asyncio
+import threading
+import os
 import time
 from datetime import timedelta
 
 import celery
 from celery import platforms
+from auto_run_on_remote import run_current_script_on_remote
+
+
 
 # import celery_helper
 
@@ -36,6 +41,7 @@ class Config2:
         '求和啊': {"queue": "queue_add3", },
         'sub啊': {"queue": 'queue_sub2'},
         'f1': {"queue": 'queue_f1'},
+        'sync_fun': {"queue": 'sync_fun_queue'},
     }
 
     # task_reject_on_worker_lost = True #配置这两项可以随意停止
@@ -72,9 +78,16 @@ def test_shere_deco(x):
     print(x)
 
 
+@celery_app.task(name='sync_fun')
+def sync_fun(x):
+    print(f'{os.getpid()}  {threading.get_ident()}')
+    asyncio.new_event_loop().run_until_complete(async_fun(x))
+
+async def async_fun(x):
+    await asyncio.sleep(10)
+    print(f'async_fun {x}')
 
 
-print(sub)
 
 def patch_celery_console(celery_instance:celery.Celery):
     import logging
@@ -113,9 +126,12 @@ if __name__ == '__main__':
     """
     # queue_add,queue_sub,queue_f1
     # patch_celery_console(celery_app)
+
+    print(celery.__version__)
+    run_current_script_on_remote()
     celery_app.worker_main(
-        argv=['worker', '--pool=gevent','--concurrency=500', '-n', 'worker1@%h', '--loglevel=DEBUG',
-              '--queues=queue_f1,queue_add3,queue_sub2'])
+        argv=['worker', '--pool=threads','--concurrency=500', '-n', 'worker1@%h', '--loglevel=DEBUG',
+              '--queues=queue_f1,queue_add3,queue_sub2,sync_fun_queue'])
     import threading
 
     print(777777777777777)

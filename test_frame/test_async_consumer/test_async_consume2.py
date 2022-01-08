@@ -2,6 +2,8 @@
 
 这个脚本可以得出协程asyncio + aiohttp 比 threading + requests 多线程快70%
 """
+
+
 from funboost import boost, BrokerEnum,ConcurrentModeEnum
 import asyncio
 import time
@@ -21,11 +23,12 @@ ss = aiohttp.ClientSession(loop=loop, )
 async def async_f(x):
     # 如果使使用了同一个session，async with ss.request，必须指定specify_async_loop的值和ClientSession的loop相同。
     # 否则 如果使使用 async with aiohttp.request ，则无需指定specify_async_loop参数。
-    # async with aiohttp.request('get', url=url) as resp:
+    # async with aiohttp.request('get', url=url) as resp:  # 如果是这样请求，boost装饰器无需指定specify_async_loop
+    #     text = await resp.text()
     # print(x,55555555555)
     # await asyncio.sleep(1,)
     # print(x,66666666666)
-    async with ss.request('get', url=url) as resp:
+    async with ss.request('get', url=url) as resp:  # 如果是这样请求，boost装饰器必须指定specify_async_loop，
         text = await resp.text()
         # print(x, resp.url, text[:10])
     print(x)

@@ -141,6 +141,7 @@ def boost(queue_name, *, function_timeout=_Undefined,
           ):
     """
     入参也可以看文档 https://funboost.readthedocs.io/zh/latest/articles/c3.html   3.3章节。
+
     # 为了代码提示好，这里重复一次入参意义。被此装饰器装饰的函数f，函数f对象本身自动加了一些方法，例如f.push 、 f.consume等。
     :param queue_name: 队列名字。
     :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。设置后代码性能会变差，非必要不要轻易设置。
@@ -232,10 +233,11 @@ def boost(queue_name, *, function_timeout=_Undefined,
     consumer_init_params0 = copy.copy(consumer_init_params_include_boost_decorator_default_params)
     consumer_init_params0.pop('boost_decorator_default_params')
     consumer_init_params = copy.copy(consumer_init_params0)
-    for k,v in consumer_init_params0.items():
+    for k, v in consumer_init_params0.items():
         if v == _Undefined:
             # print(k,v,boost_decorator_default_params[k])
             consumer_init_params[k] = boost_decorator_default_params[k]
+
     # print(consumer_init_params)
     def _deco(func) -> IdeAutoCompleteHelper:  # 加这个-> 可以实现pycahrm动态补全
 

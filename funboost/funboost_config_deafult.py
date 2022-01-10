@@ -24,12 +24,6 @@ from funboost.utils.simple_data_class import DataClassBase
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  以下是中间件连接配置    $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 
-# 如果@boost装饰器没有亲自指定broker_kind入参，则默认使用DEFAULT_BROKER_KIND这个中间件。
-# 强烈推荐安装rabbitmq然后使用 BrokerEnum.RABBITMQ_AMQPSTORM 这个中间件,
-# 次之 BrokerEnum.REDIS_ACK_ABLE中间件，kafka则推荐 BrokerEnum.CONFLUENT_KAFKA。
-# BrokerEnum.PERSISTQUEUE 的优点是基于单机磁盘的消息持久化，不需要安装消息中间件软件就能使用，但不是跨机器的真分布式。
-DEFAULT_BROKER_KIND = BrokerEnum.PERSISTQUEUE
-
 MONGO_CONNECT_URL = f'mongodb://192.168.6.133:27017'  # 如果有密码连接 'mongodb://myUserAdmin:8mwTdy1klnSYepNo@192.168.199.202:27016/admin'
 
 RABBITMQ_USER = 'rabbitmq_user'
@@ -78,8 +72,6 @@ FSDF_DEVELOP_LOG_LEVEL = 50  # 开发时候的日志，仅供我自己用，所�
 
 TIMEZONE = 'Asia/Shanghai'
 
-
-
 # *********************************************** 以下是 boost装饰器的默认全局配置 *******************************************
 """
 BoostDecoratorDefaultParams是@boost装饰器默认的全局入参。如果boost没有亲自指定某个入参，就自动使用这里的配置。
@@ -87,6 +79,8 @@ BoostDecoratorDefaultParams是@boost装饰器默认的全局入参。如果boost
 
 boost入参可以ide跳转到boost函数的docstring查看
 boost入参也可以看文档3.3章节  https://funboost.readthedocs.io/zh/latest/articles/c3.html  
+
+BoostDecoratorDefaultParams这个类的属性名字和boost装饰器的入参名字一模一样，只有 queue_name 必须每个装饰器是不同的名字，不能作为全局的。
 """
 
 
@@ -124,6 +118,6 @@ class BoostDecoratorDefaultParams(DataClassBase):
 
     schedule_tasks_on_main_thread = False
 
-    broker_kind: int = None
+    broker_kind: int = BrokerEnum.PERSISTQUEUE   # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
 
 # *********************************************** 以上是 boost装饰器的默认全局配置 *******************************************

@@ -1,3 +1,4 @@
+import typing
 from functools import update_wrapper, wraps, partial
 import copy
 # noinspection PyUnresolvedReferences
@@ -125,6 +126,8 @@ class IdeAutoCompleteHelper(LoggerMixin):
 class _Undefined:
     pass
 
+boost_queue__fun_map = {}  # type:typing.Dict[str,IdeAutoCompleteHelper]
+# import funboost ; funboost.boost_queue__fun_map
 
 def boost(queue_name, *, function_timeout=_Undefined,
           concurrent_num=_Undefined, specify_concurrent_pool=_Undefined, specify_async_loop=_Undefined, concurrent_mode=_Undefined,
@@ -238,6 +241,7 @@ def boost(queue_name, *, function_timeout=_Undefined,
             # print(k,v,boost_decorator_default_params[k])
             consumer_init_params[k] = boost_decorator_default_params[k]
 
+
     # print(consumer_init_params)
     def _deco(func) -> IdeAutoCompleteHelper:  # 加这个-> 可以实现pycahrm动态补全
 
@@ -261,6 +265,8 @@ def boost(queue_name, *, function_timeout=_Undefined,
         func.clear_filter_tasks = consumer.clear_filter_tasks
 
         func.wait_for_possible_has_finish_all_tasks = consumer.wait_for_possible_has_finish_all_tasks
+
+        boost_queue__fun_map[queue_name] = func
 
         # @wraps(func)
         # def __deco(*args, **kwargs):  # 这样函数的id变化了，导致win在装饰器内部开多进程不方便。

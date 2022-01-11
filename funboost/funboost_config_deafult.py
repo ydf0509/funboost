@@ -81,6 +81,7 @@ boost入参可以ide跳转到boost函数的docstring查看
 boost入参也可以看文档3.3章节  https://funboost.readthedocs.io/zh/latest/articles/c3.html  
 
 BoostDecoratorDefaultParams这个类的属性名字和boost装饰器的入参名字一模一样，只有 queue_name 必须每个装饰器是不同的名字，不能作为全局的。
+所以boost装饰器只有一个是必传参数。
 """
 
 

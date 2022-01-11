@@ -32,7 +32,7 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
 
     def _shedual_task(self):
 
-        from confluent_kafka import Consumer as ConfluentConsumer  # 这个包不好安装，用户用这个中间件的时候自己再想办法安装。
+        from confluent_kafka import Consumer as ConfluentConsumer  # 这个包在win下不好安装，用户用这个中间件的时候自己再想办法安装。win用户需要安装c++ 14.0以上环境。
         try:
             admin_client = KafkaAdminClient(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
             admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
@@ -80,7 +80,7 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
         每隔2秒对1组offset，对连续消费状态是1的最大offset进行commit
         :return:
         """
-        from confluent_kafka.cimpl import TopicPartition  # 这个包不好安装，用户用这个中间件的时候自己再想办法安装。
+        from confluent_kafka.cimpl import TopicPartition  # 这个包不好安装，用户用这个中间件的时候自己再想办法安装。win用户需要安装c++ 14.0以上环境。
         if time.time() - self._recent_commit_time > 2:
             partion_max_consumed_offset_map = dict()
             to_be_remove_from_partion_max_consumed_offset_map = defaultdict(list)

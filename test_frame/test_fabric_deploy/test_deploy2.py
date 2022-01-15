@@ -35,7 +35,7 @@ computer_ip, computer_name = get_host_ip()
 # 还有其他30种函数运行控制参数，看代码里面的函数入参说明，说的非常详细了。
 
 # @boost('queue_test2', )  # @task_deco必须参数只有一个。
-@boost('queue_test30', qps=0.2, broker_kind=BrokerEnum.REDIS)
+@boost('queue_test30a', qps=0.2, broker_kind=BrokerEnum.REDIS_ACK_ABLE)
 def f2(a, b):
     sleep_time = 7
     result = a + b
@@ -45,7 +45,7 @@ def f2(a, b):
     return result
 
 
-@boost('queue_test31', qps=0.2, broker_kind=BrokerEnum.REDIS)
+@boost('queue_test31a', qps=0.2, broker_kind=BrokerEnum.REDIS_ACK_ABLE)
 def f3(a, b):
     print(f'机器：{get_host_ip()} 进程：{os.getpid()}，{a} - {b} 的结果是 {a - b}')
     return a - b
@@ -54,11 +54,11 @@ def f3(a, b):
 if __name__ == '__main__':
     print(f2.__name__)
     f2.clear()
-    for i in range(200):
+    for i in range(2000):
         f2.push(i, i * 2)
         f3.push(i, i * 2)
     f2.consume()
-    # f3.multi_process_consume(2)
+    f3.multi_process_consume(2)
     # # 192.168.114.135  192.168.6.133
     # f2.fabric_deploy('192.168.6.133', 22, 'ydf', '372148', process_num=2)
     f3.fabric_deploy('106.55.244.110', 22, 'root', '(H8{Q$%Bb2_|nSg}',

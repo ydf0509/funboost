@@ -1,8 +1,9 @@
 import time
 
-from test_frame.test_broker.test_consume import f
+from test_frame.test_broker.test_consume import f, f2
 
 f.clear()
+f2.clear()
 for i in range(1000000):
     # time.sleep(0.2)
     if i == 0:
@@ -10,6 +11,7 @@ for i in range(1000000):
     if i == 99999:
         print(time.strftime("%H:%M:%S"), '发布第100000条')
     f.push(i, i * 2)
+    f2.push(i, 1 * 2)
 
 if __name__ == '__main__':
     pass

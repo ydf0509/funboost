@@ -201,6 +201,7 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
 class ConsumersManager:
     schedulal_thread_to_be_join = []
     consumers_queue__info_map = dict()
+    consumers_queue__consumer_obj_map = dict()
     global_concurrent_mode = None
     schedual_task_always_use_thread = False
     _has_show_conusmers_info = False
@@ -344,6 +345,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.init_params['consuming_function'] = consuming_function
 
         ConsumersManager.consumers_queue__info_map[queue_name] = current_queue__info_dict = copy.copy(self.init_params)
+        ConsumersManager.consumers_queue__consumer_obj_map[queue_name] = self
         current_queue__info_dict['consuming_function'] = str(consuming_function)  # consuming_function.__name__
         current_queue__info_dict['specify_async_loop'] = str(specify_async_loop)
         current_queue__info_dict[
@@ -422,7 +424,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                  formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
         # self.logger.info(f'{self.__class__} 在 {current_queue__info_dict["where_to_instantiate"]}  被实例化')
 
-        stdout_write(f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;30;44m此行 '
+        stdout_write(f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;37;44m此行 '
                      f'实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
         current_queue__info_dict_for_json = {}
         for k, v in current_queue__info_dict.items():

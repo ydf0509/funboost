@@ -314,6 +314,8 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 大部分框架，都要深入使用里面的很多个类，还需要继承组合一顿。
 ```
 
+[查看分布式函数调度框架完整文档](https://funboost.readthedocs.io/zh/latest/index.html)
+
 ![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)
 
 <div> </div>

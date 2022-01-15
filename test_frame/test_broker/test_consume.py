@@ -33,5 +33,5 @@ if __name__ == '__main__':
         f2.push(i, i * 2)
 
     f.consume()
-    f2.consume()
+    f2.multi_process_consume(2)
 

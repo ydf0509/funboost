@@ -11,7 +11,7 @@ from funboost.utils import RedisMixin
 
 # @boost('test_queue66', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=5, log_level=10, is_print_detail_exception=False, is_show_message_get_from_broker=False,
 #            is_using_distributed_frequency_control=True)
-@boost('test_queue70c', qps=1, broker_kind=BrokerEnum.REDIS_ACK_ABLE, is_send_consumer_hearbeat_to_redis=True)
+@boost('test_queue70c', broker_kind=BrokerEnum.REDIS_ACK_ABLE, is_send_consumer_hearbeat_to_redis=True)
 def f(x, y):
     return x + y
 

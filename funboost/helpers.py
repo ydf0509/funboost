@@ -85,7 +85,7 @@ def fabric_deploy(task_fun, host, port, user, password,
                   only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
                   file_volume_limit=1000 * 1000, sftp_log_level=20, extra_shell_str='',
                   invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
-                  python_interpreter ='python3',
+                  python_interpreter='python3',
                   process_num=1):
     """
     不依赖阿里云codepipeline 和任何运维发布管理工具，只需要在python代码层面就能实现多机器远程部署。
@@ -179,6 +179,7 @@ def kill_all_remote_tasks(host, port, user, password):
     logger.warning(f'{kill_shell} 命令杀死 {fsdf_fabric_mark_all} 标识的进程')
     uploader.ssh.exec_command(kill_shell)
     logger.warning(f'杀死 {host}  机器所有的 {fsdf_fabric_mark_all} 标识的进程')
+
 
 class FunctionResultStatusPersistanceConfig(LoggerMixin):
     def __init__(self, is_save_status: bool, is_save_result: bool, expire_seconds: int = 7 * 24 * 3600, is_use_bulk_insert=False):

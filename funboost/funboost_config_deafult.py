@@ -78,8 +78,6 @@ FSDF_DEVELOP_LOG_LEVEL = 50  # 开发时候的日志，仅供我自己用，所�
 
 TIMEZONE = 'Asia/Shanghai'
 
-
-
 # *********************************************** 以下是 boost装饰器的默认全局配置 *******************************************
 """
 BoostDecoratorDefaultParams是@boost装饰器默认的全局入参。如果boost没有亲自指定某个入参，就自动使用这里的配置。

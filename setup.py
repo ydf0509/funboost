@@ -78,6 +78,7 @@ setup(
         'nb_filelock',
         'aiohttp==3.8.0',
         'pysnooper',
+        'deprecated'
     ]
 )
 """

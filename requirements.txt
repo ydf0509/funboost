@@ -42,6 +42,6 @@ six~=1.11.0
 redis3
 fabric2
 nats-python
-
+deprecated
 
 ## 这里的不用管，可能没及时更新维护， pip install function_scheduling_distributed_framework 自动安装所有依赖包

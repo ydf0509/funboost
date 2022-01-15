@@ -1088,12 +1088,12 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
         with self.redis_db_frame.pipeline() as p:
             for result in results:
                 result_dict = json.loads(result)
-                if time.time() - result_dict['hearbeat_timestamp'] > 15 \
+                if self.timestamp() - result_dict['hearbeat_timestamp'] > 15 \
                         or self._consumer_identification_map['consumer_uuid'] == result_dict['consumer_uuid']:
                     # 因为这个是10秒钟运行一次，15秒还没更新，那肯定是掉线了。如果消费者本身是自己也先删除。
                     p.srem(redis_key, result)
             self._consumer_identification_map['hearbeat_datetime_str'] = time_util.DatetimeConverter().datetime_str
-            self._consumer_identification_map['hearbeat_timestamp'] = time.time()
+            self._consumer_identification_map['hearbeat_timestamp'] = self.timestamp()
             value = json.dumps(self._consumer_identification_map, sort_keys=True)
             p.sadd(redis_key, value)
             p.execute()
@@ -1103,10 +1103,10 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
         results = self.redis_db_frame.smembers(self._redis_key_name)
         with self.redis_db_frame.pipeline() as p:
             for result in results:
-                if time.time() - float(result.decode().split('&&')[-1]) > 15 or \
+                if self.timestamp() - float(result.decode().split('&&')[-1]) > 15 or \
                         self._consumer_identification == result.decode().split('&&')[0]:  # 因为这个是10秒钟运行一次，15秒还没更新，那肯定是掉线了。如果消费者本身是自己也先删除。
                     p.srem(self._redis_key_name, result)
-            p.sadd(self._redis_key_name, f'{self._consumer_identification}&&{time.time()}')
+            p.sadd(self._redis_key_name, f'{self._consumer_identification}&&{self.timestamp()}')
             p.execute()
 
         self._send_heartbeat_with_dict_value(self._queue__consumer_identification_map_key_name)
@@ -1141,7 +1141,7 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHand
         active_consumers_processor_info_list = []
         for result in results:
             result_dict = json.loads(result)
-            if time.time() - result_dict['hearbeat_timestamp'] < 15:
+            if self.timestamp() - result_dict['hearbeat_timestamp'] < 15:
                 active_consumers_processor_info_list.append(result_dict)
         return active_consumers_processor_info_list
 
@@ -1186,7 +1186,7 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHand
             infos_map[dict_key] = []
             for info_str in infos:
                 info_dict = json.loads(info_str)
-                if time.time() - info_dict['hearbeat_timestamp'] < 15:
+                if self.timestamp() - info_dict['hearbeat_timestamp'] < 15:
                     infos_map[dict_key].append(info_dict)
         return infos_map
 

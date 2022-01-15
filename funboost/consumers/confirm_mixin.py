@@ -38,6 +38,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
         self.redis_db_frame.zrem(self._unack_zset_name, kw['task_str'])
 
     def _requeue_tasks_which_unconfirmed(self):
+        """不使用这种方案，不适合本来来就需要长耗时的函数，很死板"""
         # 防止在多个进程或多个机器中同时做扫描和放入未确认消费的任务。使用个分布式锁。
         lock_key = f'fsdf_lock__requeue_tasks_which_unconfirmed_timeout:{self._queue_name}'
         with decorators.RedisDistributedLockContextManager(self.redis_db_frame, lock_key, ) as lock:

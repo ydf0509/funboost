@@ -28,7 +28,7 @@ def f2(a, b):
 if __name__ == '__main__':
     # pass
     # f.clear()
-    for i in range(100):
+    for i in range(1000):
         f.push(i, i * 2)
         f2.push(i, i * 2)
 

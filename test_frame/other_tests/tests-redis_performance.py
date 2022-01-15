@@ -1,11 +1,12 @@
 """
 测试redis无其他逻辑时候的性能
 """
+from funboost.utils import RedisMixin
 from redis3 import Redis
 import decorator_libs
 import nb_log
 
-r = Redis(decode_responses=True)
+# r = Redis(decode_responses=True)
 
 # with decorator_libs.TimerContextManager():
 #     for i in range(1000000):
@@ -22,3 +23,4 @@ r = Redis(decode_responses=True)
 #     r.xadd('testp2',{"":i})
 
 
+print(RedisMixin().timestamp())

@@ -64,3 +64,8 @@ class RedisMixin(object):
     @decorators.cached_method_result
     def redis_db_frame_version3(self):
         return redis3.Redis(host=funboost_config_deafult.REDIS_HOST, port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD, db=funboost_config_deafult.REDIS_DB, decode_responses=True)
+
+    def timestamp(self):
+        time_tuple = self.redis_db_frame_version3.time()
+        # print(time_tuple)
+        return time_tuple[0] + time_tuple[1] / 1000000

@@ -631,7 +631,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
         if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
             # print(function_result_status.get_status_dict(without_datetime_obj=
-            with RedisMixin().redis_db_frame.pipeline() as p:
+            with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
                 # RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
                 # RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
                 p.lpush(kw['body']['extra']['task_id'],
@@ -726,7 +726,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params)
         if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
             def push_result():
-                with RedisMixin().redis_db_frame.pipeline() as p:
+                with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
                     p.lpush(kw['body']['extra']['task_id'],
                             json.dumps(current_function_result_status.get_status_dict(without_datetime_obj=True)))
                     p.expire(kw['body']['extra']['task_id'], 600)

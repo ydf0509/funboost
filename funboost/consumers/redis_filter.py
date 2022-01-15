@@ -40,13 +40,13 @@ class RedisFilter(RedisMixin, LoggerMixinDefaultWithFileHandler):
         return json.dumps(ordered_dict)
 
     def add_a_value(self, value: typing.Union[str, dict]):
-        self.redis_db_frame.sadd(self._redis_key_name, self._get_ordered_str(value))
+        self.redis_db_filter_and_rpc_result.sadd(self._redis_key_name, self._get_ordered_str(value))
 
     def manual_delete_a_value(self, value: typing.Union[str, dict]):
-        self.redis_db_frame.srem(self._redis_key_name, self._get_ordered_str(value))
+        self.redis_db_filter_and_rpc_result.srem(self._redis_key_name, self._get_ordered_str(value))
 
     def check_value_exists(self, value):
-        return self.redis_db_frame.sismember(self._redis_key_name, self._get_ordered_str(value))
+        return self.redis_db_filter_and_rpc_result.sismember(self._redis_key_name, self._get_ordered_str(value))
 
     def delete_expire_filter_task_cycle(self):
         pass
@@ -60,14 +60,14 @@ class RedisImpermanencyFilter(RedisFilter):
     """
 
     def add_a_value(self, value: typing.Union[str, dict]):
-        self.redis_db_frame.zadd(self._redis_key_name, self._get_ordered_str(value), time.time())
+        self.redis_db_filter_and_rpc_result.zadd(self._redis_key_name, self._get_ordered_str(value), time.time())
 
     def manual_delete_a_value(self, value: typing.Union[str, dict]):
-        self.redis_db_frame.zrem(self._redis_key_name, self._get_ordered_str(value))
+        self.redis_db_filter_and_rpc_result.zrem(self._redis_key_name, self._get_ordered_str(value))
 
     def check_value_exists(self, value):
-        # print(self.redis_db_frame.zrank(self._redis_key_name, self._get_ordered_str(value)))
-        return False if self.redis_db_frame.zrank(self._redis_key_name, self._get_ordered_str(value)) is None else True
+        # print(self.redis_db_filter_and_rpc_result.zrank(self._redis_key_name, self._get_ordered_str(value)))
+        return False if self.redis_db_filter_and_rpc_result.zrank(self._redis_key_name, self._get_ordered_str(value)) is None else True
 
     @decorators.keep_circulating(60, block=False)
     def delete_expire_filter_task_cycle000(self):
@@ -77,9 +77,9 @@ class RedisImpermanencyFilter(RedisFilter):
         :return:
         """
         time_max = time.time() - self._redis_filter_task_expire_seconds
-        for value in self.redis_db_frame.zrangebyscore(self._redis_key_name, 0, time_max):
+        for value in self.redis_db_filter_and_rpc_result.zrangebyscore(self._redis_key_name, 0, time_max):
             self.logger.info(f'删除 {self._redis_key_name} 键中的过滤任务 {value}')
-            self.redis_db_frame.zrem(self._redis_key_name, value)
+            self.redis_db_filter_and_rpc_result.zrem(self._redis_key_name, value)
 
     @decorators.keep_circulating(60, block=False)
     def delete_expire_filter_task_cycle(self):
@@ -88,9 +88,9 @@ class RedisImpermanencyFilter(RedisFilter):
         :return:
         """
         time_max = time.time() - self._redis_filter_task_expire_seconds
-        delete_num = self.redis_db_frame.zremrangebyscore(self._redis_key_name, 0, time_max)
+        delete_num = self.redis_db_filter_and_rpc_result.zremrangebyscore(self._redis_key_name, 0, time_max)
         self.logger.warning(f'从{self._redis_key_name}  键删除 {delete_num} 个过期的过滤任务')
-        self.logger.warning(f'{self._redis_key_name}  键中有 {self.redis_db_frame.zcard(self._redis_key_name)} 个没有过期的过滤任务')
+        self.logger.warning(f'{self._redis_key_name}  键中有 {self.redis_db_filter_and_rpc_result.zcard(self._redis_key_name)} 个没有过期的过滤任务')
 
 
 class RedisImpermanencyFilterUsingRedisKey(RedisFilter):

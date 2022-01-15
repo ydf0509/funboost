@@ -63,7 +63,21 @@ class RedisMixin(object):
     @property
     @decorators.cached_method_result
     def redis_db_frame_version3(self):
-        return redis3.Redis(host=funboost_config_deafult.REDIS_HOST, port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD, db=funboost_config_deafult.REDIS_DB, decode_responses=True)
+        ''' redis 3和2 入仓和返回差别很大，都要使用'''
+        return redis3.Redis(host=funboost_config_deafult.REDIS_HOST, port=funboost_config_deafult.REDIS_PORT,
+                            password=funboost_config_deafult.REDIS_PASSWORD, db=funboost_config_deafult.REDIS_DB, decode_responses=True)
+
+    @property
+    @decorators.cached_method_result
+    def redis_db_filter_and_rpc_result(self):
+        return RedisManager(host=funboost_config_deafult.REDIS_HOST, port=funboost_config_deafult.REDIS_PORT,
+                            password=funboost_config_deafult.REDIS_PASSWORD, db=funboost_config_deafult.REDIS_DB_FILTER_AND_RPC_RESULT).get_redis()
+
+    @property
+    @decorators.cached_method_result
+    def redis_db_filter_and_rpc_result_version3(self):
+        return redis3.Redis(host=funboost_config_deafult.REDIS_HOST, port=funboost_config_deafult.REDIS_PORT,
+                            password=funboost_config_deafult.REDIS_PASSWORD, db=funboost_config_deafult.REDIS_DB_FILTER_AND_RPC_RESULT, decode_responses=True)
 
     def timestamp(self):
         time_tuple = self.redis_db_frame_version3.time()

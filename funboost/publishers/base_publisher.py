@@ -40,18 +40,18 @@ class AsyncResult(RedisMixin):
         return self
 
     def is_pending(self):
-        return not self.redis_db_frame.exists(self.task_id)
+        return not self.redis_db_filter_and_rpc_result.exists(self.task_id)
 
     @property
     def status_and_result(self):
         if not self._has_pop:
-            redis_value = self.redis_db_frame.blpop(self.task_id, self.timeout)
+            redis_value = self.redis_db_filter_and_rpc_result.blpop(self.task_id, self.timeout)
             self._has_pop = True
             if redis_value is not None:
                 status_and_result_str = redis_value[1]
                 self._status_and_result = json.loads(status_and_result_str)
-                self.redis_db_frame.lpush(self.task_id, status_and_result_str)
-                self.redis_db_frame.expire(self.task_id, 600)
+                self.redis_db_filter_and_rpc_result.lpush(self.task_id, status_and_result_str)
+                self.redis_db_filter_and_rpc_result.expire(self.task_id, 600)
                 return self._status_and_result
             return None
         return self._status_and_result

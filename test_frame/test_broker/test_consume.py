@@ -13,7 +13,7 @@ from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecut
 pool = ThreadPoolExecutorShrinkAble(10)
 # @boost('test_queue66', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=5, log_level=10, is_print_detail_exception=False, is_show_message_get_from_broker=False,
 #            is_using_distributed_frequency_control=True)
-@boost('test_queue70ac',)
+@boost('test_queue70ac',do_task_filtering=True,qps=3)
 def f(x, y):
     # time.sleep(100)
     return x + y
@@ -27,11 +27,12 @@ def f2(a, b):
 
 if __name__ == '__main__':
     # pass
-    # f.clear()
-    for i in range(1000):
+    f.clear()
+    f2.clear()
+    for i in range(100):
         f.push(i, i * 2)
         f2.push(i, i * 2)
 
     f.consume()
-    f2.multi_process_consume(2)
+    # f2.multi_process_consume(2)
 

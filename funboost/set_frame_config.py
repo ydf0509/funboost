@@ -10,11 +10,23 @@ import sys
 import time
 import re
 import importlib
+import json
 from pathlib import Path
 from shutil import copyfile
 from nb_log import nb_print, stderr_write, stdout_write
 from nb_log.monkey_print import is_main_process, only_print_on_main_process
 from funboost import funboost_config_deafult
+
+
+def dict2json(dictx: dict, indent=4):
+    dict_new = {}
+    for k, v in dictx.items():
+        # only_print_on_main_process(f'{k} :  {v}')
+        if isinstance(v, (bool, tuple, dict, float, int)):
+            dict_new[k] = v
+        else:
+            dict_new[k] = str(v)
+    return json.dumps(dict_new, ensure_ascii=False, indent=indent)
 
 
 # noinspection PyPep8Naming
@@ -75,6 +87,9 @@ def show_frame_config():
             else:
                 only_print_on_main_process(f'{var_name}:                {var_value}')
 
+    only_print_on_main_process(f'\n 读取的 BoostDecoratorDefaultParams 默认 @boost 装饰器入参的默认全局配置是： \n  '
+                               f'{dict2json(funboost_config_deafult.BoostDecoratorDefaultParams().get_dict())}')
+
 
 def use_config_form_funboost_config_module():
     """
@@ -110,8 +125,9 @@ def use_config_form_funboost_config_module():
         nb_print(
             f'''分布式函数调度框架检测到 你的项目根目录 {project_root_path} 和当前文件夹 {current_script_path}  下没有 funboost_config.py 文件，\n''')
         auto_creat_config_file_to_project_root_path()
-
-    show_frame_config()
+    else:
+        show_frame_config()
+        # print(getattr(m,'BoostDecoratorDefaultParams')().get_dict())
 
 
 def auto_creat_config_file_to_project_root_path():

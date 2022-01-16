@@ -61,7 +61,7 @@ from funboost.concurrent_pool.custom_threadpool_executor import \
 # from funboost.concurrent_pool.concurrent_pool_with_multi_process import ConcurrentPoolWithProcess
 from funboost.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from funboost.factories.publisher_factotry import get_publisher
-from funboost.utils import decorators, time_util, RedisMixin
+from funboost.utils import decorators, time_util, RedisMixin, un_strict_json_dumps
 # noinspection PyUnresolvedReferences
 from funboost.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
 from funboost.utils.mongo_util import MongoMixin
@@ -426,14 +426,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         stdout_write(f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;37;44m此行 '
                      f'实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
-        current_queue__info_dict_for_json = {}
-        for k, v in current_queue__info_dict.items():
-            # only_print_on_main_process(f'{k} :  {v}')
-            if isinstance(v, (bool, tuple, dict, float, int)):
-                current_queue__info_dict_for_json[k] = v
-            else:
-                current_queue__info_dict_for_json[k] = str(v)
-        only_print_on_main_process(f'{current_queue__info_dict["queue_name"]} 的消费者配置:\n', json.dumps(current_queue__info_dict_for_json, ensure_ascii=False, indent=4))
+        only_print_on_main_process(f'{current_queue__info_dict["queue_name"]} 的消费者配置:\n', un_strict_json_dumps.dict2json(current_queue__info_dict))
 
         self._do_task_filtering = do_task_filtering
         self._redis_filter_key_name = f'filter_zset:{queue_name}' if task_filtering_expire_seconds else f'filter_set:{queue_name}'

@@ -87,7 +87,7 @@ def show_frame_config():
             else:
                 only_print_on_main_process(f'{var_name}:                {var_value}')
 
-    only_print_on_main_process(f'\n 读取的 BoostDecoratorDefaultParams 默认 @boost 装饰器入参的默认全局配置是： \n  '
+    only_print_on_main_process(f'读取的 BoostDecoratorDefaultParams 默认 @boost 装饰器入参的默认全局配置是： \n  '
                                f'{dict2json(funboost_config_deafult.BoostDecoratorDefaultParams().get_dict())}')
 
 

@@ -1,4 +1,5 @@
 import copy
+from funboost.utils import un_strict_json_dumps
 class DataClassBase:
     """
     使用类实现的 简单数据类。
@@ -25,11 +26,18 @@ class DataClassBase:
     def __getitem__(self, item):
         return getattr(self,item)
 
+    def get_json(self):
+        un_strict_json_dumps.dict2json(self.get_dict())
+
+
 
 if __name__ == '__main__':
+    import datetime
+
     class A(DataClassBase):
         x =1
         y = 2
+        z = datetime.datetime.now()
 
     print(A())
     print(A(y=3))

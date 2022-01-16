@@ -36,9 +36,8 @@ RABBITMQ_VIRTUAL_HOST = '/'  # my_host # 这个是rabbitmq的虚拟子host用户
 REDIS_HOST = '127.0.0.1'
 REDIS_PASSWORD = ''
 REDIS_PORT = 6379
-REDIS_DB = 7      # redis消息队列所在db，请不要在这个db放太多其他键值对
-REDIS_DB_FILTER_AND_RPC_RESULT = 8 # 如果函数做任务参数过滤 或者使用rpc获取结果，使用这个db，因为这个db的键值对多，和redis消息队列db分开
-
+REDIS_DB = 7  # redis消息队列所在db，请不要在这个db放太多其他键值对
+REDIS_DB_FILTER_AND_RPC_RESULT = 8  # 如果函数做任务参数过滤 或者使用rpc获取结果，使用这个db，因为这个db的键值对多，和redis消息队列db分开
 
 NSQD_TCP_ADDRESSES = ['127.0.0.1:4150']
 NSQD_HTTP_CLIENT_HOST = '127.0.0.1'
@@ -95,6 +94,7 @@ class BoostDecoratorDefaultParams(DataClassBase):
     specify_async_loop = None
     qps: float = 0
     is_using_distributed_frequency_control = False
+    is_send_consumer_hearbeat_to_redis = False
 
     max_retry_times = 3
 
@@ -108,8 +108,6 @@ class BoostDecoratorDefaultParams(DataClassBase):
 
     msg_expire_senconds = 0
 
-    is_send_consumer_hearbeat_to_redis = False
-
     do_task_filtering = False
     task_filtering_expire_seconds = 0
 
@@ -122,6 +120,6 @@ class BoostDecoratorDefaultParams(DataClassBase):
 
     schedule_tasks_on_main_thread = False
 
-    broker_kind: int = BrokerEnum.PERSISTQUEUE   # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
+    broker_kind: int = BrokerEnum.PERSISTQUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
 
 # *********************************************** 以上是 boost装饰器的默认全局配置 *******************************************

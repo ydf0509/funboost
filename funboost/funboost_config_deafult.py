@@ -98,6 +98,7 @@ class BoostDecoratorDefaultParams(DataClassBase):
 
     max_retry_times = 3
 
+    consumin_function_decorator = None
     function_timeout = 0
 
     log_level = 10

@@ -126,10 +126,13 @@ class IdeAutoCompleteHelper(LoggerMixin):
 class _Undefined:
     pass
 
+
 boost_queue__fun_map = {}  # type:typing.Dict[str,IdeAutoCompleteHelper]
+
+
 # import funboost ; funboost.boost_queue__fun_map
 
-def boost(queue_name, *, function_timeout=_Undefined,
+def boost(queue_name, *, consumin_function_decorator: typing.Callable = _Undefined, function_timeout=_Undefined,
           concurrent_num=_Undefined, specify_concurrent_pool=_Undefined, specify_async_loop=_Undefined, concurrent_mode=_Undefined,
           max_retry_times=_Undefined, log_level=_Undefined, is_print_detail_exception=_Undefined, is_show_message_get_from_broker=_Undefined,
           qps: float = _Undefined, is_using_distributed_frequency_control=_Undefined, msg_expire_senconds=_Undefined,
@@ -147,6 +150,7 @@ def boost(queue_name, *, function_timeout=_Undefined,
 
     # 为了代码提示好，这里重复一次入参意义。被此装饰器装饰的函数f，函数f对象本身自动加了一些方法，例如f.push 、 f.consume等。
     :param queue_name: 队列名字。
+    :param consumin_function_decorator : 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
     :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。设置后代码性能会变差，非必要不要轻易设置。
     # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
     # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
@@ -240,7 +244,6 @@ def boost(queue_name, *, function_timeout=_Undefined,
         if v == _Undefined:
             # print(k,v,boost_decorator_default_params[k])
             consumer_init_params[k] = boost_decorator_default_params[k]
-
 
     # print(consumer_init_params)
     def _deco(func) -> IdeAutoCompleteHelper:  # 加这个-> 可以实现pycahrm动态补全

@@ -283,7 +283,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         ConsumersManager.join_all_consumer_shedual_task_thread()
 
     # noinspection PyProtectedMember,PyUnresolvedReferences
-    def __init__(self, queue_name, *, consuming_function: Callable = None, function_timeout=0, concurrent_num=50,
+    def __init__(self, queue_name, *, consuming_function: Callable = None,
+                 consumin_function_decorator: typing.Callable = None, function_timeout=0, concurrent_num=50,
                  specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=ConcurrentModeEnum.THREADING,
                  max_retry_times=3, log_level=10, is_print_detail_exception=True, is_show_message_get_from_broker=False,
                  qps: float = 0, is_using_distributed_frequency_control=False,
@@ -300,6 +301,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         :param queue_name:
         :param consuming_function: 处理消息的函数。
+        :param consumin_function_decorator : 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
         :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
          # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
          # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
@@ -376,6 +378,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if consuming_function is None:
             raise ValueError('必须传 consuming_function 参数')
         self.consuming_function = consuming_function
+        self._consumin_function_decorator = consumin_function_decorator
         self._function_timeout = function_timeout
 
         # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
@@ -616,12 +619,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 break
 
         self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
+        self._confirm_consume(kw)
+        if self.__get_priority_conf(kw, 'do_task_filtering'):
+            self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
         if current_function_result_status.success is False and current_retry_times == max_retry_times:
             self.logger.critical(
                 f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} ')
-            self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
-            if self.__get_priority_conf(kw, 'do_task_filtering'):
-                self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
         if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
             # print(function_result_status.get_status_dict(without_datetime_obj=
             with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
@@ -658,8 +661,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         function_result_status.run_times = current_retry_times + 1
         try:
             function_timeout = self.__get_priority_conf(kw, 'function_timeout')
-            function_run = self.consuming_function if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
-                function_timeout)(self.consuming_function)
+            function_run0 = self.consuming_function if self._consumin_function_decorator is None else self._consumin_function_decorator(self.consuming_function)
+            function_run = function_run0 if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
+                function_timeout)(function_run0)
             function_result_status.result = function_run(**function_only_params)
             if asyncio.iscoroutine(function_result_status.result):
                 self.logger.critical(f'异步的协程消费函数必须使用 async 并发模式并发,请设置 '
@@ -667,9 +671,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 # noinspection PyProtectedMember,PyUnresolvedReferences
                 os._exit(4)
             function_result_status.success = True
-            self._confirm_consume(kw)
-            if self.__get_priority_conf(kw, 'do_task_filtering'):
-                self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
             if self._log_level <= logging.DEBUG:
                 result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
@@ -709,14 +710,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         # self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
         await simple_run_in_executor(self._result_persistence_helper.save_function_result_to_mongo, current_function_result_status)
+        await simple_run_in_executor(self._confirm_consume, kw)
+        if self.__get_priority_conf(kw, 'do_task_filtering'):
+            # self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
+            await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params)
         if current_function_result_status.success is False and current_retry_times == max_retry_times:
             self.logger.critical(
                 f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} ')
             # self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
-            await simple_run_in_executor(self._confirm_consume, kw)
-            if self.__get_priority_conf(kw, 'do_task_filtering'):
-                # self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
-                await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params)
+
         if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
             def push_result():
                 with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
@@ -769,11 +771,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 rs = await asyncio.wait_for(corotinue_obj, timeout=self._function_timeout)
             function_result_status.result = rs
             function_result_status.success = True
-            # self._confirm_consume(kw)
-            await simple_run_in_executor(self._confirm_consume, kw)
-            if self.__get_priority_conf(kw, 'do_task_filtering'):
-                # self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
-                await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params)
             if self._log_level <= logging.DEBUG:
                 result_str_to_be_print = str(rs)[:100] if len(str(rs)) < 100 else str(rs)[:100] + '  。。。。。  '
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '

@@ -12,6 +12,8 @@ def incr_deco(redis_key):
         def __inner(*args, **kwargs):
             result = f(*args, **kwargs)
             RedisMixin().redis_db_frame.incr(redis_key)
+            # 创建索引
+
             # MongoMixin().mongo_client.get_database('basea').get_collection('cola').insert({'result':result,'args':str(args),'kwargs':str(kwargs)})
             return result
 
@@ -20,7 +22,7 @@ def incr_deco(redis_key):
     return _inner
 
 
-@boost('test_queue_235',consumin_function_decorator=incr_deco(nb_log.nb_log_config_default.computer_ip))
+@boost('test_queue_235',consumin_function_decorator=incr_deco(f'run_count:{nb_log.nb_log_config_default.computer_ip}'))
 # @incr_deco('test_queue_235_run_count')
 def fun(xxx, yyy):
     print(xxx + yyy)

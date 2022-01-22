@@ -22,7 +22,8 @@ def incr_deco(redis_key):
     return _inner
 
 
-@boost('test_queue_235',consumin_function_decorator=incr_deco(f'run_count:{nb_log.nb_log_config_default.computer_ip}'))
+@boost('test_queue_235',consumin_function_decorator=incr_deco(f'run_count:{nb_log.nb_log_config_default.computer_ip}'),
+       do_task_filtering=True)
 # @incr_deco('test_queue_235_run_count')
 def fun(xxx, yyy):
     print(xxx + yyy)
@@ -32,6 +33,6 @@ def fun(xxx, yyy):
 if __name__ == '__main__':
     print(inspect.getfullargspec(fun))
 
-    for i in range(10):
+    for i in range(20):
         fun.push(i, 2 * i)
     fun.consume()

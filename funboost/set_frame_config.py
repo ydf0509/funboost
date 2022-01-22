@@ -119,8 +119,12 @@ def use_config_form_funboost_config_module():
         only_print_on_main_process(f'分布式函数调度框架 读取到\n "{m.__file__}:1" 文件里面的变量作为优先配置了\n')
         for var_namex, var_valuex in m.__dict__.items():
             # print(m, var_namex, var_valuex)
-            if var_namex.isupper() or var_namex == 'BoostDecoratorDefaultParams':
+            if var_namex.isupper():
                 setattr(funboost_config_deafult, var_namex, var_valuex)  # 用用户自定义的配置覆盖框架的默认配置。
+            if var_namex == 'BoostDecoratorDefaultParams':
+                for k, v in var_valuex().get_dict().items():
+                    setattr(funboost_config_deafult.BoostDecoratorDefaultParams, k, v)
+
     except ModuleNotFoundError:
         nb_print(
             f'''分布式函数调度框架检测到 你的项目根目录 {project_root_path} 和当前文件夹 {current_script_path}  下没有 funboost_config.py 文件，\n''')

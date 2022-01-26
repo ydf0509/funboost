@@ -95,7 +95,8 @@ def test_f(x):
 if __name__ == '__main__':
     import nb_log
 
-    pool = BoundedProcessPoolExecutor(4)
+    # pool = BoundedProcessPoolExecutor(4)
+    pool = BoundedThreadPoolExecutor(4)
     for i in range(10):
         print(i)
         pool.submit(test_f, i)

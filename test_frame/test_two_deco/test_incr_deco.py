@@ -35,4 +35,4 @@ if __name__ == '__main__':
 
     for i in range(20):
         fun.push(i, 2 * i)
-    fun.consume()
+    fun.multi_process_consume(2)

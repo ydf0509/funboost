@@ -34,6 +34,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
 from apscheduler.events import EVENT_JOB_MISSED
 
+
 from funboost.concurrent_pool.single_thread_executor import SoloExecutor
 from funboost.helpers import FunctionResultStatusPersistanceConfig
 from funboost.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
@@ -217,15 +218,15 @@ class ConsumersManager:
                 nb_print(t)
                 t.join()
         else:
-            if cls.global_concurrent_mode in [1, 4]:
+            if cls.global_concurrent_mode in [ConcurrentModeEnum.THREADING, ConcurrentModeEnum.ASYNC, ]:
                 for t in cls.schedulal_thread_to_be_join:
                     # nb_print(t)
                     t.join()
-            elif cls.global_concurrent_mode == 2:
+            elif cls.global_concurrent_mode == ConcurrentModeEnum.GEVENT:
                 # cls.logger.info()
                 # nb_print(cls.schedulal_thread_to_be_join)
                 gevent.joinall(cls.schedulal_thread_to_be_join, raise_error=True, )
-            elif cls.global_concurrent_mode == 3:
+            elif cls.global_concurrent_mode == ConcurrentModeEnum.EVENTLET:
                 for g in cls.schedulal_thread_to_be_join:
                     # eventlet.greenthread.GreenThread.
                     # nb_print(g)
@@ -243,16 +244,18 @@ class ConsumersManager:
 
     @staticmethod
     def get_concurrent_name_by_concurrent_mode(concurrent_mode):
-        if concurrent_mode == 1:
+        if concurrent_mode == ConcurrentModeEnum.THREADING:
             return 'thread'
-        elif concurrent_mode == 2:
+        elif concurrent_mode == ConcurrentModeEnum.GEVENT:
             return 'gevent'
-        elif concurrent_mode == 3:
+        elif concurrent_mode == ConcurrentModeEnum.EVENTLET:
             return 'evenlet'
-        elif concurrent_mode == 4:
+        elif concurrent_mode == ConcurrentModeEnum.ASYNC:
             return 'async'
-        elif concurrent_mode == 5:
+        elif concurrent_mode == ConcurrentModeEnum.SINGLE_THREAD:
             return 'single_thread'
+        # elif concurrent_mode == ConcurrentModeEnum.LINUX_FORK:
+        #     return 'linux_fork'
 
 
 # noinspection DuplicatedCode
@@ -404,10 +407,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._is_send_consumer_hearbeat_to_redis = is_send_consumer_hearbeat_to_redis or is_using_distributed_frequency_control
         self._msg_expire_senconds = msg_expire_senconds
 
-        if self._concurrent_mode not in (1, 2, 3, 4, 5):
+        if self._concurrent_mode not in (1, 2, 3, 4, 5, 6):
             raise ValueError('设置的并发模式不正确')
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
-        if self._concurrent_mode == 4:
+        if self._concurrent_mode == ConcurrentModeEnum.ASYNC:
             self._run = self._async_run  # 这里做了自动转化，使用async_run代替run
 
         self._logger_prefix = logger_prefix
@@ -604,6 +607,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         return concurrent_info
 
     def _run(self, kw: dict, ):
+        # print(kw)
         t_start_run_fun = time.time()
         max_retry_times = self.__get_priority_conf(kw, 'max_retry_times')
         current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'])
@@ -950,21 +954,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         return f'队列为 {self.queue_name} 函数为 {self.consuming_function} 的消费者'
 
 
-def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3):
-    """
-   判断多个消费者是否消费完成了。
-   由于是异步消费，和存在队列一边被消费，一边在推送，或者还有结尾少量任务还在确认消费者实际还没彻底运行完成。  但有时候需要判断 所有任务，务是否完成，提供一个不精确的判断，要搞清楚原因和场景后再慎用。
-   一般是和celery一样，是永久运行的后台任务，永远无限死循环去任务执行任务，但有的人有判断是否执行完成的需求。
-   :param consumer_list: 多个消费者列表
-   :param minutes: 消费者连续多少分钟没执行任务任务 并且 消息队列中间件中没有，就判断为消费完成。为了防止是长耗时任务，一般判断完成是真正提供的minutes的2个周期时间。
-   :return:
-
-    """
-    with BoundedThreadPoolExecutor(len(consumer_list)) as pool:
-        for consumer in consumer_list:
-            pool.submit(consumer.wait_for_possible_has_finish_all_tasks(minutes))
-
-
 # noinspection PyProtectedMember
 class ConcurrentModeDispatcher(LoggerMixin):
 
@@ -972,11 +961,11 @@ class ConcurrentModeDispatcher(LoggerMixin):
         self.consumer = consumerx
         self._concurrent_mode = self.consumer._concurrent_mode
         self.timeout_deco = None
-        if self._concurrent_mode in (1, 5):
+        if self._concurrent_mode in (ConcurrentModeEnum.THREADING, ConcurrentModeEnum.SINGLE_THREAD):
             self.timeout_deco = decorators.timeout
-        elif self._concurrent_mode == 2:
+        elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
             self.timeout_deco = gevent_timeout_deco
-        elif self._concurrent_mode == 3:
+        elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
             self.timeout_deco = evenlet_timeout_deco
         self.logger.warning(f'{self.consumer} 设置并发模式'
                             f'为{ConsumersManager.get_concurrent_name_by_concurrent_mode(self._concurrent_mode)}')
@@ -985,7 +974,9 @@ class ConcurrentModeDispatcher(LoggerMixin):
         if ConsumersManager.global_concurrent_mode is not None and self.consumer._concurrent_mode != ConsumersManager.global_concurrent_mode:
             ConsumersManager.show_all_consumer_info()
             # print({self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode})
-            if not {self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode}.issubset({1, 4, 5}):
+            if not {self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode}.issubset({ConcurrentModeEnum.THREADING,
+                                                                                                       ConcurrentModeEnum.ASYNC,
+                                                                                                       ConcurrentModeEnum.SINGLE_THREAD}):
                 # threding、asyncio、solo 这几种模式可以共存。但同一个解释器不能同时选择 gevent + 其它并发模式，也不能 eventlet + 其它并发模式。
                 raise ValueError('''由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，
                                  搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种(或可以共存),
@@ -999,18 +990,23 @@ class ConcurrentModeDispatcher(LoggerMixin):
             return self.consumer._concurrent_pool
 
         pool_type = None  # 是按照ThreadpoolExecutor写的三个鸭子类，公有方法名和功能写成完全一致，可以互相替换。
-        if self._concurrent_mode == 1:
+        if self._concurrent_mode == ConcurrentModeEnum.THREADING:
             pool_type = CustomThreadPoolExecutor
             # pool_type = BoundedThreadPoolExecutor
-        elif self._concurrent_mode == 2:
+        elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
             pool_type = GeventPoolExecutor
-        elif self._concurrent_mode == 3:
+        elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
             pool_type = CustomEventletPoolExecutor
-        elif self._concurrent_mode == 4:
+        elif self._concurrent_mode == ConcurrentModeEnum.ASYNC:
             pool_type = AsyncPoolExecutor
-        elif self._concurrent_mode == 5:
+        elif self._concurrent_mode == ConcurrentModeEnum.SINGLE_THREAD:
             pool_type = SoloExecutor
-        if self._concurrent_mode == 4:
+        # elif self._concurrent_mode == ConcurrentModeEnum.LINUX_FORK:
+        #     pool_type = SimpleProcessPool
+            # pool_type = BoundedProcessPoolExecutor
+            # from concurrent.futures import ProcessPoolExecutor
+            # pool_type = ProcessPoolExecutor
+        if self._concurrent_mode == ConcurrentModeEnum.ASYNC:
             self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool is not None else pool_type(
                 self.consumer._concurrent_num, loop=self.consumer._specify_async_loop)
         else:
@@ -1026,21 +1022,32 @@ class ConcurrentModeDispatcher(LoggerMixin):
             ConsumersManager.schedulal_thread_to_be_join.append(t)
             t.start()
         else:
-            if self._concurrent_mode in [1, 4, 5]:
+            if self._concurrent_mode in [ConcurrentModeEnum.THREADING, ConcurrentModeEnum.ASYNC,
+                                         ConcurrentModeEnum.SINGLE_THREAD, ]:
                 t = Thread(target=self.consumer.keep_circulating(1)(self.consumer._shedual_task))
                 ConsumersManager.schedulal_thread_to_be_join.append(t)
                 t.start()
-            elif self._concurrent_mode == 2:
+            elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
                 g = gevent.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
                 ConsumersManager.schedulal_thread_to_be_join.append(g)
-            elif self._concurrent_mode == 3:
+            elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
                 g = eventlet.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
                 ConsumersManager.schedulal_thread_to_be_join.append(g)
-            # elif self._concurrent_mode == 4:
-            #     t = Thread(target=self.consumer.keep_circulating(1)(self.consumer._shedual_task))
-            #     ConsumersManager.schedulal_thread_to_be_join.append(t)
-            #     t.start()
-            # elif self._concurrent_mode ==5:
+
+
+def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3):
+    """
+   判断多个消费者是否消费完成了。
+   由于是异步消费，和存在队列一边被消费，一边在推送，或者还有结尾少量任务还在确认消费者实际还没彻底运行完成。  但有时候需要判断 所有任务，务是否完成，提供一个不精确的判断，要搞清楚原因和场景后再慎用。
+   一般是和celery一样，是永久运行的后台任务，永远无限死循环去任务执行任务，但有的人有判断是否执行完成的需求。
+   :param consumer_list: 多个消费者列表
+   :param minutes: 消费者连续多少分钟没执行任务任务 并且 消息队列中间件中没有，就判断为消费完成。为了防止是长耗时任务，一般判断完成是真正提供的minutes的2个周期时间。
+   :return:
+
+    """
+    with BoundedThreadPoolExecutor(len(consumer_list)) as pool:
+        for consumer in consumer_list:
+            pool.submit(consumer.wait_for_possible_has_finish_all_tasks(minutes))
 
 
 class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandler):

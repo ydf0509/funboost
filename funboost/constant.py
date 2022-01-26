@@ -70,5 +70,6 @@ class ConcurrentModeEnum:
     EVENTLET = 3
     ASYNC = 4  # asyncio并发，适用于async def定义的函数。
     SINGLE_THREAD = 5
+    # LINUX_FORK = 6  # 多进程，只支持linux mac，不支持win使用这个多进程模式。
 
 # is_fsdf_remote_run = 0

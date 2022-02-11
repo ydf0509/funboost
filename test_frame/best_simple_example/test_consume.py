@@ -29,4 +29,5 @@ if __name__ == '__main__':
     f2.clear()
     for i in range(200):
         f2.push(i, i * 2)
+    f2.consume()
 

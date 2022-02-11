@@ -1,4 +1,6 @@
 ﻿import datetime
+import time
+
 from funboost import boost, BrokerEnum, fsdf_background_scheduler, timing_publish_deco
 
 """
@@ -19,3 +21,7 @@ if __name__ == '__main__':
     fsdf_background_scheduler.start()
     # 启动消费
     consume_func.consume()
+
+
+    while 1:
+        time.sleep(10)

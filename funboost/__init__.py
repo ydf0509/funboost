@@ -84,6 +84,9 @@ class IdeAutoCompleteHelper(LoggerMixin):
 
         self.wait_for_possible_has_finish_all_tasks = self.consumer.wait_for_possible_has_finish_all_tasks
 
+        self.pause_consume = self.consumer.pause_consume
+        self.continue_consume = self.consumer.continue_consume
+
     def multi_process_consume(self, process_num=1):
         """超高速多进程消费"""
         run_consumer_with_multi_process(self.consuming_func_decorated, process_num)
@@ -268,6 +271,9 @@ def boost(queue_name, *, consumin_function_decorator: typing.Callable = _Undefin
         func.clear_filter_tasks = consumer.clear_filter_tasks
 
         func.wait_for_possible_has_finish_all_tasks = consumer.wait_for_possible_has_finish_all_tasks
+
+        func.pause_consume = consumer.pause_consume
+        func.continue_consume = consumer.continue_consume
 
         boost_queue__fun_map[queue_name] = func
 

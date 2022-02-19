@@ -34,7 +34,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
 from apscheduler.events import EVENT_JOB_MISSED
 
-
 from funboost.concurrent_pool.single_thread_executor import SoloExecutor
 from funboost.helpers import FunctionResultStatusPersistanceConfig
 from funboost.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
@@ -458,7 +457,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._is_using_rpc_mode = is_using_rpc_mode
 
-        self.stop_flag = False
+        self._stop_flag = None
+        self._pause_flag = None
+        self._last_show_pause_log_time = 0
+        self._redis_key_stop_flag = f'funboost_stop_flag:{self.queue_name}'
+        self._redis_key_pause_flag = f'funboost_pause_flag:{self.queue_name}'
 
         # 控频要用到的成员变量
         self._last_submit_task_timestamp = 0
@@ -524,6 +527,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 # noinspection PyBroadException
                 def ___keep_circulating():
                     while 1:
+                        if self._stop_flag == 1:
+                            break
                         try:
                             result = func(*args, **kwargs)
                             if exit_if_function_run_sucsess:
@@ -556,7 +561,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             os._exit(4444)  # noqa
         self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
 
-        self._distributed_consumer_statistics = DistributedConsumerStatistics(self._queue_name, self.consumer_identification, self.consumer_identification_map)
+        self._distributed_consumer_statistics = DistributedConsumerStatistics(self)
         if self._is_send_consumer_hearbeat_to_redis:
             self._distributed_consumer_statistics.run()
             self.logger.warning(f'启动了分布式环境 使用 redis 的键 hearbeat:{self._queue_name} 统计活跃消费者 ，当前消费者唯一标识为 {self.consumer_identification}')
@@ -843,7 +848,23 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             event.function(*event.function_args, **event.function_kwargs)
         '''
 
+    def pause_consume(self):
+        RedisMixin().redis_db_frame.set(self._redis_key_pause_flag, 1)
+
+    def continue_consume(self):
+        RedisMixin().redis_db_frame.set(self._redis_key_pause_flag, 0)
+
     def _submit_task(self, kw):
+        while 1:
+            # print(self._pause_flag)
+            if self._pause_flag == 1:
+                time.sleep(1)
+                if time.time() - self._last_show_pause_log_time > 60:
+                    self.logger.warning(f'已设置 {self.queue_name} 队列中的任务为暂停消费')
+                    self._last_show_pause_log_time = time.time()
+            else:
+                break
+
         if self._judge_is_daylight():
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
@@ -1003,9 +1024,9 @@ class ConcurrentModeDispatcher(LoggerMixin):
             pool_type = SoloExecutor
         # elif self._concurrent_mode == ConcurrentModeEnum.LINUX_FORK:
         #     pool_type = SimpleProcessPool
-            # pool_type = BoundedProcessPoolExecutor
-            # from concurrent.futures import ProcessPoolExecutor
-            # pool_type = ProcessPoolExecutor
+        # pool_type = BoundedProcessPoolExecutor
+        # from concurrent.futures import ProcessPoolExecutor
+        # pool_type = ProcessPoolExecutor
         if self._concurrent_mode == ConcurrentModeEnum.ASYNC:
             self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool is not None else pool_type(
                 self.consumer._concurrent_num, loop=self.consumer._specify_async_loop)
@@ -1053,20 +1074,26 @@ def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typin
 class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandler):
     """
     为了兼容模拟mq的中间件（例如redis，他没有实现amqp协议，redis的list结构和真mq差远了），获取一个队列有几个连接活跃消费者数量。
-    分布式环境中的消费者统计。主要目的有两点
+    分布式环境中的消费者统计。主要目的有3点
 
     1、统计活跃消费者数量用于分布式控频。
         获取分布式的消费者数量后，用于分布式qps控频。如果不获取全环境中的消费者数量，则只能用于当前进程中的消费控频。
         即使只有一台机器，例如把xx.py启动3次，xx.py的consumer设置qps为10，如果不使用分布式控频，会1秒钟最终运行30次函数而不是10次。
 
     2、记录分布式环境中的活跃消费者的所有消费者 id，如果消费者id不在此里面说明已掉线或关闭，消息可以重新分发，用于不支持服务端天然消费确认的中间件。
+
+    3、从redis中获取停止和暂停状态，以便支持在别的地方发送命令停止或者暂停消费。
     """
 
-    def __init__(self, queue_name: str, consumer_identification: str, consumer_identification_map: dict):
-        self._consumer_identification = consumer_identification
-        self._consumer_identification_map = consumer_identification_map
-        self._queue_name = queue_name
-        self._redis_key_name = f'funboost_hearbeat_queue__str:{queue_name}'
+    def __init__(self, consumer: AbstractConsumer):
+        # self._consumer_identification = consumer_identification
+        # self._consumer_identification_map = consumer_identification_map
+        # self._queue_name = queue_name
+        self._consumer_identification = consumer.consumer_identification
+        self._consumer_identification_map = consumer.consumer_identification_map
+        self._queue_name = consumer.queue_name
+        self._consumer = consumer
+        self._redis_key_name = f'funboost_hearbeat_queue__str:{self._queue_name}'
         self.active_consumer_num = 1
         self._last_show_consumer_num_timestamp = 0
 
@@ -1075,8 +1102,8 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
 
     def run(self):
         self.send_heartbeat()
-        decorators.keep_circulating(10, block=False)(self.send_heartbeat)()
-        decorators.keep_circulating(5, block=False)(self._show_active_consumer_num)()  # 主要是为快速频繁统计分布式消费者个数，快速调整分布式qps控频率。
+        self._consumer.keep_circulating(10, block=False)(self.send_heartbeat)()
+        # decorators.keep_circulating(5, block=False)(self._show_active_consumer_num)()  # 主要是为快速频繁统计分布式消费者个数，快速调整分布式qps控频率。
 
     def _send_heartbeat_with_dict_value(self, redis_key, ):
         # 发送当前消费者进程心跳的，值是字典，按一个机器或者一个队列运行了哪些进程。
@@ -1108,6 +1135,8 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
 
         self._send_heartbeat_with_dict_value(self._queue__consumer_identification_map_key_name)
         self._send_heartbeat_with_dict_value(self._server__consumer_identification_map_key_name)
+        self._show_active_consumer_num()
+        self._get_stop_and_pause_flag_from_redis()
 
     def _show_active_consumer_num(self):
         self.active_consumer_num = self.redis_db_frame.scard(self._redis_key_name) or 1
@@ -1120,6 +1149,19 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
             return [idx.decode().split('&&')[0] for idx in self.redis_db_frame.smembers(self._redis_key_name)]
         else:
             return [idx.decode() for idx in self.redis_db_frame.smembers(self._redis_key_name)]
+
+    def _get_stop_and_pause_flag_from_redis(self):
+        stop_flag = self.redis_db_frame.get(self._consumer._redis_key_stop_flag)
+        if stop_flag is not None and int(stop_flag) == 1:
+            self._consumer._stop_flag = 1
+        else:
+            self._consumer._stop_flag = 0
+
+        pause_flag = self.redis_db_frame.get(self._consumer._redis_key_pause_flag)
+        if pause_flag is not None and int(pause_flag) == 1:
+            self._consumer._pause_flag = 1
+        else:
+            self._consumer._pause_flag = 0
 
 
 class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHandler):

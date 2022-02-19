@@ -1,6 +1,10 @@
 
 # 1.分布式函数调度框架简介
 
+python万能分布式函数调度框架，支持5种并发模式，20+种消息中间件，20种任务控制功能。
+用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。
+
+
 funboost的旧框架名字是function_scheduling_distributed_framework , 关系和兼容性见1.0.3介绍。
 旧框架地址： [https://github.com/ydf0509/distributed_framework](https://github.com/ydf0509/distributed_framework)
 

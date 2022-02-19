@@ -1,6 +1,6 @@
 # coding=utf-8
 from auto_run_on_remote import run_current_script_on_remote
-run_current_script_on_remote()
+# run_current_script_on_remote()
 import json
 import os
 
@@ -24,14 +24,17 @@ def f(x, y):
     return x + y
 
 pool2 = ProcessPoolExecutor(4)
-@boost('test_queue73ac', log_level=10, broker_kind=BrokerEnum.REDIS, qps=0.1,
+@boost('test_queue73ac', log_level=10, broker_kind=BrokerEnum.SQLITE_QUEUE, qps=0,
        # specify_concurrent_pool= pool2,
-       concurrent_mode=ConcurrentModeEnum.LINUX_FORK, concurrent_num=3)
+       concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3)
 def f2(a, b):
     # time.sleep(100)
     print(a, b)
     if a % 10000 == 0:
         print(a)
+    sum = 0
+    for i in range(10000*10000):
+        sum +=i
     return a - b
 
 
@@ -39,11 +42,10 @@ if __name__ == '__main__':
     # pass
     # f.clear()
     # f2.clear()
-    for i in range(10):
+    for i in range(1000):
         # f.push(i, i * 2)
         f2.push(i, i * 2)
 
-    f2.consume()
     # f2.consume()
-    # f2.multi_process_consume(2)
-    time.sleep(10000)
+
+    f2.multi_process_consume(5)

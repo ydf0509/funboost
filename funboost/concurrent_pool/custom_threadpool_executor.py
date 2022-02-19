@@ -238,11 +238,11 @@ if __name__ == '__main__':
         # raise Exception('抛个错误测试')  # 官方的不会显示函数出错你，你还以为你写的代码没毛病呢。
 
 
-    pool = ThreadPoolExecutorShrinkAble(200)
+    pool = ThreadPoolExecutorShrinkAble(1)
     # pool = ThreadPoolExecutor(200)  # 测试对比官方自带
 
     for i in range(30):
-        time.sleep(0.05)  # 这里的间隔时间模拟，当任务来临不密集，只需要少量线程就能搞定f1了，因为f1的消耗时间短，
+        time.sleep(0.1)  # 这里的间隔时间模拟，当任务来临不密集，只需要少量线程就能搞定f1了，因为f1的消耗时间短，
         # 不需要开那么多线程，CustomThreadPoolExecutor比ThreadPoolExecutor 优势之一。
         futurex = pool.submit(f1, i)
         # print(futurex.result())

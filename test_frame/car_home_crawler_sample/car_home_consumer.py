@@ -69,3 +69,6 @@ if __name__ == '__main__':
     crawl_detail_page.consume()
     # 这样速度更猛，叠加多进程
     # crawl_detail_page.multi_process_consume(4)
+
+
+

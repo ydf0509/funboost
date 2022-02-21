@@ -48,10 +48,15 @@ if __name__ == '__main__':
 
 
     f2.consume()
+    f2.continue_consume()
+    time.sleep(20)
     while 1:
         f2.consumer.pause_consume()
-        time.sleep(10)
+        time.sleep(300)
         f2.continue_consume()
+        time.sleep(300)
+
+
 
 
     # f2.multi_process_consume(5)

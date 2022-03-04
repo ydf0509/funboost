@@ -1,6 +1,7 @@
 # coding=utf-8
 import base64
 import copy
+import logging
 import random
 import uuid
 
@@ -23,6 +24,7 @@ from tomorrow3 import threads as tomorrow_threads
 from funboost.utils import LogManager, nb_print, LoggerMixin
 # noinspection PyUnresolvedReferences
 # from funboost.utils.custom_pysnooper import _snoop_can_click, snoop_deco, patch_snooper_max_variable_length
+from nb_log import LoggerLevelSetterMixin
 
 os_name = os.name
 nb_print(f' 操作系统类型是  {os_name}')
@@ -241,12 +243,12 @@ class TimerContextManager(LoggerMixin):
             self.logger.debug(f'对下面代码片段进行计时:  \n执行"{self._file_name}:{self._line}" 用时 {round(self.t_spend, 2)} 秒')
 
 
-class RedisDistributedLockContextManager(LoggerMixin):
+class RedisDistributedLockContextManager(LoggerMixin, LoggerLevelSetterMixin):
     """
     分布式redis锁上下文管理.
     """
 
-    def __init__(self, redis_client, redis_lock_key, expire_seconds=30):
+    def __init__(self, redis_client, redis_lock_key, expire_seconds=30, ):
         self.redis_client = redis_client
         self.redis_lock_key = redis_lock_key
         self._expire_seconds = expire_seconds
@@ -536,7 +538,7 @@ def timeout(seconds):
             thd = __KThread(target=_new_func, args=(), kwargs=new_kwargs)
             thd.start()
             thd.join(seconds)
-            alive = thd.isAlive()
+            alive = thd.is_alive()
             thd.kill()  # kill the child thread
 
             if alive:
@@ -552,8 +554,6 @@ def timeout(seconds):
         return _
 
     return timeout_decorator
-
-
 
 
 # noinspection PyMethodMayBeStatic

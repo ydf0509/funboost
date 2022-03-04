@@ -458,7 +458,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._is_using_rpc_mode = is_using_rpc_mode
 
         self._stop_flag = None
-        self._pause_flag = None
+        self._pause_flag = None  # 暂停消费标志，从reids读取
         self._last_show_pause_log_time = 0
         self._redis_key_stop_flag = f'funboost_stop_flag:{self.queue_name}'
         self._redis_key_pause_flag = f'funboost_pause_flag:{self.queue_name}'
@@ -849,13 +849,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         '''
 
     def pause_consume(self):
+        """设置队列为暂停消费状态"""
         RedisMixin().redis_db_frame.set(self._redis_key_pause_flag, 1)
 
     def continue_consume(self):
+        """设置队列为继续消费状态"""
         RedisMixin().redis_db_frame.set(self._redis_key_pause_flag, 0)
 
     def _submit_task(self, kw):
-        while 1:
+        while 1:  # 这一块的代码为支持暂停消费。
             # print(self._pause_flag)
             if self._pause_flag == 1:
                 time.sleep(1)
@@ -869,6 +871,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
             return
+
         function_only_params = _delete_keys_and_return_new_dict(kw['body'], )
         if self.__get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
                 function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
@@ -1140,7 +1143,7 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
 
     def _show_active_consumer_num(self):
         self.active_consumer_num = self.redis_db_frame.scard(self._redis_key_name) or 1
-        if time.time() - self._last_show_consumer_num_timestamp > 60:
+        if time.time() - self._last_show_consumer_num_timestamp > 600:
             self.logger.info(f'分布式所有环境中使用 {self._queue_name} 队列的，一共有 {self.active_consumer_num} 个消费者')
             self._last_show_consumer_num_timestamp = time.time()
 
@@ -1150,6 +1153,7 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
         else:
             return [idx.decode() for idx in self.redis_db_frame.smembers(self._redis_key_name)]
 
+    # noinspection PyProtectedMember
     def _get_stop_and_pause_flag_from_redis(self):
         stop_flag = self.redis_db_frame.get(self._consumer._redis_key_stop_flag)
         if stop_flag is not None and int(stop_flag) == 1:

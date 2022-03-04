@@ -177,6 +177,7 @@
 
     function searchCols() {
         // console.info($("#col_name_search").val());
+
         $.ajax({
             url: "{{ url_for('query_cols_view')}}", data: {col_name_search: $("#col_name_search").val()}, async: useAsync, success: function (result, status) {
                 console.info(result);
@@ -203,6 +204,7 @@
     useAsync = true;
 
     function queryResult(col_name, page, manualOperate) {
+        $('#echartsArea').css('display','none');
         currentColName = col_name;
         if (manualOperate === true){
             document.getElementById('table').style.display = 'block';

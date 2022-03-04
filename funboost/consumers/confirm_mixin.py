@@ -62,10 +62,11 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
     def custom_init(self):
         self._unack_zset_name = f'{self._queue_name}__unack_id_{self.consumer_identification}'
         self._is_send_consumer_hearbeat_to_redis = True
+        self._last_show_unacked_msg_num_log = 0
 
     def _requeue_tasks_which_unconfirmed(self):
         lock_key = f'fsdf_lock__requeue_tasks_which_unconfirmed:{self._queue_name}'
-        with decorators.RedisDistributedLockContextManager(self.redis_db_frame, lock_key, ) as lock:
+        with decorators.RedisDistributedLockContextManager(self.redis_db_frame, lock_key, ).set_log_level(30) as lock:
             if lock.has_aquire_lock:
                 self._distributed_consumer_statistics.send_heartbeat()
                 current_queue_hearbeat_ids = self._distributed_consumer_statistics.get_queue_heartbeat_ids(without_time=True)
@@ -73,8 +74,10 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
                 # print(current_queue_unacked_msg_queues)
                 for current_queue_unacked_msg_queue in current_queue_unacked_msg_queues[1]:
                     current_queue_unacked_msg_queue_str = current_queue_unacked_msg_queue.decode()
-                    self.logger.info(f'{current_queue_unacked_msg_queue_str} 中有待确认消费任务的数量是'
-                                     f' {self.redis_db_frame.zcard(current_queue_unacked_msg_queue_str)}')
+                    if time.time() - self._last_show_unacked_msg_num_log > 600:
+                        self.logger.info(f'{current_queue_unacked_msg_queue_str} 中有待确认消费任务的数量是'
+                                         f' {self.redis_db_frame.zcard(current_queue_unacked_msg_queue_str)}')
+                        self._last_show_unacked_msg_num_log = time.time()
                     if current_queue_unacked_msg_queue_str.split(f'{self._queue_name}__unack_id_')[1] not in current_queue_hearbeat_ids:
                         self.logger.warning(f'{current_queue_unacked_msg_queue_str} 是掉线或关闭消费者的')
                         for unacked_task_str in self.redis_db_frame.zrevrange(current_queue_unacked_msg_queue_str, 0, 1000):

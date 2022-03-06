@@ -24,7 +24,7 @@ def f(x, y):
     return x + y
 
 pool2 = ProcessPoolExecutor(4)
-@boost('test_queue73ac', log_level=10, broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=0.5,
+@boost('test_queue74ac', log_level=10, broker_kind=BrokerEnum.KAFKA, qps=5,
        # specify_concurrent_pool= pool2,
        concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,
        function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True))
@@ -42,20 +42,20 @@ def f2(a, b):
 if __name__ == '__main__':
     # pass
     # f.clear()
-    # f2.clear()
-    for i in range(1000):
+    f2.clear()
+    for i in range(100):
         # f.push(i, i * 2)
         f2.push(i, i * 2)
 
 
     f2.consume()
-    f2.continue_consume()
-    time.sleep(20)
-    while 1:
-        f2.consumer.pause_consume()
-        time.sleep(300)
-        f2.continue_consume()
-        time.sleep(300)
+    # f2.continue_consume()
+    # time.sleep(20)
+    # while 1:
+    #     f2.consumer.pause_consume()
+    #     time.sleep(300)
+    #     f2.continue_consume()
+    #     time.sleep(300)
 
 
 

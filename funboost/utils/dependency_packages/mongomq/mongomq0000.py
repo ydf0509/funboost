@@ -68,7 +68,7 @@ class MongoQueue(object):
         """
         Total size of the queue
         """
-        return self.collection.count_documents({})
+        return self.collection.count()
 
     def repair(self):
         """
@@ -76,8 +76,8 @@ class MongoQueue(object):
 
         Increments per job attempt counter.
         """
-        self.collection.find_one_and_update(
-            {
+        self.collection.find_and_modify(
+            query={
                 "locked_by": {"$ne": None},
                 "locked_at": {
                     "$lt": datetime.now() - timedelta(self.timeout)}},
@@ -87,7 +87,7 @@ class MongoQueue(object):
         )
 
     def drop_max_attempts(self):
-        self.collection.find_one_and_update(
+        self.collection.find_and_modify(
             {"attempts": {"$gte": self.max_attempts}},
             remove=True)
 
@@ -109,8 +109,8 @@ class MongoQueue(object):
         """
         Get next job from queue
         """
-        return self._wrap_one(self.collection.find_one_and_update(
-            {"locked_by": None,
+        return self._wrap_one(self.collection.find_and_modify(
+            query={"locked_by": None,
                    "locked_at": None,
                    "attempts": {"$lt": self.max_attempts},
                    "status": {
@@ -124,13 +124,13 @@ class MongoQueue(object):
                 }
             },
             sort=[('priority', pymongo.DESCENDING)],
-            return_document=ReturnDocument.AFTER,
-            # limit=1
+            new=1,
+            limit=1
         ))
 
     def _jobs(self):
         return self.collection.find(
-            {"locked_by": None,
+            query={"locked_by": None,
                    "locked_at": None,
                    "attempts": {"$lt": self.max_attempts}},
             sort=[('priority', pymongo.DESCENDING)],
@@ -274,4 +274,4 @@ class Job(object):
 
 
 if __name__ == '__main__':
-    pymongo.collection.Collection.count_documents()
+    pymongo.collection.Collection.find_one_and_update()

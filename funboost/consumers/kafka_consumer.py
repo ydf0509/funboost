@@ -11,18 +11,19 @@ from kafka.errors import TopicAlreadyExistsError
 
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost import funboost_config_deafult
-from nb_log import LogManager
+from nb_log import get_logger,LogManager
 
-LogManager('kafka').get_logger_and_add_handlers(30)
-
+# LogManager('kafka').get_logger_and_add_handlers(30)
+get_logger('kafka',log_level_int=20)
 
 class KafkaConsumer(AbstractConsumer):
     """
     kafka作为中间件实现的。自动确认消费，最多消费一次，随意重启会丢失正在大批正在运行的任务。推荐使用 confluent_kafka 中间件，kafka_consumer_manually_commit.py。
 
-    可以让消费函数内部 sleep60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group frame_group 来证实自动确认消费和手动确认消费的区别。
+    可以让消费函数内部 sleep60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group funboost 来证实自动确认消费和手动确认消费的区别。
     """
     BROKER_KIND = 8
+    KAFKA_GROUP_ID = 'funboost_kafka'
 
     def _shedual_task(self):
         try:
@@ -34,7 +35,7 @@ class KafkaConsumer(AbstractConsumer):
 
         self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         consumer = OfficialKafkaConsumer(self._queue_name, bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS,
-                                         group_id=f'frame_group', enable_auto_commit=True,
+                                         group_id=self.KAFKA_GROUP_ID, enable_auto_commit=True,
                                          auto_offset_reset='earliest')
 
         #  auto_offset_reset (str): A policy for resetting offsets on

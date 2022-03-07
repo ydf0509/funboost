@@ -29,6 +29,7 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
     可以让消费函数内部 sleep 60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group frame_group 来证实自动确认消费和手动确认消费的区别。
     """
     BROKER_KIND = 16
+    KAFKA_GROUP_ID = 'funboost_confluent_kafka'
 
     def _shedual_task(self):
 
@@ -44,7 +45,7 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
         # consumer 配置 https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
         self._confluent_consumer = ConfluentConsumer({
             'bootstrap.servers': ','.join(funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS),
-            'group.id': 'frame_group',
+            'group.id': self.KAFKA_GROUP_ID,
             'auto.offset.reset': 'earliest',
             'enable.auto.commit': False
         })

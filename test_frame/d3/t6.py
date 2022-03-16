@@ -17,7 +17,7 @@ from nb_log import get_logger
 # print('导入nb_log之后的print是强化版的可点击跳转的')
 
 
-
+get_logger()
 #raise  Exception("dsadsd")
 
 while 1:

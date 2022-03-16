@@ -39,7 +39,7 @@ from funboost import boost, BrokerEnum, IdeAutoCompleteHelper
 @boost('car_home_list', broker_kind=BrokerEnum.RedisBrpopLpush, max_retry_times=5, qps=2)
 def crawl_list_page(news_type, page, do_page_turning=False):
     url = f'https://www.autohome.com.cn/{news_type}/{page}/#liststart'
-    resp_text = requests.get(url).text
+    resp_text = requests.get(url).text  # 如果要换ip 换请求头，自己写一个自动换ip和请求头的请求函数就行了太简单了，不需要按照某些框架写啥请求中间件类来改变请求行为。
     sel = Selector(resp_text)
     for li in sel.css('ul.article > li'):
         if len(li.extract()) > 100:  # 有的是这样的去掉。 <li id="ad_tw_04" style="display: none;">
@@ -55,7 +55,7 @@ def crawl_list_page(news_type, page, do_page_turning=False):
 @boost('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=3,
        do_task_filtering=True, is_using_distributed_frequency_control=True)
 def crawl_detail_page(url, title, news_type):
-    resp_text = requests.get(url).text
+    resp_text = requests.get(url).text # # 如果要换ip 换请求头，自己写一个自动换ip和请求头的请求函数就行了太简单了，不需要按照某些框架写啥请求中间件类来改变请求行为。
     sel = Selector(resp_text)
     author = sel.css('#articlewrap > div.article-info > div > a::text').extract_first() or \
              sel.css('#articlewrap > div.article-info > div::text').extract_first() or ''

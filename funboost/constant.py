@@ -59,7 +59,7 @@ class BrokerEnum:
 
     NATS = 24  # 高性能中间件nats,中间件服务端性能很好,。
 
-    TXT_FILE = 25  # 磁盘txt文件作为消息队列，支持单机持久化，不支持多机分布式
+    TXT_FILE = 25  # 磁盘txt文件作为消息队列，支持单机持久化，不支持多机分布式。不建议这个，用sqlite。
 
     PULSAR = 20  # 最有潜力的下一代分布式消息系统。5年后会同时取代rabbitmq和kafka。目前python客户端只支持linux，win不行
 

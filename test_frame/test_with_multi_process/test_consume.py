@@ -1,6 +1,8 @@
 import time
-from funboost import boost, BrokerEnum, IdeAutoCompleteHelper, PriorityConsumingControlConfig, run_consumer_with_multi_process
+from funboost import boost, BrokerEnum, IdeAutoCompleteHelper, PriorityConsumingControlConfig, run_consumer_with_multi_process,FunctionResultStatusPersistanceConfig
+from auto_run_on_remote import run_current_script_on_remote
 
+run_current_script_on_remote()
 """
 演示多进程启动消费，多进程和 asyncio/threading/gevnt/evntlet是叠加关系，不是平行的关系。
 """
@@ -8,7 +10,7 @@ from funboost import boost, BrokerEnum, IdeAutoCompleteHelper, PriorityConsuming
 
 # qps=5，is_using_distributed_frequency_control=True 分布式控频每秒执行5次。
 # 如果is_using_distributed_frequency_control不设置为True,默认每个进程都会每秒执行5次。
-@boost('test_queue', qps=5, is_using_distributed_frequency_control=True)
+@boost('test_queue', qps=5, function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True))
 def ff(x, y):
     import os
     time.sleep(2)

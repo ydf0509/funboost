@@ -135,16 +135,16 @@ boost_queue__fun_map = {}  # type:typing.Dict[str,IdeAutoCompleteHelper]
 
 # import funboost ; funboost.boost_queue__fun_map
 
-def boost(queue_name, *, consumin_function_decorator: typing.Callable = _Undefined, function_timeout=_Undefined,
-          concurrent_num=_Undefined, specify_concurrent_pool=_Undefined, specify_async_loop=_Undefined, concurrent_mode=_Undefined,
-          max_retry_times=_Undefined, log_level=_Undefined, is_print_detail_exception=_Undefined, is_show_message_get_from_broker=_Undefined,
-          qps: float = _Undefined, is_using_distributed_frequency_control=_Undefined, msg_expire_senconds=_Undefined,
-          is_send_consumer_hearbeat_to_redis=_Undefined,
-          logger_prefix='', create_logger_file=_Undefined, do_task_filtering=_Undefined, task_filtering_expire_seconds=_Undefined,
-          is_do_not_run_by_specify_time_effect=_Undefined, do_not_run_by_specify_time=_Undefined,
-          schedule_tasks_on_main_thread=_Undefined,
-          function_result_status_persistance_conf=_Undefined,
-          is_using_rpc_mode=_Undefined,
+def boost(queue_name, *, consumin_function_decorator: typing.Callable = _Undefined, function_timeout: float = _Undefined,
+          concurrent_num: int = _Undefined, specify_concurrent_pool=_Undefined, specify_async_loop=_Undefined, concurrent_mode: int = _Undefined,
+          max_retry_times: int = _Undefined, log_level: int = _Undefined, is_print_detail_exception: bool = _Undefined, is_show_message_get_from_broker: bool = _Undefined,
+          qps: float = _Undefined, is_using_distributed_frequency_control: bool = _Undefined, msg_expire_senconds: float = _Undefined,
+          is_send_consumer_hearbeat_to_redis: bool = _Undefined,
+          logger_prefix: str = _Undefined, create_logger_file: bool = _Undefined, do_task_filtering: bool = _Undefined, task_filtering_expire_seconds: float = _Undefined,
+          is_do_not_run_by_specify_time_effect: bool = _Undefined, do_not_run_by_specify_time: bool = _Undefined,
+          schedule_tasks_on_main_thread: bool = _Undefined,
+          function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = _Undefined,
+          is_using_rpc_mode: bool = _Undefined,
           broker_kind: int = _Undefined,
           boost_decorator_default_params=BoostDecoratorDefaultParams()
           ):

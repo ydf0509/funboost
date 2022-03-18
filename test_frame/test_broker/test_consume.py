@@ -24,8 +24,8 @@ def f(x, y):
     return x + y
 
 pool2 = ProcessPoolExecutor(4)
-@boost('test_queue75d', log_level=10, broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=5,
-       # create_logger_file=False,
+@boost('test_queue77d', log_level=10, broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=5,
+       create_logger_file=False,
        # specify_concurrent_pool= pool2,
        concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,function_timeout=10,
        function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True))

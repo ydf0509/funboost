@@ -25,7 +25,7 @@ from funboost.timing_job import fsdf_background_scheduler, timing_publish_deco
 from funboost.constant import BrokerEnum, ConcurrentModeEnum
 
 # 有的包默认没加handlers，原始的日志不漂亮且不可跳转不知道哪里发生的。这里把warnning级别以上的日志默认加上handlers。
-nb_log.get_logger(name=None, log_level_int=30, log_filename='pywarning.log')
+# nb_log.get_logger(name='', log_level_int=30, log_filename='pywarning.log')
 
 logger = nb_log.get_logger('funboost')
 

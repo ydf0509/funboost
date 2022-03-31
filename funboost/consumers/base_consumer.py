@@ -22,7 +22,8 @@ import os
 import uuid
 import time
 import traceback
-from collections import Callable
+# from collections import Callable
+from typing import Callable
 from functools import wraps
 import threading
 from threading import Lock, Thread
@@ -38,9 +39,9 @@ from funboost.concurrent_pool.single_thread_executor import SoloExecutor
 from funboost.helpers import FunctionResultStatusPersistanceConfig
 from funboost.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
 
-import pymongo
-from pymongo import IndexModel
-from pymongo.errors import PyMongoError
+import pymongo4
+from pymongo4 import IndexModel
+from pymongo4.errors import PyMongoError
 
 # noinspection PyUnresolvedReferences
 from nb_log import get_logger, LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, \
@@ -166,11 +167,11 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
             try:
                 # params_str 如果很长，必须使用TEXt或HASHED索引。
                 task_status_col.create_indexes([IndexModel([("insert_time_str", -1)]), IndexModel([("insert_time", -1)]),
-                                                IndexModel([("params_str", pymongo.TEXT)]), IndexModel([("success", 1)])
+                                                IndexModel([("params_str", pymongo4.TEXT)]), IndexModel([("success", 1)])
                                                 ], )
                 task_status_col.create_index([("utime", 1)],
                                              expireAfterSeconds=function_result_status_persistance_conf.expire_seconds)  # 只保留7天(用户自定义的)。
-            except pymongo.errors.OperationFailure as e:  # 新的mongo服务端，每次启动重复创建已存在索引会报错，try一下。
+            except pymongo4.errors.OperationFailure as e:  # 新的mongo服务端，每次启动重复创建已存在索引会报错，try一下。
                 self.logger.warning(e)
             # self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
             self.task_status_col = task_status_col

@@ -2,7 +2,7 @@ import contextlib
 import time
 import uuid
 
-from pymongo import errors
+from pymongo4 import errors
 from datetime import datetime, timedelta
 
 

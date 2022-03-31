@@ -10,6 +10,7 @@ from flask import jsonify
 from funboost import nb_print
 from funboost.utils import time_util, decorators, LoggerMixin
 from funboost.utils.mongo_util import MongoMixin
+
 # from test_frame.my_patch_frame_config import do_patch_frame_config
 #
 # do_patch_frame_config()
@@ -17,12 +18,17 @@ from funboost.utils.mongo_util import MongoMixin
 db = MongoMixin().mongo_db_task_status
 
 
+# print(db)
+# print(type(db))
+# print(db.list_collection_names())
+
 def get_cols(col_name_search: str):
     if not col_name_search:
-        collection_name_list = db.collection_names()
+        collection_name_list = db.list_collection_names()
     else:
-        collection_name_list = [collection_name for collection_name in db.collection_names() if col_name_search in collection_name]
-    return [{'collection_name': collection_name, 'count': db.get_collection(collection_name).find().count()} for collection_name in collection_name_list]
+        collection_name_list = [collection_name for collection_name in db.list_collection_names() if col_name_search in collection_name]
+    # return [{'collection_name': collection_name, 'count': db.get_collection(collection_name).find().count()} for collection_name in collection_name_list]
+    return [{'collection_name': collection_name, 'count': db.get_collection(collection_name).count_documents({})} for collection_name in collection_name_list]
     # for collection_name in collection_list:
     #     if col_name_search in collection_name:
     #     print (collection,db[collection].find().count())
@@ -62,8 +68,10 @@ def get_speed(col_name, start_time, end_time):
     # }
     # nb_print(condition)
     with decorators.TimerContextManager():
-        success_num = db.get_collection(col_name).count({**{'success': True}, **condition})
-        fail_num = db.get_collection(col_name).count({**{'success': False}, **condition})
+        # success_num = db.get_collection(col_name).count({**{'success': True}, **condition})
+        # fail_num = db.get_collection(col_name).count({**{'success': False}, **condition})
+        success_num = db.get_collection(col_name).count_documents({**{'success': True}, **condition})
+        fail_num = db.get_collection(col_name).count_documents({**{'success': False}, **condition})
         qps = (success_num + fail_num) / (time_util.DatetimeConverter(end_time).timestamp - time_util.DatetimeConverter(start_time).timestamp)
         return {'success_num': success_num, 'fail_num': fail_num, 'qps': round(qps, 1)}
 
@@ -77,8 +85,8 @@ class Statistic(LoggerMixin):
                        'recent_60_seconds': {'time_arr': [], 'count_arr': []}}
 
     def statistic_by_period(self, t_start: str, t_end: str):
-        return self.col.count({'insert_time': {'$gt': time_util.DatetimeConverter(t_start).datetime_obj,
-                                               '$lt': time_util.DatetimeConverter(t_end).datetime_obj}})
+        return self.col.count_documents({'insert_time': {'$gt': time_util.DatetimeConverter(t_start).datetime_obj,
+                                                         '$lt': time_util.DatetimeConverter(t_end).datetime_obj}})
 
     def build_result(self):
         with decorators.TimerContextManager():
@@ -126,5 +134,3 @@ if __name__ == '__main__':
     stat = Statistic('queue_test56')
     stat.build_result()
     nb_print(stat.result)
-
-

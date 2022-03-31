@@ -4,7 +4,8 @@
 import atexit
 import time
 import warnings
-from collections import Callable
+# from collections import Callable
+from typing import Callable
 import threading
 import gevent
 from gevent import pool as gevent_pool

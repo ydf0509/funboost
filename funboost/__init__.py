@@ -232,7 +232,7 @@ def boost(queue_name, *, consumin_function_decorator: typing.Callable = _Undefin
     for i in range(10, 20):
         consumer.publisher_of_same_queue.publish(dict(a=i, b=i * 2))
     consumer.start_consuming_message()
-    #run_consumer_with_multi_process(consumer,4) # 一次性启动4个进程。
+
     '''
 
     装饰器版本的 boost 入参 和 get_consumer 入参99%一致，唯一不同的是 装饰器版本加在了函数上自动知道消费函数了，

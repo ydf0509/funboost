@@ -1,9 +1,9 @@
-import pymongo4
+import pymongo
 import traceback
 
 from datetime import datetime, timedelta
 
-from pymongo4 import ReturnDocument
+from pymongo import ReturnDocument
 
 from .utils import enum
 
@@ -45,7 +45,7 @@ class MongoQueue(object):
                 "created_at", name='exp_created_at_idx',
                 expireAfterSeconds=self.ttl
             )
-        except pymongo4.errors.OperationFailure:
+        except pymongo.errors.OperationFailure:
             self.collection.drop_index("exp_created_at_idx")
             self.collection.create_index(
                 "created_at", name='exp_created_at_idx',
@@ -123,7 +123,7 @@ class MongoQueue(object):
                     'status': JobStatus.STARTED
                 }
             },
-            sort=[('priority', pymongo4.DESCENDING)],
+            sort=[('priority', pymongo.DESCENDING)],
             return_document=ReturnDocument.AFTER,
             # limit=1
         ))
@@ -133,7 +133,7 @@ class MongoQueue(object):
             {"locked_by": None,
                    "locked_at": None,
                    "attempts": {"$lt": self.max_attempts}},
-            sort=[('priority', pymongo4.DESCENDING)],
+            sort=[('priority', pymongo.DESCENDING)],
         )
 
     def _wrap_one(self, data):
@@ -274,4 +274,4 @@ class Job(object):
 
 
 if __name__ == '__main__':
-    pymongo4.collection.Collection.count_documents()
+    pymongo.collection.Collection.count_documents()

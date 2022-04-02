@@ -2,7 +2,7 @@
 # @Author  : ydf
 # @Time    : 2019/9/17 0017 15:26
 import os
-import pymongo4
+import pymongo
 from funboost import funboost_config_deafult
 from funboost.utils import decorators
 
@@ -20,7 +20,7 @@ class MongoMixin0000:
     @property
     @decorators.cached_method_result
     def mongo_client(self):
-        return pymongo4.MongoClient(funboost_config_deafult.MONGO_CONNECT_URL, connect=False)  # connect等于False原因见注释
+        return pymongo.MongoClient(funboost_config_deafult.MONGO_CONNECT_URL, connect=False)  # connect等于False原因见注释
 
     @property
     @decorators.cached_method_result
@@ -32,7 +32,7 @@ class MongoMixin:
     """
     mixin类被继承，也可以直接实例化。
 
-    这个是修改后的，当使用f.multi_process_connsume() + linux +  保存结果到mongo + pymongo4.0.2 时候不再报错了。
+    这个是修改后的，当使用f.multi_process_connsume() + linux +  保存结果到mongo + pymongo.0.2 时候不再报错了。
     """
     processid__client_map = {}
     processid__db_map = {}
@@ -41,7 +41,7 @@ class MongoMixin:
     def mongo_client(self):
         pid = os.getpid()
         if pid not in MongoMixin.processid__client_map:
-            MongoMixin.processid__client_map[pid] = pymongo4.MongoClient(funboost_config_deafult.MONGO_CONNECT_URL, connect=False)
+            MongoMixin.processid__client_map[pid] = pymongo.MongoClient(funboost_config_deafult.MONGO_CONNECT_URL, connect=False)
         return MongoMixin.processid__client_map[pid]
 
     @property

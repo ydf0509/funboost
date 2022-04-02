@@ -17,7 +17,7 @@ import time
 from queue import Queue, Empty
 import unittest
 # noinspection PyUnresolvedReferences
-from pymongo4 import UpdateOne, InsertOne, UpdateMany, collection, MongoClient
+from pymongo import UpdateOne, InsertOne, UpdateMany, collection, MongoClient
 import redis
 
 from funboost.utils.time_util import DatetimeConverter

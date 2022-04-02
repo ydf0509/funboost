@@ -24,20 +24,15 @@ def f(x, y):
     return x + y
 
 pool2 = ProcessPoolExecutor(4)
-@boost('test_queue77d', log_level=10, broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=5,
+@boost('test_queue77d', log_level=10, broker_kind=BrokerEnum.REDIS, qps=5,
        create_logger_file=False,
        # specify_concurrent_pool= pool2,
-       concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,function_timeout=10,
-       function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True))
+       # concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,function_timeout=10,
+       # function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True)
+       )
 def f2(a, b):
     # time.sleep(100)
     print(a, b)
-    if a % 10000 == 0:
-        print(a)
-    sum = 0
-    # for i in range(10000*10000):
-    #     sum +=i
-    # 1/0
     return a - b
 
 
@@ -45,12 +40,14 @@ if __name__ == '__main__':
     # pass
     # f.clear()
     f2.clear()
-    for i in range(100):
+    f2.consume()
+    for i in range(1000):
+        time.sleep(1)
         # f.push(i, i * 2)
         f2.push(i, i * 2)
 
 
-    f2.consume()
+
     # f2.continue_consume()
     # time.sleep(20)
     # while 1:

@@ -39,7 +39,7 @@ from queue import Queue, Empty
 from kafka import KafkaProducer
 from elasticsearch import Elasticsearch, helpers
 from threading import Lock, Thread
-import pymongo4
+import pymongo
 import requests
 import logging
 from logging import handlers
@@ -221,7 +221,7 @@ class MongoHandler(logging.Handler):
         :param mongo_database: 保存日志的数据库，默认使用logs数据库
         """
         logging.Handler.__init__(self)
-        mongo_client = pymongo4.MongoClient(mongo_url)
+        mongo_client = pymongo.MongoClient(mongo_url)
         self.mongo_db = mongo_client.get_database(mongo_database)
 
     def emit(self, record):

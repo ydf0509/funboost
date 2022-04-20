@@ -19,9 +19,9 @@ test_frame/test_custom_broker/test_custom_redis_consume_latest_publish_msg_broke
 
 def register_custom_broker(broker_kind: int, publisher_class: typing.Type[AbstractPublisher], consumer_class: typing.Type[AbstractConsumer]):
     if not issubclass(publisher_class, AbstractPublisher):
-        raise TypeError(f'publisher_class 必须是 AbstractPublisher 的子类')
+        raise TypeError(f'publisher_class 必须是 AbstractPublisher 的子孙类')
     if not issubclass(consumer_class, AbstractConsumer):
-        raise TypeError(f'consumer_class 必须是 AbstractConsumer 的子类')
+        raise TypeError(f'consumer_class 必须是 AbstractConsumer 的子孙类')
     publisher_factotry.broker_kind__publisher_type_map[broker_kind] = publisher_class
     consumer_factory.broker_kind__consumer_type_map[broker_kind] = consumer_class
     consumer_class.BROKER_KIND = broker_kind

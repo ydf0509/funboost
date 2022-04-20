@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 setup(
     name='funboost',  #
-    version='15.9',
+    version='16.2',
     description=(
         'funboost  is function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way'
     ),
@@ -18,7 +18,7 @@ setup(
     maintainer_email='ydf0509@sohu.com',
     license='BSD License',
     # packages=['douban'], #
-    packages=find_packages() + ['funboost.beggar_version_implementation'],   # 也可以写在 MANiFEST.in
+    packages=find_packages() + ['funboost.beggar_version_implementation','funboost.assist'],   # 也可以写在 MANiFEST.in
     # packages=['function_scheduling_distributed_framework'], # 这样内层级文件夹的没有打包进去。
     include_package_data=True,
     platforms=["all"],
@@ -93,7 +93,7 @@ python setup.py sdist upload -r pypi
 
 # python setup.py bdist_wheel
 python setup.py bdist_wheel ; python -m twine upload dist/funboost-15.0-py3-none-any.whl
-python setup.py bdist_wheel && python -m twine upload dist/funboost-15.9-py3-none-any.whl
+python setup.py bdist_wheel && python -m twine upload dist/funboost-16.2-py3-none-any.whl
 python setup.py sdist & twine upload dist/funboost-10.9.tar.gz
 
 最快的下载方式，上传立即可安装。阿里云源同步官网pypi间隔要等很久。

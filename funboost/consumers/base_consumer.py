@@ -510,23 +510,23 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._delay_task_scheduler = BackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE)
         self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
-        self._delay_task_scheduler.add_listener(self.__apscheduler_job_miss, EVENT_JOB_MISSED)
+        self._delay_task_scheduler.add_listener(self._apscheduler_job_miss, EVENT_JOB_MISSED)
         self._delay_task_scheduler.start()
 
-        self.__check_broker_exclusive_config()
+        self._check_broker_exclusive_config()
 
         self.custom_init()
 
         atexit.register(self.join_shedual_task_thread)
 
-    def __check_broker_exclusive_config(self):
+    def _check_broker_exclusive_config(self):
         if self.broker_exclusive_config:
             if set(self.broker_exclusive_config.keys()).issubset(self.BROKER_EXCLUSIVE_CONFIG_KEYS):
                 self.logger.info(f'当前消息队列中间件能支持特殊独有配置 {self.broker_exclusive_config.keys()}')
             else:
                 self.logger.warning(f'当前消息队列中间件含有不支持的特殊配置 {self.broker_exclusive_config.keys()}，能支持的特殊独有配置包括 {self.BROKER_EXCLUSIVE_CONFIG_KEYS}')
 
-    def __check_monkey_patch(self):
+    def _check_monkey_patch(self):
         if self._concurrent_mode == 2:
             check_gevent_monkey_patch()
         elif self._concurrent_mode == 3:
@@ -586,7 +586,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # noinspection PyBroadException
         try:
             self._concurrent_mode_dispatcher.check_all_concurrent_mode()
-            self.__check_monkey_patch()
+            self._check_monkey_patch()
         except Exception:
             traceback.print_exc()
             os._exit(4444)  # noqa
@@ -621,7 +621,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if self._is_show_message_get_from_broker:
             self.logger.debug(f'从 {broker_name} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
 
-    def __get_priority_conf(self, kw: dict, broker_task_config_key: str):
+    def _get_priority_conf(self, kw: dict, broker_task_config_key: str):
         broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)
         if broker_task_config is None:
             return getattr(self, f'_{broker_task_config_key}', None)
@@ -645,7 +645,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _run(self, kw: dict, ):
         # print(kw)
         t_start_run_fun = time.time()
-        max_retry_times = self.__get_priority_conf(kw, 'max_retry_times')
+        max_retry_times = self._get_priority_conf(kw, 'max_retry_times')
         current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
         current_retry_times = 0
         function_only_params = _delete_keys_and_return_new_dict(kw['body'])
@@ -660,12 +660,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
         self._confirm_consume(kw)
-        if self.__get_priority_conf(kw, 'do_task_filtering'):
+        if self._get_priority_conf(kw, 'do_task_filtering'):
             self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
         if current_function_result_status.success is False and current_retry_times == max_retry_times:
             self.logger.critical(
-                f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} ')
-        if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
+                f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} ')
+        if self._get_priority_conf(kw, 'is_using_rpc_mode'):
             # print(function_result_status.get_status_dict(without_datetime_obj=
             with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
                 # RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
@@ -702,7 +702,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         t_start = time.time()
         function_result_status.run_times = current_retry_times + 1
         try:
-            function_timeout = self.__get_priority_conf(kw, 'function_timeout')
+            function_timeout = self._get_priority_conf(kw, 'function_timeout')
             function_run0 = self.consuming_function if self._consumin_function_decorator is None else self._consumin_function_decorator(self.consuming_function)
             function_run = function_run0 if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
                 function_timeout)(function_run0)
@@ -728,7 +728,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 return function_result_status
             self.logger.error(f'函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次运行发生错误，'
                               f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是  {function_only_params}    \n 原因是 {type(e)} {e} ',
-                              exc_info=self.__get_priority_conf(kw, 'is_print_detail_exception'))
+                              exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
             # traceback.print_exc()
             function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
         return function_result_status
@@ -737,7 +737,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # """虽然和上面有点大面积重复相似，这个是为了asyncio模式的，asyncio模式真的和普通同步模式的代码思维和形式区别太大，
         # 框架实现兼容async的消费函数很麻烦复杂，连并发池都要单独写"""
         t_start_run_fun = time.time()
-        max_retry_times = self.__get_priority_conf(kw, 'max_retry_times')
+        max_retry_times = self._get_priority_conf(kw, 'max_retry_times')
         current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
         current_retry_times = 0
         function_only_params = _delete_keys_and_return_new_dict(kw['body'])
@@ -753,15 +753,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
         await simple_run_in_executor(self._result_persistence_helper.save_function_result_to_mongo, current_function_result_status)
         await simple_run_in_executor(self._confirm_consume, kw)
-        if self.__get_priority_conf(kw, 'do_task_filtering'):
+        if self._get_priority_conf(kw, 'do_task_filtering'):
             # self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
             await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params)
         if current_function_result_status.success is False and current_retry_times == max_retry_times:
             self.logger.critical(
-                f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self.__get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} ')
+                f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} ')
             # self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
 
-        if self.__get_priority_conf(kw, 'is_using_rpc_mode'):
+        if self._get_priority_conf(kw, 'is_using_rpc_mode'):
             def push_result():
                 with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
                     p.lpush(kw['body']['extra']['task_id'],
@@ -832,7 +832,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 return function_result_status
             self.logger.error(f'函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次运行发生错误，'
                               f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是  {function_only_params}    \n 原因是 {type(e)} {e} ',
-                              exc_info=self.__get_priority_conf(kw, 'is_print_detail_exception'))
+                              exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
             function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
         return function_result_status
 
@@ -856,7 +856,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """重新入队"""
         raise NotImplementedError
 
-    def __apscheduler_job_miss(self, event):
+    def _apscheduler_job_miss(self, event):
         """
         这是 apscheduler 包的事件钩子。
         ev.function_args = job.args
@@ -865,14 +865,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :return:
         """
         # print(event.scheduled_run_time)
-        misfire_grace_time = self.__get_priority_conf(event.function_kwargs["kw"], 'misfire_grace_time')
+        misfire_grace_time = self._get_priority_conf(event.function_kwargs["kw"], 'misfire_grace_time')
         self.logger.critical(f'现在时间是 {time_util.DatetimeConverter().datetime_str} ,'
                              f'比此任务规定的本应该的运行时间 {event.scheduled_run_time} 相比 超过了指定的 {misfire_grace_time} 秒,放弃执行此任务 \n'
                              f'{event.function_kwargs["kw"]["body"]} ')
         self._confirm_consume(event.function_kwargs["kw"])
 
         '''
-        if self.__get_priority_conf(event.function_kwargs["kw"], 'execute_delay_task_even_if_when_task_is_expired') is False:
+        if self._get_priority_conf(event.function_kwargs["kw"], 'execute_delay_task_even_if_when_task_is_expired') is False:
             self.logger.critical(f'现在时间是 {time_util.DatetimeConverter().datetime_str} ,此任务设置的延时运行已过期 \n'
                                  f'{event.function_kwargs["kw"]["body"]} ， 此任务放弃执行')
             self._confirm_consume(event.function_kwargs["kw"])
@@ -908,13 +908,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             return
 
         function_only_params = _delete_keys_and_return_new_dict(kw['body'], )
-        if self.__get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
+        if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
                 function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
             self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
             self._confirm_consume(kw)
             return
         publish_time = _get_publish_time(kw['body'])
-        msg_expire_senconds_priority = self.__get_priority_conf(kw, 'msg_expire_senconds')
+        msg_expire_senconds_priority = self._get_priority_conf(kw, 'msg_expire_senconds')
         if msg_expire_senconds_priority and time.time() - msg_expire_senconds_priority > publish_time:
             self.logger.warning(
                 f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(time.time() - publish_time, 4)} 秒 ,'
@@ -922,9 +922,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._confirm_consume(kw)
             return 0
 
-        msg_eta = self.__get_priority_conf(kw, 'eta')
-        msg_countdown = self.__get_priority_conf(kw, 'countdown')
-        misfire_grace_time = self.__get_priority_conf(kw, 'misfire_grace_time')
+        msg_eta = self._get_priority_conf(kw, 'eta')
+        msg_countdown = self._get_priority_conf(kw, 'countdown')
+        misfire_grace_time = self._get_priority_conf(kw, 'misfire_grace_time')
         run_date = None
         # print(kw)
         if msg_countdown:
@@ -943,11 +943,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         if self._is_using_distributed_frequency_control:  # 如果是需要分布式控频。
             active_num = self._distributed_consumer_statistics.active_consumer_num
-            self.__frequency_control(self._qps / active_num, self._msg_schedule_time_intercal * active_num)
+            self._frequency_control(self._qps / active_num, self._msg_schedule_time_intercal * active_num)
         else:
-            self.__frequency_control(self._qps, self._msg_schedule_time_intercal)
+            self._frequency_control(self._qps, self._msg_schedule_time_intercal)
 
-    def __frequency_control(self, qpsx, msg_schedule_time_intercalx):
+    def _frequency_control(self, qpsx, msg_schedule_time_intercalx):
         # 以下是消费函数qps控制代码。无论是单个消费者空频还是分布式消费控频，都是基于直接计算的，没有依赖redis inrc计数，使得控频性能好。
         if qpsx == 0:  # 不需要控频的时候，就不需要休眠。
             return

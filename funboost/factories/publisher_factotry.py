@@ -28,6 +28,33 @@ from funboost.publishers.redis_stream_publisher import RedisStreamPublisher
 from funboost.publishers.mqtt_publisher import MqttPublisher
 from funboost.publishers.httpsqs_publisher import HttpsqsPublisher
 
+broker_kind__publisher_type_map = {
+    0: RabbitmqPublisherUsingAmqpStorm,
+    1: RabbitmqPublisherUsingRabbitpy,
+    2: RedisPublisher,
+    3: LocalPythonQueuePublisher,
+    4: RabbitmqPublisher,
+    5: MongoMqPublisher,
+    6: PersistQueuePublisher,
+    7: NsqPublisher,
+    8: KafkaPublisher,
+    9: RedisPublisher,
+    10: SqlachemyQueuePublisher,
+    11: RocketmqPublisher,
+    12: RedisStreamPublisher,
+    13: ZeroMqPublisher,
+    14: RedisPublisherLpush,
+    15: KombuPublisher,
+    16: ConfluentKafkaPublisher,
+    17: MqttPublisher,
+    18: HttpsqsPublisher,
+    21: UDPPublisher,
+    22: TCPPublisher,
+    23: HTTPPublisher,
+    24: NatsPublisher,
+    25: TxtFilePublisher,
+}
+
 
 def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=True,
                   clear_queue_within_init=False, is_add_publish_time=True, consuming_function: Callable = None,
@@ -47,32 +74,6 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
 
     all_kwargs = copy.deepcopy(locals())
     all_kwargs.pop('broker_kind')
-    broker_kind__publisher_type_map = {
-        0: RabbitmqPublisherUsingAmqpStorm,
-        1: RabbitmqPublisherUsingRabbitpy,
-        2: RedisPublisher,
-        3: LocalPythonQueuePublisher,
-        4: RabbitmqPublisher,
-        5: MongoMqPublisher,
-        6: PersistQueuePublisher,
-        7: NsqPublisher,
-        8: KafkaPublisher,
-        9: RedisPublisher,
-        10: SqlachemyQueuePublisher,
-        11: RocketmqPublisher,
-        12: RedisStreamPublisher,
-        13: ZeroMqPublisher,
-        14: RedisPublisherLpush,
-        15: KombuPublisher,
-        16: ConfluentKafkaPublisher,
-        17: MqttPublisher,
-        18: HttpsqsPublisher,
-        21: UDPPublisher,
-        22: TCPPublisher,
-        23: HTTPPublisher,
-        24: NatsPublisher,
-        25: TxtFilePublisher,
-    }
     if broker_kind not in broker_kind__publisher_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')
     return broker_kind__publisher_type_map[broker_kind](**all_kwargs)

@@ -50,3 +50,4 @@ class MongoMixin:
         if pid not in MongoMixin.processid__db_map:
             MongoMixin.processid__db_map[pid] = self.mongo_client.get_database('task_status')
         return MongoMixin.processid__db_map[pid]
+

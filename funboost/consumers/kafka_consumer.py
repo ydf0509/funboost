@@ -11,10 +11,11 @@ from kafka.errors import TopicAlreadyExistsError
 
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost import funboost_config_deafult
-from nb_log import get_logger,LogManager
+from nb_log import get_logger, LogManager
 
 # LogManager('kafka').get_logger_and_add_handlers(30)
-get_logger('kafka',log_level_int=20)
+get_logger('kafka', log_level_int=20)
+
 
 class KafkaConsumer(AbstractConsumer):
     """
@@ -24,6 +25,9 @@ class KafkaConsumer(AbstractConsumer):
     """
     BROKER_KIND = 8
     KAFKA_GROUP_ID = 'funboost_kafka'
+
+    BROKER_EXCLUSIVE_CONFIG_KEYS = ['group_id','auto_offset_reset']
+    # not_all_brokers_general_settings配置 ，支持独立的中间件配置参数是 group_id 和 auto_offset_reset
 
     def _shedual_task(self):
         try:
@@ -35,9 +39,10 @@ class KafkaConsumer(AbstractConsumer):
 
         self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         consumer = OfficialKafkaConsumer(self._queue_name, bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS,
-                                         group_id=self.KAFKA_GROUP_ID, enable_auto_commit=True,
-                                         auto_offset_reset='earliest')
-
+                                         group_id=self.broker_exclusive_config.get("group_id", default=self.KAFKA_GROUP_ID),
+                                         enable_auto_commit=True,
+                                         auto_offset_reset=self.broker_exclusive_config.get("auto_offset_reset", default='earliest'),
+                                         )
         #  auto_offset_reset (str): A policy for resetting offsets on
         #             OffsetOutOfRange errors: 'earliest' will move to the oldest
         #             available message, 'latest' will move to the most recent. Any

@@ -107,13 +107,18 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
     script_name_long = sys.argv[0]
     script_name = script_name_long.split('/')[-1].split('\\')[-1]
 
-    def __init__(self, queue_name, fucntion_name, params):
+    def __init__(self, queue_name: str, fucntion_name: str, msg_dict: dict):
+        # print(params)
         self.queue_name = queue_name
         self.function = fucntion_name
-        publish_time = _get_publish_time(params)
+        self.msg_dict = msg_dict
+        self.task_id = self.msg_dict.get('extra', {}).get('task_id', '')
+        self.process_id = os.getpid()
+        self.thread_id = threading.get_ident()
+        self.publish_time = publish_time = _get_publish_time(msg_dict)
         if publish_time:
             self.publish_time_str = time_util.DatetimeConverter(publish_time).datetime_str
-        function_params = _delete_keys_and_return_new_dict(params, )
+        function_params = _delete_keys_and_return_new_dict(msg_dict, )
         self.params = function_params
         self.params_str = json.dumps(function_params, ensure_ascii=False)
         self.result = None
@@ -150,7 +155,8 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
                          })
         else:
             item = _delete_keys_and_return_new_dict(item, ['insert_time', 'utime'])
-        item['_id'] = str(uuid.uuid4())
+        # kw['body']['extra']['task_id']
+        item['_id'] = self.task_id.split(':')[-1] or str(uuid.uuid4())
         # self.logger.warning(item['_id'])
         # self.logger.warning(item)
         return item
@@ -262,6 +268,9 @@ class ConsumersManager:
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     time_interval_for_check_do_not_run_time = 60
     BROKER_KIND = None
+    BROKER_EXCLUSIVE_CONFIG_KEYS = []  # 中间件能支持的独自的配置参数，例如kafka支持消费者组， 从最早还是最晚消费。因为支持30种中间件，
+
+    # 每种中间件的概念有所不同，用户可以从 broker_exclusive_config 中传递该种中间件特有的配置意义参数。
 
     @property
     @decorators.synchronized
@@ -299,7 +308,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                  schedule_tasks_on_main_thread=False,
                  function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(
                      False, False, 7 * 24 * 3600),
-                 is_using_rpc_mode=False):
+                 user_custom_record_process_info_func: typing.Callable = None,
+                 is_using_rpc_mode=False,
+                 broker_exclusive_config: dict = None,
+                 ):
 
         """
         :param queue_name:
@@ -332,8 +344,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
         :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。
                这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
+        :param user_custom_record_process_info_func  提供一个用户自定义的保存消息处理记录到某个地方例如mysql数据库的函数，函数仅仅接受一个入参，入参类型是 FunctionResultStatus，用户可以打印参数
         :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。
-
+        :param broker_exclusive_config 加上一个不同种类中间件非通用的配置,不同中间件自身独有的配置，不是所有中间件都兼容的配置，因为框架支持30种消息队列，消息队列不仅仅是一般的先进先出queue这么简单的概念，
+            例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，每一种消息队列都有独特的配置参数意义，可以通过这里传递。
 
         执行流程为
         1、 实例化消费者类，设置各种控制属性
@@ -344,6 +358,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         各种中间件的 取消息、确认消费 单独实现，其他逻辑由于采用了模板模式，自动复用代码。
 
         """
+
         self.init_params = copy.copy(locals())
         self.init_params.pop('self')
         self.init_params['broker_kind'] = self.__class__.BROKER_KIND
@@ -456,7 +471,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._result_persistence_helper = ResultPersistenceHelper(function_result_status_persistance_conf, queue_name)
 
+        self._user_custom_record_process_info_func = user_custom_record_process_info_func
+
         self._is_using_rpc_mode = is_using_rpc_mode
+
+        if broker_exclusive_config is None:
+            broker_exclusive_config = {}
+        self.broker_exclusive_config = broker_exclusive_config
 
         self._stop_flag = None
         self._pause_flag = None  # 暂停消费标志，从reids读取
@@ -492,9 +513,18 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._delay_task_scheduler.add_listener(self.__apscheduler_job_miss, EVENT_JOB_MISSED)
         self._delay_task_scheduler.start()
 
+        self.__check_broker_exclusive_config()
+
         self.custom_init()
 
         atexit.register(self.join_shedual_task_thread)
+
+    def __check_broker_exclusive_config(self):
+        if self.broker_exclusive_config:
+            if set(self.broker_exclusive_config.keys()).issubset(self.BROKER_EXCLUSIVE_CONFIG_KEYS):
+                self.logger.info(f'当前消息队列中间件能支持特殊独有配置 {self.broker_exclusive_config.keys()}')
+            else:
+                self.logger.warning(f'当前消息队列中间件含有不支持的特殊配置 {self.broker_exclusive_config.keys()}，能支持的特殊独有配置包括 {self.BROKER_EXCLUSIVE_CONFIG_KEYS}')
 
     def __check_monkey_patch(self):
         if self._concurrent_mode == 2:
@@ -616,7 +646,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # print(kw)
         t_start_run_fun = time.time()
         max_retry_times = self.__get_priority_conf(kw, 'max_retry_times')
-        current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'])
+        current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
         current_retry_times = 0
         function_only_params = _delete_keys_and_return_new_dict(kw['body'])
         for current_retry_times in range(max_retry_times + 1):
@@ -663,6 +693,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._current_time_for_execute_task_times_every_unit_time = time.time()
                 self._consuming_function_cost_time_total_every_unit_time = 0
                 self._execute_task_times_every_unit_time = 0
+        if self._user_custom_record_process_info_func:
+            self._user_custom_record_process_info_func(current_function_result_status)
 
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
                                                        function_result_status: FunctionResultStatus, ):
@@ -706,14 +738,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # 框架实现兼容async的消费函数很麻烦复杂，连并发池都要单独写"""
         t_start_run_fun = time.time()
         max_retry_times = self.__get_priority_conf(kw, 'max_retry_times')
-        current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'])
+        current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
         current_retry_times = 0
         function_only_params = _delete_keys_and_return_new_dict(kw['body'])
         for current_retry_times in range(max_retry_times + 1):
             current_function_result_status = await self._async_run_consuming_function_with_confirm_and_retry(kw, current_retry_times=current_retry_times,
                                                                                                              function_result_status=FunctionResultStatus(
                                                                                                                  self.queue_name, self.consuming_function.__name__,
-                                                                                                                 kw['body']),
+                                                                                                                 kw['body'], ),
                                                                                                              )
             if current_function_result_status.success is True or current_retry_times == max_retry_times or current_function_result_status.has_requeue:
                 break
@@ -758,6 +790,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._current_time_for_execute_task_times_every_unit_time = time.time()
             self._consuming_function_cost_time_total_every_unit_time = 0
             self._execute_task_times_every_unit_time = 0
+        if self._user_custom_record_process_info_func:
+            await self._user_custom_record_process_info_func(current_function_result_status)
 
     async def _async_run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
                                                                    function_result_status: FunctionResultStatus, ):

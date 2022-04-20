@@ -8,12 +8,13 @@ from funboost.funboost_config_deafult import BoostDecoratorDefaultParams
 from funboost.helpers import (fabric_deploy, kill_all_remote_tasks,
                               multi_process_pub_params_list,
                               run_consumer_with_multi_process)
+from funboost.assist.user_custom_broker_register import register_custom_broker
 from funboost.utils.paramiko_util import ParamikoFolderUploader
 from funboost.consumers.base_consumer import (ExceptionForRequeue, ExceptionForRetry,
                                               AbstractConsumer, ConsumersManager,
                                               FunctionResultStatusPersistanceConfig,
                                               wait_for_possible_has_finish_all_tasks_by_conusmer_list,
-                                              ActiveCousumerProcessInfoGetter)
+                                              ActiveCousumerProcessInfoGetter,FunctionResultStatus)
 from funboost.publishers.base_publisher import (PriorityConsumingControlConfig,
                                                 AbstractPublisher, AsyncResult, HasNotAsyncResult)
 from funboost.factories.publisher_factotry import get_publisher
@@ -135,16 +136,33 @@ boost_queue__fun_map = {}  # type:typing.Dict[str,IdeAutoCompleteHelper]
 
 # import funboost ; funboost.boost_queue__fun_map
 
-def boost(queue_name, *, consumin_function_decorator: typing.Callable = _Undefined, function_timeout: float = _Undefined,
-          concurrent_num: int = _Undefined, specify_concurrent_pool=_Undefined, specify_async_loop=_Undefined, concurrent_mode: int = _Undefined,
-          max_retry_times: int = _Undefined, log_level: int = _Undefined, is_print_detail_exception: bool = _Undefined, is_show_message_get_from_broker: bool = _Undefined,
-          qps: float = _Undefined, is_using_distributed_frequency_control: bool = _Undefined, msg_expire_senconds: float = _Undefined,
+def boost(queue_name,
+          *,
+          consumin_function_decorator: typing.Callable = _Undefined,
+          function_timeout: float = _Undefined,
+          concurrent_num: int = _Undefined,
+          specify_concurrent_pool=_Undefined,
+          specify_async_loop=_Undefined,
+          concurrent_mode: int = _Undefined,
+          max_retry_times: int = _Undefined,
+          log_level: int = _Undefined,
+          is_print_detail_exception: bool = _Undefined,
+          is_show_message_get_from_broker: bool = _Undefined,
+          qps: float = _Undefined,
+          is_using_distributed_frequency_control: bool = _Undefined,
+          msg_expire_senconds: float = _Undefined,
           is_send_consumer_hearbeat_to_redis: bool = _Undefined,
-          logger_prefix: str = _Undefined, create_logger_file: bool = _Undefined, do_task_filtering: bool = _Undefined, task_filtering_expire_seconds: float = _Undefined,
-          is_do_not_run_by_specify_time_effect: bool = _Undefined, do_not_run_by_specify_time: bool = _Undefined,
+          logger_prefix: str = _Undefined,
+          create_logger_file: bool = _Undefined,
+          do_task_filtering: bool = _Undefined,
+          task_filtering_expire_seconds: float = _Undefined,
+          is_do_not_run_by_specify_time_effect: bool = _Undefined,
+          do_not_run_by_specify_time: bool = _Undefined,
           schedule_tasks_on_main_thread: bool = _Undefined,
           function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = _Undefined,
+          user_custom_record_process_info_func: typing.Callable = None,
           is_using_rpc_mode: bool = _Undefined,
+          broker_exclusive_config: dict = _Undefined,
           broker_kind: int = _Undefined,
           boost_decorator_default_params=BoostDecoratorDefaultParams()
           ):
@@ -184,7 +202,10 @@ def boost(queue_name, *, consumin_function_decorator: typing.Callable = _Undefin
     :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。fun.consume()就阻塞了，这之后的代码不会运行
     :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。
            这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
+    :param user_custom_record_process_info_func  提供一个用户自定义的保存消息处理记录到某个地方例如mysql数据库的函数，函数仅仅接受一个入参，入参类型是 FunctionResultStatus，用户可以打印参数
     :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。。
+    :param broker_exclusive_config 加上一个不同种类中间件非通用的配置,不同中间件自身独有的配置，不是所有中间件都兼容的配置，因为框架支持30种消息队列，消息队列不仅仅是一般的先进先出queue这么简单的概念，
+            例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，每一种消息队列都有独特的配置参数意义，可以通过这里传递。
     :param broker_kind:中间件种类，支持30种消息队列。 入参见 BrokerEnum枚举类的属性。
     :param boost_decorator_default_params: oostDecoratorDefaultParams是
             @boost装饰器默认的全局入参。如果boost没有亲自指定某个入参，就自动使用funboost_config.py的BoostDecoratorDefaultParams中的配置。

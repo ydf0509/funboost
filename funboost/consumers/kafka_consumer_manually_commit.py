@@ -30,6 +30,7 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
     """
     BROKER_KIND = 16
     KAFKA_GROUP_ID = 'funboost_confluent_kafka'
+    BROKER_EXCLUSIVE_CONFIG_KEYS = ['group_id', 'auto_offset_reset']
 
     def _shedual_task(self):
 
@@ -45,8 +46,8 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
         # consumer 配置 https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
         self._confluent_consumer = ConfluentConsumer({
             'bootstrap.servers': ','.join(funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS),
-            'group.id': self.KAFKA_GROUP_ID,
-            'auto.offset.reset': 'earliest',
+            'group.id': self.broker_exclusive_config.get("group_id", default=self.KAFKA_GROUP_ID),
+            'auto.offset.reset': self.broker_exclusive_config.get("auto_offset_reset", default='earliest'),
             'enable.auto.commit': False
         })
         self._confluent_consumer.subscribe([self._queue_name])

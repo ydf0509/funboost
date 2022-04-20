@@ -202,3 +202,6 @@ class FunctionResultStatusPersistanceConfig(LoggerMixin):
     def to_dict(self):
         return {"is_save_status": self.is_save_status,
                 'is_save_result': self.is_save_result, 'expire_seconds': self.expire_seconds}
+
+    def __str__(self):
+        return f'<FunctionResultStatusPersistanceConfig> {id(self)} {self.to_dict()}'

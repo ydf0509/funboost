@@ -279,7 +279,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self.logger.info(
                     f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 队列中')
                 self._init_count()
-        return RedisAsyncResult(task_id)
+        return AsyncResult(task_id)
 
     def push(self, *func_args, **func_kwargs):
         """

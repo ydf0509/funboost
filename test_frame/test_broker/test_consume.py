@@ -18,7 +18,7 @@ pool = ThreadPoolExecutorShrinkAble(10)
 
 # @boost('test_queue66', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=5, log_level=10, is_print_detail_exception=False, is_show_message_get_from_broker=False,
 #            is_using_distributed_frequency_control=True)
-@boost('test_queue70ac', do_task_filtering=True, qps=0, log_level=20, concurrent_num=20)
+@boost('test_queue70ac', do_task_filtering=True, qps=0, log_level=20, concurrent_num=20,broker_exclusive_config={'a':1})
 def f(x, y):
     # time.sleep(100)
     return x + y

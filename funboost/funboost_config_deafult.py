@@ -113,6 +113,7 @@ class BoostDecoratorDefaultParams(DataClassBase):
     task_filtering_expire_seconds = 0
 
     function_result_status_persistance_conf = FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600)
+    user_custom_record_process_info_func = None
 
     is_using_rpc_mode = False
 
@@ -120,6 +121,8 @@ class BoostDecoratorDefaultParams(DataClassBase):
     do_not_run_by_specify_time = ('10:00:00', '22:00:00')
 
     schedule_tasks_on_main_thread = False
+
+    broker_exclusive_config = {}
 
     broker_kind: int = BrokerEnum.PERSISTQUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
 

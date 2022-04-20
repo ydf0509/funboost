@@ -93,7 +93,7 @@ class AsyncPoolExecutor(nb_log.LoggerMixin):
         # print(self._event.is_set())
         self._event.set()
 
-    def submit(self, func, *args, **kwargs):
+    def submit000(self, func, *args, **kwargs):
         # 这个性能比下面的采用 run_coroutine_threadsafe + result返回快了3倍多。
         with self._lock:
             while 1:
@@ -103,7 +103,7 @@ class AsyncPoolExecutor(nb_log.LoggerMixin):
                 else:
                     time.sleep(0.01)
 
-    def submit000(self, func, *args, **kwargs):
+    def submit(self, func, *args, **kwargs):
         future = asyncio.run_coroutine_threadsafe(self._produce(func, *args, **kwargs), self.loop)  # 这个 run_coroutine_threadsafe 方法也有缺点，消耗的性能巨大。
         future.result()  # 阻止过快放入，放入超过队列大小后，使submit阻塞。
 

@@ -1,7 +1,7 @@
 import flask
 from flask_mail import Mail, Message
 from funboost import boost, BrokerEnum, PriorityConsumingControlConfig
-from funboost.publishers.base_publisher import RedisAsyncResult
+from funboost.publishers.base_publisher import AsyncResult
 
 app = flask.Flask(__name__)
 
@@ -75,7 +75,7 @@ def send_email_api():
     :return:
     """
     # 如果前端不关注结果，只是把任务发到中间件，那就使用  send_email.push(msg='邮件内容') 就可以了。
-    async_result = send_email.publish(dict(msg='邮件内容'), priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True))  # type: RedisAsyncResult
+    async_result = send_email.publish(dict(msg='邮件内容'), priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True))  # type: AsyncResult
     return async_result.task_id
     # return async_result.result  # 不推荐，这种会阻塞接口，一般是采用另外写一个ajax接口带着task_id去获取结果，后端实现方式为 RedisAsyncResult(task_id,timeout=30).result
 

@@ -29,6 +29,32 @@ from funboost.consumers.zeromq_consumer import ZeroMqConsumer
 from funboost.consumers.mqtt_consumer import MqttConsumer
 from funboost.consumers.httpsqs_consumer import HttpsqsConsumer
 
+broker_kind__consumer_type_map = {
+    0: RabbitmqConsumerAmqpStorm,
+    1: RabbitmqConsumerRabbitpy,
+    2: RedisConsumer,
+    3: LocalPythonQueueConsumer,
+    4: RabbitmqConsumer,
+    5: MongoMqConsumer,
+    6: PersistQueueConsumer,
+    7: NsqConsumer,
+    8: KafkaConsumer,
+    9: RedisConsumerAckAble,
+    10: SqlachemyConsumer,
+    11: RocketmqConsumer,
+    12: RedisStreamConsumer,
+    13: ZeroMqConsumer,
+    14: RedisBrpopLpushConsumer,
+    15: KombuConsumer,
+    16: KafkaConsumerManuallyCommit,
+    17: MqttConsumer,
+    18: HttpsqsConsumer,
+    21: UDPConsumer,
+    22: TCPConsumer,
+    23: HTTPConsumer,
+    24: NatsConsumer,
+    25: TxtFileConsumer,
+}
 
 
 def get_consumer(*args, broker_kind: int = None, **kwargs):
@@ -39,32 +65,6 @@ def get_consumer(*args, broker_kind: int = None, **kwargs):
     :return:
     """
 
-    broker_kind__consumer_type_map = {
-        0: RabbitmqConsumerAmqpStorm,
-        1: RabbitmqConsumerRabbitpy,
-        2: RedisConsumer,
-        3: LocalPythonQueueConsumer,
-        4: RabbitmqConsumer,
-        5: MongoMqConsumer,
-        6: PersistQueueConsumer,
-        7: NsqConsumer,
-        8: KafkaConsumer,
-        9: RedisConsumerAckAble,
-        10: SqlachemyConsumer,
-        11: RocketmqConsumer,
-        12: RedisStreamConsumer,
-        13: ZeroMqConsumer,
-        14: RedisBrpopLpushConsumer,
-        15: KombuConsumer,
-        16: KafkaConsumerManuallyCommit,
-        17: MqttConsumer,
-        18: HttpsqsConsumer,
-        21: UDPConsumer,
-        22: TCPConsumer,
-        23: HTTPConsumer,
-        24: NatsConsumer,
-        25:TxtFileConsumer,
-    }
     if broker_kind not in broker_kind__consumer_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')
     return broker_kind__consumer_type_map[broker_kind](*args, **kwargs)

@@ -14,6 +14,8 @@ from funboost.utils import RedisMixin, decorators
 class RedisPublisher(AbstractPublisher, RedisMixin):
     """
     使用redis作为中间件,这个是大幅优化了发布速度的方式。简单的发布是 redis_publisher_0000.py 中的代码方式。
+
+    这个是复杂版，批量推送，简单版在 funboost/publishers/redis_publisher_simple.py
     """
     _push_method = 'rpush'
 

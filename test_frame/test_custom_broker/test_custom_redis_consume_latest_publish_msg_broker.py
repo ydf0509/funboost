@@ -1,7 +1,7 @@
 from funboost import register_custom_broker
 from funboost import boost, FunctionResultStatus
-from funboost.consumers.redis_consumer_simple import RedisConsumer as SimpleRedisConsumer
-from funboost.publishers.redis_publisher_simple import RedisPublisher as SimpleRedisPublisher
+from funboost.consumers.redis_consumer_simple import RedisConsumer
+from funboost.publishers.redis_publisher_simple import RedisPublisher
 
 """
 此文件是演示添加自定义类型的中间件,演示怎么使用redis 实现先进后出 后进先出的队列，就是消费总是拉取最晚发布的消息，而不是优先消费最早发布的消息
@@ -13,12 +13,12 @@ lpush + lpop 或者 rpush + rpop 就会消费最新发布的消息，如果是 l
 """
 
 
-class RedisConsumeLatestPublisher(SimpleRedisPublisher):
+class RedisConsumeLatestPublisher(RedisPublisher):
     def concrete_realization_of_publish(self, msg):
         self.redis_db_frame.lpush(self._queue_name, msg)
 
 
-class RedisConsumeLatestConsumer(SimpleRedisConsumer):
+class RedisConsumeLatestConsumer(RedisConsumer):
     pass
 
 

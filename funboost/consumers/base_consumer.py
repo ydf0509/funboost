@@ -156,7 +156,8 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         else:
             item = _delete_keys_and_return_new_dict(item, ['insert_time', 'utime'])
         # kw['body']['extra']['task_id']
-        item['_id'] = self.task_id.split(':')[-1] or str(uuid.uuid4())
+        # item['_id'] = self.task_id.split(':')[-1] or str(uuid.uuid4())
+        item['_id'] = self.task_id or str(uuid.uuid4())
         # self.logger.warning(item['_id'])
         # self.logger.warning(item)
         return item
@@ -278,13 +279,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if not self._publisher_of_same_queue:
             self._publisher_of_same_queue = get_publisher(self._queue_name, consuming_function=self.consuming_function,
                                                           broker_kind=self.BROKER_KIND, log_level_int=self._log_level,
-                                                          is_add_file_handler=self._create_logger_file)
+                                                          is_add_file_handler=self._create_logger_file,broker_exclusive_config=self.broker_exclusive_config)
             if self._msg_expire_senconds:
                 self._publisher_of_same_queue.set_is_add_publish_time()
         return self._publisher_of_same_queue
 
     def bulid_a_new_publisher_of_same_queue(self):
-        return get_publisher(self._queue_name, broker_kind=self.BROKER_KIND)
+        return get_publisher(self._queue_name, consuming_function=self.consuming_function,
+                                                          broker_kind=self.BROKER_KIND, log_level_int=self._log_level,
+                                                          is_add_file_handler=self._create_logger_file,broker_exclusive_config=self.broker_exclusive_config)
 
     @classmethod
     def join_shedual_task_thread(cls):
@@ -447,7 +450,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         stdout_write(f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;37;44m此行 '
                      f'实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
-        only_print_on_main_process(f'{current_queue__info_dict["queue_name"]} 的消费者配置:\n', un_strict_json_dumps.dict2json(current_queue__info_dict))
+        # only_print_on_main_process(f'{current_queue__info_dict["queue_name"]} 的消费者配置:\n', un_strict_json_dumps.dict2json(current_queue__info_dict))
+        if is_main_process:
+            self.logger.debug(f'{current_queue__info_dict["queue_name"]} 的消费者配置:\n {un_strict_json_dumps.dict2json(current_queue__info_dict)}')
 
         self._do_task_filtering = do_task_filtering
         self._redis_filter_key_name = f'filter_zset:{queue_name}' if task_filtering_expire_seconds else f'filter_set:{queue_name}'

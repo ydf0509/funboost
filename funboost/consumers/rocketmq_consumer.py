@@ -14,6 +14,7 @@ class RocketmqConsumer(AbstractConsumer):
     安装
     """
     BROKER_KIND = 11
+    GROUP_ID = 'g_funboost'
 
     def _shedual_task(self):
         try:
@@ -21,7 +22,7 @@ class RocketmqConsumer(AbstractConsumer):
         except Exception as e:
             # print(traceback.format_exc())
             raise ImportError(f'rocketmq包 只支持linux和mac {e}')
-        consumer = PushConsumer(f'g-{self._queue_name}')
+        consumer = PushConsumer(self.GROUP_ID)
         consumer.set_namesrv_addr(funboost_config_deafult.ROCKETMQ_NAMESRV_ADDR)
         consumer.set_thread_count(1)
         consumer.set_message_batch_max_size(self._concurrent_num)

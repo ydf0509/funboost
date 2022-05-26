@@ -17,7 +17,7 @@ class MyRedisConsumer(SimpleRedisConsumer):
     def _run(self, kw: dict, ):
         self.logger.warning(f'kw: {kw}')
         print(self._get_priority_conf)
-        super()._run(kw)   # 如果更精细化控制可以把AbstractConsumer类的 _run方法复制到这里，直接修改里面的代码逻辑
+        super()._run(kw)   # 如果更精细化控制可以把AbstractConsumer类的 _run方法的代码全部复制到这里，直接修改里面的代码逻辑
 
 
 BROKER_KIND_MY_REEDIS = 104

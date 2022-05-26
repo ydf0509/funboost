@@ -46,8 +46,8 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
         # consumer 配置 https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
         self._confluent_consumer = ConfluentConsumer({
             'bootstrap.servers': ','.join(funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS),
-            'group.id': self.broker_exclusive_config.get("group_id", default=self.KAFKA_GROUP_ID),
-            'auto.offset.reset': self.broker_exclusive_config.get("auto_offset_reset", default='earliest'),
+            'group.id': self.broker_exclusive_config.get("group_id", self.KAFKA_GROUP_ID),
+            'auto.offset.reset': self.broker_exclusive_config.get("auto_offset_reset", 'earliest'),
             'enable.auto.commit': False
         })
         self._confluent_consumer.subscribe([self._queue_name])

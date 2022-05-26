@@ -43,7 +43,7 @@ class ConfluentKafkaPublisher(AbstractPublisher, ):
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
         from confluent_kafka import Producer as ConfluentProducer  # 这个包不好安装，用户用这个中间件的时候自己再想办法安装。win用户需要安装c++ 14.0以上环境。
-        self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
+        # self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         try:
             admin_client = KafkaAdminClient(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
             admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
@@ -74,9 +74,10 @@ class ConfluentKafkaPublisher(AbstractPublisher, ):
         return -1  # 还没找到获取所有分区未消费数量的方法。
 
     def close(self):
-        self._producer.close()
+        pass
+        # self._confluent_producer.
 
     def _at_exit(self):
-        self._producer.flush()
+        # self._producer.flush()
         self._confluent_producer.flush()
         super()._at_exit()

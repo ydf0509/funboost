@@ -40,9 +40,9 @@ class KafkaConsumer(AbstractConsumer):
 
         self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         consumer = OfficialKafkaConsumer(self._queue_name, bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS,
-                                         group_id=self.broker_exclusive_config.get("group_id", default=self.KAFKA_GROUP_ID),
+                                         group_id=self.broker_exclusive_config.get("group_id", self.KAFKA_GROUP_ID),
                                          enable_auto_commit=True,
-                                         auto_offset_reset=self.broker_exclusive_config.get("auto_offset_reset", default=self.AUTO_OFFSET_RESET),
+                                         auto_offset_reset=self.broker_exclusive_config.get("auto_offset_reset", self.AUTO_OFFSET_RESET),
                                          )
         #  auto_offset_reset (str): A policy for resetting offsets on
         #             OffsetOutOfRange errors: 'earliest' will move to the oldest

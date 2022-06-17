@@ -27,7 +27,7 @@ from funboost.utils import LogManager, nb_print, LoggerMixin
 from nb_log import LoggerLevelSetterMixin
 
 os_name = os.name
-nb_print(f' 操作系统类型是  {os_name}')
+# nb_print(f' 操作系统类型是  {os_name}')
 handle_exception_log = LogManager('function_error').get_logger_and_add_handlers()
 run_times_log = LogManager('run_many_times').get_logger_and_add_handlers(20)
 
@@ -272,10 +272,10 @@ class RedisDistributedLockContextManager(LoggerMixin, LoggerLevelSetterMixin):
             self.redis_client.delete(self.redis_lock_key)
         if self.has_aquire_lock:
             log_msg = f'\n"{self._file_name}:{self._line}" 这行代码获得了redis锁 {self.redis_lock_key}'
-            self.logger.info(log_msg)
+            self.logger.debug(log_msg)
         else:
-            log_msg = f'\n"{self._file_name}:{self._line}" 这行代码没有获得redis锁 {self.redis_lock_key}'
-            self.logger.warning(log_msg)
+            log_msg = f'\n"{self._file_name}:{self._line}" 这行代码此次没有获得redis锁 {self.redis_lock_key}'
+            self.logger.debug(log_msg)
 
 
 """

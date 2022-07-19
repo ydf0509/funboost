@@ -279,15 +279,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if not self._publisher_of_same_queue:
             self._publisher_of_same_queue = get_publisher(self._queue_name, consuming_function=self.consuming_function,
                                                           broker_kind=self.BROKER_KIND, log_level_int=self._log_level,
-                                                          is_add_file_handler=self._create_logger_file,broker_exclusive_config=self.broker_exclusive_config)
+                                                          is_add_file_handler=self._create_logger_file, broker_exclusive_config=self.broker_exclusive_config)
             if self._msg_expire_senconds:
                 self._publisher_of_same_queue.set_is_add_publish_time()
         return self._publisher_of_same_queue
 
     def bulid_a_new_publisher_of_same_queue(self):
         return get_publisher(self._queue_name, consuming_function=self.consuming_function,
-                                                          broker_kind=self.BROKER_KIND, log_level_int=self._log_level,
-                                                          is_add_file_handler=self._create_logger_file,broker_exclusive_config=self.broker_exclusive_config)
+                             broker_kind=self.BROKER_KIND, log_level_int=self._log_level,
+                             is_add_file_handler=self._create_logger_file, broker_exclusive_config=self.broker_exclusive_config)
 
     @classmethod
     def join_shedual_task_thread(cls):

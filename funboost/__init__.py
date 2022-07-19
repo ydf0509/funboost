@@ -224,7 +224,6 @@ def boost(queue_name,
     为了更好的ide智能补全，重复写全函数入参。
 
     装饰器方式注册消费任务，如果有人过于喜欢装饰器方式，例如celery 装饰器方式的任务注册，觉得黑科技，那就可以使用这个装饰器。
-    此种方式不利于ide代码自动补全,被装饰的函数自身自动添加了几个方法,但不能被ide补全。所以请牢记以下几个方法名，
     假如你的函数名是f,那么可以调用f.publish或f.pub来发布任务。调用f.start_consuming_message 或 f.consume 或 f.start消费任务。
     必要时候调用f.publisher.funcxx   和 f.conusmer.funcyy。
 

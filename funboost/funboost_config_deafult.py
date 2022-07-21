@@ -47,6 +47,13 @@ KAFKA_BOOTSTRAP_SERVERS = ['127.0.0.1:9092']
 
 SQLACHEMY_ENGINE_URL = 'sqlite:////sqlachemy_queues/queues.db'
 
+# 如果broker_kind 使用 peewee 中间件模式会使用mysql配置
+MYSQL_HOST = '127.0.0.1'
+MYSQL_PORT = 3306
+MYSQL_USER = 'root'
+MYSQL_PASSWORD = '123456'
+MYSQL_DATABASE = 'testdb6'
+
 # persist_quque中间件时候采用本机sqlite的方式，数据库文件生成的位置。如果linux账号在根目录没权限建文件夹，可以换文件夹。
 SQLLITE_QUEUES_PATH = '/sqllite_queues'
 

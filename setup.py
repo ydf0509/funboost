@@ -57,8 +57,8 @@ setup(
         'requests',
         'gnsq==1.0.1',
         'psutil',
-        'sqlalchemy==1.3.10',
-        'sqlalchemy_utils==0.36.1',
+        # 'sqlalchemy==1.3.10',
+        # 'sqlalchemy_utils==0.36.1',    # 用户使用数据库作为消息队列时候，自行安装，不自动安装这个包。也可以使用kombu中间件的sqlalchemy模式来操作数据库。
         'apscheduler==3.7.0',
         'pikav0',
         'pikav1',

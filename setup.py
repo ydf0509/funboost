@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 setup(
     name='funboost',  #
-    version='16.4',
+    version='16.6',
     description=(
         'funboost  is function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way'
     ),
@@ -58,7 +58,8 @@ setup(
         'gnsq==1.0.1',
         'psutil',
         # 'sqlalchemy==1.3.10',
-        # 'sqlalchemy_utils==0.36.1',    # 用户使用数据库作为消息队列时候，自行安装，不自动安装这个包。也可以使用kombu中间件的sqlalchemy模式来操作数据库。
+        # 'sqlalchemy_utils==0.36.1',    # 用户使用数据库作为消息队列时候，自行安装，不自动安装这个包。也可以使用kombu中间件的sqlalchemy模式来操作数据库或者peewee操作。
+        'peewee',
         'apscheduler==3.7.0',
         'pikav0',
         'pikav1',
@@ -93,7 +94,7 @@ python setup.py sdist upload -r pypi
 
 # python setup.py bdist_wheel
 python setup.py bdist_wheel ; python -m twine upload dist/funboost-15.0-py3-none-any.whl
-python setup.py bdist_wheel && python -m twine upload dist/funboost-16.4-py3-none-any.whl
+python setup.py bdist_wheel && python -m twine upload dist/funboost-16.6-py3-none-any.whl
 python setup.py sdist & twine upload dist/funboost-10.9.tar.gz
 
 最快的下载方式，上传立即可安装。阿里云源同步官网pypi间隔要等很久。

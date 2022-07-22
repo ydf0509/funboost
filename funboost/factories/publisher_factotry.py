@@ -8,6 +8,7 @@ from funboost.publishers.confluent_kafka_publisher import ConfluentKafkaPublishe
 from funboost.publishers.http_publisher import HTTPPublisher
 from funboost.publishers.kombu_publisher import KombuPublisher
 from funboost.publishers.nats_publisher import NatsPublisher
+from funboost.publishers.peewee_publisher import PeeweePublisher
 from funboost.publishers.redis_publisher_lpush import RedisPublisherLpush
 from funboost.publishers.tcp_publisher import TCPPublisher
 from funboost.publishers.txt_file_publisher import TxtFilePublisher
@@ -53,6 +54,7 @@ broker_kind__publisher_type_map = {
     23: HTTPPublisher,
     24: NatsPublisher,
     25: TxtFilePublisher,
+    26: PeeweePublisher,
 }
 
 

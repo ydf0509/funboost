@@ -12,6 +12,7 @@ from funboost.consumers.local_python_queue_consumer import LocalPythonQueueConsu
 from funboost.consumers.mongomq_consumer import MongoMqConsumer
 from funboost.consumers.nats_consumer import NatsConsumer
 from funboost.consumers.nsq_consumer import NsqConsumer
+from funboost.consumers.peewee_conusmer import PeeweeConsumer
 from funboost.consumers.persist_queue_consumer import PersistQueueConsumer
 from funboost.consumers.rabbitmq_amqpstorm_consumer import RabbitmqConsumerAmqpStorm
 from funboost.consumers.rabbitmq_pika_consumer import RabbitmqConsumer
@@ -54,6 +55,7 @@ broker_kind__consumer_type_map = {
     23: HTTPConsumer,
     24: NatsConsumer,
     25: TxtFileConsumer,
+    26: PeeweeConsumer,
 }
 
 

@@ -41,11 +41,12 @@ if __name__ == '__main__':
     # pass
     # f.clear()
     f2.clear()
-    f2.consume()
+
     for i in range(1000):
-        time.sleep(1)
+        # time.sleep(1)
         # f.push(i, i * 2)
         f2.push(i, i * 2)
+    f2.consume()
 
 
 

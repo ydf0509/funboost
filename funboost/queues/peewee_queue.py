@@ -56,14 +56,16 @@ class PeeweeQueue(LoggerMixin, LoggerLevelSetterMixin):
             ten_minitues_ago_datetime = datetime.datetime.now() + datetime.timedelta(minutes=-10)
             ret = self.FunboostMessage.select().where(self.FunboostMessage.status.in_([TaskStatus.TO_BE_CONSUMED, TaskStatus.REQUEUE])
                                                       | (
-                                                              self.FunboostMessage.status == TaskStatus.PENGDING &
-                                                              self.FunboostMessage.consume_start_timestamp < ten_minitues_ago_datetime
+                                                          (self.FunboostMessage.status == TaskStatus.PENGDING) &
+                                                          (self.FunboostMessage.consume_start_timestamp < ten_minitues_ago_datetime)
                                                       )).limit(1)
             # ret = self.FunboostMessage.select().where(self.FunboostMessage.status=='dsadsad').limit(1)
             # print(ret)
             if len(ret) > 0:
-                row = model_to_dict(ret[0])
-                # print(row)
+                row_obj = ret[0]
+                row = model_to_dict(row_obj)
+                self.FunboostMessage.update(status=TaskStatus.PENGDING,consume_start_timestamp=datetime.datetime.now()
+                                            ).where(self.FunboostMessage.job_id ==row['job_id']).execute()
                 return row
             else:
                 time.sleep(0.2)
@@ -72,18 +74,15 @@ class PeeweeQueue(LoggerMixin, LoggerLevelSetterMixin):
         if is_delete_the_task:
             self.FunboostMessage.delete_by_id(job_id)
         else:
+            # print(self.FunboostMessage.update(status=TaskStatus.SUCCESS).where(self.FunboostMessage.job_id==job_id))
             self.FunboostMessage.update(status=TaskStatus.SUCCESS).where(self.FunboostMessage.job_id==job_id).execute()
 
 
     def set_failed(self, job_id, ):
-        msg = self.FunboostMessage.get(self.FunboostMessage.job_id == job_id)
-        msg.status = TaskStatus.FAILED
-        msg.save()
+        self.set_task_status(job_id,status=TaskStatus.FAILED)
 
     def set_task_status(self, job_id, status: str):
-        msg = self.FunboostMessage.get(self.FunboostMessage.job_id == job_id)
-        msg.status = status
-        msg.save()
+        self.FunboostMessage.update(status=status).where(self.FunboostMessage.job_id == job_id).execute()
 
     def requeue_task(self, job_id):
         self.set_task_status(job_id, TaskStatus.REQUEUE)

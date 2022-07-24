@@ -7,7 +7,7 @@ from playhouse.shortcuts import model_to_dict, dict_to_model
 from nb_log import LoggerMixin, LoggerLevelSetterMixin
 from funboost import funboost_config_deafult
 from peewee import *
-from threadpool_executor_shrink_able import ThreadPoolExecutorShrinkAble
+
 
 
 class TaskStatus:
@@ -104,6 +104,7 @@ class PeeweeQueue(LoggerMixin, LoggerLevelSetterMixin):
 
 
 if __name__ == '__main__':
+    from threadpool_executor_shrink_able import ThreadPoolExecutorShrinkAble
     q = PeeweeQueue('peewee_queue')
     q.set_success(1)
 

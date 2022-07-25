@@ -19,6 +19,10 @@ class TaskStatus:
 
 
 class PeeweeQueue(LoggerMixin, LoggerLevelSetterMixin):
+    """
+    使用peewee操作数据库模拟消息队列
+    """
+
     def __init__(self, queue_name):
         self.queue_name = queue_name
         self.FunboostMessage = None
@@ -48,7 +52,7 @@ class PeeweeQueue(LoggerMixin, LoggerLevelSetterMixin):
         self.FunboostMessage = FunboostMessage
 
     def push(self, body):
-        msg = self.FunboostMessage(body=body, status=TaskStatus.TO_BE_CONSUMED,consume_start_timestamp=None)
+        msg = self.FunboostMessage(body=body, status=TaskStatus.TO_BE_CONSUMED, consume_start_timestamp=None)
         msg.save()
 
     def get(self):
@@ -56,16 +60,16 @@ class PeeweeQueue(LoggerMixin, LoggerLevelSetterMixin):
             ten_minitues_ago_datetime = datetime.datetime.now() + datetime.timedelta(minutes=-10)
             ret = self.FunboostMessage.select().where(self.FunboostMessage.status.in_([TaskStatus.TO_BE_CONSUMED, TaskStatus.REQUEUE])
                                                       | (
-                                                          (self.FunboostMessage.status == TaskStatus.PENGDING) &
-                                                          (self.FunboostMessage.consume_start_timestamp < ten_minitues_ago_datetime)
+                                                              (self.FunboostMessage.status == TaskStatus.PENGDING) &
+                                                              (self.FunboostMessage.consume_start_timestamp < ten_minitues_ago_datetime)
                                                       )).limit(1)
             # ret = self.FunboostMessage.select().where(self.FunboostMessage.status=='dsadsad').limit(1)
             # print(ret)
-            if len(ret) > 0:
+            if len(ret) == 1:
                 row_obj = ret[0]
                 row = model_to_dict(row_obj)
-                self.FunboostMessage.update(status=TaskStatus.PENGDING,consume_start_timestamp=datetime.datetime.now()
-                                            ).where(self.FunboostMessage.job_id ==row['job_id']).execute()
+                self.FunboostMessage.update(status=TaskStatus.PENGDING, consume_start_timestamp=datetime.datetime.now()
+                                            ).where(self.FunboostMessage.job_id == row['job_id']).execute()
                 return row
             else:
                 time.sleep(0.2)
@@ -74,12 +78,12 @@ class PeeweeQueue(LoggerMixin, LoggerLevelSetterMixin):
         if is_delete_the_task:
             self.FunboostMessage.delete_by_id(job_id)
         else:
+            ModelSelect.for_update()
             # print(self.FunboostMessage.update(status=TaskStatus.SUCCESS).where(self.FunboostMessage.job_id==job_id))
-            self.FunboostMessage.update(status=TaskStatus.SUCCESS).where(self.FunboostMessage.job_id==job_id).execute()
-
+            self.FunboostMessage.update(status=TaskStatus.SUCCESS).where(self.FunboostMessage.job_id == job_id).execute()
 
     def set_failed(self, job_id, ):
-        self.set_task_status(job_id,status=TaskStatus.FAILED)
+        self.set_task_status(job_id, status=TaskStatus.FAILED)
 
     def set_task_status(self, job_id, status: str):
         self.FunboostMessage.update(status=status).where(self.FunboostMessage.job_id == job_id).execute()
@@ -97,7 +101,6 @@ class PeeweeQueue(LoggerMixin, LoggerLevelSetterMixin):
     def total_count(self):
         return self.FunboostMessage.select().count()
 
-
     @property
     def to_be_consumed_count(self):
         return self.get_count_by_status(TaskStatus.TO_BE_CONSUMED)
@@ -106,7 +109,6 @@ class PeeweeQueue(LoggerMixin, LoggerLevelSetterMixin):
 if __name__ == '__main__':
     q = PeeweeQueue('peewee_queue')
     q.set_success(1)
-
 
     pool = ThreadPoolExecutorShrinkAble(20)
     # q.clear_queue()

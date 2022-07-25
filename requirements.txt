@@ -1,4 +1,4 @@
-## 这里的不用管，可能没及时更新维护， pip install function_scheduling_distributed_framework 自动安装所有依赖包
+## 这里的不用管，没及时更新维护， pip install funboost 自动安装所有依赖包
 
 eventlet==0.31.0
 gevent==21.1.2
@@ -44,4 +44,4 @@ fabric2
 nats-python
 deprecated
 
-## 这里的不用管，可能没及时更新维护， pip install funboost 自动安装所有依赖包
+## 这里的不用管，没及时更新维护， pip install funboost 自动安装所有依赖包

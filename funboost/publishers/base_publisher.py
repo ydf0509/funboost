@@ -51,7 +51,7 @@ class AsyncResult(RedisMixin):
                 status_and_result_str = redis_value[1]
                 self._status_and_result = json.loads(status_and_result_str)
                 self.redis_db_filter_and_rpc_result.lpush(self.task_id, status_and_result_str)
-                self.redis_db_filter_and_rpc_result .expire(self.task_id, 600)
+                self.redis_db_filter_and_rpc_result.expire(self.task_id, 600)
                 return self._status_and_result
             return None
         return self._status_and_result
@@ -196,7 +196,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True,
                  clear_queue_within_init=False, is_add_publish_time=True, consuming_function: callable = None,
-                 broker_exclusive_config:dict=None,
+                 broker_exclusive_config: dict = None,
                  ):
         # noinspection GrazieInspection
         """

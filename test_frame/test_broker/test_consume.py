@@ -25,7 +25,7 @@ def f(x, y):
 
 pool2 = ProcessPoolExecutor(4)
 
-@boost('test_queue77d', log_level=10, broker_kind=BrokerEnum.PEEWEE, qps=5,
+@boost('test_queue77d', log_level=10, broker_kind=BrokerEnum.MQTT, qps=5,
        create_logger_file=False,
        # specify_concurrent_pool= pool2,
        # concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,function_timeout=10,
@@ -33,6 +33,7 @@ pool2 = ProcessPoolExecutor(4)
        )
 def f2(a, b):
     # time.sleep(100)
+    time.sleep(10)
     print(a, b)
     return a - b
 

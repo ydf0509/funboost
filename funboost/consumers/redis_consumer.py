@@ -3,6 +3,7 @@
 # @Time    : 2019/8/8 0008 13:32
 import json
 # import time
+import time
 
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.utils import RedisMixin
@@ -16,6 +17,7 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
     这个是复杂版，一次性拉取100个，简单版在 funboost/consumers/redis_consumer_simple.py
     """
     BROKER_KIND = 2
+    BROKER_EXCLUSIVE_CONFIG_KEYS = ['redis_bulk_push', ]
 
     # noinspection DuplicatedCode
     def _shedual_task000(self):

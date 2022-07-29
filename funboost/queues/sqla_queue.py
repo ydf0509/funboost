@@ -59,28 +59,7 @@ class SqlaBase(Base):
 """
 
 
-class SqlaBaseMixin:
-    # __abstract__ = True
-    job_id = Column(Integer, primary_key=True, autoincrement=True)
-    body = Column(String(10240))
-    publish_timestamp = Column(DateTime, default=datetime.datetime.now, comment='发布时间')
-    status = Column(String(20), index=False, nullable=True)
-    consume_start_timestamp = Column(DateTime, default=None, comment='消费时间', index=False)
 
-    def __init__(self, job_id=None, body=None, publish_timestamp=None, status=None, consume_start_timestamp=None):
-        self.job_id = job_id
-        self.body = body
-        self.publish_timestamp = publish_timestamp
-        self.status = status
-        self.consume_start_timestamp = consume_start_timestamp
-
-    def __str__(self):
-        return f'{self.__class__} {self.to_dict()}'
-
-    def to_dict(self):
-        # return {'job_id':self.job_id,'body':self.body,'publish_timestamp':self.publish_timestamp,'status':self.status}
-        # noinspection PyUnresolvedReferences
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
 class SessionContext:
@@ -100,6 +79,29 @@ class SqlaQueue(LoggerMixin, LoggerLevelSetterMixin):
     # noinspection PyPep8Naming
     @decorators.where_is_it_called
     def __init__(self, queue_name: str, sqla_conn_url: str):
+        class SqlaBaseMixin:
+            # __abstract__ = True
+            job_id = Column(Integer, primary_key=True, autoincrement=True)
+            body = Column(String(10240))
+            publish_timestamp = Column(DateTime, default=datetime.datetime.now, comment='发布时间')
+            status = Column(String(20), index=False, nullable=True)
+            consume_start_timestamp = Column(DateTime, default=None, comment='消费时间', index=False)
+
+            def __init__(self, job_id=None, body=None, publish_timestamp=None, status=None, consume_start_timestamp=None):
+                self.job_id = job_id
+                self.body = body
+                self.publish_timestamp = publish_timestamp
+                self.status = status
+                self.consume_start_timestamp = consume_start_timestamp
+
+            def __str__(self):
+                return f'{self.__class__} {self.to_dict()}'
+
+            def to_dict(self):
+                # return {'job_id':self.job_id,'body':self.body,'publish_timestamp':self.publish_timestamp,'status':self.status}
+                # noinspection PyUnresolvedReferences
+                return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
         self.logger.setLevel(20)
         self.queue_name = queue_name
         self._sqla_conn_url = sqla_conn_url

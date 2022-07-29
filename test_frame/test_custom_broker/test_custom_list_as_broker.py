@@ -1,8 +1,9 @@
 import json
+import os
 import threading
 import time
 
-from funboost import register_custom_broker, AbstractConsumer, AbstractPublisher
+from funboost import register_custom_broker, AbstractConsumer, AbstractPublisher,BrokerEnum
 from funboost import boost
 
 """
@@ -22,18 +23,15 @@ class ListPublisher(AbstractPublisher):
     def __init__(self, *args, **kwargs):
         print('此类可以重写父类 AbstractPublisher 的任何方法，但必须实现以下方法  concrete_realization_of_publish clear  get_message_count  close ')
         super().__init__(*args, **kwargs)
-        with list_operation_lock:
-            if self.queue_name not in queue_name__list_map:
-                queue_name__list_map[self.queue_name] = []
-            self.msg_list: list = queue_name__list_map[self.queue_name]
+        if self.queue_name not in queue_name__list_map:
+            queue_name__list_map[self.queue_name] = []
+        self.msg_list: list = queue_name__list_map[self.queue_name]
 
     def concrete_realization_of_publish(self, msg: str):
-        with list_operation_lock:
-            self.msg_list.append(msg)
+        self.msg_list.append(msg)
 
     def clear(self):
-        with list_operation_lock:
-            self.msg_list.clear()
+        self.msg_list.clear()
 
     def get_message_count(self):
         return len(self.msg_list)
@@ -46,16 +44,14 @@ class ListConsumer(AbstractConsumer):
     def __init__(self, *args, **kwargs):
         print('此类可以重写父类 AbstractConsumer 的任何方法，但必须实现以下方法  _shedual_task  _confirm_consume  _requeue ')
         super().__init__(*args, **kwargs)
-        with list_operation_lock:
-            if self.queue_name not in queue_name__list_map:
-                queue_name__list_map[self.queue_name] = []
-            self.msg_list: list = queue_name__list_map[self.queue_name]
+        if self.queue_name not in queue_name__list_map:
+            queue_name__list_map[self.queue_name] = []
+        self.msg_list: list = queue_name__list_map[self.queue_name]
 
     def _shedual_task(self):
         while True:
             try:
-                with list_operation_lock:
-                    task_str = self.msg_list.pop(-1)  # pop(0) 消耗的性能更高
+                task_str = self.msg_list.pop(-1)  # pop(0) 消耗的性能更高
             except IndexError:  # 说明是空的
                 time.sleep(0.1)
                 continue
@@ -66,21 +62,21 @@ class ListConsumer(AbstractConsumer):
         pass  # 这里不演示基于list作为消息队列中间件的确认消费了
 
     def _requeue(self, kw):
-        with list_operation_lock:
-            self.msg_list.append(json.dumps(kw['body']))
+        self.msg_list.append(json.dumps(kw['body']))
 
 
 BROKER_KIND_LIST = 101
 register_custom_broker(BROKER_KIND_LIST, ListPublisher, ListConsumer)  # 核心，这就是将自己写的类注册到框架中，框架可以自动使用用户的类，这样用户无需修改框架的源代码了。
 
 
-@boost('test_list_queue', broker_kind=BROKER_KIND_LIST, qps=10)
+@boost('test_list_queue', broker_kind=BROKER_KIND_LIST, qps=0.5,concurrent_num=2)
 def f(x):
+    print(os.getpid())
     print(x * 10)
 
 
 if __name__ == '__main__':
-    for i in range(50):
+    for i in range(5000):
         f.push(i)
     print(f.publisher.get_message_count())
-    f.consume()
+    f.multi_process_consume(10)

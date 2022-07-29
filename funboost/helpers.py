@@ -44,11 +44,13 @@ def run_consumer_with_multi_process(task_fun, process_num=1):
     '''
     if not getattr(task_fun, 'is_decorated_as_consume_function'):
         raise ValueError(f'{task_fun} 参数必须是一个被 boost 装饰的函数')
-    if process_num == 1  or True:
+    if process_num == 1 :
         task_fun.consume()
     else:
-        [Process(target=_run_many_consumer_by_init_params,
-                 args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start() for _ in range(process_num)]
+        for i in range(process_num):
+            # print(i)
+            Process(target=_run_many_consumer_by_init_params,
+                     args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start()
 
 
 def _multi_process_pub_params_list_by_consumer_init_params(consumer_init_params: dict, msgs: List[dict]):

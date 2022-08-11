@@ -78,7 +78,7 @@ class PeeweeQueue(LoggerMixin, LoggerLevelSetterMixin):
         if is_delete_the_task:
             self.FunboostMessage.delete_by_id(job_id)
         else:
-            ModelSelect.for_update()
+            # ModelSelect.for_update()
             # print(self.FunboostMessage.update(status=TaskStatus.SUCCESS).where(self.FunboostMessage.job_id==job_id))
             self.FunboostMessage.update(status=TaskStatus.SUCCESS).where(self.FunboostMessage.job_id == job_id).execute()
 

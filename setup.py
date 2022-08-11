@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 setup(
     name='funboost',  #
-    version='17.0',
+    version='17.1',
     description=(
         'funboost  is function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way'
     ),
@@ -39,7 +39,7 @@ setup(
     ],
     install_requires=[
         'eventlet==0.31.0',
-        'gevent==21.1.2',
+        'gevent==21.12.0',
         'pymongo==4.0.2',      # 3.5.1  -> 4.0.2
         'AMQPStorm==2.7.1',
         'rabbitpy==2.0.1',
@@ -94,7 +94,7 @@ python setup.py sdist upload -r pypi
 
 # python setup.py bdist_wheel
 python setup.py bdist_wheel ; python -m twine upload dist/funboost-15.0-py3-none-any.whl
-python setup.py bdist_wheel && python -m twine upload dist/funboost-17.0-py3-none-any.whl
+python setup.py bdist_wheel && python -m twine upload dist/funboost-17.1-py3-none-any.whl
 python setup.py sdist & twine upload dist/funboost-10.9.tar.gz
 
 最快的下载方式，上传立即可安装。阿里云源同步官网pypi间隔要等很久。

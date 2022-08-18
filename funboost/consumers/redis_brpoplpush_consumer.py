@@ -24,12 +24,11 @@ class RedisBrpopLpushConsumer(AbstractConsumer, RedisMixin):
     def _shedual_task(self):
         unack_list_name = f'unack_{self._queue_name}_{self.consumer_identification}'
         while True:
-            result = self.redis_db_frame.brpoplpush(self._queue_name, unack_list_name, timeout=60)
-            if result:
-                # self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {result.decode()}  ')
-                self._print_message_get_from_broker('redis', result.decode())
-                task_dict = json.loads(result)
-                kw = {'body': task_dict, 'raw_msg': result}
+            msg = self.redis_db_frame.brpoplpush(self._queue_name, unack_list_name, timeout=60)
+            if msg:
+                self._print_message_get_from_broker('redis', msg.decode())
+                task_dict = json.loads(msg)
+                kw = {'body': task_dict, 'raw_msg': msg}
                 self._submit_task(kw)
 
     def _confirm_consume(self, kw):

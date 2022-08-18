@@ -21,7 +21,7 @@ try:
     from sqlalchemy.pool import StaticPool
     from sqlalchemy_utils import database_exists, create_database
 except ImportError as e:
-    print(e)
+    print(f'{e}  不使用sqlalchemy操作数据库模拟消息队列，就可以无视这')
 from funboost.utils import LoggerMixin, decorators, LoggerLevelSetterMixin
 
 

@@ -1,17 +1,23 @@
 """
 集成定时任务。
 """
+import importlib
+
+import pickle
+
 import time
 from typing import Union
 import threading
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.jobstores.redis import RedisJobStore
 # noinspection PyProtectedMember
 from apscheduler.util import undefined
 
 from funboost import funboost_config_deafult
 
 from funboost.consumers.base_consumer import AbstractConsumer
+
 
 
 def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, AbstractConsumer]):
@@ -41,17 +47,23 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
                             next_run_time, jobstore, executor,
                             replace_existing, **trigger_args)
 
-    def start(self):
-        def _block_exit():
-            while True:
-                time.sleep(3600)
-
-        threading.Thread(target=_block_exit).start()  # 既不希望用BlockingScheduler阻塞主进程也不希望定时退出。
-        super(FsdfBackgroundScheduler, self).start()
+    def start(self,paused=False):
+        # def _block_exit():
+        #     while True:
+        #         time.sleep(3600)
+        #
+        # threading.Thread(target=_block_exit).start()  # 既不希望用BlockingScheduler阻塞主进程也不希望定时退出。
+        # self._daemon = False
+        super(FsdfBackgroundScheduler, self).start(paused=paused)
         # _block_exit()   # python3.9 判断守护线程结束必须主线程在运行，否则结尾
 
 
-fsdf_background_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE)
+
+
+fsdf_background_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE,daemon=False,)
+funboost_aps_scheduler = fsdf_background_scheduler   # 定时配置基于内存的，不可以跨机器远程动态添加/修改/删除定时任务配置
+
+
 # fsdf_background_scheduler = FsdfBackgroundScheduler()
 
 

@@ -18,8 +18,12 @@ class HTTPConsumer(AbstractConsumer, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        self._ip, self._port = self.queue_name.split(':')
-        self._port = int(self._port)
+        try:
+            self._ip, self._port = self.queue_name.split(':')
+            self._port = int(self._port)
+        except Exception as e:
+            self.logger.critical(f'http作为消息队列时候,队列名字必须设置为 例如 192.168.1.101:8200  这种,  ip:port')
+            raise e
 
     # noinspection DuplicatedCode
     def _shedual_task(self):

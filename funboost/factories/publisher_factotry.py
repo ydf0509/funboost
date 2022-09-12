@@ -10,6 +10,7 @@ from funboost.publishers.kombu_publisher import KombuPublisher
 from funboost.publishers.nats_publisher import NatsPublisher
 from funboost.publishers.peewee_publisher import PeeweePublisher
 from funboost.publishers.redis_publisher_lpush import RedisPublisherLpush
+from funboost.publishers.redis_pubsub_publisher import RedisPubSubPublisher
 from funboost.publishers.tcp_publisher import TCPPublisher
 from funboost.publishers.txt_file_publisher import TxtFilePublisher
 from funboost.publishers.udp_publisher import UDPPublisher
@@ -55,6 +56,7 @@ broker_kind__publisher_type_map = {
     24: NatsPublisher,
     25: TxtFilePublisher,
     26: PeeweePublisher,
+    27:RedisPubSubPublisher,
 }
 
 

@@ -620,10 +620,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         raise NotImplementedError
 
     def _print_message_get_from_broker(self, broker_name, msg):
-        if isinstance(msg, (dict, list)):
-            msg = json.dumps(msg, ensure_ascii=False)
         # print(999)
         if self._is_show_message_get_from_broker:
+            if isinstance(msg, (dict, list)):
+                msg = json.dumps(msg, ensure_ascii=False)
             self.logger.debug(f'从 {broker_name} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
 
     def _get_priority_conf(self, kw: dict, broker_task_config_key: str):

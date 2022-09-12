@@ -6,6 +6,23 @@ python万能分布式函数调度框架，支持5种并发模式，20+种消息�
 框架只需要学习@boost这一个装饰器的入参就可以，所有用法几乎和1.3例子一摸一样，非常简化简单。
 
 
+### 框架评价
+
+```
+95%的用户在初步使用后，赞不绝口、相见恨晚。认为funboost框架使用简单但功能强大和丰富。
+
+第一次听说此框架的，100%用户会质疑框架性能不行，功能少，表示学习celery的教程文档上的所有功能已近非常费劲头疼，
+一般python用户听到一个新的python框架，脚都软了，学习类似django celery scrapy意味着要学习几个月文档才只能掌握框架的一部分用法了，
+尤其是celery这种框架，代码在pycharm完全不能自动补全提示，用户连@task装饰的函数有什么方法，每个方法有什么入参都不知道，
+配置文件能写哪些配置都不知道，如果不按照博客上的celery目录结构写celery任务，连celery命令行运行起来都要反复猜测尝试。
+正因为如此用户从心理已近十分惧怕学习一种叫python框架的东西了，用户顶多愿意学习一个python包或者模块，学习一个框架会非常害怕觉得难度高且耗时。
+
+funboost只有一个@boost装饰器，@boost入参能自动补全，更重要的是被@boost装饰的函数，有哪些方法，每个方法入参是什么都能自动补全。
+funboost的中间件配置文件自当生成在用户当前项目根目录，用户无需到处找文档，能配置什么东西，框架功能怎么配置。
+因为funboost非常注重代码补全提示，所以不存在上面celery的那些复杂高难度缺点。
+```
+
+
 funboost的旧框架名字是function_scheduling_distributed_framework , 关系和兼容性见1.0.3介绍。
 旧框架地址： [https://github.com/ydf0509/distributed_framework](https://github.com/ydf0509/distributed_framework)
 

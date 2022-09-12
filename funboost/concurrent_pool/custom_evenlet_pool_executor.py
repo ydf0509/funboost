@@ -46,7 +46,7 @@ def evenlet_timeout_deco(timeout_t):
 class CustomEventletPoolExecutor(greenpool.GreenPool):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        check_evenlet_monkey_patch() # basecomer.py中检查。
+        check_evenlet_monkey_patch()  # basecomer.py中检查。
         atexit.register(self.shutdown)
 
     def submit(self, *args, **kwargs):  # 保持为一直的公有用法。

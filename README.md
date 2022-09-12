@@ -115,7 +115,7 @@ pip install funboost --upgrade
 
 框架支持的中间件种类大全和选型见文档3.1章节的介绍:   
 
-[3.1 各种中间件选择的场景和优势](https://function-scheduling-distributed-framework.readthedocs.io/zh_CN/latest/articles/c3.html#id2) 
+[3.1 各种中间件选择的场景和优势](https://funboost.readthedocs.io/zh/latest/articles/c3.html#id2) 
 
 
 ### 1.2.3 框架对任务支持20种控制功能。

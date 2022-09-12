@@ -15,12 +15,11 @@ class RedisPbSubConsumer(AbstractConsumer, RedisMixin):
     def _shedual_task(self):
         pub = self.redis_db_frame.pubsub()
         pub.subscribe(self.queue_name)
-        while True:
-            for item in pub.listen():
-                if item['type'] == 'message':
-                    self._print_message_get_from_broker('reids', item['data'])
-                    kw = {'body': json.loads(item['data'])}
-                    self._submit_task(kw)
+        for item in pub.listen():
+            if item['type'] == 'message':
+                self._print_message_get_from_broker('reids', item['data'])
+                kw = {'body': json.loads(item['data'])}
+                self._submit_task(kw)
 
     def _confirm_consume(self, kw):
         pass

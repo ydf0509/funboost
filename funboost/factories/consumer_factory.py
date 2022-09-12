@@ -5,7 +5,7 @@ import copy
 # from collections import Callable
 from typing import Callable
 
-from funboost.consumers.RedisPubSubConsumer import RedisPbSubConsumer
+from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer
 from funboost.consumers.http_consumer import HTTPConsumer
 from funboost.consumers.kafka_consumer import KafkaConsumer
 from funboost.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit

@@ -21,6 +21,8 @@ for i in range(1,20):
     sync_fun.delay(i)
 
 
+
+
 print(time.time() - t1)
 print('任务添加完成')
 

@@ -475,7 +475,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._schedule_tasks_on_main_thread = schedule_tasks_on_main_thread
 
         self._result_persistence_helper = ResultPersistenceHelper(function_result_status_persistance_conf, queue_name)
-
         self._user_custom_record_process_info_func = user_custom_record_process_info_func
 
         self._is_using_rpc_mode = is_using_rpc_mode

@@ -73,6 +73,11 @@ def print_hello(x):
     print(f'hello {x}')
 
 
+
+print_hello.
+
+
+
 @celery.shared_task(name='无apptask')
 def test_shere_deco(x):
     print(x)
@@ -82,6 +87,7 @@ def test_shere_deco(x):
 def sync_fun(x):
     print(f'{os.getpid()}  {threading.get_ident()}')
     asyncio.new_event_loop().run_until_complete(async_fun(x))
+
 
 async def async_fun(x):
     await asyncio.sleep(10)

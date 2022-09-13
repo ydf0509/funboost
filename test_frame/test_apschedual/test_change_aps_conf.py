@@ -7,7 +7,7 @@ from funboost.timing_job.push_fun_for_apscheduler_use_db import push_for_apsched
 此文件是测试修改定时任务配置，另一个脚本的一启动的定时任务配置，会自动发生变化。因为定时任务配置通过中间件存储和通知了。
 """
 
-funboost_background_scheduler_redis_store.start(paused=True)  # 这个要设置为 paused=True，这个脚本是为了修改定时任务配置，这个脚本的sheduler不要启动
+funboost_background_scheduler_redis_store.start(paused=True)  # 这个要设置为 paused=True，这个脚本是为了修改定时任务配置，这个要设置为 paused=True，这个脚本的sheduler不要运行，但一定要启动
 
 
 # 第一种方式修改任务配置，使用 apscheduler.modify_job方法，但是_create_trigger方法有点冷门。
@@ -22,7 +22,7 @@ funboost_background_scheduler_redis_store.start(paused=True)  # 这个要设置�
 
 # 第二种方式修改任务配置，使用 apscheduler.add_job方法，对某个已存在的定时任务id修改，需要设置replace_existing=True
 
-funboost_background_scheduler_redis_store.add_job(push_for_apscheduler_use_db,
+funboost_background_scheduler_redis_store.add_job(push_for_apscheduler_use_db,   # 这里也可以用 my_push函数秒，那样就不用传递函数的位置和名字了，看test_aps_redis_store.py。
                                                   'interval', id='6', name='namexx', seconds=3,
                                                   args=('test_frame/test_apschedual/test_aps_redis_store.py', 'consume_func'), kwargs={"x": 20, "y": 30},
                                                   replace_existing=True)

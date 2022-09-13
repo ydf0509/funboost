@@ -26,7 +26,7 @@ def f(x, y):
 pool2 = ProcessPoolExecutor(4)
 
 @boost('test_queue77d', log_level=10, broker_kind=BrokerEnum.MEMORY_QUEUE, qps=5,
-       create_logger_file=False,
+       create_logger_file=False,is_show_message_get_from_broker=True,
        # specify_concurrent_pool= pool2,
        # concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,function_timeout=10,
        # function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True)
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     # f.clear()
     f2.clear()
 
-    for i in range(1000):
+    for i in range(10):
         # time.sleep(1)
         # f.push(i, i * 2)
         f2.push(i, i * 2)

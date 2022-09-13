@@ -4,6 +4,8 @@
 import copy
 # from collections import Callable
 from typing import Callable
+
+from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer
 from funboost.consumers.http_consumer import HTTPConsumer
 from funboost.consumers.kafka_consumer import KafkaConsumer
 from funboost.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit
@@ -56,6 +58,7 @@ broker_kind__consumer_type_map = {
     24: NatsConsumer,
     25: TxtFileConsumer,
     26: PeeweeConsumer,
+    27:RedisPbSubConsumer,
 }
 
 

@@ -1093,7 +1093,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
             elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
                 g = gevent.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
                 ConsumersManager.schedulal_thread_to_be_join.append(g)
-            elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
+            elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
                 g = eventlet.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
                 ConsumersManager.schedulal_thread_to_be_join.append(g)
 

@@ -50,7 +50,7 @@ def run_consumer_with_multi_process(task_fun, process_num=1):
         for i in range(process_num):
             # print(i)
             Process(target=_run_many_consumer_by_init_params,
-                     args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start()
+                    args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start()
 
 
 def _multi_process_pub_params_list_by_consumer_init_params(consumer_init_params: dict, msgs: List[dict]):

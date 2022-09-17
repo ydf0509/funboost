@@ -78,6 +78,7 @@ class IdeAutoCompleteHelper(LoggerMixin):
         self.publish = self.pub = self.apply_async = self.publisher.publish  # type: AbstractPublisher.publish
         self.push = self.delay = self.publisher.push  # type: AbstractPublisher.push
         self.clear = self.clear_queue = self.publisher.clear  # type: AbstractPublisher.clear
+        self.get_message_count = self.publisher.get_message_count
 
         self.start_consuming_message = self.consume = self.start = self.consumer.start_consuming_message
 
@@ -283,6 +284,7 @@ def boost(queue_name,
         func.push = func.delay = consumer.publisher_of_same_queue.push
         func.multi_process_pub_params_list = partial(multi_process_pub_params_list, func)
         func.clear = func.clear_queue = consumer.publisher_of_same_queue.clear
+        func.get_message_count = consumer.publisher_of_same_queue.get_message_count
 
         func.start_consuming_message = func.consume = func.start = consumer.start_consuming_message
         func.multi_process_start = func.multi_process_consume = partial(run_consumer_with_multi_process, func)

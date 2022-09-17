@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 12:12
+# @Time    : 2022/8/8 0008 12:12
 import os
 import time
 # noinspection PyUnresolvedReferences
@@ -51,6 +51,7 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
                     self.__bulk_push_and_init()
         else:
             getattr(self.redis_db_frame, self._push_method)(self._queue_name, msg)
+            # print(msg)
 
         # self.redis_db_frame.rpush(self._queue_name, msg)
     def clear(self):
@@ -64,7 +65,7 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
             self.logger.warning(f'清除 {unack_queue_name_list} 队列中的消息成功')
 
     def get_message_count(self):
-        # nb_print(self.redis_db7,self._queue_name)
+        # print(self.redis_db7,self._queue_name)
         return self.redis_db_frame.llen(self._queue_name)
 
     def close(self):

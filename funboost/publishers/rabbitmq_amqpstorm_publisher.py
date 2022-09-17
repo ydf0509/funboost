@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 12:06
+# @Time    : 2022/8/8 0008 12:06
 import amqpstorm
 from amqpstorm.basic import Basic as AmqpStormBasic
 from amqpstorm.queue import Queue as AmqpStormQueue

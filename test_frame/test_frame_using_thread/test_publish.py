@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 14:57
+# @Time    : 2022/8/8 0008 14:57
 
 from test_frame.test_frame_using_thread.test_consume import consumer_add, consumer_sub
 from funboost.publishers.base_publisher import PriorityConsumingControlConfig

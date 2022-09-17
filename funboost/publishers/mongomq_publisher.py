@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 12:23
+# @Time    : 2022/8/8 0008 12:23
 import json
 from funboost.utils.dependency_packages.mongomq import MongoQueue
 from funboost.publishers.base_publisher import AbstractPublisher

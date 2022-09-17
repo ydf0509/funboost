@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/9/17 0017 15:26
+# @Time    : 2022/9/17 0017 15:26
 import os
 import pymongo
 from funboost import funboost_config_deafult

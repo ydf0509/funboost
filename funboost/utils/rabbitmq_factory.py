@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 11:51
+# @Time    : 2022/8/8 0008 11:51
 import pikav0 as pika
 import rabbitpy
 from pikav0.adapters.blocking_connection import BlockingChannel

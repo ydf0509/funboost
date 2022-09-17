@@ -162,6 +162,9 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         # self.logger.warning(item)
         return item
 
+    def __str__(self):
+        return f'''{self.__class__}   {json.dumps(self.get_status_dict(),ensure_ascii=False)}'''
+
 
 class ResultPersistenceHelper(MongoMixin, LoggerMixin):
     def __init__(self, function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig, queue_name):

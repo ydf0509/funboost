@@ -44,7 +44,7 @@ def run_consumer_with_multi_process(task_fun, process_num=1):
     '''
     if not getattr(task_fun, 'is_decorated_as_consume_function'):
         raise ValueError(f'{task_fun} 参数必须是一个被 boost 装饰的函数')
-    if process_num == 1 :
+    if process_num == 1 and False:
         task_fun.consume()
     else:
         for i in range(process_num):

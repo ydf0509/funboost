@@ -25,7 +25,7 @@ def f(x, y):
 
 pool2 = ProcessPoolExecutor(4)
 
-@boost('test_queue77g', log_level=10, broker_kind=BrokerEnum.SQLITE_QUEUE, qps=50,
+@boost('test_queue77g', log_level=10, broker_kind=BrokerEnum.MONGOMQ, qps=50,
        create_logger_file=False,is_show_message_get_from_broker=True,concurrent_mode=ConcurrentModeEnum.THREADING
        # specify_concurrent_pool= pool2,
        # concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,function_timeout=10,
@@ -41,17 +41,17 @@ def f2(a, b):
 if __name__ == '__main__':
     # pass
     # f.clear()
-    f2.clear()
+    # f2.clear()
     for i in range(8):
         f2.push(i, i * 5)
-    print(f2.get_message_count())
-
-    f2.clear()
-    for i in range(20):
-        f2.push(i, i * 2)
-    print(f2.get_message_count())
-
-    f2.consume()
+    # print(f2.get_message_count())
+    #
+    # f2.clear()
+    # for i in range(20):
+    #     f2.push(i, i * 2)
+    # print(f2.get_message_count())
+    #
+    # f2.consume()
 
 
     # f2.continue_consume()

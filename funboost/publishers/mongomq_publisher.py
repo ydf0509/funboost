@@ -17,7 +17,7 @@ class MongoMqPublisher(AbstractPublisher, MongoMixin):
             consumer_id=f"consumer-{time_util.DatetimeConverter().datetime_str}",
             timeout=600,
             max_attempts=3,
-            ttl=0)
+            ttl=24 * 3600 * 365)
 
     def concrete_realization_of_publish(self, msg):
         # noinspection PyTypeChecker

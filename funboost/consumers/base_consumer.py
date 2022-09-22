@@ -163,7 +163,7 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         return item
 
     def __str__(self):
-        return f'''{self.__class__}   {json.dumps(self.get_status_dict(),ensure_ascii=False)}'''
+        return f'''{self.__class__}   {json.dumps(self.get_status_dict(), ensure_ascii=False)}'''
 
 
 class ResultPersistenceHelper(MongoMixin, LoggerMixin):
@@ -515,7 +515,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                             'code_filename': Path(self.consuming_function.__code__.co_filename).as_posix()
                                             }
 
-        self._delay_task_scheduler = BackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE)
+        self._delay_task_scheduler = BackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False)
         self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
         self._delay_task_scheduler.add_listener(self._apscheduler_job_miss, EVENT_JOB_MISSED)
         self._delay_task_scheduler.start()

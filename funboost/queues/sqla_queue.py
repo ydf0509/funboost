@@ -63,7 +63,8 @@ class SqlaBase(Base):
 
 
 class SessionContext:
-    def __init__(self, session: sqlalchemy.orm.session.Session):
+    # def __init__(self, session: sqlalchemy.orm.session.Session):
+    def __init__(self, session):
         self.ss = session
 
     def __enter__(self):

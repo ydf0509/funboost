@@ -70,7 +70,7 @@ setup(
         'rocketmq',
         'zmq',
         'pyzmq',
-        'kombu',  # 'kombu==4.6.11',
+        'kombu==4.6.11',  # 'kombu==4.6.11',
         # 'confluent_kafka==1.7.0',
         'paho-mqtt',
         'setuptools_rust',

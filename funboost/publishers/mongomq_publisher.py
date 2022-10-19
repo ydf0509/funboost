@@ -28,7 +28,8 @@ class MongoMqPublisher(AbstractPublisher, MongoMixin):
         self.logger.warning(f'清除 mongo队列 {self._queue_name} 中的消息成功')
 
     def get_message_count(self):
-        return self.queue.size()
+        # return self.queue.size()
+        return self.queue.collection.count_documents({'status':'queued'})
 
     def close(self):
         pass

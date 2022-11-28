@@ -4,8 +4,9 @@
 import json
 
 # noinspection PyUnresolvedReferences
-from kombu import Connection, Exchange, Queue, Consumer, Producer
 from kombu.transport.virtual.base import Channel
+from kombu.entity import Exchange, Queue
+from kombu.connection import Connection
 from nb_log import LogManager
 
 from funboost.publishers.base_publisher import AbstractPublisher, deco_mq_conn_error

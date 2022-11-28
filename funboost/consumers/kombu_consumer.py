@@ -2,9 +2,11 @@
 # @Author  : ydf
 # @Time    : 2021/04/18 0008 13:32
 # import time
-import kombu
-from kombu import Connection, Exchange, Queue
+
+from kombu.entity import Exchange, Queue
+from kombu.connection import Connection
 from kombu.transport.virtual.base import Channel
+from kombu.transport.virtual.base import Message
 from nb_log import LogManager
 
 from funboost import funboost_config_deafult
@@ -79,7 +81,7 @@ class KombuConsumer(AbstractConsumer, ):
 
     # noinspection DuplicatedCode
     def _shedual_task(self):  # 这个倍while 1 启动的，会自动重连。
-        def callback(body: dict, message: kombu.transport.virtual.base.Message):
+        def callback(body: dict, message: Message):
             # print(type(body),body,type(message),message)
             self._print_message_get_from_broker('kombu', body)
             # self.logger.debug(f""" 从 kombu {self._middware_name} 中取出的消息是 {body}""")

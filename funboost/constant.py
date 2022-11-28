@@ -65,7 +65,7 @@ class BrokerEnum:
 
     PULSAR = 20  # 最有潜力的下一代分布式消息系统。5年后会同时取代rabbitmq和kafka。目前python客户端只支持linux，win不行
 
-    REDIS_PUBSUB = 27
+    REDIS_PUBSUB = 27 # 基于redis 发布订阅的，发布一个消息多个消费者都能收到消息，但不支持持久化
 
 
 

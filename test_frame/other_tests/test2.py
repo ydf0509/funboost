@@ -11,3 +11,6 @@ def f(x,y):
     print(2)
 
 f(3,4)
+
+
+import pulsar

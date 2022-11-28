@@ -86,6 +86,8 @@ TIMEZONE = 'Asia/Shanghai'
 BoostDecoratorDefaultParams是@boost装饰器默认的全局入参。如果boost没有亲自指定某个入参，就自动使用这里的配置。
 这里的值不用配置，在boost装饰器中可以为每个消费者指定不同的入参，除非你嫌弃每个 boost 装饰器相同入参太多了，那么可以设置这里的全局默认值。
 
+例如用户不想每次在boost装饰器指定broker_kind为哪种消息队列，可以设置broker_kind为用户自己希望的默认消息队列类型
+
 boost入参可以ide跳转到boost函数的docstring查看
 boost入参也可以看文档3.3章节  https://funboost.readthedocs.io/zh/latest/articles/c3.html  
 

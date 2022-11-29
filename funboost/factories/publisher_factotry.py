@@ -6,7 +6,7 @@ from typing import Callable
 
 from funboost.publishers.confluent_kafka_publisher import ConfluentKafkaPublisher
 from funboost.publishers.http_publisher import HTTPPublisher
-from funboost.publishers.kombu_publisher import KombuPublisher
+# from funboost.publishers.kombu_publisher import KombuPublisher
 from funboost.publishers.nats_publisher import NatsPublisher
 from funboost.publishers.peewee_publisher import PeeweePublisher
 from funboost.publishers.redis_publisher_lpush import RedisPublisherLpush
@@ -46,7 +46,7 @@ broker_kind__publisher_type_map = {
     12: RedisStreamPublisher,
     13: ZeroMqPublisher,
     14: RedisPublisherLpush,
-    15: KombuPublisher,
+    # 15: KombuPublisher,
     16: ConfluentKafkaPublisher,
     17: MqttPublisher,
     18: HttpsqsPublisher,

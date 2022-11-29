@@ -9,7 +9,7 @@ from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer
 from funboost.consumers.http_consumer import HTTPConsumer
 from funboost.consumers.kafka_consumer import KafkaConsumer
 from funboost.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit
-from funboost.consumers.kombu_consumer import KombuConsumer
+# from funboost.consumers.kombu_consumer import KombuConsumer
 from funboost.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
 from funboost.consumers.mongomq_consumer import MongoMqConsumer
 from funboost.consumers.nats_consumer import NatsConsumer
@@ -48,7 +48,7 @@ broker_kind__consumer_type_map = {
     12: RedisStreamConsumer,
     13: ZeroMqConsumer,
     14: RedisBrpopLpushConsumer,
-    15: KombuConsumer,
+    # 15: KombuConsumer,
     16: KafkaConsumerManuallyCommit,
     17: MqttConsumer,
     18: HttpsqsConsumer,

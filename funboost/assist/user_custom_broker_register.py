@@ -1,4 +1,6 @@
 import typing
+from funboost.constant import BrokerEnum
+
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.consumers.base_consumer import AbstractConsumer
 
@@ -19,9 +21,34 @@ test_frame/test_custom_broker/test_custom_redis_consume_latest_publish_msg_broke
 
 def register_custom_broker(broker_kind: int, publisher_class: typing.Type[AbstractPublisher], consumer_class: typing.Type[AbstractConsumer]):
     if not issubclass(publisher_class, AbstractPublisher):
-        raise TypeError(f'publisher_class 必须是 AbstractPublisher 的子孙类')
+        raise TypeError(f'publisher_class 必须是 AbstractPublisher 的子或孙类')
     if not issubclass(consumer_class, AbstractConsumer):
-        raise TypeError(f'consumer_class 必须是 AbstractConsumer 的子孙类')
+        raise TypeError(f'consumer_class 必须是 AbstractConsumer 的子或孙类')
     publisher_factotry.broker_kind__publisher_type_map[broker_kind] = publisher_class
     consumer_factory.broker_kind__consumer_type_map[broker_kind] = consumer_class
     consumer_class.BROKER_KIND = broker_kind
+
+
+def register_kombu_broker():
+    """
+    直接导入kombu有的人的环境容易报错，有的人从来不使用kombu作为消息队列中间件免得报错，需要使用kombu作为消息队列的人,
+    自己在 @boost,先调用 register_kombu_broker() 就可以使用了.如
+
+    from funboost import BrokerEnum,boost
+    from funboost.assist.user_custom_broker_register import register_kombu_broker
+
+    register_kombu_broker()
+
+
+    @boost('test_kombu',broker_kind=BrokerEnum.KOMBU)
+    def f1(x,y):
+        print(f'{x} + {y} = {x  + y}')
+
+
+    if __name__ == '__main__':
+        f1.push(1,2)
+        f1.consume()
+    """
+    from funboost.consumers.kombu_consumer import KombuConsumer
+    from funboost.publishers.kombu_publisher import KombuPublisher
+    register_custom_broker(BrokerEnum.KOMBU, KombuPublisher, KombuConsumer)

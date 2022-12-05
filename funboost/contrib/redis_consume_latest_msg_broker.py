@@ -22,16 +22,15 @@ class RedisConsumeLatestConsumer(RedisConsumer):
     pass
 
 
-BROKER_KIND_REDIS_CONSUME_LATEST = 103
+BROKER_KIND_REDIS_CONSUME_LATEST = 105
 register_custom_broker(BROKER_KIND_REDIS_CONSUME_LATEST, RedisConsumeLatestPublisher, RedisConsumeLatestConsumer)  # 核心，这就是将自己写的类注册到框架中，框架可以自动使用用户的类，这样用户无需修改框架的源代码了。
 
 
-@boost('test_list_queue', broker_kind=BROKER_KIND_REDIS_CONSUME_LATEST, qps=10, )
-def f(x):
-    print(x * 10)
-
-
 if __name__ == '__main__':
+    @boost('test_list_queue2', broker_kind=BROKER_KIND_REDIS_CONSUME_LATEST, qps=10, )
+    def f(x):
+        print(x * 10)
+
     f.clear()
     for i in range(50):
         f.push(i)

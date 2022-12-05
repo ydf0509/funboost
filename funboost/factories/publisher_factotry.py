@@ -9,6 +9,7 @@ from funboost.publishers.http_publisher import HTTPPublisher
 # from funboost.publishers.kombu_publisher import KombuPublisher
 from funboost.publishers.nats_publisher import NatsPublisher
 from funboost.publishers.peewee_publisher import PeeweePublisher
+from funboost.publishers.pulsar_publisher import PulsarPublisher
 from funboost.publishers.redis_publisher_lpush import RedisPublisherLpush
 from funboost.publishers.redis_pubsub_publisher import RedisPubSubPublisher
 from funboost.publishers.tcp_publisher import TCPPublisher
@@ -50,20 +51,21 @@ broker_kind__publisher_type_map = {
     16: ConfluentKafkaPublisher,
     17: MqttPublisher,
     18: HttpsqsPublisher,
+    20: PulsarPublisher,
     21: UDPPublisher,
     22: TCPPublisher,
     23: HTTPPublisher,
     24: NatsPublisher,
     25: TxtFilePublisher,
     26: PeeweePublisher,
-    27:RedisPubSubPublisher,
+    27: RedisPubSubPublisher,
 }
 
 
 def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=True,
                   clear_queue_within_init=False, is_add_publish_time=True, consuming_function: Callable = None,
                   broker_kind: int = None,
-                  broker_exclusive_config:dict=None,
+                  broker_exclusive_config: dict = None,
                   ):
     """
     :param queue_name:

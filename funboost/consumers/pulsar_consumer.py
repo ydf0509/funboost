@@ -34,7 +34,7 @@ class PulsarConsumer(AbstractConsumer, ):
     SUBSCRIPTION_NAME = 'funboost_subc'
 
     def custom_init(self):
-        import pulsar
+        import pulsar  # 需要用户自己 pip install pulsar-client ，目前20221206只支持linux安装此python包。
         self._client = pulsar.Client(funboost_config_deafult.PULSAR_URL)
         self._consumer = self._client.subscribe(self._queue_name,
                                     subscription_name=self.SUBSCRIPTION_NAME)

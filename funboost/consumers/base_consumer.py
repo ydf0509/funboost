@@ -27,7 +27,6 @@ from typing import Callable
 from functools import wraps
 import threading
 from threading import Lock, Thread
-import eventlet
 import gevent
 import asyncio
 
@@ -53,8 +52,8 @@ from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
 # noinspection PyUnresolvedReferences
 from funboost.concurrent_pool.bounded_threadpoolexcutor import \
     BoundedThreadPoolExecutor
-from funboost.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco, \
-    check_evenlet_monkey_patch, CustomEventletPoolExecutor
+# from funboost.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco, \
+#     check_evenlet_monkey_patch, CustomEventletPoolExecutor   # 不提前导入，python3.10 以上高版本的python不支持此包
 from funboost.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_deco, \
     GeventPoolExecutor, check_gevent_monkey_patch
 from funboost.concurrent_pool.custom_threadpool_executor import \
@@ -537,6 +536,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if self._concurrent_mode == 2:
             check_gevent_monkey_patch()
         elif self._concurrent_mode == 3:
+            from funboost.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch
             check_evenlet_monkey_patch()
         else:
             check_not_monkey()
@@ -1032,6 +1032,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
         elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
             self.timeout_deco = gevent_timeout_deco
         elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
+            from funboost.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco
             self.timeout_deco = evenlet_timeout_deco
         self.logger.warning(f'{self.consumer} 设置并发模式'
                             f'为{ConsumersManager.get_concurrent_name_by_concurrent_mode(self._concurrent_mode)}')
@@ -1062,6 +1063,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
         elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
             pool_type = GeventPoolExecutor
         elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
+            from funboost.concurrent_pool.custom_evenlet_pool_executor import CustomEventletPoolExecutor  # 高版本python3.10以上的不支持 eventlet
             pool_type = CustomEventletPoolExecutor
         elif self._concurrent_mode == ConcurrentModeEnum.ASYNC:
             pool_type = AsyncPoolExecutor
@@ -1097,6 +1099,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
                 g = gevent.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
                 ConsumersManager.schedulal_thread_to_be_join.append(g)
             elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
+                import eventlet
                 g = eventlet.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
                 ConsumersManager.schedulal_thread_to_be_join.append(g)
 

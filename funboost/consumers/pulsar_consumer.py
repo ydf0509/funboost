@@ -55,3 +55,4 @@ class PulsarConsumer(AbstractConsumer, ):
         self._consumer.negative_acknowledge(kw['msg'])
 
 
+

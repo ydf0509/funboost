@@ -1,4 +1,7 @@
 # coding=utf-8
+import os
+
+print(os.getenv('path'))
 from auto_run_on_remote import run_current_script_on_remote
 # run_current_script_on_remote()
 import json

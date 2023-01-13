@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 setup(
     name='funboost',  #
-    version='18.2',
+    version='18.5',
     description=(
         'pip install funboost，python全功能分布式函数调度框架,。支持python所有类型的并发模式和一切知名消息队列中间件，python函数加速器，框架包罗万象，一统编程思维，兼容50% python业务场景，适用范围广。只需要一行代码即可分布式执行python一切函数。旧名字是function_scheduling_distributed_framework'
     ),
@@ -34,12 +34,13 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
-        # 'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         'Topic :: Software Development :: Libraries'
     ],
     install_requires=[
         'eventlet==0.33.2',
-        'gevent==21.12.0',
+        'gevent==22.10.2',
         'pymongo==4.0.2',      # 3.5.1  -> 4.0.2
         'AMQPStorm==2.7.1',
         'rabbitpy==2.0.1',
@@ -77,10 +78,11 @@ setup(
         'fabric2==2.6.0',  # 有的机器包rust错误， 这样做 curl https://sh.rustup.rs -sSf | sh
         'nats-python',
         'nb_filelock',
-        'aiohttp==3.8.0',
+        'aiohttp==3.8.3',
         'pysnooper',
         'deprecated',
-        'cryptography'
+        'cryptography',
+        'auto_run_on_remote',
     ]
 )
 """
@@ -95,7 +97,7 @@ python setup.py sdist upload -r pypi
 
 # python setup.py bdist_wheel
 python setup.py bdist_wheel ; python -m twine upload dist/funboost-15.0-py3-none-any.whl
-python setup.py bdist_wheel && python -m twine upload dist/funboost-18.2-py3-none-any.whl
+python setup.py bdist_wheel && python -m twine upload dist/funboost-18.5-py3-none-any.whl
 python setup.py sdist & twine upload dist/funboost-10.9.tar.gz
 
 最快的下载方式，上传立即可安装。阿里云源同步官网pypi间隔要等很久。

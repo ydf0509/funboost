@@ -1,4 +1,6 @@
+from funboost.utils import show_funboost_flag
 import typing
+# noinspection PyUnresolvedReferences
 from functools import update_wrapper, wraps, partial
 import copy
 # noinspection PyUnresolvedReferences
@@ -14,7 +16,7 @@ from funboost.consumers.base_consumer import (ExceptionForRequeue, ExceptionForR
                                               AbstractConsumer, ConsumersManager,
                                               FunctionResultStatusPersistanceConfig,
                                               wait_for_possible_has_finish_all_tasks_by_conusmer_list,
-                                              ActiveCousumerProcessInfoGetter,FunctionResultStatus)
+                                              ActiveCousumerProcessInfoGetter, FunctionResultStatus)
 from funboost.publishers.base_publisher import (PriorityConsumingControlConfig,
                                                 AbstractPublisher, AsyncResult, HasNotAsyncResult)
 from funboost.factories.publisher_factotry import get_publisher
@@ -28,9 +30,7 @@ from funboost.constant import BrokerEnum, ConcurrentModeEnum
 # 有的包默认没加handlers，原始的日志不漂亮且不可跳转不知道哪里发生的。这里把warnning级别以上的日志默认加上handlers。
 # nb_log.get_logger(name='', log_level_int=30, log_filename='pywarning.log')
 
-logger = nb_log.get_logger('funboost')
 
-logger.debug(f'\n 分布式函数调度框架文档地址：  https://funboost.readthedocs.io/zh_CN/latest/')
 
 
 class IdeAutoCompleteHelper(LoggerMixin):
@@ -161,7 +161,7 @@ def boost(queue_name,
           do_not_run_by_specify_time: bool = _Undefined,
           schedule_tasks_on_main_thread: bool = _Undefined,
           function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = _Undefined,
-          user_custom_record_process_info_func: typing.Union[typing.Callable,None] = _Undefined,
+          user_custom_record_process_info_func: typing.Union[typing.Callable, None] = _Undefined,
           is_using_rpc_mode: bool = _Undefined,
           broker_exclusive_config: dict = _Undefined,
           broker_kind: int = _Undefined,

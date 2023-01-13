@@ -16,7 +16,7 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
         while True:
             result = self.redis_db_frame.blpop(self._queue_name,timeout=60)
             if result:
-                self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {result[1].decode()}  ')
+                self._print_message_get_from_broker('redis',result[1].decode())
                 task_dict = json.loads(result[1])
                 kw = {'body': task_dict}
                 self._submit_task(kw)

@@ -514,11 +514,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                             'code_filename': Path(self.consuming_function.__code__.co_filename).as_posix()
                                             }
 
-        self._delay_task_scheduler = BackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False)
-        self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
-        self._delay_task_scheduler.add_listener(self._apscheduler_job_miss, EVENT_JOB_MISSED)
-        self._delay_task_scheduler.start()
-
         self._check_broker_exclusive_config()
 
         self.custom_init()
@@ -611,6 +606,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         else:
             self._concurrent_mode_dispatcher.schedulal_task_with_no_block()
         setattr(funboost_config_deafult, 'has_start_a_consumer_flag', 1)
+
+        self._delay_task_scheduler = BackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False)
+        self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
+        self._delay_task_scheduler.add_listener(self._apscheduler_job_miss, EVENT_JOB_MISSED)
+        self._delay_task_scheduler.start()
 
     @abc.abstractmethod
     def _shedual_task(self):

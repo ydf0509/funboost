@@ -7,7 +7,7 @@ from test_frame.best_simple_example.test_consume import f2
 
 f2.clear()
 
-for i in range(10000):
+for i in range(100):
     time.sleep(0.1)
     f2.pub({'a': i, 'b': 2 * i})  # pub这是发布字典，另外还能设置函数控制参数
     f2.push(i*10, i * 20)  # push这是发布函数参数形式，不是发布一个字典的形式

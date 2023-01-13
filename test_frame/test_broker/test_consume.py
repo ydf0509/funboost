@@ -1,4 +1,6 @@
 # coding=utf-8
+import sys
+print(sys.path)
 import os
 
 print(os.getenv('path'))
@@ -46,8 +48,10 @@ if __name__ == '__main__':
     # pass
     # f.clear()
     # f2.clear()
-    # for i in range(8):
-    #     f2.push(i, i * 5)
+    from nb_log import handlers
+    # nb_log.LogManager(f2.consumer.logger.name).remove_handler_by_handler_class(nb_log.handlers.ColorHandler)
+    for i in range(8):
+        f2.push(i, i * 5)
     f2.consume()
     f2.consume()
     # print(f2.get_message_count())
@@ -72,3 +76,14 @@ if __name__ == '__main__':
 
 
     # f2.multi_process_consume(5)
+
+    while 1:
+        time.sleep(60)
+
+
+    """
+    win命令行运行
+    conda activate py311c    conda activate  py37c
+    set PYTHONPATH=/codes/funboost &&  python /codes/funboost/test_frame/test_broker/test_consume.py
+    d:  ;cd  /codes/funboost  ;$ENV:PYTHONPATH="./" ;  python /codes/funboost/test_frame/test_broker/test_consume.py
+    """

@@ -3,6 +3,8 @@ import sys
 print(sys.path)
 import os
 
+
+
 print(os.getenv('path'))
 from auto_run_on_remote import run_current_script_on_remote
 # run_current_script_on_remote()
@@ -14,7 +16,7 @@ import random
 # from distributed_frame_config import REDIS_HOST
 import nb_log
 from concurrent.futures import ProcessPoolExecutor
-from funboost import boost, BrokerEnum, ConcurrentModeEnum, FunctionResultStatusPersistanceConfig
+from funboost import boost, BrokerEnum, ConcurrentModeEnum, FunctionResultStatusPersistanceConfig,boost_queue__fun_map
 from funboost.utils import RedisMixin
 from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
 
@@ -52,8 +54,11 @@ if __name__ == '__main__':
     # nb_log.LogManager(f2.consumer.logger.name).remove_handler_by_handler_class(nb_log.handlers.ColorHandler)
     for i in range(8):
         f2.push(i, i * 5)
-    f2.consume()
-    f2.consume()
+
+    for queue_name,consumex in boost_queue__fun_map.items():
+        consumex.consume()
+    # f2.consume()
+    # f2.consume()
     # print(f2.get_message_count())
     #
     # f2.clear()
@@ -87,3 +92,4 @@ if __name__ == '__main__':
     set PYTHONPATH=/codes/funboost &&  python /codes/funboost/test_frame/test_broker/test_consume.py
     d:  ;cd  /codes/funboost  ;$ENV:PYTHONPATH="./" ;  python /codes/funboost/test_frame/test_broker/test_consume.py
     """
+

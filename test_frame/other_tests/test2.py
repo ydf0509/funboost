@@ -1,4 +1,5 @@
 
+import dns.rdtypes
 
 def f(x,y):
     print(1)
@@ -12,5 +13,3 @@ def f(x,y):
 
 f(3,4)
 
-
-import pulsar

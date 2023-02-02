@@ -1,7 +1,7 @@
 from funboost import boost,BrokerEnum,ConcurrentModeEnum
 import time
 
-@boost('test_delay', broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=0.5, concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD)
+@boost('test_delay2', broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=10, concurrent_mode=ConcurrentModeEnum.THREADING)
 def f(x):
     print(x)
 

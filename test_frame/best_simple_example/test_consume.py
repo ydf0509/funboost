@@ -4,7 +4,7 @@
 import threading
 
 import time
-from funboost import boost, BrokerEnum, ConcurrentModeEnum
+from funboost import boost, BrokerEnum
 
 
 # 通过设置broker_kind，一键切换中间件为mq或redis等20种中间件或包。
@@ -32,7 +32,6 @@ if __name__ == '__main__':
     # f2.clear()
     # for i in range(200):
     #     f2.push(i, i * 2)
-    # f2.consume()
-    print('hi')
-    print(threading.active_count())
+    f2.consume()
+
 

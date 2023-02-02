@@ -1,8 +1,9 @@
 import nb_log
 
 logger = nb_log.get_logger('funboost.show_funboost_flag')
-funboost_flag_str = '''
 
+funboost_flag_str = '''
+\033[0m
 FFFFFFFFFFFFFFFFFFFFFFUUUUUUUU     UUUUUUUUNNNNNNNN        NNNNNNNNBBBBBBBBBBBBBBBBB        OOOOOOOOO          OOOOOOOOO        SSSSSSSSSSSSSSS TTTTTTTTTTTTTTTTTTTTTTT
 F::::::::::::::::::::FU::::::U     U::::::UN:::::::N       N::::::NB::::::::::::::::B     OO:::::::::OO      OO:::::::::OO    SS:::::::::::::::ST:::::::::::::::::::::T
 F::::::::::::::::::::FU::::::U     U::::::UN::::::::N      N::::::NB::::::BBBBBB:::::B  OO:::::::::::::OO  OO:::::::::::::OO S:::::SSSSSS::::::ST:::::::::::::::::::::T
@@ -19,7 +20,7 @@ FF:::::::FF            U:::::::UUU:::::::U N::::::N      N::::::::NBB:::::BBBBBB
 F::::::::FF             UU:::::::::::::UU  N::::::N       N:::::::NB:::::::::::::::::B  OO:::::::::::::OO  OO:::::::::::::OO S::::::SSSSSS:::::S      T:::::::::T      
 F::::::::FF               UU:::::::::UU    N::::::N        N::::::NB::::::::::::::::B     OO:::::::::OO      OO:::::::::OO   S:::::::::::::::SS       T:::::::::T      
 FFFFFFFFFFF                 UUUUUUUUU      NNNNNNNN         NNNNNNNBBBBBBBBBBBBBBBBB        OOOOOOOOO          OOOOOOOOO      SSSSSSSSSSSSSSS         TTTTTTTTTTT 
-
+\033[0m
 '''
 
 logger.debug(funboost_flag_str)

@@ -516,6 +516,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._check_broker_exclusive_config()
 
+        self._has_start_delay_task_scheduler = False
         self.custom_init()
 
         atexit.register(self.join_shedual_task_thread)
@@ -607,10 +608,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._concurrent_mode_dispatcher.schedulal_task_with_no_block()
         setattr(funboost_config_deafult, 'has_start_a_consumer_flag', 1)
 
+    def _start_delay_task_scheduler(self):
         self._delay_task_scheduler = BackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False)
         self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
         self._delay_task_scheduler.add_listener(self._apscheduler_job_miss, EVENT_JOB_MISSED)
         self._delay_task_scheduler.start()
+        self.logger.warning('启动延时任务sheduler')
 
     @abc.abstractmethod
     def _shedual_task(self):
@@ -942,8 +945,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # print(self.concurrent_pool)
         if run_date:
             # print(repr(run_date),repr(datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))))
+            if self._has_start_delay_task_scheduler is False:
+                self._start_delay_task_scheduler()
+                self._has_start_delay_task_scheduler = True
             self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw},
                                                misfire_grace_time=misfire_grace_time)
+
         else:
             self.concurrent_pool.submit(self._run, kw)
 

@@ -32,16 +32,19 @@ def f(x, y):
 
 pool2 = ProcessPoolExecutor(4)
 
-@boost('test_queue77g', log_level=10, broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=50,
-       create_logger_file=False,is_show_message_get_from_broker=True,concurrent_mode=ConcurrentModeEnum.THREADING,
+@boost('test_queue77h', log_level=10, broker_kind=BrokerEnum.REDIS_STREAM,
+       create_logger_file=False,is_show_message_get_from_broker=True,concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,
        concurrent_num=50,
        # specify_concurrent_pool= pool2,
        # concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,function_timeout=10,
-       # function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True)
+       # function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True,is_use_bulk_insert=True)
        )
 def f2(a, b):
     # time.sleep(100)
-    time.sleep(10)
+    # time.sleep(10)
+    if random.random() > 0.99999:
+        while 1:
+            time.sleep(10)
     print(a, b)
     return a - b
 
@@ -52,8 +55,9 @@ if __name__ == '__main__':
     # f2.clear()
     from nb_log import handlers
     # nb_log.LogManager(f2.consumer.logger.name).remove_handler_by_handler_class(nb_log.handlers.ColorHandler)
-    for i in range(8):
+    for i in range(92):
         f2.push(i, i * 5)
+    f2.consume()
 
     for queue_name,consumex in boost_queue__fun_map.items():
         consumex.consume()

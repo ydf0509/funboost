@@ -1,3 +1,4 @@
+from funboost.utils import  monkey_patches
 from funboost.utils import show_funboost_flag
 import typing
 # noinspection PyUnresolvedReferences

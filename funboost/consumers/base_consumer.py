@@ -171,6 +171,7 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
         self._bulk_list = []
         self._bulk_list_lock = Lock()
         self._last_bulk_insert_time = 0
+        self._has_start_bulk_insert_thread = False
         if self.function_result_status_persistance_conf.is_save_status:
             task_status_col = self.mongo_db_task_status.get_collection(queue_name)
             try:
@@ -200,12 +201,24 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
                 # self._mongo_bulk_write_helper.add_task(InsertOne(item2))  # 自动离散批量聚合方式。
                 with self._bulk_list_lock:
                     self._bulk_list.append(InsertOne(item2))
-                    if time.time() - self._last_bulk_insert_time > 0.5:
-                        self.task_status_col.bulk_write(self._bulk_list, ordered=False)
-                        self._bulk_list.clear()
-                        self._last_bulk_insert_time = time.time()
+                    # if time.time() - self._last_bulk_insert_time > 0.5:
+                    #     self.task_status_col.bulk_write(self._bulk_list, ordered=False)
+                    #     self._bulk_list.clear()
+                    #     self._last_bulk_insert_time = time.time()
+                    if not self._has_start_bulk_insert_thread:
+                        self._has_start_bulk_insert_thread = True
+                        decorators.keep_circulating(time_sleep=0.2, is_display_detail_exception=True, block=False,
+                                                    daemon=False)(self._bulk_insert)()
+                        self.logger.warning(f'启动批量保存函数消费状态 结果到mongo的 线程')
             else:
                 self.task_status_col.insert_one(item2)  # 立即实时插入。
+
+    def _bulk_insert(self):
+        with self._bulk_list_lock:
+            if time.time() - self._last_bulk_insert_time > 0.5 and self._bulk_list:
+                self.task_status_col.bulk_write(self._bulk_list, ordered=False)
+                self._bulk_list.clear()
+                self._last_bulk_insert_time = time.time()
 
 
 class ConsumersManager:

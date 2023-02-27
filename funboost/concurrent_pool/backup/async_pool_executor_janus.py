@@ -1,5 +1,3 @@
-import sys
-
 import atexit
 import asyncio
 import threading
@@ -43,7 +41,10 @@ if __name__ == '__main__':
 """
 
 
-class AsyncPoolExecutorLtPy310(nb_log.LoggerMixin):
+
+
+
+class AsyncPoolExecutor(nb_log.LoggerMixin):
     """
     使api和线程池一样，最好的性能做法是submit也弄成 async def，生产和消费在同一个线程同一个loop一起运行，但会对调用链路的兼容性产生破坏，从而调用方式不兼容线程池。
     """
@@ -56,10 +57,9 @@ class AsyncPoolExecutorLtPy310(nb_log.LoggerMixin):
         """
         self._size = size
         self.loop = loop or asyncio.new_event_loop()
-        self._sem = asyncio.Semaphore(self._size, loop=self.loop)
-        self._queue = asyncio.Queue(maxsize=size, loop=self.loop)
+        self.queue = janus.Queue(maxsize=6000)
         self._lock = threading.Lock()
-        t = Thread(target=self._start_loop_in_new_thread, daemon=True)
+        t = Thread(target=self._start_loop_in_new_thread,daemon=True)
         # t.setDaemon(True)  # 设置守护线程是为了有机会触发atexit，使程序自动结束，不用手动调用shutdown
         t.start()
         self._can_be_closed_flag = False
@@ -122,39 +122,8 @@ class AsyncPoolExecutorLtPy310(nb_log.LoggerMixin):
             print('关闭循环')
 
 
-class AsyncPoolExecutorGtPy310(AsyncPoolExecutorLtPy310):
-    # noinspection PyMissingConstructor
-    def __init__(self, size, loop=None):
-        """
-
-        :param size: 同时并发运行的协程任务数量。
-        :param loop:
-        """
-        self._size = size
-        self.loop = loop or asyncio.new_event_loop()
-        self._sem = asyncio.Semaphore(self._size, )
-        self._queue = asyncio.Queue(maxsize=size, )
-        self._lock = threading.Lock()
-        t = Thread(target=self._start_loop_in_new_thread, daemon=True)
-        # t.setDaemon(True)  # 设置守护线程是为了有机会触发atexit，使程序自动结束，不用手动调用shutdown
-        t.start()
-        self._can_be_closed_flag = False
-        atexit.register(self.shutdown)
-
-        self._event = threading.Event()
-        # print(self._event.is_set())
-        self._event.set()
-
-    def _start_loop_in_new_thread(self, ):
-        # self._loop.run_until_complete(self.__run())  # 这种也可以。
-        # self._loop.run_forever()
-
-        # asyncio.set_event_loop(self.loop)
-        self.loop.run_until_complete(asyncio.wait([self.loop.create_task(self._consume()) for _ in range(self._size)], ))
-        self._can_be_closed_flag = True
 
 
-AsyncPoolExecutor = AsyncPoolExecutorLtPy310 if sys.version_info.minor < 10 else AsyncPoolExecutorGtPy310
 
 if __name__ == '__main__':
     def test_async_pool_executor():
@@ -162,7 +131,7 @@ if __name__ == '__main__':
         # from concurrent.futures.thread import ThreadPoolExecutor
         # noinspection PyUnusedLocal
         async def f(x):
-            await asyncio.sleep(1)
+            # await asyncio.sleep(0.1)
             pass
             print('打印', x)
             # await asyncio.sleep(1)
@@ -190,7 +159,8 @@ if __name__ == '__main__':
         print(time.time() - t1)
 
 
+
+
+
     test_async_pool_executor()
     # test_async_producer_consumer()
-
-    print(sys.version_info)

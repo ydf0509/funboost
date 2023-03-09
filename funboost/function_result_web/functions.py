@@ -15,7 +15,7 @@ from funboost.utils.mongo_util import MongoMixin
 #
 # do_patch_frame_config()
 
-db = MongoMixin().mongo_db_task_status
+
 
 
 # print(db)
@@ -23,6 +23,7 @@ db = MongoMixin().mongo_db_task_status
 # print(db.list_collection_names())
 
 def get_cols(col_name_search: str):
+    db = MongoMixin().mongo_db_task_status
     if not col_name_search:
         collection_name_list = db.list_collection_names()
     else:
@@ -35,6 +36,7 @@ def get_cols(col_name_search: str):
 
 
 def query_result(col_name, start_time, end_time, is_success, function_params: str, page, ):
+    db = MongoMixin().mongo_db_task_status
     condition = {
         'insert_time': {'$gt': time_util.DatetimeConverter(start_time).datetime_obj,
                         '$lt': time_util.DatetimeConverter(end_time).datetime_obj},
@@ -59,6 +61,7 @@ def query_result(col_name, start_time, end_time, is_success, function_params: st
 
 
 def get_speed(col_name, start_time, end_time):
+    db = MongoMixin().mongo_db_task_status
     condition = {
         'insert_time': {'$gt': time_util.DatetimeConverter(start_time).datetime_obj,
                         '$lt': time_util.DatetimeConverter(end_time).datetime_obj},
@@ -78,6 +81,7 @@ def get_speed(col_name, start_time, end_time):
 
 class Statistic(LoggerMixin):
     def __init__(self, col_name):
+        db = MongoMixin().mongo_db_task_status
         self.col = db.get_collection(col_name)
         self.result = {'recent_10_days': {'time_arr': [], 'count_arr': []},
                        'recent_24_hours': {'time_arr': [], 'count_arr': []},

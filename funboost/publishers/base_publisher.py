@@ -17,85 +17,13 @@ from kombu.exceptions import KombuError
 from pikav1.exceptions import AMQPError as PikaAMQPError
 
 from nb_log import LoggerLevelSetterMixin, LogManager, LoggerMixin
-from funboost.utils import decorators, RedisMixin, time_util
+
+from funboost.publishers.msg_result_getter import AsyncResult, AioAsyncResult, HasNotAsyncResult
+from funboost.utils import decorators, time_util
 from funboost import funboost_config_deafult
-from funboost.concurrent_pool import CustomThreadPoolExecutor
-
-
-class HasNotAsyncResult(Exception):
-    pass
-
-
-class AsyncResult(RedisMixin):
-    callback_run_executor = CustomThreadPoolExecutor(200)
-
-    def __init__(self, task_id, timeout=120):
-        self.task_id = task_id
-        self.timeout = timeout
-        self._has_pop = False
-        self._status_and_result = None
-
-    def set_timeout(self, timeout=60):
-        self.timeout = timeout
-        return self
-
-    def is_pending(self):
-        return not self.redis_db_filter_and_rpc_result.exists(self.task_id)
-
-    @property
-    def status_and_result(self):
-        if not self._has_pop:
-            redis_value = self.redis_db_filter_and_rpc_result.blpop(self.task_id, self.timeout)
-            self._has_pop = True
-            if redis_value is not None:
-                status_and_result_str = redis_value[1]
-                self._status_and_result = json.loads(status_and_result_str)
-                self.redis_db_filter_and_rpc_result.lpush(self.task_id, status_and_result_str)
-                self.redis_db_filter_and_rpc_result.expire(self.task_id, 600)
-                return self._status_and_result
-            return None
-        return self._status_and_result
-
-    def get(self):
-        # print(self.status_and_result)
-        if self.status_and_result is not None:
-            return self.status_and_result['result']
-        else:
-            raise HasNotAsyncResult
-
-    @property
-    def result(self):
-        return self.get()
-
-    def is_success(self):
-        return self.status_and_result['success']
-
-    def _run_callback_func(self, callback_func):
-        callback_func(self.status_and_result)
-
-    def set_callback(self, callback_func: typing.Callable):
-        """
-        :param callback_func: 函数结果回调函数，使回调函数自动在线程池中并发运行。
-        :return:
-        """
-
-        ''' 用法例如
-        from test_frame.test_rpc.test_consume import add
-        def show_result(status_and_result: dict):
-            """
-            :param status_and_result: 一个字典包括了函数入参、函数结果、函数是否运行成功、函数运行异常类型
-            """
-            print(status_and_result)
-
-        for i in range(100):
-            async_result = add.push(i, i * 2)
-            # print(async_result.result)   # 执行 .result是获取函数的运行结果，会阻塞当前发布消息的线程直到函数运行完成。
-            async_result.set_callback(show_result) # 使用回调函数在线程池中并发的运行函数结果
-        '''
-        self.callback_run_executor.submit(self._run_callback_func, callback_func)
-
 
 RedisAsyncResult = AsyncResult  # 别名
+RedisAioAsyncResult = AioAsyncResult  # 别名
 
 
 class PriorityConsumingControlConfig:

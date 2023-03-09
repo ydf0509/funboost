@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 14:57
+import time
+
 from funboost import PriorityConsumingControlConfig
 from test_frame.test_rpc.test_consume import add
 
 
 def show_result(status_and_result):
+    time.sleep(1)
     print(status_and_result)
 
 

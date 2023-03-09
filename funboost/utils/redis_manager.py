@@ -4,6 +4,8 @@ import redis3
 from funboost import funboost_config_deafult
 from funboost.utils import decorators
 
+from funboost.utils.dependency_packages.aioredis_adapt_py311.client import Redis as AioRedis
+
 
 class RedisManager(object):
     _pool_dict = {}
@@ -89,3 +91,11 @@ class RedisMixin(object):
         time_tuple = self.redis_db_frame_version3.time()
         # print(time_tuple)
         return time_tuple[0] + time_tuple[1] / 1000000
+
+
+class AioRedisMixin(object):
+    @property
+    @decorators.cached_method_result
+    def aioredis_db_filter_and_rpc_result(self):
+        return AioRedis(host=funboost_config_deafult.REDIS_HOST, port=funboost_config_deafult.REDIS_PORT,
+                        password=funboost_config_deafult.REDIS_PASSWORD, db=funboost_config_deafult.REDIS_DB_FILTER_AND_RPC_RESULT, decode_responses=True)

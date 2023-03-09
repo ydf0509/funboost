@@ -26,6 +26,7 @@ if __name__ == '__main__':
     for i in range(2000):
         async_f.push(i)
         f.push(i * 10)
+        f.publish()
 
     async_f.consume()
     f.consume()

@@ -36,9 +36,10 @@ class MongoMixin:
     """
     processid__client_map = {}
     processid__db_map = {}
+    processid__col_map = {}
 
     @property
-    def mongo_client(self):
+    def mongo_client(self) -> pymongo.MongoClient:
         pid = os.getpid()
         if pid not in MongoMixin.processid__client_map:
             MongoMixin.processid__client_map[pid] = pymongo.MongoClient(funboost_config_deafult.MONGO_CONNECT_URL, connect=False)
@@ -47,7 +48,18 @@ class MongoMixin:
     @property
     def mongo_db_task_status(self):
         pid = os.getpid()
+        key = (pid,'task_status')
         if pid not in MongoMixin.processid__db_map:
-            MongoMixin.processid__db_map[pid] = self.mongo_client.get_database('task_status')
-        return MongoMixin.processid__db_map[pid]
+            MongoMixin.processid__db_map[key] = self.mongo_client.get_database('task_status')
+        return MongoMixin.processid__db_map[key]
+
+    def get_mongo_collection(self,database_name,colleciton_name):
+        pid = os.getpid()
+        key = (pid, database_name, colleciton_name)
+        if pid not in MongoMixin.processid__col_map:
+            MongoMixin.processid__col_map[key] = self.mongo_client.get_database(database_name).get_collection(colleciton_name)
+        return MongoMixin.processid__col_map[key]
+
+
+
 

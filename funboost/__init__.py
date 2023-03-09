@@ -1,4 +1,4 @@
-from funboost.utils import  monkey_patches
+from funboost.utils import monkey_patches
 from funboost.utils import show_funboost_flag
 import typing
 # noinspection PyUnresolvedReferences
@@ -19,7 +19,7 @@ from funboost.consumers.base_consumer import (ExceptionForRequeue, ExceptionForR
                                               wait_for_possible_has_finish_all_tasks_by_conusmer_list,
                                               ActiveCousumerProcessInfoGetter, FunctionResultStatus)
 from funboost.publishers.base_publisher import (PriorityConsumingControlConfig,
-                                                AbstractPublisher, AsyncResult, HasNotAsyncResult)
+                                                AbstractPublisher, AsyncResult, HasNotAsyncResult, AioAsyncResult)
 from funboost.factories.publisher_factotry import get_publisher
 from funboost.factories.consumer_factory import get_consumer
 
@@ -28,10 +28,9 @@ from funboost.utils import nb_print, patch_print, LogManager, get_logger, Logger
 from funboost.timing_job import fsdf_background_scheduler, timing_publish_deco
 from funboost.constant import BrokerEnum, ConcurrentModeEnum
 
+
 # 有的包默认没加handlers，原始的日志不漂亮且不可跳转不知道哪里发生的。这里把warnning级别以上的日志默认加上handlers。
 # nb_log.get_logger(name='', log_level_int=30, log_filename='pywarning.log')
-
-
 
 
 class IdeAutoCompleteHelper(LoggerMixin):

@@ -106,6 +106,8 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
     script_name_long = sys.argv[0]
     script_name = script_name_long.split('/')[-1].split('\\')[-1]
 
+    FUNC_RUN_ERROR = 'FUNC_RUN_ERROR'
+
     def __init__(self, queue_name: str, fucntion_name: str, msg_dict: dict):
         # print(params)
         self.queue_name = queue_name
@@ -172,8 +174,9 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
         self._bulk_list_lock = Lock()
         self._last_bulk_insert_time = 0
         self._has_start_bulk_insert_thread = False
+        self._queue_name = queue_name
         if self.function_result_status_persistance_conf.is_save_status:
-            task_status_col = self.mongo_db_task_status.get_collection(queue_name)
+            task_status_col = self.get_mongo_collection('task_status', queue_name)
             try:
                 # params_str 如果很长，必须使用TEXt或HASHED索引。
                 task_status_col.create_indexes([IndexModel([("insert_time_str", -1)]), IndexModel([("insert_time", -1)]),
@@ -184,11 +187,11 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
             except pymongo.errors.OperationFailure as e:  # 新的mongo服务端，每次启动重复创建已存在索引会报错，try一下。
                 self.logger.warning(e)
             # self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
-            self.task_status_col = task_status_col
             self.logger.info(f"函数运行状态结果将保存至mongo的 task_status 库的 {queue_name} 集合中，请确认 funboost.py文件中配置的 MONGO_CONNECT_URL")
 
     def save_function_result_to_mongo(self, function_result_status: FunctionResultStatus):
         if self.function_result_status_persistance_conf.is_save_status:
+            task_status_col = self.get_mongo_collection('task_status', self._queue_name)
             item = function_result_status.get_status_dict()
             item2 = copy.copy(item)
             if not self.function_result_status_persistance_conf.is_save_result:
@@ -211,12 +214,13 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
                                                     daemon=False)(self._bulk_insert)()
                         self.logger.warning(f'启动批量保存函数消费状态 结果到mongo的 线程')
             else:
-                self.task_status_col.insert_one(item2)  # 立即实时插入。
+                task_status_col.insert_one(item2)  # 立即实时插入。
 
     def _bulk_insert(self):
         with self._bulk_list_lock:
             if time.time() - self._last_bulk_insert_time > 0.5 and self._bulk_list:
-                self.task_status_col.bulk_write(self._bulk_list, ordered=False)
+                task_status_col = self.get_mongo_collection('task_status', self._queue_name)
+                task_status_col.bulk_write(self._bulk_list, ordered=False)
                 self._bulk_list.clear()
                 self._last_bulk_insert_time = time.time()
 
@@ -689,13 +693,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} ')
         if self._get_priority_conf(kw, 'is_using_rpc_mode'):
             # print(function_result_status.get_status_dict(without_datetime_obj=
-            with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
-                # RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
-                # RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
-                p.lpush(kw['body']['extra']['task_id'],
-                        json.dumps(current_function_result_status.get_status_dict(without_datetime_obj=True)))
-                p.expire(kw['body']['extra']['task_id'], 600)
-                p.execute()
+            if (current_function_result_status.success is False and current_retry_times == max_retry_times) or current_function_result_status.success is True:
+                with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
+                    # RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
+                    # RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
+                    p.lpush(kw['body']['extra']['task_id'],
+                            json.dumps(current_function_result_status.get_status_dict(without_datetime_obj=True)))
+                    p.expire(kw['body']['extra']['task_id'], 600)
+                    p.execute()
 
         with self._lock_for_count_execute_task_times_every_unit_time:
             self._execute_task_times_every_unit_time += 1
@@ -753,6 +758,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                               exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
             # traceback.print_exc()
             function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
+            function_result_status.result = FunctionResultStatus.FUNC_RUN_ERROR
         return function_result_status
 
     async def _async_run(self, kw: dict, ):
@@ -791,7 +797,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     p.expire(kw['body']['extra']['task_id'], 600)
                     p.execute()
 
-            await simple_run_in_executor(push_result)
+            if (current_function_result_status.success is False and current_retry_times == max_retry_times) or current_function_result_status.success is True:
+                await simple_run_in_executor(push_result)
 
         # 异步执行不存在线程并发，不需要加锁。
         self._execute_task_times_every_unit_time += 1
@@ -856,6 +863,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                               f'函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是  {function_only_params}    \n 原因是 {type(e)} {e} ',
                               exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
             function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
+            function_result_status.result = FunctionResultStatus.FUNC_RUN_ERROR
         return function_result_status
 
     @abc.abstractmethod

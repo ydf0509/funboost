@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, TypeVar, overload
 
 if TYPE_CHECKING:
-    from funboost.utils.dependency_packages.aioredis_adapt_py311 import Redis
-    from funboost.utils.dependency_packages.aioredis_adapt_py311.client import Pipeline
+    from aioredis import Redis
+    from aioredis.client import Pipeline
 
 
 try:
@@ -23,7 +23,7 @@ def from_url(url, **kwargs):
     Will attempt to extract the database id from the path url fragment, if
     none is provided.
     """
-    from funboost.utils.dependency_packages.aioredis_adapt_py311.client import Redis
+    from aioredis.client import Redis
 
     return Redis.from_url(url, **kwargs)
 

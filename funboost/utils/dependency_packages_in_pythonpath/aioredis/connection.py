@@ -1503,7 +1503,7 @@ class BlockingConnectionPool(ConnectionPool):
     """
     Thread-safe blocking connection pool::
 
-        >>> from funboost.utils.dependency_packages.aioredis_adapt_py311.client import Redis
+        >>> from aioredis.client import Redis
         >>> client = Redis(connection_pool=BlockingConnectionPool())
 
     It performs the same function as the default

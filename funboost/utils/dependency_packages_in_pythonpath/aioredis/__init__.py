@@ -1,12 +1,12 @@
-from funboost.utils.dependency_packages.aioredis_adapt_py311.client import Redis, StrictRedis
-from funboost.utils.dependency_packages.aioredis_adapt_py311.connection import (
+from aioredis.client import Redis, StrictRedis
+from aioredis.connection import (
     BlockingConnectionPool,
     Connection,
     ConnectionPool,
     SSLConnection,
     UnixDomainSocketConnection,
 )
-from funboost.utils.dependency_packages.aioredis_adapt_py311.exceptions import (
+from aioredis.exceptions import (
     AuthenticationError,
     AuthenticationWrongNumberOfArgsError,
     BusyLoadingError,
@@ -21,7 +21,7 @@ from funboost.utils.dependency_packages.aioredis_adapt_py311.exceptions import (
     TimeoutError,
     WatchError,
 )
-from funboost.utils.dependency_packages.aioredis_adapt_py311.utils import from_url
+from aioredis.utils import from_url
 
 
 def int_or_str(value):

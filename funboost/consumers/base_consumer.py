@@ -52,6 +52,7 @@ from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
 # noinspection PyUnresolvedReferences
 from funboost.concurrent_pool.bounded_threadpoolexcutor import \
     BoundedThreadPoolExecutor
+from func_timeout import func_set_timeout # noqa
 from funboost.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco, \
     check_evenlet_monkey_patch, CustomEventletPoolExecutor
 from funboost.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_deco, \
@@ -745,7 +746,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 {function_only_params}  '
                                   f' 结果是  {result_str_to_be_print} ，  {self._get_concurrent_info()}  ')
-        except Exception as e:
+        except BaseException as e:
             if isinstance(e, (PyMongoError,
                               ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
                 self.logger.critical(f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}，消息重新入队')
@@ -849,7 +850,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,'
                                   f'入参是 【 {function_only_params} 】 ,结果是 {result_str_to_be_print}  。 {corotinue_obj} ')
-        except Exception as e:
+        except BaseException as e:
             if isinstance(e, (PyMongoError,
                               ExceptionForRequeue)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
                 self.logger.critical(f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}，消息重新入队')
@@ -1055,7 +1056,8 @@ class ConcurrentModeDispatcher(LoggerMixin):
         self._concurrent_mode = self.consumer._concurrent_mode
         self.timeout_deco = None
         if self._concurrent_mode in (ConcurrentModeEnum.THREADING, ConcurrentModeEnum.SINGLE_THREAD):
-            self.timeout_deco = decorators.timeout
+            # self.timeout_deco = decorators.timeout
+            self.timeout_deco = func_set_timeout # 这个超时装饰器性能好很多。
         elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
             self.timeout_deco = gevent_timeout_deco
         elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:

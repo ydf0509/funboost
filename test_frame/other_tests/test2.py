@@ -1,4 +1,6 @@
+import sys
 
+print(sys.path)
 import dns.rdtypes
 
 def f(x,y):

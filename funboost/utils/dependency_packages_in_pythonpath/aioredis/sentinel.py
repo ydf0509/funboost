@@ -2,15 +2,15 @@ import random
 import weakref
 from typing import AsyncIterator, Iterable, Mapping, Sequence, Tuple, Type
 
-from funboost.utils.dependency_packages.aioredis_adapt_py311.client import Redis
-from funboost.utils.dependency_packages.aioredis_adapt_py311.connection import Connection, ConnectionPool, EncodableT, SSLConnection
-from funboost.utils.dependency_packages.aioredis_adapt_py311.exceptions import (
+from aioredis.client import Redis
+from aioredis.connection import Connection, ConnectionPool, EncodableT, SSLConnection
+from aioredis.exceptions import (
     ConnectionError,
     ReadOnlyError,
     ResponseError,
     TimeoutError,
 )
-from funboost.utils.dependency_packages.aioredis_adapt_py311.utils import str_if_bytes
+from aioredis.utils import str_if_bytes
 
 
 class MasterNotFoundError(ConnectionError):
@@ -145,7 +145,7 @@ class Sentinel:
     """
     Redis Sentinel cluster client
 
-    >>> from funboost.utils.dependency_packages.aioredis_adapt_py311.sentinel import Sentinel
+    >>> from aioredis.sentinel import Sentinel
     >>> sentinel = Sentinel([('localhost', 26379)], socket_timeout=0.1)
     >>> master = sentinel.master_for('mymaster', socket_timeout=0.1)
     >>> await master.set('foo', 'bar')

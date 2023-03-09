@@ -1,10 +1,10 @@
 
 
-from funboost.utils.auto_run_on_remote import run_current_script_on_remote
+from auto_run_on_remote import run_current_script_on_remote
 run_current_script_on_remote()
 import asyncio
 
-from funboost.utils.dependency_packages.aioredis_adapt_py311 import RedisError
+from aioredis import RedisError
 
 
 class TimeoutError(asyncio.TimeoutError, RedisError):

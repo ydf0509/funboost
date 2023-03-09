@@ -10,6 +10,7 @@ class RedisError(Exception):
 class ConnectionError(RedisError):
     pass
 
+
 ''' 这个在python3.11有问题'''
 # class TimeoutError(asyncio.TimeoutError, builtins.TimeoutError, RedisError):
 #     pass

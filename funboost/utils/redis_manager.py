@@ -4,7 +4,7 @@ import redis3
 from funboost import funboost_config_deafult
 from funboost.utils import decorators
 
-from funboost.utils.dependency_packages.aioredis_adapt_py311.client import Redis as AioRedis
+from aioredis.client import Redis as AioRedis
 
 
 class RedisManager(object):

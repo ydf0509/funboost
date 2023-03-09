@@ -28,15 +28,15 @@ from typing import (
     cast,
 )
 
-from funboost.utils.dependency_packages.aioredis_adapt_py311.compat import Protocol, TypedDict
-from funboost.utils.dependency_packages.aioredis_adapt_py311.connection import (
+from aioredis.compat import Protocol, TypedDict
+from aioredis.connection import (
     Connection,
     ConnectionPool,
     EncodableT,
     SSLConnection,
     UnixDomainSocketConnection,
 )
-from funboost.utils.dependency_packages.aioredis_adapt_py311.exceptions import (
+from aioredis.exceptions import (
     ConnectionError,
     DataError,
     ExecAbortError,
@@ -48,8 +48,8 @@ from funboost.utils.dependency_packages.aioredis_adapt_py311.exceptions import (
     TimeoutError,
     WatchError,
 )
-from funboost.utils.dependency_packages.aioredis_adapt_py311.lock import Lock
-from funboost.utils.dependency_packages.aioredis_adapt_py311.utils import safe_str, str_if_bytes
+from aioredis.lock import Lock
+from aioredis.utils import safe_str, str_if_bytes
 
 AbsExpiryT = Union[int, datetime.datetime]
 ExpiryT = Union[int, datetime.timedelta]

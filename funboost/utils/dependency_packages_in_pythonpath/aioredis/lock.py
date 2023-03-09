@@ -4,10 +4,10 @@ import uuid
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Awaitable, NoReturn, Optional, Union
 
-from funboost.utils.dependency_packages.aioredis_adapt_py311.exceptions import LockError, LockNotOwnedError
+from aioredis.exceptions import LockError, LockNotOwnedError
 
 if TYPE_CHECKING:
-    from funboost.utils.dependency_packages.aioredis_adapt_py311 import Redis
+    from aioredis import Redis
 
 
 class Lock:

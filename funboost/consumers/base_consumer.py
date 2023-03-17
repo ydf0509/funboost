@@ -549,6 +549,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._dlx_queue_name = f'{queue_name}_dlx'
         self._publisher_of_dlx_queue = None  # 死信队列发布者
 
+        self._do_not_delete_extra_from_msg = False
+
         self.consumer_identification = f'{nb_log_config_default.computer_name}_{nb_log_config_default.computer_ip}_' \
                                        f'{time_util.DatetimeConverter().datetime_str.replace(":", "-")}_{os.getpid()}_{id(self)}'
         self.consumer_identification_map = {'queue_name': self.queue_name,
@@ -713,6 +715,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         '''
         return concurrent_info
 
+    def set_do_not_delete_extra_from_msg(self):
+        """例如从死信队列，把完整的包括extra的消息移到另一个正常队列，不要把extra中的参数去掉"""
+        self._do_not_delete_extra_from_msg = True
+
     def _run(self, kw: dict, ):
         # print(kw)
         try:
@@ -734,7 +740,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
             self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
             if self._get_priority_conf(kw, 'do_task_filtering'):
-                 self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
+                self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
             if current_function_result_status.success is False and current_retry_times == max_retry_times:
                 log_msg = f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} '
                 if self._is_push_to_dlx_queue_when_retry_max_times:
@@ -781,7 +787,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
                                                        function_result_status: FunctionResultStatus, ):
-        function_only_params = _delete_keys_and_return_new_dict(kw['body'])
+        function_only_params = _delete_keys_and_return_new_dict(kw['body']) if self._do_not_delete_extra_from_msg is False else kw['body']
         t_start = time.time()
         function_result_status.run_times = current_retry_times + 1
         try:
@@ -908,7 +914,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                                    function_result_status: FunctionResultStatus, ):
         """虽然和上面有点大面积重复相似，这个是为了asyncio模式的，asyncio模式真的和普通同步模式的代码思维和形式区别太大，
         框架实现兼容async的消费函数很麻烦复杂，连并发池都要单独写"""
-        function_only_params = _delete_keys_and_return_new_dict(kw['body'])
+        function_only_params = _delete_keys_and_return_new_dict(kw['body']) if self._do_not_delete_extra_from_msg is False else kw['body']
         function_result_status.run_times = current_retry_times + 1
         # noinspection PyBroadException
         t_start = time.time()

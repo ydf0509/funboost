@@ -6,6 +6,7 @@ import copy
 import inspect
 import atexit
 import json
+import threading
 import uuid
 import time
 import typing
@@ -272,23 +273,24 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.logger.warning(
             f'程序关闭前，{round(time.time() - self.__init_time)} 秒内，累计推送了 {self.publish_msg_num_total} 条消息 到 {self._queue_name} 中')
 
-
+has_init_broker_lock = threading.Lock()
 def deco_mq_conn_error(f):
     @wraps(f)
     def _deco_mq_conn_error(self, *args, **kwargs):
-        if not self.has_init_broker:
-            self.logger.warning(f'对象的方法 【{f.__name__}】 首次使用 进行初始化执行 init_broker 方法')
-            self.init_broker()
-            self.has_init_broker = 1
-            return f(self, *args, **kwargs)
-        # noinspection PyBroadException
-        try:
-            return f(self, *args, **kwargs)
-        except (PikaAMQPError, amqpstorm.AMQPError, KombuError) as e:  # except Exception as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
-            self.logger.error(f'中间件链接出错   ,方法 {f.__name__}  出错 ，{e}')
-            self.init_broker()
-            return f(self, *args, **kwargs)
-        except Exception as e:
-            self.logger.critical(e, exc_info=True)
+        with has_init_broker_lock:
+            if not self.has_init_broker:
+                self.logger.warning(f'对象的方法 【{f.__name__}】 首次使用 进行初始化执行 init_broker 方法')
+                self.init_broker()
+                self.has_init_broker = 1
+                return f(self, *args, **kwargs)
+            # noinspection PyBroadException
+            try:
+                return f(self, *args, **kwargs)
+            except (PikaAMQPError, amqpstorm.AMQPError, KombuError) as e:  # except Exception as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
+                self.logger.error(f'中间件链接出错   ,方法 {f.__name__}  出错 ，{e}')
+                self.init_broker()
+                return f(self, *args, **kwargs)
+            except Exception as e:
+                self.logger.critical(e, exc_info=True)
 
     return _deco_mq_conn_error

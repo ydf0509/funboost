@@ -1,4 +1,3 @@
-
 # noinspection PyUnresolvedReferences
 from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath
 
@@ -17,7 +16,7 @@ from funboost.helpers import (fabric_deploy, kill_all_remote_tasks,
                               run_consumer_with_multi_process)
 from funboost.assist.user_custom_broker_register import register_custom_broker
 from funboost.utils.paramiko_util import ParamikoFolderUploader
-from funboost.consumers.base_consumer import (ExceptionForRequeue, ExceptionForRetry,
+from funboost.consumers.base_consumer import (ExceptionForRequeue, ExceptionForRetry, ExceptionForPushToDlxqueue,
                                               AbstractConsumer, ConsumersManager,
                                               FunctionResultStatusPersistanceConfig,
                                               wait_for_possible_has_finish_all_tasks_by_conusmer_list,
@@ -150,6 +149,7 @@ def boost(queue_name,
           specify_async_loop=_Undefined,
           concurrent_mode: int = _Undefined,
           max_retry_times: int = _Undefined,
+          is_push_to_dlx_queue_when_retry_max_times: bool = _Undefined,
           log_level: int = _Undefined,
           is_print_detail_exception: bool = _Undefined,
           is_show_message_get_from_broker: bool = _Undefined,
@@ -172,6 +172,9 @@ def boost(queue_name,
           boost_decorator_default_params=BoostDecoratorDefaultParams()
           ):
     """
+    funboost.funboost_config_deafult.BoostDecoratorDefaultParams 的值会自动被你项目根目录下的funboost_config.BoostDecoratorDefaultParams的值覆盖，
+    如果boost装饰器不传参，默认使用funboost_config.BoostDecoratorDefaultParams的配置
+
     入参也可以看文档 https://funboost.readthedocs.io/zh/latest/articles/c3.html   3.3章节。
 
     # 为了代码提示好，这里重复一次入参意义。被此装饰器装饰的函数f，函数f对象本身自动加了一些方法，例如f.push 、 f.consume等。
@@ -187,7 +190,10 @@ def boost(queue_name,
                               3eventlet(ConcurrentModeEnum.EVENTLET) 4 asyncio(ConcurrentModeEnum.ASYNC) 5单线程(ConcurrentModeEnum.SINGLE_THREAD)
     :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
            可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。
-           主动抛出ExceptionForRequeue异常，则当前 消息会重返中间件。
+           主动抛出ExceptionForRequeue异常，则当前 消息会重返中间件，
+           主动抛出 ExceptionForPushToDlxqueue  异常，可以使消息发送到单独的死信队列中，死信队列的名字是 队列名字 + _dlx。
+           。
+    :param is_push_to_dlx_queue_when_retry_max_times : 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
     :param log_level:框架的日志级别。logging.DEBUG(10)  logging.DEBUG(10) logging.INFO(20) logging.WARNING(30) logging.ERROR(40) logging.CRITICAL(50)
     :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
     :param is_show_message_get_from_broker: 从中间件取出消息时候时候打印显示出来

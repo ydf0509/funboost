@@ -3,7 +3,7 @@
 # @Time    : 2022/8/8 0008 13:16
 import copy
 from typing import Callable
-
+from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.publishers.confluent_kafka_publisher import ConfluentKafkaPublisher
 from funboost.publishers.http_publisher import HTTPPublisher
 # from funboost.publishers.kombu_publisher import KombuPublisher
@@ -66,7 +66,7 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
                   clear_queue_within_init=False, is_add_publish_time=True, consuming_function: Callable = None,
                   broker_kind: int = None,
                   broker_exclusive_config: dict = None,
-                  ):
+                  ) -> AbstractPublisher:
     """
     :param queue_name:
     :param log_level_int:

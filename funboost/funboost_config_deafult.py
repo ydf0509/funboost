@@ -12,6 +12,7 @@ from funboost.utils.simple_data_class import DataClassBase
 
 '''
 你项目根目录下自动生成的 funboost_config.py 文件中修改配置，会被自动读取到。
+用户不要动修改框架的源码 funboost/funboost_config_deafult.py 中的代码，此模块的变量会自动被 funboost_config.py 覆盖。
 
 此文件按需修改，例如你使用redis中间件作为消息队列，可以不用管rabbitmq mongodb kafka啥的配置。
 但有3个功能例外，如果你需要使用rpc模式或者分布式控频或者任务过滤功能，无论设置使用何种消息队列中间件都需要把redis连接配置好，
@@ -25,7 +26,7 @@ from funboost.utils.simple_data_class import DataClassBase
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  以下是中间件连接配置    $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 
-MONGO_CONNECT_URL = f'mongodb://192.168.6.133:27017'  # 如果有密码连接 'mongodb://myUserAdmin:8mwTdy1klnSYepNo@192.168.199.202:27016/admin'
+MONGO_CONNECT_URL = f'mongodb://127.0.0.1:27017'  # 如果有密码连接 'mongodb://myUserAdmin:8mwTdy1klnSYepNo@192.168.199.202:27016/admin'
 
 RABBITMQ_USER = 'rabbitmq_user'
 RABBITMQ_PASS = 'rabbitmq_pass'
@@ -108,6 +109,7 @@ class BoostDecoratorDefaultParams(DataClassBase):
     is_send_consumer_hearbeat_to_redis = False
 
     max_retry_times = 3
+    is_push_to_dlx_queue_when_retry_max_times = False
 
     consumin_function_decorator = None
     function_timeout = 0

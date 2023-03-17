@@ -23,7 +23,8 @@ class MongoMqPublisher(AbstractPublisher, MongoMixin):
     def queue(self):
         ''' 不能提前实例化，mongo fork进程不安全，这样是动态生成queue'''
         pid = os.getpid()
-        if pid not in MongoMqPublisher.pid__queue_map:
+        key = (pid, 'consume_queues', self._queue_name)
+        if key not in MongoMqPublisher.pid__queue_map:
             queuex = MongoQueue(
                 # self.mongo_client.get_database('consume_queues').get_collection(self._queue_name),
                 self.get_mongo_collection('consume_queues', self._queue_name),
@@ -31,8 +32,9 @@ class MongoMqPublisher(AbstractPublisher, MongoMixin):
                 timeout=600,
                 max_attempts=3,
                 ttl=24 * 3600 * 365)
-            MongoMqPublisher.pid__queue_map[pid] =queuex
-        return MongoMqPublisher.pid__queue_map[pid]
+            MongoMqPublisher.pid__queue_map[key] = queuex
+        return MongoMqPublisher.pid__queue_map[key]
+
 
     def concrete_realization_of_publish(self, msg):
         # noinspection PyTypeChecker

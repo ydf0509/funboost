@@ -16,7 +16,7 @@ import random
 # from distributed_frame_config import REDIS_HOST
 import nb_log
 from concurrent.futures import ProcessPoolExecutor
-from funboost import boost, BrokerEnum, ConcurrentModeEnum, FunctionResultStatusPersistanceConfig,boost_queue__fun_map
+from funboost import boost, BrokerEnum, ConcurrentModeEnum, FunctionResultStatusPersistanceConfig,boost_queue__fun_map,ExceptionForRequeue,ExceptionForPushToDlxqueue
 from funboost.utils import RedisMixin
 from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
 
@@ -32,19 +32,24 @@ def f(x, y):
 
 pool2 = ProcessPoolExecutor(4)
 
-@boost('test_queue77h', log_level=10, broker_kind=BrokerEnum.REDIS_STREAM,
-       create_logger_file=False,is_show_message_get_from_broker=True,concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,
-       concurrent_num=50,
+@boost('test_queue77h3', log_level=10, broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM,
+       create_logger_file=True,is_show_message_get_from_broker=True,concurrent_mode=ConcurrentModeEnum.THREADING,
+       concurrent_num=50,qps=4,is_print_detail_exception=False,is_push_to_dlx_queue_when_retry_max_times=True,
        # specify_concurrent_pool= pool2,
        # concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,function_timeout=10,
-       # function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True,is_use_bulk_insert=True)
+       function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True,is_use_bulk_insert=True)
        )
 def f2(a, b):
     # time.sleep(100)
-    # time.sleep(10)
-    if random.random() > 0.99999:
-        while 1:
-            time.sleep(10)
+    time.sleep(1)
+    if random.random() > 0.01:
+        raise ValueError('普通错误会对函数重试n次')
+    # if random.random() > 0.8:
+    #     raise ExceptionForRequeue('重新入队去吧')
+    # if random.random() > 0.9:
+    #     raise ExceptionForPushToDlxqueue('放入死信队列')
+    #     while 1:
+    #         time.sleep(10)
     print(a, b)
     return a - b
 
@@ -55,12 +60,12 @@ if __name__ == '__main__':
     # f2.clear()
     from nb_log import handlers
     # nb_log.LogManager(f2.consumer.logger.name).remove_handler_by_handler_class(nb_log.handlers.ColorHandler)
-    for i in range(92):
+    for i in range(920):
         f2.push(i, i * 5)
     f2.consume()
 
-    for queue_name,consumex in boost_queue__fun_map.items():
-        consumex.consume()
+    # for queue_name,consumex in boost_queue__fun_map.items():
+    #     consumex.consume()
     # f2.consume()
     # f2.consume()
     # print(f2.get_message_count())

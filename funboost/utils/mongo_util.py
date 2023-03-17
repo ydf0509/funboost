@@ -42,7 +42,8 @@ class MongoMixin:
     def mongo_client(self) -> pymongo.MongoClient:
         pid = os.getpid()
         if pid not in MongoMixin.processid__client_map:
-            MongoMixin.processid__client_map[pid] = pymongo.MongoClient(funboost_config_deafult.MONGO_CONNECT_URL, connect=False)
+            MongoMixin.processid__client_map[pid] = pymongo.MongoClient(funboost_config_deafult.MONGO_CONNECT_URL,
+                                                                        connect=False,maxIdleTimeMS=60*1000,minPoolSize=3,maxPoolSize=20)
         return MongoMixin.processid__client_map[pid]
 
     @property
@@ -63,3 +64,6 @@ class MongoMixin:
 
 
 
+if __name__ == '__main__':
+    print(MongoMixin().get_mongo_collection('db2','col2'))
+    print(MongoMixin().get_mongo_collection('db2', 'col3'))

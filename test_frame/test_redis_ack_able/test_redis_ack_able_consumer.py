@@ -8,8 +8,10 @@ from funboost import boost,BrokerEnum
 @boost('test_cost_long_time_fun_queue2', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=5)
 def cost_long_time_fun(x):
     print(f'正在消费 {x} 中 。。。。')
-    time.sleep(3)
+    time.sleep(60)
     print(f'消费完成 {x} ')
 
 if __name__ == '__main__':
+    for i in range(10000):
+        cost_long_time_fun.push(i)
     cost_long_time_fun.consume()

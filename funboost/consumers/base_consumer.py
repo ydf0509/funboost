@@ -1129,7 +1129,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         while 1:
             # noinspection PyBroadException
             message_count = self._msg_num_in_broker
-            # print(message_count,self._last_execute_task_time,time.time() - self._last_execute_task_time)
+            # print(message_count,self._last_execute_task_time,time.time() - self._last_execute_task_time,no_task_time)
             if message_count == 0 and self._last_execute_task_time != 0 and (time.time() - self._last_execute_task_time) > minutes * 60:
                 no_task_time += 30
             else:

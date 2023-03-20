@@ -61,7 +61,7 @@ def multi_prcocess_queue2queue(source_target_list: typing.List[typing.List],
             source_consumer = get_consumer(source_queue_name, broker_kind=source_broker_kind, consuming_function=_fun, log_level=log_level_int)
             source_consumer_list.append(source_consumer)
     if exit_script_when_finish:
-        wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list=source_consumer_list, minutes=3)
+        wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list=source_consumer_list, minutes=2)
         for (source_queue_name, source_broker_kind, target_queue_name, target_broker_kind) in source_target_list:
             print(f'{source_queue_name}  转移到 {target_queue_name} 消息转移完成，结束脚本')
         os._exit(999)  # 结束脚本
@@ -73,6 +73,6 @@ if __name__ == '__main__':
     #                                   'test_queue77h3_dlx', BrokerEnum.RABBITMQ_AMQPSTORM,
     #                                   log_level_int=logging.INFO, exit_script_when_finish=True)
 
-    # 转移多个对内，使用多进程。
-    multi_prcocess_queue2queue([['test_queue77h3', BrokerEnum.RABBITMQ_AMQPSTORM, 'test_queue77h3_dlx', BrokerEnum.RABBITMQ_AMQPSTORM]],
+    # 转移多个队列，并使用多进程。
+    multi_prcocess_queue2queue([['test_queue77h4', BrokerEnum.RABBITMQ_AMQPSTORM, 'test_queue77h5', BrokerEnum.RABBITMQ_AMQPSTORM]],
                                log_level_int=logging.INFO, exit_script_when_finish=True, n=6)

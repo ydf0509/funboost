@@ -22,7 +22,7 @@ def _deco(f):
         except Exception as e:
             logger.exception(e)
 
-    return __deco
+    return __deco if f is not None else f
 
 
 class BoundedThreadPoolExecutor(ThreadPoolExecutor, ):

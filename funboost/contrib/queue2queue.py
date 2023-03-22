@@ -49,6 +49,14 @@ def _consume_and_push_to_another_queue_for_multi_process(source_queue_name: str,
 
 def multi_prcocess_queue2queue(source_target_list: typing.List[typing.List],
                                log_level_int: int = logging.DEBUG, exit_script_when_finish=False, n=1):
+    '''
+    转移多个队列，并使用多进程。
+    :param source_target_list:  入参例如  [['test_queue77h5', BrokerEnum.RABBITMQ_AMQPSTORM, 'test_queue77h4', BrokerEnum.RABBITMQ_AMQPSTORM],['test_queue77h6', BrokerEnum.RABBITMQ_AMQPSTORM, 'test_queue77h7', BrokerEnum.REDIS]]
+    :param log_level_int:
+    :param exit_script_when_finish:
+    :param n:
+    :return:
+    '''
     source_consumer_list = []
     for (source_queue_name, source_broker_kind, target_queue_name, target_broker_kind) in source_target_list:
         for i in range(n):
@@ -74,5 +82,5 @@ if __name__ == '__main__':
     #                                   log_level_int=logging.INFO, exit_script_when_finish=True)
 
     # 转移多个队列，并使用多进程。
-    multi_prcocess_queue2queue([['test_queue77h4', BrokerEnum.RABBITMQ_AMQPSTORM, 'test_queue77h5', BrokerEnum.RABBITMQ_AMQPSTORM]],
+    multi_prcocess_queue2queue([['test_queue77h5', BrokerEnum.RABBITMQ_AMQPSTORM, 'test_queue77h4', BrokerEnum.RABBITMQ_AMQPSTORM]],
                                log_level_int=logging.INFO, exit_script_when_finish=True, n=6)

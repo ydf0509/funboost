@@ -35,4 +35,4 @@ if __name__ == '__main__':
     for i in range(50):
         f.push(i)
     print(f.publisher.get_message_count())
-    f.consume()
+    f.consume()  # 从可以看到事从最后发布的消息开始消费。

@@ -1,4 +1,6 @@
-﻿import sys
+﻿import os
+import signal
+import sys
 import re
 from multiprocessing import Process
 import threading
@@ -208,3 +210,14 @@ class FunctionResultStatusPersistanceConfig(LoggerMixin):
 
     def __str__(self):
         return f'<FunctionResultStatusPersistanceConfig> {id(self)} {self.to_dict()}'
+
+
+# noinspection PyUnusedLocal
+def _interrupt_signal_handler(signal, frame):
+    print('你按了 Ctrl+C  。 You pressed Ctrl+C!  结束程序！')
+    # sys.exit(0)
+    # noinspection PyUnresolvedReferences
+    os._exit(0)  # os._exit才能更强力的迅速终止python，sys.exit只能退出主线程。
+
+
+signal.signal(signal.SIGINT, _interrupt_signal_handler)

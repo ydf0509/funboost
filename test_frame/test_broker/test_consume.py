@@ -42,7 +42,7 @@ pool2 = ProcessPoolExecutor(4)
 def f2(a, b):
     # time.sleep(100)
     time.sleep(1)
-    if random.random() > 0.01:
+    if random.random() > 0.91:
         raise ValueError('普通错误会对函数重试n次')
     # if random.random() > 0.8:
     #     raise ExceptionForRequeue('重新入队去吧')

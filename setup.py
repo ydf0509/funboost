@@ -103,6 +103,11 @@ python setup.py sdist & twine upload dist/funboost-10.9.tar.gz
 最快的下载方式，上传立即可安装。阿里云源同步官网pypi间隔要等很久。
 ./pip install funboost==3.5 -i https://pypi.org/simple   
 最新版下载
-./pip install funboost --upgrade -i https://pypi.org/simple       
+./pip install funboost --upgrade -i https://pypi.org/simple      
+
+
+从git安装
+pip install git+https://github.com/ydf0509/funboost.git 
+pip install git+https://gitee.com/bfzshen/funboost.git
 """
 

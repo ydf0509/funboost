@@ -95,7 +95,7 @@ class AsyncPoolExecutorLtPy310(nb_log.LoggerMixin):
             # noinspection PyBroadException,PyUnusedLocal
             try:
                 await func(*args, **kwargs)
-            except Exception as e:
+            except BaseException as e:
                 traceback.print_exc()
             # self._queue.task_done()
 

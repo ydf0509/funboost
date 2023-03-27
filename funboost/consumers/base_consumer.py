@@ -242,7 +242,7 @@ class ConsumersManager:
 
     @classmethod
     def join_all_consumer_shedual_task_thread(cls):
-        """实现这个主要是为了兼容linux和win，在开启多进程时候兼容。在linux下如果子进程中即使有在一个非守护线程里面运行while 1的逻辑，代码也会很快结束。所以必须把所有循环拉取消息的线程join
+        """实现这个主要是为了兼容linux和win，在开启多进程时候兼容。在linux + python3.6 （python3.7-3.11不会）环境如果子进程中即使有在一个非守护线程里面运行while 1的逻辑，代码也会很快结束。所以必须把所有循环拉取消息的线程join
         否则如果只是为了兼容win，压根不需要这里多此一举
         """
         # nb_print((cls.schedulal_thread_to_be_join, len(cls.schedulal_thread_to_be_join), '模式：', cls.global_concurrent_mode))
@@ -525,7 +525,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._do_not_run_by_specify_time = do_not_run_by_specify_time  # 可以设置在指定的时间段不运行。
         self._schedule_tasks_on_main_thread = schedule_tasks_on_main_thread
 
-        self._result_persistence_helper = ResultPersistenceHelper(function_result_status_persistance_conf, queue_name)
+        self._function_result_status_persistance_conf = function_result_status_persistance_conf
+        self._result_persistence_helper : ResultPersistenceHelper
         self._user_custom_record_process_info_func = user_custom_record_process_info_func
 
         self._is_using_rpc_mode = is_using_rpc_mode
@@ -629,7 +630,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                             result = func(*args, **kwargs)
                             if exit_if_function_run_sucsess:
                                 return result
-                        except Exception as e:
+                        except BaseException as e:
                             log_msg = func.__name__ + '   运行出错\n ' + traceback.format_exc(
                                 limit=10) if is_display_detail_exception else str(e)
                             self.logger.error(msg=f'{log_msg} \n', exc_info=True)
@@ -653,10 +654,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         try:
             self._concurrent_mode_dispatcher.check_all_concurrent_mode()
             self._check_monkey_patch()
-        except Exception:
+        except BaseException :
             traceback.print_exc()
             os._exit(4444)  # noqa
         self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
+        self._result_persistence_helper = ResultPersistenceHelper(self._function_result_status_persistance_conf, self._queue_name)
 
         self._distributed_consumer_statistics = DistributedConsumerStatistics(self)
         if self._is_send_consumer_hearbeat_to_redis:

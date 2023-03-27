@@ -1,5 +1,4 @@
 # coding=utf-8
-
 from setuptools import setup, find_packages
 setup(
     name='funboost',  #
@@ -109,5 +108,6 @@ python setup.py sdist & twine upload dist/funboost-10.9.tar.gz
 从git安装
 pip install git+https://github.com/ydf0509/funboost.git 
 pip install git+https://gitee.com/bfzshen/funboost.git
+
 """
 

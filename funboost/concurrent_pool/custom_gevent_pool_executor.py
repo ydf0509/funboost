@@ -76,7 +76,7 @@ class GeventPoolExecutor2(LoggerMixin):
             fn, args, kwargs = self._q.get()
             try:
                 fn(*args, **kwargs)
-            except Exception as exc:
+            except BaseException as exc:
                 self.logger.exception(f'函数 {fn.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
             finally:
                 pass
@@ -103,7 +103,7 @@ class GeventPoolExecutor3(LoggerMixin):
             fn, args, kwargs = self._q.get()
             try:
                 fn(*args, **kwargs)
-            except Exception as exc:
+            except BaseException as exc:
                 self.logger.exception(f'函数 {fn.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
 
     def submit(self, fn: Callable, *args, **kwargs):

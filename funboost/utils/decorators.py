@@ -79,7 +79,7 @@ def handle_exception(retry_times=0, error_detail_level=0, is_throw_error=False, 
                             u'%s\n调用成功，调用方法--> [  %s  ] 第  %s  次重试成功' % ('# ' * 40, func.__name__, i))
                     return result
 
-                except Exception as e:
+                except BaseException as e:
                     error_info = ''
                     if error_detail_level == 0:
                         error_info = '错误类型是：' + str(e.__class__) + '  ' + str(e)
@@ -120,7 +120,7 @@ def keep_circulating(time_sleep=0.001, exit_if_function_run_sucsess=False, is_di
                         result = func(*args, **kwargs)
                         if exit_if_function_run_sucsess:
                             return result
-                    except Exception as e:
+                    except BaseException as e:
                         msg = func.__name__ + '   运行出错\n ' + traceback.format_exc(limit=10) if is_display_detail_exception else str(e)
                         keep_circulating.log.error(msg)
                     finally:
@@ -352,7 +352,7 @@ def where_is_it_called(func):
                 result = str(result)[0:200] + '  。。。。。。  '
             where_is_it_called.log.debug('执行函数[{}]消耗的时间是{}秒，返回的结果是 --> '.format(func_name, t_spend) + str(result))
             return result_raw
-        except Exception as e:
+        except BaseException as e:
             where_is_it_called.log.debug('执行函数{}，发生错误'.format(func_name))
             where_is_it_called.log.exception(e)
             raise e

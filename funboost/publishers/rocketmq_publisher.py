@@ -17,7 +17,7 @@ class RocketmqPublisher(AbstractPublisher, ):
     def custom_init(self):
         try:
             from rocketmq.client import Producer
-        except Exception as e:
+        except BaseException as e:
             # print(traceback.format_exc())
             raise ImportError(f'rocketmq包 只支持linux和mac {str(e)}')
 
@@ -35,7 +35,7 @@ class RocketmqPublisher(AbstractPublisher, ):
     def concrete_realization_of_publish(self, msg):
         try:
             from rocketmq.client import Message
-        except Exception as e:
+        except BaseException as e:
             # print(traceback.format_exc())
             raise ImportError(f'rocketmq包 只支持linux和mac {str(e)}')
         rocket_msg = Message(self._queue_name)

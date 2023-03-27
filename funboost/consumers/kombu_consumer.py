@@ -40,7 +40,7 @@ def patch_kombu_redis():
                     # noinspection PyBroadException,PyUnusedLocal
                     try:
                         ret = self.handle_event(fileno, event)
-                    except Exception as e:
+                    except BaseException as e:
                         pass
                     if ret:
                         return

@@ -59,7 +59,7 @@ class StoppableThread(threading.Thread):
 
             @param exception <Exception type> - Exception to throw. Likely, you want to use something
 
-              that inherits from BaseException (so except Exception as e: continue; isn't a problem)
+              that inherits from BaseException (so except BaseException as e: continue; isn't a problem)
 
               This should be a class/type, NOT an instance, i.e.  MyExceptionType   not  MyExceptionType()
 

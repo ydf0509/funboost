@@ -20,7 +20,7 @@ def check_port_is_used(ip, port):
         # 利用shutdown()函数使socket双向数据传输变为单向数据传输。shutdown()需要一个单独的参数，
         # 该参数表示了如何关闭socket。具体为：0表示禁止将来读；1表示禁止将来写；2表示禁止将来读和写。
         return True
-    except Exception:
+    except BaseException :
         return False
 
 
@@ -55,7 +55,7 @@ def start_broker(port_router: int, port_dealer: int):
             if socks.get(backend) == zmq.POLLIN:
                 message = backend.recv_multipart()
                 frontend.send_multipart(message)
-    except Exception as e:
+    except BaseException as e:
         logger_zeromq_broker.warning(e)
 
 
@@ -71,7 +71,7 @@ class ZeroMqConsumer(AbstractConsumer):
         try:
             if not (10000 < int(self._queue_name) < 65535):
                 raise ValueError("，请设置queue的名字是一个 10000到65535的之间的一个端口数字")
-        except Exception:
+        except BaseException :
             self.logger.critical(f" zeromq 模式以 queue 的民资作为tcp 端口，请设置queue的名字是一个 10000 到 65535 之间的一个端口数字")
             # noinspection PyProtectedMember
             os._exit(444)

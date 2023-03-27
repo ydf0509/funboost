@@ -84,7 +84,7 @@ class ColorHandler(logging.Handler):
             stream.write(msg_color)
             stream.write(self.terminator)
             self.flush()
-        except Exception:
+        except BaseException :
             self.handleError(record)
 
     def emit(self, record):
@@ -125,7 +125,7 @@ class ColorHandler(logging.Handler):
             stream.write(msg_color)
             stream.write(self.terminator)
             self.flush()
-        except Exception:
+        except BaseException :
             self.handleError(record)
 
     @staticmethod

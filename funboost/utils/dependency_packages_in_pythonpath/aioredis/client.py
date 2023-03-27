@@ -317,7 +317,7 @@ def pairs_to_dict_typed(response, type_info):
         if key in type_info:
             try:
                 value = type_info[key](value)
-            except Exception:
+            except BaseException :
                 # if for some reason the value can't be coerced, just use
                 # the string value
                 pass

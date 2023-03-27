@@ -30,7 +30,7 @@ class KafkaPublisher(AbstractPublisher, ):
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
         except TopicAlreadyExistsError:
             pass
-        except Exception as e:
+        except BaseException as e:
             self.logger.exception(e)
         atexit.register(self.close)  # 程序退出前不主动关闭，会报错。
 

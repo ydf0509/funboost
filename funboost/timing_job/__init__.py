@@ -1,6 +1,7 @@
 """
 集成定时任务。
 """
+import atexit
 import importlib
 
 import pickle
@@ -46,13 +47,19 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
                             next_run_time, jobstore, executor,
                             replace_existing, **trigger_args)
 
-    def start(self, paused=False):
+    def start(self, paused=False,block_exit=True):
         # def _block_exit():
         #     while True:
         #         time.sleep(3600)
         #
         # threading.Thread(target=_block_exit,).start()  # 既不希望用BlockingScheduler阻塞主进程也不希望定时退出。
         # self._daemon = False
+        def _when_exit():
+            while 1:
+                #print('阻止退出')
+                time.sleep(100)
+        if block_exit:
+            atexit.register(_when_exit)
         super(FsdfBackgroundScheduler, self).start(paused=paused, )
         # _block_exit()   # python3.9 判断守护线程结束必须主线程在运行，否则结尾
 

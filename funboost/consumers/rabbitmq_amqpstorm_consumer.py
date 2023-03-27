@@ -34,7 +34,7 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
         # noinspection PyBroadException
         try:
             kw['amqpstorm_message'].ack()  # 确认消费
-        except Exception as e:
+        except BaseException as e:
             self.logger.error(f'AmqpStorm确认消费失败  {type(e)} {e}')
 
     def _requeue(self, kw):

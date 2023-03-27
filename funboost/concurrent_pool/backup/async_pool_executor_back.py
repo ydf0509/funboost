@@ -119,7 +119,7 @@ class AsyncPoolExecutor(nb_log.LoggerMixin):
             # noinspection PyBroadException,PyUnusedLocal
             try:
                 await func(*args, **kwargs)
-            except Exception as e:
+            except BaseException as e:
                 traceback.print_exc()
             # self._queue.task_done()
 
@@ -184,7 +184,7 @@ class AsyncProducerConsumer:
                     await self.consume_fun_specify(item)
                 else:
                     await self.consume_fun(item)
-            except Exception as e:
+            except BaseException as e:
                 print(e)
 
             # Notify the queue that the item has been processed

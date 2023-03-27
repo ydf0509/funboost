@@ -57,6 +57,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
     """
     使用的是根据心跳，判断非活跃消费者，将非活跃消费者对应的unack zset的重新回到消费队列。
     """
+    SCAN_COUNT = 1000
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
@@ -70,7 +71,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
             if lock.has_aquire_lock:
                 self._distributed_consumer_statistics.send_heartbeat()
                 current_queue_hearbeat_ids = self._distributed_consumer_statistics.get_queue_heartbeat_ids(without_time=True)
-                current_queue_unacked_msg_queues = self.redis_db_frame.scan(0, f'{self._queue_name}__unack_id_*', 100)
+                current_queue_unacked_msg_queues = self.redis_db_frame.scan(0, f'{self._queue_name}__unack_id_*', self.SCAN_COUNT) # 不要在funboost的队列所在db放弃他缓存keys，要保持db的keys少于1000，否则要多次scan。
                 # print(current_queue_unacked_msg_queues)
                 for current_queue_unacked_msg_queue in current_queue_unacked_msg_queues[1]:
                     current_queue_unacked_msg_queue_str = current_queue_unacked_msg_queue.decode()

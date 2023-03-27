@@ -66,7 +66,7 @@ def func_timeout(timeout, func, args=(), kwargs=None):
         except FunctionTimedOut:
             # Don't print traceback to stderr if we time out
             pass
-        except Exception as e:
+        except BaseException as e:
             exc_info = sys.exc_info()
             if isStopped is False:
                 # Assemble the alternate traceback, excluding this function

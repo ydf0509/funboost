@@ -27,7 +27,7 @@ class RedisManager(object):
     def _ping(self):
         try:
             self._r.ping()
-        except Exception as e:
+        except BaseException as e:
             raise e
 
 

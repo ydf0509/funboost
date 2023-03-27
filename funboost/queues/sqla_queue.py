@@ -132,7 +132,7 @@ class SqlaQueue(LoggerMixin, LoggerLevelSetterMixin):
             SqlaQueueModel.metadata.create_all(engine, )
             self.Session = sessionmaker(bind=engine, expire_on_commit=False)
             self.SqlaQueueModel = SqlaQueueModel
-        except Exception as e:
+        except BaseException as e:
             self.logger.warning(e)
             Base = automap_base()
 

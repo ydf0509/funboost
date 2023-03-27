@@ -190,7 +190,7 @@ class BaseParser:
     def __del__(self):
         try:
             self.on_disconnect()
-        except Exception:
+        except BaseException :
             pass
 
     def parse_error(self, response: str) -> ResponseError:
@@ -350,7 +350,7 @@ class SocketBuffer:
         try:
             self.purge()
             self._buffer.close()  # type: ignore[union-attr]
-        except Exception:
+        except BaseException :
             # issue #633 suggests the purge/close somehow raised a
             # BadFileDescriptor error. Perhaps the client ran out of
             # memory or something else? It's probably OK to ignore
@@ -671,7 +671,7 @@ class Connection:
                     loop.create_task(coro)
                 else:
                     loop.run_until_complete(coro)
-        except Exception:
+        except BaseException :
             pass
 
     @property
@@ -696,7 +696,7 @@ class Connection:
             raise TimeoutError("Timeout connecting to server")
         except OSError as e:
             raise ConnectionError(self._error_message(e))
-        except Exception as exc:
+        except BaseException as exc:
             raise ConnectionError(exc) from exc
 
         try:

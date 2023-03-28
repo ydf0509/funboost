@@ -57,7 +57,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
     """
     使用的是根据心跳，判断非活跃消费者，将非活跃消费者对应的unack zset的重新回到消费队列。
     """
-    SCAN_COUNT = 1000
+    SCAN_COUNT = 2000
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):

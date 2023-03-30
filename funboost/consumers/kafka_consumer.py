@@ -29,6 +29,13 @@ class KafkaConsumer(AbstractConsumer):
 
     BROKER_EXCLUSIVE_CONFIG_KEYS = ['group_id','auto_offset_reset']
     # not_all_brokers_general_settings配置 ，支持独立的中间件配置参数是 group_id 和 auto_offset_reset
+    """
+    auto_offset_reset 介绍
+      auto_offset_reset (str): A policy for resetting offsets on
+            OffsetOutOfRange errors: 'earliest' will move to the oldest
+            available message, 'latest' will move to the most recent. Any
+            other value will raise the exception. Default: 'latest'.
+    """
 
     def _shedual_task(self):
         try:

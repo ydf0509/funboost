@@ -10,7 +10,7 @@ from funboost.queues.peewee_queue import PeeweeQueue,TaskStatus
 
 class PeeweeConsumer(AbstractConsumer):
     """
-    sqlachemy实现的操作5种数据库模拟消息队列，支持消费确认。
+    peewee实现的操作5种数据库模拟消息队列，支持消费确认。
     """
     BROKER_KIND = 26
 

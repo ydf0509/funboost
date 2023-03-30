@@ -34,13 +34,13 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
 from apscheduler.events import EVENT_JOB_MISSED
 
-from funboost.concurrent_pool.single_thread_executor import SoloExecutor
-from funboost.helpers import FunctionResultStatusPersistanceConfig
-from funboost.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
-
 import pymongo
 from pymongo import IndexModel, ReplaceOne
 from pymongo.errors import PyMongoError
+
+from funboost.concurrent_pool.single_thread_executor import SoloExecutor
+from funboost.helpers import FunctionResultStatusPersistanceConfig
+from funboost.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
 
 # noinspection PyUnresolvedReferences
 from nb_log import get_logger, LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, \
@@ -526,7 +526,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._schedule_tasks_on_main_thread = schedule_tasks_on_main_thread
 
         self._function_result_status_persistance_conf = function_result_status_persistance_conf
-        self._result_persistence_helper : ResultPersistenceHelper
+        self._result_persistence_helper: ResultPersistenceHelper
         self._user_custom_record_process_info_func = user_custom_record_process_info_func
 
         self._is_using_rpc_mode = is_using_rpc_mode
@@ -654,7 +654,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         try:
             self._concurrent_mode_dispatcher.check_all_concurrent_mode()
             self._check_monkey_patch()
-        except BaseException :
+        except BaseException:
             traceback.print_exc()
             os._exit(4444)  # noqa
         self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
@@ -717,7 +717,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         '''
         return concurrent_info
 
-    def set_do_not_delete_extra_from_msg(self):
+    def _set_do_not_delete_extra_from_msg(self):
         """例如从死信队列，把完整的包括extra的消息移到另一个正常队列，不要把extra中的参数去掉"""
         self._do_not_delete_extra_from_msg = True
 

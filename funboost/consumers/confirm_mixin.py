@@ -74,17 +74,20 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
                 current_queue_unacked_msg_queues = self.redis_db_frame.scan(0, f'{self._queue_name}__unack_id_*', self.SCAN_COUNT) # 不要在funboost的队列所在db放弃他缓存keys，要保持db的keys少于1000，否则要多次scan。
                 # print(current_queue_unacked_msg_queues)
                 for current_queue_unacked_msg_queue in current_queue_unacked_msg_queues[1]:
-                    current_queue_unacked_msg_queue_str = current_queue_unacked_msg_queue.decode()
+                    current_queue_unacked_msg_queue_name = current_queue_unacked_msg_queue.decode()
                     if time.time() - self._last_show_unacked_msg_num_log > 600:
-                        self.logger.info(f'{current_queue_unacked_msg_queue_str} 中有待确认消费任务的数量是'
-                                         f' {self.redis_db_frame.zcard(current_queue_unacked_msg_queue_str)}')
+                        self.logger.info(f'{current_queue_unacked_msg_queue_name} 中有待确认消费任务的数量是'
+                                         f' {self.redis_db_frame.zcard(current_queue_unacked_msg_queue_name)}')
                         self._last_show_unacked_msg_num_log = time.time()
-                    if current_queue_unacked_msg_queue_str.split(f'{self._queue_name}__unack_id_')[1] not in current_queue_hearbeat_ids:
-                        self.logger.warning(f'{current_queue_unacked_msg_queue_str} 是掉线或关闭消费者的')
-                        for unacked_task_str in self.redis_db_frame.zrevrange(current_queue_unacked_msg_queue_str, 0, 1000):
-                            self.logger.warning(f'从 {current_queue_unacked_msg_queue_str} 向 {self._queue_name} 重新放入掉线消费者未消费确认的任务 {unacked_task_str.decode()}')
-                            self.redis_db_frame.lpush(self._queue_name, unacked_task_str)
-                            self.redis_db_frame.zrem(current_queue_unacked_msg_queue_str, unacked_task_str)
+                    if current_queue_unacked_msg_queue_name.split(f'{self._queue_name}__unack_id_')[1] not in current_queue_hearbeat_ids:
+                        self.logger.warning(f'{current_queue_unacked_msg_queue_name} 是掉线或关闭消费者的')
+                        while 1:
+                            if self.redis_db_frame.exists(current_queue_unacked_msg_queue_name):
+                                for unacked_task_str in self.redis_db_frame.zrevrange(current_queue_unacked_msg_queue_name, 0, 1000):
+                                    self.logger.warning(f'从 {current_queue_unacked_msg_queue_name} 向 {self._queue_name} 重新放入掉线消费者未消费确认的任务'
+                                                        f' {unacked_task_str.decode()}')
+                                    self.redis_db_frame.lpush(self._queue_name, unacked_task_str)
+                                    self.redis_db_frame.zrem(current_queue_unacked_msg_queue_name, unacked_task_str)
                     else:
                         pass
                         # print('是活跃消费者')

@@ -30,7 +30,7 @@ def consume_and_push_to_another_queue(source_queue_name: str, source_broker_kind
             msg_cnt += 1
 
     source_consumer = get_consumer(source_queue_name, broker_kind=source_broker_kind, consuming_function=_task_fun, log_level=log_level_int)
-    source_consumer.set_do_not_delete_extra_from_msg()
+    source_consumer._set_do_not_delete_extra_from_msg()
     source_consumer.start_consuming_message()
     if exit_script_when_finish:
         source_consumer.wait_for_possible_has_finish_all_tasks(2)

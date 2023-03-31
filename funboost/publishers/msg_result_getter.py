@@ -2,6 +2,9 @@ import asyncio
 
 import typing
 import json
+
+from funboost.utils.mongo_util import MongoMixin
+
 from funboost.concurrent_pool import CustomThreadPoolExecutor
 from funboost.utils import RedisMixin
 from funboost.utils.redis_manager import AioRedisMixin
@@ -9,6 +12,9 @@ from funboost.utils.redis_manager import AioRedisMixin
 
 class HasNotAsyncResult(Exception):
     pass
+
+
+NO_RESULT = 'no_result'
 
 
 class AsyncResult(RedisMixin):
@@ -84,8 +90,9 @@ class AsyncResult(RedisMixin):
 
 
 class AioAsyncResult(AioRedisMixin):
-    ''' 这个是可以用于asyncio的语法环境中。'''
+    """ 这个是可以用于asyncio的语法环境中。"""
     '''
+    用法例子
 import asyncio
 
 from funboost import AioAsyncResult
@@ -166,3 +173,42 @@ if __name__ == '__main__':
 
     async def set_callback(self, aio_callback_func: typing.Callable):
         asyncio.create_task(self._run_callback_func(callback_func=aio_callback_func))
+
+
+class ResultFromMongo(MongoMixin):
+    """
+    以非阻塞等待的方式从funboost的状态结果持久化的mongodb数据库根据taskid获取结果
+
+    async_result = add.push(i, i * 2)
+    task_id=async_result.task_id
+    print(ResultFromMongo(task_id).get_status_and_result())
+
+
+    print(ResultFromMongo('test_queue77h6_result:764a1ba2-14eb-49e2-9209-ac83fc5db1e8').get_status_and_result())
+    print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c1').get_result())
+    """
+
+    def __init__(self, task_id: str, ):
+        self.task_id = task_id
+        self.col_name = task_id.split('_result:')[0]
+        self.mongo_row = None
+        self._has_query = False
+
+    def query_result(self):
+        col = self.get_mongo_collection('task_status', self.col_name)
+        self.mongo_row = col.find_one({'_id': self.task_id})
+        self._has_query = True
+
+    def get_status_and_result(self):
+        self.query_result()
+        return self.mongo_row or NO_RESULT
+
+    def get_result(self):
+        """以非阻塞等待的方式从funboost的状态结果持久化的mongodb数据库根据taskid获取结果"""
+        self.query_result()
+        return (self.mongo_row or {}).get('result', NO_RESULT)
+
+
+if __name__ == '__main__':
+    print(ResultFromMongo('test_queue77h6_result:764a1ba2-14eb-49e2-9209-ac83fc5db1e8').get_status_and_result())
+    print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c1').get_result())

@@ -222,4 +222,3 @@ def _interrupt_signal_handler(signal, frame):
 
 signal.signal(signal.SIGINT, _interrupt_signal_handler)
 
-print('测试从gitee安装')

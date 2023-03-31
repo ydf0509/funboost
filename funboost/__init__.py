@@ -22,7 +22,7 @@ from funboost.consumers.base_consumer import (ExceptionForRequeue, ExceptionForR
                                               wait_for_possible_has_finish_all_tasks_by_conusmer_list,
                                               ActiveCousumerProcessInfoGetter, FunctionResultStatus)
 from funboost.publishers.base_publisher import (PriorityConsumingControlConfig,
-                                                AbstractPublisher, AsyncResult, HasNotAsyncResult, AioAsyncResult)
+                                                AbstractPublisher, AsyncResult, HasNotAsyncResult, AioAsyncResult,ResultFromMongo)
 from funboost.factories.publisher_factotry import get_publisher
 from funboost.factories.consumer_factory import get_consumer
 

@@ -182,18 +182,36 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
         self._has_start_bulk_insert_thread = False
         self._queue_name = queue_name
         if self.function_result_status_persistance_conf.is_save_status:
-            task_status_col = self.get_mongo_collection('task_status', queue_name)
-            try:
+            self._create_indexes()
+            # self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
+            self.logger.info(f"函数运行状态结果将保存至mongo的 task_status 库的 {queue_name} 集合中，请确认 funboost.py文件中配置的 MONGO_CONNECT_URL")
+
+    def _create_indexes(self):
+        task_status_col = self.get_mongo_collection('task_status', self._queue_name)
+        try:
+            has_creat_index = False
+            index_dict = task_status_col.index_information()
+            if 'insert_time_str_-1' in index_dict:
+                has_creat_index = True
+            old_expire_after_seconds = None
+            for index_name, v in index_dict.items():
+                if index_name == 'utime_1':
+                    old_expire_after_seconds = v['expireAfterSeconds']
+            if has_creat_index is False:
                 # params_str 如果很长，必须使用TEXt或HASHED索引。
                 task_status_col.create_indexes([IndexModel([("insert_time_str", -1)]), IndexModel([("insert_time", -1)]),
                                                 IndexModel([("params_str", pymongo.TEXT)]), IndexModel([("success", 1)])
                                                 ], )
-                task_status_col.create_index([("utime", 1)],
-                                             expireAfterSeconds=function_result_status_persistance_conf.expire_seconds)  # 只保留7天(用户自定义的)。
-            except pymongo.errors.OperationFailure as e:  # 新的mongo服务端，每次启动重复创建已存在索引会报错，try一下。
-                self.logger.warning(e)
-            # self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
-            self.logger.info(f"函数运行状态结果将保存至mongo的 task_status 库的 {queue_name} 集合中，请确认 funboost.py文件中配置的 MONGO_CONNECT_URL")
+                task_status_col.create_index([("utime", 1)],  # 这个是过期时间索引。
+                                             expireAfterSeconds=self.function_result_status_persistance_conf.expire_seconds)  # 只保留7天(用户自定义的)。
+            else:
+                if old_expire_after_seconds != self.function_result_status_persistance_conf.expire_seconds:
+                    self.logger.warning(f'过期时间从 {old_expire_after_seconds} 修改为 {self.function_result_status_persistance_conf.expire_seconds} 。。。')
+                    task_status_col.drop_index('utime_1', ),  # 这个不能也设置为True，导致修改过期时间不成功。
+                    task_status_col.create_index([("utime", 1)],
+                                                 expireAfterSeconds=self.function_result_status_persistance_conf.expire_seconds, background=True)  # 只保留7天(用户自定义的)。
+        except pymongo.errors.PyMongoError as e:
+            self.logger.warning(e)
 
     def save_function_result_to_mongo(self, function_result_status: FunctionResultStatus):
         if self.function_result_status_persistance_conf.is_save_status:

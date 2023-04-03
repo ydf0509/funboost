@@ -31,21 +31,39 @@ import threading
 # while 1:
 #     time.sleep(10)
 from auto_run_on_remote import run_current_script_on_remote
-run_current_script_on_remote()
-from multiprocessing import Process
+# run_current_script_on_remote()
+# from multiprocessing import Process
+# import threading
+#
+# def f():
+#     def _f():
+#         while 1:
+#             print('hello')
+#             time.sleep(10)
+#     threading.Thread(target=_f).start()
+#
+# if __name__ == '__main__':
+#
+#     Process(target=f).start()
+#     print('start')
+
+import nb_log
 import threading
 
-def f():
-    def _f():
-        while 1:
-            print('hello')
-            time.sleep(10)
-    threading.Thread(target=_f).start()
+lock = threading.Lock()
 
-if __name__ == '__main__':
-
-    Process(target=f).start()
-    print('start')
+def add(x,y):
+    with lock:
+        z = x+y
 
 
+from concurrent.futures import ThreadPoolExecutor
+from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
+print()
 
+with ThreadPoolExecutorShrinkAble(50) as pool:
+    for i in range(1000000):
+        # pool.submit(add,i,i*2)
+        add(i,i*2)
+
+print()

@@ -41,6 +41,8 @@ funboost的旧框架名字是function_scheduling_distributed_framework , 关系�
 ### 1.0.1 [分布式函数调度框架文档地址](https://funboost.readthedocs.io/zh/latest/index.html)
 [查看分布式函数调度框架文档](https://funboost.readthedocs.io/zh/latest/index.html)
 
+[funboost依赖的nb_log日志文档](https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2)
+
 ```
 文档很长，但归根结底只需要学习 1.3 里面的这1个例子就行，主要是修改下@boost的各种参数，
 通过不同的入参，实践测试下各种控制功能。
@@ -64,25 +66,13 @@ funboost的旧框架名字是function_scheduling_distributed_framework , 关系�
 
 ### 1.0.3 funboost 框架 和 function_scheduling_distributed_framework 框架 关系说明
 
-<p style="color: crimson;font-size: larger">funboost框架取名说明:</p>
-<pre style="color: darkorchid ;font-size:medium">
-funboost是function_scheduling_distributed_framework框架的新名字,把框架名字长度减小.
-funboost名字是两个单词,fun是function指的是python函数,boost是加速的意思,合一起是加速函数并发运行.
-</pre>
-
-<p style="color: crimson;font-size: larger">两个框架的兼容性说明:</p>
-<pre style="color: darkorchid;font-size:medium">
-funboost 和 function_scheduling_distributed_framework 项目的代码一模一样,以后新代码只更新funboost项目。
-from funboost import xx 和  from function_scheduling_distributed_framework import xx 是完全一模一样的.
-boost是task_deco的别名，两个都可以使用。在消费函数上写@boost 和 @task_deco是一模一样的，两个都可以使用。
-所以在有的文档或者截图中如果写 
-from  function_scheduling_distributed_framework import task_deco , @task_deco
-用户需要知道效果和from funboost import boost , @boost 是一模一样的。兼容性100%
-</pre>
+```
+funboost 是 function_scheduling_distributed_framework的包名更新版本
+```
 
 
 
-<span style="font-size:25px">旧框架地址：<span><a href="https://github.com/ydf0509/distributed_framework" style="font-size: 25px">function_scheduling_distributed_framework框架地址链接</a>
+<span style="font-size:15px">旧框架地址：<span><a href="https://github.com/ydf0509/distributed_framework" style="font-size: 15px">function_scheduling_distributed_framework框架地址链接</a>
 
 
 ## 1.1 安装方式

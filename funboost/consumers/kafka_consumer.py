@@ -14,7 +14,7 @@ from funboost import funboost_config_deafult
 from nb_log import get_logger, LogManager
 
 # LogManager('kafka').get_logger_and_add_handlers(30)
-get_logger('kafka', log_level_int=20)
+get_logger('kafka', log_level_int=30)
 
 
 class KafkaConsumer(AbstractConsumer):

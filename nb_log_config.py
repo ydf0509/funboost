@@ -81,6 +81,7 @@ if os.name == 'posix':  # linux非root用户和mac用户无法操作 /pythonlogs
     home_path = os.environ.get("HOME", '/')  # 这个是获取linux系统的当前用户的主目录，不需要亲自设置
     LOG_PATH = Path(home_path) / Path('pythonlogs')  # linux mac 权限很严格，非root权限不能在/pythonlogs写入，修改一下默认值。
 
+# print('LOG_PATH: ',LOG_PATH)
 LOG_FILE_HANDLER_TYPE = 2  # 1 2 3 4 5
 """
 LOG_FILE_HANDLER_TYPE 这个值可以设置为 1 2 3 4 5 四种值，

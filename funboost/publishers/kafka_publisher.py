@@ -26,7 +26,7 @@ class KafkaPublisher(AbstractPublisher, ):
         self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         self._admin_client = KafkaAdminClient(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         try:
-            self._admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
+            self._admin_client.create_topics([NewTopic(self._queue_name, 10, 2)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
         except TopicAlreadyExistsError:
             pass

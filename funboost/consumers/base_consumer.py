@@ -249,7 +249,7 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
                 self._last_bulk_insert_time = time.time()
 
 
-# noinspection PyClassHasNoInit
+# noinspection PyClassHasNoInit,DuplicatedCode
 class ConsumersManager:
     schedulal_thread_to_be_join = []
     consumers_queue__info_map = dict()
@@ -1044,7 +1044,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         while 1:  # 这一块的代码为支持暂停消费。
             # print(self._pause_flag)
             if self._pause_flag == 1:
-                time.sleep(1)
+                time.sleep(5)
                 if time.time() - self._last_show_pause_log_time > 60:
                     self.logger.warning(f'已设置 {self.queue_name} 队列中的任务为暂停消费')
                     self._last_show_pause_log_time = time.time()
@@ -1083,15 +1083,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # print(run_date,time_util.DatetimeConverter().datetime_obj)
         # print(run_date.timestamp(),time_util.DatetimeConverter().datetime_obj.timestamp())
         # print(self.concurrent_pool)
-        if run_date:
+        if run_date:  # 延时任务
             # print(repr(run_date),repr(datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))))
             if self._has_start_delay_task_scheduler is False:
-                self._start_delay_task_scheduler()
                 self._has_start_delay_task_scheduler = True
+                self._start_delay_task_scheduler()
             self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw},
                                                misfire_grace_time=misfire_grace_time)
-
-        else:
+        else:  # 普通任务
             self.concurrent_pool.submit(self._run, kw)
 
         if self._is_using_distributed_frequency_control:  # 如果是需要分布式控频。

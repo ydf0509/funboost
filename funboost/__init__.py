@@ -220,7 +220,7 @@ def boost(queue_name,
     :param broker_kind:中间件种类，支持30种消息队列。 入参见 BrokerEnum枚举类的属性。
     :param boost_decorator_default_params: oostDecoratorDefaultParams是
             @boost装饰器默认的全局入参。如果boost没有亲自指定某个入参，就自动使用funboost_config.py的BoostDecoratorDefaultParams中的配置。
-            除非你嫌弃每个 boost 装饰器相同入参太多了，可以在 funboost_config.py 文件中设置boost装饰器的全局默认值。
+                    如果你嫌弃每个 boost 装饰器相同入参太多重复了，可以在 funboost_config.py 文件中设置boost装饰器的全局默认值。
             BoostDecoratorDefaultParams() 实例化时候也可以传递这个boost装饰器任何的入参，BoostDecoratorDefaultParams是个数据类，百度python3.7dataclass的概念，类似。
 
             funboost.funboost_config_deafult.BoostDecoratorDefaultParams 的值会自动被你项目根目录下的funboost_config.BoostDecoratorDefaultParams的值覆盖

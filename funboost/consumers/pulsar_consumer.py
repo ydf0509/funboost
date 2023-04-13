@@ -31,7 +31,7 @@ class PulsarConsumer(AbstractConsumer, ):
     """
     BROKER_KIND = 20
     BROKER_EXCLUSIVE_CONFIG_KEYS = ['subscription_name']
-    SUBSCRIPTION_NAME = 'funboost_subc'
+    SUBSCRIPTION_NAME = 'funboost'
 
     def custom_init(self):
         try:

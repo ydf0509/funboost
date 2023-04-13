@@ -54,8 +54,7 @@ def your_app_context_deco(flask_appx: flask.Flask):
     return _deco
 
 
-@boost(queue_name='flask_test_queue', broker_kind=BrokerEnum.REDIS)
-@your_app_context_deco(app)
+@boost(queue_name='flask_test_queue', broker_kind=BrokerEnum.REDIS,consumin_function_decorator=your_app_context_deco(app))
 def send_main_with_app_context2(msg):
     """
     演示使用 flask_mail ，此包需要用到app上下文

@@ -16,7 +16,17 @@ def test_fun(x):
     # time.sleep(random_sleep)
     # print(x,random_sleep)
     # time.sleep(20000)
-    time.sleep(10000)
+    rd= random.random()
+    time_sleep = 0
+    if 0 < rd < 0.3:
+        time_sleep = 500
+    if 0.3 < rd < 0.6 :
+        time_sleep = 1700
+    if 0.6 < rd < 1 :
+        time_sleep = 1900
+    time_sleep=1900
+    time.sleep(time_sleep)
+    print(time_sleep)
     print(x * 2)
     return x * 2
 

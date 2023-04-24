@@ -59,8 +59,8 @@ class SaslPlainKafkaConsumer(KafkaConsumerManuallyCommit):
             'sasl.mechanisms': funboost_config.KFFKA_CONFIG['sasl_mechanism'],
             'sasl.username': funboost_config.KFFKA_CONFIG['sasl_plain_username'],
             'sasl.password': funboost_config.KFFKA_CONFIG['sasl_plain_password'],
-            'group.id': self.broker_exclusive_config.get("group_id", self.KAFKA_GROUP_ID),
-            'auto.offset.reset': self.broker_exclusive_config.get("auto_offset_reset", 'earliest'),
+            'group.id': self.broker_exclusive_config["group_id"],
+            'auto.offset.reset': self.broker_exclusive_config["auto_offset_reset"],
             'enable.auto.commit': False
         })
         self._confluent_consumer.subscribe([self._queue_name])

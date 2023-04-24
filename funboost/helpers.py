@@ -213,7 +213,7 @@ class FunctionResultStatusPersistanceConfig(LoggerMixin):
 
 
 # noinspection PyUnusedLocal
-def _interrupt_signal_handler(signal, frame):
+def _interrupt_signal_handler(signalx, framex):
     print('你按了 Ctrl+C  。 You pressed Ctrl+C!  结束程序！')
     # sys.exit(0)
     # noinspection PyUnresolvedReferences
@@ -221,4 +221,3 @@ def _interrupt_signal_handler(signal, frame):
 
 
 signal.signal(signal.SIGINT, _interrupt_signal_handler)
-

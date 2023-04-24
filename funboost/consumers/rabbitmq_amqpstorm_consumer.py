@@ -38,6 +38,6 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
             self.logger.error(f'AmqpStorm确认消费失败  {type(e)} {e}')
 
     def _requeue(self, kw):
-        amqpstorm.Message.delivery_tag
+        # amqpstorm.Message.delivery_tag
         print(kw['amqpstorm_message'].delivery_tag)
         kw['amqpstorm_message'].nack(requeue=True)

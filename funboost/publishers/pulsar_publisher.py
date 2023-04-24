@@ -1,6 +1,3 @@
-
-
-
 '''
 
 import pulsar
@@ -16,31 +13,36 @@ client.close()
 
 '''
 
-
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 12:12
+import os
+
+from pulsar.schema import schema
+
 from funboost.publishers.base_publisher import AbstractPublisher
-from  funboost import funboost_config_deafult
+from funboost import funboost_config_deafult
 
 
 class PulsarPublisher(AbstractPublisher, ):
     """
     使用pulsar作为中间件
     """
+
     def custom_init(self):
         import pulsar
-        self._client = pulsar.Client(funboost_config_deafult.PULSAR_URL)
-        self._producer = self._client.create_producer(self._queue_name)
+        self._client = pulsar.Client(funboost_config_deafult.PULSAR_URL, )
+        self._producer = self._client.create_producer(self._queue_name, schema=schema.StringSchema(), producer_name=f'funboost_publisher_{os.getpid()}')
 
     def concrete_realization_of_publish(self, msg):
-        self._producer.send(msg.encode('utf-8'))
+        self._producer.send(msg)
 
     def clear(self):
+        """用户换个 subscription_name 就可以重新消费了，不需要清空消息"""
         pass
 
+
     def get_message_count(self):
-        # nb_print(self.redis_db7,self._queue_name)
         return -1
 
     def close(self):

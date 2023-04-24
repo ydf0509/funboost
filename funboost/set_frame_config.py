@@ -158,7 +158,7 @@ def auto_creat_config_file_to_project_root_path():
 
     file_name = Path(sys.path[1]) / Path('funboost_config.py')
     copyfile(Path(__file__).absolute().parent / Path('funboost_config_deafult.py'), file_name)
-    nb_print(f'在  {Path(sys.path[1])} 目录下自动生成了一个文件， 请查看或修改 \n "{file_name}:1" 文件')
+    nb_print(f'在  {Path(sys.path[1])} 目录下自动生成了一个文件， 请刷新文件夹查看或修改 \n "{file_name}:1" 文件')
     # with (file_name).open(mode='w', encoding='utf8') as f:
     #     nb_print(f'在 {file_name} 目录下自动生成了一个文件， 请查看或修改 \n "{file_name}:1" 文件')
     #     f.write(config_file_content)

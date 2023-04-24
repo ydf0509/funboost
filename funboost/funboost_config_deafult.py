@@ -26,7 +26,7 @@ from funboost.utils.simple_data_class import DataClassBase
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  以下是中间件连接配置    $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 
-MONGO_CONNECT_URL = f'mongodb://127.0.0.1:27017'  # 如果有密码连接 'mongodb://myUserAdmin:8mwTdy1klnSYepNo@192.168.199.202:27016/admin'
+MONGO_CONNECT_URL = f'mongodb://127.0.0.1:27017'  # 如果有密码连接 'mongodb://myUserAdmin:8mwTdy1klnSYepNo@192.168.199.202:27016/MONGO_CONNECT_URL = 'mongodb://root:123456@192.168.64.151:27017?authSource=admin''
 
 RABBITMQ_USER = 'rabbitmq_user'
 RABBITMQ_PASS = 'rabbitmq_pass'
@@ -71,7 +71,7 @@ HTTPSQS_AUTH = '123456'
 
 NATS_URL = 'nats://192.168.6.134:4222'
 
-KOMBU_URL = 'redis://127.0.0.1:6379/0'
+KOMBU_URL = 'redis://127.0.0.1:6379/0'  # 这个就是celery依赖包kombu使用的消息队列格式，所以funboost支持一切celery支持的消息队列种类。
 # KOMBU_URL =  'sqla+sqlite:////dssf_kombu_sqlite.sqlite'  # 4个//// 代表磁盘根目录下生成一个文件。推荐绝对路径。3个///是相对路径。
 
 PULSAR_URL = 'pulsar://192.168.70.128:6650'

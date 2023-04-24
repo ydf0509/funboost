@@ -76,6 +76,7 @@ setup(
         'setuptools_rust',
         'fabric2==2.6.0',  # 有的机器包rust错误， 这样做 curl https://sh.rustup.rs -sSf | sh
         'nats-python',
+        # 'pulsar-client==3.1.0',   # python3.6 无法安装 pulsar-client
         'nb_filelock',
         'aiohttp==3.8.3',
         'pysnooper',

@@ -10,11 +10,12 @@ from funboost.publishers.base_publisher import AbstractPublisher, deco_mq_conn_e
 
 class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher):
     # 使用amqpstorm包实现的mq操作。
-    # 实例属性没在init里面写，造成补全很麻烦，写在这里做类属性，方便pycharm补全
+    # 实例属性没在__init__里面写，造成代码补全很麻烦，写在这里做类属性，方便pycharm补全
     connection = amqpstorm.UriConnection
     channel = amqpstorm.Channel
     channel_wrapper_by_ampqstormbaic = AmqpStormBasic
     queue = AmqpStormQueue
+    DURABLE = True
 
     # noinspection PyAttributeOutsideInit
     # @decorators.synchronized
@@ -27,7 +28,7 @@ class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher):
         self.channel = self.connection.channel()  # type:amqpstorm.Channel
         self.channel_wrapper_by_ampqstormbaic = AmqpStormBasic(self.channel)
         self.queue = AmqpStormQueue(self.channel)
-        self.queue.declare(queue=self._queue_name, durable=True)
+        self.queue.declare(queue=self._queue_name, durable=self.DURABLE)
 
     # @decorators.tomorrow_threads(10)
     @deco_mq_conn_error

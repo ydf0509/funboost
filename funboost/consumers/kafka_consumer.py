@@ -24,10 +24,7 @@ class KafkaConsumer(AbstractConsumer):
     可以让消费函数内部 sleep60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group funboost 来证实自动确认消费和手动确认消费的区别。
     """
     BROKER_KIND = 8
-    KAFKA_GROUP_ID = 'funboost_kafka'
-    AUTO_OFFSET_RESET = 'earliest'
-
-    BROKER_EXCLUSIVE_CONFIG_KEYS = ['group_id','auto_offset_reset']
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group_id':'funboost_kafka','auto_offset_reset':'earliest'}
     # not_all_brokers_general_settings配置 ，支持独立的中间件配置参数是 group_id 和 auto_offset_reset
     """
     auto_offset_reset 介绍
@@ -47,9 +44,9 @@ class KafkaConsumer(AbstractConsumer):
 
         self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         consumer = OfficialKafkaConsumer(self._queue_name, bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS,
-                                         group_id=self.broker_exclusive_config.get("group_id", self.KAFKA_GROUP_ID),
+                                         group_id=self.broker_exclusive_config["group_id"],
                                          enable_auto_commit=True,
-                                         auto_offset_reset=self.broker_exclusive_config.get("auto_offset_reset", self.AUTO_OFFSET_RESET),
+                                         auto_offset_reset=self.broker_exclusive_config["auto_offset_reset"],
                                          )
         #  auto_offset_reset (str): A policy for resetting offsets on
         #             OffsetOutOfRange errors: 'earliest' will move to the oldest

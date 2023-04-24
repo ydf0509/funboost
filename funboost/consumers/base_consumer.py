@@ -313,7 +313,7 @@ class ConsumersManager:
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     time_interval_for_check_do_not_run_time = 60
     BROKER_KIND = None
-    BROKER_EXCLUSIVE_CONFIG_KEYS = []  # 中间件能支持的独自的配置参数，例如kafka支持消费者组， 从最早还是最晚消费。因为支持30种中间件，
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {}
 
     # 每种中间件的概念有所不同，用户可以从 broker_exclusive_config 中传递该种中间件特有的配置意义参数。
 
@@ -551,7 +551,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         if broker_exclusive_config is None:
             broker_exclusive_config = {}
-        self.broker_exclusive_config = broker_exclusive_config
+        self.broker_exclusive_config = copy.deepcopy(self.BROKER_EXCLUSIVE_CONFIG_DEFAULT)
+        self.broker_exclusive_config.update(broker_exclusive_config)
 
         self._stop_flag = None
         self._pause_flag = None  # 暂停消费标志，从reids读取
@@ -594,11 +595,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         atexit.register(self.join_shedual_task_thread)
 
     def _check_broker_exclusive_config(self):
+        broker_exclusive_config_keys = self.BROKER_EXCLUSIVE_CONFIG_DEFAULT.keys()
         if self.broker_exclusive_config:
-            if set(self.broker_exclusive_config.keys()).issubset(self.BROKER_EXCLUSIVE_CONFIG_KEYS):
+            if set(self.broker_exclusive_config.keys()).issubset(broker_exclusive_config_keys):
                 self.logger.info(f'当前消息队列中间件能支持特殊独有配置 {self.broker_exclusive_config.keys()}')
             else:
-                self.logger.warning(f'当前消息队列中间件含有不支持的特殊配置 {self.broker_exclusive_config.keys()}，能支持的特殊独有配置包括 {self.BROKER_EXCLUSIVE_CONFIG_KEYS}')
+                self.logger.warning(f'当前消息队列中间件含有不支持的特殊配置 {self.broker_exclusive_config.keys()}，能支持的特殊独有配置包括 {broker_exclusive_config_keys}')
 
     def _check_monkey_patch(self):
         if self._concurrent_mode == 2:
@@ -706,6 +708,91 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :return:
         """
         raise NotImplementedError
+
+    def _submit_task(self, kw):
+        while 1:  # 这一块的代码为支持暂停消费。
+            # print(self._pause_flag)
+            if self._pause_flag == 1:
+                time.sleep(5)
+                if time.time() - self._last_show_pause_log_time > 60:
+                    self.logger.warning(f'已设置 {self.queue_name} 队列中的任务为暂停消费')
+                    self._last_show_pause_log_time = time.time()
+            else:
+                break
+
+        if self._judge_is_daylight():
+            self._requeue(kw)
+            time.sleep(self.time_interval_for_check_do_not_run_time)
+            return
+
+        function_only_params = _delete_keys_and_return_new_dict(kw['body'], )
+        if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
+                function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
+            self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
+            self._confirm_consume(kw)
+            return
+        publish_time = _get_publish_time(kw['body'])
+        msg_expire_senconds_priority = self._get_priority_conf(kw, 'msg_expire_senconds')
+        if msg_expire_senconds_priority and time.time() - msg_expire_senconds_priority > publish_time:
+            self.logger.warning(
+                f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(time.time() - publish_time, 4)} 秒 ,'
+                f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
+            self._confirm_consume(kw)
+            return 0
+
+        msg_eta = self._get_priority_conf(kw, 'eta')
+        msg_countdown = self._get_priority_conf(kw, 'countdown')
+        misfire_grace_time = self._get_priority_conf(kw, 'misfire_grace_time')
+        run_date = None
+        # print(kw)
+        if msg_countdown:
+            run_date = time_util.DatetimeConverter(kw['body']['extra']['publish_time']).datetime_obj + datetime.timedelta(seconds=msg_countdown)
+        if msg_eta:
+            run_date = time_util.DatetimeConverter(msg_eta).datetime_obj
+        # print(run_date,time_util.DatetimeConverter().datetime_obj)
+        # print(run_date.timestamp(),time_util.DatetimeConverter().datetime_obj.timestamp())
+        # print(self.concurrent_pool)
+        if run_date:  # 延时任务
+            # print(repr(run_date),repr(datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))))
+            if self._has_start_delay_task_scheduler is False:
+                self._has_start_delay_task_scheduler = True
+                self._start_delay_task_scheduler()
+            self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw},
+                                               misfire_grace_time=misfire_grace_time)
+        else:  # 普通任务
+            self.concurrent_pool.submit(self._run, kw)
+
+        if self._is_using_distributed_frequency_control:  # 如果是需要分布式控频。
+            active_num = self._distributed_consumer_statistics.active_consumer_num
+            self._frequency_control(self._qps / active_num, self._msg_schedule_time_intercal * active_num)
+        else:
+            self._frequency_control(self._qps, self._msg_schedule_time_intercal)
+
+    def _frequency_control(self, qpsx: float, msg_schedule_time_intercalx: float):
+        # 以下是消费函数qps控制代码。无论是单个消费者空频还是分布式消费控频，都是基于直接计算的，没有依赖redis inrc计数，使得控频性能好。
+        if qpsx == 0:  # 不需要控频的时候，就不需要休眠。
+            return
+        if qpsx <= 5:
+            """ 原来的简单版 """
+            time.sleep(msg_schedule_time_intercalx)
+        elif 5 < qpsx <= 20:
+            """ 改进的控频版,防止消息队列中间件网络波动，例如1000qps使用redis,不能每次间隔1毫秒取下一条消息，
+            如果取某条消息有消息超过了1毫秒，后面不能匀速间隔1毫秒获取，time.sleep不能休眠一个负数来让时光倒流"""
+            time_sleep_for_qps_control = max((msg_schedule_time_intercalx - (time.time() - self._last_submit_task_timestamp)) * 0.99, 10 ** -3)
+            # print(time.time() - self._last_submit_task_timestamp)
+            # print(time_sleep_for_qps_control)
+            time.sleep(time_sleep_for_qps_control)
+            self._last_submit_task_timestamp = time.time()
+        else:
+            """基于当前消费者计数的控频，qps很大时候需要使用这种"""
+            if time.time() - self._last_start_count_qps_timestamp > 1:
+                self._has_execute_times_in_recent_second = 1
+                self._last_start_count_qps_timestamp = time.time()
+            else:
+                self._has_execute_times_in_recent_second += 1
+            # print(self._has_execute_times_in_recent_second)
+            if self._has_execute_times_in_recent_second >= qpsx:
+                time.sleep((1 - (time.time() - self._last_start_count_qps_timestamp)) * 1)
 
     def _print_message_get_from_broker(self, broker_name, msg):
         # print(999)
@@ -991,7 +1078,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def check_heartbeat_and_message_count(self):
         self._msg_num_in_broker = self.publisher_of_same_queue.get_message_count()
-        if time.time() - self._last_timestamp_print_msg_num > 60:
+        if time.time() - self._last_timestamp_print_msg_num > 600:
             if self._msg_num_in_broker != -1:
                 self.logger.info(f'队列 [{self._queue_name}] 中还有 [{self._msg_num_in_broker}] 个任务')
             self._last_timestamp_print_msg_num = time.time()
@@ -1039,91 +1126,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def continue_consume(self):
         """设置队列为继续消费状态"""
         RedisMixin().redis_db_frame.set(self._redis_key_pause_flag, 0)
-
-    def _submit_task(self, kw):
-        while 1:  # 这一块的代码为支持暂停消费。
-            # print(self._pause_flag)
-            if self._pause_flag == 1:
-                time.sleep(5)
-                if time.time() - self._last_show_pause_log_time > 60:
-                    self.logger.warning(f'已设置 {self.queue_name} 队列中的任务为暂停消费')
-                    self._last_show_pause_log_time = time.time()
-            else:
-                break
-
-        if self._judge_is_daylight():
-            self._requeue(kw)
-            time.sleep(self.time_interval_for_check_do_not_run_time)
-            return
-
-        function_only_params = _delete_keys_and_return_new_dict(kw['body'], )
-        if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
-                function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
-            self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
-            self._confirm_consume(kw)
-            return
-        publish_time = _get_publish_time(kw['body'])
-        msg_expire_senconds_priority = self._get_priority_conf(kw, 'msg_expire_senconds')
-        if msg_expire_senconds_priority and time.time() - msg_expire_senconds_priority > publish_time:
-            self.logger.warning(
-                f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(time.time() - publish_time, 4)} 秒 ,'
-                f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
-            self._confirm_consume(kw)
-            return 0
-
-        msg_eta = self._get_priority_conf(kw, 'eta')
-        msg_countdown = self._get_priority_conf(kw, 'countdown')
-        misfire_grace_time = self._get_priority_conf(kw, 'misfire_grace_time')
-        run_date = None
-        # print(kw)
-        if msg_countdown:
-            run_date = time_util.DatetimeConverter(kw['body']['extra']['publish_time']).datetime_obj + datetime.timedelta(seconds=msg_countdown)
-        if msg_eta:
-            run_date = time_util.DatetimeConverter(msg_eta).datetime_obj
-        # print(run_date,time_util.DatetimeConverter().datetime_obj)
-        # print(run_date.timestamp(),time_util.DatetimeConverter().datetime_obj.timestamp())
-        # print(self.concurrent_pool)
-        if run_date:  # 延时任务
-            # print(repr(run_date),repr(datetime.datetime.now(tz=pytz.timezone(frame_config.TIMEZONE))))
-            if self._has_start_delay_task_scheduler is False:
-                self._has_start_delay_task_scheduler = True
-                self._start_delay_task_scheduler()
-            self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw},
-                                               misfire_grace_time=misfire_grace_time)
-        else:  # 普通任务
-            self.concurrent_pool.submit(self._run, kw)
-
-        if self._is_using_distributed_frequency_control:  # 如果是需要分布式控频。
-            active_num = self._distributed_consumer_statistics.active_consumer_num
-            self._frequency_control(self._qps / active_num, self._msg_schedule_time_intercal * active_num)
-        else:
-            self._frequency_control(self._qps, self._msg_schedule_time_intercal)
-
-    def _frequency_control(self, qpsx, msg_schedule_time_intercalx):
-        # 以下是消费函数qps控制代码。无论是单个消费者空频还是分布式消费控频，都是基于直接计算的，没有依赖redis inrc计数，使得控频性能好。
-        if qpsx == 0:  # 不需要控频的时候，就不需要休眠。
-            return
-        if qpsx <= 5:
-            """ 原来的简单版 """
-            time.sleep(msg_schedule_time_intercalx)
-        elif 5 < qpsx <= 20:
-            """ 改进的控频版,防止消息队列中间件网络波动，例如1000qps使用redis,不能每次间隔1毫秒取下一条消息，
-            如果取某条消息有消息超过了1毫秒，后面不能匀速间隔1毫秒获取，time.sleep不能休眠一个负数来让时光倒流"""
-            time_sleep_for_qps_control = max((msg_schedule_time_intercalx - (time.time() - self._last_submit_task_timestamp)) * 0.99, 10 ** -3)
-            # print(time.time() - self._last_submit_task_timestamp)
-            # print(time_sleep_for_qps_control)
-            time.sleep(time_sleep_for_qps_control)
-            self._last_submit_task_timestamp = time.time()
-        else:
-            """基于当前消费者计数的控频，qps很大时候需要使用这种"""
-            if time.time() - self._last_start_count_qps_timestamp > 1:
-                self._has_execute_times_in_recent_second = 1
-                self._last_start_count_qps_timestamp = time.time()
-            else:
-                self._has_execute_times_in_recent_second += 1
-            # print(self._has_execute_times_in_recent_second)
-            if self._has_execute_times_in_recent_second >= qpsx:
-                time.sleep((1 - (time.time() - self._last_start_count_qps_timestamp)) * 1)
 
     @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)
     def _judge_is_daylight(self):

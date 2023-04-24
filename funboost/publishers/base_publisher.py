@@ -17,9 +17,9 @@ import amqpstorm
 from kombu.exceptions import KombuError
 from pikav1.exceptions import AMQPError as PikaAMQPError
 
-from nb_log import LoggerLevelSetterMixin, LogManager, LoggerMixin
+from nb_log import LoggerLevelSetterMixin, get_logger, LoggerMixin
 
-from funboost.publishers.msg_result_getter import AsyncResult, AioAsyncResult, HasNotAsyncResult,ResultFromMongo
+from funboost.publishers.msg_result_getter import AsyncResult, AioAsyncResult, HasNotAsyncResult, ResultFromMongo
 from funboost.utils import decorators, time_util
 from funboost import funboost_config_deafult
 
@@ -149,10 +149,10 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._logger_prefix = logger_prefix
         self._log_level_int = log_level_int
         logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}'
-        self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level_int,
-                                                                          log_filename=f'{logger_name}.log' if is_add_file_handler else None,
-                                                                          formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
-                                                                          )  #
+        self.logger = get_logger(logger_name, log_level_int=log_level_int,
+                                 log_filename=f'{logger_name}.log' if is_add_file_handler else None,
+                                 formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
+                                 )  #
         self.publish_params_checker = PublishParamsChecker(consuming_function) if consuming_function else None
         if broker_exclusive_config is None:
             broker_exclusive_config = {}
@@ -273,7 +273,10 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.logger.warning(
             f'程序关闭前，{round(time.time() - self.__init_time)} 秒内，累计推送了 {self.publish_msg_num_total} 条消息 到 {self._queue_name} 中')
 
+
 has_init_broker_lock = threading.Lock()
+
+
 def deco_mq_conn_error(f):
     @wraps(f)
     def _deco_mq_conn_error(self, *args, **kwargs):

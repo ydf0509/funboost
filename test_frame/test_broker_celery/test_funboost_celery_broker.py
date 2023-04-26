@@ -1,24 +1,25 @@
 import time
-import nb_log
-from funboost import register_custom_broker, boost
+
+from funboost import register_custom_broker, boost, BrokerEnum
+
 from funboost.consumers.celery_consumer import CeleryConsumer
 from funboost.publishers.celery_publisher import CeleryPublisher
 
-register_custom_broker(30, CeleryPublisher, CeleryConsumer)
-
-celery_config = {'broker_url': 'redis://192.168.64.151:6378/11'}
+register_custom_broker(BrokerEnum.CELERY, CeleryPublisher, CeleryConsumer)
 
 
-@boost('tets_funboost_celery_queue26a', broker_kind=30, concurrent_num=10,
-       broker_exclusive_config={'task_default_rate_limit': '1/s', 'worker_prefetch_multiplier': 10}
+@boost('tets_funboost_celery_queue27a', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
+       broker_exclusive_config={'celery_app_config':
+                                    {'task_default_rate_limit': '1/s', 'worker_prefetch_multiplier': 10}}
        )
 def fa(x, y):
     time.sleep(3)
     print(6666, x, y)
 
 
-@boost('tets_funboost_celery_queue26b', broker_kind=30, concurrent_num=10,
-       broker_exclusive_config={'task_default_rate_limit': '2/s', 'worker_prefetch_multiplier': 10}
+@boost('tets_funboost_celery_queue27b', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
+       broker_exclusive_config={'celery_app_config':
+                                    {'task_default_rate_limit': '2/s', 'worker_prefetch_multiplier': 10}}
        )
 def fb(a, b):
     time.sleep(2)
@@ -30,8 +31,18 @@ if __name__ == '__main__':
         fa.push(i, i + 1)
         fb.push(i, i * 2)
 
-    # fa.multi_process_consume(1)
-    # fb.multi_process_consume(1)
-
     fa.consume()
     fb.consume()
+
+'''
+
+linux celery 报错EntryPoints‘ object has no attribute ‘get‘ ，这么做
+https://blog.csdn.net/weixin_73672704/article/details/129477312
+
+pip install frozenlist==1.3.1 geopy==2.2.0 humanize==4.3.0 idna==3.3 importlib-metadata==4.12.0 jsonschema==4.9.0 korean_lunar_calendar==0.2.1 marshmallow==3.17.0 pyOpenSSL==22.0.0 pyrsistent==0.18.1 python-dotenv==0.20.0 pytz==2022.2.1 selenium==4.4.0 simplejson==3.17.6 sniffio==1.2.0 trio==0.21.0 urllib3==1.26.11 wsproto==1.1.0 zipp==3.8.1
+ 
+# 如果上述安装仍未解决, 则执行以下安装(笔者执行完上述安装即能解决问题)
+pip install backoff==2.1.2 colorama==0.4.5 croniter==1.3.5 cryptography==37.0.4 email-validator==1.2.1 flask-compress==1.12 flask-migrate==3.1.0 aiohttp==3.8.1 aiosignal==1.2.0 Mako==1.2.1 Babel==2.10.3
+
+
+'''

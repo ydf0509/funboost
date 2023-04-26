@@ -67,6 +67,8 @@ class BrokerEnum:
 
     REDIS_PUBSUB = 27 # 基于redis 发布订阅的，发布一个消息多个消费者都能收到消息，但不支持持久化
 
+    CELERY = 30  # funboost支持celery框架来发布和消费任务，由celery框架来调度执行任务，但是写法简单暴击celery。
+
 
 
 class ConcurrentModeEnum:

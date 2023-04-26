@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:32
+from multiprocessing import Process
+
 import logging
 import json
+from funboost import funboost_config_deafult
+
 from funboost.consumers.base_consumer import AbstractConsumer
 import celery
 
@@ -15,16 +19,15 @@ class CeleryConsumer(AbstractConsumer):
     celery作为中间件实现的。
     """
     BROKER_KIND = 30
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'broker': 'redis://192.168.64.151:6378/11'}
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'celery_app_config': {}}
 
     def _shedual_task(self):
         raw_fun = self.consuming_function
 
-        celery_app = celery.Celery(broker='redis://192.168.64.151:6378/11')
-
-        # celery_app.config_from_object(self.broker_exclusive_config)
-        if not celery_app.conf.task_routes:
-            celery_app.conf.task_routes = {}
+        celery_app = celery.Celery(broker=funboost_config_deafult.CELERY_BROKER_URL,
+                                   backend=funboost_config_deafult.CELERY_RESULT_BACKEND,
+                                   task_routes={})
+        celery_app.config_from_object(self.broker_exclusive_config['celery_app_config'])
         celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})
 
         celery_app.conf.task_reject_on_worker_lost = True  # 配置这两项可以随意停止

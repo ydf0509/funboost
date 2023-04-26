@@ -32,7 +32,7 @@ def f(x, y):
 
 pool2 = ProcessPoolExecutor(4)
 
-@boost('test_queue77h6', log_level=20, broker_kind=BrokerEnum.MEMORY_QUEUE,
+@boost('test_queue77h6', log_level=10, broker_kind=BrokerEnum.MEMORY_QUEUE,
        create_logger_file=True,is_show_message_get_from_broker=True,concurrent_mode=ConcurrentModeEnum.THREADING,
        concurrent_num=50,qps=4,is_print_detail_exception=False,is_push_to_dlx_queue_when_retry_max_times=True,
        # specify_concurrent_pool= pool2,
@@ -60,6 +60,8 @@ if __name__ == '__main__':
     # f2.clear()
     from nb_log import handlers
     # nb_log.LogManager(f2.consumer.logger.name).remove_handler_by_handler_class(nb_log.handlers.ColorHandler)
+    print(f2.consumer.logger.level)
+
     for i in range(500):
         f2.push(i, i * 5)
     f2.consume()

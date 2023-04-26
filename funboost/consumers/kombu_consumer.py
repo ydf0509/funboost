@@ -70,27 +70,30 @@ def patch_kombu_redis000():
     redis.MultiChannelPoller.get = monkey_get
 
 
+has_patch_kombu_redis = False
+
+
 def patch_kombu_redis():
     """
     给kombu的redis 模式打猴子补丁
     kombu有bug，redis中间件 unnacked 中的任务即使客户端掉线了或者突然关闭脚本中正在运行的任务，也永远不会被重新消费。
     这个很容易验证那个测试，把消费函数写成sleep 100秒，启动20秒后把脚本关掉，取出来的任务在 unacked 队列中那个永远不会被确认消费，也不会被重新消费。
     """
+    global has_patch_kombu_redis
+    if not has_patch_kombu_redis:
+        redis_multichannelpoller_get_raw = redis.MultiChannelPoller.get
 
-    redis_multichannelpoller_get_raw = redis.MultiChannelPoller.get
+        # noinspection PyUnusedLocal
+        def monkey_get(self, callback, timeout=None):
+            try:
+                redis_multichannelpoller_get_raw(self, callback, timeout)
+            except Empty:
+                self.maybe_restore_messages()
+                raise Empty()
 
-    # noinspection PyUnusedLocal
-    def monkey_get(self, callback, timeout=None):
-        try:
-            redis_multichannelpoller_get_raw(self, callback, timeout)
-        except Empty:
-            self.maybe_restore_messages()
-            raise Empty()
+        redis.MultiChannelPoller.get = monkey_get
+        has_patch_kombu_redis = True
 
-    redis.MultiChannelPoller.get = monkey_get
-
-
-patch_kombu_redis()
 
 ''' kombu 能支持的消息队列中间件有如下，可以查看 D:\ProgramData\Miniconda3\Lib\site-packages\kombu\transport\__init__.py 文件。
 
@@ -190,6 +193,8 @@ Transport Options
 
     # noinspection DuplicatedCode
     def _shedual_task(self):  # 这个倍while 1 启动的，会自动重连。
+        patch_kombu_redis()
+
         def callback(body: dict, message: Message):
             # print(type(body),body,type(message),message)
             self._print_message_get_from_broker('kombu', body)

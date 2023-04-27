@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 12:03
+# @Time    : 2022/8/8 0008 12:03
 from threading import Lock
 from pikav1 import BasicProperties
 import pikav1

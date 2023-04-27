@@ -75,7 +75,7 @@ def get_path_and_source_from_frame(frame):
                 ((_, _, source_chunk),) = ipython_shell.history_manager. \
                                   get_range(0, entry_number, entry_number + 1)
                 source = source_chunk.splitlines()
-            except Exception:
+            except BaseException :
                 pass
         else:
             try:
@@ -274,7 +274,7 @@ class Tracer:
                         return
                 try:
                     method, incoming = gen.send, (yield outgoing)
-                except Exception as e:
+                except BaseException as e:
                     method, incoming = gen.throw, e
 
         if pycompat.iscoroutinefunction(function):

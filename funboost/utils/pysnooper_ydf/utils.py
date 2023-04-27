@@ -59,7 +59,7 @@ def get_shortish_repr(item, custom_repr=(), max_length=None):
     repr_function = get_repr_function(item, custom_repr)
     try:
         r = repr_function(item)
-    except Exception:
+    except BaseException :
         r = 'REPR FAILED'
     r = r.replace('\r', '').replace('\n', '')
     if max_length:

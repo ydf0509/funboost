@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 13:32
+# @Time    : 2022/8/8 0008 13:32
 import asyncio
 import json
 
@@ -21,7 +21,7 @@ class HTTPConsumer(AbstractConsumer, ):
         try:
             self._ip, self._port = self.queue_name.split(':')
             self._port = int(self._port)
-        except Exception as e:
+        except BaseException as e:
             self.logger.critical(f'http作为消息队列时候,队列名字必须设置为 例如 192.168.1.101:8200  这种,  ip:port')
             raise e
 

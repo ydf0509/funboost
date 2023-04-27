@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 14:57
+# @Time    : 2022/8/8 0008 14:57
 from multiprocessing import Process
 import time
 from funboost import get_consumer, get_publisher, AbstractConsumer

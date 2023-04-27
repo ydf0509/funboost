@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 13:32
+# @Time    : 2022/8/8 0008 13:32
 import json
 # noinspection PyPackageRequirements
 from kafka import KafkaConsumer as OfficialKafkaConsumer, KafkaProducer, KafkaAdminClient
@@ -14,7 +14,7 @@ from funboost import funboost_config_deafult
 from nb_log import get_logger, LogManager
 
 # LogManager('kafka').get_logger_and_add_handlers(30)
-get_logger('kafka', log_level_int=20)
+get_logger('kafka', log_level_int=30)
 
 
 class KafkaConsumer(AbstractConsumer):
@@ -24,11 +24,15 @@ class KafkaConsumer(AbstractConsumer):
     可以让消费函数内部 sleep60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group funboost 来证实自动确认消费和手动确认消费的区别。
     """
     BROKER_KIND = 8
-    KAFKA_GROUP_ID = 'funboost_kafka'
-    AUTO_OFFSET_RESET = 'earliest'
-
-    BROKER_EXCLUSIVE_CONFIG_KEYS = ['group_id','auto_offset_reset']
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group_id':'funboost_kafka','auto_offset_reset':'earliest'}
     # not_all_brokers_general_settings配置 ，支持独立的中间件配置参数是 group_id 和 auto_offset_reset
+    """
+    auto_offset_reset 介绍
+      auto_offset_reset (str): A policy for resetting offsets on
+            OffsetOutOfRange errors: 'earliest' will move to the oldest
+            available message, 'latest' will move to the most recent. Any
+            other value will raise the exception. Default: 'latest'.
+    """
 
     def _shedual_task(self):
         try:
@@ -40,9 +44,9 @@ class KafkaConsumer(AbstractConsumer):
 
         self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         consumer = OfficialKafkaConsumer(self._queue_name, bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS,
-                                         group_id=self.broker_exclusive_config.get("group_id", self.KAFKA_GROUP_ID),
+                                         group_id=self.broker_exclusive_config["group_id"],
                                          enable_auto_commit=True,
-                                         auto_offset_reset=self.broker_exclusive_config.get("auto_offset_reset", self.AUTO_OFFSET_RESET),
+                                         auto_offset_reset=self.broker_exclusive_config["auto_offset_reset"],
                                          )
         #  auto_offset_reset (str): A policy for resetting offsets on
         #             OffsetOutOfRange errors: 'earliest' will move to the oldest

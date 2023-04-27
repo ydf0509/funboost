@@ -30,7 +30,7 @@ class BaseVariable(pycompat.ABC):
     def items(self, frame):
         try:
             main_value = eval(self.code, frame.f_globals or {}, frame.f_locals)
-        except Exception:
+        except BaseException :
             return ()
         return self._items(main_value)
 
@@ -58,7 +58,7 @@ class CommonVariable(BaseVariable):
                 if key in self.exclude:
                     continue
                 value = self._get_value(main_value, key)
-            except Exception:
+            except BaseException :
                 continue
             result.append((
                 '{}{}'.format(self.unambiguous_source, self._format_key(key)),
@@ -70,7 +70,7 @@ class CommonVariable(BaseVariable):
         try:
             for key in self._keys(main_value):
                 yield key
-        except Exception:
+        except BaseException :
             pass
 
     def _keys(self, main_value):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2020/1/10 0010 18:42
+# @Time    : 2022/1/10 0010 18:42
 """
 使用sqlachemy来使5种关系型数据库模拟消息队列。
 """
@@ -63,7 +63,8 @@ class SqlaBase(Base):
 
 
 class SessionContext:
-    def __init__(self, session: sqlalchemy.orm.session.Session):
+    # def __init__(self, session: sqlalchemy.orm.session.Session):
+    def __init__(self, session):
         self.ss = session
 
     def __enter__(self):
@@ -131,7 +132,7 @@ class SqlaQueue(LoggerMixin, LoggerLevelSetterMixin):
             SqlaQueueModel.metadata.create_all(engine, )
             self.Session = sessionmaker(bind=engine, expire_on_commit=False)
             self.SqlaQueueModel = SqlaQueueModel
-        except Exception as e:
+        except BaseException as e:
             self.logger.warning(e)
             Base = automap_base()
 

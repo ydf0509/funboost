@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 14:57
+# @Time    : 2022/8/8 0008 14:57
+import threading
+
 import time
-from funboost import boost, BrokerEnum, ConcurrentModeEnum, fabric_deploy
+from funboost import boost, BrokerEnum
 
 
 # 通过设置broker_kind，一键切换中间件为mq或redis等20种中间件或包。
@@ -14,7 +16,7 @@ from funboost import boost, BrokerEnum, ConcurrentModeEnum, fabric_deploy
 # 还有其他30种函数运行控制参数，看代码里面的函数入参说明，说的非常详细了。
 
 # @boost('queue_test2', )  # @task_deco必须参数只有一个。
-@boost('queue_test2', qps=6, broker_kind=BrokerEnum.PERSISTQUEUE)
+@boost('queue_test2', qps=6, broker_kind=BrokerEnum.REDIS)
 def f2(a, b):
     sleep_time = 7
     result = a + b
@@ -25,9 +27,11 @@ def f2(a, b):
 
 
 if __name__ == '__main__':
-    print(f2.__name__)
-    f2.clear()
-    for i in range(200):
-        f2.push(i, i * 2)
+    pass
+    # print(f2.__name__)
+    # f2.clear()
+    # for i in range(200):
+    #     f2.push(i, i * 2)
     f2.consume()
+
 

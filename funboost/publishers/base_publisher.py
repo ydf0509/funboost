@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 11:57
+# @Time    : 2022/8/8 0008 11:57
 import abc
 import copy
 import inspect
 import atexit
 import json
+import threading
 import uuid
 import time
 import typing
@@ -16,86 +17,14 @@ import amqpstorm
 from kombu.exceptions import KombuError
 from pikav1.exceptions import AMQPError as PikaAMQPError
 
-from nb_log import LoggerLevelSetterMixin, LogManager, LoggerMixin
-from funboost.utils import decorators, RedisMixin, time_util
+from nb_log import LoggerLevelSetterMixin, get_logger, LoggerMixin
+
+from funboost.publishers.msg_result_getter import AsyncResult, AioAsyncResult, HasNotAsyncResult, ResultFromMongo
+from funboost.utils import decorators, time_util
 from funboost import funboost_config_deafult
-from funboost.concurrent_pool import CustomThreadPoolExecutor
-
-
-class HasNotAsyncResult(Exception):
-    pass
-
-
-class AsyncResult(RedisMixin):
-    callback_run_executor = CustomThreadPoolExecutor(200)
-
-    def __init__(self, task_id, timeout=120):
-        self.task_id = task_id
-        self.timeout = timeout
-        self._has_pop = False
-        self._status_and_result = None
-
-    def set_timeout(self, timeout=60):
-        self.timeout = timeout
-        return self
-
-    def is_pending(self):
-        return not self.redis_db_filter_and_rpc_result.exists(self.task_id)
-
-    @property
-    def status_and_result(self):
-        if not self._has_pop:
-            redis_value = self.redis_db_filter_and_rpc_result.blpop(self.task_id, self.timeout)
-            self._has_pop = True
-            if redis_value is not None:
-                status_and_result_str = redis_value[1]
-                self._status_and_result = json.loads(status_and_result_str)
-                self.redis_db_filter_and_rpc_result.lpush(self.task_id, status_and_result_str)
-                self.redis_db_filter_and_rpc_result.expire(self.task_id, 600)
-                return self._status_and_result
-            return None
-        return self._status_and_result
-
-    def get(self):
-        # print(self.status_and_result)
-        if self.status_and_result is not None:
-            return self.status_and_result['result']
-        else:
-            raise HasNotAsyncResult
-
-    @property
-    def result(self):
-        return self.get()
-
-    def is_success(self):
-        return self.status_and_result['success']
-
-    def _run_callback_func(self, callback_func):
-        callback_func(self.status_and_result)
-
-    def set_callback(self, callback_func: typing.Callable):
-        """
-        :param callback_func: 函数结果回调函数，使回调函数自动在线程池中并发运行。
-        :return:
-        """
-
-        ''' 用法例如
-        from test_frame.test_rpc.test_consume import add
-        def show_result(status_and_result: dict):
-            """
-            :param status_and_result: 一个字典包括了函数入参、函数结果、函数是否运行成功、函数运行异常类型
-            """
-            print(status_and_result)
-
-        for i in range(100):
-            async_result = add.push(i, i * 2)
-            # print(async_result.result)   # 执行 .result是获取函数的运行结果，会阻塞当前发布消息的线程直到函数运行完成。
-            async_result.set_callback(show_result) # 使用回调函数在线程池中并发的运行函数结果
-        '''
-        self.callback_run_executor.submit(self._run_callback_func, callback_func)
-
 
 RedisAsyncResult = AsyncResult  # 别名
+RedisAioAsyncResult = AioAsyncResult  # 别名
 
 
 class PriorityConsumingControlConfig:
@@ -220,10 +149,10 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._logger_prefix = logger_prefix
         self._log_level_int = log_level_int
         logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}'
-        self.logger = LogManager(logger_name).get_logger_and_add_handlers(log_level_int,
-                                                                          log_filename=f'{logger_name}.log' if is_add_file_handler else None,
-                                                                          formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
-                                                                          )  #
+        self.logger = get_logger(logger_name, log_level_int=log_level_int,
+                                 log_filename=f'{logger_name}.log' if is_add_file_handler else None,
+                                 formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
+                                 )  #
         self.publish_params_checker = PublishParamsChecker(consuming_function) if consuming_function else None
         if broker_exclusive_config is None:
             broker_exclusive_config = {}
@@ -345,22 +274,26 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             f'程序关闭前，{round(time.time() - self.__init_time)} 秒内，累计推送了 {self.publish_msg_num_total} 条消息 到 {self._queue_name} 中')
 
 
+has_init_broker_lock = threading.Lock()
+
+
 def deco_mq_conn_error(f):
     @wraps(f)
     def _deco_mq_conn_error(self, *args, **kwargs):
-        if not self.has_init_broker:
-            self.logger.warning(f'对象的方法 【{f.__name__}】 首次使用 进行初始化执行 init_broker 方法')
-            self.init_broker()
-            self.has_init_broker = 1
-            return f(self, *args, **kwargs)
-        # noinspection PyBroadException
-        try:
-            return f(self, *args, **kwargs)
-        except (PikaAMQPError, amqpstorm.AMQPError, KombuError) as e:  # except Exception as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
-            self.logger.error(f'中间件链接出错   ,方法 {f.__name__}  出错 ，{e}')
-            self.init_broker()
-            return f(self, *args, **kwargs)
-        except Exception as e:
-            self.logger.critical(e, exc_info=True)
+        with has_init_broker_lock:
+            if not self.has_init_broker:
+                self.logger.warning(f'对象的方法 【{f.__name__}】 首次使用 进行初始化执行 init_broker 方法')
+                self.init_broker()
+                self.has_init_broker = 1
+                return f(self, *args, **kwargs)
+            # noinspection PyBroadException
+            try:
+                return f(self, *args, **kwargs)
+            except (PikaAMQPError, amqpstorm.AMQPError, KombuError) as e:  # except BaseException as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
+                self.logger.error(f'中间件链接出错   ,方法 {f.__name__}  出错 ，{e}')
+                self.init_broker()
+                return f(self, *args, **kwargs)
+            except BaseException as e:
+                self.logger.critical(e, exc_info=True)
 
     return _deco_mq_conn_error

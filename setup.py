@@ -1,15 +1,14 @@
 # coding=utf-8
-
 from setuptools import setup, find_packages
 setup(
     name='funboost',  #
-    version='17.2',
+    version='20.3',
     description=(
-        'funboost  is function scheduling distributed framework,support threading,gevent,eventlet,asyncio concurrent,support all kinds of message queue,and has manay control way'
+        'pip install funboost，python全功能分布式函数调度框架,。支持python所有类型的并发模式和一切知名消息队列中间件，python函数加速器，框架包罗万象，一统编程思维，兼容50% python业务场景，适用范围广。只需要一行代码即可分布式执行python一切函数，99%用过funboost的pythoner 感受是 方便 快速 强大，相见恨晚 '
     ),
     # long_description=open('README.md', 'r',encoding='utf8').read(),
     keywords=["funboost", "distributed-framework", "function-scheduling", "rabbitmq", "rocketmq", "kafka", "nsq", "redis", "disk",
-              "sqlachemy", "consume-confirm", "timing", "task-scheduling", "apscheduler", "pulsar", "mqtt", "kombu"],
+              "sqlachemy", "consume-confirm", "timing", "task-scheduling", "apscheduler", "pulsar", "mqtt", "kombu","的","celery","框架",'分布式调度'],
     long_description_content_type="text/markdown",
     long_description=open('README.md', 'r', encoding='utf8').read(),
     author='bfzs',
@@ -34,12 +33,13 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
-        # 'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         'Topic :: Software Development :: Libraries'
     ],
     install_requires=[
-        'eventlet==0.31.0',
-        'gevent==21.12.0',
+        'eventlet==0.33.3',
+        'gevent==22.10.2',
         'pymongo==4.0.2',      # 3.5.1  -> 4.0.2
         'AMQPStorm==2.7.1',
         'rabbitpy==2.0.1',
@@ -66,7 +66,7 @@ setup(
         'redis2',
         'redis3',
         'redis',
-        'nb_log>=7.6',
+        'nb_log>=8.2',
         'rocketmq',
         'zmq',
         'pyzmq',
@@ -76,10 +76,14 @@ setup(
         'setuptools_rust',
         'fabric2==2.6.0',  # 有的机器包rust错误， 这样做 curl https://sh.rustup.rs -sSf | sh
         'nats-python',
+        # 'pulsar-client==3.1.0',   # python3.6 无法安装 pulsar-client
         'nb_filelock',
-        'aiohttp==3.8.0',
+        'aiohttp==3.8.3',
         'pysnooper',
-        'deprecated'
+        'deprecated',
+        'cryptography',
+        'auto_run_on_remote',
+        'frozenlist',
     ]
 )
 """
@@ -94,11 +98,18 @@ python setup.py sdist upload -r pypi
 
 # python setup.py bdist_wheel
 python setup.py bdist_wheel ; python -m twine upload dist/funboost-15.0-py3-none-any.whl
-python setup.py bdist_wheel && python -m twine upload dist/funboost-17.2-py3-none-any.whl
+python setup.py bdist_wheel && python -m twine upload dist/funboost-20.3-py3-none-any.whl
 python setup.py sdist & twine upload dist/funboost-10.9.tar.gz
 
 最快的下载方式，上传立即可安装。阿里云源同步官网pypi间隔要等很久。
 ./pip install funboost==3.5 -i https://pypi.org/simple   
 最新版下载
-./pip install funboost --upgrade -i https://pypi.org/simple       
+./pip install funboost --upgrade -i https://pypi.org/simple      
+
+
+从git安装
+pip install git+https://github.com/ydf0509/funboost.git 
+pip install git+https://gitee.com/bfzshen/funboost.git
+
 """
+

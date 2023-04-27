@@ -12,7 +12,7 @@ for i in range(200000):
         print(time.strftime("%H:%M:%S"), f'发布第 {i} 条')
     f2.push(i, i * 2)
     # f2.push(i, 1 * 2)
-    time.sleep(200)
+    time.sleep(1)
 
 if __name__ == '__main__':
     pass

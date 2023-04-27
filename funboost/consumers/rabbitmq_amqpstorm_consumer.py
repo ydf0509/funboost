@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 13:30
+# @Time    : 2022/8/8 0008 13:30
 import json
 import amqpstorm
 
@@ -34,8 +34,10 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
         # noinspection PyBroadException
         try:
             kw['amqpstorm_message'].ack()  # 确认消费
-        except Exception as e:
+        except BaseException as e:
             self.logger.error(f'AmqpStorm确认消费失败  {type(e)} {e}')
 
     def _requeue(self, kw):
+        # amqpstorm.Message.delivery_tag
+        print(kw['amqpstorm_message'].delivery_tag)
         kw['amqpstorm_message'].nack(requeue=True)

@@ -20,7 +20,7 @@ platforms.C_FORCE_ROOT = True
 celery_app = celery.Celery()
 class Config2:
     # broker_url = f'redis://:@127.0.0.1:6379/10'  # 使用redis
-    broker_url = f'amqp://admin:372148@106.55.244.110'  #
+    broker_url = f'amqp://admin:6555@106.55.244.110'  #
     # result_backend = f'redis://:@127.0.0.1:6379/11'  # 使用redis
     broker_connection_max_retries = 150  # 默认是100
     # result_serializer = 'json'
@@ -73,6 +73,11 @@ def print_hello(x):
     print(f'hello {x}')
 
 
+
+
+
+
+
 @celery.shared_task(name='无apptask')
 def test_shere_deco(x):
     print(x)
@@ -82,6 +87,7 @@ def test_shere_deco(x):
 def sync_fun(x):
     print(f'{os.getpid()}  {threading.get_ident()}')
     asyncio.new_event_loop().run_until_complete(async_fun(x))
+
 
 async def async_fun(x):
     await asyncio.sleep(10)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2020/7/8 0008 13:27
+# @Time    : 2022/7/8 0008 13:27
 import json
 import time
 
@@ -19,7 +19,7 @@ class RocketmqConsumer(AbstractConsumer):
     def _shedual_task(self):
         try:
             from rocketmq.client import PushConsumer
-        except Exception as e:
+        except BaseException as e:
             # print(traceback.format_exc())
             raise ImportError(f'rocketmq包 只支持linux和mac {e}')
         consumer = PushConsumer(self.GROUP_ID)

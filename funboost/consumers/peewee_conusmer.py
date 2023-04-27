@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 13:33
+# @Time    : 2022/8/8 0008 13:33
 import json
 
 from funboost import funboost_config_deafult
@@ -10,7 +10,7 @@ from funboost.queues.peewee_queue import PeeweeQueue,TaskStatus
 
 class PeeweeConsumer(AbstractConsumer):
     """
-    sqlachemy实现的操作5种数据库模拟消息队列，支持消费确认。
+    peewee实现的操作5种数据库模拟消息队列，支持消费确认。
     """
     BROKER_KIND = 26
 

@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2021-04-15 0008 12:12
+import os
+
 import json
 
 # noinspection PyUnresolvedReferences
-from kombu import Connection, Exchange, Queue, Consumer, Producer
 from kombu.transport.virtual.base import Channel
-from nb_log import LogManager
+from kombu.entity import Exchange, Queue
+from kombu.connection import Connection
+from nb_log import get_logger
 
 from funboost.publishers.base_publisher import AbstractPublisher, deco_mq_conn_error
 from funboost import funboost_config_deafult
@@ -43,21 +46,31 @@ class KombuPublisher(AbstractPublisher, ):
     """
 
     def custom_init(self):
-        self._kombu_broker_url_prefix = funboost_config_deafult.KOMBU_URL.split(":")[0]
+        self.kombu_url = self.broker_exclusive_config['kombu_url'] or funboost_config_deafult.KOMBU_URL
+        self._kombu_broker_url_prefix = self.kombu_url.split(":")[0]
         logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._kombu_broker_url_prefix}--{self._queue_name}'
-        self.logger = LogManager(logger_name).get_logger_and_add_handlers(self._log_level_int,
-                                                                          log_filename=f'{logger_name}.log' if self._is_add_file_handler else None,
-                                                                          formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
-                                                                          )  #
+        self.logger = get_logger(logger_name, log_level_int=self._log_level_int,
+                                 log_filename=f'{logger_name}.log' if self._is_add_file_handler else None,
+                                 formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
+                                 )  #
+        if self.kombu_url.startswith('filesystem://'):
+            self._create_msg_file_dir()
+
+    def _create_msg_file_dir(self):
+        os.makedirs(self.broker_exclusive_config['transport_options']['data_folder_in'], exist_ok=True)
+        os.makedirs(self.broker_exclusive_config['transport_options']['data_folder_out'], exist_ok=True)
+        processed_folder = self.broker_exclusive_config['transport_options'].get('processed_folder', None)
+        if processed_folder:
+            os.makedirs(processed_folder, exist_ok=True)
 
     def init_broker(self):
         self.exchange = Exchange('funboost_exchange', 'direct', durable=True)
         self.queue = Queue(self._queue_name, exchange=self.exchange, routing_key=self._queue_name, auto_delete=False)
-        self.conn = Connection(funboost_config_deafult.KOMBU_URL)
+        self.conn = Connection(self.kombu_url, transport_options=self.broker_exclusive_config['transport_options'])
         self.queue(self.conn).declare()
         self.producer = self.conn.Producer(serializer='json')
         self.channel = self.producer.channel  # type: Channel
-        self.channel.body_encoding = 'no_encode'
+        self.channel.body_encoding = 'no_encode'  # 这里改了编码，存到中间件的参数默认把消息base64了，我觉得没必要不方便查看消息明文。
         # self.channel = self.conn.channel()  # type: Channel
         # # self.channel.exchange_declare(exchange='distributed_framework_exchange', durable=True, type='direct')
         # self.queue = self.channel.queue_declare(queue=self._queue_name, durable=True)

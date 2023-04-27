@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 12:06
+# @Time    : 2022/8/8 0008 12:06
 import amqpstorm
 from amqpstorm.basic import Basic as AmqpStormBasic
 from amqpstorm.queue import Queue as AmqpStormQueue
@@ -10,11 +10,12 @@ from funboost.publishers.base_publisher import AbstractPublisher, deco_mq_conn_e
 
 class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher):
     # 使用amqpstorm包实现的mq操作。
-    # 实例属性没在init里面写，造成补全很麻烦，写在这里做类属性，方便pycharm补全
+    # 实例属性没在__init__里面写，造成代码补全很麻烦，写在这里做类属性，方便pycharm补全
     connection = amqpstorm.UriConnection
     channel = amqpstorm.Channel
     channel_wrapper_by_ampqstormbaic = AmqpStormBasic
     queue = AmqpStormQueue
+    DURABLE = True
 
     # noinspection PyAttributeOutsideInit
     # @decorators.synchronized
@@ -22,12 +23,12 @@ class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher):
         # username=app_config.RABBITMQ_USER, password=app_config.RABBITMQ_PASS, host=app_config.RABBITMQ_HOST, port=app_config.RABBITMQ_PORT, virtual_host=app_config.RABBITMQ_VIRTUAL_HOST, heartbeat=60 * 10
         self.logger.warning(f'使用AmqpStorm包 链接mq')
         self.connection = amqpstorm.UriConnection(
-            f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}?heartbeat={60 * 10}'
+            f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}?heartbeat={60 * 10}&timeout=20000'
         )
         self.channel = self.connection.channel()  # type:amqpstorm.Channel
         self.channel_wrapper_by_ampqstormbaic = AmqpStormBasic(self.channel)
         self.queue = AmqpStormQueue(self.channel)
-        self.queue.declare(queue=self._queue_name, durable=True)
+        self.queue.declare(queue=self._queue_name, durable=self.DURABLE)
 
     # @decorators.tomorrow_threads(10)
     @deco_mq_conn_error

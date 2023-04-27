@@ -1,4 +1,6 @@
 import typing
+from funboost.constant import BrokerEnum
+
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.consumers.base_consumer import AbstractConsumer
 
@@ -19,9 +21,79 @@ test_frame/test_custom_broker/test_custom_redis_consume_latest_publish_msg_broke
 
 def register_custom_broker(broker_kind: int, publisher_class: typing.Type[AbstractPublisher], consumer_class: typing.Type[AbstractConsumer]):
     if not issubclass(publisher_class, AbstractPublisher):
-        raise TypeError(f'publisher_class 必须是 AbstractPublisher 的子孙类')
+        raise TypeError(f'publisher_class 必须是 AbstractPublisher 的子或孙类')
     if not issubclass(consumer_class, AbstractConsumer):
-        raise TypeError(f'consumer_class 必须是 AbstractConsumer 的子孙类')
+        raise TypeError(f'consumer_class 必须是 AbstractConsumer 的子或孙类')
     publisher_factotry.broker_kind__publisher_type_map[broker_kind] = publisher_class
     consumer_factory.broker_kind__consumer_type_map[broker_kind] = consumer_class
     consumer_class.BROKER_KIND = broker_kind
+
+
+def register_kombu_broker():
+    """
+    直接导入kombu有的人的环境容易报错，有的人从来不使用kombu作为消息队列中间件免得报错，需要使用kombu作为消息队列的人,
+    自己在 @boost,先调用 register_kombu_broker() 就可以使用了.如
+
+    from funboost import BrokerEnum,boost
+    from funboost.assist.user_custom_broker_register import register_kombu_broker
+
+    register_kombu_broker()
+
+
+    @boost('test_kombu',broker_kind=BrokerEnum.KOMBU)
+    def f1(x,y):
+        print(f'{x} + {y} = {x  + y}')
+
+
+    if __name__ == '__main__':
+        f1.push(1,2)
+        f1.consume()
+    """
+    from funboost.consumers.kombu_consumer import KombuConsumer
+    from funboost.publishers.kombu_publisher import KombuPublisher
+    register_custom_broker(BrokerEnum.KOMBU, KombuPublisher, KombuConsumer)
+
+
+def register_celery_broker():
+    """
+     如果有人想用celery作为funboost的消息队列中间件，先自己pip 安装celery包，然后调用这个函数，之后 boost装饰器就可以正常使用了。
+    :return:
+    """
+    """
+import time
+
+from funboost import boost, BrokerEnum
+from funboost.assist.user_custom_broker_register import register_celery_broker
+
+register_celery_broker()
+
+
+@boost('tets_funboost_celery_queue29a', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
+       broker_exclusive_config={'celery_app_config':
+                                    {'task_default_rate_limit': '1/s', }}
+       )
+def fa(x, y):
+    time.sleep(3)
+    print(6666, x, y)
+
+
+@boost('tets_funboost_celery_queue29b', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
+       broker_exclusive_config={'celery_app_config':
+                                    {'task_default_rate_limit': '2/s', }}
+       )
+def fb(a, b):
+    time.sleep(2)
+    print(7777, a, b)
+
+
+if __name__ == '__main__':
+    for i in range(1000):
+        fa.push(i, i + 1)
+        fb.push(i, i * 2)
+
+    fa.consume()
+    fb.consume()
+"""
+    from funboost.consumers.celery_consumer import CeleryConsumer
+    from funboost.publishers.celery_publisher import CeleryPublisher
+    register_custom_broker(BrokerEnum.CELERY, CeleryPublisher, CeleryConsumer)

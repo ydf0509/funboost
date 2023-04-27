@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2020/7/9 0008 12:12
-
+# @Time    : 2022/7/9 0008 12:12
+import threading
 import time
 from funboost import funboost_config_deafult
 
@@ -10,34 +10,36 @@ from funboost.publishers.base_publisher import AbstractPublisher
 
 
 class RocketmqPublisher(AbstractPublisher, ):
-    group_id__rocketmq_producer = {}
+    _group_id__rocketmq_producer = {}
+    _lock_for_create_producer = threading.Lock()
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
         try:
             from rocketmq.client import Producer
-        except Exception as e:
+        except BaseException as e:
             # print(traceback.format_exc())
             raise ImportError(f'rocketmq包 只支持linux和mac {str(e)}')
 
         group_id = f'g-{self._queue_name}'
-        if group_id not in self.__class__.group_id__rocketmq_producer:  # 同一个进程中创建多个同组消费者会报错。
-            producer = Producer(group_id)
-            producer.set_namesrv_addr(funboost_config_deafult.ROCKETMQ_NAMESRV_ADDR)
-            producer.start()
-            self.__class__.group_id__rocketmq_producer[group_id] = producer
-        else:
-            producer = self.__class__.group_id__rocketmq_producer[group_id]
-        self._producer = producer
+        with self._lock_for_create_producer:
+            if group_id not in self.__class__._group_id__rocketmq_producer:  # 同一个进程中创建多个同组消费者会报错。
+                producer = Producer(group_id)
+                producer.set_namesrv_addr(funboost_config_deafult.ROCKETMQ_NAMESRV_ADDR)
+                producer.start()
+                self.__class__._group_id__rocketmq_producer[group_id] = producer
+            else:
+                producer = self.__class__._group_id__rocketmq_producer[group_id]
+            self._producer = producer
 
     def concrete_realization_of_publish(self, msg):
         try:
             from rocketmq.client import Message
-        except Exception as e:
+        except BaseException as e:
             # print(traceback.format_exc())
             raise ImportError(f'rocketmq包 只支持linux和mac {str(e)}')
         rocket_msg = Message(self._queue_name)
-        rocket_msg.set_keys(msg)  # 利于检索
+        # rocket_msg.set_keys(msg)  # 利于检索
         # rocket_msg.set_tags('XXX')
         rocket_msg.set_body(msg)
         # print(msg)

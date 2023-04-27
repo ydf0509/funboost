@@ -19,10 +19,10 @@ def _deco(f):
     def __deco(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except Exception as e:
+        except BaseException as e:
             logger.exception(e)
 
-    return __deco
+    return __deco if f is not None else f
 
 
 class BoundedThreadPoolExecutor(ThreadPoolExecutor, ):
@@ -44,8 +44,9 @@ class BoundedThreadPoolExecutor(ThreadPoolExecutor, ):
 
 if __name__ == '__main__':
     def fun():
-        print(1 / 0)
+        print(1 / 0.2)
 
     # 如果是官方线程池，这样不报错你还以为代码没毛病呢。
-    pool = BoundedThreadPoolExecutor(10)
-    pool.submit(fun)
+    with BoundedThreadPoolExecutor(10) as pool:
+        for i in range(20):
+            pool.submit(fun)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 13:35
+# @Time    : 2022/8/8 0008 13:35
 import json
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.publishers.persist_queue_publisher import PersistQueuePublisher

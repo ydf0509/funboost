@@ -13,11 +13,10 @@
 #             boost_fun.push(i,i*2)
 #         boost_fun.consume()
 
-import nb_log
-import time
+import dns.rdtypes.ANY
 
-print(1)
-for i in range(1000000):
-    time.time()
-
-print(2)
+# print(1)
+# for i in range(1000000):
+#     time.time()
+#
+# print(2)

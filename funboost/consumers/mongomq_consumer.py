@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 13:33
+# @Time    : 2022/8/8 0008 13:33
 import time
 
 from funboost.consumers.base_consumer import AbstractConsumer

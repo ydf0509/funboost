@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/20 0008 12:12
+# @Time    : 2022/8/20 0008 12:12
 
 # noinspection PyPackageRequirements
 import atexit
@@ -26,11 +26,11 @@ class KafkaPublisher(AbstractPublisher, ):
         self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         self._admin_client = KafkaAdminClient(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         try:
-            self._admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
+            self._admin_client.create_topics([NewTopic(self._queue_name, 10, 2)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
         except TopicAlreadyExistsError:
             pass
-        except Exception as e:
+        except BaseException as e:
             self.logger.exception(e)
         atexit.register(self.close)  # 程序退出前不主动关闭，会报错。
 

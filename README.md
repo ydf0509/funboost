@@ -1,10 +1,14 @@
 
 # 1.分布式函数调度框架简介
 
-python万能分布式函数调度框架，支持5种并发模式，20+种消息中间件，20种任务控制功能。给任意python函数赋能。
+<pre style="color: greenyellow;background-color: #0c1119; font-size: medium;">
+pip install funboost ,python全功能分布式函数调度框架,。 支持python所有类型的并发模式和全球一切知名消息队列中间件，
+python函数加速器，框架包罗万象，一统编程思维，兼容50% python编程业务场景，适用范围广。
+只需要一行代码即可分布式执行python一切函数，99%用过funboost的pythoner 感受是 方便 快速 强大。
+python万能分布式函数调度框架，支持5种并发模式，30种消息中间件，20种任务控制功能。给任意python函数赋能。
 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。
 框架只需要学习@boost这一个装饰器的入参就可以，所有用法几乎和1.3例子一摸一样，非常简化简单。
-
+</pre>
 
 ### 框架评价
 
@@ -37,6 +41,8 @@ funboost的旧框架名字是function_scheduling_distributed_framework , 关系�
 ### 1.0.1 [分布式函数调度框架文档地址](https://funboost.readthedocs.io/zh/latest/index.html)
 [查看分布式函数调度框架文档](https://funboost.readthedocs.io/zh/latest/index.html)
 
+[funboost依赖的nb_log日志文档](https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2)
+
 ```
 文档很长，但归根结底只需要学习 1.3 里面的这1个例子就行，主要是修改下@boost的各种参数，
 通过不同的入参，实践测试下各种控制功能。
@@ -60,25 +66,13 @@ funboost的旧框架名字是function_scheduling_distributed_framework , 关系�
 
 ### 1.0.3 funboost 框架 和 function_scheduling_distributed_framework 框架 关系说明
 
-<p style="color: crimson;font-size: larger">funboost框架取名说明:</p>
-<pre style="color: darkorchid ;font-size:medium">
-funboost是function_scheduling_distributed_framework框架的新名字,把框架名字长度减小.
-funboost名字是两个单词,fun是function指的是python函数,boost是加速的意思,合一起是加速函数并发运行.
-</pre>
-
-<p style="color: crimson;font-size: larger">两个框架的兼容性说明:</p>
-<pre style="color: darkorchid;font-size:medium">
-funboost 和 function_scheduling_distributed_framework 项目的代码一模一样,以后新代码只更新funboost项目。
-from funboost import xx 和  from function_scheduling_distributed_framework import xx 是完全一模一样的.
-boost是task_deco的别名，两个都可以使用。在消费函数上写@boost 和 @task_deco是一模一样的，两个都可以使用。
-所以在有的文档或者截图中如果写 
-from  function_scheduling_distributed_framework import task_deco , @task_deco
-用户需要知道效果和from funboost import boost , @boost 是一模一样的。兼容性100%
-</pre>
+```
+funboost 是 function_scheduling_distributed_framework的包名更新版本
+```
 
 
 
-<span style="font-size:25px">旧框架地址：<span><a href="https://github.com/ydf0509/distributed_framework" style="font-size: 25px">function_scheduling_distributed_framework框架地址链接</a>
+<span style="font-size:15px">旧框架地址：<span><a href="https://github.com/ydf0509/distributed_framework" style="font-size: 15px">function_scheduling_distributed_framework框架地址链接</a>
 
 
 ## 1.1 安装方式
@@ -265,6 +259,7 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
 
 使用之前先学习 PYTHONPATH的概念  [https://github.com/ydf0509/pythonpathdemo](https://github.com/ydf0509/pythonpathdemo)
 
+win cmd和linux 运行时候，设置 PYTHONPATH 为项目根目录，是为了自动生成或读取到项目根目录下的 funboost_config.py文件作为配置。
 ```
 以下这只是简单求和例子，实际情况换成任意函数里面写任意逻辑，框架可没有规定只能用于 求和函数 的自动调度并发。
 而是根据实际情况函数的参数个数、函数的内部逻辑功能，全部都由用户自定义，函数里面想写什么就写什么，想干什么就干什么，极端自由。

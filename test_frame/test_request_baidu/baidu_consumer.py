@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 14:57
+# @Time    : 2022/8/8 0008 14:57
 import time
 
 from funboost import boost, BrokerEnum
@@ -14,12 +14,12 @@ http_pool = ObjectPool(object_type=HttpOperator, object_pool_size=100, object_in
 def request_url(url):
     with http_pool.get() as conn:
         r1 = conn.request_and_getresponse('GET', url)
-        # print(r1.text[:10], )
+        print(r1.text[:100], )
 
 
 if __name__ == '__main__':
     request_url.clear()
-    for i in range(100000):
+    for i in range(10000):
         request_url.push('http://mini.eastday.com/assets/v1/js/search_word.js')
 
     request_url.multi_process_consume(2)

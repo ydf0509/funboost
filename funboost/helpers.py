@@ -1,4 +1,6 @@
-﻿import sys
+﻿import os
+import signal
+import sys
 import re
 from multiprocessing import Process
 import threading
@@ -44,13 +46,13 @@ def run_consumer_with_multi_process(task_fun, process_num=1):
     '''
     if not getattr(task_fun, 'is_decorated_as_consume_function'):
         raise ValueError(f'{task_fun} 参数必须是一个被 boost 装饰的函数')
-    if process_num == 1 :
+    if process_num == 1 and False:
         task_fun.consume()
     else:
         for i in range(process_num):
             # print(i)
             Process(target=_run_many_consumer_by_init_params,
-                     args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start()
+                    args=([{**{'consuming_function': task_fun}, **task_fun.init_params}],)).start()
 
 
 def _multi_process_pub_params_list_by_consumer_init_params(consumer_init_params: dict, msgs: List[dict]):
@@ -203,7 +205,19 @@ class FunctionResultStatusPersistanceConfig(LoggerMixin):
 
     def to_dict(self):
         return {"is_save_status": self.is_save_status,
+
                 'is_save_result': self.is_save_result, 'expire_seconds': self.expire_seconds}
 
     def __str__(self):
         return f'<FunctionResultStatusPersistanceConfig> {id(self)} {self.to_dict()}'
+
+
+# noinspection PyUnusedLocal
+def _interrupt_signal_handler(signalx, framex):
+    print('你按了 Ctrl+C  。 You pressed Ctrl+C!  结束程序！')
+    # sys.exit(0)
+    # noinspection PyUnresolvedReferences
+    os._exit(0)  # os._exit才能更强力的迅速终止python，sys.exit只能退出主线程。
+
+
+signal.signal(signal.SIGINT, _interrupt_signal_handler)

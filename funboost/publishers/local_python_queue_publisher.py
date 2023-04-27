@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 13:07
+# @Time    : 2022/8/8 0008 13:07
 from queue import Queue
 
 from funboost.publishers.base_publisher import AbstractPublisher

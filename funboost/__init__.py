@@ -1,4 +1,10 @@
+# noinspection PyUnresolvedReferences
+from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath
+
+from funboost.utils import monkey_patches
+from funboost.utils import show_funboost_flag
 import typing
+# noinspection PyUnresolvedReferences
 from functools import update_wrapper, wraps, partial
 import copy
 # noinspection PyUnresolvedReferences
@@ -10,13 +16,13 @@ from funboost.helpers import (fabric_deploy, kill_all_remote_tasks,
                               run_consumer_with_multi_process)
 from funboost.assist.user_custom_broker_register import register_custom_broker
 from funboost.utils.paramiko_util import ParamikoFolderUploader
-from funboost.consumers.base_consumer import (ExceptionForRequeue, ExceptionForRetry,
+from funboost.consumers.base_consumer import (ExceptionForRequeue, ExceptionForRetry, ExceptionForPushToDlxqueue,
                                               AbstractConsumer, ConsumersManager,
                                               FunctionResultStatusPersistanceConfig,
                                               wait_for_possible_has_finish_all_tasks_by_conusmer_list,
-                                              ActiveCousumerProcessInfoGetter,FunctionResultStatus)
+                                              ActiveCousumerProcessInfoGetter, FunctionResultStatus)
 from funboost.publishers.base_publisher import (PriorityConsumingControlConfig,
-                                                AbstractPublisher, AsyncResult, HasNotAsyncResult)
+                                                AbstractPublisher, AsyncResult, HasNotAsyncResult, AioAsyncResult, ResultFromMongo)
 from funboost.factories.publisher_factotry import get_publisher
 from funboost.factories.consumer_factory import get_consumer
 
@@ -25,12 +31,9 @@ from funboost.utils import nb_print, patch_print, LogManager, get_logger, Logger
 from funboost.timing_job import fsdf_background_scheduler, timing_publish_deco
 from funboost.constant import BrokerEnum, ConcurrentModeEnum
 
+
 # 有的包默认没加handlers，原始的日志不漂亮且不可跳转不知道哪里发生的。这里把warnning级别以上的日志默认加上handlers。
 # nb_log.get_logger(name='', log_level_int=30, log_filename='pywarning.log')
-
-logger = nb_log.get_logger('funboost')
-
-logger.debug(f'\n 分布式函数调度框架文档地址：  https://funboost.readthedocs.io/zh_CN/latest/')
 
 
 class IdeAutoCompleteHelper(LoggerMixin):
@@ -78,6 +81,7 @@ class IdeAutoCompleteHelper(LoggerMixin):
         self.publish = self.pub = self.apply_async = self.publisher.publish  # type: AbstractPublisher.publish
         self.push = self.delay = self.publisher.push  # type: AbstractPublisher.push
         self.clear = self.clear_queue = self.publisher.clear  # type: AbstractPublisher.clear
+        self.get_message_count = self.publisher.get_message_count
 
         self.start_consuming_message = self.consume = self.start = self.consumer.start_consuming_message
 
@@ -145,6 +149,7 @@ def boost(queue_name,
           specify_async_loop=_Undefined,
           concurrent_mode: int = _Undefined,
           max_retry_times: int = _Undefined,
+          is_push_to_dlx_queue_when_retry_max_times: bool = _Undefined,
           log_level: int = _Undefined,
           is_print_detail_exception: bool = _Undefined,
           is_show_message_get_from_broker: bool = _Undefined,
@@ -160,13 +165,16 @@ def boost(queue_name,
           do_not_run_by_specify_time: bool = _Undefined,
           schedule_tasks_on_main_thread: bool = _Undefined,
           function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = _Undefined,
-          user_custom_record_process_info_func: typing.Callable = None,
+          user_custom_record_process_info_func: typing.Union[typing.Callable, None] = _Undefined,
           is_using_rpc_mode: bool = _Undefined,
           broker_exclusive_config: dict = _Undefined,
           broker_kind: int = _Undefined,
           boost_decorator_default_params=BoostDecoratorDefaultParams()
           ):
     """
+    funboost.funboost_config_deafult.BoostDecoratorDefaultParams 的值会自动被你项目根目录下的funboost_config.BoostDecoratorDefaultParams的值覆盖，
+    如果boost装饰器不传参，默认使用funboost_config.BoostDecoratorDefaultParams的配置
+
     入参也可以看文档 https://funboost.readthedocs.io/zh/latest/articles/c3.html   3.3章节。
 
     # 为了代码提示好，这里重复一次入参意义。被此装饰器装饰的函数f，函数f对象本身自动加了一些方法，例如f.push 、 f.consume等。
@@ -182,7 +190,10 @@ def boost(queue_name,
                               3eventlet(ConcurrentModeEnum.EVENTLET) 4 asyncio(ConcurrentModeEnum.ASYNC) 5单线程(ConcurrentModeEnum.SINGLE_THREAD)
     :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
            可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。
-           主动抛出ExceptionForRequeue异常，则当前 消息会重返中间件。
+           主动抛出ExceptionForRequeue异常，则当前 消息会重返中间件，
+           主动抛出 ExceptionForPushToDlxqueue  异常，可以使消息发送到单独的死信队列中，死信队列的名字是 队列名字 + _dlx。
+           。
+    :param is_push_to_dlx_queue_when_retry_max_times : 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
     :param log_level:框架的日志级别。logging.DEBUG(10)  logging.DEBUG(10) logging.INFO(20) logging.WARNING(30) logging.ERROR(40) logging.CRITICAL(50)
     :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
     :param is_show_message_get_from_broker: 从中间件取出消息时候时候打印显示出来
@@ -209,7 +220,7 @@ def boost(queue_name,
     :param broker_kind:中间件种类，支持30种消息队列。 入参见 BrokerEnum枚举类的属性。
     :param boost_decorator_default_params: oostDecoratorDefaultParams是
             @boost装饰器默认的全局入参。如果boost没有亲自指定某个入参，就自动使用funboost_config.py的BoostDecoratorDefaultParams中的配置。
-            除非你嫌弃每个 boost 装饰器相同入参太多了，可以在 funboost_config.py 文件中设置boost装饰器的全局默认值。
+                    如果你嫌弃每个 boost 装饰器相同入参太多重复了，可以在 funboost_config.py 文件中设置boost装饰器的全局默认值。
             BoostDecoratorDefaultParams() 实例化时候也可以传递这个boost装饰器任何的入参，BoostDecoratorDefaultParams是个数据类，百度python3.7dataclass的概念，类似。
 
             funboost.funboost_config_deafult.BoostDecoratorDefaultParams 的值会自动被你项目根目录下的funboost_config.BoostDecoratorDefaultParams的值覆盖
@@ -283,9 +294,15 @@ def boost(queue_name,
         func.push = func.delay = consumer.publisher_of_same_queue.push
         func.multi_process_pub_params_list = partial(multi_process_pub_params_list, func)
         func.clear = func.clear_queue = consumer.publisher_of_same_queue.clear
+        func.get_message_count = consumer.publisher_of_same_queue.get_message_count
 
         func.start_consuming_message = func.consume = func.start = consumer.start_consuming_message
         func.multi_process_start = func.multi_process_consume = partial(run_consumer_with_multi_process, func)
+        if broker_kind == BrokerEnum.CELERY:   # celery作为消息队列
+            from multiprocessing import set_start_method
+            set_start_method('spawn', force=True)  # linux上运行需要这样。
+            func.consume = partial(func.multi_process_consume, 1)
+
         func.fabric_deploy = partial(fabric_deploy, func)
 
         func.clear_filter_tasks = consumer.clear_filter_tasks

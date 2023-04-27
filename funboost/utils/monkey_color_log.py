@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/1 0001 17:54
+# @Time    : 2022/8/1 0001 17:54
 """
 如果老项目没用使用Logmanager,可以打此猴子补丁，自动使项目中的任何日志变彩色和可跳转。
 
@@ -84,7 +84,7 @@ class ColorHandler(logging.Handler):
             stream.write(msg_color)
             stream.write(self.terminator)
             self.flush()
-        except Exception:
+        except BaseException :
             self.handleError(record)
 
     def emit(self, record):
@@ -125,7 +125,7 @@ class ColorHandler(logging.Handler):
             stream.write(msg_color)
             stream.write(self.terminator)
             self.flush()
-        except Exception:
+        except BaseException :
             self.handleError(record)
 
     @staticmethod

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2019/8/8 0008 12:12
+# @Time    : 2022/8/8 0008 12:12
 import os
 import time
 # noinspection PyUnresolvedReferences
@@ -42,7 +42,7 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
         # print(getattr(frame_config,'has_start_a_consumer_flag',0))
         # 这里的 has_start_a_consumer_flag 是一个标志，借用此模块设置的一个标识变量而已，框架运行时候自动设定的，不要把这个变量写到模块里面。
         # if getattr(funboost_config_deafult, 'has_start_a_consumer_flag', 0) == 0:  # 加快速度推送，否则每秒只能推送4000次。如果是独立脚本推送，使用批量推送，如果是消费者中发布任务，为了保持原子性，用原来的单个推送。
-        if self.broker_exclusive_config.get('redis_bulk_push') == 1:
+        if self.broker_exclusive_config['redis_bulk_push'] == 1:
             # self._temp_msg_queue.put(msg)
             with self._lock_for_bulk_push:
                 self._temp_msg_list.append(msg)
@@ -51,6 +51,7 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
                     self.__bulk_push_and_init()
         else:
             getattr(self.redis_db_frame, self._push_method)(self._queue_name, msg)
+            # print(msg)
 
         # self.redis_db_frame.rpush(self._queue_name, msg)
     def clear(self):
@@ -64,7 +65,7 @@ class RedisPublisher(AbstractPublisher, RedisMixin):
             self.logger.warning(f'清除 {unack_queue_name_list} 队列中的消息成功')
 
     def get_message_count(self):
-        # nb_print(self.redis_db7,self._queue_name)
+        # print(self.redis_db7,self._queue_name)
         return self.redis_db_frame.llen(self._queue_name)
 
     def close(self):

@@ -47,7 +47,7 @@ def _deco(f):
     def __deco(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except Exception as e:
+        except BaseException as e:
             logger.exception(e)
 
     return __deco

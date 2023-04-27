@@ -1,13 +1,69 @@
+# import threading
+# from time import sleep
+# import nb_log
+#
+# def test():
+#     while 1:
+#         print(123123)
+#         sleep(1)
+#
+# if __name__ == '__main__':
+#     threading.Thread(target=test).start()
+#     # threading._start_new_thread(test, ())
+#     print(111111111)
+
+import os
+import signal
+import sys
+import time
 import threading
-from time import sleep
+
+# def signal_handler(signal, frame):
+#     print('You pressed Ctrl+C!')
+#     # sys.exit(0)
+#     os._exit(4444)
+#
+# signal.signal(signal.SIGINT, signal_handler)
+# print('Press Ctrl+C')
+# # forever = threading.Event()
+# # forever.wait()
+#
+# while 1:
+#     time.sleep(10)
+from auto_run_on_remote import run_current_script_on_remote
+# run_current_script_on_remote()
+# from multiprocessing import Process
+# import threading
+#
+# def f():
+#     def _f():
+#         while 1:
+#             print('hello')
+#             time.sleep(10)
+#     threading.Thread(target=_f).start()
+#
+# if __name__ == '__main__':
+#
+#     Process(target=f).start()
+#     print('start')
+
 import nb_log
+import threading
 
-def test():
-    while 1:
-        print(123123)
-        sleep(1)
+lock = threading.Lock()
 
-if __name__ == '__main__':
-    threading.Thread(target=test).start()
-    # threading._start_new_thread(test, ())
-    print(111111111)
+def add(x,y):
+    with lock:
+        z = x+y
+
+
+from concurrent.futures import ThreadPoolExecutor
+from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
+print()
+
+with ThreadPoolExecutorShrinkAble(50) as pool:
+    for i in range(1000000):
+        # pool.submit(add,i,i*2)
+        add(i,i*2)
+
+print()

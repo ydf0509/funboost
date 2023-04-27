@@ -32,6 +32,7 @@ def f(x):
 
 
 if __name__ == '__main__':
+    f.clear()
     for i in range(50):
         f.push(i)
     print(f.publisher.get_message_count())

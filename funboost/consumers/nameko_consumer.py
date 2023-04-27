@@ -10,8 +10,8 @@ from funboost import funboost_config_deafult
 from funboost.consumers.base_consumer import AbstractConsumer
 
 
-class NamekoService3:
-    name = 'funboost_nameko_servicedsd'
+class NamekoService:
+    name = 'funboost_nameko_service'
 
 class NamekoConsumer(AbstractConsumer, ):
     """
@@ -21,31 +21,31 @@ class NamekoConsumer(AbstractConsumer, ):
 
     def custom_init(self):
         pass
-        # url = f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'
-        #
-        # self._nameko_config = {'AMQP_URI': url}
-        #
-        # class MyService(NamekoService):
-        #
-        #     @rpc
-        #     def call(this, *args, **kwargs):
-        #         self.consuming_function(*args, **kwargs)
-        #
-        # self._nameko_service_cls  = MyService
-
-
-    def _shedual_task(self):
         url = f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'
 
         self._nameko_config = {'AMQP_URI': url}
 
-        class MyService():
-            name = 'funboost_nameko_service'
+        class MyService(NamekoService):
+
             @rpc
             def call(this, *args, **kwargs):
-                self.consuming_function(*args, **kwargs)
+                return self.consuming_function(*args, **kwargs)
 
-        self._nameko_service_cls = MyService
+        self._nameko_service_cls  = MyService
+
+
+    def _shedual_task(self):
+        # url = f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'
+        #
+        # self._nameko_config = {'AMQP_URI': url}
+        #
+        # class MyService():
+        #     name = 'funboost_nameko_service'
+        #     @rpc
+        #     def call(this, *args, **kwargs):
+        #         self.consuming_function(*args, **kwargs)
+        #
+        # self._nameko_service_cls = MyService
 
         container = ServiceContainer(self._nameko_service_cls, config=self._nameko_config)
 

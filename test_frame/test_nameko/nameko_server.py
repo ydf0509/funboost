@@ -2,10 +2,16 @@ import time
 
 import eventlet
 
+from funboost import funboost_config_deafult
+
 eventlet.monkey_patch()
 import nb_log
 from nameko.containers import ServiceContainer
 from nameko.rpc import rpc
+
+url = f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'
+
+CONFIG = {'AMQP_URI': url}
 
 class HelloService:
     name = "hello_service"
@@ -29,7 +35,7 @@ if __name__ == '__main__':
 
 
 
-    container = ServiceContainer(HelloService, config={'AMQP_URI': 'amqp://admin:admin@192.168.64.151'})
+    container = ServiceContainer(HelloService, config={'AMQP_URI': url})
 
     container.start()
 

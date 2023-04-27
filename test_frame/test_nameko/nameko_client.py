@@ -1,6 +1,10 @@
 from nameko.standalone.rpc import ClusterRpcProxy
 
-CONFIG = {'AMQP_URI': "amqp://admin:admin@192.168.64.151"}
+from funboost import funboost_config_deafult
+
+url = f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'
+
+CONFIG = {'AMQP_URI': url}
 
 
 def compute():

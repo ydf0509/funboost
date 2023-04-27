@@ -5,7 +5,7 @@ import copy
 # from collections import Callable
 from typing import Callable
 
-from funboost.consumers.pulsar_consumer import PulsarConsumer
+# from funboost.consumers.pulsar_consumer import PulsarConsumer
 from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer
 from funboost.consumers.http_consumer import HTTPConsumer
 from funboost.consumers.kafka_consumer import KafkaConsumer
@@ -53,7 +53,7 @@ broker_kind__consumer_type_map = {
     16: KafkaConsumerManuallyCommit,
     17: MqttConsumer,
     18: HttpsqsConsumer,
-    20: PulsarConsumer,
+    # 20: PulsarConsumer,
     21: UDPConsumer,
     22: TCPConsumer,
     23: HTTPConsumer,

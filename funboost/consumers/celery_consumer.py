@@ -45,7 +45,7 @@ class CeleryConsumer(AbstractConsumer):
             # return raw_fun(**func_params)
             # print(args)
             # print(kwargs)
-            self.logger.debug(f' 这条消息将由 funboost 在 celery 框架中处理: {kwargs}')
+            self.logger.debug(f' 这条消息将由 funboost 在 celery 框架中处理: args:  {args} ,  kwargs: {kwargs}')
             return raw_fun(*args, **kwargs)
 
         # celery_app.worker_main(
@@ -70,7 +70,7 @@ class CeleryConsumer(AbstractConsumer):
         pass
 
 
-class CeleryBeat:
+class CeleryBeatHelper:
     def __init__(self, beat_schedule: dict):
         '''
 
@@ -110,6 +110,12 @@ class CeleryBeat:
         '''
         celery -A test_celery_beat beat
         '''
-        beat = partial(self.celery_app.Beat,
+        beat = partial(self.celery_app.Beat, loglevel='INFO',
                        )
         beat().run()
+
+
+def celery_start_beat(beat_schedule: dict):
+    celery_beat_helper = CeleryBeatHelper(beat_schedule)
+    celery_app = celery_beat_helper.get_celery_app()
+    celery_beat_helper.start_beat()

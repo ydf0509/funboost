@@ -1,21 +1,13 @@
 from datetime import timedelta
 
-from funboost.consumers.celery_consumer import CeleryBeat
+from funboost.consumers.celery_consumer import celery_start_beat
 
-beat_conf = {
-    'add-every-30-seconds': {
+beat_schedule = {
+    'add-every-10-seconds_job': {
         'task': 'celery_beat_queue_7',
-        'schedule': timedelta(seconds=2),
+        'schedule': timedelta(seconds=10),
         'args': (10000, 20000)
     }}
 
-celery_beat = CeleryBeat(beat_conf)
-# celery_app = celery_beat.get_celery_app()
-
 if __name__ == '__main__':
-    pass
-    # funboost_celery_beat.start()
-    '''
-    set  PYTHONPATH=D:\codes\funboost\ && celery -A test_celery_beat beat
-    '''
-    celery_beat.start_beat()
+    celery_start_beat(beat_schedule)

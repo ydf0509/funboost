@@ -4,10 +4,7 @@
 import threading
 
 from functools import partial
-from multiprocessing import Process
 
-import logging
-import json
 from funboost import funboost_config_deafult
 
 from funboost.consumers.base_consumer import AbstractConsumer
@@ -122,4 +119,4 @@ def celery_start_beat(beat_schedule: dict):
         celery_beat_helper = CeleryBeatHelper(beat_schedule)
         celery_app = celery_beat_helper.get_celery_app()
         celery_beat_helper.start_beat()
-    threading.Thread(target=_f).start()
+    threading.Thread(target=_f).start() # 使得可以很方便启动定时任务，继续启动函数消费

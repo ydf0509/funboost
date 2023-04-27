@@ -5,7 +5,8 @@ CONFIG = {'AMQP_URI': "amqp://admin:admin@192.168.64.151"}
 
 def compute():
     with ClusterRpcProxy(CONFIG) as rpc:
-        rpc.hello_service.hello()
+        r = rpc.hello_service.hello(1,2)
+        print(r)
 
 
 if __name__ == '__main__':

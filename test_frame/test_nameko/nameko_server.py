@@ -1,6 +1,9 @@
+import time
+
 import eventlet
 
 eventlet.monkey_patch()
+import nb_log
 from nameko.containers import ServiceContainer
 from nameko.rpc import rpc
 
@@ -8,8 +11,12 @@ class HelloService:
     name = "hello_service"
 
     @rpc
-    def hello(self):
-        print("hello world")
+    def hello(self,a,b):
+
+        print(f"a {a}  b: {b}  start")
+        time.sleep(30)
+        print(f"a {a}  b: {b}  over")
+        return a + b
 
 
 if __name__ == '__main__':

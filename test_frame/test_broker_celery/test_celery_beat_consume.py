@@ -1,6 +1,8 @@
+from datetime import timedelta
 import time
 
 from funboost import boost, BrokerEnum
+from funboost.consumers.celery_consumer import celery_start_beat
 from funboost.assist.user_custom_broker_register import register_celery_broker
 
 register_celery_broker()
@@ -24,7 +26,15 @@ def f_beat2(x, y):
     print(2222, x, y)
 
 
+beat_schedule = {
+    'add-every-10-seconds_job': {
+        'task': 'celery_beat_queue_7',
+        'schedule': timedelta(seconds=10),
+        'args': (10000, 20000)
+    }}
+
 if __name__ == '__main__':
+    celery_start_beat(beat_schedule)
     for i in range(1000):
         f_beat.push(i, i + 1)
         f_beat2.push(i, i * 2)

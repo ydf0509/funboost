@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:32
+import threading
+
 from functools import partial
 from multiprocessing import Process
 
@@ -116,6 +118,8 @@ class CeleryBeatHelper:
 
 
 def celery_start_beat(beat_schedule: dict):
-    celery_beat_helper = CeleryBeatHelper(beat_schedule)
-    celery_app = celery_beat_helper.get_celery_app()
-    celery_beat_helper.start_beat()
+    def _f():
+        celery_beat_helper = CeleryBeatHelper(beat_schedule)
+        celery_app = celery_beat_helper.get_celery_app()
+        celery_beat_helper.start_beat()
+    threading.Thread(target=_f).start()

@@ -9,6 +9,7 @@ import celery
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost import funboost_config_deafult
 
+
 # celery_app = celery.Celery(broker='redis://192.168.64.151:6378/11',task_routes={})
 
 
@@ -37,7 +38,7 @@ class CeleryPublisher(AbstractPublisher, ):
 
     def _build_celery_app(self):
         celery_app = celery.Celery(broker=funboost_config_deafult.CELERY_BROKER_URL,
-                                   backend = funboost_config_deafult.CELERY_RESULT_BACKEND,
+                                   backend=funboost_config_deafult.CELERY_RESULT_BACKEND,
                                    task_routes={})
         celery_app.config_from_object(self.broker_exclusive_config['celery_app_config'])
         celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})
@@ -58,9 +59,11 @@ class CeleryPublisher(AbstractPublisher, ):
                 # t.start()
                 # t.join()
                 self._build_celery_app()
+
         func_params = json.loads(msg)
+        msg_extra = func_params['extra']
         func_params.pop('extra')
-        self._celery_fun.delay(**func_params)
+        self._celery_fun.apply_async(kwargs=func_params, task_id=msg_extra['task_id'])
 
     def clear(self):
         pass

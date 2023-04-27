@@ -52,3 +52,48 @@ def register_kombu_broker():
     from funboost.consumers.kombu_consumer import KombuConsumer
     from funboost.publishers.kombu_publisher import KombuPublisher
     register_custom_broker(BrokerEnum.KOMBU, KombuPublisher, KombuConsumer)
+
+
+def register_celery_broker():
+    """
+     如果有人想用celery作为funboost的消息队列中间件，先自己pip 安装celery包，然后调用这个函数，之后 boost装饰器就可以正常使用了。
+    :return:
+    """
+    """
+import time
+
+from funboost import boost, BrokerEnum
+from funboost.assist.user_custom_broker_register import register_celery_broker
+
+register_celery_broker()
+
+
+@boost('tets_funboost_celery_queue29a', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
+       broker_exclusive_config={'celery_app_config':
+                                    {'task_default_rate_limit': '1/s', }}
+       )
+def fa(x, y):
+    time.sleep(3)
+    print(6666, x, y)
+
+
+@boost('tets_funboost_celery_queue29b', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
+       broker_exclusive_config={'celery_app_config':
+                                    {'task_default_rate_limit': '2/s', }}
+       )
+def fb(a, b):
+    time.sleep(2)
+    print(7777, a, b)
+
+
+if __name__ == '__main__':
+    for i in range(1000):
+        fa.push(i, i + 1)
+        fb.push(i, i * 2)
+
+    fa.consume()
+    fb.consume()
+"""
+    from funboost.consumers.celery_consumer import CeleryConsumer
+    from funboost.publishers.celery_publisher import CeleryPublisher
+    register_custom_broker(BrokerEnum.CELERY, CeleryPublisher, CeleryConsumer)

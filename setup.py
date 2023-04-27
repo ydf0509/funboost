@@ -83,6 +83,7 @@ setup(
         'deprecated',
         'cryptography',
         'auto_run_on_remote',
+        'frozenlist',
     ]
 )
 """

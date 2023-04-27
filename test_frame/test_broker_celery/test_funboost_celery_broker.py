@@ -1,25 +1,23 @@
 import time
 
-from funboost import register_custom_broker, boost, BrokerEnum
+from funboost import boost, BrokerEnum
+from funboost.assist.user_custom_broker_register import register_celery_broker
 
-from funboost.consumers.celery_consumer import CeleryConsumer
-from funboost.publishers.celery_publisher import CeleryPublisher
-
-register_custom_broker(BrokerEnum.CELERY, CeleryPublisher, CeleryConsumer)
+register_celery_broker()
 
 
-@boost('tets_funboost_celery_queue27a', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
+@boost('tets_funboost_celery_queue29a', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
        broker_exclusive_config={'celery_app_config':
-                                    {'task_default_rate_limit': '1/s', 'worker_prefetch_multiplier': 10}}
+                                    {'task_default_rate_limit': '1/s', }}
        )
 def fa(x, y):
     time.sleep(3)
     print(6666, x, y)
 
 
-@boost('tets_funboost_celery_queue27b', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
+@boost('tets_funboost_celery_queue29b', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
        broker_exclusive_config={'celery_app_config':
-                                    {'task_default_rate_limit': '2/s', 'worker_prefetch_multiplier': 10}}
+                                    {'task_default_rate_limit': '2/s', }}
        )
 def fb(a, b):
     time.sleep(2)
@@ -43,6 +41,5 @@ pip install frozenlist==1.3.1 geopy==2.2.0 humanize==4.3.0 idna==3.3 importlib-m
  
 # 如果上述安装仍未解决, 则执行以下安装(笔者执行完上述安装即能解决问题)
 pip install backoff==2.1.2 colorama==0.4.5 croniter==1.3.5 cryptography==37.0.4 email-validator==1.2.1 flask-compress==1.12 flask-migrate==3.1.0 aiohttp==3.8.1 aiosignal==1.2.0 Mako==1.2.1 Babel==2.10.3
-
 
 '''

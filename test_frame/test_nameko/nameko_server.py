@@ -14,7 +14,7 @@ url = f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.
 CONFIG = {'AMQP_URI': url}
 
 class HelloService:
-    name = "hello_service"
+    name = "hello_service2"
 
     @rpc
     def hello(self,a,b):
@@ -38,9 +38,9 @@ if __name__ == '__main__':
     container = ServiceContainer(HelloService, config={'AMQP_URI': url})
 
     container.start()
-
-    try:
-        container.wait()
-    except KeyboardInterrupt:
-        container.kill()
-    container.stop()
+    container.wait()
+    # try:
+    #     container.wait()
+    # except KeyboardInterrupt:
+    #     container.kill()
+    # container.stop()

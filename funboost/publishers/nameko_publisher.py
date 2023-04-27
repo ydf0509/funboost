@@ -24,7 +24,7 @@ class NamekoPublisher(AbstractPublisher, ):
         url = f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'
 
         self._nameko_config = {'AMQP_URI': url}
-        self.rpc =  ClusterRpcProxy(self._nameko_config)
+        # self.rpc =  ClusterRpcProxy(self._nameko_config)
 
     def publish(self, msg: typing.Union[str, dict], task_id=None,
                 priority_control_config: PriorityConsumingControlConfig = None):

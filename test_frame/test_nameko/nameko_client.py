@@ -9,7 +9,7 @@ CONFIG = {'AMQP_URI': url}
 
 def compute():
     with ClusterRpcProxy(CONFIG) as rpc:
-        r = rpc.hello_service.hello(1,2)
+        r = rpc.hello_service2.hello(1,2)
         print(r)
 
 

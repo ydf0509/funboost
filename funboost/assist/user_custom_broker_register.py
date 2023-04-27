@@ -54,6 +54,12 @@ def register_kombu_broker():
     register_custom_broker(BrokerEnum.KOMBU, KombuPublisher, KombuConsumer)
 
 
+def register_pulsar_broker():
+    from funboost.consumers.pulsar_consumer import PulsarConsumer
+    from funboost.publishers.pulsar_publisher import PulsarPublisher
+    register_custom_broker(BrokerEnum.PULSAR, PulsarPublisher, PulsarConsumer)
+
+
 def register_celery_broker():
     """
      如果有人想用celery作为funboost的消息队列中间件，先自己pip 安装celery包，然后调用这个函数，之后 boost装饰器就可以正常使用了。

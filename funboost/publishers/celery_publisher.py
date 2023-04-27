@@ -39,7 +39,7 @@ class CeleryPublisher(AbstractPublisher, ):
     def _build_celery_app(self):
         celery_app = celery.Celery(broker=funboost_config_deafult.CELERY_BROKER_URL,
                                    backend=funboost_config_deafult.CELERY_RESULT_BACKEND,
-                                   task_routes={})
+                                   task_routes={},timezone=funboost_config_deafult.TIMEZONE,enable_utc=False)
         celery_app.config_from_object(self.broker_exclusive_config['celery_app_config'])
         celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})
 

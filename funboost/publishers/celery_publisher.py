@@ -86,17 +86,6 @@ class CeleryPublisher(AbstractPublisher, ):
 
     def concrete_realization_of_publish(self, msg):
         pass
-        # with self.celery_conf_lock:
-        #     if not self._has_build_celery_app:
-        #         # t = threading.Thread(target=self._build_celery_app_in_new_thread)
-        #         # t.start()
-        #         # t.join()
-        #         self._build_celery_app()
-        #
-        # func_params = json.loads(msg)
-        # msg_extra = func_params['extra']
-        # func_params.pop('extra')
-        # return self._celery_fun.apply_async(kwargs=func_params, task_id=msg_extra['task_id'])
 
     def clear(self):
         pass

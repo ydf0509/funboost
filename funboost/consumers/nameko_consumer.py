@@ -7,7 +7,6 @@ import threading
 
 import typing
 
-import json
 from funboost.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch
 
 from nameko.containers import ServiceContainer
@@ -44,7 +43,6 @@ class NamekoConsumer(AbstractConsumer, ):
 
     def _shedual_task(self):
         container = ServiceContainer(all_queue_name__nameko_service_cls_map[self.queue_name], config=NAMEKO_CONFIG)
-
         container.start()
         container.wait()
 

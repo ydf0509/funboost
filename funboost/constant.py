@@ -65,10 +65,11 @@ class BrokerEnum:
 
     PEEWEE = 26  # peewee包操作mysql，使用表模拟消息队列
 
-    REDIS_PUBSUB = 27 # 基于redis 发布订阅的，发布一个消息多个消费者都能收到消息，但不支持持久化
+    REDIS_PUBSUB = 27  # 基于redis 发布订阅的，发布一个消息多个消费者都能收到消息，但不支持持久化
 
-    CELERY = 30  # funboost支持celery框架来发布和消费任务，由celery框架来调度执行任务，但是写法简单暴击celery。
+    CELERY = 30  # funboost支持celery框架来发布和消费任务，由celery框架来调度执行任务，但是写法简单暴击celery，永无无需关心和操作Celery对象实例。
 
+    NAMEKO = 40  # funboost支持python微服务框架nameko，用户无需掌握nameko api语法，就玩转python nameko微服务
 
 
 class ConcurrentModeEnum:

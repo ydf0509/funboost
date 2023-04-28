@@ -53,7 +53,7 @@ broker_kind__consumer_type_map = {
     16: KafkaConsumerManuallyCommit,
     17: MqttConsumer,
     18: HttpsqsConsumer,
-    # 20: PulsarConsumer,
+    # 20: PulsarConsumer,  # 用户如果想用pulsar，先pip 安装pulsar-client ,然后代码调用 register_pulsar_broker() 会自动添加到这个字典里面
     21: UDPConsumer,
     22: TCPConsumer,
     23: HTTPConsumer,

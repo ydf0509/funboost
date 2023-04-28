@@ -1,48 +1,39 @@
+from eventlet import monkey_patch
+
+monkey_patch()
+
+from funboost.consumers.nameko_consumer import start_batch_nameko_service_in_new_process, start_batch_nameko_service_in_new_thread
+
+from funboost.assist.user_custom_broker_register import register_nameko_broker
 import time
 
-from nameko.containers import ServiceContainer
-from nameko.rpc import rpc
+from funboost import boost, ConcurrentModeEnum, BrokerEnum
 
-from funboost import register_custom_broker, boost, funboost_config_deafult,ConcurrentModeEnum
-from funboost.consumers.nameko_consumer import NamekoConsumer
-from funboost.publishers.nameko_publisher import NamekoPublisher
+'''
+目前没有加到 funboost/factories/consumer_factory.py的 broker_kind__consumer_type_map 字典中，防止用户安装celery报错和funboost瘦身，
+如果想要使用namelo作为funboost的消息中间件，需要先调用 register_nameko_broker() 函数，目的是把类注册到funboost框架中。看文档4.21自由扩展中间件文档。
+'''
+register_nameko_broker()
 
-register_custom_broker(40,NamekoPublisher,NamekoConsumer)
 
-
-@boost('test_nameko_queue',broker_kind=40,schedule_tasks_on_main_thread=False,concurrent_mode=ConcurrentModeEnum.EVENTLET)
-def f(msg):
-    print(msg)
-    time.sleep(10)
+@boost('test_nameko_queue', broker_kind=BrokerEnum.NAMEKO, concurrent_mode=ConcurrentModeEnum.EVENTLET)
+def f(a, b):
+    print(a, b)
+    time.sleep(1)
     return 'hi'
 
 
-#
-# class MyService4():
-#     name = 'funboost_nameko_service4'
-#
-#     @rpc
-#     def call4(this, *args, **kwargs):
-#         print(args, kwargs)
-#
-#
-# url = f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'
-#
-
-
+@boost('test_nameko_queue2', broker_kind=BrokerEnum.NAMEKO, concurrent_mode=ConcurrentModeEnum.EVENTLET)
+def f2(x, y):
+    print(f'x: {x}   y:{y}')
+    time.sleep(2)
+    return 'heelo'
 
 
 if __name__ == '__main__':
-    from eventlet import monkey_patch
-    monkey_patch()
+    # 用户可以使用nameko的 ServiceContainer ,直接启动每个nameko的service类，语法和funboost使用其他中间件语法一样。
     f.consume()
-    print('565657')
-    for i in range(100):
-        f.push(i)
-    # from eventlet import monkey_patch
-    # monkey_patch()
-    # nameko_config = {'AMQP_URI': url}
-    # container = ServiceContainer(MyService4, config=nameko_config)
-    #
-    # container.start()
-    # container.wait()
+    f2.consume()
+
+    # 也可以批量启动，使用nameko的 ServiceRunner 批量启动多个 nameko的service类。这个函数专门为nameko 中间件而写的。
+    start_batch_nameko_service_in_new_thread([f, f2])

@@ -1,8 +1,6 @@
-
-
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2022/8/8 0008 12:12
+# @Time    : 2023/8/8 0008 12:12
 import copy
 import json
 import time
@@ -14,6 +12,8 @@ from nameko.standalone.rpc import ClusterRpcProxy
 from funboost import funboost_config_deafult
 from funboost.publishers.base_publisher import AbstractPublisher, PriorityConsumingControlConfig
 
+NAMEKO_CONFIG = {'AMQP_URI': f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'}
+
 
 class NamekoPublisher(AbstractPublisher, ):
     """
@@ -21,10 +21,7 @@ class NamekoPublisher(AbstractPublisher, ):
     """
 
     def custom_init(self):
-        url = f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'
-
-        self._nameko_config = {'AMQP_URI': url}
-        self._rpc =  ClusterRpcProxy(self._nameko_config)
+        self._rpc = ClusterRpcProxy(NAMEKO_CONFIG)
 
     def publish(self, msg: typing.Union[str, dict], task_id=None,
                 priority_control_config: PriorityConsumingControlConfig = None):
@@ -40,20 +37,9 @@ class NamekoPublisher(AbstractPublisher, ):
             extra_params.update(priority_control_config.to_dict())
         t_start = time.time()
         with self._rpc as rpc:
-            print(msg)
-            res = rpc.funboost_nameko_service.call(msg)
-            print(res)
-
-        self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}')  # 显示msg太长了。
-        with self._lock_for_count:
-            self.count_per_minute += 1
-            self.publish_msg_num_total += 1
-            if time.time() - self._current_time > 10:
-                self.logger.info(
-                    f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 队列中')
-                self._init_count()
+            res = getattr(rpc, self.queue_name).call(**msg_function_kw)
+        self.logger.debug(f'调用nameko的 {self.queue_name} service 的 call方法 耗时{round(time.time() - t_start, 4)}秒，入参  {msg_function_kw}')  # 显示msg太长了。
         return res
-
 
     def concrete_realization_of_publish(self, msg):
         pass

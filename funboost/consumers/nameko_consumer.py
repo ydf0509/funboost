@@ -1,53 +1,49 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2022/8/8 0008 13:32
+# @Time    : 2023/8/8 0008 13:32
+from multiprocessing import Process
+
+import threading
+
+import typing
+
 import json
+from funboost.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch
 
 from nameko.containers import ServiceContainer
 from nameko.rpc import rpc
+from nameko.runners import ServiceRunner
 
-from funboost import funboost_config_deafult
 from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.publishers.nameko_publisher import NAMEKO_CONFIG
 
+all_queue_name__nameko_service_cls_map = {}
 
-class NamekoService:
-    name = 'funboost_nameko_service'
 
 class NamekoConsumer(AbstractConsumer, ):
     """
-    redis作为中间件实现的。
+    nameko作为中间件实现的。
     """
     BROKER_KIND = 2
 
     def custom_init(self):
-        pass
-        url = f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'
+        try:
+            check_evenlet_monkey_patch()
+        except Exception as e:
+            self.logger.critical('nameko 必须使用eventlet 并发，并且eventlet包打猴子补丁')
+            raise e
 
-        self._nameko_config = {'AMQP_URI': url}
-
-        class MyService(NamekoService):
+        class MyService:
+            name = self.queue_name
 
             @rpc
             def call(this, *args, **kwargs):
                 return self.consuming_function(*args, **kwargs)
 
-        self._nameko_service_cls  = MyService
-
+        all_queue_name__nameko_service_cls_map[self.queue_name] = MyService
 
     def _shedual_task(self):
-        # url = f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'
-        #
-        # self._nameko_config = {'AMQP_URI': url}
-        #
-        # class MyService():
-        #     name = 'funboost_nameko_service'
-        #     @rpc
-        #     def call(this, *args, **kwargs):
-        #         self.consuming_function(*args, **kwargs)
-        #
-        # self._nameko_service_cls = MyService
-
-        container = ServiceContainer(self._nameko_service_cls, config=self._nameko_config)
+        container = ServiceContainer(all_queue_name__nameko_service_cls_map[self.queue_name], config=NAMEKO_CONFIG)
 
         container.start()
         container.wait()
@@ -59,3 +55,18 @@ class NamekoConsumer(AbstractConsumer, ):
         pass
 
 
+def start_batch_nameko_service(boost_fun_list: typing.List):
+    runner = ServiceRunner(config=NAMEKO_CONFIG)
+    for boost_fun in boost_fun_list:
+        runner.add_service(all_queue_name__nameko_service_cls_map[boost_fun.queue_name])
+    runner.start()
+    runner.wait()
+
+
+def start_batch_nameko_service_in_new_thread(boost_fun_list: typing.List):
+    threading.Thread(target=start_batch_nameko_service, args=(boost_fun_list,)).start()
+
+
+def start_batch_nameko_service_in_new_process(boost_fun_list: typing.List, process_num=1):
+    for i in range(process_num):
+        Process(target=start_batch_nameko_service, args=(boost_fun_list,)).start()

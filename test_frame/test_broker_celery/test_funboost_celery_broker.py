@@ -1,36 +1,44 @@
 import time
-
+import celery.result
 from funboost import boost, BrokerEnum
 from funboost.assist.user_custom_broker_register import register_celery_broker
 
+'''
+目前没有加到 funboost/factories/consumer_factory.py的 broker_kind__consumer_type_map 字典中，防止用户安装celery报错和funboost瘦身，
+如果想要使用celery作为funboost的消息中间件，需要先调用 register_celery_broker() 函数，目的是把类注册到funboost框架中。看文档4.21自由扩展中间件文档。
+'''
 register_celery_broker()
 
 
-@boost('tets_funboost_celery_queue29a', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
+@boost('tets_funboost_celery_queue31a', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
        broker_exclusive_config={'celery_app_config':
                                     {'task_default_rate_limit': '1/s', }}
        )
 def fa(x, y):
     time.sleep(3)
     print(6666, x, y)
+    return x + y
 
 
-@boost('tets_funboost_celery_queue29b', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
+@boost('tets_funboost_celery_queue31b', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
        broker_exclusive_config={'celery_app_config':
                                     {'task_default_rate_limit': '2/s', }}
        )
 def fb(a, b):
     time.sleep(2)
     print(7777, a, b)
+    return a - b
 
 
 if __name__ == '__main__':
-    for i in range(1000):
-        fa.push(i, i + 1)
-        fb.push(i, i * 2)
-
     fa.consume()
     fb.consume()
+
+    for i in range(1000):
+        r = fa.push(i, i + 1)  # type: celery.result.AsyncResult
+        print(type(r), r)
+        # print(r.get())
+        fb.push(i, i * 2)
 
 '''
 

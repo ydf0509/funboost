@@ -103,3 +103,9 @@ if __name__ == '__main__':
     from funboost.consumers.celery_consumer import CeleryConsumer
     from funboost.publishers.celery_publisher import CeleryPublisher
     register_custom_broker(BrokerEnum.CELERY, CeleryPublisher, CeleryConsumer)
+
+
+def register_nameko_broker():
+    from funboost.consumers.nameko_consumer import NamekoConsumer
+    from funboost.publishers.nameko_publisher import NamekoPublisher
+    register_custom_broker(BrokerEnum.NAMEKO, NamekoPublisher, NamekoConsumer)

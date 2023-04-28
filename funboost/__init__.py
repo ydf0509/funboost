@@ -298,10 +298,10 @@ def boost(queue_name,
 
         func.start_consuming_message = func.consume = func.start = consumer.start_consuming_message
         func.multi_process_start = func.multi_process_consume = partial(run_consumer_with_multi_process, func)
-        if broker_kind == BrokerEnum.CELERY:   # celery作为消息队列
-            from multiprocessing import set_start_method
-            set_start_method('spawn', force=True)  # linux上运行需要这样。
-            func.consume = partial(func.multi_process_consume, 1)
+        # if broker_kind == BrokerEnum.CELERY:   # celery作为消息队列
+        #     from multiprocessing import set_start_method
+        #     set_start_method('spawn', force=True)  # linux上运行需要这样。
+        #     func.consume = partial(func.multi_process_consume, 1)
 
         func.fabric_deploy = partial(fabric_deploy, func)
 

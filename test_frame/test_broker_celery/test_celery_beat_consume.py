@@ -5,6 +5,7 @@ import time
 from funboost import boost, BrokerEnum
 from funboost.consumers.celery_consumer import celery_start_beat
 from funboost.assist.user_custom_broker_register import register_celery_broker
+from funboost.publishers.celery_publisher import celery_app
 
 '''
 目前没有加到 funboost/factories/consumer_factory.py的 broker_kind__consumer_type_map 字典中，防止用户安装celery报错和funboost瘦身，
@@ -42,8 +43,9 @@ beat_schedule = {  # 这是100% 原汁原味的celery 定时任务配置方式
     },
     'celery_beat_queueb_8_jobxx': {
         'task': queue_2,
-        'schedule': crontab(minute=30, hour=16),
-        'kwargs': {'x': 'aaaaaaaaa', 'y': 'bbbbbbbb'}
+'schedule': timedelta(seconds=20),
+        # 'schedule': crontab(minute=30, hour=16),
+        'kwargs': {'a': 'aaaaaaaaa', 'b': 'bbbbbbbb'}
     }
 
 }
@@ -53,5 +55,15 @@ if __name__ == '__main__':
     for i in range(10):
         f_beat.push(i, i + 1)
         f_beat2.push(i, i * 2)
-    f_beat.consume()
-    f_beat2.consume()
+
+    print(celery_app.conf)
+    celery_app.worker_main(
+        argv=['worker', '--pool=threads', f'--concurrency=5',
+              '-n', f'worker_12@%h', f'--loglevel=INFO',
+             # f'--queues={self.queue_name}',
+              ])
+    # f_beat.consume()
+    # f_beat2.consume()
+    while 1:
+        time.sleep(100)
+

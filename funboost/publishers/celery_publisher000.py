@@ -14,16 +14,7 @@ from funboost.publishers.base_publisher import AbstractPublisher, PriorityConsum
 from funboost import funboost_config_deafult
 
 
-celery_app = celery.Celery(broker=funboost_config_deafult.CELERY_BROKER_URL,
-                           backend=funboost_config_deafult.CELERY_RESULT_BACKEND,
-                           task_routes={}, timezone=funboost_config_deafult.TIMEZONE, enable_utc=False)
-
-celery_app.conf.task_acks_late = True
-
-# celery_app.conf.worker_task_log_format = '%(asctime)s - %(name)s - "%(pathname)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(message)s'
-# celery_app.conf.worker_log_format = '%(asctime)s - %(name)s - "%(pathname)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(message)s'
-
-celery_app.conf.worker_redirect_stdouts = False
+# celery_app = celery.Celery(broker='redis://192.168.64.151:6378/11',task_routes={})
 
 
 class CeleryPublisher(AbstractPublisher, ):
@@ -47,11 +38,23 @@ class CeleryPublisher(AbstractPublisher, ):
         # self._celery_app = celery_app
         # self._celery_fun = f
 
+        self._has_build_celery_app = False
+
+    def _build_celery_app(self):
+        celery_app = celery.Celery(broker=funboost_config_deafult.CELERY_BROKER_URL,
+                                   backend=funboost_config_deafult.CELERY_RESULT_BACKEND,
+                                   task_routes={}, timezone=funboost_config_deafult.TIMEZONE, enable_utc=False)
+        celery_app.config_from_object(self.broker_exclusive_config['celery_app_config'])
         celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})
 
+        @celery_app.task(name=self.queue_name)
+        def f(*args, **kwargs):
+            pass
 
+        self._celery_app = celery_app
+        self._celery_fun = f
 
-
+        self._has_build_celery_app = True
 
     def publish(self, msg: typing.Union[str, dict], task_id=None,
                 priority_control_config: PriorityConsumingControlConfig = None) -> celery.result.AsyncResult:
@@ -65,9 +68,11 @@ class CeleryPublisher(AbstractPublisher, ):
                                        'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
         if priority_control_config:
             extra_params.update(priority_control_config.to_dict())
-
+        with self.celery_conf_lock:
+            if not self._has_build_celery_app:
+                self._build_celery_app()
         t_start = time.time()
-        celery_result = celery_app.send_task(name=self.queue_name,kwargs=msg_function_kw, task_id=extra_params['task_id'])  # type: celery.result.AsyncResult
+        celery_result = self._celery_fun.apply_async(kwargs=msg_function_kw, task_id=extra_params['task_id'])  # type: celery.result.AsyncResult
         self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}')  # 显示msg太长了。
         with self._lock_for_count:
             self.count_per_minute += 1

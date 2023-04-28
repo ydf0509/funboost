@@ -12,8 +12,8 @@ from funboost.assist.user_custom_broker_register import register_celery_broker
 '''
 register_celery_broker()
 
-queue_1 = 'celery_beat_queue_7a'
-queue_2 = 'celery_beat_queueb_8a'
+queue_1 = 'celery_beat_queue_7a2'
+queue_2 = 'celery_beat_queueb_8a2'
 
 
 @boost(queue_1, broker_kind=BrokerEnum.CELERY, concurrent_num=10,
@@ -25,13 +25,13 @@ def f_beat(x, y):
     print(1111, x, y)
 
 
-@boost(queue_1, broker_kind=BrokerEnum.CELERY, concurrent_num=10,
+@boost(queue_2, broker_kind=BrokerEnum.CELERY, concurrent_num=10,
        broker_exclusive_config={'celery_app_config':
                                     {'task_default_rate_limit': '3/s', }}
        )
-def f_beat2(x, y):
+def f_beat2(a, b):
     time.sleep(2)
-    print(2222, x, y)
+    print(2222, a, b)
 
 
 beat_schedule = {  # 这是100% 原汁原味的celery 定时任务配置方式
@@ -50,7 +50,7 @@ beat_schedule = {  # 这是100% 原汁原味的celery 定时任务配置方式
 
 if __name__ == '__main__':
     celery_start_beat(beat_schedule)
-    for i in range(1000):
+    for i in range(10):
         f_beat.push(i, i + 1)
         f_beat2.push(i, i * 2)
     f_beat.consume()

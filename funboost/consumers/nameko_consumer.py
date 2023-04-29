@@ -53,7 +53,8 @@ class NamekoConsumer(AbstractConsumer, ):
         pass
 
 
-def start_batch_nameko_service(boost_fun_list: typing.List):
+
+def batch_start_nameko_consumers(boost_fun_list: typing.List):
     runner = ServiceRunner(config=NAMEKO_CONFIG)
     for boost_fun in boost_fun_list:
         runner.add_service(all_queue_name__nameko_service_cls_map[boost_fun.queue_name])
@@ -61,10 +62,10 @@ def start_batch_nameko_service(boost_fun_list: typing.List):
     runner.wait()
 
 
-def start_batch_nameko_service_in_new_thread(boost_fun_list: typing.List):
-    threading.Thread(target=start_batch_nameko_service, args=(boost_fun_list,)).start()
+def batch_start_nameko_service_in_new_thread(boost_fun_list: typing.List):
+    threading.Thread(target=batch_start_nameko_consumers, args=(boost_fun_list,)).start()
 
 
-def start_batch_nameko_service_in_new_process(boost_fun_list: typing.List, process_num=1):
+def batch_start_nameko_service_in_new_process(boost_fun_list: typing.List, process_num=1):
     for i in range(process_num):
-        Process(target=start_batch_nameko_service, args=(boost_fun_list,)).start()
+        Process(target=batch_start_nameko_consumers, args=(boost_fun_list,)).start()

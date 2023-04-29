@@ -1,5 +1,5 @@
 
-
+import flower
 from celery import Celery
 
 app = Celery(main='abcd')

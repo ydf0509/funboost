@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:32
+import os
+import sys
 import threading
+import typing
 
 from functools import partial
 
@@ -18,39 +21,17 @@ class CeleryConsumer(AbstractConsumer):
     celery作为中间件实现的。
     """
     BROKER_KIND = 30
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'celery_app_config': {}}
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'celery_task_config': {}}
 
     # celery的可以配置项大全  https://docs.celeryq.dev/en/stable/userguide/configuration.html#new-lowercase-settings
 
     def custom_init(self):
-        @celery_app.task(name=self.queue_name)
+        @celery_app.task(name=self.queue_name,rate_limit=f'{self._qps}/s',**self.broker_exclusive_config['celery_task_config'])
         def f(*args, **kwargs):
-            # func_params = json.loads(msg)
-            # func_params.pop('extra')
-            # return raw_fun(**func_params)
-            # print(args)
-            # print(kwargs)
             self.logger.debug(f' 这条消息将由 funboost 在 celery 框架中处理: args:  {args} ,  kwargs: {kwargs}')
             return self.consuming_function(*args, **kwargs)
 
     def _shedual_task(self):
-        # raise Exception('不用这个语法启动')
-        # raw_fun = self.consuming_function
-        #
-        # # celery_app = celery.Celery()
-        # # celery_app.config_from_object(self.broker_exclusive_config['celery_app_config'])
-        # celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})
-        #
-        # celery_app.conf.task_reject_on_worker_lost = True  # 配置这两项可以随意停止
-        # celery_app.conf.task_acks_late = True
-        #
-        # # celery_app.conf.worker_task_log_format = '%(asctime)s - %(name)s - "%(pathname)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(message)s'
-        # # celery_app.conf.worker_log_format = '%(asctime)s - %(name)s - "%(pathname)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(message)s'
-        #
-        # celery_app.conf.worker_redirect_stdouts = False
-        #
-        #
-        #
         # # celery_app.worker_main(
         # #     argv=['worker', '--pool=threads', '--concurrency=500', '-n', 'worker1@%h', '--loglevel=INFO',
         # #           f'--queues={self.queue_name}',
@@ -63,6 +44,7 @@ class CeleryConsumer(AbstractConsumer):
                       '-n', f'worker_{self.queue_name}@%h', f'--loglevel=INFO',
                       f'--queues={self.queue_name}',
                       ])
+
         # threading.Thread(target=f).start()
         f()
         #
@@ -76,49 +58,35 @@ class CeleryConsumer(AbstractConsumer):
         pass
 
 
-class CeleryBeatHelper:
-    def __init__(self, beat_schedule: dict):
-        '''
+def celery_start_beat(beat_schedule: dict):
+    celery_app.conf.beat_schedule = beat_schedule
 
-        celery_app.conf.beat_schedule = {
-    'add-every-30-seconds': {
-        'task': '求和啊',
-        'schedule': timedelta(seconds=2),
-        'args': (10000, 20000)
-    }}
-        :param beat_schedule:
-        '''
-        self.beat_schedule = beat_schedule
-
-    def get_celery_app(self):
-        # for k, v in self.beat_schedule.items():
-        #     queue_name = v['task']
-        #
-        #     @celery_app.task(name=queue_name)
-        #     def f(*args, **kwargs):
-        #         pass
-        #
-        #     celery_app.conf.task_routes.update({queue_name: {"queue": queue_name}})
-        celery_app.conf.beat_schedule = self.beat_schedule
-        # celery_app.worker_main(
-        #     argv=['worker','beat',
-        #           f'--loglevel=INFO',
-
-        return celery_app
-
-    def start_beat(self):
-        '''
-        celery -A test_celery_beat beat
-        '''
-        beat = partial(celery_app.Beat, loglevel='INFO',
-                       )
+    def _f():
+        beat = partial(celery_app.Beat, loglevel='INFO', )
         beat().run()
 
-
-def celery_start_beat(beat_schedule: dict):
-    def _f():
-        celery_beat_helper = CeleryBeatHelper(beat_schedule)
-        celery_app = celery_beat_helper.get_celery_app()
-        celery_beat_helper.start_beat()
-
     threading.Thread(target=_f).start()  # 使得可以很方便启动定时任务，继续启动函数消费
+
+
+def start_flower(port=5555):
+    def _f():
+        python_executable = sys.executable
+        # print(python_executable)
+
+        # cmd = f'''{python_executable} -m celery -A funboost.publishers.celery_publisher --broker={funboost_config_deafult.CELERY_BROKER_URL}  --result-backend={funboost_config_deafult.CELERY_RESULT_BACKEND}   flower --address=0.0.0.0 --port={port}  --auto_refresh=True '''
+        cmd = f'''{python_executable} -m celery  --broker={funboost_config_deafult.CELERY_BROKER_URL}  --result-backend={funboost_config_deafult.CELERY_RESULT_BACKEND}   flower --address=0.0.0.0 --port={port}  --auto_refresh=True '''
+
+        print(f'启动flower命令:   {cmd}')
+        os.system(cmd)
+    threading.Thread(target=_f).start()
+
+
+def batch_start_celery_consumers(consumers: typing.List):
+    queue_names = [consumer.queue_name for consumer in consumers]
+    queue_names_str = ','.join(queue_names)
+
+    celery_app.worker_main(
+        argv=['worker', '--pool=threads', '--concurrency=200',
+              '-n', f'worker_funboost_pid_{os.getpid()}@%h', f'--loglevel=INFO',
+              f'--queues={queue_names_str}',
+              ])

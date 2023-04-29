@@ -52,9 +52,7 @@ if __name__ == '__main__':
     start_flower()
     celery_start_beat(beat_schedule)
     #
-    for i in range(100):
-        f_beat.push(i, i + 1)
-        f_beat2.push(i, i * 2)
+
 
     print(celery_app.conf)
     batch_start_celery_consumers([f_beat, f_beat2])

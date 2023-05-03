@@ -32,6 +32,9 @@ class CeleryConsumer(AbstractConsumer):
             return self.consuming_function(*args, **kwargs)
 
     def _shedual_task(self):
+        """ 建议使用 batch_start_celery_consumers([f1,f2]) ,而不是 f1.consume()  f2.consume() 方式"""
+
+
         # # celery_app.worker_main(
         # #     argv=['worker', '--pool=threads', '--concurrency=500', '-n', 'worker1@%h', '--loglevel=INFO',
         # #           f'--queues={self.queue_name}',
@@ -74,7 +77,7 @@ def start_flower(port=5555):
         # print(python_executable)
 
         # cmd = f'''{python_executable} -m celery -A funboost.publishers.celery_publisher --broker={funboost_config_deafult.CELERY_BROKER_URL}  --result-backend={funboost_config_deafult.CELERY_RESULT_BACKEND}   flower --address=0.0.0.0 --port={port}  --auto_refresh=True '''
-        cmd = f'''{python_executable} -m celery  --broker={funboost_config_deafult.CELERY_BROKER_URL}  --result-backend={funboost_config_deafult.CELERY_RESULT_BACKEND}   flower --address=0.0.0.0 --port={port}  --auto_refresh=True '''
+        cmd = f'''{python_executable} -m celery  --broker={funboost_config_deafult.CELERY_BROKER_URL}  --result-backend={funboost_config_deafult.CELERY_RESULT_BACKEND}   flower --address=0.0.0.0 --port={port}  --auto_refresh=1 '''
 
         print(f'启动flower命令:   {cmd}')
         os.system(cmd)

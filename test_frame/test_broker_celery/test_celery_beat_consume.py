@@ -51,9 +51,6 @@ beat_schedule = {  # 这是100% 原汁原味的celery 定时任务配置方式
 if __name__ == '__main__':
     start_flower()
     celery_start_beat(beat_schedule)
-    #
-
-
     print(celery_app.conf)
     batch_start_celery_consumers([f_beat, f_beat2])
     print('batch_start_celery_consumers()  之后的代码不会被运行')

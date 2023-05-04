@@ -32,3 +32,6 @@ auto_run_on_remote_config.py
 funboost_config.py
 /test_frame/my/
 test_frame/test_fabric_deploy/test_deploy2.py
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir

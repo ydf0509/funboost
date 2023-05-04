@@ -2,6 +2,7 @@
 # @Author  : ydf
 # @Time    : 2023/8/8 0008 13:32
 import json
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.utils import RedisMixin
 
@@ -10,7 +11,7 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
     """
     redis作为中间件实现的。
     """
-    BROKER_KIND = 2
+
 
     def _shedual_task(self):
         while True:

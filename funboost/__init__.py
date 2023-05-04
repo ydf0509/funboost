@@ -14,7 +14,7 @@ from funboost.funboost_config_deafult import BoostDecoratorDefaultParams
 from funboost.helpers import (fabric_deploy, kill_all_remote_tasks,
                               multi_process_pub_params_list,
                               run_consumer_with_multi_process)
-from funboost.assist.user_custom_broker_register import register_custom_broker
+
 from funboost.utils.paramiko_util import ParamikoFolderUploader
 from funboost.consumers.base_consumer import (ExceptionForRequeue, ExceptionForRetry, ExceptionForPushToDlxqueue,
                                               AbstractConsumer, ConsumersManager,
@@ -25,6 +25,7 @@ from funboost.publishers.base_publisher import (PriorityConsumingControlConfig,
                                                 AbstractPublisher, AsyncResult, HasNotAsyncResult, AioAsyncResult, ResultFromMongo)
 from funboost.factories.publisher_factotry import get_publisher
 from funboost.factories.consumer_factory import get_consumer
+from funboost.assist.user_custom_broker_register import register_custom_broker
 
 # noinspection PyUnresolvedReferences
 from funboost.utils import nb_print, patch_print, LogManager, get_logger, LoggerMixin

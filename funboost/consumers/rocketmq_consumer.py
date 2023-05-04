@@ -3,7 +3,7 @@
 # @Time    : 2022/7/8 0008 13:27
 import json
 import time
-
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost import funboost_config_deafult
 from funboost.publishers.rocketmq_publisher import RocketmqPublisher
@@ -13,7 +13,7 @@ class RocketmqConsumer(AbstractConsumer):
     """
     安装
     """
-    BROKER_KIND = 11
+
     GROUP_ID = 'g_funboost'
 
     def _shedual_task(self):

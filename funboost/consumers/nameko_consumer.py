@@ -6,7 +6,7 @@ from multiprocessing import Process
 import threading
 
 import typing
-
+from funboost.constant import BrokerEnum
 from funboost.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch
 
 from nameko.containers import ServiceContainer
@@ -23,7 +23,7 @@ class NamekoConsumer(AbstractConsumer, ):
     """
     nameko作为中间件实现的。
     """
-    BROKER_KIND = 2
+
 
     def custom_init(self):
         try:

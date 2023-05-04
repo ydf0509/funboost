@@ -3,7 +3,7 @@
 # @Time    : 2022/8/8 0008 13:32
 import json
 from gnsq import Consumer, Message
-
+from funboost.constant import BrokerEnum
 from funboost import funboost_config_deafult
 from funboost.consumers.base_consumer import AbstractConsumer
 from nb_log import LogManager
@@ -15,7 +15,7 @@ class NsqConsumer(AbstractConsumer):
     """
     nsq作为中间件实现的。
     """
-    BROKER_KIND = 7
+
 
     def _shedual_task(self):
         consumer = Consumer(self._queue_name, 'frame_channel', funboost_config_deafult.NSQD_TCP_ADDRESSES,

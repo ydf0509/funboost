@@ -3,7 +3,7 @@
 # @Time    : 2022/8/8 0008 13:32
 import json
 import socket
-
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 
 
@@ -11,7 +11,6 @@ class UDPConsumer(AbstractConsumer, ):
     """
     socket 实现消息队列，不支持持久化，但不需要安装软件。
     """
-    BROKER_KIND = 21
 
     BUFSIZE = 10240
 

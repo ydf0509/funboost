@@ -3,7 +3,7 @@
 # @Time    : 2022/8/8 0008 13:30
 import json
 import amqpstorm
-
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.publishers.rabbitmq_amqpstorm_publisher import RabbitmqPublisherUsingAmqpStorm
 
@@ -12,7 +12,7 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
     """
     使用AmqpStorm实现的，多线程安全的，不用加锁。
     """
-    BROKER_KIND = 0
+
 
     def _shedual_task(self):
         # noinspection PyTypeChecker

@@ -3,9 +3,7 @@ from funboost.constant import BrokerEnum
 
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.consumers.base_consumer import AbstractConsumer
-
-from funboost.factories import publisher_factotry
-from funboost.factories import consumer_factory
+from funboost.factories.broker_kind__publsiher_consumer_type_map import broker_kind__funboost_cls_map
 
 """
 这个有两个用途
@@ -24,8 +22,7 @@ def register_custom_broker(broker_kind: int, publisher_class: typing.Type[Abstra
         raise TypeError(f'publisher_class 必须是 AbstractPublisher 的子或孙类')
     if not issubclass(consumer_class, AbstractConsumer):
         raise TypeError(f'consumer_class 必须是 AbstractConsumer 的子或孙类')
-    publisher_factotry.broker_kind__publisher_type_map[broker_kind] = publisher_class
-    consumer_factory.broker_kind__consumer_type_map[broker_kind] = consumer_class
+    broker_kind__funboost_cls_map[broker_kind] = (publisher_class, consumer_class)
     consumer_class.BROKER_KIND = broker_kind
 
 

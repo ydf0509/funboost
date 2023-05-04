@@ -1,5 +1,6 @@
 ﻿import json
 from pynats import NATSClient, NATSMessage  # noqa
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost import funboost_config_deafult
 
@@ -8,7 +9,7 @@ class NatsConsumer(AbstractConsumer):
     """
     nats作为中间件实现的。
     """
-    BROKER_KIND = 24
+
 
     def _shedual_task(self):
         # print(88888888888888)

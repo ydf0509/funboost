@@ -11,8 +11,6 @@ class HTTPPublisher(AbstractPublisher, ):
     http实现的，不支持持久化。
     """
 
-    BROKER_KIND = 23
-
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
         self._http = PoolManager(10)

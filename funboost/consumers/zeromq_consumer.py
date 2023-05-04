@@ -6,6 +6,7 @@ import json
 # import time
 import zmq
 import multiprocessing
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from nb_log import get_logger
 
@@ -63,7 +64,6 @@ class ZeroMqConsumer(AbstractConsumer):
     """
     zeromq 中间件的消费者，zeromq基于socket代码，不会持久化，且不需要安装软件。
     """
-    BROKER_KIND = 13
 
     def start_broker_queue_name_as_port(self):
         # threading.Thread(target=self._start_broker).start()

@@ -6,7 +6,7 @@ import functools
 import json
 from threading import Lock
 from nb_log import LogManager, get_logger
-
+from funboost.constant import BrokerEnum
 from funboost.publishers.base_publisher import deco_mq_conn_error
 import pikav1.exceptions
 from pikav1.exceptions import AMQPError
@@ -21,7 +21,7 @@ class RabbitmqConsumer(AbstractConsumer):
     """
     使用pika包实现的。
     """
-    BROKER_KIND = 4
+
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):

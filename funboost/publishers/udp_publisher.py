@@ -10,8 +10,6 @@ class UDPPublisher(AbstractPublisher, ):
     使用udp作为中间件,不支持持久化，支持分布式
     """
 
-    BROKER_KIND = 22
-
     BUFSIZE = 10240
 
     # noinspection PyAttributeOutsideInit

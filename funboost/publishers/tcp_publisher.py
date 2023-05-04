@@ -10,8 +10,6 @@ class TCPPublisher(AbstractPublisher, ):
     使用tco作为中间件,不支持持久化，支持分布式
     """
 
-    BROKER_KIND = 21
-
     BUFSIZE = 10240
 
     # noinspection PyAttributeOutsideInit

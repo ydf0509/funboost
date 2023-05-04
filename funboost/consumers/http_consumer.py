@@ -7,6 +7,7 @@ import json
 from aiohttp import web
 from aiohttp.web_request import Request
 
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 
 
@@ -14,7 +15,7 @@ class HTTPConsumer(AbstractConsumer, ):
     """
     http 实现消息队列，不支持持久化，但不需要安装软件。
     """
-    BROKER_KIND = 23
+
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):

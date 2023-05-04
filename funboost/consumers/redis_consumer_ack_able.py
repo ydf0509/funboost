@@ -9,6 +9,7 @@
 import json
 import time
 from deprecated.sphinx import deprecated
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.consumers.confirm_mixin import ConsumerConfirmMixinWithTheHelpOfRedis, ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat
 
@@ -20,7 +21,7 @@ class RedisConsumerAckAble000(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractCo
     redis作为中间件实现的。将取出来的消息同时放入一个set中，代表unack消费状态。以支持对机器和python进程的随意关闭和断电。
     和celery的配置  task_reject_on_worker_lost = True task_acks_late = True后，处理逻辑几乎不约而同相似。
     """
-    BROKER_KIND = 9
+
 
     def _shedual_task(self):
         while True:
@@ -57,7 +58,7 @@ class RedisConsumerAckAble111(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractCo
     #
     # print(script_4(keys=["text_pipelien1","text_pipelien1b"]))
     """
-    BROKER_KIND = 9
+
 
     def _shedual_task(self):
         lua = '''
@@ -100,7 +101,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
     #
     # print(script_4(keys=["text_pipelien1","text_pipelien1b"]))
     """
-    BROKER_KIND = 9
+
 
     def _shedual_task000(self):
         # 可以采用lua脚本，也可以采用redis的watch配合pipeline使用。比代码分两行pop和zadd比还能减少一次io交互，还能防止丢失小概率一个任务。

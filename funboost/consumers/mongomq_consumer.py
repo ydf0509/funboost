@@ -2,7 +2,7 @@
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:33
 import time
-
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.publishers.mongomq_publisher import MongoMixin, MongoMqPublisher
 
@@ -11,7 +11,7 @@ class MongoMqConsumer(AbstractConsumer, MongoMixin):
     """
     Mongo queue包实现的基于mongo的消息队列，支持消费确认。
     """
-    BROKER_KIND = 5
+
 
     def _shedual_task(self):
         mp = MongoMqPublisher(self.queue_name)

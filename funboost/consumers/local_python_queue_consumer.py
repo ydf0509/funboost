@@ -3,7 +3,7 @@
 # @Time    : 2022/8/8 0008 13:36
 import json
 from queue import Queue
-
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.publishers import local_python_queue_publisher
 
@@ -12,7 +12,6 @@ class LocalPythonQueueConsumer(AbstractConsumer):
     """
     python 内置queue对象作为消息队列，这个要求发布和消费必须在同一python解释器内部运行，不支持分布式。
     """
-    BROKER_KIND = 3
 
     @property
     def local_python_queue(self) -> Queue:

@@ -2,7 +2,7 @@
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:33
 import json
-
+from funboost.constant import BrokerEnum
 from funboost import funboost_config_deafult
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.queues import sqla_queue
@@ -12,7 +12,7 @@ class SqlachemyConsumer(AbstractConsumer):
     """
     sqlachemy实现的操作5种数据库模拟消息队列，支持消费确认。
     """
-    BROKER_KIND = 10
+
 
     def _shedual_task(self):
         self.queue = sqla_queue.SqlaQueue(self._queue_name, funboost_config_deafult.SQLACHEMY_ENGINE_URL)

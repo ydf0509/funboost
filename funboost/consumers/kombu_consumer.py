@@ -14,7 +14,7 @@ from kombu.transport import redis
 from kombu.transport.redis import Empty
 
 from nb_log import get_logger
-
+from funboost.constant import BrokerEnum
 from funboost import funboost_config_deafult
 from funboost.consumers.base_consumer import AbstractConsumer
 
@@ -132,7 +132,6 @@ class KombuConsumer(AbstractConsumer, ):
     使用kombu作为中间件,这个能直接一次性支持很多种小众中间件，但性能很差，除非是分布式函数调度框架没实现的中间件种类用户才可以用这种，用户也可以自己对比性能。
     """
 
-    BROKER_KIND = 15
     BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'kombu_url': None,  # 如果这里也配置了kombu_url,则优先使用跟着你的kombu_url，否则使用funboost_config. KOMBU_URL
                                        'transport_options': {},  # transport_options是kombu的transport_options 。
                                        'prefetch_count': 500

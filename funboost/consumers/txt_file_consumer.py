@@ -4,7 +4,7 @@ from nb_filelock import FileLock
 from persistqueue import Queue
 import json
 from persistqueue.serializers import json as json_serializer
-
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost import funboost_config_deafult
 
@@ -14,7 +14,6 @@ class TxtFileConsumer(AbstractConsumer, ):
     txt文件作为消息队列
     这个不想做消费确认了,要消费确认请选 SQLITE_QUEUE 、PERSISTQUEUE中间件
     """
-    BROKER_KIND = 25
 
     def _shedual_task(self):
         file_queue_path = str((Path(funboost_config_deafult.TXT_FILE_PATH) / self.queue_name).absolute())

@@ -22,7 +22,7 @@ import os
 import json
 from _pulsar import ConsumerType
 from pulsar.schema import schema
-
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost import funboost_config_deafult
 
@@ -31,7 +31,7 @@ class PulsarConsumer(AbstractConsumer, ):
     """
     pulsar作为中间件实现的。
     """
-    BROKER_KIND = 20
+
     BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'subscription_name': 'funboost_group',
                                        'replicate_subscription_state_enabled': True,
                                        'consumer_type': ConsumerType.Shared,

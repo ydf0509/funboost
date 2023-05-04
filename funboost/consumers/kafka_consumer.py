@@ -8,7 +8,7 @@ from kafka import KafkaConsumer as OfficialKafkaConsumer, KafkaProducer, KafkaAd
 from kafka.admin import NewTopic
 # noinspection PyPackageRequirements
 from kafka.errors import TopicAlreadyExistsError
-
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost import funboost_config_deafult
 from nb_log import get_logger, LogManager
@@ -23,7 +23,7 @@ class KafkaConsumer(AbstractConsumer):
 
     可以让消费函数内部 sleep60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group funboost 来证实自动确认消费和手动确认消费的区别。
     """
-    BROKER_KIND = 8
+
     BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group_id':'funboost_kafka','auto_offset_reset':'earliest'}
     # not_all_brokers_general_settings配置 ，支持独立的中间件配置参数是 group_id 和 auto_offset_reset
     """

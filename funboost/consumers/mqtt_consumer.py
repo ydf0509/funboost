@@ -3,7 +3,7 @@
 # @Time    : 2022/8/8 0008 13:32
 import json
 # import time
-
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost import funboost_config_deafult
 import paho.mqtt.client as mqtt
@@ -13,7 +13,7 @@ class MqttConsumer(AbstractConsumer):
     """
     emq 作为中间件 实现的消费者 ，使用共享订阅。
     """
-    BROKER_KIND = 17
+
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):

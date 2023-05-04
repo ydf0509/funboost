@@ -3,6 +3,7 @@
 # @Time    : 2022/8/8 0008 13:32
 import json
 import time
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.publishers.httpsqs_publisher import HttpsqsPublisher
 
@@ -11,7 +12,7 @@ class HttpsqsConsumer(AbstractConsumer):
     """
     httpsqs作为中间件
     """
-    BROKER_KIND = 18
+
 
     def custom_init(self):
         # noinspection PyAttributeOutsideInit

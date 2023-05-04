@@ -4,7 +4,7 @@
 import json
 from threading import Thread
 import socket
-
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 
 
@@ -12,7 +12,7 @@ class TCPConsumer(AbstractConsumer, ):
     """
     socket 实现消息队列，不支持持久化，但不需要安装软件。
     """
-    BROKER_KIND = 22
+
 
     BUFSIZE = 10240
 

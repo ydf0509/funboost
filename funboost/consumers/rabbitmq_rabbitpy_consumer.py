@@ -3,7 +3,7 @@
 # @Time    : 2022/8/8 0008 13:31
 import json
 import rabbitpy
-
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.utils.rabbitmq_factory import RabbitMqFactory
 
@@ -12,7 +12,7 @@ class RabbitmqConsumerRabbitpy(AbstractConsumer):
     """
     使用rabbitpy实现的
     """
-    BROKER_KIND = 1
+
 
     def _shedual_task(self):
         # noinspection PyTypeChecker

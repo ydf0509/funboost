@@ -3,6 +3,7 @@
 # @Time    : 2021/4/3 0008 13:32
 import json
 import redis3
+from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.utils import RedisMixin, decorators
 
@@ -11,7 +12,6 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
     """
     redis 的 stream 结构 作为中间件实现的。需要redis 5.0以上，redis stream结构 是redis的消息队列，概念类似kafka，功能远超 list结构。
     """
-    BROKER_KIND = 12
     GROUP = 'funboost_group'
 
     def start_consuming_message(self):

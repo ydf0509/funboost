@@ -3,6 +3,7 @@
 
 <pre style="color: greenyellow;background-color: #0c1119; font-size: medium;">
 pip install funboost ,python全功能分布式函数调度框架,。 支持python所有类型的并发模式和全球一切知名消息队列中间件，
+同时funboost支持celery整个框架作为核心来发布和消费消息，使用funboost的极简api方式来自动化配置和操作celery,
 python函数加速器，框架包罗万象，一统编程思维，兼容50% python编程业务场景，适用范围广。
 只需要一行代码即可分布式执行python一切函数，99%用过funboost的pythoner 感受是 方便 快速 强大。
 python万能分布式函数调度框架，支持5种并发模式，30种消息中间件，20种任务控制功能。给任意python函数赋能。
@@ -88,7 +89,7 @@ pip install funboost --upgrade
 
 有了这个框架，用户再也无需亲自手写操作进程、线程、协程的并发的代码了。
 
-有了这个框架，用户再也无需亲自手写操作redis rabbitmq socket kafka 了。
+有了这个框架，用户再也无需亲自手写操作redis rabbitmq socket kafka celery nameko了。
 
 [![sgV2xP.png](https://z3.ax1x.com/2021/01/19/sgV2xP.png)](https://imgtu.com/i/sgV2xP)
 
@@ -125,7 +126,7 @@ pip install funboost --upgrade
 
 ### 1.2.2 框架支持20种中间件
 
-框架支持 rabbitmq redis python自带的queue.Queue  sqlite sqlachemy kafka pulsar mongodb 直接socket 等作为消息中间件。
+框架支持 rabbitmq redis python自带的queue.Queue  sqlite sqlachemy kafka pulsar mongodb 直接socket celery  nameko 等作为消息中间件。
 
 同时此框架也支持操作 kombu 库作为中间件,所以此框架能够支持的中间件类型只会比celery更多。
 
@@ -338,6 +339,19 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 如果连只有一个重要函数的框架都学不会，那就学不会学习得了更复杂的其他框架了，大部分框架都很复杂比学习一个包难很多。
 大部分框架，都要深入使用里面的很多个类，还需要继承组合一顿。
 ```
+
+## 1.6 funboost支持支持celery框架整体作为funboost的broker (2023.4新增)
+```
+见11.1章节代码例子，celery框架整体作为funboost的broker，funboost的发布和消费将只作为极简api，核心的消费调度和发布和定时功能，都是由celery框架来完成，funboost框架的发布和调度代码不实际起作用。
+用户操作funboost的api，语法和使用其他消息队列中间件类型一样，funboost自动化操作celery。
+
+用户无需操作celery本身，无需敲击celery难记的命令行启动消费、定时、flower;
+用户无需小心翼翼纠结亲自使用celery时候怎么规划目录结构 文件夹命名 需要怎么在配置写include 写task_routes，
+完全不存在需要固定的celery目录结构，不需要手动配置懵逼的任务路由，不需要配置每个函数怎么使用不同的队列名字，funboost自动搞定这些。
+
+用户只需要使用简单的funboost语法就能操控celery框架了。funboost使用celery作为broker_kind,远远的暴击亲自使用无法ide下代码补全的celery框架的语法。
+```
+
 
 [查看分布式函数调度框架完整文档](https://funboost.readthedocs.io/zh/latest/index.html)
 

@@ -13,7 +13,6 @@ import typing
 from funboost.publishers.base_publisher import AbstractPublisher, PriorityConsumingControlConfig
 from funboost import funboost_config_deafult
 
-
 celery_app = celery.Celery(broker=funboost_config_deafult.CELERY_BROKER_URL,
                            backend=funboost_config_deafult.CELERY_RESULT_BACKEND,
                            task_routes={}, timezone=funboost_config_deafult.TIMEZONE, enable_utc=False)
@@ -49,10 +48,6 @@ class CeleryPublisher(AbstractPublisher, ):
 
         celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})
 
-
-
-
-
     def publish(self, msg: typing.Union[str, dict], task_id=None,
                 priority_control_config: PriorityConsumingControlConfig = None) -> celery.result.AsyncResult:
         if isinstance(msg, str):
@@ -67,7 +62,7 @@ class CeleryPublisher(AbstractPublisher, ):
             extra_params.update(priority_control_config.to_dict())
 
         t_start = time.time()
-        celery_result = celery_app.send_task(name=self.queue_name,kwargs=msg_function_kw, task_id=extra_params['task_id'])  # type: celery.result.AsyncResult
+        celery_result = celery_app.send_task(name=self.queue_name, kwargs=msg_function_kw, task_id=extra_params['task_id'])  # type: celery.result.AsyncResult
         self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}')  # 显示msg太长了。
         with self._lock_for_count:
             self.count_per_minute += 1

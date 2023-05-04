@@ -54,7 +54,7 @@ from funboost.consumers.zeromq_consumer import ZeroMqConsumer
 from funboost.consumers.mqtt_consumer import MqttConsumer
 from funboost.consumers.httpsqs_consumer import HttpsqsConsumer
 
-broker_kind__funboost_cls_map = {
+broker_kind__publsiher_consumer_type_map = {
     BrokerEnum.RABBITMQ_AMQPSTORM: (RabbitmqPublisherUsingAmqpStorm, RabbitmqConsumerAmqpStorm),
     BrokerEnum.RABBITMQ_RABBITPY: (RabbitmqPublisherUsingRabbitpy, RabbitmqConsumerRabbitpy),
     BrokerEnum.REDIS: (RedisPublisher, RedisConsumer),
@@ -74,7 +74,6 @@ broker_kind__funboost_cls_map = {
     BrokerEnum.KAFKA_CONFLUENT: (ConfluentKafkaPublisher, KafkaConsumerManuallyCommit),
     BrokerEnum.MQTT: (MqttPublisher, MqttConsumer),
     BrokerEnum.HTTPSQS: (HttpsqsPublisher, HttpsqsConsumer),
-    # 20: PulsarPublisher,
     BrokerEnum.UDP: (UDPPublisher, UDPConsumer),
     BrokerEnum.TCP: (TCPPublisher, TCPConsumer),
     BrokerEnum.HTTP: (HTTPPublisher, HTTPConsumer),
@@ -85,5 +84,5 @@ broker_kind__funboost_cls_map = {
 
 }
 
-for broker_kindx, cls_tuple in broker_kind__funboost_cls_map.items():
+for broker_kindx, cls_tuple in broker_kind__publsiher_consumer_type_map.items():
     cls_tuple[1].BROKER_KIND = broker_kindx

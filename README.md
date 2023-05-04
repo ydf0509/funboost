@@ -352,6 +352,9 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 用户只需要使用简单的funboost语法就能操控celery框架了。funboost使用celery作为broker_kind,远远的暴击亲自使用无法ide下代码补全的celery框架的语法。
 ```
 
+```
+funboost通过支持celery作为broker_kind,使celer框架变成了funboost的一个子集
+```
 
 [查看分布式函数调度框架完整文档](https://funboost.readthedocs.io/zh/latest/index.html)
 

@@ -8,7 +8,7 @@ from funboost.publishers.base_publisher import AbstractPublisher
 
 
 # broker_kind__publisher_type_map
-from funboost.factories.broker_kind__publsiher_consumer_type_map import broker_kind__funboost_cls_map
+
 def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=True,
                   clear_queue_within_init=False, is_add_publish_time=True, consuming_function: Callable = None,
                   broker_kind: int = None,
@@ -32,7 +32,7 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
 
     all_kwargs = copy.deepcopy(locals())
     all_kwargs.pop('broker_kind')
-
+    from funboost.factories.broker_kind__publsiher_consumer_type_map import broker_kind__funboost_cls_map
     if broker_kind not in broker_kind__funboost_cls_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')
     return broker_kind__funboost_cls_map[broker_kind][0](**all_kwargs)

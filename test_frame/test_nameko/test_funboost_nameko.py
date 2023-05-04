@@ -2,7 +2,7 @@ from eventlet import monkey_patch
 
 monkey_patch()
 
-from funboost.consumers.nameko_consumer import start_batch_nameko_service_in_new_process, start_batch_nameko_service_in_new_thread
+from funboost.consumers.nameko_consumer import batch_start_nameko_consumers
 
 from funboost.assist.user_custom_broker_register import register_nameko_broker
 import time
@@ -36,4 +36,4 @@ if __name__ == '__main__':
     f2.consume()
 
     # 也可以批量启动，使用nameko的 ServiceRunner 批量启动多个 nameko的service类。这个函数专门为nameko 中间件而写的。
-    start_batch_nameko_service_in_new_thread([f, f2])
+    batch_start_nameko_consumers([f, f2])

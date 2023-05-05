@@ -22,7 +22,6 @@ from funboost.publishers.rabbitmq_pika_publisher import RabbitmqPublisher
 from funboost.publishers.rabbitmq_rabbitpy_publisher import RabbitmqPublisherUsingRabbitpy
 from funboost.publishers.redis_publisher import RedisPublisher
 from funboost.publishers.rocketmq_publisher import RocketmqPublisher
-from funboost.publishers.sqla_queue_publisher import SqlachemyQueuePublisher
 from funboost.publishers.redis_stream_publisher import RedisStreamPublisher
 from funboost.publishers.mqtt_publisher import MqttPublisher
 from funboost.publishers.httpsqs_publisher import HttpsqsPublisher
@@ -45,7 +44,6 @@ from funboost.consumers.redis_brpoplpush_consumer import RedisBrpopLpushConsumer
 from funboost.consumers.redis_consumer import RedisConsumer
 from funboost.consumers.redis_consumer_ack_able import RedisConsumerAckAble
 from funboost.consumers.rocketmq_consumer import RocketmqConsumer
-from funboost.consumers.sqlachemy_consumer import SqlachemyConsumer
 from funboost.consumers.redis_stream_consumer import RedisStreamConsumer
 from funboost.consumers.tcp_consumer import TCPConsumer
 from funboost.consumers.txt_file_consumer import TxtFileConsumer
@@ -65,7 +63,6 @@ broker_kind__publsiher_consumer_type_map = {
     BrokerEnum.NSQ: (NsqPublisher, NsqConsumer),
     BrokerEnum.KAFKA: (KafkaPublisher, KafkaConsumer),
     BrokerEnum.REDIS_ACK_ABLE: (RedisPublisher, RedisConsumerAckAble),
-    BrokerEnum.SQLACHEMY: (SqlachemyQueuePublisher, SqlachemyConsumer),
     BrokerEnum.ROCKETMQ: (RocketmqPublisher, RocketmqConsumer),
     BrokerEnum.REDIS_STREAM: (RedisStreamPublisher, RedisStreamConsumer),
     BrokerEnum.ZEROMQ: (ZeroMqPublisher, ZeroMqConsumer),

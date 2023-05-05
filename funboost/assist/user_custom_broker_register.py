@@ -10,6 +10,7 @@ from funboost.factories.broker_kind__publsiher_consumer_type_map import broker_k
 1 是给用户提供一种方式新增消息队列中间件种类，(框架支持了所有知名类型消息队列中间件或模拟中间件，这个用途的可能性比较少)
 2 可以对已有中间件类型的消费者 发布者类继承重写符合自己意愿的，这样就不需要修改项目的源代码了，这种用法非常的强大自由，可以满足一切用户的特殊定制想法。
   因为用户可以使用到self成员变量和通过重写使用其中的函数内部局部变量，能够做到更精细化的特殊定制。这个用途很强大自由灵活定制。
+3 延迟导入第三方包，使得当不需要安装使用某个中间件时候，启动funboost不报错
 
 test_frame/test_custom_broker/test_custom_list_as_broker.py 中有例子，使用list作为消息队列。
 test_frame/test_custom_broker/test_custom_deque_as_broker.py 中有例子，使用deque作为消息队列。
@@ -106,3 +107,18 @@ def register_nameko_broker():
     from funboost.consumers.nameko_consumer import NamekoConsumer
     from funboost.publishers.nameko_publisher import NamekoPublisher
     register_custom_broker(BrokerEnum.NAMEKO, NamekoPublisher, NamekoConsumer)
+
+
+def register_sqlalchemy_broker():
+    from funboost.consumers.sqlachemy_consumer import SqlachemyConsumer
+    from funboost.publishers.sqla_queue_publisher import SqlachemyQueuePublisher
+    register_custom_broker(BrokerEnum.SQLACHEMY, SqlachemyQueuePublisher, SqlachemyConsumer)
+
+
+broker_kind__regist_fun_map = {
+    BrokerEnum.KOMBU: register_kombu_broker,
+    BrokerEnum.PULSAR: register_pulsar_broker,
+    BrokerEnum.CELERY: register_celery_broker,
+    BrokerEnum.NAMEKO: register_nameko_broker,
+    BrokerEnum.SQLACHEMY: register_sqlalchemy_broker,
+}

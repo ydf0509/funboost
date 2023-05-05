@@ -9,19 +9,18 @@ import json
 import time
 from pathlib import Path
 
-try:
-    import sqlalchemy
-    from sqlalchemy import Column, func, or_, and_, Table, MetaData
-    from sqlalchemy import Integer
-    from sqlalchemy import String, DateTime
-    from sqlalchemy import create_engine
-    from sqlalchemy.ext.automap import automap_base
-    from sqlalchemy.ext.declarative import declarative_base
-    from sqlalchemy.orm import sessionmaker, scoped_session
-    from sqlalchemy.pool import StaticPool
-    from sqlalchemy_utils import database_exists, create_database
-except ImportError as e:
-    print(f'{e}  不使用sqlalchemy操作数据库模拟消息队列，就可以无视这')
+
+import sqlalchemy
+from sqlalchemy import Column, func, or_, and_, Table, MetaData
+from sqlalchemy import Integer
+from sqlalchemy import String, DateTime
+from sqlalchemy import create_engine
+from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.pool import StaticPool
+from sqlalchemy_utils import database_exists, create_database
+
 from funboost.utils import LoggerMixin, decorators, LoggerLevelSetterMixin
 
 

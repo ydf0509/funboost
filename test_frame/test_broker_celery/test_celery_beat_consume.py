@@ -5,13 +5,7 @@ import time
 
 from funboost import boost, BrokerEnum
 from funboost.consumers.celery_consumer import CeleryHelper
-from funboost.assist.user_custom_broker_register import register_celery_broker
 
-'''
-目前没有加到 funboost/factories/consumer_factory.py的 broker_kind__consumer_type_map 字典中，防止用户安装celery报错和funboost瘦身，
-如果想要使用celery作为funboost的消息中间件，需要先调用 register_celery_broker() 函数，目的是把类注册到funboost框架中。（看文档4.21自由扩展中间件文档）
-'''
-register_celery_broker()
 
 queue_1 = 'celery_beat_queue_7a2'
 queue_2 = 'celery_beat_queueb_8a2'

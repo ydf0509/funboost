@@ -168,7 +168,7 @@ class CeleryConsumer(AbstractConsumer):
             self.logger.debug(f' 这条消息是 celery 从 {self.queue_name} 队列中取出 ,将由 celery 框架处理: args:  {args} ,  kwargs: {kwargs}')
             return self.consuming_function(*args, **kwargs)
 
-        print(type(f), dir(f), f.__dict__)
+        # print(type(f), dir(f), f.__dict__)
 
     # def _shedual_task000(self):
     #     """ 建议使用 batch_start_celery_consumers([f1,f2]) ,而不是 f1.consume()  f2.consume() 方式"""

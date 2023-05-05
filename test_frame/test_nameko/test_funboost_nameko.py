@@ -4,16 +4,11 @@ monkey_patch()
 
 from funboost.consumers.nameko_consumer import batch_start_nameko_consumers
 
-from funboost.assist.user_custom_broker_register import register_nameko_broker
+
 import time
 
 from funboost import boost, ConcurrentModeEnum, BrokerEnum
 
-'''
-目前没有加到 funboost/factories/consumer_factory.py的 broker_kind__consumer_type_map 字典中，防止用户安装celery报错和funboost瘦身，
-如果想要使用namelo作为funboost的消息中间件，需要先调用 register_nameko_broker() 函数，目的是把类注册到funboost框架中。看文档4.21自由扩展中间件文档。
-'''
-register_nameko_broker()
 
 
 @boost('test_nameko_queue', broker_kind=BrokerEnum.NAMEKO, concurrent_mode=ConcurrentModeEnum.EVENTLET)

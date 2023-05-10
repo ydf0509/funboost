@@ -7,7 +7,7 @@ from funboost.publishers.base_publisher import AbstractPublisher
 
 class TCPPublisher(AbstractPublisher, ):
     """
-    使用tco作为中间件,不支持持久化，支持分布式
+    使用tcp作为中间件,不支持持久化，支持分布式
     """
 
     BUFSIZE = 10240

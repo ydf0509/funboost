@@ -695,7 +695,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         setattr(funboost_config_deafult, 'has_start_a_consumer_flag', 1)
 
     def _start_delay_task_scheduler(self):
-        self._delay_task_scheduler = BackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False)
+        from funboost.timing_job import FsdfBackgroundScheduler
+        self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False)
         self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
         self._delay_task_scheduler.add_listener(self._apscheduler_job_miss, EVENT_JOB_MISSED)
         self._delay_task_scheduler.start()

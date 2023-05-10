@@ -13,6 +13,7 @@ import threading
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.redis import RedisJobStore
 # noinspection PyProtectedMember
+from apscheduler.schedulers.base import STATE_STOPPED, STATE_RUNNING
 from apscheduler.util import undefined
 
 from funboost import funboost_config_deafult
@@ -62,6 +63,34 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
             atexit.register(_when_exit)
         super(FsdfBackgroundScheduler, self).start(paused=paused, )
         # _block_exit()   # python3.9 判断守护线程结束必须主线程在运行，否则结尾
+
+
+    def _main_loop00000(self):
+        """
+        原来的代码是这，动态添加任务不友好。
+        :return:
+        """
+        wait_seconds = threading.TIMEOUT_MAX
+        while self.state != STATE_STOPPED:
+            print(6666,self._event.is_set(),wait_seconds)
+            self._event.wait(wait_seconds)
+            print(7777, self._event.is_set(),wait_seconds)
+            self._event.clear()
+            wait_seconds = self._process_jobs()
+
+
+    def _main_loop(self):
+        """原来的_main_loop 删除所有任务后wait_seconds 会变成None，无限等待。
+        或者下一个需要运行的任务的wait_seconds是3600秒后，此时新加了一个动态任务需要3600秒后，
+        现在最多只需要1秒就能扫描到动态新增的定时任务了。
+        """
+        MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS = 1
+        wait_seconds = None
+        while self.state == STATE_RUNNING:
+            if wait_seconds is None:
+                wait_seconds = MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS
+            time.sleep(min(wait_seconds,MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS))  # 这个要取最小值，不然例如定时间隔0.1秒运行，不取最小值，不会每隔0.1秒运行。
+            wait_seconds = self._process_jobs()
 
 
 fsdf_background_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False, )

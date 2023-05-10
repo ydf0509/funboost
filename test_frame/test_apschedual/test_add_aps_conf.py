@@ -1,5 +1,6 @@
 import time
 
+import nb_log
 from funboost.timing_job.apscheduler_use_redis_store import funboost_background_scheduler_redis_store
 from funboost.timing_job.push_fun_for_apscheduler_use_db import push_for_apscheduler_use_db
 from test_aps_redis_store import my_push
@@ -8,6 +9,8 @@ from test_aps_redis_store import my_push
 """
 此文件是测试修改定时任务配置，另一个脚本的一启动的定时任务配置，会自动发生变化。因为定时任务配置通过中间件存储和通知了。
 """
+
+nb_log.get_logger('apscheduler')
 
 funboost_background_scheduler_redis_store.start(paused=True)  # 这个要设置为 paused=True，这个脚本是为了修改定时任务配置，这个要设置为 paused=True，这个脚本的sheduler不要运行，但一定要启动
 
@@ -35,11 +38,33 @@ funboost_background_scheduler_redis_store.start(paused=True)  # 这个要设置�
 #     funboost_background_scheduler_redis_store.remove_job(job_id=j.id)
 # funboost_background_scheduler_redis_store.remove_job()
 
-# funboost_background_scheduler_redis_store.remove_job('68')
+# funboost_background_scheduler_redis_store.remove_job('73')
 
-time.sleep(10)
+# time.sleep(10)
+# funboost_background_scheduler_redis_store.remove_all_jobs()
+
+# funboost_background_scheduler_redis_store.remove_job(job_id='68')
 
 funboost_background_scheduler_redis_store.add_job(push_for_apscheduler_use_db,   # 这里也可以用 my_push函数秒，那样就不用传递函数的位置和名字了，看test_aps_redis_store.py。
-                                                  'interval', id='73', name='namexx', seconds=6,
-                                                  args=('test_frame/test_apschedual/test_aps_redis_store.py', 'consume_func'), kwargs={"x": 14, "y": 20},
+                                                  'interval', id='15', name='namexx1', seconds=10,
+                                                  args=('test_frame/test_apschedual/test_aps_redis_store.py', 'consume_func'),
+                                                  kwargs={"x": 300, "y": 400},
                                                   replace_existing=True)
+
+funboost_background_scheduler_redis_store.add_job(push_for_apscheduler_use_db,   # 这里也可以用 my_push函数秒，那样就不用传递函数的位置和名字了，看test_aps_redis_store.py。
+                                                  'interval', id='16', name='namexx2', seconds=1,
+                                                  args=('test_frame/test_apschedual/test_aps_redis_store.py', 'consume_func'),
+                                                  kwargs={"x": 100, "y": 200},
+                                                  replace_existing=True)
+
+funboost_background_scheduler_redis_store.add_job(push_for_apscheduler_use_db,   # 这里也可以用 my_push函数秒，那样就不用传递函数的位置和名字了，看test_aps_redis_store.py。
+                                                  'interval', id='17', name='namexx3', seconds=0.1,
+                                                  args=('test_frame/test_apschedual/test_aps_redis_store.py', 'consume_func'),
+                                                  kwargs={"x": 500, "y": 600},
+                                                  replace_existing=True)
+
+#
+# # funboost_background_scheduler_redis_store.resume()
+# funboost_background_scheduler_redis_store.wakeup()
+
+print('over')

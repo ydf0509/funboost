@@ -1,9 +1,16 @@
+import time
+
 import apscheduler.jobstores.base
 import datetime
+
+from apscheduler.schedulers.base import STATE_RUNNING
+
+import nb_log
 from funboost import boost, BrokerEnum
 from funboost.timing_job.apscheduler_use_redis_store import funboost_background_scheduler_redis_store
 from funboost.timing_job.push_fun_for_apscheduler_use_db import push_for_apscheduler_use_db
 
+nb_log.get_logger('apscheduler')
 '''
 test_frame/test_apschedual/test_aps_redis_store.py
 和 test_frame/test_apschedual/test_change_aps_conf.py  搭配测试，动态修改定时任务
@@ -21,10 +28,11 @@ def my_push(x,y): # 推荐这样做，自己写个发布函数
 
 
 if __name__ == '__main__':
-    consume_func.clear()
-
-    funboost_background_scheduler_redis_store.start(paused=False)
     # funboost_background_scheduler_redis_store.remove_all_jobs() # 删除数据库中所有已配置的定时任务
+    consume_func.clear()
+    #
+    funboost_background_scheduler_redis_store.start(paused=False)
+    #
     try:
         # funboost_background_scheduler_redis_store.add_job(push_for_apscheduler_use_db, # 这个可以，定时调用push_for_apscheduler_use_db，需要把文件路径和函数名字传来。
         #                                                   'interval', id='6', name='namexx', seconds=3,
@@ -40,9 +48,23 @@ if __name__ == '__main__':
                                                           'interval', id='68', name='namexx', seconds=3,
                                                           kwargs={"x": 5, "y": 6},
                                                           replace_existing=False)
+        funboost_background_scheduler_redis_store.add_job(my_push,  # 这样做是可以的，用户自己定义一个函数，可picke序列化存储到redis或者mysql mongo。推荐这样。
+                                                          'interval', id='69', name='namexx', seconds=5,
+                                                          kwargs={"x": 7, "y": 8},
+                                                          replace_existing=False)
     except apscheduler.jobstores.base.ConflictingIdError as e:
         print('定时任务id已存在： {e}')
 
     consume_func.consume()
+
+    # while 1:
+    #     time.sleep(5)
+    #     print(funboost_background_scheduler_redis_store.state)
+    #     print(funboost_background_scheduler_redis_store._event.is_set())
+    #     if funboost_background_scheduler_redis_store.state == STATE_RUNNING:
+    #         funboost_background_scheduler_redis_store.wakeup()
+
+
+
 
 

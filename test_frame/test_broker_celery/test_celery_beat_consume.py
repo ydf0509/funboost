@@ -42,7 +42,7 @@ beat_schedule = {  # 这是100% 原汁原味的celery 定时任务配置方式
 }
 
 if __name__ == '__main__':
-    CeleryHelper.start_flower(5556)  # 启动flower 网页，这个函数也可以单独的脚本中启动
+    CeleryHelper.start_flower(port=5556)  # 启动flower 网页，这个函数也可以单独的脚本中启动
     CeleryHelper.celery_start_beat(beat_schedule) # 配置和启动定时任务，这个函数也可以在单独的脚本中启动，但脚本中需要 先import 导入@boost装饰器函数所在的脚本，因为@boost时候consumer的custom_init中注册celery任务路由，之后才能使定时任务发送到正确的消息队列。
     print(CeleryHelper.celery_app.conf)
     CeleryHelper.show_celery_app_conf()

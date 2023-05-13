@@ -5,8 +5,8 @@ import time
 from funboost import boost, BrokerEnum,ConcurrentModeEnum
 from funboost.consumers.celery_consumer import CeleryHelper
 
-queue_1 = 'celery_q1'
-queue_2 = 'celery_q2'
+queue_1 = 'celery_q3'
+queue_2 = 'celery_q4'
 
 
 @boost(queue_1, broker_kind=BrokerEnum.CELERY, qps=0.2,concurrent_mode=ConcurrentModeEnum.EVENTLET)
@@ -24,16 +24,14 @@ def f2(a, b):
 
 
 if __name__ == '__main__':
-    for i in range(2000):
+    for i in range(200):
         f1.push(i,i*2)
         f2.push(a=i,b=i*10)
 
-    f1.clear()
+    # f1.clear()
     # f2.clear()
 
-    for i in range(2000):
-        f1.push(i,i*2)
-        f2.push(a=i,b=i*10)
+
 
     f1.consume()
     f2.consume()

@@ -87,7 +87,11 @@ class CeleryPublisher(AbstractPublisher, ):
         os.system(cmd)
 
     def get_message_count(self):
-        return -1
+        # return -1
+        with celery_app.connection_or_acquire() as conn:
+            msg_cnt = conn.default_channel.queue_declare(
+                queue=self.queue_name, passive=False).message_count
+        return msg_cnt
 
     def close(self):
         pass

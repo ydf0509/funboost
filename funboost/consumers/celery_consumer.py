@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:32
+import logging
 import os
 import sys
 import threading
 import time
 from functools import partial
 
-
+import nb_log
 from nb_log import get_logger
 
 from funboost import funboost_config_deafult
@@ -280,3 +281,11 @@ class CeleryHelper:
                 ]
         cls.logger.info(f'celery 启动work参数 {argv}')
         celery_app.worker_main(argv)
+
+    @staticmethod
+    def use_nb_log_instead_celery_log(log_level:int=logging.INFO,log_filename='celery.log',formatter_template=7):
+        '''
+        使用nb_log的日志来取代celery的日志
+        '''
+        celery_app.conf.worker_hijack_root_logger = False
+        nb_log.get_logger('celery',log_level_int=log_level,log_filename=log_filename,formatter_template=formatter_template,)

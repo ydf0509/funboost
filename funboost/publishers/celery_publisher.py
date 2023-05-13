@@ -17,7 +17,7 @@ from funboost import funboost_config_deafult
 
 celery_app = celery.Celery(main='funboost_celery', broker=funboost_config_deafult.CELERY_BROKER_URL,
                            backend=funboost_config_deafult.CELERY_RESULT_BACKEND,
-                           task_routes={}, timezone=funboost_config_deafult.TIMEZONE, enable_utc=False)
+                           task_routes={}, timezone=funboost_config_deafult.TIMEZONE, enable_utc=False,)
 
 celery_app.conf.task_acks_late = True
 
@@ -25,6 +25,7 @@ celery_app.conf.task_acks_late = True
 # celery_app.conf.worker_log_format = '%(asctime)s - %(name)s - "%(pathname)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(message)s'
 
 celery_app.conf.worker_redirect_stdouts = False
+celery_app.conf.worker_hijack_root_logger = True # 如果设置为false，可以用nb_log来取代celery的日志
 
 
 class CeleryPublisher(AbstractPublisher, ):

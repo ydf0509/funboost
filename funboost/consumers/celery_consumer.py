@@ -5,12 +5,11 @@ import os
 import sys
 import threading
 import time
-import typing
 from functools import partial
 
-import nb_log
+
 from nb_log import get_logger
-from funboost.constant import BrokerEnum
+
 from funboost import funboost_config_deafult
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.publishers.celery_publisher import celery_app
@@ -216,7 +215,6 @@ class CeleryConsumer(AbstractConsumer):
 
 
 class CeleryHelper:
-
     celery_app = celery_app
     to_be_start_work_celery_queue_name_set = set()  # 存放需要worker运行的queue name。
     to_be_start_work_celery_queue_name__conmsumer_map = {}
@@ -249,7 +247,7 @@ class CeleryHelper:
         threading.Thread(target=_f).start()  # 使得可以很方便启动定时任务，继续启动函数消费
 
     @classmethod
-    def start_flower(cls,port=5555):
+    def start_flower(cls, port=5555):
         def _f():
             python_executable = sys.executable
             # print(python_executable)
@@ -281,5 +279,3 @@ class CeleryHelper:
                 ]
         cls.logger.info(f'celery 启动work参数 {argv}')
         celery_app.worker_main(argv)
-
-

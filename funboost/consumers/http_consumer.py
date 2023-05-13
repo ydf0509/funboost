@@ -7,7 +7,6 @@ import json
 from aiohttp import web
 from aiohttp.web_request import Request
 
-from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 
 

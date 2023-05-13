@@ -283,9 +283,9 @@ class CeleryHelper:
         celery_app.worker_main(argv)
 
     @staticmethod
-    def use_nb_log_instead_celery_log(log_level:int=logging.INFO,log_filename='celery.log',formatter_template=7):
-        '''
+    def use_nb_log_instead_celery_log(log_level: int = logging.INFO, log_filename='celery.log', formatter_template=7):
+        """
         使用nb_log的日志来取代celery的日志
-        '''
+        """
         celery_app.conf.worker_hijack_root_logger = False
-        nb_log.get_logger('celery',log_level_int=log_level,log_filename=log_filename,formatter_template=formatter_template,)
+        nb_log.get_logger('celery', log_level_int=log_level, log_filename=log_filename, formatter_template=formatter_template, )

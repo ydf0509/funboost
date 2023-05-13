@@ -9,14 +9,14 @@ queue_1 = 'celery_q1'
 queue_2 = 'celery_q2'
 
 
-@boost(queue_1, broker_kind=BrokerEnum.CELERY, qps=5,concurrent_mode=ConcurrentModeEnum.EVENTLET)
+@boost(queue_1, broker_kind=BrokerEnum.CELERY, qps=0.2,concurrent_mode=ConcurrentModeEnum.EVENTLET)
 def f1(x, y):
     time.sleep(3)
     print('哈哈哈', x, y)
     return x + y
 
 
-@boost(queue_2, broker_kind=BrokerEnum.CELERY, qps=1, concurrent_mode=ConcurrentModeEnum.EVENTLET)
+@boost(queue_2, broker_kind=BrokerEnum.CELERY, qps=0.5, concurrent_mode=ConcurrentModeEnum.EVENTLET)
 def f2(a, b):
     time.sleep(2)
     print('嘻嘻', a, b)
@@ -24,6 +24,13 @@ def f2(a, b):
 
 
 if __name__ == '__main__':
+    for i in range(2000):
+        f1.push(i,i*2)
+        f2.push(a=i,b=i*10)
+
+    f1.clear()
+    # f2.clear()
+
     for i in range(2000):
         f1.push(i,i*2)
         f2.push(a=i,b=i*10)

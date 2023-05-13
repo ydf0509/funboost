@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 12:12
+import os
+import sys
 import uuid
 import copy
 import time
@@ -12,6 +14,7 @@ import typing
 
 from funboost.publishers.base_publisher import AbstractPublisher, PriorityConsumingControlConfig
 from funboost import funboost_config_deafult
+from funboost.publishers.kombu_publisher import KombuPublisher
 
 celery_app = celery.Celery(broker=funboost_config_deafult.CELERY_BROKER_URL,
                            backend=funboost_config_deafult.CELERY_RESULT_BACKEND,
@@ -78,7 +81,10 @@ class CeleryPublisher(AbstractPublisher, ):
         pass
 
     def clear(self):
-        pass
+        python_executable = sys.executable
+        cmd = f''' {python_executable} -m celery -A funboost.publishers.celery_publisher purge -Q {self.queue_name} -f'''
+        self.logger.warning(f'刪除celery {self.queue_name} 隊列中的消息  {cmd}')
+        os.system(cmd)
 
     def get_message_count(self):
         return -1

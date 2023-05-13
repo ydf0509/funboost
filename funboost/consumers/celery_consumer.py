@@ -232,6 +232,12 @@ class CeleryHelper:
         """
         celery_app.conf.update(celery_app_conf)
 
+    @classmethod
+    def show_celery_app_conf(cls):
+        cls.logger.debug('展示celery app的配置')
+        for k, v in celery_app.conf.items():
+            print(k, ' : ', v)
+
     @staticmethod
     def celery_start_beat(beat_schedule: dict):
         celery_app.conf.beat_schedule = beat_schedule  # 配置celery定时任务
@@ -276,8 +282,4 @@ class CeleryHelper:
         cls.logger.info(f'celery 启动work参数 {argv}')
         celery_app.worker_main(argv)
 
-    @classmethod
-    def show_celery_app_conf(cls):
-        cls.logger.debug('展示celery app的配置')
-        for k, v in celery_app.conf.items():
-            print(k, ' : ', v)
+

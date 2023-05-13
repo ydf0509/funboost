@@ -3,7 +3,8 @@ monkey_patch()
 import time
 
 from funboost import boost, BrokerEnum,ConcurrentModeEnum
-from funboost.consumers.celery_consumer import CeleryHelper
+from funboost.consumers.celery_consumer import CeleryHelper,celery_app
+
 
 queue_1 = 'celery_q3'
 queue_2 = 'celery_q4'
@@ -28,11 +29,11 @@ if __name__ == '__main__':
         f1.push(i,i*2)
         f2.push(a=i,b=i*10)
 
-    # f1.clear()
-    # f2.clear()
-
-
-
     f1.consume()
     f2.consume()
     CeleryHelper.realy_start_celery_worker()
+
+    '''
+    $env:PYTHONPATH="D:/codes/funboost" 
+    python -m celery -A test_celery_consume2 status
+    '''

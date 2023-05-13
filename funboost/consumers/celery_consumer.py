@@ -164,6 +164,7 @@ class CeleryConsumer(AbstractConsumer):
     '''
 
     def custom_init(self):
+        # 这就是核心，@boost时候回注册任务路由到celery_app
         @celery_app.task(name=self.queue_name, rate_limit=f'{self._qps}/s', soft_time_limit=self._function_timeout,
                          max_retries=self._max_retry_times,
                          **self.broker_exclusive_config['celery_task_config'])

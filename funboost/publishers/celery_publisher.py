@@ -14,9 +14,8 @@ import typing
 
 from funboost.publishers.base_publisher import AbstractPublisher, PriorityConsumingControlConfig
 from funboost import funboost_config_deafult
-from funboost.publishers.kombu_publisher import KombuPublisher
 
-celery_app = celery.Celery(main='funboost_celery',broker=funboost_config_deafult.CELERY_BROKER_URL,
+celery_app = celery.Celery(main='funboost_celery', broker=funboost_config_deafult.CELERY_BROKER_URL,
                            backend=funboost_config_deafult.CELERY_RESULT_BACKEND,
                            task_routes={}, timezone=funboost_config_deafult.TIMEZONE, enable_utc=False)
 

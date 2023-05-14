@@ -212,6 +212,9 @@ class FunctionResultStatusPersistanceConfig(LoggerMixin):
         return f'<FunctionResultStatusPersistanceConfig> {id(self)} {self.to_dict()}'
 
 
+boost_queue__fun_map = {}
+
+
 # noinspection PyUnusedLocal
 def _interrupt_signal_handler(signalx, framex):
     print('你按了 Ctrl+C  。 You pressed Ctrl+C!  结束程序！')

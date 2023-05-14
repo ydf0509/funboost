@@ -13,7 +13,7 @@ from funboost.set_frame_config import patch_frame_config, show_frame_config
 from funboost.funboost_config_deafult import BoostDecoratorDefaultParams
 from funboost.helpers import (fabric_deploy, kill_all_remote_tasks,
                               multi_process_pub_params_list,
-                              run_consumer_with_multi_process)
+                              run_consumer_with_multi_process, boost_queue__fun_map)
 
 from funboost.utils.paramiko_util import ParamikoFolderUploader
 from funboost.consumers.base_consumer import (ExceptionForRequeue, ExceptionForRetry, ExceptionForPushToDlxqueue,
@@ -137,7 +137,7 @@ class _Undefined:
     pass
 
 
-boost_queue__fun_map = {}  # type:typing.Dict[str,IdeAutoCompleteHelper]
+
 
 
 # import funboost ; funboost.boost_queue__fun_map

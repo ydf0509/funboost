@@ -40,7 +40,7 @@ from pymongo import IndexModel, ReplaceOne
 from pymongo.errors import PyMongoError
 
 from funboost.concurrent_pool.single_thread_executor import SoloExecutor
-from funboost.helpers import FunctionResultStatusPersistanceConfig
+from funboost.helpers import FunctionResultStatusPersistanceConfig, boost_queue__fun_map
 
 from funboost.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
 
@@ -704,12 +704,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                      port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD, )
         }
         self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False,
-                                                             # jobstores=jobstores   # push 方法的序列化带thredignn.lock
+                                                             jobstores=jobstores  # push 方法的序列化带thredignn.lock
                                                              )
         self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
         # self._delay_task_scheduler.add_listener(self._apscheduler_job_miss, EVENT_JOB_MISSED)
         self._delay_task_scheduler.start()
         self.logger.warning('启动延时任务sheduler')
+
+    @staticmethod
+    def _push_for_apscheduler_use_database_store(queue_name, msg):
+        boost_queue__fun_map[queue_name].publish(msg)
 
     @abc.abstractmethod
     def _shedual_task(self):
@@ -775,8 +779,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # 这种方式是重新以普通任务方式发送到消息队列
             msg_no_delay = copy.deepcopy(kw['body'])
             self.__delete_eta_countdown(msg_no_delay)
-            print(msg_no_delay)
-            self._delay_task_scheduler.add_job(self.publisher_of_same_queue.publish, 'date', run_date=run_date, kwargs={'msg': msg_no_delay},
+            # print(msg_no_delay)
+            # 数据库作为apscheduler的jobstores时候， 不能用 self.pbulisher_of_same_queue.publish，self不能序列化
+            self._delay_task_scheduler.add_job(AbstractConsumer._push_for_apscheduler_use_database_store, 'date', run_date=run_date,
+                                               kwargs={'queue_name': self.queue_name, 'msg': msg_no_delay},
                                                misfire_grace_time=misfire_grace_time)
             self._confirm_consume(kw)
 
@@ -790,7 +796,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._frequency_control(self._qps, self._msg_schedule_time_intercal)
 
     def __delete_eta_countdown(self, msg_body: dict):
-        self.__dict_pop(msg_body.get('extra', {}),'eta')
+        self.__dict_pop(msg_body.get('extra', {}), 'eta')
         self.__dict_pop(msg_body.get('extra', {}), 'countdown')
         self.__dict_pop(msg_body.get('extra', {}), 'misfire_grace_time')
 

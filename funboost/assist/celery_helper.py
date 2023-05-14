@@ -14,10 +14,6 @@ celery_app = celery.Celery(main='funboost_celery', broker=funboost_config_deaful
                            task_routes={}, timezone=funboost_config_deafult.TIMEZONE, enable_utc=False, )
 
 celery_app.conf.task_acks_late = True
-
-# celery_app.conf.worker_task_log_format = '%(asctime)s - %(name)s - "%(pathname)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(message)s'
-# celery_app.conf.worker_log_format = '%(asctime)s - %(name)s - "%(pathname)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(message)s'
-
 celery_app.conf.worker_redirect_stdouts = False
 celery_app.conf.worker_hijack_root_logger = True  # 如果设置为false，可以用nb_log来取代celery的日志
 
@@ -59,7 +55,6 @@ class CeleryHelper:
         def _f():
             python_executable = sys.executable
             # print(python_executable)
-
             # cmd = f'''{python_executable} -m celery -A funboost.publishers.celery_publisher --broker={funboost_config_deafult.CELERY_BROKER_URL}  --result-backend={funboost_config_deafult.CELERY_RESULT_BACKEND}   flower --address=0.0.0.0 --port={port}  --auto_refresh=True '''
             cmd = f'''{python_executable} -m celery  --broker={funboost_config_deafult.CELERY_BROKER_URL}  --result-backend={funboost_config_deafult.CELERY_RESULT_BACKEND}   flower --address=0.0.0.0 --port={port}  --auto_refresh=True '''
 

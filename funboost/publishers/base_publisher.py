@@ -197,14 +197,20 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         if isinstance(msg, str):
             msg = json.loads(msg)
-        msg_function_kw = copy.copy(msg)
+        msg_function_kw = copy.deepcopy(msg)
+        raw_extra = {}
+        if 'extra' in msg:
+            msg_function_kw.pop('extra')
+            raw_extra = msg['extra']
         if self.publish_params_checker:
-            self.publish_params_checker.check_params(msg)
+            self.publish_params_checker.check_params(msg_function_kw)
         task_id = task_id or f'{self._queue_name}_result:{uuid.uuid4()}'
-        msg['extra'] = extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
+        extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
                                        'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
         if priority_control_config:
             extra_params.update(priority_control_config.to_dict())
+        extra_params.update(raw_extra)
+        msg['extra'] =extra_params
         t_start = time.time()
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
             self.concrete_realization_of_publish)(json.dumps(msg, ensure_ascii=False))

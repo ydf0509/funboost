@@ -16,12 +16,13 @@ celery_app = celery.Celery(main='funboost_celery', broker=funboost_config_deaful
 celery_app.conf.task_acks_late = True
 celery_app.conf.worker_redirect_stdouts = False
 
+logger = get_logger('funboost.CeleryHelper')
+
 
 class CeleryHelper:
     celery_app = celery_app
     to_be_start_work_celery_queue_name_set = set()  # 存放需要worker运行的queue name。
-    to_be_start_work_celery_queue_name__conmsumer_map = {}
-    logger = get_logger('funboost.CeleryHelper')
+
     concurrent_mode = None
 
     @staticmethod
@@ -33,9 +34,9 @@ class CeleryHelper:
         """
         celery_app.conf.update(celery_app_conf)
 
-    @classmethod
-    def show_celery_app_conf(cls):
-        cls.logger.debug('展示celery app的配置')
+    @staticmethod
+    def show_celery_app_conf():
+        logger.debug('展示celery app的配置')
         for k, v in celery_app.conf.items():
             print(k, ' : ', v)
 
@@ -49,15 +50,15 @@ class CeleryHelper:
 
         threading.Thread(target=_f).start()  # 使得可以很方便启动定时任务，继续启动函数消费
 
-    @classmethod
-    def start_flower(cls, port=5555):
+    @staticmethod
+    def start_flower(port=5555):
         def _f():
             python_executable = sys.executable
             # print(python_executable)
             # cmd = f'''{python_executable} -m celery -A funboost.publishers.celery_publisher --broker={funboost_config_deafult.CELERY_BROKER_URL}  --result-backend={funboost_config_deafult.CELERY_RESULT_BACKEND}   flower --address=0.0.0.0 --port={port}  --auto_refresh=True '''
             cmd = f'''{python_executable} -m celery  --broker={funboost_config_deafult.CELERY_BROKER_URL}  --result-backend={funboost_config_deafult.CELERY_RESULT_BACKEND}   flower --address=0.0.0.0 --port={port}  --auto_refresh=True '''
 
-            cls.logger.info(f'启动flower命令:   {cmd}')
+            logger.info(f'启动flower命令:   {cmd}')
             os.system(cmd)
 
         threading.Thread(target=_f).start()
@@ -79,7 +80,7 @@ class CeleryHelper:
                 '-n', f'worker_funboost_{worker_name}@%h', f'--loglevel=INFO',
                 f'--queues={queue_names_str}',
                 ]
-        cls.logger.info(f'celery 启动work参数 {argv}')
+        logger.info(f'celery 启动work参数 {argv}')
         celery_app.worker_main(argv)
 
     @staticmethod

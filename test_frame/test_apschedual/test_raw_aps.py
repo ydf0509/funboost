@@ -7,7 +7,7 @@ from funboost.timing_job import FsdfBackgroundScheduler
 
 jobstores = {
     "default": RedisJobStore(db=4, host=funboost_config_deafult.REDIS_HOST,
-                             port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD,),
+                             port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD,pickle_protocol=5),
 
 "default2": RedisJobStore(db=6, host=funboost_config_deafult.REDIS_HOST,
                              port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD,)

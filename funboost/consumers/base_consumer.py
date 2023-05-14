@@ -713,7 +713,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._delay_task_scheduler.start()
         self.logger.warning('启动延时任务sheduler')
 
-    logger_apscheduler = nb_log.get_logger('push_for_apscheduler_use_database_store')
+    logger_apscheduler = nb_log.get_logger('push_for_apscheduler_use_database_store',log_filename='push_for_apscheduler_use_database_store.log')
 
     @classmethod
     def _push_for_apscheduler_use_database_store(cls, queue_name, msg, ):
@@ -805,7 +805,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.__dict_pop(msg_body.get('extra', {}), 'countdown')
         self.__dict_pop(msg_body.get('extra', {}), 'misfire_grace_time')
 
-    def __dict_pop(self, dictx, key):
+    @staticmethod
+    def __dict_pop( dictx, key):
         try:
             dictx.pop(key)
         except KeyError:

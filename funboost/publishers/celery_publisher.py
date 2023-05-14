@@ -12,20 +12,8 @@ import celery
 import celery.result
 import typing
 
+from funboost.assist.celery_helper import celery_app
 from funboost.publishers.base_publisher import AbstractPublisher, PriorityConsumingControlConfig
-from funboost import funboost_config_deafult
-
-celery_app = celery.Celery(main='funboost_celery', broker=funboost_config_deafult.CELERY_BROKER_URL,
-                           backend=funboost_config_deafult.CELERY_RESULT_BACKEND,
-                           task_routes={}, timezone=funboost_config_deafult.TIMEZONE, enable_utc=False,)
-
-celery_app.conf.task_acks_late = True
-
-# celery_app.conf.worker_task_log_format = '%(asctime)s - %(name)s - "%(pathname)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(message)s'
-# celery_app.conf.worker_log_format = '%(asctime)s - %(name)s - "%(pathname)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(message)s'
-
-celery_app.conf.worker_redirect_stdouts = False
-celery_app.conf.worker_hijack_root_logger = True # 如果设置为false，可以用nb_log来取代celery的日志
 
 
 class CeleryPublisher(AbstractPublisher, ):
@@ -55,14 +43,20 @@ class CeleryPublisher(AbstractPublisher, ):
                 priority_control_config: PriorityConsumingControlConfig = None) -> celery.result.AsyncResult:
         if isinstance(msg, str):
             msg = json.loads(msg)
-        msg_function_kw = copy.copy(msg)
+        msg_function_kw = copy.deepcopy(msg)
+        raw_extra = {}
+        if 'extra' in msg:
+            msg_function_kw.pop('extra')
+            raw_extra = msg['extra']
         if self.publish_params_checker:
-            self.publish_params_checker.check_params(msg)
+            self.publish_params_checker.check_params(msg_function_kw)
         task_id = task_id or f'{self._queue_name}_result:{uuid.uuid4()}'
-        msg['extra'] = extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
-                                       'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
+        extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
+                        'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
         if priority_control_config:
             extra_params.update(priority_control_config.to_dict())
+        extra_params.update(raw_extra)
+        msg['extra'] = extra_params
 
         t_start = time.time()
         celery_result = celery_app.send_task(name=self.queue_name, kwargs=msg_function_kw, task_id=extra_params['task_id'])  # type: celery.result.AsyncResult

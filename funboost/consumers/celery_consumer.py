@@ -1,20 +1,11 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:32
-import logging
-import os
-import sys
-import threading
+
 import time
-from functools import partial
+from funboost.assist.celery_helper import CeleryHelper, celery_app
 
-import nb_log
-from nb_log import get_logger
-
-from funboost import funboost_config_deafult
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost.publishers.celery_publisher import celery_app
-from funboost.constant import ConcurrentModeEnum
 
 
 class CeleryConsumer(AbstractConsumer):
@@ -175,31 +166,6 @@ class CeleryConsumer(AbstractConsumer):
 
         CeleryHelper.concurrent_mode = self._concurrent_mode
 
-        # print(type(f), dir(f), f.__dict__)
-
-    # def _shedual_task000(self):
-    #     """ 建议使用 batch_start_celery_consumers([f1,f2]) ,而不是 f1.consume()  f2.consume() 方式"""
-    #
-    #     # # celery_app.worker_main(
-    #     # #     argv=['worker', '--pool=threads', '--concurrency=500', '-n', 'worker1@%h', '--loglevel=INFO',
-    #     # #           f'--queues={self.queue_name}',
-    #     # #           ])
-    #     #
-    #     # # logging.getLevelName(self._log_level)
-    #     def f():
-    #         celery_app.worker_main(
-    #             argv=['worker', '--pool=threads', f'--concurrency={self._concurrent_num}',
-    #                   '-n', f'worker_{self.queue_name}@%h', f'--loglevel=INFO',
-    #                   f'--queues={self.queue_name}',
-    #                   ])
-    #
-    #     # threading.Thread(target=f).start()
-    #     f()
-    #     #
-    #     # # worker = celery_app.Worker()
-    #     # # worker.start()
-    #     # raise Exception('不建议这样启动')
-
     def start_consuming_message(self):
         # 不单独每个函数都启动一次celery的worker消费，是把要消费的 queue name放到列表中，realy_start_celery_worker 一次性启动多个函数消费。
         CeleryHelper.to_be_start_work_celery_queue_name_set.add(self.queue_name)
@@ -214,78 +180,3 @@ class CeleryConsumer(AbstractConsumer):
 
     def _requeue(self, kw):
         pass
-
-
-class CeleryHelper:
-    celery_app = celery_app
-    to_be_start_work_celery_queue_name_set = set()  # 存放需要worker运行的queue name。
-    to_be_start_work_celery_queue_name__conmsumer_map = {}
-    logger = get_logger('funboost.CeleryHelper')
-    concurrent_mode = None
-
-    @staticmethod
-    def update_celery_app_conf(celery_app_conf: dict):
-        """
-        更新celery app的配置，celery app配置大全见 https://docs.celeryq.dev/en/stable/userguide/configuration.html
-        :param celery_app_conf:
-        :return:
-        """
-        celery_app.conf.update(celery_app_conf)
-
-    @classmethod
-    def show_celery_app_conf(cls):
-        cls.logger.debug('展示celery app的配置')
-        for k, v in celery_app.conf.items():
-            print(k, ' : ', v)
-
-    @staticmethod
-    def celery_start_beat(beat_schedule: dict):
-        celery_app.conf.beat_schedule = beat_schedule  # 配置celery定时任务
-
-        def _f():
-            beat = partial(celery_app.Beat, loglevel='INFO', )
-            beat().run()
-
-        threading.Thread(target=_f).start()  # 使得可以很方便启动定时任务，继续启动函数消费
-
-    @classmethod
-    def start_flower(cls, port=5555):
-        def _f():
-            python_executable = sys.executable
-            # print(python_executable)
-
-            # cmd = f'''{python_executable} -m celery -A funboost.publishers.celery_publisher --broker={funboost_config_deafult.CELERY_BROKER_URL}  --result-backend={funboost_config_deafult.CELERY_RESULT_BACKEND}   flower --address=0.0.0.0 --port={port}  --auto_refresh=True '''
-            cmd = f'''{python_executable} -m celery  --broker={funboost_config_deafult.CELERY_BROKER_URL}  --result-backend={funboost_config_deafult.CELERY_RESULT_BACKEND}   flower --address=0.0.0.0 --port={port}  --auto_refresh=True '''
-
-            cls.logger.info(f'启动flower命令:   {cmd}')
-            os.system(cmd)
-
-        threading.Thread(target=_f).start()
-
-    @classmethod
-    def realy_start_celery_worker(cls, worker_name=None):
-        if len(cls.to_be_start_work_celery_queue_name_set) == 0:
-            raise Exception('celery worker 没有需要运行的queue')
-        queue_names_str = ','.join(list(cls.to_be_start_work_celery_queue_name_set))
-        # '--concurrency=200',
-        # '--autoscale=5,500' threads 并发模式不支持自动扩大缩小并发数量,
-        worker_name = worker_name or f'pid_{os.getpid()}'
-        pool_name = 'threads'
-        if cls.concurrent_mode == ConcurrentModeEnum.GEVENT:
-            pool_name = 'gevent'
-        if cls.concurrent_mode == ConcurrentModeEnum.EVENTLET:
-            pool_name = 'eventlet'
-        argv = ['worker', f'--pool={pool_name}', '--concurrency=200',
-                '-n', f'worker_funboost_{worker_name}@%h', f'--loglevel=INFO',
-                f'--queues={queue_names_str}',
-                ]
-        cls.logger.info(f'celery 启动work参数 {argv}')
-        celery_app.worker_main(argv)
-
-    @staticmethod
-    def use_nb_log_instead_celery_log(log_level: int = logging.INFO, log_filename='celery.log', formatter_template=7):
-        """
-        使用nb_log的日志来取代celery的日志
-        """
-        celery_app.conf.worker_hijack_root_logger = False
-        nb_log.get_logger('celery', log_level_int=log_level, log_filename=log_filename, formatter_template=formatter_template, )

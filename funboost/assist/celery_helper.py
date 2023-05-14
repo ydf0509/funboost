@@ -15,7 +15,6 @@ celery_app = celery.Celery(main='funboost_celery', broker=funboost_config_deaful
 
 celery_app.conf.task_acks_late = True
 celery_app.conf.worker_redirect_stdouts = False
-celery_app.conf.worker_hijack_root_logger = True  # 如果设置为false，可以用nb_log来取代celery的日志
 
 
 class CeleryHelper:

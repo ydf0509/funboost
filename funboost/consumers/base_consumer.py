@@ -39,6 +39,7 @@ import pymongo
 from pymongo import IndexModel, ReplaceOne
 from pymongo.errors import PyMongoError
 
+import nb_log
 from funboost.concurrent_pool.single_thread_executor import SoloExecutor
 from funboost.helpers import FunctionResultStatusPersistanceConfig, boost_queue__fun_map
 
@@ -514,6 +515,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.logger = get_logger(logger_name, log_level_int=log_level, log_filename=f'{logger_name}.log' if create_logger_file else None,
                                  # log_file_handler_type=log_file_handler_type,
                                  formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+        self._logger_name = logger_name
         # self.logger.info(f'{self.__class__} 在 {current_queue__info_dict["where_to_instantiate"]}  被实例化')
         logger_name_error = f'{logger_name}_error'
         self.error_file_logger = get_logger(logger_name_error, log_level_int=log_level, log_filename=f'{logger_name_error}.log',
@@ -711,8 +713,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._delay_task_scheduler.start()
         self.logger.warning('启动延时任务sheduler')
 
-    @staticmethod
-    def _push_for_apscheduler_use_database_store(queue_name, msg):
+    logger_apscheduler = nb_log.get_logger('push_for_apscheduler_use_database_store')
+
+    @classmethod
+    def _push_for_apscheduler_use_database_store(cls,queue_name, msg,):
+        cls.logger_apscheduler.debug(f'延时任务用普通消息重新发布到普通队列 {msg}')
         boost_queue__fun_map[queue_name].publish(msg)
 
     @abc.abstractmethod
@@ -776,13 +781,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw},
             #                                    misfire_grace_time=misfire_grace_time)
 
-            # 这种方式是重新以普通任务方式发送到消息队列
+            # 这种方式是延时任务重新以普通任务方式发送到消息队列
             msg_no_delay = copy.deepcopy(kw['body'])
             self.__delete_eta_countdown(msg_no_delay)
             # print(msg_no_delay)
             # 数据库作为apscheduler的jobstores时候， 不能用 self.pbulisher_of_same_queue.publish，self不能序列化
-            self._delay_task_scheduler.add_job(AbstractConsumer._push_for_apscheduler_use_database_store, 'date', run_date=run_date,
-                                               kwargs={'queue_name': self.queue_name, 'msg': msg_no_delay},
+            self._delay_task_scheduler.add_job(self._push_for_apscheduler_use_database_store, 'date', run_date=run_date,
+                                               kwargs={'queue_name': self.queue_name, 'msg': msg_no_delay,},
                                                misfire_grace_time=misfire_grace_time)
             self._confirm_consume(kw)
 

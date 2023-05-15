@@ -7,3 +7,6 @@ def f(x):
 
 if __name__ == '__main__':
     f.consume()
+
+    while 1:
+        time.sleep(10)

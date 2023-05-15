@@ -30,6 +30,7 @@ from threading import Lock, Thread
 import gevent
 import asyncio
 
+from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
 from apscheduler.events import EVENT_JOB_MISSED
@@ -38,8 +39,10 @@ import pymongo
 from pymongo import IndexModel, ReplaceOne
 from pymongo.errors import PyMongoError
 
+import nb_log
 from funboost.concurrent_pool.single_thread_executor import SoloExecutor
-from funboost.helpers import FunctionResultStatusPersistanceConfig
+from funboost.helpers import FunctionResultStatusPersistanceConfig, boost_queue__fun_map
+
 from funboost.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
 
 # noinspection PyUnresolvedReferences
@@ -70,7 +73,8 @@ from funboost import funboost_config_deafult
 # noinspection PyUnresolvedReferences
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
 
-patch_apscheduler_run_job()
+
+# patch_apscheduler_run_job()
 
 
 def _delete_keys_and_return_new_dict(dictx: dict, keys: list = None):
@@ -511,6 +515,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.logger = get_logger(logger_name, log_level_int=log_level, log_filename=f'{logger_name}.log' if create_logger_file else None,
                                  # log_file_handler_type=log_file_handler_type,
                                  formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+        self._logger_name = logger_name
         # self.logger.info(f'{self.__class__} 在 {current_queue__info_dict["where_to_instantiate"]}  被实例化')
         logger_name_error = f'{logger_name}_error'
         self.error_file_logger = get_logger(logger_name_error, log_level_int=log_level, log_filename=f'{logger_name_error}.log',
@@ -565,7 +570,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._last_start_count_qps_timestamp = time.time()
         self._has_execute_times_in_recent_second = 0
 
-        self._publisher_of_same_queue = None
+        self._publisher_of_same_queue = None  #
         self._dlx_queue_name = f'{queue_name}_dlx'
         self._publisher_of_dlx_queue = None  # 死信队列发布者
 
@@ -696,11 +701,24 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _start_delay_task_scheduler(self):
         from funboost.timing_job import FsdfBackgroundScheduler
-        self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False)
+        jobstores = {
+            "default": RedisJobStore(db=funboost_config_deafult.REDIS_DB, host=funboost_config_deafult.REDIS_HOST,
+                                     port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD, )
+        }
+        self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False,
+                                                             jobstores=jobstores  # push 方法的序列化带thredignn.lock
+                                                             )
         self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
-        self._delay_task_scheduler.add_listener(self._apscheduler_job_miss, EVENT_JOB_MISSED)
+        # self._delay_task_scheduler.add_listener(self._apscheduler_job_miss, EVENT_JOB_MISSED)
         self._delay_task_scheduler.start()
         self.logger.warning('启动延时任务sheduler')
+
+    logger_apscheduler = nb_log.get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')
+
+    @classmethod
+    def _push_for_apscheduler_use_database_store(cls, queue_name, msg, ):
+        cls.logger_apscheduler.debug(f'延时任务用普通消息重新发布到普通队列 {msg}')
+        boost_queue__fun_map[queue_name].publish(msg)
 
     @abc.abstractmethod
     def _shedual_task(self):
@@ -758,8 +776,21 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             if self._has_start_delay_task_scheduler is False:
                 self._has_start_delay_task_scheduler = True
                 self._start_delay_task_scheduler()
-            self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw},
+
+            # 这种方式是扔到线程池
+            # self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw},
+            #                                    misfire_grace_time=misfire_grace_time)
+
+            # 这种方式是延时任务重新以普通任务方式发送到消息队列
+            msg_no_delay = copy.deepcopy(kw['body'])
+            self.__delete_eta_countdown(msg_no_delay)
+            # print(msg_no_delay)
+            # 数据库作为apscheduler的jobstores时候， 不能用 self.pbulisher_of_same_queue.publish，self不能序列化
+            self._delay_task_scheduler.add_job(self._push_for_apscheduler_use_database_store, 'date', run_date=run_date,
+                                               kwargs={'queue_name': self.queue_name, 'msg': msg_no_delay, },
                                                misfire_grace_time=misfire_grace_time)
+            self._confirm_consume(kw)
+
         else:  # 普通任务
             self.concurrent_pool.submit(self._run, kw)
 
@@ -768,6 +799,18 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._frequency_control(self._qps / active_num, self._msg_schedule_time_intercal * active_num)
         else:
             self._frequency_control(self._qps, self._msg_schedule_time_intercal)
+
+    def __delete_eta_countdown(self, msg_body: dict):
+        self.__dict_pop(msg_body.get('extra', {}), 'eta')
+        self.__dict_pop(msg_body.get('extra', {}), 'countdown')
+        self.__dict_pop(msg_body.get('extra', {}), 'misfire_grace_time')
+
+    @staticmethod
+    def __dict_pop(dictx, key):
+        try:
+            dictx.pop(key)
+        except KeyError:
+            pass
 
     def _frequency_control(self, qpsx: float, msg_schedule_time_intercalx: float):
         # 以下是消费函数qps控制代码。无论是单个消费者空频还是分布式消费控频，都是基于直接计算的，没有依赖redis inrc计数，使得控频性能好。

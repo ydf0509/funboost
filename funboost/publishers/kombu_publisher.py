@@ -82,6 +82,7 @@ class KombuPublisher(AbstractPublisher, ):
 
     @deco_mq_conn_error
     def clear(self):
+        self.logger.warning(f'kombu清空消息队列 {self.queue_name}')
         self.channel.queue_purge(self._queue_name)
 
     @deco_mq_conn_error

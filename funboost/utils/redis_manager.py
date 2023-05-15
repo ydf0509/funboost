@@ -87,7 +87,7 @@ class RedisMixin(object):
                             password=funboost_config_deafult.REDIS_PASSWORD, db=funboost_config_deafult.REDIS_DB_FILTER_AND_RPC_RESULT, decode_responses=True)
 
     def timestamp(self):
-        """ 如果是多台机器做分布式控频 乃至确认消费，每台机器取自己的时间，如果各机器的时间戳不一致会发生问题，改成统一使用从redis服务端获取时间。"""
+        """ 如果是多台机器做分布式控频 乃至确认消费，每台机器取自己的时间，如果各机器的时间戳不一致会发生问题，改成统一使用从redis服务端获取时间，单位是时间戳秒。"""
         time_tuple = self.redis_db_frame_version3.time()
         # print(time_tuple)
         return time_tuple[0] + time_tuple[1] / 1000000

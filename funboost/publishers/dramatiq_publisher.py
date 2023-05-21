@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2022/8/8 0008 12:12
-import os
-import sys
-import uuid
+
 import copy
-import time
-import threading
 import json
 
-import typing
-
+from funboost import funboost_config_deafult
 from funboost.assist.dramatiq_helper import DramatiqHelper
-from funboost.publishers.base_publisher import AbstractPublisher, PriorityConsumingControlConfig
+from funboost.publishers.base_publisher import AbstractPublisher
+from funboost.utils.redis_manager import RedisMixin
 
 
 class DramatiqPublisher(AbstractPublisher, ):
@@ -37,8 +32,13 @@ class DramatiqPublisher(AbstractPublisher, ):
 
     def get_message_count(self):
         # pass
+        # return -1
+        if funboost_config_deafult.DRAMATIQ_URL.startswith('redis'):
+            return RedisMixin().redis_db_frame.llen(self.queue_name)  # redis 无，需要自己实现
+        if funboost_config_deafult.DRAMATIQ_URL.startswith('amqp'):
+            cnts = DramatiqHelper.broker.get_queue_message_counts(self.queue_name)
+            return cnts[0]
         return -1
-        # DramatiqHelper.broker.get_queue_message_counts(self.queue_name) # redis 无，需要自己实现
 
     def close(self):
         DramatiqHelper.broker.close()

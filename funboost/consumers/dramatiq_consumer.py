@@ -8,7 +8,7 @@ from funboost.assist.dramatiq_helper import DramatiqHelper
 
 class DramatiqConsumer(AbstractConsumer):
     """
-    celery作为中间件实现的。
+    dramatiq作为中间件实现的。
     """
 
     BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'dramatiq_actor_options': {}}

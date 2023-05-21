@@ -1,20 +1,17 @@
 import time
 
-from funboost import register_custom_broker, boost
-from funboost.consumers.dramatiq_consumer import DramatiqConsumer
-from funboost.publishers.dramatiq_publisher import DramatiqPublisher
+from funboost import boost, BrokerEnum
+
 from funboost.assist.dramatiq_helper import DramatiqHelper
 
-register_custom_broker(52, DramatiqPublisher, DramatiqConsumer)
 
-
-@boost('test_dramatiq_q1', broker_kind=52, function_timeout=10)
+@boost('test_dramatiq_q1', broker_kind=BrokerEnum.DRAMATIQ, function_timeout=10)
 def f1(x):
     time.sleep(1)
     print('f1', x)
 
 
-@boost('test_dramatiq_q2', broker_kind=52, function_timeout=3)
+@boost('test_dramatiq_q2', broker_kind=BrokerEnum.DRAMATIQ, function_timeout=3)
 def f2(y):
     time.sleep(2)
     print('f2', y)

@@ -111,6 +111,7 @@ class BrokerRegister:
             BrokerEnum.CELERY: self.register_celery_broker,
             BrokerEnum.NAMEKO: self.register_nameko_broker,
             BrokerEnum.SQLACHEMY: self.register_sqlalchemy_broker,
+            BrokerEnum.DRAMATIQ: self.register_dramatiq_broker,
         }
 
     def regist_to_funboost(self, broker_kind):
@@ -145,4 +146,10 @@ class BrokerRegister:
         from funboost.consumers.sqlachemy_consumer import SqlachemyConsumer
         from funboost.publishers.sqla_queue_publisher import SqlachemyQueuePublisher
         register_custom_broker(BrokerEnum.SQLACHEMY, SqlachemyQueuePublisher, SqlachemyConsumer)
+
+    @staticmethod
+    def register_dramatiq_broker():
+        from funboost.consumers.dramatiq_consumer import DramatiqConsumer
+        from funboost.publishers.dramatiq_publisher import DramatiqPublisher
+        register_custom_broker(BrokerEnum.DRAMATIQ, DramatiqPublisher, DramatiqConsumer)
 

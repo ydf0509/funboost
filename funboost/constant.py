@@ -69,6 +69,8 @@ class BrokerEnum:
 
     CELERY = 30  # funboost支持celery框架来发布和消费任务，由celery框架来调度执行任务，但是写法简单暴击celery，永无无需关心和操作Celery对象实例。
 
+    DRAMATIQ = 31 # funboost使用 dramatiq 框架作为消息队列，dramatiq类似celery也是任务队列框架。用户使用funboost api来操作dramatiq核心调度。
+
     NAMEKO = 40  # funboost支持python微服务框架nameko，用户无需掌握nameko api语法，就玩转python nameko微服务
 
 

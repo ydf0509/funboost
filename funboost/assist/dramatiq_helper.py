@@ -4,10 +4,13 @@ import dramatiq
 from dramatiq.cli import main
 from funboost import funboost_config_deafult
 from dramatiq.brokers.redis import RedisBroker
+from dramatiq.brokers.rabbitmq import RabbitmqBroker
 
-redis_broker = RedisBroker(url=funboost_config_deafult.DRAMATIQ_URL)
-dramatiq.set_broker(redis_broker)
-
+if funboost_config_deafult.DRAMATIQ_URL.startswith('redis'):
+    broker = RedisBroker(url=funboost_config_deafult.DRAMATIQ_URL)
+else:
+    broker = RabbitmqBroker(url=funboost_config_deafult.DRAMATIQ_URL)
+dramatiq.set_broker(broker)
 
 """
  {'max_age', 'throws', 'pipe_target', 'pipe_ignore', 'on_success', 'retry_when', 'time_limit', 'min_backoff', 'max_retries', 'max_backoff', 'notify_shutdown', 'on_failure'}

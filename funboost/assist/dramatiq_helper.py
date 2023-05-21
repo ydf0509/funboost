@@ -2,10 +2,10 @@ import argparse
 import nb_log
 import dramatiq
 from dramatiq.cli import main
-
+from funboost import funboost_config_deafult
 from dramatiq.brokers.redis import RedisBroker
 
-redis_broker = RedisBroker(host="127.0.0.1", port=6379)
+redis_broker = RedisBroker(url=funboost_config_deafult.DRAMATIQ_URL)
 dramatiq.set_broker(redis_broker)
 
 

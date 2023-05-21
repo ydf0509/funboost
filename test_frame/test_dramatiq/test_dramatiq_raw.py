@@ -11,7 +11,7 @@ from dramatiq.brokers.redis import RedisBroker
 redis_broker = RedisBroker(host="127.0.0.1", port=6379)
 dramatiq.set_broker(redis_broker)
 
-print(dramatiq.get_broker())
+print(dramatiq.get_broker().actor_options)
 
 
 
@@ -21,6 +21,18 @@ def count_words(url):
     count = len(response.text.split(" "))
     print(f"There are {count} words at {url!r}.")
 
+
+@dramatiq.actor(queue_name='f2q')
+def f2(url):
+    response = requests.get(url)
+    count = len(response.text.split(" "))
+    print(f"There are {count} words at {url!r}.")
+
+@dramatiq.actor(queue_name='f3q')
+def f3(url):
+    response = requests.get(url)
+    count = len(response.text.split(" "))
+    print(f"There are {count} words at {url!r}.")
 
 
 

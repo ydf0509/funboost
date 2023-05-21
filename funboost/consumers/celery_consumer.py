@@ -172,6 +172,7 @@ class CeleryConsumer(AbstractConsumer):
         super().start_consuming_message()
 
     def _shedual_task(self):
+        """ 完全由celery框架接管控制消费，不使用funboost的AbstractConsumer的_run"""
         while 1:
             time.sleep(100)
 

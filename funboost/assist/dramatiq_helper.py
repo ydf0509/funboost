@@ -1,17 +1,13 @@
 import argparse
-import sys
 import nb_log
 import dramatiq
-from dramatiq.cli import main, make_argument_parser
-import requests
+from dramatiq.cli import main
 
-# print(dramatiq.get_broker())
 from dramatiq.brokers.redis import RedisBroker
 
 redis_broker = RedisBroker(host="127.0.0.1", port=6379)
 dramatiq.set_broker(redis_broker)
 
-# print(dramatiq.get_broker().actor_options)
 
 """
  {'max_age', 'throws', 'pipe_target', 'pipe_ignore', 'on_success', 'retry_when', 'time_limit', 'min_backoff', 'max_retries', 'max_backoff', 'notify_shutdown', 'on_failure'}

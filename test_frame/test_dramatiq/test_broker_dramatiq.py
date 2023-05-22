@@ -18,16 +18,9 @@ def f2(y):
 
 
 if __name__ == '__main__':
-    f1.clear()
-    f2.clear()
+    f1.consume()  # 登记要启动消费的queue
+    f2.consume()  # 登记要启动消费的queue
     for i in range(100):
         f1.push(i)
         f2.push(i * 2)
-    f1.clear()
-    for i in range(100, 200):
-        f1.push(i)
-        f2.push(i * 2)
-    f1.consume()
-    f2.consume()
-
-    DramatiqHelper.realy_start_dramatiq_worker()
+    DramatiqHelper.realy_start_dramatiq_worker()  # 真正启动dramatiq消费

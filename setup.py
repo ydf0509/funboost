@@ -90,7 +90,7 @@ setup(
                                       'celery',
                                       'flower',
                                       'nameko==2.14.1',
-                                      'sqlalchemy==1.3.10',
+                                      'sqlalchemy==1.4.8',
                                       'sqlalchemy_utils==0.36.1',
                                       ]},
 )

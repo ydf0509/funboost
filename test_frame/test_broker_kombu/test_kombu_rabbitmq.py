@@ -4,12 +4,10 @@ import time
 
 from funboost import BrokerEnum, boost, FunctionResultStatusPersistanceConfig, funboost_config_deafult
 
-amqp_uri = f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'
-
 @boost('test_kombu2b', broker_kind=BrokerEnum.KOMBU, qps=0.1,
        function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True),
        broker_exclusive_config={
-           'kombu_url': amqp_uri,
+           'kombu_url': funboost_config_deafult.RABBITMQ_URL,
            'transport_options': {
 
            },

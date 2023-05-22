@@ -43,7 +43,7 @@ class DramatiqConsumer(AbstractConsumer):
             time.sleep(100)
 
     def _confirm_consume(self, kw):
-        pass
+        """dramatiq框架默认自带，不需要funboost实现"""
 
     def _requeue(self, kw):
         pass

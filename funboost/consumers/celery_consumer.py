@@ -167,7 +167,7 @@ class CeleryConsumer(AbstractConsumer):
         CeleryHelper.concurrent_mode = self._concurrent_mode
 
     def start_consuming_message(self):
-        # 不单独每个函数都启动一次celery的worker消费，是把要消费的 queue name放到列表中，realy_start_celery_worker 一次性启动多个函数消费。
+        # 不单独每个函数都启动一次celery的worker消费，是把要消费的 queue name放到列表中，CeleryHelper.realy_start_celery_worker 一次性启动多个函数消费。
         CeleryHelper.to_be_start_work_celery_queue_name_set.add(self.queue_name)
         super().start_consuming_message()
 

@@ -421,8 +421,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         1、 实例化消费者类，设置各种控制属性
         2、启动 start_consuming_message 启动消费
         3、start_consuming_message 中 调用 _shedual_task 从中间件循环取消息
-        4、 _shedual_task 中调用 _submit_task，将 任务 添加到并发池中并发运行。
-        5、 函数执行完成后，运行 _confirm_consume , 确认消费。
+        4、 _shedual_task 中调用 _submit_task 运行 _run方法，将 任务 添加到并发池中并发运行。
+        5、 消费函数执行完成后，运行 _confirm_consume , 确认消费。
         各种中间件的 取消息、确认消费 单独实现，其他逻辑由于采用了模板模式，自动复用代码。
 
         """
@@ -1164,11 +1164,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         '''
 
     def pause_consume(self):
-        """设置队列为暂停消费状态"""
+        """从远程机器可以设置队列为暂停消费状态，funboost框架会自动停止消费，此功能需要配置好redis"""
         RedisMixin().redis_db_frame.set(self._redis_key_pause_flag, 1)
 
     def continue_consume(self):
-        """设置队列为继续消费状态"""
+        """从远程机器可以设置队列为暂停消费状态，funboost框架会自动继续消费，此功能需要配置好redis"""
         RedisMixin().redis_db_frame.set(self._redis_key_pause_flag, 0)
 
     @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)

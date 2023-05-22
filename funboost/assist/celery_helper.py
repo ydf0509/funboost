@@ -21,7 +21,7 @@ logger = get_logger('funboost.CeleryHelper')
 
 class CeleryHelper:
     celery_app = celery_app
-    to_be_start_work_celery_queue_name_set = set()  # 存放需要worker运行的queue name。
+    to_be_start_work_celery_queue_name_set = set()  # start_consuming_message时候，添加需要worker运行的queue name。
 
     concurrent_mode = None
 

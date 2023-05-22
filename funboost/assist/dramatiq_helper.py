@@ -8,8 +8,10 @@ from dramatiq.brokers.rabbitmq import RabbitmqBroker
 
 if funboost_config_deafult.DRAMATIQ_URL.startswith('redis'):
     broker = RedisBroker(url=funboost_config_deafult.DRAMATIQ_URL)
-else:
+elif funboost_config_deafult.DRAMATIQ_URL.startswith('amqp'):
     broker = RabbitmqBroker(url=funboost_config_deafult.DRAMATIQ_URL)
+else:
+    raise ValueError('DRAMATIQ_URL 配置错误，需要配置成url连接形式，例如 amqp://rabbitmq_user:rabbitmq_pass@127.0.0.1:5672/ 或者 redis://:passwd@192.168.64.151:6378/7 ')
 dramatiq.set_broker(broker)
 
 """

@@ -111,13 +111,13 @@ if __name__ == '__main__':
     q = PeeweeQueue('peewee_queue')
     q.set_success(1)
 
-    pool = ThreadPoolExecutorShrinkAble(20)
+    pool = ThreadPoolExecutorShrinkAble(200)
     # q.clear_queue()
     # t1 = time.time()
     #
-    # for i in range(10000):
-    #     # q.push(body=f'{{"a":{i}}}',status=TaskStatus.TO_BE_CONSUMED)
-    #     pool.submit(q.push, body=f'{{"a":{i}}}', status=TaskStatus.TO_BE_CONSUMED)
+    for i in range(10000):
+        # q.push(body=f'{{"a":{i}}}',status=TaskStatus.TO_BE_CONSUMED)
+        pool.submit(q.push, body=f'{{"a":{i}}}',)
     # # q.get()
     # # q.set_success(3,is_delete_the_task=False)
     # pool.shutdown()

@@ -2,8 +2,8 @@ import time
 from funboost import BrokerEnum, boost,funboost_config_deafult
 
 '''
-默认自动创建表 kombu_message 和 kombu_queue, sqlalchemy版本要选对，测试 1.4.8 可以，2.0.15版本报错。
-所有队列的消息在一个表中kombu_message，queue_id做区分是何种队列。
+默认自动创建表 kombu_message 和 kombu_queue, sqlalchemy版本要选对，测试 1.4.8 可以，2.0.15版本报错。 
+所有队列的消息在一个表中kombu_message，queue_id字段做区分是何种队列。
 '''
 @boost('test_kombu_sqlalchemy_queue2', broker_kind=BrokerEnum.KOMBU, qps=0.1,
        broker_exclusive_config={

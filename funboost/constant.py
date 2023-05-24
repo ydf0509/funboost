@@ -71,6 +71,7 @@ class BrokerEnum:
 
     DRAMATIQ = 31 # funboost使用 dramatiq 框架作为消息队列，dramatiq类似celery也是任务队列框架。用户使用funboost api来操作dramatiq核心调度。
 
+    HUEY = 32 # huey任务队列框架作为funboost调度核心
     NAMEKO = 40  # funboost支持python微服务框架nameko，用户无需掌握nameko api语法，就玩转python nameko微服务
 
 

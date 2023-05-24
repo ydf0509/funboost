@@ -21,7 +21,7 @@ class DramatiqConsumer(AbstractConsumer):
         # 这就是核心，
         dramatiq_actor_options = self.broker_exclusive_config['dramatiq_actor_options']
         if self._function_timeout:
-            dramatiq_actor_options['time_limit'] = self._function_timeout * 1000
+            dramatiq_actor_options['time_limit'] = self._function_timeout * 1000  # dramatiq的超时单位是毫秒，funboost是秒。
         dramatiq_actor_options['max_retries'] = self._max_retry_times
 
         @dramatiq.actor(actor_name=self.queue_name, queue_name=self.queue_name,

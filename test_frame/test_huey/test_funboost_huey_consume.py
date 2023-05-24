@@ -8,6 +8,7 @@ from funboost import boost, BrokerEnum
 def f1(x, y):
     time.sleep(10)
     print(x, y)
+    return 666
 
 
 @boost('test_huey_queue2', broker_kind=BrokerEnum.HUEY)

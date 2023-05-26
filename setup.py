@@ -76,6 +76,7 @@ setup(
         'fabric2==2.6.0',  # 有的机器包rust错误， 这样做 curl https://sh.rustup.rs -sSf | sh
         'nats-python',
         # 'pulsar-client==3.1.0',   # python3.6 无法安装 pulsar-client
+        'kombu',
         'nb_filelock',
         'aiohttp==3.8.3',
         'pysnooper',
@@ -86,7 +87,6 @@ setup(
     ],
     extras_require={'extra_brokers': ['confluent_kafka==1.7.0',
                                       "pulsar-client==3.1.0; python_version>='3.7'",
-                                      'kombu',
                                       'celery',
                                       'flower',
                                       'nameko==2.14.1',

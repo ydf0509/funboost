@@ -103,23 +103,17 @@ class BrokerRegister:
 
     def __init__(self, ):
         self.broker_kind__regist_fun_map = {
-            # BrokerEnum.KOMBU: self.register_kombu_broker,
             BrokerEnum.PULSAR: self.register_pulsar_broker,
             BrokerEnum.CELERY: self.register_celery_broker,
             BrokerEnum.NAMEKO: self.register_nameko_broker,
             BrokerEnum.SQLACHEMY: self.register_sqlalchemy_broker,
             BrokerEnum.DRAMATIQ: self.register_dramatiq_broker,
             BrokerEnum.HUEY: self.register_huey_broker,
+            BrokerEnum.KAFKA_CONFLUENT: self.register_kafka_confluent_broker,
         }
 
     def regist_to_funboost(self, broker_kind):
         self.broker_kind__regist_fun_map[broker_kind]()
-
-    # @staticmethod
-    # def register_kombu_broker():
-    #     from funboost.consumers.kombu_consumer import KombuConsumer
-    #     from funboost.publishers.kombu_publisher import KombuPublisher
-    #     register_custom_broker(BrokerEnum.KOMBU, KombuPublisher, KombuConsumer)
 
     @staticmethod
     def register_pulsar_broker():

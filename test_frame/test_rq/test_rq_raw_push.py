@@ -1,4 +1,4 @@
-from main import q
+from test_rq_raw import q
 
 from test_frame.test_rq.test_rq_raw import count_words_at_url
 

@@ -95,64 +95,43 @@ def register_custom_broker(broker_kind, publisher_class: typing.Type[AbstractPub
     consumer_class.BROKER_KIND = broker_kind
 
 
-class BrokerRegister:
+def regist_to_funboost(broker_kind: int):
     """
     延迟导入是因为funboost没有pip自动安装这些三方包，防止一启动就报错。
     这样当用户需要使用某些三方包中间件作为消息队列时候，按照import报错信息，用户自己去pip先安装。或者 pip install funboost[extra_brokers] 一次性安装所有中间件。
     """
 
-    def __init__(self, ):
-        self.broker_kind__regist_fun_map = {
-            BrokerEnum.PULSAR: self.register_pulsar_broker,
-            BrokerEnum.CELERY: self.register_celery_broker,
-            BrokerEnum.NAMEKO: self.register_nameko_broker,
-            BrokerEnum.SQLACHEMY: self.register_sqlalchemy_broker,
-            BrokerEnum.DRAMATIQ: self.register_dramatiq_broker,
-            BrokerEnum.HUEY: self.register_huey_broker,
-            BrokerEnum.KAFKA_CONFLUENT: self.register_kafka_confluent_broker,
-        }
-
-    def regist_to_funboost(self, broker_kind):
-        self.broker_kind__regist_fun_map[broker_kind]()
-
-    @staticmethod
-    def register_pulsar_broker():
+    if broker_kind == BrokerEnum.PULSAR:
         from funboost.consumers.pulsar_consumer import PulsarConsumer
         from funboost.publishers.pulsar_publisher import PulsarPublisher
         register_custom_broker(BrokerEnum.PULSAR, PulsarPublisher, PulsarConsumer)
 
-    @staticmethod
-    def register_celery_broker():
+    if broker_kind == BrokerEnum.CELERY:
         from funboost.consumers.celery_consumer import CeleryConsumer
         from funboost.publishers.celery_publisher import CeleryPublisher
         register_custom_broker(BrokerEnum.CELERY, CeleryPublisher, CeleryConsumer)
 
-    @staticmethod
-    def register_nameko_broker():
+    if broker_kind == BrokerEnum.NAMEKO:
         from funboost.consumers.nameko_consumer import NamekoConsumer
         from funboost.publishers.nameko_publisher import NamekoPublisher
         register_custom_broker(BrokerEnum.NAMEKO, NamekoPublisher, NamekoConsumer)
 
-    @staticmethod
-    def register_sqlalchemy_broker():
+    if broker_kind == BrokerEnum.SQLACHEMY:
         from funboost.consumers.sqlachemy_consumer import SqlachemyConsumer
         from funboost.publishers.sqla_queue_publisher import SqlachemyQueuePublisher
         register_custom_broker(BrokerEnum.SQLACHEMY, SqlachemyQueuePublisher, SqlachemyConsumer)
 
-    @staticmethod
-    def register_dramatiq_broker():
+    if broker_kind == BrokerEnum.DRAMATIQ:
         from funboost.consumers.dramatiq_consumer import DramatiqConsumer
         from funboost.publishers.dramatiq_publisher import DramatiqPublisher
         register_custom_broker(BrokerEnum.DRAMATIQ, DramatiqPublisher, DramatiqConsumer)
 
-    @staticmethod
-    def register_huey_broker():
+    if broker_kind == BrokerEnum.HUEY:
         from funboost.consumers.huey_consumer import HueyConsumer
         from funboost.publishers.huey_publisher import HueyPublisher
         register_custom_broker(BrokerEnum.HUEY, HueyPublisher, HueyConsumer)
 
-    @staticmethod
-    def register_kafka_confluent_broker():
+    if broker_kind == BrokerEnum.KAFKA_CONFLUENT:
         from funboost.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit
         from funboost.publishers.confluent_kafka_publisher import ConfluentKafkaPublisher
         register_custom_broker(BrokerEnum.KAFKA_CONFLUENT, ConfluentKafkaPublisher, KafkaConsumerManuallyCommit)

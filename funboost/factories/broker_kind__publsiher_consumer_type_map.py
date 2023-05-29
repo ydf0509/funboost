@@ -5,7 +5,6 @@ from funboost.consumers.base_consumer import AbstractConsumer
 
 from funboost.constant import BrokerEnum
 
-from funboost.publishers.confluent_kafka_publisher import ConfluentKafkaPublisher
 from funboost.publishers.http_publisher import HTTPPublisher
 from funboost.publishers.kombu_publisher import KombuPublisher
 from funboost.publishers.nats_publisher import NatsPublisher
@@ -33,7 +32,6 @@ from funboost.publishers.httpsqs_publisher import HttpsqsPublisher
 from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer
 from funboost.consumers.http_consumer import HTTPConsumer
 from funboost.consumers.kafka_consumer import KafkaConsumer
-from funboost.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit
 from funboost.consumers.kombu_consumer import KombuConsumer
 from funboost.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
 from funboost.consumers.mongomq_consumer import MongoMqConsumer
@@ -72,7 +70,6 @@ broker_kind__publsiher_consumer_type_map = {
     BrokerEnum.ZEROMQ: (ZeroMqPublisher, ZeroMqConsumer),
     BrokerEnum.RedisBrpopLpush: (RedisPublisherLpush, RedisBrpopLpushConsumer),
     BrokerEnum.KOMBU: (KombuPublisher, KombuConsumer),
-    BrokerEnum.KAFKA_CONFLUENT: (ConfluentKafkaPublisher, KafkaConsumerManuallyCommit),
     BrokerEnum.MQTT: (MqttPublisher, MqttConsumer),
     BrokerEnum.HTTPSQS: (HttpsqsPublisher, HttpsqsConsumer),
     BrokerEnum.UDP: (UDPPublisher, UDPConsumer),
@@ -112,7 +109,7 @@ class BrokerRegister:
             BrokerEnum.NAMEKO: self.register_nameko_broker,
             BrokerEnum.SQLACHEMY: self.register_sqlalchemy_broker,
             BrokerEnum.DRAMATIQ: self.register_dramatiq_broker,
-            BrokerEnum.HUEY:self.register_huey_broker,
+            BrokerEnum.HUEY: self.register_huey_broker,
         }
 
     def regist_to_funboost(self, broker_kind):
@@ -160,3 +157,8 @@ class BrokerRegister:
         from funboost.publishers.huey_publisher import HueyPublisher
         register_custom_broker(BrokerEnum.HUEY, HueyPublisher, HueyConsumer)
 
+    @staticmethod
+    def register_kafka_confluent_broker():
+        from funboost.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit
+        from funboost.publishers.confluent_kafka_publisher import ConfluentKafkaPublisher
+        register_custom_broker(BrokerEnum.KAFKA_CONFLUENT, ConfluentKafkaPublisher, KafkaConsumerManuallyCommit)

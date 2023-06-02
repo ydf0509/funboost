@@ -41,7 +41,8 @@ from pymongo.errors import PyMongoError
 
 import nb_log
 from funboost.concurrent_pool.single_thread_executor import SoloExecutor
-from funboost.helpers import FunctionResultStatusPersistanceConfig, boost_queue__fun_map
+from funboost.helpers import FunctionResultStatusPersistanceConfig
+from funboost.assist.global_boost_queue__fun_map import boost_queue__fun_map
 
 from funboost.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
 
@@ -178,6 +179,8 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
 
 
 class ResultPersistenceHelper(MongoMixin, LoggerMixin):
+    TASK_STATUS_DB = 'task_status'
+
     def __init__(self, function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig, queue_name):
         self.function_result_status_persistance_conf = function_result_status_persistance_conf
         self._bulk_list = []
@@ -188,10 +191,10 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
         if self.function_result_status_persistance_conf.is_save_status:
             self._create_indexes()
             # self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
-            self.logger.info(f"函数运行状态结果将保存至mongo的 task_status 库的 {queue_name} 集合中，请确认 funboost.py文件中配置的 MONGO_CONNECT_URL")
+            self.logger.info(f"函数运行状态结果将保存至mongo的 {self.TASK_STATUS_DB} 库的 {queue_name} 集合中，请确认 funboost.py文件中配置的 MONGO_CONNECT_URL")
 
     def _create_indexes(self):
-        task_status_col = self.get_mongo_collection('task_status', self._queue_name)
+        task_status_col = self.get_mongo_collection(self.TASK_STATUS_DB, self._queue_name)
         try:
             has_creat_index = False
             index_dict = task_status_col.index_information()
@@ -219,7 +222,7 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
 
     def save_function_result_to_mongo(self, function_result_status: FunctionResultStatus):
         if self.function_result_status_persistance_conf.is_save_status:
-            task_status_col = self.get_mongo_collection('task_status', self._queue_name)  # type: pymongo.collection.Collection
+            task_status_col = self.get_mongo_collection(self.TASK_STATUS_DB, self._queue_name)  # type: pymongo.collection.Collection
             item = function_result_status.get_status_dict()
             item2 = copy.copy(item)
             if not self.function_result_status_persistance_conf.is_save_result:
@@ -247,7 +250,7 @@ class ResultPersistenceHelper(MongoMixin, LoggerMixin):
     def _bulk_insert(self):
         with self._bulk_list_lock:
             if time.time() - self._last_bulk_insert_time > 0.5 and self._bulk_list:
-                task_status_col = self.get_mongo_collection('task_status', self._queue_name)
+                task_status_col = self.get_mongo_collection(self.TASK_STATUS_DB, self._queue_name)
                 task_status_col.bulk_write(self._bulk_list, ordered=False)
                 self._bulk_list.clear()
                 self._last_bulk_insert_time = time.time()

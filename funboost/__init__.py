@@ -1,4 +1,7 @@
 # noinspection PyUnresolvedReferences
+import types
+
+# noinspection PyUnresolvedReferences
 from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath
 
 from funboost.utils import monkey_patches
@@ -11,9 +14,10 @@ import copy
 import nb_log
 from funboost.set_frame_config import patch_frame_config, show_frame_config
 from funboost.funboost_config_deafult import BoostDecoratorDefaultParams
-from funboost.helpers import (fabric_deploy, kill_all_remote_tasks,
-                              multi_process_pub_params_list,
-                              run_consumer_with_multi_process, boost_queue__fun_map)
+from funboost.helpers import (multi_process_pub_params_list,
+                              run_consumer_with_multi_process, )
+from funboost.assist.global_boost_queue__fun_map import boost_queue__fun_map
+from funboost.assist.fabric_deploy_helper import fabric_deploy, kill_all_remote_tasks
 
 from funboost.utils.paramiko_util import ParamikoFolderUploader
 from funboost.consumers.base_consumer import (ExceptionForRequeue, ExceptionForRetry, ExceptionForPushToDlxqueue,
@@ -27,18 +31,18 @@ from funboost.factories.broker_kind__publsiher_consumer_type_map import register
 from funboost.factories.publisher_factotry import get_publisher
 from funboost.factories.consumer_factory import get_consumer
 
-
 # noinspection PyUnresolvedReferences
 from funboost.utils import nb_print, patch_print, LogManager, get_logger, LoggerMixin
-from funboost.timing_job import fsdf_background_scheduler, timing_publish_deco
+from funboost.timing_job import fsdf_background_scheduler, timing_publish_deco, funboost_aps_scheduler
 from funboost.constant import BrokerEnum, ConcurrentModeEnum
+from funboost.assist import exit_signal
 
 
 # 有的包默认没加handlers，原始的日志不漂亮且不可跳转不知道哪里发生的。这里把warnning级别以上的日志默认加上handlers。
 # nb_log.get_logger(name='', log_level_int=30, log_filename='pywarning.log')
 
 
-class IdeAutoCompleteHelper(LoggerMixin):
+class Booster(LoggerMixin):
     """
     为了被装饰的消费函数的敲代码时候的被pycharm自动补全而写的类。
     """
@@ -72,6 +76,8 @@ class IdeAutoCompleteHelper(LoggerMixin):
            IdeAutoCompleteHelper(f).start_consuming_message()  # 和 f.consume()等效
 
         """
+        wraps(consuming_func_decorated)(self)
+        self.init_params: dict = consuming_func_decorated.init_params
         self.is_decorated_as_consume_function = consuming_func_decorated.is_decorated_as_consume_function
         self.consuming_func_decorated = consuming_func_decorated
 
@@ -91,12 +97,19 @@ class IdeAutoCompleteHelper(LoggerMixin):
 
         self.wait_for_possible_has_finish_all_tasks = self.consumer.wait_for_possible_has_finish_all_tasks
 
-        self.pause = self.pause_consume = self.consumer.pause_consume
+        # self.pause = self.pause_consume = self.consumer.pause_consume
         self.continue_consume = self.consumer.continue_consume
+
+        for k, v in consuming_func_decorated.__dict__.items():
+            ''' 上面那些手动的是为了代码补全方便 ，这个是自动的补充所有'''
+            if not k.startswith('_'):
+                setattr(self, k, v)
 
     def multi_process_consume(self, process_num=1):
         """超高速多进程消费"""
         run_consumer_with_multi_process(self.consuming_func_decorated, process_num)
+
+    multi_process_start = multi_process_consume
 
     def multi_process_pub_params_list(self, params_list, process_num=16):
         """超高速多进程发布，例如先快速发布1000万个任务到中间件，以后慢慢消费"""
@@ -127,20 +140,23 @@ class IdeAutoCompleteHelper(LoggerMixin):
         in_kwargs.pop('self')
         fabric_deploy(self.consuming_func_decorated, **in_kwargs)
 
-    multi_process_start = multi_process_consume
-
     def __call__(self, *args, **kwargs):
         return self.consuming_func_decorated(*args, **kwargs)
+
+    def __get__(self, instance, cls):
+        """ https://python3-cookbook.readthedocs.io/zh_CN/latest/c09/p09_define_decorators_as_classes.html """
+        if instance is None:
+            return self
+        else:
+            return types.MethodType(self, instance)
+
+
+IdeAutoCompleteHelper = Booster  # 兼容
 
 
 class _Undefined:
     pass
 
-
-
-
-
-# import funboost ; funboost.boost_queue__fun_map
 
 def boost(queue_name,
           *,
@@ -279,17 +295,16 @@ def boost(queue_name,
     for k, v in consumer_init_params0.items():
         if v == _Undefined:
             # print(k,v,boost_decorator_default_params[k])
-            consumer_init_params[k] = boost_decorator_default_params[k]
+            consumer_init_params[k] = boost_decorator_default_params[k]  # boost装饰器没有亲指定某个传参，就使用funboost_config.py的BoostDecoratorDefaultParams的全局配置。
 
     # print(consumer_init_params)
-    def _deco(func) -> IdeAutoCompleteHelper:  # 加这个-> 可以实现pycahrm动态补全
+    def _deco(func) -> Booster:  # 加这个-> 可以实现pycahrm动态补全
 
         func.init_params = consumer_init_params
-        consumer = get_consumer(consuming_function=func, **consumer_init_params)
+        consumer = get_consumer(consuming_function=func, **consumer_init_params)  # type: AbstractConsumer
         func.is_decorated_as_consume_function = True
         func.consumer = consumer
         func.queue_name = queue_name
-        # 下面这些连等主要是由于元编程造成的不能再ide下智能补全，参数太长很难手动拼写出来
 
         func.publisher = consumer.publisher_of_same_queue
         func.publish = func.pub = func.apply_async = consumer.publisher_of_same_queue.publish
@@ -300,10 +315,6 @@ def boost(queue_name,
 
         func.start_consuming_message = func.consume = func.start = consumer.start_consuming_message
         func.multi_process_start = func.multi_process_consume = partial(run_consumer_with_multi_process, func)
-        # if broker_kind == BrokerEnum.CELERY:   # celery作为消息队列
-        #     from multiprocessing import set_start_method
-        #     set_start_method('spawn', force=True)  # linux上运行需要这样。
-        #     func.consume = partial(func.multi_process_consume, 1)
 
         func.fabric_deploy = partial(fabric_deploy, func)
 
@@ -320,6 +331,7 @@ def boost(queue_name,
         # def __deco(*args, **kwargs):  # 这样函数的id变化了，导致win在装饰器内部开多进程不方便。
         #     return func(*args, **kwargs)
         return func
+
         # return __deco  # noqa # 两种方式都可以
         # return update_wrapper(__deco, func)
 

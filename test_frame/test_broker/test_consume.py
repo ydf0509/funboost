@@ -16,7 +16,7 @@ import random
 # from distributed_frame_config import REDIS_HOST
 import nb_log
 from concurrent.futures import ProcessPoolExecutor
-from funboost import boost, BrokerEnum, ConcurrentModeEnum, FunctionResultStatusPersistanceConfig,boost_queue__fun_map,ExceptionForRequeue,ExceptionForPushToDlxqueue
+from funboost import boost, BrokerEnum, ConcurrentModeEnum, FunctionResultStatusPersistanceConfig, boost_queue__fun_map, ExceptionForRequeue, ExceptionForPushToDlxqueue, IdeAutoCompleteHelper
 from funboost.utils import RedisMixin
 from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
 
@@ -62,9 +62,11 @@ if __name__ == '__main__':
     # nb_log.LogManager(f2.consumer.logger.name).remove_handler_by_handler_class(nb_log.handlers.ColorHandler)
     print(f2.consumer.logger.level)
 
-    for i in range(500):
+    for i in range(5):
         f2.push(i, i * 5)
-    f2.consume()
+
+
+    print(IdeAutoCompleteHelper(f2).__dict__)
 
     # for queue_name,consumex in boost_queue__fun_map.items():
     #     consumex.consume()

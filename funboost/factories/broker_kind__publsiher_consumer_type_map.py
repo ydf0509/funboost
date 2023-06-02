@@ -87,6 +87,13 @@ for broker_kindx, cls_tuple in broker_kind__publsiher_consumer_type_map.items():
 
 
 def register_custom_broker(broker_kind, publisher_class: typing.Type[AbstractPublisher], consumer_class: typing.Type[AbstractConsumer]):
+    """
+    动态注册中间件到框架中， 方便的增加中间件类型或者修改是自定义消费者逻辑。
+    :param broker_kind:
+    :param publisher_class:
+    :param consumer_class:
+    :return:
+    """
     if not issubclass(publisher_class, AbstractPublisher):
         raise TypeError(f'publisher_class 必须是 AbstractPublisher 的子或孙类')
     if not issubclass(consumer_class, AbstractConsumer):

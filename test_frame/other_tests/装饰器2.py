@@ -30,6 +30,7 @@ class Profiled(Generic[P]):
         # print(self.__wrapped__)
         print('call')
         return self.ff(*args2, **kwargs)
+        # return self
 
     def __get__(self, instance, cls):
         if instance is None:
@@ -40,7 +41,7 @@ class Profiled(Generic[P]):
 
 @Profiled
 def add(x, y):
-    print(x + y)
+    print(666,x + y)
     return x + y
 
 
@@ -53,4 +54,4 @@ if __name__ == '__main__':
     #       type(add),type(add.ff),,isinstance(add,Profiled))
     #
     # # print(glf)
-    multiprocessing.Process(target=add.ff, args=(4, 5)).start()
+    # multiprocessing.Process(target=add.ff, args=(4, 5)).start()

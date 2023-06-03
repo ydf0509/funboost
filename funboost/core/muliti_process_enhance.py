@@ -4,17 +4,17 @@ from multiprocessing import Process
 import time
 from typing import List
 from concurrent.futures import ProcessPoolExecutor
-from nb_log import LoggerMixin
 import nb_log
 from funboost.core.booster import Booster
 
 logger = nb_log.get_logger('funboost')
 
 
-def _run_many_consumer_by_init_params(consumer_init_params_list: List[dict]):
+def _run_consumer_by_init_params(queue_name, boost_params: dict):
+    from funboost.core.get_booster import get_booster
     from funboost import get_consumer, ConsumersManager
-    for consumer_init_params in consumer_init_params_list:
-        get_consumer(**consumer_init_params).start_consuming_message()
+    booster = get_booster(queue_name)
+    get_consumer(consuming_function=booster.consuming_function, **boost_params).start_consuming_message()
     ConsumersManager.join_all_consumer_shedual_task_thread()
 
 
@@ -44,13 +44,15 @@ def run_consumer_with_multi_process(booster: Booster, process_num=1):
     else:
         for i in range(process_num):
             # print(i)
-            Process(target=_run_many_consumer_by_init_params,
-                    args=([{**{'consuming_function': booster.consuming_function}, **booster.init_params}],)).start()
+            Process(target=_run_consumer_by_init_params,
+                    args=(booster.queue_name, booster.boost_params,)).start()
 
 
-def _multi_process_pub_params_list_by_consumer_init_params(consumer_init_params: dict, msgs: List[dict]):
+def _multi_process_pub_params_list_by_consumer_init_params(queue_name, boost_params: dict, msgs: List[dict]):
     from funboost import get_consumer
-    consumer = get_consumer(**consumer_init_params)
+    from funboost.core.get_booster import get_booster
+    booster = get_booster(queue_name)
+    consumer = get_consumer(consuming_function=booster.consuming_function, **boost_params)
     publisher = consumer.publisher_of_same_queue
     publisher.set_log_level(20)  # 超高速发布，如果打印详细debug日志会卡死屏幕和严重降低代码速度。
     for msg in msgs:
@@ -70,6 +72,6 @@ def multi_process_pub_params_list(booster: Booster, params_list, process_num=16)
         for i in range(process_num):
             msgs = params_list[i * ava_len: (i + 1) * ava_len]
             # print(msgs)
-            pool.submit(_multi_process_pub_params_list_by_consumer_init_params,
-                        {**{'consuming_function': booster.consuming_function}, **booster.init_params}, msgs)
+            pool.submit(_multi_process_pub_params_list_by_consumer_init_params, booster.queue_name,
+                        booster.boost_params, msgs)
     logger.info(f'\n 通过 multi_process_pub_params_list 多进程子进程的发布方式，发布了 {params_list_len} 个任务。耗时 {time.time() - t0} 秒')

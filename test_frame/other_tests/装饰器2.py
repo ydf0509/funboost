@@ -4,23 +4,32 @@ import types
 from functools import wraps
 
 glf = None
+import nb_log
+from typing import TypeVar,Generic
 
-class Profiled:
-    def __new__(cls, f):
+P = TypeVar('P')
+
+
+class Profiled(Generic[P]):
+    def __new__(cls, f: P) -> P:
         self = object.__new__(cls)
-        global glf
-        glf = copy.deepcopy(f)
-        
-    def __init__(self, func):
+        self.ff = copy.deepcopy(f)
+        self.__call__ = f
+        return self
+
+    def __init__(self, func: P):
         # global glf
         # glf = copy.deepcopy(func)
-        # wraps(func)(self)
+        print('self', self)
+        # self.ff = copy.deepcopy(func)
+        # wraps(self.ff)(self)
         self.ncalls = 0
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args2, **kwargs):
         self.ncalls += 1
-        print(self.__wrapped__)
-        return self.__wrapped__(*args, **kwargs)
+        # print(self.__wrapped__)
+        print('call')
+        return self.ff(*args2, **kwargs)
 
     def __get__(self, instance, cls):
         if instance is None:
@@ -31,6 +40,7 @@ class Profiled:
 
 @Profiled
 def add(x, y):
+    print(x + y)
     return x + y
 
 
@@ -38,6 +48,9 @@ def add(x, y):
 
 if __name__ == '__main__':
     print(add(1, 2))
-    print(add)
-    print(glf)
-    multiprocessing.Process(target=glf,args=(4,5)).start()
+    print(add, type(add))
+    # print(
+    #       type(add),type(add.ff),,isinstance(add,Profiled))
+    #
+    # # print(glf)
+    multiprocessing.Process(target=add.ff, args=(4, 5)).start()

@@ -19,14 +19,13 @@ class _Undefined:
 
 
 class Booster:
-    def __init__(self, consuming_function: typing.Callable, consumer_init_params: dict):
+    def __init__(self, consuming_function: typing.Callable, boost_params: dict):
         wraps(consuming_function)(self)
-
-        self.init_params = consumer_init_params
-        self.queue_name = consumer_init_params['queue_name']
-        self.is_decorated_as_consume_function = True
         self.consuming_function = consuming_function
-        consumer = get_consumer(**consumer_init_params, consuming_function=consuming_function)
+        self.boost_params = boost_params  # boost装饰器的入参
+        self.queue_name = boost_params['queue_name']
+        self.is_decorated_as_consume_function = True
+        consumer = get_consumer(**boost_params, consuming_function=consuming_function)
         self.consumer = consumer
         self.publisher = consumer.publisher_of_same_queue
         self.publish = self.pub = self.apply_async = consumer.publisher_of_same_queue.publish
@@ -42,10 +41,7 @@ class Booster:
         self.continue_consume = consumer.continue_consume
         regist_booster(self.queue_name, self)
 
-
-
     def __call__(self, *args, **kwargs):
-        wraps(self.consuming_function)(self)
         return self.consuming_function(*args, **kwargs)
 
     # noinspection PyMethodMayBeStatic
@@ -194,19 +190,19 @@ def boost(queue_name,
     '''
     """
 
-    # 下面这段代码 consumer_init_params 是综合funboost_config.BoostDecoratorDefaultParams全局入参 和boost装饰器入参，最终得到的入参。
+    # 下面这段代码 boost_params 是综合funboost_config.BoostDecoratorDefaultParams全局入参 和boost装饰器入参，最终得到的入参。
     # 如果@boost装饰器没有亲自执行boost的某个入参，则使用BoostDecoratorDefaultParams全局入参
-    consumer_init_params_include_boost_decorator_default_params = copy.copy(locals())
-    consumer_init_params0 = copy.copy(consumer_init_params_include_boost_decorator_default_params)
-    consumer_init_params0.pop('boost_decorator_default_params')
-    consumer_init_params = copy.copy(consumer_init_params0)
-    for k, v in consumer_init_params0.items():
+    boost_params_include_boost_decorator_default_params = copy.copy(locals())
+    boost_params0 = copy.copy(boost_params_include_boost_decorator_default_params)
+    boost_params0.pop('boost_decorator_default_params')
+    boost_params = copy.copy(boost_params0)
+    for k, v in boost_params0.items():
         if v == _Undefined:
             # print(k,v,boost_decorator_default_params[k])
-            consumer_init_params[k] = boost_decorator_default_params[k]  # boost装饰器没有亲指定某个传参，就使用funboost_config.py的BoostDecoratorDefaultParams的全局配置。
+            boost_params[k] = boost_decorator_default_params[k]  # boost装饰器没有亲指定某个传参，就使用funboost_config.py的BoostDecoratorDefaultParams的全局配置。
 
     def _deco(func):
-        return Booster(func, consumer_init_params)
+        return Booster(func, boost_params)
 
     return _deco  # noqa
 

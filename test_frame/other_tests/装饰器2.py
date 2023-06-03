@@ -6,10 +6,15 @@ from functools import wraps
 glf = None
 
 class Profiled:
-    def __init__(self, func):
+    def __new__(cls, f):
+        self = object.__new__(cls)
         global glf
-        glf = copy.deepcopy(func)
-        wraps(func)(self)
+        glf = copy.deepcopy(f)
+        
+    def __init__(self, func):
+        # global glf
+        # glf = copy.deepcopy(func)
+        # wraps(func)(self)
         self.ncalls = 0
 
     def __call__(self, *args, **kwargs):

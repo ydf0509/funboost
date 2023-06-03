@@ -5,7 +5,6 @@ from funboost.consumers.base_consumer import AbstractConsumer
 
 from funboost.constant import BrokerEnum
 
-from funboost.publishers.confluent_kafka_publisher import ConfluentKafkaPublisher
 from funboost.publishers.http_publisher import HTTPPublisher
 from funboost.publishers.kombu_publisher import KombuPublisher
 from funboost.publishers.nats_publisher import NatsPublisher
@@ -33,7 +32,6 @@ from funboost.publishers.httpsqs_publisher import HttpsqsPublisher
 from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer
 from funboost.consumers.http_consumer import HTTPConsumer
 from funboost.consumers.kafka_consumer import KafkaConsumer
-from funboost.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit
 from funboost.consumers.kombu_consumer import KombuConsumer
 from funboost.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
 from funboost.consumers.mongomq_consumer import MongoMqConsumer
@@ -72,7 +70,6 @@ broker_kind__publsiher_consumer_type_map = {
     BrokerEnum.ZEROMQ: (ZeroMqPublisher, ZeroMqConsumer),
     BrokerEnum.RedisBrpopLpush: (RedisPublisherLpush, RedisBrpopLpushConsumer),
     BrokerEnum.KOMBU: (KombuPublisher, KombuConsumer),
-    BrokerEnum.KAFKA_CONFLUENT: (ConfluentKafkaPublisher, KafkaConsumerManuallyCommit),
     BrokerEnum.MQTT: (MqttPublisher, MqttConsumer),
     BrokerEnum.HTTPSQS: (HttpsqsPublisher, HttpsqsConsumer),
     BrokerEnum.UDP: (UDPPublisher, UDPConsumer),
@@ -90,6 +87,13 @@ for broker_kindx, cls_tuple in broker_kind__publsiher_consumer_type_map.items():
 
 
 def register_custom_broker(broker_kind, publisher_class: typing.Type[AbstractPublisher], consumer_class: typing.Type[AbstractConsumer]):
+    """
+    动态注册中间件到框架中， 方便的增加中间件类型或者修改是自定义消费者逻辑。
+    :param broker_kind:
+    :param publisher_class:
+    :param consumer_class:
+    :return:
+    """
     if not issubclass(publisher_class, AbstractPublisher):
         raise TypeError(f'publisher_class 必须是 AbstractPublisher 的子或孙类')
     if not issubclass(consumer_class, AbstractConsumer):
@@ -98,65 +102,43 @@ def register_custom_broker(broker_kind, publisher_class: typing.Type[AbstractPub
     consumer_class.BROKER_KIND = broker_kind
 
 
-class BrokerRegister:
+def regist_to_funboost(broker_kind: int):
     """
     延迟导入是因为funboost没有pip自动安装这些三方包，防止一启动就报错。
     这样当用户需要使用某些三方包中间件作为消息队列时候，按照import报错信息，用户自己去pip先安装。或者 pip install funboost[extra_brokers] 一次性安装所有中间件。
     """
 
-    def __init__(self, ):
-        self.broker_kind__regist_fun_map = {
-            # BrokerEnum.KOMBU: self.register_kombu_broker,
-            BrokerEnum.PULSAR: self.register_pulsar_broker,
-            BrokerEnum.CELERY: self.register_celery_broker,
-            BrokerEnum.NAMEKO: self.register_nameko_broker,
-            BrokerEnum.SQLACHEMY: self.register_sqlalchemy_broker,
-            BrokerEnum.DRAMATIQ: self.register_dramatiq_broker,
-            BrokerEnum.HUEY:self.register_huey_broker,
-        }
-
-    def regist_to_funboost(self, broker_kind):
-        self.broker_kind__regist_fun_map[broker_kind]()
-
-    # @staticmethod
-    # def register_kombu_broker():
-    #     from funboost.consumers.kombu_consumer import KombuConsumer
-    #     from funboost.publishers.kombu_publisher import KombuPublisher
-    #     register_custom_broker(BrokerEnum.KOMBU, KombuPublisher, KombuConsumer)
-
-    @staticmethod
-    def register_pulsar_broker():
+    if broker_kind == BrokerEnum.PULSAR:
         from funboost.consumers.pulsar_consumer import PulsarConsumer
         from funboost.publishers.pulsar_publisher import PulsarPublisher
         register_custom_broker(BrokerEnum.PULSAR, PulsarPublisher, PulsarConsumer)
 
-    @staticmethod
-    def register_celery_broker():
+    if broker_kind == BrokerEnum.CELERY:
         from funboost.consumers.celery_consumer import CeleryConsumer
         from funboost.publishers.celery_publisher import CeleryPublisher
         register_custom_broker(BrokerEnum.CELERY, CeleryPublisher, CeleryConsumer)
 
-    @staticmethod
-    def register_nameko_broker():
+    if broker_kind == BrokerEnum.NAMEKO:
         from funboost.consumers.nameko_consumer import NamekoConsumer
         from funboost.publishers.nameko_publisher import NamekoPublisher
         register_custom_broker(BrokerEnum.NAMEKO, NamekoPublisher, NamekoConsumer)
 
-    @staticmethod
-    def register_sqlalchemy_broker():
+    if broker_kind == BrokerEnum.SQLACHEMY:
         from funboost.consumers.sqlachemy_consumer import SqlachemyConsumer
         from funboost.publishers.sqla_queue_publisher import SqlachemyQueuePublisher
         register_custom_broker(BrokerEnum.SQLACHEMY, SqlachemyQueuePublisher, SqlachemyConsumer)
 
-    @staticmethod
-    def register_dramatiq_broker():
+    if broker_kind == BrokerEnum.DRAMATIQ:
         from funboost.consumers.dramatiq_consumer import DramatiqConsumer
         from funboost.publishers.dramatiq_publisher import DramatiqPublisher
         register_custom_broker(BrokerEnum.DRAMATIQ, DramatiqPublisher, DramatiqConsumer)
 
-    @staticmethod
-    def register_huey_broker():
+    if broker_kind == BrokerEnum.HUEY:
         from funboost.consumers.huey_consumer import HueyConsumer
         from funboost.publishers.huey_publisher import HueyPublisher
         register_custom_broker(BrokerEnum.HUEY, HueyPublisher, HueyConsumer)
 
+    if broker_kind == BrokerEnum.KAFKA_CONFLUENT:
+        from funboost.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit
+        from funboost.publishers.confluent_kafka_publisher import ConfluentKafkaPublisher
+        register_custom_broker(BrokerEnum.KAFKA_CONFLUENT, ConfluentKafkaPublisher, KafkaConsumerManuallyCommit)

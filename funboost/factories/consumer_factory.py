@@ -14,9 +14,8 @@ def get_consumer(*args, broker_kind: int = None, **kwargs) -> AbstractConsumer:
     :param kwargs:
     :return:
     """
-    from funboost.factories.broker_kind__publsiher_consumer_type_map import broker_kind__publsiher_consumer_type_map, BrokerRegister
-    if broker_kind in BrokerRegister().broker_kind__regist_fun_map:
-        BrokerRegister().regist_to_funboost(broker_kind)  # 动态注册中间件到框架是为了延迟导入，用户没安装不需要的第三方包不报错。
+    from funboost.factories.broker_kind__publsiher_consumer_type_map import broker_kind__publsiher_consumer_type_map, regist_to_funboost
+    regist_to_funboost(broker_kind)  # 动态注册中间件到框架是为了延迟导入，用户没安装不需要的第三方包不报错。
 
     if broker_kind not in broker_kind__publsiher_consumer_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')

@@ -2,7 +2,7 @@ from apscheduler.jobstores.redis import RedisJobStore
 
 from funboost import funboost_config_deafult
 
-from funboost.timing_job import FsdfBackgroundScheduler
+from funboost.timing_job import FunboostBackgroundScheduler
 
 """
 这个是使用redis作为定时任务持久化，支持动态修改/添加/删除定时任务
@@ -13,7 +13,7 @@ jobstores = {
                              port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD,)
 }
 
-funboost_background_scheduler_redis_store = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False, jobstores=jobstores)
+funboost_background_scheduler_redis_store = FunboostBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False, jobstores=jobstores)
 
 
 

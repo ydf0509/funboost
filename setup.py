@@ -3,7 +3,11 @@ from setuptools import setup, find_packages
 
 setup(
     name='funboost',  #
+<<<<<<< HEAD
     version='21.0',
+=======
+    version='21.2',
+>>>>>>> cf2ec3d37e40de9509ecead1e6f97b91286d9460
     description=(
         'pip install funboost，python全功能分布式函数调度框架,。支持python所有类型的并发模式和一切知名消息队列中间件，python函数加速器，框架包罗万象，一统编程思维，兼容50% python业务场景，适用范围广。只需要一行代码即可分布式执行python一切函数，99%用过funboost的pythoner 感受是 方便 快速 强大，相见恨晚 '
     ),
@@ -93,6 +97,7 @@ setup(
                                       'sqlalchemy==1.4.8',
                                       'sqlalchemy_utils==0.36.1',
                                       'dramatiq==1.14.2',
+                                      'huey==2.4.5',
                                       ]},
 )
 
@@ -108,7 +113,11 @@ python setup.py sdist upload -r pypi
 
 # python setup.py bdist_wheel
 python setup.py bdist_wheel ; python -m twine upload dist/funboost-15.0-py3-none-any.whl
+<<<<<<< HEAD
 python setup.py bdist_wheel && python -m twine upload dist/funboost-21.0-py3-none-any.whl
+=======
+python setup.py bdist_wheel && python -m twine upload dist/funboost-21.2-py3-none-any.whl
+>>>>>>> cf2ec3d37e40de9509ecead1e6f97b91286d9460
 python setup.py sdist & twine upload dist/funboost-10.9.tar.gz
 
 最快的下载方式，上传立即可安装。阿里云源同步官网pypi间隔要等很久。

@@ -15,10 +15,12 @@ from apscheduler.jobstores.redis import RedisJobStore
 # noinspection PyProtectedMember
 from apscheduler.schedulers.base import STATE_STOPPED, STATE_RUNNING
 from apscheduler.util import undefined
+import deprecated
 
-from funboost import funboost_config_deafult
+from funboost import funboost_config_deafult, boost_queue__fun_map
 
 from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.publishers.base_publisher import AbstractPublisher
 
 
 def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, AbstractConsumer]):
@@ -33,12 +35,17 @@ def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, Ab
     return _deco
 
 
+def push_fun_params_to_broker(queue_name:str, *args, **kwargs, ):
+    boost_queue__fun_map[queue_name].push(*args, **kwargs)
+
+
 class FsdfBackgroundScheduler(BackgroundScheduler):
     """
-    自定义的，添加一个方法add_timing_publish_job
+    自定义的， 继承了官方BackgroundScheduler，
+    通过重写 _main_loop ，使得动态修改增加删除定时任务配置更好。
     """
 
-    # noinspection PyShadowingBuiltins
+    @deprecated.deprecated(reason='以后不要使用这种方式，对于job_store为数据库时候需要序列化不好。使用内存和数据库都兼容的添加任务方式: add_push_job')
     def add_timing_publish_job(self, func, trigger=None, args=None, kwargs=None, id=None, name=None,
                                misfire_grace_time=undefined, coalesce=undefined, max_instances=undefined,
                                next_run_time=undefined, jobstore='default', executor='default',
@@ -48,7 +55,41 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
                             next_run_time, jobstore, executor,
                             replace_existing, **trigger_args)
 
-    def start(self, paused=False,block_exit=True):
+    def add_push_job(self, func, trigger=None, args=None, kwargs=None, id=None, name=None,
+                     misfire_grace_time=undefined, coalesce=undefined, max_instances=undefined,
+                     next_run_time=undefined, jobstore='default', executor='default',
+                     replace_existing=False, **trigger_args):
+        """
+        :param func: 被@boost装饰器装饰的函数
+        :param trigger:
+        :param args:
+        :param kwargs:
+        :param id:
+        :param name:
+        :param misfire_grace_time:
+        :param coalesce:
+        :param max_instances:
+        :param next_run_time:
+        :param jobstore:
+        :param executor:
+        :param replace_existing:
+        :param trigger_args:
+        :return:
+        """
+        # args = args or {}
+        # kwargs['queue_name'] = func.queue_name
+        if args is None:
+            args = (func.queue_name,)
+        else:
+            args_list = list(args)
+            args_list.insert(0, func.queue_name)
+            args = tuple(args_list)
+        return self.add_job(push_fun_params_to_broker, trigger, args, kwargs, id, name,
+                            misfire_grace_time, coalesce, max_instances,
+                            next_run_time, jobstore, executor,
+                            replace_existing, **trigger_args)
+
+    def start(self, paused=False, block_exit=True):
         # def _block_exit():
         #     while True:
         #         time.sleep(3600)
@@ -57,13 +98,13 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
         # self._daemon = False
         def _when_exit():
             while 1:
-                #print('阻止退出')
+                # print('阻止退出')
                 time.sleep(100)
+
         if block_exit:
             atexit.register(_when_exit)
         super(FsdfBackgroundScheduler, self).start(paused=paused, )
         # _block_exit()   # python3.9 判断守护线程结束必须主线程在运行，否则结尾
-
 
     def _main_loop00000(self):
         """
@@ -72,12 +113,11 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
         """
         wait_seconds = threading.TIMEOUT_MAX
         while self.state != STATE_STOPPED:
-            print(6666,self._event.is_set(),wait_seconds)
+            print(6666, self._event.is_set(), wait_seconds)
             self._event.wait(wait_seconds)
-            print(7777, self._event.is_set(),wait_seconds)
+            print(7777, self._event.is_set(), wait_seconds)
             self._event.clear()
             wait_seconds = self._process_jobs()
-
 
     def _main_loop(self):
         """原来的_main_loop 删除所有任务后wait_seconds 会变成None，无限等待。
@@ -89,15 +129,13 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
         while self.state == STATE_RUNNING:
             if wait_seconds is None:
                 wait_seconds = MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS
-            time.sleep(min(wait_seconds,MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS))  # 这个要取最小值，不然例如定时间隔0.1秒运行，不取最小值，不会每隔0.1秒运行。
+            time.sleep(min(wait_seconds, MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS))  # 这个要取最小值，不然例如定时间隔0.1秒运行，不取最小值，不会每隔0.1秒运行。
             wait_seconds = self._process_jobs()
 
 
-fsdf_background_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False, )
-funboost_aps_scheduler = fsdf_background_scheduler  # 定时配置基于内存的，不可以跨机器远程动态添加/修改/删除定时任务配置
-
-# fsdf_background_scheduler = FsdfBackgroundScheduler()
-
+FunboostBackgroundScheduler = FsdfBackgroundScheduler
+funboost_aps_scheduler = FunboostBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False, )
+fsdf_background_scheduler = funboost_aps_scheduler  # funboost_aps_scheduler定时配置基于内存的，不可以跨机器远程动态添加/修改/删除定时任务配置。如果需要动态增删改查定时任务，可以使用funboost_background_scheduler_redis_store
 
 if __name__ == '__main__':
     # 定时运行消费演示
@@ -111,19 +149,19 @@ if __name__ == '__main__':
 
 
     # 定时每隔3秒执行一次。
-    fsdf_background_scheduler.add_job(timing_publish_deco(consume_func),
-                                      'interval', id='3_second_job', seconds=3, kwargs={"x": 5, "y": 6})
+    funboost_aps_scheduler.add_push_job(consume_func,
+                                        'interval', id='3_second_job', seconds=3, kwargs={"x": 5, "y": 6})
 
     # 定时，只执行一次
-    fsdf_background_scheduler.add_job(timing_publish_deco(consume_func),
-                                      'date', run_date=datetime.datetime(2020, 7, 24, 13, 53, 6), args=(5, 6,))
+    funboost_aps_scheduler.add_push_job(consume_func,
+                                        'date', run_date=datetime.datetime(2020, 7, 24, 13, 53, 6), args=(5, 6,))
 
     # 定时，每天的11点32分20秒都执行一次。
-    fsdf_background_scheduler.add_timing_publish_job(consume_func,
-                                                     'cron', day_of_week='*', hour=18, minute=22, second=20, args=(5, 6,))
+    funboost_aps_scheduler.add_push_job(consume_func,
+                                        'cron', day_of_week='*', hour=18, minute=22, second=20, args=(5, 6,))
 
     # 启动定时
-    fsdf_background_scheduler.start()
+    funboost_aps_scheduler.start()
 
     # 启动消费
     consume_func.consume()

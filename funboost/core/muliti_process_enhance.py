@@ -10,11 +10,13 @@ from funboost.core.booster import Booster
 logger = nb_log.get_logger('funboost')
 
 
-def _run_consumer_by_init_params(queue_name, boost_params: dict):
-    from funboost.core.get_booster import get_booster
-    from funboost import get_consumer, ConsumersManager
-    booster = get_booster(queue_name)
-    get_consumer(consuming_function=booster.consuming_function, **boost_params).start_consuming_message()
+def _run_consumer_by_init_params(queue_name):
+    from funboost.core.get_booster import get_boost_params_and_conusming_function
+    from funboost.core.booster import boost
+    from funboost import  ConsumersManager
+    boost_params,conusming_function = get_boost_params_and_conusming_function(queue_name)
+    booster = boost(**boost_params)(conusming_function)
+    booster.consume()
     ConsumersManager.join_all_consumer_shedual_task_thread()
 
 
@@ -45,15 +47,15 @@ def run_consumer_with_multi_process(booster: Booster, process_num=1):
         for i in range(process_num):
             # print(i)
             Process(target=_run_consumer_by_init_params,
-                    args=(booster.queue_name, booster.boost_params,)).start()
+                    args=(booster.queue_name, )).start()
 
 
-def _multi_process_pub_params_list_by_consumer_init_params(queue_name, boost_params: dict, msgs: List[dict]):
-    from funboost import get_consumer
-    from funboost.core.get_booster import get_booster
-    booster = get_booster(queue_name)
-    consumer = get_consumer(consuming_function=booster.consuming_function, **boost_params)
-    publisher = consumer.publisher_of_same_queue
+def _multi_process_pub_params_list_by_consumer_init_params(queue_name, msgs: List[dict]):
+    from funboost.core.get_booster import get_boost_params_and_conusming_function
+    from funboost.core.booster import boost
+    boost_params, conusming_function = get_boost_params_and_conusming_function(queue_name)
+    booster = boost(**boost_params)(conusming_function)
+    publisher = booster.publisher
     publisher.set_log_level(20)  # 超高速发布，如果打印详细debug日志会卡死屏幕和严重降低代码速度。
     for msg in msgs:
         publisher.publish(msg)
@@ -73,5 +75,5 @@ def multi_process_pub_params_list(booster: Booster, params_list, process_num=16)
             msgs = params_list[i * ava_len: (i + 1) * ava_len]
             # print(msgs)
             pool.submit(_multi_process_pub_params_list_by_consumer_init_params, booster.queue_name,
-                        booster.boost_params, msgs)
+                         msgs)
     logger.info(f'\n 通过 multi_process_pub_params_list 多进程子进程的发布方式，发布了 {params_list_len} 个任务。耗时 {time.time() - t0} 秒')

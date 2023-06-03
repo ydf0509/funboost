@@ -1,5 +1,5 @@
 import signal
-
+import os
 
 # noinspection PyProtectedMember,PyUnusedLocal
 def _interrupt_signal_handler(signalx, framex):

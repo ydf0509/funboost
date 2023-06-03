@@ -34,6 +34,7 @@ def _get_final_boost_params(boost_params_include_boost_decorator_default_params)
 class Booster:
     """
     这种__call__写法在pycahrm下 不仅能补全消费函数的 push consume等方法，也能补全函数本身的入参，一举两得。代码能自动补全很重要。
+    一个函数fun被 boost装饰器装饰后， isinstance(fun,Booster) 为True.
     """
 
     def __init__(self, queue_name,

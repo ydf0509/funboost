@@ -64,10 +64,12 @@ def fabric_deploy(booster:Booster, host, port, user, password,
 
     task_fun.fabric_deploy('192.168.6.133', 22, 'ydf', '123456', process_num=2) 只需要这样就可以自动部署在远程机器运行，无需任何额外操作。
     """
+    print(locals())
     python_proj_dir = sys.path[1].replace('\\', '/') + '/'
     python_proj_dir_short = python_proj_dir.split('/')[-2]
     # 获取被调用函数所在模块文件名
-    file_name = sys._getframe(1).f_code.co_filename.replace('\\', '/')  # noqa\
+    file_name = sys._getframe(2).f_code.co_filename.replace('\\', '/')  # noqa\
+    print(file_name)
     relative_file_name = re.sub(f'^{python_proj_dir}', '', file_name)
     relative_module = relative_file_name.replace('/', '.')[:-3]  # -3是去掉.py
     if user == 'root':  # 文件夹会被自动创建，无需用户创建。

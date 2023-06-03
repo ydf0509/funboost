@@ -31,9 +31,7 @@ import gevent
 import asyncio
 
 from apscheduler.jobstores.redis import RedisJobStore
-from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
-from apscheduler.events import EVENT_JOB_MISSED
 
 import pymongo
 from pymongo import IndexModel, ReplaceOne
@@ -41,12 +39,10 @@ from pymongo.errors import PyMongoError
 
 import nb_log
 from funboost.concurrent_pool.single_thread_executor import SoloExecutor
-from funboost.helpers import FunctionResultStatusPersistanceConfig
-from funboost.assist.global_boost_queue__fun_map import boost_queue__fun_map
-
-from funboost.utils.apscheduler_monkey import patch_run_job as patch_apscheduler_run_job
+from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig, ResultPersistenceHelper, FunctionResultStatus
 
 # noinspection PyUnresolvedReferences
+from funboost.core.helper_funs import _delete_keys_and_return_new_dict, get_publish_time
 from nb_log import get_logger, LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, \
     LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write, is_main_process, \
     only_print_on_main_process, nb_log_config_default
@@ -78,17 +74,6 @@ from funboost.constant import ConcurrentModeEnum, BrokerEnum
 # patch_apscheduler_run_job()
 
 
-def _delete_keys_and_return_new_dict(dictx: dict, keys: list = None):
-    dict_new = copy.copy(dictx)  # 主要是去掉一级键 publish_time，浅拷贝即可。新的消息已经不是这样了。
-    keys = ['publish_time', 'publish_time_format', 'extra'] if keys is None else keys
-    for dict_key in keys:
-        try:
-            dict_new.pop(dict_key)
-        except KeyError:
-            pass
-    return dict_new
-
-
 class ExceptionForRetry(Exception):
     """为了重试的，抛出错误。只是定义了一个子类，用不用都可以，函数出任何类型错误了框架都会自动重试"""
 
@@ -99,161 +84,6 @@ class ExceptionForRequeue(Exception):
 
 class ExceptionForPushToDlxqueue(Exception):
     """框架检测到ExceptionForPushToDlxqueue错误，发布到死信队列"""
-
-
-def _get_publish_time(paramsx: dict):
-    """
-    原来存放控制参数的位置没想好，建议所有控制参数放到extra键的字典值里面。
-    :param paramsx:
-    :return:
-    """
-    return paramsx.get('extra', {}).get('publish_time', None) or paramsx.get('publish_time', None)
-
-
-class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
-    host_name = socket.gethostname()
-    host_process = f'{host_name} - {os.getpid()}'
-    script_name_long = sys.argv[0]
-    script_name = script_name_long.split('/')[-1].split('\\')[-1]
-
-    FUNC_RUN_ERROR = 'FUNC_RUN_ERROR'
-
-    def __init__(self, queue_name: str, fucntion_name: str, msg_dict: dict):
-        # print(params)
-        self.queue_name = queue_name
-        self.function = fucntion_name
-        self.msg_dict = msg_dict
-        self.task_id = self.msg_dict.get('extra', {}).get('task_id', '')
-        self.process_id = os.getpid()
-        self.thread_id = threading.get_ident()
-        self.publish_time = publish_time = _get_publish_time(msg_dict)
-        if publish_time:
-            self.publish_time_str = time_util.DatetimeConverter(publish_time).datetime_str
-        function_params = _delete_keys_and_return_new_dict(msg_dict, )
-        self.params = function_params
-        self.params_str = json.dumps(function_params, ensure_ascii=False)
-        self.result = None
-        self.run_times = 0
-        self.exception = None
-        self.time_start = time.time()
-        self.time_cost = None
-        self.time_end = None
-        self.success = False
-        self.total_thread = threading.active_count()
-        self.has_requeue = False
-        self.has_to_dlx_queue = False
-        self.set_log_level(20)
-
-    def get_status_dict(self, without_datetime_obj=False):
-        self.time_end = time.time()
-        self.time_cost = round(self.time_end - self.time_start, 3)
-        item = self.__dict__
-        item['host_name'] = self.host_name
-        item['host_process'] = self.host_process
-        item['script_name'] = self.script_name
-        item['script_name_long'] = self.script_name_long
-        # item.pop('time_start')
-        datetime_str = time_util.DatetimeConverter().datetime_str
-        try:
-            json.dumps(item['result'])  # 不希望存不可json序列化的复杂类型。麻烦。存这种类型的结果是伪需求。
-        except TypeError:
-            item['result'] = str(item['result'])[:1000]
-        item.update({'insert_time_str': datetime_str,
-                     'insert_minutes': datetime_str[:-3],
-                     })
-        if not without_datetime_obj:
-            item.update({'insert_time': datetime.datetime.now(),
-                         'utime': datetime.datetime.utcnow(),
-                         })
-        else:
-            item = _delete_keys_and_return_new_dict(item, ['insert_time', 'utime'])
-        # kw['body']['extra']['task_id']
-        # item['_id'] = self.task_id.split(':')[-1] or str(uuid.uuid4())
-        item['_id'] = self.task_id or str(uuid.uuid4())
-        # self.logger.warning(item['_id'])
-        # self.logger.warning(item)
-        return item
-
-    def __str__(self):
-        return f'''{self.__class__}   {json.dumps(self.get_status_dict(), ensure_ascii=False)}'''
-
-
-class ResultPersistenceHelper(MongoMixin, LoggerMixin):
-    TASK_STATUS_DB = 'task_status'
-
-    def __init__(self, function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig, queue_name):
-        self.function_result_status_persistance_conf = function_result_status_persistance_conf
-        self._bulk_list = []
-        self._bulk_list_lock = Lock()
-        self._last_bulk_insert_time = 0
-        self._has_start_bulk_insert_thread = False
-        self._queue_name = queue_name
-        if self.function_result_status_persistance_conf.is_save_status:
-            self._create_indexes()
-            # self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
-            self.logger.info(f"函数运行状态结果将保存至mongo的 {self.TASK_STATUS_DB} 库的 {queue_name} 集合中，请确认 funboost.py文件中配置的 MONGO_CONNECT_URL")
-
-    def _create_indexes(self):
-        task_status_col = self.get_mongo_collection(self.TASK_STATUS_DB, self._queue_name)
-        try:
-            has_creat_index = False
-            index_dict = task_status_col.index_information()
-            if 'insert_time_str_-1' in index_dict:
-                has_creat_index = True
-            old_expire_after_seconds = None
-            for index_name, v in index_dict.items():
-                if index_name == 'utime_1':
-                    old_expire_after_seconds = v['expireAfterSeconds']
-            if has_creat_index is False:
-                # params_str 如果很长，必须使用TEXt或HASHED索引。
-                task_status_col.create_indexes([IndexModel([("insert_time_str", -1)]), IndexModel([("insert_time", -1)]),
-                                                IndexModel([("params_str", pymongo.TEXT)]), IndexModel([("success", 1)])
-                                                ], )
-                task_status_col.create_index([("utime", 1)],  # 这个是过期时间索引。
-                                             expireAfterSeconds=self.function_result_status_persistance_conf.expire_seconds)  # 只保留7天(用户自定义的)。
-            else:
-                if old_expire_after_seconds != self.function_result_status_persistance_conf.expire_seconds:
-                    self.logger.warning(f'过期时间从 {old_expire_after_seconds} 修改为 {self.function_result_status_persistance_conf.expire_seconds} 。。。')
-                    task_status_col.drop_index('utime_1', ),  # 这个不能也设置为True，导致修改过期时间不成功。
-                    task_status_col.create_index([("utime", 1)],
-                                                 expireAfterSeconds=self.function_result_status_persistance_conf.expire_seconds, background=True)  # 只保留7天(用户自定义的)。
-        except pymongo.errors.PyMongoError as e:
-            self.logger.warning(e)
-
-    def save_function_result_to_mongo(self, function_result_status: FunctionResultStatus):
-        if self.function_result_status_persistance_conf.is_save_status:
-            task_status_col = self.get_mongo_collection(self.TASK_STATUS_DB, self._queue_name)  # type: pymongo.collection.Collection
-            item = function_result_status.get_status_dict()
-            item2 = copy.copy(item)
-            if not self.function_result_status_persistance_conf.is_save_result:
-                item2['result'] = '不保存结果'
-            if item2['result'] is None:
-                item2['result'] = ''
-            if item2['exception'] is None:
-                item2['exception'] = ''
-            if self.function_result_status_persistance_conf.is_use_bulk_insert:
-                # self._mongo_bulk_write_helper.add_task(InsertOne(item2))  # 自动离散批量聚合方式。
-                with self._bulk_list_lock:
-                    self._bulk_list.append(ReplaceOne({'_id': item2['_id']}, item2, upsert=True))
-                    # if time.time() - self._last_bulk_insert_time > 0.5:
-                    #     self.task_status_col.bulk_write(self._bulk_list, ordered=False)
-                    #     self._bulk_list.clear()
-                    #     self._last_bulk_insert_time = time.time()
-                    if not self._has_start_bulk_insert_thread:
-                        self._has_start_bulk_insert_thread = True
-                        decorators.keep_circulating(time_sleep=0.2, is_display_detail_exception=True, block=False,
-                                                    daemon=False)(self._bulk_insert)()
-                        self.logger.warning(f'启动批量保存函数消费状态 结果到mongo的 线程')
-            else:
-                task_status_col.replace_one({'_id': item2['_id']}, item2, upsert=True)  # 立即实时插入。
-
-    def _bulk_insert(self):
-        with self._bulk_list_lock:
-            if time.time() - self._last_bulk_insert_time > 0.5 and self._bulk_list:
-                task_status_col = self.get_mongo_collection(self.TASK_STATUS_DB, self._queue_name)
-                task_status_col.bulk_write(self._bulk_list, ordered=False)
-                self._bulk_list.clear()
-                self._last_bulk_insert_time = time.time()
 
 
 # noinspection PyClassHasNoInit,DuplicatedCode
@@ -429,7 +259,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         各种中间件的 取消息、确认消费 单独实现，其他逻辑由于采用了模板模式，自动复用代码。
 
         """
-
         self.init_params = copy.copy(locals())
         self.init_params.pop('self')
         self.init_params['broker_kind'] = self.__class__.BROKER_KIND
@@ -721,7 +550,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     @classmethod
     def _push_for_apscheduler_use_database_store(cls, queue_name, msg, ):
         cls.logger_apscheduler.debug(f'延时任务用普通消息重新发布到普通队列 {msg}')
-        boost_queue__fun_map[queue_name].publish(msg)
+        from funboost.core.get_booster import get_booster
+        get_booster(queue_name).publish(msg)
 
     @abc.abstractmethod
     def _shedual_task(self):
@@ -753,7 +583,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
             self._confirm_consume(kw)
             return
-        publish_time = _get_publish_time(kw['body'])
+        publish_time = get_publish_time(kw['body'])
         msg_expire_senconds_priority = self._get_priority_conf(kw, 'msg_expire_senconds')
         if msg_expire_senconds_priority and time.time() - msg_expire_senconds_priority > publish_time:
             self.logger.warning(
@@ -1404,81 +1234,3 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
             self._consumer._pause_flag = 1
         else:
             self._consumer._pause_flag = 0
-
-
-class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHandler):
-    """
-
-    获取分布式环境中的消费进程信息。
-    使用这里面的4个方法需要相应函数的@boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
-    要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息
-    """
-
-    def _get_all_hearbeat_info_by_redis_key_name(self, redis_key):
-        results = self.redis_db_frame.smembers(redis_key)
-        # print(type(results))
-        # print(results)
-        # 如果所有机器所有进程都全部关掉了，就没办法还剩一个线程执行删除了，这里还需要判断一次15秒。
-        active_consumers_processor_info_list = []
-        for result in results:
-            result_dict = json.loads(result)
-            if self.timestamp() - result_dict['hearbeat_timestamp'] < 15:
-                active_consumers_processor_info_list.append(result_dict)
-        return active_consumers_processor_info_list
-
-    def get_all_hearbeat_info_by_queue_name(self, queue_name) -> typing.List[typing.Dict]:
-        """
-        根据队列名查询有哪些活跃的消费者进程
-        返回结果例子：
-        [{
-                "code_filename": "/codes/funboost/test_frame/my/test_consume.py",
-                "computer_ip": "172.16.0.9",
-                "computer_name": "VM_0_9_centos",
-                "consumer_id": 140477437684048,
-                "consumer_uuid": "79473629-b417-4115-b516-4365b3cdf383",
-                "consuming_function": "f2",
-                "hearbeat_datetime_str": "2021-12-27 19:22:04",
-                "hearbeat_timestamp": 1640604124.4643965,
-                "process_id": 9665,
-                "queue_name": "test_queue72c",
-                "start_datetime_str": "2021-12-27 19:21:24",
-                "start_timestamp": 1640604084.0780013
-            }, ...............]
-        """
-        redis_key = f'funboost_hearbeat_queue__dict:{queue_name}'
-        return self._get_all_hearbeat_info_by_redis_key_name(redis_key)
-
-    def get_all_hearbeat_info_by_ip(self, ip=None) -> typing.List[typing.Dict]:
-        """
-        根据机器的ip查询有哪些活跃的消费者进程，ip不传参就查本机ip使用funboost框架运行了哪些消费进程，传参则查询任意机器的消费者进程信息。
-        返回结果的格式和上面的 get_all_hearbeat_dict_by_queue_name 方法相同。
-        """
-        ip = ip or nb_log_config_default.computer_ip
-        redis_key = f'funboost_hearbeat_server__dict:{ip}'
-        return self._get_all_hearbeat_info_by_redis_key_name(redis_key)
-
-    def _get_all_hearbeat_info_partition_by_redis_key_prefix(self, redis_key_prefix):
-        keys = self.redis_db_frame.scan(0, f'{redis_key_prefix}*', 10000)[1]
-        infos_map = {}
-        for key in keys:
-            key = key.decode()
-            infos = self.redis_db_frame.smembers(key)
-            dict_key = key.replace(redis_key_prefix, '')
-            infos_map[dict_key] = []
-            for info_str in infos:
-                info_dict = json.loads(info_str)
-                if self.timestamp() - info_dict['hearbeat_timestamp'] < 15:
-                    infos_map[dict_key].append(info_dict)
-        return infos_map
-
-    def get_all_hearbeat_info_partition_by_queue_name(self) -> typing.Dict[typing.AnyStr, typing.List[typing.Dict]]:
-        """获取所有队列对应的活跃消费者进程信息，按队列名划分,不需要传入队列名，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对"""
-        infos_map = self._get_all_hearbeat_info_partition_by_redis_key_prefix('funboost_hearbeat_queue__dict:')
-        self.logger.info(f'获取所有队列对应的活跃消费者进程信息，按队列名划分，结果是 {json.dumps(infos_map, indent=4)}')
-        return infos_map
-
-    def get_all_hearbeat_info_partition_by_ip(self) -> typing.Dict[typing.AnyStr, typing.List[typing.Dict]]:
-        """获取所有机器ip对应的活跃消费者进程信息，按机器ip划分,不需要传入机器ip，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对 """
-        infos_map = self._get_all_hearbeat_info_partition_by_redis_key_prefix('funboost_hearbeat_server__dict:')
-        self.logger.info(f'获取所有机器ip对应的活跃消费者进程信息，按机器ip划分，结果是 {json.dumps(infos_map, indent=4)}')
-        return infos_map

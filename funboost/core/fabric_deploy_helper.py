@@ -5,6 +5,8 @@ import threading
 import time
 
 from fabric2 import Connection
+
+from funboost.core.booster import Booster
 from funboost.utils.paramiko_util import ParamikoFolderUploader
 
 import nb_log
@@ -13,7 +15,8 @@ import nb_log
 logger = nb_log.get_logger('funboost')
 
 
-def fabric_deploy(task_fun, host, port, user, password,
+# noinspection PyDefaultArgument
+def fabric_deploy(booster:Booster, host, port, user, password,
                   path_pattern_exluded_tuple=('/.git/', '/.idea/', '/dist/', '/build/'),
                   file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
                   only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
@@ -82,8 +85,8 @@ def fabric_deploy(task_fun, host, port, user, password,
         logger.info(f'上传 本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹耗时 {round(time.perf_counter() - t_start, 3)} 秒')
         # conn.run(f'''export PYTHONPATH={remote_dir}:$PYTHONPATH''')
 
-        func_name = task_fun.__name__
-        queue_name = task_fun.consumer.queue_name
+        func_name = booster.consuming_function.__name__
+        queue_name = booster.consumer.queue_name
 
         process_mark = f'funboost_fabric_mark__{queue_name}__{func_name}'
         conn = Connection(host, port=port, user=user, connect_kwargs={"password": password}, )

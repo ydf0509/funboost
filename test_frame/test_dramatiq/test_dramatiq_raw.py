@@ -35,7 +35,6 @@ def f3(url):
     print(f"There are {count} words at {url!r}.")
 
 
-
 if __name__ == '__main__':
 
     count_words.send("http://www.baidu.com")

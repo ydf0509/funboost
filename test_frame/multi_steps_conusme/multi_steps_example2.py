@@ -1,25 +1,27 @@
-from funboost import get_consumer, boost
+from funboost import boost
 
 
+@boost('s1q',qps=0.2)
 def step1(x):
     print(f'x 的值是 {x}')
     if x == 0:
         for i in range(1, 10):
-            consumer1.publisher_of_same_queue.publish(dict(x=x + i))
+            step1.publish(dict(x=x + i))
     for j in range(10):
-        consumer2.publisher_of_same_queue.publish(dict(y=x * 100 + j))
+        step2.publish(dict(y=x * 100 + j))
 
-
+@boost('s2q',qps=2)
 def step2(y):
     print(f'y 的值是 {y}')
 
 
-consumer1 = get_consumer('queue_test_step1', consuming_function=step1)
-consumer2 = get_consumer('queue_test_step2', consuming_function=step2)
-consumer1.publisher_of_same_queue.clear()
+if __name__ == '__main__':
 
-consumer1.publisher_of_same_queue.publish({'x': 0})
+    step1.push(0)
+    step1.consume()
+    step2.multi_process_consume(2)
+    #
+    # print(step1.consumer.consuming_function.__name__)
 
-consumer1.start_consuming_message()
-consumer2.start_consuming_message()
+    step2(111)
 

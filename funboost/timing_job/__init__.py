@@ -17,9 +17,10 @@ from apscheduler.schedulers.base import STATE_STOPPED, STATE_RUNNING
 from apscheduler.util import undefined
 import deprecated
 
-from funboost import funboost_config_deafult, boost_queue__fun_map
+from funboost import funboost_config_deafult
 
 from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.core.get_booster import get_booster
 from funboost.publishers.base_publisher import AbstractPublisher
 
 
@@ -35,17 +36,20 @@ def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, Ab
     return _deco
 
 
-def push_fun_params_to_broker(queue_name:str, *args, **kwargs, ):
-    boost_queue__fun_map[queue_name].push(*args, **kwargs)
+def push_fun_params_to_broker(queue_name: str, *args, **kwargs, ):
+    """
+    *args **kwargs 是消费函数的入参
+    """
+    get_booster(queue_name).push(*args, **kwargs)
 
 
-class FsdfBackgroundScheduler(BackgroundScheduler):
+class FunboostBackgroundScheduler(BackgroundScheduler):
     """
     自定义的， 继承了官方BackgroundScheduler，
     通过重写 _main_loop ，使得动态修改增加删除定时任务配置更好。
     """
 
-    @deprecated.deprecated(reason='以后不要使用这种方式，对于job_store为数据库时候需要序列化不好。使用内存和数据库都兼容的添加任务方式: add_push_job')
+    @deprecated.deprecated(reason='以后不要再使用这种方式，对于job_store为数据库时候需要序列化不好。使用内存和数据库都兼容的添加任务方式: add_push_job')
     def add_timing_publish_job(self, func, trigger=None, args=None, kwargs=None, id=None, name=None,
                                misfire_grace_time=undefined, coalesce=undefined, max_instances=undefined,
                                next_run_time=undefined, jobstore='default', executor='default',
@@ -78,6 +82,11 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
         """
         # args = args or {}
         # kwargs['queue_name'] = func.queue_name
+
+        """
+        用户如果不使用funboost的 FunboostBackgroundScheduler 类型对象，而是使用原生的apscheduler类型对象，可以scheduler.add_jon(push_fun_params_to_broker,args=(,),kwargs={}) 
+        push_fun_params_to_broker函数入参是消费函数队列的 queue_name 加上 原消费函数的入参
+        """
         if args is None:
             args = (func.queue_name,)
         else:
@@ -103,7 +112,7 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
 
         if block_exit:
             atexit.register(_when_exit)
-        super(FsdfBackgroundScheduler, self).start(paused=paused, )
+        super().start(paused=paused, )
         # _block_exit()   # python3.9 判断守护线程结束必须主线程在运行，否则结尾
 
     def _main_loop00000(self):
@@ -133,7 +142,7 @@ class FsdfBackgroundScheduler(BackgroundScheduler):
             wait_seconds = self._process_jobs()
 
 
-FunboostBackgroundScheduler = FsdfBackgroundScheduler
+FsdfBackgroundScheduler = FunboostBackgroundScheduler  # 兼容一下名字，fsdf是 function-scheduling-distributed-framework 老框架名字的缩写
 funboost_aps_scheduler = FunboostBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False, )
 fsdf_background_scheduler = funboost_aps_scheduler  # funboost_aps_scheduler定时配置基于内存的，不可以跨机器远程动态添加/修改/删除定时任务配置。如果需要动态增删改查定时任务，可以使用funboost_background_scheduler_redis_store
 

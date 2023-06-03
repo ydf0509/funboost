@@ -3,7 +3,7 @@
 from pathlib import Path
 import pytz
 from funboost.constant import BrokerEnum, ConcurrentModeEnum
-from funboost.helpers import FunctionResultStatusPersistanceConfig
+from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig
 from funboost.utils.simple_data_class import DataClassBase
 
 '''

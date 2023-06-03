@@ -16,7 +16,7 @@ import random
 # from distributed_frame_config import REDIS_HOST
 import nb_log
 from concurrent.futures import ProcessPoolExecutor
-from funboost import boost, BrokerEnum, ConcurrentModeEnum, FunctionResultStatusPersistanceConfig, boost_queue__fun_map, ExceptionForRequeue, ExceptionForPushToDlxqueue, IdeAutoCompleteHelper
+from funboost import boost, BrokerEnum, ConcurrentModeEnum, FunctionResultStatusPersistanceConfig, ExceptionForRequeue, ExceptionForPushToDlxqueue
 from funboost.utils import RedisMixin
 from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
 

@@ -263,9 +263,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.init_params.pop('self')
         self.init_params['broker_kind'] = self.__class__.BROKER_KIND
         self.init_params['consuming_function'] = consuming_function
-
-        print(999, self.init_params)
-
+        # print(999, self.init_params)
         ConsumersManager.consumers_queue__info_map[queue_name] = current_queue__info_dict = copy.copy(self.init_params)
         ConsumersManager.consumers_queue__consumer_obj_map[queue_name] = self
         current_queue__info_dict['consuming_function'] = str(consuming_function)  # consuming_function.__name__

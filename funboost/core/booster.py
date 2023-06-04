@@ -144,6 +144,9 @@ class Booster:
         loc.pop('self')
         self.boost_params = _get_final_boost_params(boost_params_include_boost_decorator_default_params=loc)
 
+    def __str__(self):
+        return f'{type(self)}  队列为 {self.queue_name} 函数为 {self.consuming_function} 的 booster'
+
     def __call__(self, *args, **kwargs):
         if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], typing.Callable):
             consuming_function = args[0]

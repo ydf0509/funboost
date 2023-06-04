@@ -19,7 +19,7 @@ from pikav1.exceptions import AMQPError as PikaAMQPError
 
 from nb_log import LoggerLevelSetterMixin, get_logger, LoggerMixin
 
-from funboost.publishers.msg_result_getter import AsyncResult, AioAsyncResult, HasNotAsyncResult, ResultFromMongo
+from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
 from funboost.utils import decorators, time_util
 from funboost import funboost_config_deafult
 

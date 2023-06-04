@@ -30,21 +30,22 @@ def step2(y):
 
 
 if __name__ == '__main__':
-    from funboost.core.get_booster import get_booster, pid_queue_name__booster_map
-
-    print(os.getpid(), pid_queue_name__booster_map)
-    print(step1)
-    step1.push(0)
-    # step2.multi_process_pub_params_list([{'y':i*2} for i in range(100000)],2)
-    step1.consume()
-    # step2.multi_process_consume(2)
-
-    step2.fabric_deploy(host='106.55.244.110',port=22,user='root',password='(H8{Q$%Bb2_|nSg}',process_num=3,only_upload_within_the_last_modify_time=86400)
+    pass
+    # from funboost.core.get_booster import get_booster, pid_queue_name__booster_map
     #
-    # print(step1.consumer.consuming_function.__name__)
-
-    step2(8899)
-
-    while 1:
-        print(os.getpid(),pid_queue_name__booster_map)
-        time.sleep(60)
+    # print(os.getpid(), pid_queue_name__booster_map)
+    # print(step1)
+    step1.push(0)
+    # # step2.multi_process_pub_params_list([{'y':i*2} for i in range(100000)],2)
+    step1.consume()
+    step2.multi_process_consume(2)
+    #
+    # step2.fabric_deploy(host='106.55.244.110',port=22,user='root',password='(H8{Q$%Bb2_|nSg}',process_num=3,only_upload_within_the_last_modify_time=86400)
+    # #
+    # # print(step1.consumer.consuming_function.__name__)
+    #
+    # step2(8899)
+    #
+    # while 1:
+    #     print(os.getpid(),pid_queue_name__booster_map)
+    #     time.sleep(60)

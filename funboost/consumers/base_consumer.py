@@ -264,7 +264,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.init_params['broker_kind'] = self.__class__.BROKER_KIND
         self.init_params['consuming_function'] = consuming_function
 
-        print(999,self.init_params)
+        print(999, self.init_params)
 
         ConsumersManager.consumers_queue__info_map[queue_name] = current_queue__info_dict = copy.copy(self.init_params)
         ConsumersManager.consumers_queue__consumer_obj_map[queue_name] = self
@@ -279,19 +279,23 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # 方便点击跳转定位到当前解释器下所有实例化消费者的文件行，点击可跳转到该处。
         # 获取被调用函数在被调用时所处代码行数
         # 直接实例化相应的类和使用工厂模式来实例化相应的类，得到的消费者实际实例化的行是不一样的，希望定位到用户的代码处，而不是定位到工厂模式处。也不要是boost装饰器本身处。
-        line = sys._getframe(1).f_back.f_lineno
-        # 获取被调用函数所在模块文件名
-        file_name = sys._getframe(2).f_code.co_filename
-        print(line,file_name)
-        if 'consumer_factory.py' in file_name:
-            line = sys._getframe(2).f_back.f_lineno
-            file_name = sys._getframe(3).f_code.co_filename
-        if r'funboost\__init__.py' in file_name or 'funboost/__init__.py' in file_name:
-            line = sys._getframe(3).f_back.f_lineno
-            file_name = sys._getframe(4).f_code.co_filename
-        if r'funboost\helpers.py' in file_name or 'funboost/helpers.py' in file_name:
-            line = sys._getframe(4).f_back.f_lineno
-            file_name = sys._getframe(5).f_code.co_filename
+        # print(consuming_function,dir(consuming_function))
+        # print(dir(consuming_function.__code__))
+        file_name = consuming_function.__code__.co_filename
+        line = consuming_function.__code__.co_firstlineno
+        # line = sys._getframe(2).f_back.f_lineno
+        # # 获取被调用函数所在模块文件名
+        # file_name = sys._getframe(3).f_code.co_filename
+        # print(queue_name,line,file_name)
+        # if 'consumer_factory.py' in file_name:
+        #     line = sys._getframe(2).f_back.f_lineno
+        #     file_name = sys._getframe(3).f_code.co_filename
+        # if r'funboost\__init__.py' in file_name or 'funboost/__init__.py' in file_name:
+        #     line = sys._getframe(3).f_back.f_lineno
+        #     file_name = sys._getframe(4).f_code.co_filename
+        # if r'funboost\helpers.py' in file_name or 'funboost/helpers.py' in file_name:
+        #     line = sys._getframe(4).f_back.f_lineno
+        #     file_name = sys._getframe(5).f_code.co_filename
         current_queue__info_dict['where_to_instantiate'] = f'{file_name}:{line}'
 
         self._queue_name = queue_name

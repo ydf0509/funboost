@@ -143,8 +143,10 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
 
 
 FsdfBackgroundScheduler = FunboostBackgroundScheduler  # 兼容一下名字，fsdf是 function-scheduling-distributed-framework 老框架名字的缩写
+# funboost_aps_scheduler定时配置基于内存的，不可以跨机器远程动态添加/修改/删除定时任务配置。如果需要动态增删改查定时任务，可以使用funboost_background_scheduler_redis_store
+
 funboost_aps_scheduler = FunboostBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False, )
-fsdf_background_scheduler = funboost_aps_scheduler  # funboost_aps_scheduler定时配置基于内存的，不可以跨机器远程动态添加/修改/删除定时任务配置。如果需要动态增删改查定时任务，可以使用funboost_background_scheduler_redis_store
+fsdf_background_scheduler = funboost_aps_scheduler  # 兼容一下老名字。
 
 if __name__ == '__main__':
     # 定时运行消费演示

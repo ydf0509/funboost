@@ -24,7 +24,7 @@ beat_schedule = {  # 这是100% 原汁原味的celery 定时任务配置方式
     'add-every-10-seconds_job': {
         'task': f_beat.queue_name,
         'schedule': timedelta(seconds=10),
-        'args': (10000, 20000)
+        'args': (10000, 20000),
     },
     'celery_beat_queueb_8_jobxx': {
         'task': f_beat2.queue_name,

@@ -18,19 +18,6 @@ class _Undefined:
     pass
 
 
-def _get_final_boost_params(boost_params_include_boost_decorator_default_params):
-    # 下面这段代码 boost_params 是综合funboost_config.BoostDecoratorDefaultParams全局入参 和boost装饰器入参，最终得到的入参。
-    # 如果@boost装饰器没有亲自执行boost的某个入参，则使用BoostDecoratorDefaultParams全局入参
-    boost_params0 = copy.copy(boost_params_include_boost_decorator_default_params)
-    boost_params0.pop('boost_decorator_default_params')
-    boost_params = copy.copy(boost_params0)
-    for k, v in boost_params0.items():
-        if v == _Undefined:
-            # print(k,v,boost_decorator_default_params[k])
-            boost_params[k] = boost_params_include_boost_decorator_default_params['boost_decorator_default_params'][k]  # boost装饰器没有亲指定某个传参，就使用funboost_config.py的BoostDecoratorDefaultParams的全局配置。
-    return boost_params
-
-
 class Booster:
     """
     funboost极其重视代码能在pycharm下自动补全。元编程经常造成在pycharm下代码无法自动补全提示，要是实现代码补全难。
@@ -142,7 +129,20 @@ class Booster:
         """
         loc = locals()
         loc.pop('self')
-        self.boost_params = _get_final_boost_params(boost_params_include_boost_decorator_default_params=loc)
+        self.boost_params = self.__get_final_boost_params(boost_params_include_boost_decorator_default_params=loc)
+
+    @staticmethod
+    def __get_final_boost_params(boost_params_include_boost_decorator_default_params):
+        # 下面这段代码 boost_params 是综合funboost_config.BoostDecoratorDefaultParams全局入参 和boost装饰器入参，最终得到的入参。
+        # 如果@boost装饰器没有亲自执行boost的某个入参，则使用BoostDecoratorDefaultParams全局入参
+        boost_params0 = copy.copy(boost_params_include_boost_decorator_default_params)
+        boost_params0.pop('boost_decorator_default_params')
+        boost_params = copy.copy(boost_params0)
+        for k, v in boost_params0.items():
+            if v == _Undefined:
+                # print(k,v,boost_decorator_default_params[k])
+                boost_params[k] = boost_params_include_boost_decorator_default_params['boost_decorator_default_params'][k]  # boost装饰器没有亲指定某个传参，就使用funboost_config.py的BoostDecoratorDefaultParams的全局配置。
+        return boost_params
 
     def __str__(self):
         return f'{type(self)}  队列为 {self.queue_name} 函数为 {self.consuming_function} 的 booster'

@@ -163,7 +163,7 @@ class CeleryConsumer(AbstractConsumer):
         def f(*args, **kwargs):
             self.logger.debug(f' 这条消息是 celery 从 {self.queue_name} 队列中取出 ,是由 celery 框架调度 {self.consuming_function.__name__} 函数处理: args:  {args} ,  kwargs: {kwargs}')
             return self.consuming_function(*args, **kwargs)
-
+        self.celery_task = f
         CeleryHelper.concurrent_mode = self._concurrent_mode
 
     def start_consuming_message(self):

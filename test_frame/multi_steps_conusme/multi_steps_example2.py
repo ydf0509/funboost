@@ -40,7 +40,7 @@ if __name__ == '__main__':
     step1.consume()
     step2.multi_process_consume(2)
     #
-    step2.fabric_deploy(host='106.55.244.110',port=22,user='root',password='(H8{Q$%Bb2_|nSg}',process_num=3,only_upload_within_the_last_modify_time=86400*10)
+    step2.fabric_deploy(host='106.55.244.110',port=22,user='root',password='****',process_num=3,only_upload_within_the_last_modify_time=86400*10)
     # #
     # # print(step1.consumer.consuming_function.__name__)
     #

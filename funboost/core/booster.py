@@ -147,6 +147,13 @@ class Booster:
     def __str__(self):
         return f'{type(self)}  队列为 {self.queue_name} 函数为 {self.consuming_function} 的 booster'
 
+    def __get__(self, instance, cls):
+        """https://python3-cookbook.readthedocs.io/zh_CN/latest/c09/p09_define_decorators_as_classes.html"""
+        if instance is None:
+            return self
+        else:
+            return types.MethodType(self, instance)
+
     def __call__(self, *args, **kwargs):
         if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], typing.Callable):
             consuming_function = args[0]
@@ -170,8 +177,8 @@ class Booster:
             self.pause = self.pause_consume = consumer.pause_consume
             self.continue_consume = consumer.continue_consume
 
-            regist_booster(self.queue_name, self)
             wraps(consuming_function)(self)
+            regist_booster(self.queue_name, self)
             return self
         else:
             return self.consuming_function(*args, **kwargs)

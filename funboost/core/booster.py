@@ -1,9 +1,7 @@
 import copy
-import functools
 import types
 import typing
-from functools import wraps, partial
-import collections
+from functools import wraps
 
 from funboost.core.function_result_status_config import FunctionResultStatusPersistanceConfig
 

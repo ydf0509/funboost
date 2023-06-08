@@ -1,13 +1,12 @@
 import threading
 import os
 import uuid
-from random import shuffle
 from rq.worker import RandomWorker
 import nb_log
 from redis3 import Redis
 from rq import Worker
-from rq_win import WindowsWorker
 from funboost import funboost_config_deafult
+from funboost.assist.rq_windows_worker import WindowsWorker
 
 nb_log.get_logger('rq')
 

@@ -41,5 +41,5 @@ class RqHelper:
         worker.work()
 
     @staticmethod
-    def use_nb_log_handler():
-        nb_log.get_logger('rq', log_level_int=20)
+    def add_nb_log_handler_to_rq():
+        nb_log.get_logger('rq', log_level_int=20,log_filename='rq.log')

@@ -18,7 +18,7 @@ Worker._install_signal_handlers = _install_signal_handlers_monkey
 
 
 class RandomWindowsWorker(RandomWorker, WindowsWorker):
-    """ 这个是为了 每个队列随机拉取，默认是前面的队列先消费完才会消费下一个队列名"""
+    """ 这个是为了 每个队列都有机会同时拉取，默认是前面的队列先消费完才会消费下一个队列名"""
 
     pass
 

@@ -142,3 +142,8 @@ def regist_to_funboost(broker_kind: int):
         from funboost.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit
         from funboost.publishers.confluent_kafka_publisher import ConfluentKafkaPublisher
         register_custom_broker(BrokerEnum.KAFKA_CONFLUENT, ConfluentKafkaPublisher, KafkaConsumerManuallyCommit)
+
+    if broker_kind == BrokerEnum.RQ:
+        from funboost.consumers.rq_consumer import RqConsumer
+        from funboost.publishers.rq_publisher import RqPublisher
+        register_custom_broker(broker_kind, RqPublisher, RqConsumer)

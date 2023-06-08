@@ -8,8 +8,6 @@ from rq import Worker
 from funboost import funboost_config_deafult
 from funboost.assist.rq_windows_worker import WindowsWorker
 
-nb_log.get_logger('rq')
-
 
 def _install_signal_handlers_monkey(self):
     """ 不能在非主线程中操作信号"""
@@ -41,3 +39,7 @@ class RqHelper:
         worker_cls = RandomWindowsWorker if os.name == 'nt' else RandomWorker
         worker = worker_cls(list(cls.to_be_start_work_rq_queue_name_set), connection=cls.redis_conn, name=uuid.uuid4().hex)
         worker.work()
+
+    @staticmethod
+    def use_nb_log_handler():
+        nb_log.get_logger('rq', log_level_int=20)

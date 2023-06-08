@@ -94,6 +94,7 @@ setup(
                                       'sqlalchemy_utils==0.36.1',
                                       'dramatiq==1.14.2',
                                       'huey==2.4.5',
+                                      'rq==1.15.0',
                                       ]},
 )
 

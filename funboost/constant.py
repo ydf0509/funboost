@@ -73,6 +73,8 @@ class BrokerEnum:
 
     HUEY = 32 # huey任务队列框架作为funboost调度核心
 
+    RQ = 33  # huey任务队列框架作为funboost调度核心
+
     NAMEKO = 40  # funboost支持python微服务框架nameko，用户无需掌握nameko api语法，就玩转python nameko微服务
 
 

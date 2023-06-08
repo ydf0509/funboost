@@ -6,6 +6,7 @@ import copy
 import inspect
 import atexit
 import json
+import multiprocessing
 import threading
 import uuid
 import time
@@ -276,8 +277,9 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.logger.warning(f'with中自动关闭publisher连接，累计推送了 {self.publish_msg_num_total} 条消息 ')
 
     def _at_exit(self):
-        self.logger.warning(
-            f'程序关闭前，{round(time.time() - self.__init_time)} 秒内，累计推送了 {self.publish_msg_num_total} 条消息 到 {self._queue_name} 中')
+        if multiprocessing.current_process().name == 'MainProcess':
+            self.logger.warning(
+                f'程序关闭前，{round(time.time() - self.__init_time)} 秒内，累计推送了 {self.publish_msg_num_total} 条消息 到 {self._queue_name} 中')
 
 
 has_init_broker_lock = threading.Lock()

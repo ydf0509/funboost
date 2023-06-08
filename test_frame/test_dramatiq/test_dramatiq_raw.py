@@ -15,7 +15,7 @@ print(dramatiq.get_broker().actor_options)
 
 
 
-@dramatiq.actor
+@dramatiq.actor(queue_name='f1q')
 def count_words(url):
     response = requests.get(url)
     count = len(response.text.split(" "))
@@ -37,28 +37,30 @@ def f3(url):
 
 if __name__ == '__main__':
 
-    count_words.send("http://www.baidu.com")
-    # p = make_argument_parser()
-    p = argparse.ArgumentParser()
-    pa =p.parse_args()
-    px= make_argument_parser()
-    pa.broker = 'test_dramatiq_raw'
-    pa.modules = []
-    pa.processes = 1
-    pa.threads=8
-    pa.path = '.'
-    pa.queues=None
-    pa.log_file=None
-    pa.skip_logging = False
-    pa.use_spawn = False
-    pa.forks = []
-    pa.worker_shutdown_timeout = 600000
-    pa.verbose = 0
-    pa.pid_file = None
-    print(31)
-    print(32, pa)
+    # count_words.send("http://www.baidu.com")
+    # # p = make_argument_parser()
+    # p = argparse.ArgumentParser()
+    # pa =p.parse_args()
+    # px= make_argument_parser()
+    # pa.broker = 'test_dramatiq_raw'
+    # pa.modules = []
+    # pa.processes = 1
+    # pa.threads=8
+    # pa.path = '.'
+    # pa.queues=None
+    # pa.log_file=None
+    # pa.skip_logging = False
+    # pa.use_spawn = False
+    # pa.forks = []
+    # pa.worker_shutdown_timeout = 600000
+    # pa.verbose = 0
+    # pa.pid_file = None
+    # print(31)
+    # print(32, pa)
+    #
+    # main(pa)
 
-    main(pa)
+    pass
 
 
 '''

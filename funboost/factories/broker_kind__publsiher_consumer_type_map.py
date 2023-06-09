@@ -6,7 +6,6 @@ from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.constant import BrokerEnum
 
 from funboost.publishers.http_publisher import HTTPPublisher
-from funboost.publishers.kombu_publisher import KombuPublisher
 from funboost.publishers.nats_publisher import NatsPublisher
 from funboost.publishers.peewee_publisher import PeeweePublisher
 from funboost.publishers.redis_publisher_lpush import RedisPublisherLpush
@@ -32,7 +31,6 @@ from funboost.publishers.httpsqs_publisher import HttpsqsPublisher
 from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer
 from funboost.consumers.http_consumer import HTTPConsumer
 from funboost.consumers.kafka_consumer import KafkaConsumer
-from funboost.consumers.kombu_consumer import KombuConsumer
 from funboost.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
 from funboost.consumers.mongomq_consumer import MongoMqConsumer
 from funboost.consumers.nats_consumer import NatsConsumer
@@ -69,7 +67,6 @@ broker_kind__publsiher_consumer_type_map = {
     BrokerEnum.REDIS_STREAM: (RedisStreamPublisher, RedisStreamConsumer),
     BrokerEnum.ZEROMQ: (ZeroMqPublisher, ZeroMqConsumer),
     BrokerEnum.RedisBrpopLpush: (RedisPublisherLpush, RedisBrpopLpushConsumer),
-    BrokerEnum.KOMBU: (KombuPublisher, KombuConsumer),
     BrokerEnum.MQTT: (MqttPublisher, MqttConsumer),
     BrokerEnum.HTTPSQS: (HttpsqsPublisher, HttpsqsConsumer),
     BrokerEnum.UDP: (UDPPublisher, UDPConsumer),
@@ -147,3 +144,8 @@ def regist_to_funboost(broker_kind: int):
         from funboost.consumers.rq_consumer import RqConsumer
         from funboost.publishers.rq_publisher import RqPublisher
         register_custom_broker(broker_kind, RqPublisher, RqConsumer)
+
+    if broker_kind == BrokerEnum.KOMBU:
+        from funboost.consumers.kombu_consumer import KombuConsumer
+        from funboost.publishers.kombu_publisher import KombuPublisher
+        register_custom_broker(broker_kind, KombuPublisher, KombuConsumer)

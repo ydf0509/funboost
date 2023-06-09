@@ -25,3 +25,4 @@ if __name__ == '__main__':
     f.consume()  # f.consume()是登记要启动的rq f函数的 queue名字,
     f2.consume()  # f2.consume()是登记要启动的rq f2函数的queue名字
     RqHelper.realy_start_rq_worker()  # realy_start_rq_worker 是真正启动rqworker，相当于命令行执行了 rqworker 命令。
+

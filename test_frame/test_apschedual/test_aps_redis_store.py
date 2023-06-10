@@ -1,7 +1,7 @@
 
 import apscheduler.jobstores.base
 import nb_log
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum,run_forever
 from funboost.timing_job.apscheduler_use_redis_store import funboost_background_scheduler_redis_store
 
 nb_log.get_logger('apscheduler')
@@ -33,6 +33,8 @@ if __name__ == '__main__':
         print('定时任务id已存在： {e}')
 
     consume_func.consume()
+    run_forever()
+
 
 
 

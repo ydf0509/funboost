@@ -1,5 +1,5 @@
 # noinspection PyUnresolvedReferences
-from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath
+from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath # 这是把 dependency_packages_in_pythonpath 添加到 PYTHONPATH了。
 
 from funboost.utils import monkey_patches
 from funboost.utils import show_funboost_flag

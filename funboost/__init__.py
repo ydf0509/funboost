@@ -32,7 +32,10 @@ from funboost.constant import BrokerEnum, ConcurrentModeEnum
 from funboost.core.booster import boost, Booster
 from funboost.core.get_booster import get_booster
 
-from funboost.core import exit_signal
+from funboost.core.exit_signal import set_interrupt_signal_handler
 from funboost.core.helper_funs import run_forever
+
 # 有的包默认没加handlers，原始的日志不漂亮且不可跳转不知道哪里发生的。这里把warnning级别以上的日志默认加上handlers。
 # nb_log.get_logger(name='', log_level_int=30, log_filename='pywarning.log')
+
+set_interrupt_signal_handler()

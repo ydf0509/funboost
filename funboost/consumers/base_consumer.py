@@ -43,6 +43,7 @@ from funboost.core.function_result_status_saver import FunctionResultStatusPersi
 
 # noinspection PyUnresolvedReferences
 from funboost.core.helper_funs import _delete_keys_and_return_new_dict, get_publish_time
+from funboost.utils.kill_thread import kill_fun_deco
 from nb_log import get_logger, LoggerLevelSetterMixin, LogManager, nb_print, LoggerMixin, \
     LoggerMixinDefaultWithFileHandler, stdout_write, stderr_write, is_main_process, \
     only_print_on_main_process, nb_log_config_default
@@ -199,6 +200,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                  msg_expire_senconds=0, is_send_consumer_hearbeat_to_redis=False,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False,
                  task_filtering_expire_seconds=0,
+                 is_support_task_kill = False,
                  is_do_not_run_by_specify_time_effect=False,
                  do_not_run_by_specify_time=('10:00:00', '22:00:00'),
                  schedule_tasks_on_main_thread=False,
@@ -380,6 +382,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._msg_num_in_broker = 0
         self._last_timestamp_when_has_task_in_queue = 0
         self._last_timestamp_print_msg_num = 0
+
+        self._is_support_task_kill = is_support_task_kill
 
         self._is_do_not_run_by_specify_time_effect = is_do_not_run_by_specify_time_effect
         self._do_not_run_by_specify_time = do_not_run_by_specify_time  # 可以设置在指定的时间段不运行。
@@ -784,6 +788,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             function_run0 = self.consuming_function if self._consumin_function_decorator is None else self._consumin_function_decorator(self.consuming_function)
             function_run = function_run0 if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
                 function_timeout)(function_run0)
+            if self._is_support_task_kill or 1:
+                function_run = kill_fun_deco(task_id=kw['body']['extra']['task_id'])(function_run)
             function_result_status.result = function_run(**function_only_params)
             if asyncio.iscoroutine(function_result_status.result):
                 log_msg = f'''异步的协程消费函数必须使用 async 并发模式并发,请设置消费函数 {self.consuming_function.__name__} 的concurrent_mode 为 ConcurrentModeEnum.ASYNC 或 4'''

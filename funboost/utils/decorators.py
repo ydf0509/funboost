@@ -523,10 +523,12 @@ def timeout(seconds):
 
     def timeout_decorator(func):
 
-        def _new_func(oldfunc, result, oldfunc_args, oldfunc_kwargs):
-            result.append(oldfunc(*oldfunc_args, **oldfunc_kwargs))
+
 
         def _(*args, **kwargs):
+            def _new_func(oldfunc, result, oldfunc_args, oldfunc_kwargs):
+                result.append(oldfunc(*oldfunc_args, **oldfunc_kwargs))
+
             result = []
             new_kwargs = {
                 'oldfunc': func,

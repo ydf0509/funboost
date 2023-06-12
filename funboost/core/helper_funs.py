@@ -1,4 +1,5 @@
 import copy
+import time
 
 
 def get_publish_time(paramsx: dict):
@@ -18,3 +19,18 @@ def _delete_keys_and_return_new_dict(dictx: dict, keys: list = None):
         except KeyError:
             pass
     return dict_new
+
+
+def block_python_main_thread_exit():
+    """
+
+    https://funboost.readthedocs.io/zh/latest/articles/c10.html#runtimeerror-cannot-schedule-new-futures-after-interpreter-shutdown
+
+    主要是用于 python3.9以上 定时任务报错，  定时任务报错 RuntimeError: cannot schedule new futures after interpreter shutdown
+    如果主线程结束了，apscheduler就会报这个错，加上这个while 1 ： time.sleep(100) 目的就是阻止主线程退出。
+    """
+    while 1:
+        time.sleep(100)
+
+
+run_forever = block_python_main_thread_exit

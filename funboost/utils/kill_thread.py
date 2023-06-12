@@ -8,9 +8,8 @@ class ThreadKillAble(threading.Thread):
     killed = False
 
 
-def kill_thread(threadx: ThreadKillAble):
-    threadx.killed = True
-    ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(threadx.ident), ctypes.py_object(SystemExit))
+def kill_thread(thread_id):
+    ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread_id), ctypes.py_object(SystemExit))
 
 
 class ThreadHasKilled(Exception):
@@ -23,7 +22,8 @@ def kill_thread_by_task_id(task_id):
             thread_task_id = getattr(t, 'task_id', None)
             print(thread_task_id)
             if thread_task_id == task_id:
-                kill_thread(t)
+                t.killed = True
+                kill_thread(t.ident)
 
 
 def kill_fun_deco(task_id):
@@ -54,11 +54,12 @@ def kill_fun_deco(task_id):
 
 
 if __name__ == '__main__':
+    import nb_log
     @kill_fun_deco(task_id='task1234')
     def my_fun(x):
         print('start')
         print(x)
-        time.sleep(6)
+        time.sleep(10)
         print('over')
         return 666
 
@@ -70,4 +71,9 @@ if __name__ == '__main__':
 
     threading.Thread(target=kill_thread_by_task_1234).start()
 
-    print(my_fun(29))
+    print(111)
+    try:
+        print(my_fun(29))
+    except Exception as e:
+        print(e)
+    print(222)

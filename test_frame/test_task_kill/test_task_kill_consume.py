@@ -5,7 +5,7 @@ from funboost.utils.kill_thread import kill_thread_by_task_id
 @boost('test_kill_queue')
 def f(x):
     print('start')
-    time.sleep(10)
+    time.sleep(13)
     print(x)
     print('over')
 

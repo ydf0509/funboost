@@ -2,6 +2,8 @@ import ctypes
 import threading
 import time
 
+import requests
+
 
 class ThreadKillAble(threading.Thread):
     task_id = None
@@ -19,9 +21,9 @@ class ThreadHasKilled(Exception):
 
 def kill_thread_by_task_id(task_id):
     for t in threading.enumerate():
+        print(t)
         if isinstance(t, ThreadKillAble):
             thread_task_id = getattr(t, 'task_id', None)
-            print(thread_task_id)
             if thread_task_id == task_id:
                 t.killed = True
                 t.event_kill.set()
@@ -33,6 +35,7 @@ def kill_fun_deco(task_id):
         def __inner(*args, **kwargs):
             def _new_func(oldfunc, result, oldfunc_args, oldfunc_kwargs):
                 result.append(oldfunc(*oldfunc_args, **oldfunc_kwargs))
+                threading.current_thread().event_kill.set()   # noqa
 
             result = []
             new_kwargs = {
@@ -58,25 +61,40 @@ def kill_fun_deco(task_id):
 
 if __name__ == '__main__':
     import nb_log
+    test_lock = threading.Lock()
     @kill_fun_deco(task_id='task1234')
     def my_fun(x):
-        print('start')
-        print(x)
-        time.sleep(10)
-        print('over')
+        test_lock.acquire()
+        print(f'start {x}')
+        resp = requests.get('http://127.0.0.1:5000')
+        print(resp.text)
+        # for i in range(10):
+        #     time.sleep(2)
+        test_lock.release()
+        print(f'over {x}')
         return 666
 
 
-    def kill_thread_by_task_1234():
+    @kill_fun_deco(task_id='task5678')
+    def my_fun2(x):
+        test_lock.acquire()
+        print(f'start {x}')
+        resp = requests.get('http://127.0.0.1:5000')
+        print(resp.text)
+        # for i in range(10):
+        #     time.sleep(2)
+        test_lock.release()
+        print(f'over {x}')
+        return 666
+
+
+    def kill_thread_by_task(task_id):
         time.sleep(5)
-        kill_thread_by_task_id('task1234')
+        kill_thread_by_task_id(task_id)
 
 
-    threading.Thread(target=kill_thread_by_task_1234).start()
+    threading.Thread(target=kill_thread_by_task,args=('task1234',)).start()
+    threading.Thread(target=my_fun, args=(777,)).start()
+    threading.Thread(target=my_fun2, args=(888,)).start()
 
-    print(111)
-    try:
-        print(my_fun(29))
-    except Exception as e:
-        print(e)
-    print(222)
+

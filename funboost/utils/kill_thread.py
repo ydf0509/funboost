@@ -6,7 +6,7 @@ import time
 class ThreadKillAble(threading.Thread):
     task_id = None
     killed = False
-    ev = threading.Event
+    event_kill = threading.Event()
 
 
 def kill_thread(thread_id):
@@ -24,7 +24,7 @@ def kill_thread_by_task_id(task_id):
             print(thread_task_id)
             if thread_task_id == task_id:
                 t.killed = True
-                t.ev.set()
+                t.event_kill.set()
                 kill_thread(t.ident)
 
 
@@ -44,9 +44,9 @@ def kill_fun_deco(task_id):
 
             thd = ThreadKillAble(target=_new_func, args=(), kwargs=new_kwargs)
             thd.task_id = task_id
-            thd.ev = threading.Event()
+            thd.event_kill = threading.Event()
             thd.start()
-            thd.ev.wait()
+            thd.event_kill.wait()
             if not result and thd.killed is True:
                 raise ThreadHasKilled(f'线程已被杀死 {thd.task_id}')
             return result[0]

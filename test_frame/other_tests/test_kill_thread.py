@@ -70,6 +70,8 @@ def main():
 
     # 获取线程的标识符 ID
     thread_id = t.ident
+    print(t.native_id)
+    print(thread_id)
     time.sleep(1)
     print(lock2.locked())
     time.sleep(6.1)

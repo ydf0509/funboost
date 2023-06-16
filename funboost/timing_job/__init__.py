@@ -150,10 +150,10 @@ fsdf_background_scheduler = funboost_aps_scheduler  # 兼容一下老名字。
 if __name__ == '__main__':
     # 定时运行消费演示
     import datetime
-    from funboost import boost, BrokerEnum, fsdf_background_scheduler, timing_publish_deco,run_forever
+    from funboost import boost, BrokerEnum, fsdf_background_scheduler, timing_publish_deco,run_forever,Booster
 
 
-    @boost('queue_test_666', broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
+    @Booster('queue_test_666', broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
     def consume_func(x, y):
         print(f'{x} + {y} = {x + y}')
 

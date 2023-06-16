@@ -84,7 +84,7 @@ class CeleryPublisher(AbstractPublisher, ):
         # return -1
         with celery_app.connection_or_acquire() as conn:
             msg_cnt = conn.default_channel.queue_declare(
-                queue=self.queue_name, passive=False).message_count
+                queue=self.queue_name, passive=False,durable=True,auto_delete=False).message_count
         return msg_cnt
 
     def close(self):

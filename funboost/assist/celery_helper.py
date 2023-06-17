@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import sys
@@ -37,8 +38,11 @@ class CeleryHelper:
     @staticmethod
     def show_celery_app_conf():
         logger.debug('展示celery app的配置')
+        conf_dict_json_able = {}
         for k, v in celery_app.conf.items():
-            print(k, ' : ', v)
+            conf_dict_json_able[k] = str(v)
+            # print(k, ' : ', v)
+        print('celery app 的配置是：',json.dumps(conf_dict_json_able,ensure_ascii=False,indent=4))
 
     @staticmethod
     def celery_start_beat(beat_schedule: dict):

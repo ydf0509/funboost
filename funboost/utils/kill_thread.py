@@ -65,7 +65,7 @@ if __name__ == '__main__':
     def my_fun(x):
         test_lock.acquire()
         print(f'start {x}')
-        resp = requests.get('http://127.0.0.1:5000')
+        resp = requests.get('http://127.0.0.1:5000') # flask接口里面sleep30秒，
         print(resp.text)
         # for i in range(10):
         #     time.sleep(2)

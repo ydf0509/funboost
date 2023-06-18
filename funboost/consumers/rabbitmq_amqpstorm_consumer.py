@@ -24,10 +24,13 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
             kw = {'amqpstorm_message': amqpstorm_message, 'body': body}
             self._submit_task(kw)
 
+        consumer_arguments = {
+            "x-priority": 0 if self._consumer_priority is None else self._consumer_priority
+        }
         rp = RabbitmqPublisherUsingAmqpStorm(self.queue_name)
         rp.init_broker()
         rp.channel_wrapper_by_ampqstormbaic.qos(self._concurrent_num)
-        rp.channel_wrapper_by_ampqstormbaic.consume(callback=callback, queue=self.queue_name, no_ack=False)
+        rp.channel_wrapper_by_ampqstormbaic.consume(callback=callback, queue=self.queue_name, no_ack=False, arguments=consumer_arguments)
         rp.channel.start_consuming(auto_decode=True)
 
     def _confirm_consume(self, kw):

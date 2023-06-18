@@ -207,6 +207,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                  user_custom_record_process_info_func: typing.Callable = None,
                  is_using_rpc_mode=False,
                  broker_exclusive_config: dict = None,
+                 consumer_priority: int = None,
                  ):
 
         """
@@ -249,6 +250,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。
         :param broker_exclusive_config 加上一个不同种类中间件非通用的配置,不同中间件自身独有的配置，不是所有中间件都兼容的配置，因为框架支持30种消息队列，消息队列不仅仅是一般的先进先出queue这么简单的概念，
             例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，每一种消息队列都有独特的配置参数意义，可以通过这里传递。
+        :param consumer_priority: 消费者优先级, 优先级数字越大，优先级越高，当前仅在rabbitmq-amqpstorm下支持
 
         执行流程为
         1、 实例化消费者类，设置各种控制属性
@@ -376,6 +378,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._current_time_for_execute_task_times_every_unit_time = time.time()
         self._consuming_function_cost_time_total_every_unit_time = 0
         self._last_execute_task_time = time.time()  # 最近一次执行任务的时间。
+        self._consumer_priority = consumer_priority
 
         self._msg_num_in_broker = 0
         self._last_timestamp_when_has_task_in_queue = 0

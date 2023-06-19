@@ -20,11 +20,13 @@ class RedisPriorityConsumer(RedisConsumerAckAble):
             # task_str_list = script(keys=[queues_str, self._unack_zset_name], args=[time.time()])
             task_tuple = self.redis_db_frame_version3.blpop(keys=self.publisher_of_same_queue.queue_list, timeout=60)
             if task_tuple:
+                msg =  task_tuple[1]
+                self.redis_db_frame_version3.zadd(self._unack_zset_name,{msg:time.time()})
                 self.logger.debug(task_tuple)
-                self._print_message_get_from_broker('redis', task_tuple[1])
+                self._print_message_get_from_broker('redis',msg)
                 # self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {task_str_list}  ')
-                task_dict = json.loads(task_tuple[1])
-                kw = {'body': task_dict, 'task_str': task_tuple[1]}
+                task_dict = json.loads(msg)
+                kw = {'body': task_dict, 'task_str': msg}
                 self._submit_task(kw)
 
     def _requeue(self, kw):

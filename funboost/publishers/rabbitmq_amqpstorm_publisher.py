@@ -6,6 +6,7 @@ from amqpstorm.basic import Basic as AmqpStormBasic
 from amqpstorm.queue import Queue as AmqpStormQueue
 from funboost import funboost_config_deafult
 from funboost.publishers.base_publisher import AbstractPublisher, deco_mq_conn_error
+from funboost.utils import decorators
 
 
 class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher):
@@ -16,6 +17,12 @@ class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher):
     channel_wrapper_by_ampqstormbaic = AmqpStormBasic
     queue = AmqpStormQueue
     DURABLE = True
+
+    def custom_init(self):
+        arguments = {}
+        if self.broker_exclusive_config['x-max-priority']:
+            arguments['x-max-priority'] = self.broker_exclusive_config['x-max-priority']
+        self.queue_declare_params = dict(queue=self._queue_name, durable=self.DURABLE, arguments=arguments)
 
     # noinspection PyAttributeOutsideInit
     # @decorators.synchronized
@@ -28,15 +35,15 @@ class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher):
         self.channel = self.connection.channel()  # type:amqpstorm.Channel
         self.channel_wrapper_by_ampqstormbaic = AmqpStormBasic(self.channel)
         self.queue = AmqpStormQueue(self.channel)
-        self.queue.declare(queue=self._queue_name, durable=self.DURABLE)
+        self.queue.declare(**self.queue_declare_params)
 
     # @decorators.tomorrow_threads(10)
     @deco_mq_conn_error
-    def concrete_realization_of_publish(self, msg):
+    def concrete_realization_of_publish(self, msg: str):
         self.channel_wrapper_by_ampqstormbaic.publish(exchange='',
                                                       routing_key=self._queue_name,
                                                       body=msg,
-                                                      properties={'delivery_mode': 2}, )
+                                                      properties={'delivery_mode': 2, 'priority': self._get_from_other_extra_params('priroty', msg)}, )
         # nb_print(msg)
 
     @deco_mq_conn_error
@@ -47,7 +54,7 @@ class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher):
     @deco_mq_conn_error
     def get_message_count(self):
         # noinspection PyUnresolvedReferences
-        return self.queue.declare(queue=self._queue_name, durable=True)['message_count']
+        return self.queue.declare(**self.queue_declare_params)['message_count']
 
     # @deco_mq_conn_error
     def close(self):

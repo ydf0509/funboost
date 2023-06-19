@@ -42,6 +42,8 @@ class PriorityConsumingControlConfig:
                  countdown: typing.Union[float, int] = None,
                  eta: datetime.datetime = None,
                  misfire_grace_time: typing.Union[int, None] = None,
+
+                 other_extra_params:dict = None,
                  ):
         """
 
@@ -80,6 +82,8 @@ class PriorityConsumingControlConfig:
         self.misfire_grace_time = misfire_grace_time
         if misfire_grace_time is not None and misfire_grace_time < 1:
             raise ValueError(f'misfire_grace_time 的值要么是大于1的整数， 要么等于None')
+
+        self.other_extra_params = other_extra_params
 
     def to_dict(self):
         if isinstance(self.countdown, datetime.datetime):
@@ -186,6 +190,11 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def custom_init(self):
         pass
+
+    @staticmethod
+    def _get_from_other_extra_params(k: str, msg):
+        msg_dict = json.loads(msg) if isinstance(msg, str) else msg
+        return msg_dict['extra'].get('other_extra_params', {}).get(k, None)
 
     def publish(self, msg: typing.Union[str, dict], task_id=None,
                 priority_control_config: PriorityConsumingControlConfig = None):
@@ -305,3 +314,4 @@ def deco_mq_conn_error(f):
                 self.logger.critical(e, exc_info=True)
 
     return _deco_mq_conn_error
+

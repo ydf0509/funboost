@@ -43,11 +43,8 @@ class PriorityConsumingControlConfig:
                  eta: datetime.datetime = None,
                  misfire_grace_time: typing.Union[int, None] = None,
 
-<<<<<<< HEAD
                  other_extra_params: dict = None,
-=======
-                 other_extra_params:dict = None,
->>>>>>> 5e38faf275d357d5bef693fca896e0cd1d98dce4
+
                  ):
         """
 
@@ -195,25 +192,13 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def custom_init(self):
         pass
 
-<<<<<<< HEAD
-    def _convert_msg(self, msg: typing.Union[str, dict], task_id=None,
-                     priority_control_config: PriorityConsumingControlConfig = None) -> (typing.Dict, typing.Dict, typing.Dict):
-=======
     @staticmethod
     def _get_from_other_extra_params(k: str, msg):
         msg_dict = json.loads(msg) if isinstance(msg, str) else msg
         return msg_dict['extra'].get('other_extra_params', {}).get(k, None)
 
-    def publish(self, msg: typing.Union[str, dict], task_id=None,
-                priority_control_config: PriorityConsumingControlConfig = None):
-        """
-
-        :param msg:函数的入参字典或者字典转json。,例如消费函数是 def add(x,y)，你就发布 {"x":1,"y":2}
-        :param task_id:可以指定task_id,也可以不指定就随机生产uuid
-        :param priority_control_config:优先级配置，消息可以携带优先级配置，覆盖boost的配置。
-        :return:
-        """
->>>>>>> 5e38faf275d357d5bef693fca896e0cd1d98dce4
+    def _convert_msg(self, msg: typing.Union[str, dict], task_id=None,
+                     priority_control_config: PriorityConsumingControlConfig = None) -> (typing.Dict, typing.Dict, typing.Dict):
         if isinstance(msg, str):
             msg = json.loads(msg)
         msg_function_kw = copy.deepcopy(msg)
@@ -335,4 +320,3 @@ def deco_mq_conn_error(f):
                 self.logger.critical(e, exc_info=True)
 
     return _deco_mq_conn_error
-

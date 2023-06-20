@@ -22,7 +22,7 @@ class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher):
         arguments = {}
         if self.broker_exclusive_config['x-max-priority']:
             arguments['x-max-priority'] = self.broker_exclusive_config['x-max-priority']
-        self.queue_declare_params = dict(queue=self._queue_name, durable=self.DURABLE, arguments=arguments)
+        self.queue_declare_params = dict(queue=self._queue_name, durable=self.DURABLE, arguments=arguments,auto_delete=False)
 
     # noinspection PyAttributeOutsideInit
     # @decorators.synchronized

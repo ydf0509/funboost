@@ -11,17 +11,17 @@ def f(x):
 
 
 if __name__ == '__main__':
-    # f.clear()
-    # print(f.get_message_count())
-    #
-    # for i in range(10):
-    #     # test_fun.push(i)
-    #     # test_fun2.push(i)
-    #     randx = random.randint(1, 6)
-    #     if randx > 4:
-    #         randx = None
-    #     print(randx)
-    #     f.publish({'x': randx}, priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': randx}))
-    # print(f.get_message_count())
+    f.clear()
+    print(f.get_message_count())
+
+    for i in range(10):
+        # test_fun.push(i)
+        # test_fun2.push(i)
+        randx = random.randint(1, 6)
+        if randx > 4:
+            randx = None
+        print(randx)
+        f.publish({'x': randx}, priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': randx}))
+    print(f.get_message_count())
 
     f.consume()

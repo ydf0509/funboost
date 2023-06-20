@@ -8,33 +8,7 @@ from funboost.utils.redis_manager import RedisMixin
 
 class RedisPriorityPublisher(AbstractPublisher, RedisMixin):
     """
-    使用多个redis list来实现redis支持队列优先级。brpop可以支持监听多个redis键。
-    根据消息的 priroty 来决定发送到哪个队列。我这个想法和celery依赖的kombu实现的redis具有队列优先级是一样的。
-
-    注意：  rabbitmq、celery队列优先级都指的是同一个队列中的每个消息具有不同的优先级，消息可以不遵守先进先出，而是优先级越高的消息越先取出来。
-           队列优先级其实是某个队列中的消息的优先级，这是队列的 x-max-priority 的原生概念。
-           队列优先级有的人以为是 queuexx 和queueyy两个队列，以为是优先消费queuexx的消息，这是大错特错的想法。
-           队列优先级是指某个队列中的消息具有优先级，不是在不同队列名之间来比较哪个队列具有更高的优先级。
-    """
-    """用法如下。
-    第一，如果使用redis做支持优先级的消息队列， @boost中要选择 broker_kind = REDIS_PRIORITY
-    第二，broker_exclusive_config={'x-max-priority':4} 意思是这个队列中的任务消息支持多少种优先级，一般写5就完全够用了。
-    第三，发布消息时候要使用publish而非push,发布要加入参  priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': priorityxx})，
-         其中 priorityxx 必须是整数，要大于等于0且小于队列的x-max-priority。x-max-priority这个概念是rabbitmq的原生概念，celery中也是这样的参数名字。
-         
-         发布的消息priroty 越大，那么该消息就越先被取出来，这样就达到了打破先进先出的规律。比如优先级高的消息可以给vip用户来运行函数实时，优先级低的消息可以离线跑批。
-    
-    @boost('test_redis_priority_queue3', broker_kind=BROKER_KIND_REDIS_PRIORITY, qps=5,concurrent_num=2,broker_exclusive_config={'x-max-priority':4})
-    def f(x):
-        print(x)
-    
-    
-    if __name__ == '__main__':
-        for i in range(1000):
-            randx = random.randint(1, 4)
-            f.publish({'x': randx}, priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': randx}))
-        print(f.get_message_count())
-        f.consume()
+    redis队列，支持任务优先级。
     """
 
     def custom_init(self):

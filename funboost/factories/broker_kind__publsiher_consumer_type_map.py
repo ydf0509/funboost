@@ -1,5 +1,6 @@
 import typing
 
+from funboost.consumers.redis_consumer_priority import RedisPriorityConsumer
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.consumers.base_consumer import AbstractConsumer
 
@@ -9,6 +10,7 @@ from funboost.publishers.http_publisher import HTTPPublisher
 from funboost.publishers.nats_publisher import NatsPublisher
 from funboost.publishers.peewee_publisher import PeeweePublisher
 from funboost.publishers.redis_publisher_lpush import RedisPublisherLpush
+from funboost.publishers.redis_publisher_priority import RedisPriorityPublisher
 from funboost.publishers.redis_pubsub_publisher import RedisPubSubPublisher
 from funboost.publishers.tcp_publisher import TCPPublisher
 from funboost.publishers.txt_file_publisher import TxtFilePublisher
@@ -63,6 +65,7 @@ broker_kind__publsiher_consumer_type_map = {
     BrokerEnum.NSQ: (NsqPublisher, NsqConsumer),
     BrokerEnum.KAFKA: (KafkaPublisher, KafkaConsumer),
     BrokerEnum.REDIS_ACK_ABLE: (RedisPublisher, RedisConsumerAckAble),
+    BrokerEnum.REDIS_PRIORITY:(RedisPriorityPublisher,RedisPriorityConsumer),
     BrokerEnum.ROCKETMQ: (RocketmqPublisher, RocketmqConsumer),
     BrokerEnum.REDIS_STREAM: (RedisStreamPublisher, RedisStreamConsumer),
     BrokerEnum.ZEROMQ: (ZeroMqPublisher, ZeroMqConsumer),

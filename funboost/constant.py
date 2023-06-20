@@ -25,7 +25,8 @@ class BrokerEnum:
     KAFKA_CONFLUENT = CONFLUENT_KAFKA
 
     REDIS_ACK_ABLE = 9  # 基于redis的 list + 临时unack的set队列，采用了 lua脚本操持了取任务和加到pengding为原子性，随意重启和掉线不会丢失任务。
-    # 集群里面的所有电脑或服务器时间一定要设置成自动获取，不然会发生消费重复问题，单台没事。
+
+    REDIS_PRIORITY = 109 #  # 基于redis的多 list + 临时unack的set队列，blpop监听多个key，和rabbitmq的x-max-priority属性一样，支持任务优先级。
 
     SQLACHEMY = 10  # 基于SQLACHEMY 的连接作为分布式消息队列中间件支持持久化和消费确认。支持mysql oracle sqlserver等5种数据库。
 

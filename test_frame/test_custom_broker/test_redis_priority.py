@@ -1,15 +1,10 @@
 import random
 import time
 
-from funboost import register_custom_broker, boost, PriorityConsumingControlConfig
-from funboost.consumers.redis_consumer_priority import RedisPriorityConsumer
-from funboost.publishers.redis_publisher_priority import RedisPriorityPublisher
-
-BROKER_KIND_REDIS_PRIORITY = 111
-register_custom_broker(BROKER_KIND_REDIS_PRIORITY, RedisPriorityPublisher, RedisPriorityConsumer)  # 核心，这就是将自己写的类注册到框架中，框架可以自动使用用户的类，这样用户无需修改框架的源代码了。
+from funboost import register_custom_broker, boost, PriorityConsumingControlConfig,BrokerEnum
 
 
-@boost('test_redis_priority_queue4', broker_kind=BROKER_KIND_REDIS_PRIORITY, qps=100,concurrent_num=50,broker_exclusive_config={'x-max-priority':4})
+@boost('test_redis_priority_queue4', broker_kind=BrokerEnum.REDIS_PRIORITY, qps=100,concurrent_num=50,broker_exclusive_config={'x-max-priority':4})
 def f(x):
     time.sleep(60)
     print(x)

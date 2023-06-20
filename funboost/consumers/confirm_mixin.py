@@ -86,7 +86,8 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
                                 for unacked_task_str in self.redis_db_frame.zrevrange(current_queue_unacked_msg_queue_name, 0, 1000):
                                     self.logger.warning(f'从 {current_queue_unacked_msg_queue_name} 向 {self._queue_name} 重新放入掉线消费者未消费确认的任务'
                                                         f' {unacked_task_str.decode()}')
-                                    self.redis_db_frame.lpush(self._queue_name, unacked_task_str)
+                                    # self.redis_db_frame.lpush(self._queue_name, unacked_task_str)
+                                    self.publisher_of_same_queue.publish(unacked_task_str) # redis优先级队列的入队不一样，不使用上面。
                                     self.redis_db_frame.zrem(current_queue_unacked_msg_queue_name, unacked_task_str)
                     else:
                         pass

@@ -199,7 +199,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _convert_msg(self, msg: typing.Union[str, dict], task_id=None,
                      priority_control_config: PriorityConsumingControlConfig = None) -> (typing.Dict, typing.Dict, typing.Dict):
-        if isinstance(msg, str):
+        if isinstance(msg, (str,bytes)):
             msg = json.loads(msg)
         msg_function_kw = copy.deepcopy(msg)
         raw_extra = {}

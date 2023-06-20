@@ -2,11 +2,11 @@
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 12:12
 
+from funboost.publishers.base_publisher import AbstractPublisher
+from funboost.utils.redis_manager import RedisMixin
 
-from funboost.publishers.redis_publisher_simple import RedisPublisher
 
-
-class RedisPriorityPublisher(RedisPublisher):
+class RedisPriorityPublisher(AbstractPublisher, RedisMixin):
     """
     使用多个redis list来实现redis支持队列优先级。brpop可以支持监听多个redis键。
     根据消息的 priroty 来决定发送到哪个队列。我这个想法和celery依赖的kombu实现的redis具有队列优先级是一样的。
@@ -17,7 +17,7 @@ class RedisPriorityPublisher(RedisPublisher):
            队列优先级是指某个队列中的消息具有优先级，不是在不同队列名之间来比较哪个队列具有更高的优先级。
     """
     """用法如下。
-    第一，如果使用redis做消息队列， @boost中要选择 broker_kind = REDIS_PRIORITY
+    第一，如果使用redis做支持优先级的消息队列， @boost中要选择 broker_kind = REDIS_PRIORITY
     第二，broker_exclusive_config={'x-max-priority':4} 意思是这个队列中的任务消息支持多少种优先级，一般写5就完全够用了。
     第三，发布消息时候要使用publish而非push,发布要加入参  priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': priorityxx})，
          其中 priorityxx 必须是整数，要大于等于0且小于队列的x-max-priority。x-max-priority这个概念是rabbitmq的原生概念，celery中也是这样的参数名字。
@@ -30,14 +30,10 @@ class RedisPriorityPublisher(RedisPublisher):
     
     
     if __name__ == '__main__':
-        f.clear()
-        print(f.get_message_count())
-    
         for i in range(1000):
             randx = random.randint(1, 4)
             f.publish({'x': randx}, priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': randx}))
         print(f.get_message_count())
-    
         f.consume()
     """
 
@@ -51,6 +47,11 @@ class RedisPriorityPublisher(RedisPublisher):
         self.queue_list = queue_list
 
     def build_queue_name_by_msg(self, msg):
+        """
+        根据消息的other_extra_params的 priority ，自动生成子队列名。例如 queue_name:1   queue_name:2  queue_name:3 queue_name:4
+        :param msg:
+        :return:
+        """
         priority = self._get_from_other_extra_params('priroty', msg)
         x_max_priority = self.broker_exclusive_config['x-max-priority']
         queue_name = self.queue_name

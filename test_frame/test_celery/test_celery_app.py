@@ -10,17 +10,18 @@ from datetime import timedelta
 import celery
 from celery import platforms
 from auto_run_on_remote import run_current_script_on_remote
-
+import funboost_config
 
 
 # import celery_helper
+from kombu import Queue, Exchange
 
 platforms.C_FORCE_ROOT = True
 # celery_app = celery.Celery('test_frame.test_celery.test_celery_app')
 celery_app = celery.Celery()
 class Config2:
     # broker_url = f'redis://:@127.0.0.1:6379/10'  # 使用redis
-    broker_url = f'amqp://admin:6555@106.55.244.110'  #
+    broker_url = funboost_config.REDIS_URL #
     # result_backend = f'redis://:@127.0.0.1:6379/11'  # 使用redis
     broker_connection_max_retries = 150  # 默认是100
     # result_serializer = 'json'
@@ -43,6 +44,12 @@ class Config2:
         'f1': {"queue": 'queue_f1'},
         'sync_fun': {"queue": 'sync_fun_queue'},
     }
+
+    task_queues =[
+
+        Queue('test_pri', Exchange('test_pri'), routing_key='test_pri',
+              queue_arguments={'x-max-priority': 5}),
+    ]
 
     # task_reject_on_worker_lost = True #配置这两项可以随意停止
     # task_acks_late = True
@@ -93,7 +100,9 @@ async def async_fun(x):
     await asyncio.sleep(10)
     print(f'async_fun {x}')
 
-
+@celery_app.task(name='test_pri')
+def test_priority_task(priority):
+    print(priority)
 
 def patch_celery_console(celery_instance:celery.Celery):
     import logging
@@ -134,10 +143,10 @@ if __name__ == '__main__':
     # patch_celery_console(celery_app)
 
     print(celery.__version__)
-    run_current_script_on_remote()
+    # run_current_script_on_remote()
     celery_app.worker_main(
         argv=['worker', '--pool=threads','--concurrency=500', '-n', 'worker1@%h', '--loglevel=DEBUG',
-              '--queues=queue_f1,queue_add3,queue_sub2,sync_fun_queue'])
+              '--queues=test_pri'])
     import threading
 
     print(777777777777777)

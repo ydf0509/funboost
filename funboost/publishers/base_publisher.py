@@ -42,6 +42,8 @@ class PriorityConsumingControlConfig:
                  countdown: typing.Union[float, int] = None,
                  eta: datetime.datetime = None,
                  misfire_grace_time: typing.Union[int, None] = None,
+
+                 other_extra_params: dict = None,
                  ):
         """
 
@@ -80,6 +82,8 @@ class PriorityConsumingControlConfig:
         self.misfire_grace_time = misfire_grace_time
         if misfire_grace_time is not None and misfire_grace_time < 1:
             raise ValueError(f'misfire_grace_time 的值要么是大于1的整数， 要么等于None')
+
+        self.other_extra_params = other_extra_params
 
     def to_dict(self):
         if isinstance(self.countdown, datetime.datetime):
@@ -187,15 +191,8 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def custom_init(self):
         pass
 
-    def publish(self, msg: typing.Union[str, dict], task_id=None,
-                priority_control_config: PriorityConsumingControlConfig = None):
-        """
-
-        :param msg:函数的入参字典或者字典转json。,例如消费函数是 def add(x,y)，你就发布 {"x":1,"y":2}
-        :param task_id:可以指定task_id,也可以不指定就随机生产uuid
-        :param priority_control_config:优先级配置，消息可以携带优先级配置，覆盖boost的配置。
-        :return:
-        """
+    def _convert_msg(self, msg: typing.Union[str, dict], task_id=None,
+                     priority_control_config: PriorityConsumingControlConfig = None) -> (typing.Dict, typing.Dict, typing.Dict):
         if isinstance(msg, str):
             msg = json.loads(msg)
         msg_function_kw = copy.deepcopy(msg)
@@ -212,6 +209,18 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             extra_params.update(priority_control_config.to_dict())
         extra_params.update(raw_extra)
         msg['extra'] = extra_params
+        return msg, msg_function_kw, extra_params
+
+    def publish(self, msg: typing.Union[str, dict], task_id=None,
+                priority_control_config: PriorityConsumingControlConfig = None):
+        """
+
+        :param msg:函数的入参字典或者字典转json。,例如消费函数是 def add(x,y)，你就发布 {"x":1,"y":2}
+        :param task_id:可以指定task_id,也可以不指定就随机生产uuid
+        :param priority_control_config:优先级配置，消息可以携带优先级配置，覆盖boost的配置。
+        :return:
+        """
+        msg, msg_function_kw, extra_params = self._convert_msg(msg, task_id, priority_control_config)
         t_start = time.time()
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
             self.concrete_realization_of_publish)(json.dumps(msg, ensure_ascii=False))

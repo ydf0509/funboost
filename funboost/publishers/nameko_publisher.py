@@ -25,16 +25,7 @@ class NamekoPublisher(AbstractPublisher, ):
 
     def publish(self, msg: typing.Union[str, dict], task_id=None,
                 priority_control_config: PriorityConsumingControlConfig = None):
-        if isinstance(msg, str):
-            msg = json.loads(msg)
-        msg_function_kw = copy.copy(msg)
-        if self.publish_params_checker:
-            self.publish_params_checker.check_params(msg)
-        task_id = task_id or f'{self._queue_name}_result:{uuid.uuid4()}'
-        msg['extra'] = extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
-                                       'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
-        if priority_control_config:
-            extra_params.update(priority_control_config.to_dict())
+        msg, msg_function_kw, extra_params = self._convert_msg(msg, task_id, priority_control_config)
         t_start = time.time()
         with self._rpc as rpc:
             res = getattr(rpc, self.queue_name).call(**msg_function_kw)

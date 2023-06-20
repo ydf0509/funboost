@@ -1,7 +1,7 @@
 import time
 import nb_log
 
-from test_frame.test_celery.test_celery_app import add, sub,sync_fun
+from test_frame.test_celery.test_celery_app import add, sub,sync_fun,test_priority_task
 
 
 
@@ -18,7 +18,8 @@ for i in range(1,20):
     # print(type(result))
     # sub.delay(i * 10, i * 20)
 
-    sync_fun.delay(i)
+    for j in range(100):
+        test_priority_task.apply_async((i % 10,), queue="test_pri", priority=i % 10)
 
 
 

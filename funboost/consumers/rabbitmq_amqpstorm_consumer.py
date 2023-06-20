@@ -11,6 +11,7 @@ from funboost.publishers.rabbitmq_amqpstorm_publisher import RabbitmqPublisherUs
 class RabbitmqConsumerAmqpStorm(AbstractConsumer):
     """
     使用AmqpStorm实现的，多线程安全的，不用加锁。
+    funboost 强烈推荐使用这个做消息对内中间件。
     """
 
 

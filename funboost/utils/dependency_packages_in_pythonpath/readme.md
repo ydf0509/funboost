@@ -1,5 +1,9 @@
 ## 这个文件夹被添加到 sys.path中去了。
 
+funboost __init__.py 第一行就把这个添加到 sys.path了,相当于 export PYTHONPATH 了。
+```python
+from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath # 这是把 dependency_packages_in_pythonpath 添加到 PYTHONPATH了。
+```
 
 这个文件夹存放的是三方包或三方包的修改版。
 

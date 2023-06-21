@@ -59,7 +59,7 @@ class LockStore:
             return False
 
 
-class ThreadLockAutoExpire:
+class ThreadLockExpireAbleContextManager:
     """
     分布式redis锁上下文管理.
     """
@@ -70,11 +70,12 @@ class ThreadLockAutoExpire:
         self.identifier = str(uuid.uuid4())
         self.has_aquire_lock = False
 
-    def __enter__(self):
-        self._line = sys._getframe().f_back.f_lineno  # noqa 调用此方法的代码的函数
-        self._file_name = sys._getframe(1).f_code.co_filename  # noqa 哪个文件调了用此方法
+    def acquire(self):
+        # self._line = sys._getframe().f_back.f_lineno  # noqa 调用此方法的代码的函数
+        # self._file_name = sys._getframe(1).f_code.co_filename  # noqa 哪个文件调了用此方法
 
         while 1:
+
             ret = LockStore.set(self.lock_key, value=self.identifier, ex=self._expire_seconds)
             self.has_aquire_lock = ret
 
@@ -85,22 +86,27 @@ class ThreadLockAutoExpire:
                 lock_key__event_is_free_map[self.lock_key].clear()
                 break
 
+
+    def realese(self):
+        return  LockStore.delete(self.lock_key, self.identifier)
+
+
+    def __enter__(self):
+        return self.acquire()
+
+
     def __bool__(self):
         return self.has_aquire_lock
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        result = LockStore.delete(self.lock_key, self.identifier)
-        if result:
-            return True
-        else:
-            return False
+        result = self.realese()
 
 
 if __name__ == '__main__':
     def f(x):
-        with ThreadLockAutoExpire('test_lock_name', expire_seconds=2):
+        with ThreadLockExpireAbleContextManager('test_lock_name', expire_seconds=2):
             print(x, time.time())
-            time.sleep(1)
+            time.sleep(5)
 
 
     test_raw_lock = threading.Lock()

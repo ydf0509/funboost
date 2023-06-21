@@ -1,10 +1,5 @@
 import typing
 
-from funboost.consumers.redis_consumer_priority import RedisPriorityConsumer
-from funboost.publishers.base_publisher import AbstractPublisher
-from funboost.consumers.base_consumer import AbstractConsumer
-
-from funboost.constant import BrokerEnum
 
 from funboost.publishers.http_publisher import HTTPPublisher
 from funboost.publishers.nats_publisher import NatsPublisher
@@ -30,6 +25,7 @@ from funboost.publishers.redis_stream_publisher import RedisStreamPublisher
 from funboost.publishers.mqtt_publisher import MqttPublisher
 from funboost.publishers.httpsqs_publisher import HttpsqsPublisher
 
+from funboost.consumers.redis_consumer_priority import RedisPriorityConsumer
 from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer
 from funboost.consumers.http_consumer import HTTPConsumer
 from funboost.consumers.kafka_consumer import KafkaConsumer
@@ -53,6 +49,10 @@ from funboost.consumers.udp_consumer import UDPConsumer
 from funboost.consumers.zeromq_consumer import ZeroMqConsumer
 from funboost.consumers.mqtt_consumer import MqttConsumer
 from funboost.consumers.httpsqs_consumer import HttpsqsConsumer
+
+from funboost.publishers.base_publisher import AbstractPublisher
+from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.constant import BrokerEnum
 
 broker_kind__publsiher_consumer_type_map = {
     BrokerEnum.RABBITMQ_AMQPSTORM: (RabbitmqPublisherUsingAmqpStorm, RabbitmqConsumerAmqpStorm),

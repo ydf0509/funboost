@@ -147,28 +147,47 @@ class ThreadLockExpireAble:
         # if time.time() - self.start_time > self.timeout:
         #     self.lock.release()
         #     print('释放成功')
-        with self.lock_lock2:
+        with self.lock_lock:
             if self.lock.locked():
                 self.lock.release()
                 print('运行超时释放成功')
 
+    # def __enter__(self):
+    #     with self.lock_lock:
+    #         boolx = self.lock.acquire(blocking=True)
+    #         print('获得锁')
+    #         self.start_time = time.time()
+    #         self.lock_uuid = uuid.uuid4().hex
+    #
+    #     timer = threading.Timer(self.timeout, self.release_lock, args=[])
+    #     timer.start()
+    #     return boolx
+    #
+    # def __exit__(self, exc_type, exc_val, exc_tb):
+    #     print([exc_type, exc_val, exc_tb])
+    #     with self.lock_lock:
+    #         if self.lock.locked():
+    #             self.lock.release()
+    #             print('运行没有超时释放成功')
+
     def __enter__(self):
-        with self.lock_lock:
+        with self.lock_lock2:
             boolx = self.lock.acquire(blocking=True)
             print('获得锁')
             self.start_time = time.time()
             self.lock_uuid = uuid.uuid4().hex
 
-            timer = threading.Timer(self.timeout, self.release_lock, args=[])
-            timer.start()
-            return boolx
+        timer = threading.Timer(self.timeout, self.release_lock, args=[])
+        timer.start()
+        return boolx
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         print([exc_type, exc_val, exc_tb])
-        with self.lock_lock:
-            if self.lock.locked():
-                self.lock.release()
-                print('运行没有超时释放成功')
+        with self.lock_lock2:
+            with self.lock_lock:
+                if self.lock.locked():
+                    self.lock.release()
+                    print('运行没有超时释放成功')
 
 
 if __name__ == '__main__':
@@ -184,12 +203,15 @@ if __name__ == '__main__':
 
 
     def f2(x):
+
         lockx.acquire(timeout=5)
         print(f'start {x}')
-        time.sleep(10)
+        time.sleep(2)
         lockx.release()
         print(f'over {x}')
 
 
+
+
     for i in range(100):
-        threading.Thread(target=f2, args=[i]).start()
+        threading.Thread(target=f, args=[i]).start()

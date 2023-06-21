@@ -247,6 +247,16 @@ class RedisDistributedLockContextManager(LoggerMixin, LoggerLevelSetterMixin):
     """
     分布式redis锁上下文管理.
     """
+    '''
+    redis 官方推荐的 redlock-py
+    https://github.com/SPSCommerce/redlock-py/blob/master/redlock/__init__.py
+    '''
+    unlock_script = """
+       if redis.call("get",KEYS[1]) == ARGV[1] then
+           return redis.call("del",KEYS[1])
+       else
+           return 0
+       end"""
 
     def __init__(self, redis_client, redis_lock_key, expire_seconds=30, ):
         self.redis_client = redis_client
@@ -259,24 +269,25 @@ class RedisDistributedLockContextManager(LoggerMixin, LoggerLevelSetterMixin):
         self._line = sys._getframe().f_back.f_lineno  # 调用此方法的代码的函数
         self._file_name = sys._getframe(1).f_code.co_filename  # 哪个文件调了用此方法
         self.redis_client.set(self.redis_lock_key, value=self.identifier, ex=self._expire_seconds, nx=True)
-        identifier_in_redis = self.redis_client.get(self.redis_lock_key)
-        if identifier_in_redis and identifier_in_redis.decode() == self.identifier:
-            self.has_aquire_lock = True
+        self.has_aquire_lock =  self.redis_client.get(self.redis_lock_key)
+        if self.has_aquire_lock:
+            log_msg = f'\n"{self._file_name}:{self._line}" 这行代码获得了redis锁 {self.redis_lock_key}'
+        else:
+            log_msg = f'\n"{self._file_name}:{self._line}" 这行代码此次没有获得redis锁 {self.redis_lock_key}'
+        self.logger.debug(log_msg)
         return self
 
     def __bool__(self):
         return self.has_aquire_lock
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.has_aquire_lock:
-            self.redis_client.delete(self.redis_lock_key)
-        if self.has_aquire_lock:
-            log_msg = f'\n"{self._file_name}:{self._line}" 这行代码获得了redis锁 {self.redis_lock_key}'
-            self.logger.debug(log_msg)
+        # self.redis_client.delete(self.redis_lock_key)
+        unlock = self.redis_client.register_script(self.unlock_script)
+        result = unlock(keys=[self.redis_lock_key], args=[self.identifier])
+        if result:
+            return True
         else:
-            log_msg = f'\n"{self._file_name}:{self._line}" 这行代码此次没有获得redis锁 {self.redis_lock_key}'
-            self.logger.debug(log_msg)
-
+            return False
 
 """
 @contextmanager

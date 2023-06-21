@@ -26,7 +26,7 @@ class BrokerEnum:
 
     REDIS_ACK_ABLE = 9  # 基于redis的 list + 临时unack的set队列，采用了 lua脚本操持了取任务和加到pengding为原子性，随意重启和掉线不会丢失任务。
 
-    REDIS_PRIORITY = 109 #  # 基于redis的多 list + 临时unack的set队列，blpop监听多个key，和rabbitmq的x-max-priority属性一样，支持任务优先级。
+    REDIS_PRIORITY = 109 #  # 基于redis的多 list + 临时unack的set队列，blpop监听多个key，和rabbitmq的x-max-priority属性一样，支持任务优先级。看文档4.29优先级队列说明。
 
     SQLACHEMY = 10  # 基于SQLACHEMY 的连接作为分布式消息队列中间件支持持久化和消费确认。支持mysql oracle sqlserver等5种数据库。
 
@@ -84,6 +84,6 @@ class ConcurrentModeEnum:
     GEVENT = 2
     EVENTLET = 3
     ASYNC = 4  # asyncio并发，适用于async def定义的函数。
-    SINGLE_THREAD = 5
+    SINGLE_THREAD = 5  # 如果你不想并发，不想预先从消息队列中间件拉取消息到python程序的内存queue队列缓冲中，那么就适合使用此并发模式。
 
 # is_fsdf_remote_run = 0

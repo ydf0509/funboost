@@ -7,7 +7,6 @@ import sys
 
 from nb_log import LoggerMixin, LoggerLevelSetterMixin
 
-# cond = threading.Condition()
 lock_key__event_is_free_map: typing.Dict[str, threading.Event] = {}
 
 
@@ -26,7 +25,7 @@ class LockStore:
                 if time.time() - info['set_time'] > info['ex']:
                     cls.lock_key__info_map.pop(lock_key)
                     lock_key__event_is_free_map[lock_key].set()
-            time.sleep(0.01)
+            time.sleep(0.1)
 
     @classmethod
     def set(cls, lock_key, value, ex):
@@ -69,29 +68,13 @@ class ThreadLockAutoExpire(LoggerMixin, LoggerLevelSetterMixin):
         self.identifier = str(uuid.uuid4())
         self.has_aquire_lock = False
 
-    # def __enter__(self):
-    #     self._line = sys._getframe().f_back.f_lineno  # noqa 调用此方法的代码的函数
-    #     self._file_name = sys._getframe(1).f_code.co_filename  # noqa 哪个文件调了用此方法
-    #     # ret = self.redis_client.set(self.redis_lock_key, value=self.identifier, ex=self._expire_seconds, nx=True)
-    #     ret = LockStore.set(self.lock_key, value=self.identifier, ex=self._expire_seconds)
-    #     self.has_aquire_lock = ret
-    #     if self.has_aquire_lock:
-    #         log_msg = f'\n"{self._file_name}:{self._line}" 这行代码获得了锁 {self.lock_key}'
-    #     else:
-    #         log_msg = f'\n"{self._file_name}:{self._line}" 这行代码此次没有获得锁 {self.lock_key}'
-    #     # print(self.logger.level,log_msg)
-    #     self.logger.debug(log_msg)
-    #     return self
-
     def __enter__(self):
         self._line = sys._getframe().f_back.f_lineno  # noqa 调用此方法的代码的函数
         self._file_name = sys._getframe(1).f_code.co_filename  # noqa 哪个文件调了用此方法
-        # ret = self.redis_client.set(self.redis_lock_key, value=self.identifier, ex=self._expire_seconds, nx=True)
 
         while 1:
             ret = LockStore.set(self.lock_key, value=self.identifier, ex=self._expire_seconds)
             self.has_aquire_lock = ret
-            print(self.has_aquire_lock)
 
             if not self.has_aquire_lock:
                 lock_key__event_is_free_map[self.lock_key].wait()
@@ -104,13 +87,7 @@ class ThreadLockAutoExpire(LoggerMixin, LoggerLevelSetterMixin):
         return self.has_aquire_lock
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # self.redis_client.delete(self.redis_lock_key)
-        # unlock = self.redis_client.register_script(self.unlock_script)
-        # result = unlock(keys=[self.redis_lock_key], args=[self.identifier])
-
         result = LockStore.delete(self.lock_key, self.identifier)
-        # with cond:
-        #     cond.notify_all()
         lock_key__event_is_free_map[self.lock_key].set()
         if result:
             return True
@@ -126,5 +103,5 @@ if __name__ == '__main__':
 
 
     threading.Thread(target=f, args=[1]).start()
-    # time.sleep(1)
+    time.sleep(1)
     threading.Thread(target=f, args=[2]).start()

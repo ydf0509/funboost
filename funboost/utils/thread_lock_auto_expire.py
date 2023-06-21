@@ -6,9 +6,9 @@ import sys
 
 from nb_log import LoggerMixin, LoggerLevelSetterMixin
 
+
 # cond = threading.Condition()
-event = threading.Event()
-event.set()
+
 
 class LockStore:
     lock0 = threading.Lock()
@@ -16,6 +16,8 @@ class LockStore:
     lock_key__info_map = {}
 
     has_start_delete_expire_lock_key_thread = False
+
+    lock_key__event_is_free_map = {}
 
     @classmethod
     def _delete_expire_lock_key_thread(cls):
@@ -26,21 +28,26 @@ class LockStore:
                     cls.lock_key__info_map.pop(lock_key)
                     # with cond:
                     #     cond.notify_all()
-                    event.set()
-            time.sleep(0.1)
+                    cls.get_lock_event_is_free(lock_key).set()
+            time.sleep(0.01)
 
     @classmethod
     def set(cls, lock_key, value, ex):
+        set_succ = False
         with cls.lock0:
-            if cls.has_start_delete_expire_lock_key_thread is False:
-                cls.has_start_delete_expire_lock_key_thread = True
-                threading.Thread(target=cls._delete_expire_lock_key_thread).start()
             print(cls.lock_key__info_map)
             if lock_key not in cls.lock_key__info_map:
                 cls.lock_key__info_map[lock_key] = {'value': value, 'ex': ex, 'set_time': time.time()}
-                return True
+                set_succ = True
+                event_is_free = threading.Event()
+                event_is_free.set()
+                cls.lock_key__event_is_free_map[lock_key] = event_is_free
 
-            return False
+            if cls.has_start_delete_expire_lock_key_thread is False:
+                cls.has_start_delete_expire_lock_key_thread = True
+                threading.Thread(target=cls._delete_expire_lock_key_thread).start()
+
+        return set_succ
 
     @classmethod
     def delete(cls, lock_key, value):
@@ -49,21 +56,21 @@ class LockStore:
                 if cls.lock_key__info_map[lock_key]['value'] == value:
                     cls.lock_key__info_map.pop(lock_key)
                     # with cond:
-                        # cond.notify_all()
-                    event.set()
+                    # cond.notify_all()
+                    LockStore.get_lock_event_is_free(lock_key).set()
                     print('expire delete')
                     return True
             return False
 
+    @classmethod
+    def get_lock_event_is_free(cls, lock_key) -> threading.Event:
+        return cls.lock_key__event_is_free_map[lock_key]
 
-threading.Thread(target=LockStore._delete_expire_lock_key_thread).start()
 
 class ThreadLockAutoExpire(LoggerMixin, LoggerLevelSetterMixin):
     """
     分布式redis锁上下文管理.
     """
-
-
 
     def __init__(self, lock_key, expire_seconds=30, ):
         self.lock_key = lock_key
@@ -94,16 +101,13 @@ class ThreadLockAutoExpire(LoggerMixin, LoggerLevelSetterMixin):
             ret = LockStore.set(self.lock_key, value=self.identifier, ex=self._expire_seconds)
             self.has_aquire_lock = ret
             print(self.has_aquire_lock)
-            print(event.is_set())
+
             if not self.has_aquire_lock:
-                event.wait()
+                LockStore.get_lock_event_is_free(self.lock_key).wait()
                 continue
             else:
-                event.clear()
+                LockStore.get_lock_event_is_free(self.lock_key).clear()
                 break
-
-
-
 
     def __bool__(self):
         return self.has_aquire_lock
@@ -116,7 +120,7 @@ class ThreadLockAutoExpire(LoggerMixin, LoggerLevelSetterMixin):
         result = LockStore.delete(self.lock_key, self.identifier)
         # with cond:
         #     cond.notify_all()
-        event.set()
+        LockStore.get_lock_event_is_free(self.lock_key).set()
         if result:
             return True
         else:
@@ -125,10 +129,9 @@ class ThreadLockAutoExpire(LoggerMixin, LoggerLevelSetterMixin):
 
 if __name__ == '__main__':
     def f(x):
-        with ThreadLockAutoExpire('test_lock_name', expire_seconds=2) :
-            print(x)
+        with ThreadLockAutoExpire('test_lock_name', expire_seconds=2):
+            print(x, time.time())
             time.sleep(5)
-
 
 
     threading.Thread(target=f, args=[1]).start()

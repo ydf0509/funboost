@@ -1,13 +1,14 @@
 import copy
 import threading
 import time
+import typing
 import uuid
 import sys
 
 from nb_log import LoggerMixin, LoggerLevelSetterMixin
 
-
 # cond = threading.Condition()
+lock_key__event_is_free_map: typing.Dict[str, threading.Event] = {}
 
 
 class LockStore:
@@ -17,8 +18,6 @@ class LockStore:
 
     has_start_delete_expire_lock_key_thread = False
 
-    lock_key__event_is_free_map = {}
-
     @classmethod
     def _delete_expire_lock_key_thread(cls):
         while 1:
@@ -26,22 +25,20 @@ class LockStore:
             for lock_key, info in lock_key__info_map_copy.items():
                 if time.time() - info['set_time'] > info['ex']:
                     cls.lock_key__info_map.pop(lock_key)
-                    # with cond:
-                    #     cond.notify_all()
-                    cls.get_lock_event_is_free(lock_key).set()
+                    lock_key__event_is_free_map[lock_key].set()
             time.sleep(0.01)
 
     @classmethod
     def set(cls, lock_key, value, ex):
         set_succ = False
         with cls.lock0:
-            print(cls.lock_key__info_map)
             if lock_key not in cls.lock_key__info_map:
                 cls.lock_key__info_map[lock_key] = {'value': value, 'ex': ex, 'set_time': time.time()}
                 set_succ = True
+
                 event_is_free = threading.Event()
                 event_is_free.set()
-                cls.lock_key__event_is_free_map[lock_key] = event_is_free
+                lock_key__event_is_free_map[lock_key] = event_is_free
 
             if cls.has_start_delete_expire_lock_key_thread is False:
                 cls.has_start_delete_expire_lock_key_thread = True
@@ -55,16 +52,10 @@ class LockStore:
             if lock_key in cls.lock_key__info_map:
                 if cls.lock_key__info_map[lock_key]['value'] == value:
                     cls.lock_key__info_map.pop(lock_key)
-                    # with cond:
-                    # cond.notify_all()
-                    LockStore.get_lock_event_is_free(lock_key).set()
+                    lock_key__event_is_free_map[lock_key].set()
                     print('expire delete')
                     return True
             return False
-
-    @classmethod
-    def get_lock_event_is_free(cls, lock_key) -> threading.Event:
-        return cls.lock_key__event_is_free_map[lock_key]
 
 
 class ThreadLockAutoExpire(LoggerMixin, LoggerLevelSetterMixin):
@@ -103,10 +94,10 @@ class ThreadLockAutoExpire(LoggerMixin, LoggerLevelSetterMixin):
             print(self.has_aquire_lock)
 
             if not self.has_aquire_lock:
-                LockStore.get_lock_event_is_free(self.lock_key).wait()
+                lock_key__event_is_free_map[self.lock_key].wait()
                 continue
             else:
-                LockStore.get_lock_event_is_free(self.lock_key).clear()
+                lock_key__event_is_free_map[self.lock_key].clear()
                 break
 
     def __bool__(self):
@@ -120,7 +111,7 @@ class ThreadLockAutoExpire(LoggerMixin, LoggerLevelSetterMixin):
         result = LockStore.delete(self.lock_key, self.identifier)
         # with cond:
         #     cond.notify_all()
-        LockStore.get_lock_event_is_free(self.lock_key).set()
+        lock_key__event_is_free_map[self.lock_key].set()
         if result:
             return True
         else:

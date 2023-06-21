@@ -101,7 +101,7 @@ if __name__ == '__main__':
             print(x, time.time())
             time.sleep(5)
 
+    for i in range(100):
+        threading.Thread(target=f, args=[i]).start()
 
-    threading.Thread(target=f, args=[1]).start()
-    time.sleep(1)
-    threading.Thread(target=f, args=[2]).start()
+

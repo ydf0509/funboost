@@ -101,6 +101,21 @@ if __name__ == '__main__':
             print(x, time.time())
             time.sleep(5)
 
+    test_raw_lock = threading.Lock()
+    def test_raw_lock_fun(x):
+        try:
+            test_raw_lock.acquire(timeout=2)
+            print(x, time.time())
+            time.sleep(5)
+            test_raw_lock.release()
+        except Exception as e:
+            if 'release unlocked lock' in str(e):
+                return
+            print(e)
+
+
+
 
     for i in range(100):
-        threading.Thread(target=f, args=[i]).start()
+        # threading.Thread(target=f, args=[i]).start()
+        threading.Thread(target=test_raw_lock_fun, args=[i]).start()

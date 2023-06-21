@@ -268,12 +268,14 @@ class RedisDistributedLockContextManager(LoggerMixin, LoggerLevelSetterMixin):
     def __enter__(self):
         self._line = sys._getframe().f_back.f_lineno  # 调用此方法的代码的函数
         self._file_name = sys._getframe(1).f_code.co_filename  # 哪个文件调了用此方法
-        self.redis_client.set(self.redis_lock_key, value=self.identifier, ex=self._expire_seconds, nx=True)
-        self.has_aquire_lock =  self.redis_client.get(self.redis_lock_key)
+        ret = self.redis_client.set(self.redis_lock_key, value=self.identifier, ex=self._expire_seconds, nx=True)
+
+        self.has_aquire_lock = False if ret is None else True
         if self.has_aquire_lock:
             log_msg = f'\n"{self._file_name}:{self._line}" 这行代码获得了redis锁 {self.redis_lock_key}'
         else:
             log_msg = f'\n"{self._file_name}:{self._line}" 这行代码此次没有获得redis锁 {self.redis_lock_key}'
+        # print(self.logger.level,log_msg)
         self.logger.debug(log_msg)
         return self
 

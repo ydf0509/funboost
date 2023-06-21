@@ -24,20 +24,20 @@ def f3(b):
 
 
 @boost('test_priority_between_funs', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=100, broker_exclusive_config={'x-max-priority': 5})
-def boost_fun(fun_name: str, fun_kwargs: dict, ):
+def dispatch_fun(fun_name: str, fun_kwargs: dict, ):
     function = globals()[fun_name]
     return function(**fun_kwargs)
 
 
 if __name__ == '__main__':
-    boost_fun.clear()
+    dispatch_fun.clear()
     for i in range(1000):
-        boost_fun.publish({'fun_name': 'f1', 'fun_kwargs': {'x': i, 'y': i}, },
-                          priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': 1}))
-        boost_fun.publish({'fun_name': 'f2', 'fun_kwargs': {'a': i, }, },
-                          priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': 2}))
-        boost_fun.publish({'fun_name': 'f3', 'fun_kwargs': {'b': i, }, },
-                          priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': 3}))
+        dispatch_fun.publish({'fun_name': 'f1', 'fun_kwargs': {'x': i, 'y': i}, },
+                             priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': 1}))
+        dispatch_fun.publish({'fun_name': 'f2', 'fun_kwargs': {'a': i, }, },
+                             priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': 2}))
+        dispatch_fun.publish({'fun_name': 'f3', 'fun_kwargs': {'b': i, }, },
+                             priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': 3}))
 
-    print(boost_fun.get_message_count())
-    boost_fun.consume()
+    print(dispatch_fun.get_message_count())
+    dispatch_fun.consume()

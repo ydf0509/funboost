@@ -53,7 +53,7 @@ class RedisPriorityConsumer(RedisConsumerAckAble):
 
         while True:
             # task_str_list = script(keys=[queues_str, self._unack_zset_name], args=[time.time()])
-            task_tuple = self.redis_db_frame_version3.blpop(keys=self.publisher_of_same_queue.queue_list, timeout=60)
+            task_tuple = self.redis_db_frame_version3.blpop(keys=self.publisher_of_same_queue.queue_list, timeout=60)  # 监听了多个键名，所以间接实现了优先级，和kombu的redis 支持优先级的设计思路不谋而合。
             if task_tuple:
                 msg = task_tuple[1]
                 self.redis_db_frame_version3.zadd(self._unack_zset_name, {msg: time.time()})

@@ -5,7 +5,7 @@ import typing
 import uuid
 import sys
 
-from nb_log import LoggerMixin, LoggerLevelSetterMixin
+from nb_log import get_logger
 
 lock_key__event_is_free_map: typing.Dict[str, threading.Event] = {}
 
@@ -16,6 +16,8 @@ class LockStore:
     lock_key__info_map = {}
 
     has_start_delete_expire_lock_key_thread = False
+
+    logger = get_logger('LockStore')
 
     @classmethod
     def _delete_expire_lock_key_thread(cls):
@@ -52,12 +54,12 @@ class LockStore:
                 if cls.lock_key__info_map[lock_key]['value'] == value:
                     cls.lock_key__info_map.pop(lock_key)
                     lock_key__event_is_free_map[lock_key].set()
-                    print('expire delete')
+                    cls.logger.warning(f'expire delete {lock_key}')
                     return True
             return False
 
 
-class ThreadLockAutoExpire(LoggerMixin, LoggerLevelSetterMixin):
+class ThreadLockAutoExpire:
     """
     分布式redis锁上下文管理.
     """
@@ -88,7 +90,6 @@ class ThreadLockAutoExpire(LoggerMixin, LoggerLevelSetterMixin):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         result = LockStore.delete(self.lock_key, self.identifier)
-        lock_key__event_is_free_map[self.lock_key].set()
         if result:
             return True
         else:
@@ -99,7 +100,8 @@ if __name__ == '__main__':
     def f(x):
         with ThreadLockAutoExpire('test_lock_name', expire_seconds=2):
             print(x, time.time())
-            time.sleep(5)
+            time.sleep(1)
+
 
     test_raw_lock = threading.Lock()
     def test_raw_lock_fun(x):
@@ -112,8 +114,6 @@ if __name__ == '__main__':
             if 'release unlocked lock' in str(e):
                 return
             print(e)
-
-
 
 
     for i in range(100):

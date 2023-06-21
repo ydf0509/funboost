@@ -117,5 +117,5 @@ if __name__ == '__main__':
 
 
     for i in range(100):
-        # threading.Thread(target=f, args=[i]).start()
-        threading.Thread(target=test_raw_lock_fun, args=[i]).start()
+        threading.Thread(target=f, args=[i]).start()
+        # threading.Thread(target=test_raw_lock_fun, args=[i]).start()

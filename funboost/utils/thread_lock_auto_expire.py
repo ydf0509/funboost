@@ -70,12 +70,9 @@ class ThreadLockExpireAbleContextManager:
     分布式redis锁上下文管理.
     """
 
-    def __init__(self, lock_key=None, expire_seconds=30, lock_expire_conf: LockExpireConf = None):
-        if lock_expire_conf:
-            lock_key = lock_expire_conf.lock_key
-            expire_seconds = lock_expire_conf.expire_seconds
-        self.lock_key = lock_key
-        self.expire_seconds = expire_seconds
+    def __init__(self, lock_expire_conf: LockExpireConf):
+        self.lock_key = lock_expire_conf.lock_key
+        self.expire_seconds = lock_expire_conf.expire_seconds
         self.identifier = str(uuid.uuid4())
         self.has_aquire_lock = False
 
@@ -84,7 +81,7 @@ class ThreadLockExpireAbleContextManager:
         # self._file_name = sys._getframe(1).f_code.co_filename  # noqa 哪个文件调了用此方法
 
         while 1:
-
+            # print(self.lock_key)
             ret = LockStore.set(self.lock_key, value=self.identifier, ex=self.expire_seconds)
             self.has_aquire_lock = ret
 

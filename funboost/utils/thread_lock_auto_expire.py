@@ -1,17 +1,16 @@
 import copy
-import threading
+from threading import Thread, Event, Lock
 import time
 import typing
 import uuid
-import sys
 
 from nb_log import get_logger
 
-lock_key__event_is_free_map: typing.Dict[str, threading.Event] = {}
+lock_key__event_is_free_map: typing.Dict[str, Event] = {}
 
 
 class LockStore:
-    lock0 = threading.Lock()
+    lock0 = Lock()
 
     lock_key__info_map = {}
 
@@ -22,12 +21,13 @@ class LockStore:
     @classmethod
     def _delete_expire_lock_key_thread(cls):
         while 1:
-            lock_key__info_map_copy = copy.copy(cls.lock_key__info_map)
-            for lock_key, info in lock_key__info_map_copy.items():
-                if time.time() - info['set_time'] > info['ex']:
-                    cls.lock_key__info_map.pop(lock_key)
-                    lock_key__event_is_free_map[lock_key].set()
-            time.sleep(0.1)
+            with cls.lock0:
+                lock_key__info_map_copy = copy.copy(cls.lock_key__info_map)
+                for lock_key, info in lock_key__info_map_copy.items():
+                    if time.time() - info['set_time'] > info['ex']:
+                        cls.lock_key__info_map.pop(lock_key)
+                        lock_key__event_is_free_map[lock_key].set()
+            time.sleep(0.01)
 
     @classmethod
     def set(cls, lock_key, value, ex):
@@ -37,13 +37,13 @@ class LockStore:
                 cls.lock_key__info_map[lock_key] = {'value': value, 'ex': ex, 'set_time': time.time()}
                 set_succ = True
 
-                event_is_free = threading.Event()
+                event_is_free = Event()
                 event_is_free.set()
                 lock_key__event_is_free_map[lock_key] = event_is_free
 
             if cls.has_start_delete_expire_lock_key_thread is False:
                 cls.has_start_delete_expire_lock_key_thread = True
-                threading.Thread(target=cls._delete_expire_lock_key_thread).start()
+                Thread(target=cls._delete_expire_lock_key_thread).start()
 
         return set_succ
 
@@ -115,7 +115,7 @@ if __name__ == '__main__':
             time.sleep(5)
 
 
-    test_raw_lock = threading.Lock()
+    test_raw_lock = Lock()
 
 
     def test_raw_lock_fun(x):
@@ -131,5 +131,5 @@ if __name__ == '__main__':
 
 
     for i in range(100):
-        threading.Thread(target=f, args=[i]).start()
-        # threading.Thread(target=test_raw_lock_fun, args=[i]).start()
+        Thread(target=f, args=[i]).start()
+        # Thread(target=test_raw_lock_fun, args=[i]).start()

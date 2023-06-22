@@ -59,14 +59,23 @@ class LockStore:
             return False
 
 
+class LockExpireConf:
+    def __init__(self, lock_key, expire_seconds=30):
+        self.lock_key = lock_key
+        self.expire_seconds = expire_seconds
+
+
 class ThreadLockExpireAbleContextManager:
     """
     分布式redis锁上下文管理.
     """
 
-    def __init__(self, lock_key, expire_seconds=30, ):
+    def __init__(self, lock_key=None, expire_seconds=30, lock_expire_conf: LockExpireConf = None):
+        if lock_expire_conf:
+            lock_key = lock_expire_conf.lock_key
+            expire_seconds = lock_expire_conf.expire_seconds
         self.lock_key = lock_key
-        self._expire_seconds = expire_seconds
+        self.expire_seconds = expire_seconds
         self.identifier = str(uuid.uuid4())
         self.has_aquire_lock = False
 
@@ -76,7 +85,7 @@ class ThreadLockExpireAbleContextManager:
 
         while 1:
 
-            ret = LockStore.set(self.lock_key, value=self.identifier, ex=self._expire_seconds)
+            ret = LockStore.set(self.lock_key, value=self.identifier, ex=self.expire_seconds)
             self.has_aquire_lock = ret
 
             if not self.has_aquire_lock:
@@ -86,14 +95,11 @@ class ThreadLockExpireAbleContextManager:
                 lock_key__event_is_free_map[self.lock_key].clear()
                 break
 
-
     def realese(self):
-        return  LockStore.delete(self.lock_key, self.identifier)
-
+        return LockStore.delete(self.lock_key, self.identifier)
 
     def __enter__(self):
         return self.acquire()
-
 
     def __bool__(self):
         return self.has_aquire_lock
@@ -103,13 +109,18 @@ class ThreadLockExpireAbleContextManager:
 
 
 if __name__ == '__main__':
+    lock_expire = LockExpireConf(lock_key='test_lock_name', expire_seconds=2)
+
+
     def f(x):
-        with ThreadLockExpireAbleContextManager('test_lock_name', expire_seconds=2):
+        with ThreadLockExpireAbleContextManager(lock_expire):
             print(x, time.time())
             time.sleep(5)
 
 
     test_raw_lock = threading.Lock()
+
+
     def test_raw_lock_fun(x):
         try:
             test_raw_lock.acquire(timeout=2)

@@ -215,7 +215,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             extra_params.update(priority_control_config.to_dict())
         extra_params.update(raw_extra)
         msg['extra'] = extra_params
-        return msg, msg_function_kw, extra_params
+        return msg, msg_function_kw, extra_params,task_id
 
     def publish(self, msg: typing.Union[str, dict], task_id=None,
                 priority_control_config: PriorityConsumingControlConfig = None):
@@ -226,7 +226,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param priority_control_config:优先级配置，消息可以携带优先级配置，覆盖boost的配置。
         :return:
         """
-        msg, msg_function_kw, extra_params = self._convert_msg(msg, task_id, priority_control_config)
+        msg, msg_function_kw, extra_params,task_id = self._convert_msg(msg, task_id, priority_control_config)
         t_start = time.time()
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
             self.concrete_realization_of_publish)(json.dumps(msg, ensure_ascii=False))

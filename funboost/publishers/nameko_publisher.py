@@ -25,7 +25,7 @@ class NamekoPublisher(AbstractPublisher, ):
 
     def publish(self, msg: typing.Union[str, dict], task_id=None,
                 priority_control_config: PriorityConsumingControlConfig = None):
-        msg, msg_function_kw, extra_params = self._convert_msg(msg, task_id, priority_control_config)
+        msg, msg_function_kw, extra_params,task_id = self._convert_msg(msg, task_id, priority_control_config)
         t_start = time.time()
         with self._rpc as rpc:
             res = getattr(rpc, self.queue_name).call(**msg_function_kw)

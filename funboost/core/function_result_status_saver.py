@@ -14,14 +14,14 @@ import sys
 from pymongo import IndexModel, ReplaceOne
 
 from funboost.core.function_result_status_config import FunctionResultStatusPersistanceConfig
-from funboost.core.helper_funs import get_publish_time, _delete_keys_and_return_new_dict
+from funboost.core.helper_funs import get_publish_time, delete_keys_and_return_new_dict
 from funboost.utils import time_util, decorators
 from funboost.utils.mongo_util import MongoMixin
 from nb_log import LoggerMixin, LoggerLevelSetterMixin
 
 
 
-class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
+class FunctionResultStatus():
     host_name = socket.gethostname()
 
     script_name_long = sys.argv[0]
@@ -41,7 +41,7 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         self.publish_time = publish_time = get_publish_time(msg_dict)
         if publish_time:
             self.publish_time_str = time_util.DatetimeConverter(publish_time).datetime_str
-        function_params = _delete_keys_and_return_new_dict(msg_dict, )
+        function_params = delete_keys_and_return_new_dict(msg_dict, )
         self.params = function_params
         self.params_str = json.dumps(function_params, ensure_ascii=False)
         self.result = None
@@ -52,14 +52,17 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
         self.time_end = None
         self.success = False
         self.total_thread = threading.active_count()
-        self.has_requeue = False
-        self.has_to_dlx_queue = False
-        self.set_log_level(20)
+        self._has_requeue = False
+        self._has_to_dlx_queue = False
+        self._has_kill_task = False
 
     def get_status_dict(self, without_datetime_obj=False):
         self.time_end = time.time()
         self.time_cost = round(self.time_end - self.time_start, 3)
-        item = self.__dict__
+        item ={}
+        for k,v in self.__dict__.items():
+            if not k.startswith('_'):
+                item[k] =v
         item['host_name'] = self.host_name
         item['host_process'] = self.host_process
         item['script_name'] = self.script_name
@@ -78,7 +81,7 @@ class FunctionResultStatus(LoggerMixin, LoggerLevelSetterMixin):
                          'utime': datetime.datetime.utcnow(),
                          })
         else:
-            item = _delete_keys_and_return_new_dict(item, ['insert_time', 'utime'])
+            item = delete_keys_and_return_new_dict(item, ['insert_time', 'utime'])
         # kw['body']['extra']['task_id']
         # item['_id'] = self.task_id.split(':')[-1] or str(uuid.uuid4())
         item['_id'] = self.task_id or str(uuid.uuid4())

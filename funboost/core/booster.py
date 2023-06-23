@@ -50,6 +50,7 @@ class Booster:
                  function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = _Undefined,
                  user_custom_record_process_info_func: typing.Union[typing.Callable, None] = _Undefined,
                  is_using_rpc_mode: bool = _Undefined,
+                 is_support_remote_kill_task: bool = _Undefined,
                  broker_exclusive_config: dict = _Undefined,
                  broker_kind: int = _Undefined,
                  boost_decorator_default_params=BoostDecoratorDefaultParams()):
@@ -97,6 +98,7 @@ class Booster:
                   这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
            :param user_custom_record_process_info_func  提供一个用户自定义的保存消息处理记录到某个地方例如mysql数据库的函数，函数仅仅接受一个入参，入参类型是 FunctionResultStatus，用户可以打印参数
            :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。。
+           :param is_support_remote_kill_task 是否支持远程任务杀死功能，如果任务数量少，单个任务耗时长，确实需要远程发送命令来杀死正在运行的函数，才设置为true，否则不建议开启此功能。
            :param broker_exclusive_config 加上一个不同种类中间件非通用的配置,不同中间件自身独有的配置，不是所有中间件都兼容的配置，因为框架支持30种消息队列，消息队列不仅仅是一般的先进先出queue这么简单的概念，
                    例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，每一种消息队列都有独特的配置参数意义，可以通过这里传递。
            :param broker_kind:中间件种类，支持30种消息队列。 入参见 BrokerEnum枚举类的属性。

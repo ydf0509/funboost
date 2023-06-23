@@ -36,7 +36,7 @@ from funboost.concurrent_pool.single_thread_executor import SoloExecutor
 from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig, ResultPersistenceHelper, FunctionResultStatus
 
 # noinspection PyUnresolvedReferences
-from funboost.core.helper_funs import _delete_keys_and_return_new_dict, get_publish_time
+from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_publish_time
 from nb_log import get_logger, LoggerLevelSetterMixin, nb_print, LoggerMixin, \
     LoggerMixinDefaultWithFileHandler, stdout_write, is_main_process, \
     nb_log_config_default
@@ -63,6 +63,7 @@ from funboost.utils.mongo_util import MongoMixin
 from funboost import funboost_config_deafult
 # noinspection PyUnresolvedReferences
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
+from funboost.core import kill_remote_task
 
 
 # patch_apscheduler_run_job()
@@ -195,12 +196,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                  task_filtering_expire_seconds=0,
                  is_do_not_run_by_specify_time_effect=False,
                  do_not_run_by_specify_time=('10:00:00', '22:00:00'),
-                 schedule_tasks_on_main_thread=False,
                  function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(
                      False, False, 7 * 24 * 3600),
                  user_custom_record_process_info_func: typing.Callable = None,
                  is_using_rpc_mode=False,
+                 is_support_remote_kill_task=False,
                  broker_exclusive_config: dict = None,
+                 schedule_tasks_on_main_thread=False,
                  ):
 
         """
@@ -241,6 +243,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
         :param user_custom_record_process_info_func  提供一个用户自定义的保存消息处理记录到某个地方例如mysql数据库的函数，函数仅仅接受一个入参，入参类型是 FunctionResultStatus，用户可以打印参数
         :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。
+        :param is_support_remote_kill_task 是否支持远程任务杀死功能，如果任务数量少，单个任务耗时长，确实需要远程发送命令来杀死正在运行的函数，才设置为true，否则不建议开启此功能。
         :param broker_exclusive_config 加上一个不同种类中间件非通用的配置,不同中间件自身独有的配置，不是所有中间件都兼容的配置，因为框架支持30种消息队列，消息队列不仅仅是一般的先进先出queue这么简单的概念，
             例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，每一种消息队列都有独特的配置参数意义，可以通过这里传递。
 
@@ -383,7 +386,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._result_persistence_helper: ResultPersistenceHelper
         self._user_custom_record_process_info_func = user_custom_record_process_info_func
 
-        self._is_using_rpc_mode = is_using_rpc_mode
+        self._is_using_rpc_mode = is_using_rpc_mode  # 是否使用rpc模式 需要安装和配置好redis
+        self._is_support_remote_kill_task = is_support_remote_kill_task # 是否支持远程杀死函数task，需要安装和配置好redis
 
         if broker_exclusive_config is None:
             broker_exclusive_config = {}
@@ -522,6 +526,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.logger.warning(f'启动了分布式环境 使用 redis 的键 hearbeat:{self._queue_name} 统计活跃消费者 ，当前消费者唯一标识为 {self.consumer_identification}')
 
         self.keep_circulating(10, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
+        if self._is_support_remote_kill_task:
+            kill_remote_task.RemoteTaskKiller(self.queue_name, None).start_cycle_kill_task()
         if self._do_task_filtering:
             self._redis_filter.delete_expire_filter_task_cycle()  # 这个默认是RedisFilter类，是个pass不运行。所以用别的消息中间件模式，不需要安装和配置redis。
         if self._schedule_tasks_on_main_thread:
@@ -576,7 +582,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             time.sleep(self.time_interval_for_check_do_not_run_time)
             return
 
-        function_only_params = _delete_keys_and_return_new_dict(kw['body'], )
+        function_only_params = delete_keys_and_return_new_dict(kw['body'], )
         if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
                 function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
             self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
@@ -699,9 +705,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         return concurrent_info
 
     def _set_do_not_delete_extra_from_msg(self):
-        """例如从死信队列，把完整的包括extra的消息移到另一个正常队列，不要把extra中的参数去掉"""
+        """例如从死信队列，把完整的包括extra的消息移到另一个正常队列，不要把extra中的参数去掉
+        queue2queue.py 的 consume_and_push_to_another_queue 中操作了这个，普通用户无需调用这个方法。
+        """
         self._do_not_delete_extra_from_msg = True
 
+    # noinspection PyProtectedMember
     def _run(self, kw: dict, ):
         # print(kw)
         try:
@@ -709,16 +718,18 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             max_retry_times = self._get_priority_conf(kw, 'max_retry_times')
             current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
             current_retry_times = 0
-            function_only_params = _delete_keys_and_return_new_dict(kw['body'])
+            function_only_params = delete_keys_and_return_new_dict(kw['body'])
             for current_retry_times in range(max_retry_times + 1):
                 current_function_result_status = self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times=current_retry_times,
                                                                                                      function_result_status=FunctionResultStatus(
                                                                                                          self.queue_name, self.consuming_function.__name__,
                                                                                                          kw['body']))
                 if (current_function_result_status.success is True or current_retry_times == max_retry_times
-                        or current_function_result_status.has_requeue or current_function_result_status.has_to_dlx_queue):
+                        or current_function_result_status._has_requeue
+                        or current_function_result_status._has_to_dlx_queue
+                        or current_function_result_status._has_kill_task):
                     break
-            if not (current_function_result_status.has_requeue and self.BROKER_KIND in [BrokerEnum.RABBITMQ_AMQPSTORM, BrokerEnum.RABBITMQ_PIKA, BrokerEnum.RABBITMQ_RABBITPY]):  # 已经nack了，不能ack，否则rabbitmq delevar tag 报错
+            if not (current_function_result_status._has_requeue and self.BROKER_KIND in [BrokerEnum.RABBITMQ_AMQPSTORM, BrokerEnum.RABBITMQ_PIKA, BrokerEnum.RABBITMQ_RABBITPY]):  # 已经nack了，不能ack，否则rabbitmq delevar tag 报错
                 self._confirm_consume(kw)
 
             self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
@@ -768,9 +779,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
             self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
 
+    # noinspection PyProtectedMember
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
                                                        function_result_status: FunctionResultStatus, ):
-        function_only_params = _delete_keys_and_return_new_dict(kw['body']) if self._do_not_delete_extra_from_msg is False else kw['body']
+        function_only_params = delete_keys_and_return_new_dict(kw['body']) if self._do_not_delete_extra_from_msg is False else kw['body']
+        task_id = kw['body']['extra']['task_id']
         t_start = time.time()
         function_result_status.run_times = current_retry_times + 1
         try:
@@ -778,6 +791,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             function_run0 = self.consuming_function if self._consumin_function_decorator is None else self._consumin_function_decorator(self.consuming_function)
             function_run = function_run0 if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
                 function_timeout)(function_run0)
+            if self._is_support_remote_kill_task:
+                if kill_remote_task.RemoteTaskKiller(self.queue_name, task_id).judge_need_revoke_run():  # 如果远程指令杀死任务，如果还没开始运行函数，就取消运行
+                    function_result_status._has_kill_task = True
+                    self.logger.warning(f'取消运行 {task_id} {function_only_params}')
+                    return function_result_status
+                function_run = kill_remote_task.kill_fun_deco(task_id)(function_run)  # 用杀死装饰器包装起来在另一个线程运行函数
             function_result_status.result = function_run(**function_only_params)
             if asyncio.iscoroutine(function_result_status.result):
                 log_msg = f'''异步的协程消费函数必须使用 async 并发模式并发,请设置消费函数 {self.consuming_function.__name__} 的concurrent_mode 为 ConcurrentModeEnum.ASYNC 或 4'''
@@ -804,14 +823,19 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 # kw_new['body']['extra']['task_id'] = new_task_id
                 # self._requeue(kw_new)
                 self._requeue(kw)
-                function_result_status.has_requeue = True
+                function_result_status._has_requeue = True
             if isinstance(e, ExceptionForPushToDlxqueue):
                 log_msg = f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}，消息放入死信队列 {self._dlx_queue_name}'
                 self.logger.critical(msg=f'{log_msg} \n')
                 self.error_file_logger.critical(msg=f'{log_msg} \n')
                 self.publisher_of_dlx_queue.publish(kw['body'])  # 发布到死信队列，不重回当前队列
-                function_result_status.has_to_dlx_queue = True
-            if isinstance(e, (ExceptionForRequeue, ExceptionForPushToDlxqueue)):
+                function_result_status._has_to_dlx_queue = True
+            if isinstance(e, kill_remote_task.TaskHasKilledError):
+                log_msg = f'task_id 为 {task_id} , 函数 [{self.consuming_function.__name__}] 运行入参 {function_only_params}   ，已被远程指令杀死 {type(e)}  {e}'
+                self.logger.critical(msg=f'{log_msg} ')
+                self.error_file_logger.critical(msg=f'{log_msg} ')
+                function_result_status._has_kill_task = True
+            if isinstance(e, (ExceptionForRequeue, ExceptionForPushToDlxqueue,kill_remote_task.TaskHasKilledError)):
                 return function_result_status
             log_msg = f'''函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次运行发生错误，
                               函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是  {function_only_params}    \n 原因是 {type(e)} {e} '''
@@ -822,6 +846,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             function_result_status.result = FunctionResultStatus.FUNC_RUN_ERROR
         return function_result_status
 
+    # noinspection PyProtectedMember
     async def _async_run(self, kw: dict, ):
         # """虽然和上面有点大面积重复相似，这个是为了asyncio模式的，asyncio模式真的和普通同步模式的代码思维和形式区别太大，
         # 框架实现兼容async的消费函数很麻烦复杂，连并发池都要单独写"""
@@ -830,18 +855,18 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             max_retry_times = self._get_priority_conf(kw, 'max_retry_times')
             current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
             current_retry_times = 0
-            function_only_params = _delete_keys_and_return_new_dict(kw['body'])
+            function_only_params = delete_keys_and_return_new_dict(kw['body'])
             for current_retry_times in range(max_retry_times + 1):
                 current_function_result_status = await self._async_run_consuming_function_with_confirm_and_retry(kw, current_retry_times=current_retry_times,
                                                                                                                  function_result_status=FunctionResultStatus(
                                                                                                                      self.queue_name, self.consuming_function.__name__,
                                                                                                                      kw['body'], ),
                                                                                                                  )
-                if current_function_result_status.success is True or current_retry_times == max_retry_times or current_function_result_status.has_requeue:
+                if current_function_result_status.success is True or current_retry_times == max_retry_times or current_function_result_status._has_requeue:
                     break
 
             # self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
-            if not (current_function_result_status.has_requeue and self.BROKER_KIND in [BrokerEnum.RABBITMQ_AMQPSTORM, BrokerEnum.RABBITMQ_PIKA, BrokerEnum.RABBITMQ_RABBITPY]):
+            if not (current_function_result_status._has_requeue and self.BROKER_KIND in [BrokerEnum.RABBITMQ_AMQPSTORM, BrokerEnum.RABBITMQ_PIKA, BrokerEnum.RABBITMQ_RABBITPY]):
                 await simple_run_in_executor(self._confirm_consume, kw)
             await simple_run_in_executor(self._result_persistence_helper.save_function_result_to_mongo, current_function_result_status)
             if self._get_priority_conf(kw, 'do_task_filtering'):
@@ -893,11 +918,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
             self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
 
+    # noinspection PyProtectedMember
     async def _async_run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
                                                                    function_result_status: FunctionResultStatus, ):
         """虽然和上面有点大面积重复相似，这个是为了asyncio模式的，asyncio模式真的和普通同步模式的代码思维和形式区别太大，
         框架实现兼容async的消费函数很麻烦复杂，连并发池都要单独写"""
-        function_only_params = _delete_keys_and_return_new_dict(kw['body']) if self._do_not_delete_extra_from_msg is False else kw['body']
+        function_only_params = delete_keys_and_return_new_dict(kw['body']) if self._do_not_delete_extra_from_msg is False else kw['body']
         function_result_status.run_times = current_retry_times + 1
         # noinspection PyBroadException
         t_start = time.time()
@@ -930,13 +956,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 await asyncio.sleep(0.1)
                 # return self._requeue(kw)
                 await simple_run_in_executor(self._requeue, kw)
-                function_result_status.has_requeue = True
+                function_result_status._has_requeue = True
             if isinstance(e, ExceptionForPushToDlxqueue):
                 log_msg = f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}，消息放入死信队列 {self._dlx_queue_name}'
                 self.logger.critical(msg=f'{log_msg} \n')
                 self.error_file_logger.critical(msg=f'{log_msg} \n')
                 await simple_run_in_executor(self.publisher_of_dlx_queue.publish, kw['body'])  # 发布到死信队列，不重回当前队列
-                function_result_status.has_to_dlx_queue = True
+                function_result_status._has_to_dlx_queue = True
             if isinstance(e, (ExceptionForRequeue, ExceptionForPushToDlxqueue)):
                 return function_result_status
             log_msg = f'''函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次运行发生错误，
@@ -961,6 +987,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if self._msg_num_in_broker != 0:
             self._last_timestamp_when_has_task_in_queue = time.time()
         return self._msg_num_in_broker
+
+    @staticmethod
+    def _thread_kill_task_by_task_id():
+        task_id_tuple = RedisMixin().redis_db_frame_version3.brpop(kill_remote_task.REDIS_LIST_KEY_KILL_TASK, timeout=60)
+        if task_id_tuple:
+            task_id = task_id_tuple[1]
+            kill_remote_task.kill_task(task_id)
 
     @abc.abstractmethod
     def _requeue(self, kw):

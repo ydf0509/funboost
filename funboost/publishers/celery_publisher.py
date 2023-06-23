@@ -41,7 +41,7 @@ class CeleryPublisher(AbstractPublisher, ):
 
     def publish(self, msg: typing.Union[str, dict], task_id=None,
                 priority_control_config: PriorityConsumingControlConfig = None) -> celery.result.AsyncResult:
-        msg, msg_function_kw, extra_params = self._convert_msg(msg, task_id, priority_control_config)
+        msg, msg_function_kw, extra_params,task_id = self._convert_msg(msg, task_id, priority_control_config)
         t_start = time.time()
         celery_result = celery_app.send_task(name=self.queue_name, kwargs=msg_function_kw, task_id=extra_params['task_id'])  # type: celery.result.AsyncResult
         self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}')  # 显示msg太长了。

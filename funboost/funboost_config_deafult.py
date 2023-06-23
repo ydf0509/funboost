@@ -144,6 +144,7 @@ class BoostDecoratorDefaultParams(DataClassBase):
     user_custom_record_process_info_func = None
 
     is_using_rpc_mode = False
+    is_support_remote_kill_task = False
 
     is_do_not_run_by_specify_time_effect = False
     do_not_run_by_specify_time = ('10:00:00', '22:00:00')

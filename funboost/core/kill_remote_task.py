@@ -83,7 +83,7 @@ class RemoteTaskKiller(RedisMixin, nb_log.LoggerMixin):
         kill_task(self.task_id)
 
     def start_cycle_kill_task(self):
-        def f():
+        def _start_cycle_kill_task():
             while 1:
                 for t in threading.enumerate():
                     if isinstance(t, ThreadKillAble):
@@ -100,7 +100,7 @@ class RemoteTaskKiller(RedisMixin, nb_log.LoggerMixin):
                 else:
                     time.sleep(5)
 
-        threading.Thread(target=f).start()
+        threading.Thread(target=_start_cycle_kill_task).start()
 
 
 if __name__ == '__main__':

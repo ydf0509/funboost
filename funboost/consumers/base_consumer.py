@@ -37,9 +37,9 @@ from funboost.core.function_result_status_saver import FunctionResultStatusPersi
 
 # noinspection PyUnresolvedReferences
 from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_publish_time
-from nb_log import get_logger, LoggerLevelSetterMixin, nb_print, LoggerMixin, \
-    LoggerMixinDefaultWithFileHandler, stdout_write, is_main_process, \
-    nb_log_config_default
+from nb_log import (get_logger, LoggerLevelSetterMixin, nb_print, LoggerMixin,
+                    LoggerMixinDefaultWithFileHandler, stdout_write, is_main_process,
+                    nb_log_config_default)
 # noinspection PyUnresolvedReferences
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
@@ -59,7 +59,6 @@ from funboost.factories.publisher_factotry import get_publisher
 from funboost.utils import decorators, time_util, RedisMixin, un_strict_json_dumps
 # noinspection PyUnresolvedReferences
 from funboost.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
-from funboost.utils.mongo_util import MongoMixin
 from funboost import funboost_config_deafult
 # noinspection PyUnresolvedReferences
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
@@ -387,7 +386,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._user_custom_record_process_info_func = user_custom_record_process_info_func
 
         self._is_using_rpc_mode = is_using_rpc_mode  # 是否使用rpc模式 需要安装和配置好redis
-        self._is_support_remote_kill_task = is_support_remote_kill_task # 是否支持远程杀死函数task，需要安装和配置好redis
+        self._is_support_remote_kill_task = is_support_remote_kill_task  # 是否支持远程杀死函数task，需要安装和配置好redis
 
         if broker_exclusive_config is None:
             broker_exclusive_config = {}
@@ -835,7 +834,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self.logger.critical(msg=f'{log_msg} ')
                 self.error_file_logger.critical(msg=f'{log_msg} ')
                 function_result_status._has_kill_task = True
-            if isinstance(e, (ExceptionForRequeue, ExceptionForPushToDlxqueue,kill_remote_task.TaskHasKilledError)):
+            if isinstance(e, (ExceptionForRequeue, ExceptionForPushToDlxqueue, kill_remote_task.TaskHasKilledError)):
                 return function_result_status
             log_msg = f'''函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次运行发生错误，
                               函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是  {function_only_params}    \n 原因是 {type(e)} {e} '''
@@ -987,13 +986,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if self._msg_num_in_broker != 0:
             self._last_timestamp_when_has_task_in_queue = time.time()
         return self._msg_num_in_broker
-
-    @staticmethod
-    def _thread_kill_task_by_task_id():
-        task_id_tuple = RedisMixin().redis_db_frame_version3.brpop(kill_remote_task.REDIS_LIST_KEY_KILL_TASK, timeout=60)
-        if task_id_tuple:
-            task_id = task_id_tuple[1]
-            kill_remote_task.kill_task(task_id)
 
     @abc.abstractmethod
     def _requeue(self, kw):

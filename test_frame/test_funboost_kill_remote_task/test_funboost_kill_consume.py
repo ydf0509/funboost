@@ -1,13 +1,14 @@
 import time
 
-from funboost import boost,BrokerEnum
+from funboost import boost, BrokerEnum
 
-@boost('test_kill_fun_queue',broker_kind=BrokerEnum.REDIS,is_support_remote_kill_task=True)
-def test_kill_fun(x):
-    print(f'start {x}')
+
+@boost('test_kill_fun_queue', broker_kind=BrokerEnum.REDIS, is_support_remote_kill_task=True)
+def test_kill_add(x, y):
+    print(f'start {x} + {y} ....')
     time.sleep(60)
-    print(f'over {x}')
+    print(f'over {x} + {y} = {x + y}')
 
 
 if __name__ == '__main__':
-    test_kill_fun.consume()
+    test_kill_add.consume()

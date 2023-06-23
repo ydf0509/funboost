@@ -104,7 +104,6 @@ class RemoteTaskKiller(RedisMixin, nb_log.LoggerMixin):
 
 
 if __name__ == '__main__':
-    import nb_log
 
     test_lock = threading.Lock()
 

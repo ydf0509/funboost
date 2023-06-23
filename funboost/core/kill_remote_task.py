@@ -94,7 +94,7 @@ class RemoteTaskKiller(RedisMixin, nb_log.LoggerMixin):
                             t.event_kill.set()
                             kill_thread(t.ident)
                             self._lsat_kill_task_ts = time.time()
-                            self.logger.warning(f'队列的 {self.queue_name} ,  任务 {thread_task_id} 被杀死')
+                            self.logger.warning(f'队列 {self.queue_name} 的 任务 {thread_task_id} 被杀死')
                 if time.time() - self._lsat_kill_task_ts < 2:
                     time.sleep(0.01)
                 else:

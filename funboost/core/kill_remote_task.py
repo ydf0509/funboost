@@ -62,20 +62,23 @@ def kill_thread_by_task_id(task_id):
 kill_task = kill_thread_by_task_id
 
 
-class RemoteTaskKiller(RedisMixin, nb_log.LoggerMixin):
+class RemoteTaskKillerZset(RedisMixin, nb_log.LoggerMixin):
+    """
+    zset实现的，需要zrank 并发数次。
+    """
 
     def __init__(self, queue_name, task_id):
         self.queue_name = queue_name
         self.task_id = task_id
-        self.redis_zset_key = f'funboost_kill_task:{queue_name}'
+        self._redis_zset_key = f'funboost_kill_task:{queue_name}'
         self._lsat_kill_task_ts = time.time()
 
     def send_remote_task_comd(self):
-        self.redis_db_frame_version3.zadd(self.redis_zset_key, {self.task_id: time.time()})
+        self.redis_db_frame_version3.zadd(self._redis_zset_key, {self.task_id: time.time()})
 
     def judge_need_revoke_run(self):
-        if self.redis_db_frame_version3.zrank(self.redis_zset_key, self.task_id) is not None:
-            self.redis_db_frame_version3.zrem(self.redis_zset_key, self.task_id)
+        if self.redis_db_frame_version3.zrank(self._redis_zset_key, self.task_id) is not None:
+            self.redis_db_frame_version3.zrem(self._redis_zset_key, self.task_id)
             return True
         return False
 
@@ -88,17 +91,72 @@ class RemoteTaskKiller(RedisMixin, nb_log.LoggerMixin):
                 for t in threading.enumerate():
                     if isinstance(t, ThreadKillAble):
                         thread_task_id = getattr(t, 'task_id', None)
-                        if self.redis_db_frame_version3.zrank(self.redis_zset_key, thread_task_id) is not None:
-                            self.redis_db_frame_version3.zrem(self.redis_zset_key, thread_task_id)
+                        if self.redis_db_frame_version3.zrank(self._redis_zset_key, thread_task_id) is not None:
+                            self.redis_db_frame_version3.zrem(self._redis_zset_key, thread_task_id)
                             t.killed = True
                             t.event_kill.set()
                             kill_thread(t.ident)
                             self._lsat_kill_task_ts = time.time()
                             self.logger.warning(f'队列 {self.queue_name} 的 任务 {thread_task_id} 被杀死')
                 if time.time() - self._lsat_kill_task_ts < 2:
+                    time.sleep(0.001)
+                else:
+                    time.sleep(5)
+
+        threading.Thread(target=_start_cycle_kill_task).start()
+
+
+class RemoteTaskKiller(RedisMixin, nb_log.LoggerMixin):
+    """
+    hash实现的，只需要 hmget 一次
+    """
+
+    def __init__(self, queue_name, task_id):
+        self.queue_name = queue_name
+        self.task_id = task_id
+        # self.redis_zset_key = f'funboost_kill_task:{queue_name}'
+        self._redis_hash_key = f'funboost_kill_task_hash:{queue_name}'
+        self._lsat_kill_task_ts = 0  # time.time()
+
+    def send_remote_task_comd(self):
+        # self.redis_db_frame_version3.zadd(self.redis_zset_key, {self.task_id: time.time()})
+        self.redis_db_frame_version3.hset(self._redis_hash_key, key=self.task_id, value=time.time())
+
+    def judge_need_revoke_run(self):
+        if self.redis_db_frame_version3.hexists(self._redis_hash_key, self.task_id):
+            self.redis_db_frame_version3.hdel(self._redis_hash_key, self.task_id)
+            return True
+        return False
+
+    def kill_local_task(self):
+        kill_task(self.task_id)
+
+    def start_cycle_kill_task(self):
+        def _start_cycle_kill_task():
+            while 1:
+                if time.time() - self._lsat_kill_task_ts < 2:
                     time.sleep(0.01)
                 else:
                     time.sleep(5)
+
+                thread_task_id_list = []
+                task_id__thread_map = {}
+                for t in threading.enumerate():
+                    if isinstance(t, ThreadKillAble):
+                        thread_task_id = getattr(t, 'task_id', None)
+                        thread_task_id_list.append(thread_task_id)
+                        task_id__thread_map[thread_task_id] = t
+                if thread_task_id_list:
+                    values = self.redis_db_frame_version3.hmget(self._redis_hash_key, keys=thread_task_id_list)
+                    for idx, thread_task_id in enumerate(thread_task_id_list):
+                        if values[idx] is not None:
+                            self.redis_db_frame_version3.hdel(self._redis_hash_key, thread_task_id)
+                            t = task_id__thread_map[thread_task_id]
+                            t.killed = True
+                            t.event_kill.set()
+                            kill_thread(t.ident)
+                            self._lsat_kill_task_ts = time.time()
+                            self.logger.warning(f'队列 {self.queue_name} 的 任务 {thread_task_id} 被杀死')
 
         threading.Thread(target=_start_cycle_kill_task).start()
 

@@ -121,7 +121,7 @@ class ConsumersManager:
         if not cls._has_show_conusmers_info:
             for _, consumer_info in cls.consumers_queue__info_map.items():
                 stdout_write(f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}" '
-                             f' \033[0;30;44m{consumer_info["queue_name"]} 的消费者\033[0m\n')
+                             f' \033[0;37;44m{consumer_info["queue_name"]} 的消费者。 \033[0m\n')
         cls._has_show_conusmers_info = True
 
     @staticmethod

@@ -64,7 +64,7 @@ kill_task = kill_thread_by_task_id
 
 class RemoteTaskKillerZset(RedisMixin, nb_log.LoggerMixin):
     """
-    zset实现的，需要zrank 并发数次。
+    zset实现的，需要zrank 多次。
     """
 
     def __init__(self, queue_name, task_id):
@@ -116,9 +116,10 @@ class RemoteTaskKiller(RedisMixin, nb_log.LoggerMixin):
         self.task_id = task_id
         # self.redis_zset_key = f'funboost_kill_task:{queue_name}'
         self._redis_hash_key = f'funboost_kill_task_hash:{queue_name}'
-        self._lsat_kill_task_ts = 0  # time.time()
+        # self._lsat_kill_task_ts = 0  # time.time()
+        self._recent_scan_need_kill_task = False
 
-    def send_remote_task_comd(self):
+    def send_kill_remote_task_comd(self):
         # self.redis_db_frame_version3.zadd(self.redis_zset_key, {self.task_id: time.time()})
         self.redis_db_frame_version3.hset(self._redis_hash_key, key=self.task_id, value=time.time())
 
@@ -134,7 +135,7 @@ class RemoteTaskKiller(RedisMixin, nb_log.LoggerMixin):
     def start_cycle_kill_task(self):
         def _start_cycle_kill_task():
             while 1:
-                if time.time() - self._lsat_kill_task_ts < 2:
+                if self._recent_scan_need_kill_task:
                     time.sleep(0.01)
                 else:
                     time.sleep(5)
@@ -155,7 +156,7 @@ class RemoteTaskKiller(RedisMixin, nb_log.LoggerMixin):
                             t.killed = True
                             t.event_kill.set()
                             kill_thread(t.ident)
-                            self._lsat_kill_task_ts = time.time()
+                            self._recent_scan_need_kill_task = True
                             self.logger.warning(f'队列 {self.queue_name} 的 任务 {thread_task_id} 被杀死')
 
         threading.Thread(target=_start_cycle_kill_task).start()
@@ -202,7 +203,7 @@ if __name__ == '__main__':
 
     k = RemoteTaskKiller('test_kill_queue', 'task1234')
     k.start_cycle_kill_task()
-    k.send_remote_task_comd()
+    k.send_kill_remote_task_comd()
 
     """
     第一种代码：

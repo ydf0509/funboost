@@ -136,10 +136,10 @@ class RemoteTaskKiller(RedisMixin, nb_log.LoggerMixin):
         def _start_cycle_kill_task():
             while 1:
                 if self._recent_scan_need_kill_task:
-                    print(0.0001)
+                    # print(0.0001)
                     time.sleep(0.01)
                 else:
-                    print(555)
+                    # print(555)
                     time.sleep(5)
                 self._recent_scan_need_kill_task = False
                 thread_task_id_list = []

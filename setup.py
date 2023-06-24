@@ -67,7 +67,7 @@ setup(
         'redis2',
         'redis3',
         'redis',
-        'nb_log>=8.5',
+        'nb_log>=8.8',
         'rocketmq',
         'zmq',
         'pyzmq',

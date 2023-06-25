@@ -79,9 +79,11 @@ funboost 是 function_scheduling_distributed_framework的包名更新版本
 
 ## 1.1 安装方式
 
+```
 pip install funboost --upgrade
 
-
+或pip install funboost[extra_brokers]  一次性安装所有小众三方中间件
+```
 
 ## 1.2 框架功能介绍
 
@@ -250,6 +252,12 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
 
      暂停消费：
         支持从python解释器外部/远程机器 ，控制暂停消息消费和继续消费。
+
+     优先级队列：
+         支持队列优先级消息。
+
+     远程杀死任务：
+         支持在发布端杀死正在运行的消息，阿松杀死命令时候对还未取出的消息则放弃运行消息。
 
 </pre>
 

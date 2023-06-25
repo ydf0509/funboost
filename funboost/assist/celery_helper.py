@@ -15,7 +15,11 @@ celery_app = celery.Celery(main='funboost_celery', broker=funboost_config_deaful
                            task_routes={}, timezone=funboost_config_deafult.TIMEZONE, enable_utc=False, )
 
 celery_app.conf.task_acks_late = True
-celery_app.conf.worker_redirect_stdouts = False
+celery_app.conf.update({
+    'worker_redirect_stdouts': False,
+    'worker_concurrency': 200
+}
+)
 
 logger = get_logger('funboost.CeleryHelper')
 
@@ -30,7 +34,7 @@ class CeleryHelper:
     def update_celery_app_conf(celery_app_conf: dict):
         """
         更新celery app的配置，celery app配置大全见 https://docs.celeryq.dev/en/stable/userguide/configuration.html
-        :param celery_app_conf:
+        :param celery_app_conf: celery app 配置，字典
         :return:
         """
         celery_app.conf.update(celery_app_conf)
@@ -42,7 +46,7 @@ class CeleryHelper:
         for k, v in celery_app.conf.items():
             conf_dict_json_able[k] = str(v)
             # print(k, ' : ', v)
-        print('celery app 的配置是：',json.dumps(conf_dict_json_able,ensure_ascii=False,indent=4))
+        print('celery app 的配置是：', json.dumps(conf_dict_json_able, ensure_ascii=False, indent=4))
 
     @staticmethod
     def celery_start_beat(beat_schedule: dict):
@@ -68,7 +72,7 @@ class CeleryHelper:
         threading.Thread(target=_f).start()
 
     @classmethod
-    def realy_start_celery_worker(cls, worker_name=None):
+    def realy_start_celery_worker(cls, worker_name=None, loglevel='INFO'):
         if len(cls.to_be_start_work_celery_queue_name_set) == 0:
             raise Exception('celery worker 没有需要运行的queue')
         queue_names_str = ','.join(list(cls.to_be_start_work_celery_queue_name_set))
@@ -80,8 +84,8 @@ class CeleryHelper:
             pool_name = 'gevent'
         if cls.concurrent_mode == ConcurrentModeEnum.EVENTLET:
             pool_name = 'eventlet'
-        argv = ['worker', f'--pool={pool_name}', '--concurrency=200',
-                '-n', f'worker_funboost_{worker_name}@%h', f'--loglevel=INFO',
+        argv = ['worker', f'--pool={pool_name}',
+                '-n', f'worker_funboost_{worker_name}@%h', f'--loglevel={loglevel}',
                 f'--queues={queue_names_str}',
                 ]
         logger.info(f'celery 启动work参数 {argv}')

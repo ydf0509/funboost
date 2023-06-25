@@ -527,6 +527,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.keep_circulating(10, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
         if self._is_support_remote_kill_task:
             self.keep_circulating(10, block=False)(kill_remote_task.RemoteTaskKiller(self.queue_name, None).start_cycle_kill_task)()
+            self._is_show_message_get_from_broker = True    # 方便用户看到从消息队列取出来的消息的task_id,然后使用task_id杀死运行中的消息。
         if self._do_task_filtering:
             self._redis_filter.delete_expire_filter_task_cycle()  # 这个默认是RedisFilter类，是个pass不运行。所以用别的消息中间件模式，不需要安装和配置redis。
         if self._schedule_tasks_on_main_thread:

@@ -3,10 +3,11 @@
 # @Time    : 2022/8/8 0008 12:12
 
 from funboost.publishers.base_publisher import AbstractPublisher
+from funboost.publishers.redis_queue_flush import FlushRedisQueueMixin
 from funboost.utils.redis_manager import RedisMixin
 
 
-class RedisPriorityPublisher(AbstractPublisher, RedisMixin):
+class RedisPriorityPublisher(FlushRedisQueueMixin,AbstractPublisher, RedisMixin,):
     """
     redis队列，支持任务优先级。
     """
@@ -39,10 +40,6 @@ class RedisPriorityPublisher(AbstractPublisher, RedisMixin):
         self.logger.debug([queue_name, msg])
         self.redis_db_frame.rpush(queue_name, msg)
 
-    def clear(self):
-        self.redis_db_frame.delete(*self.queue_list)
-        self.redis_db_frame.delete(f'{self._queue_name}__unack')
-        self.logger.warning(f'清除 {self._queue_name} 队列中的消息成功')
 
     def get_message_count(self):
         count = 0

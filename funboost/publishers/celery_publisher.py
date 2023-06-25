@@ -3,11 +3,7 @@
 # @Time    : 2022/8/8 0008 12:12
 import os
 import sys
-import uuid
-import copy
 import time
-import threading
-import json
 import celery
 import celery.result
 import typing
@@ -20,24 +16,6 @@ class CeleryPublisher(AbstractPublisher, ):
     """
     使用celery作为中间件
     """
-    celery_conf_lock = threading.Lock()
-
-    # noinspection PyAttributeOutsideInit
-    def custom_init(self):
-        # self.broker_exclusive_config['task_routes'] = {self.queue_name: {"queue": self.queue_name}}
-        # celery_app.config_from_object(self.broker_exclusive_config)
-        pass
-
-        # celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})
-        #
-        # @celery_app.task(name=self.queue_name)
-        # def f(*args, **kwargs):
-        #     pass
-        #
-        # self._celery_app = celery_app
-        # self._celery_fun = f
-
-        celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})
 
     def publish(self, msg: typing.Union[str, dict], task_id=None,
                 priority_control_config: PriorityConsumingControlConfig = None) -> celery.result.AsyncResult:

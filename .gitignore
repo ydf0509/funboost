@@ -35,3 +35,4 @@ test_frame/test_fabric_deploy/test_deploy2.py
 celerybeat-schedule.bak
 celerybeat-schedule.dat
 celerybeat-schedule.dir
+nb_log_config.py

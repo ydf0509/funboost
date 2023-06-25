@@ -6,14 +6,14 @@ from funboost import boost, BrokerEnum
 from funboost.consumers.celery_consumer import CeleryHelper
 
 
-@boost('celery_beat_queue_7a2b', broker_kind=BrokerEnum.CELERY, qps=5)
+@boost('celery_beat_queue_7a2b2', broker_kind=BrokerEnum.CELERY, qps=5)
 def f_beat(x, y):
     time.sleep(3)
     print(1111, x, y)
     return x + y
 
 
-@boost('celery_beat_queueb_8a2b', broker_kind=BrokerEnum.CELERY, qps=1, broker_exclusive_config={'celery_task_config': {'default_retry_delay': 60 * 5}})
+@boost('celery_beat_queueb_8a2b2', broker_kind=BrokerEnum.CELERY, qps=1, broker_exclusive_config={'celery_task_config': {'default_retry_delay': 60 * 5}})
 def f_beat2(a, b):
     time.sleep(2)
     print(2222, a, b)

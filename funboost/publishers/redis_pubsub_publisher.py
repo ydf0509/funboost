@@ -5,7 +5,7 @@ from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.utils import RedisMixin
 
 
-class RedisPubSubPublisher(AbstractPublisher, RedisMixin):
+class RedisPubSubPublisher(AbstractPublisher, RedisMixin, ):
     """
     使用redis作为中间件
     """

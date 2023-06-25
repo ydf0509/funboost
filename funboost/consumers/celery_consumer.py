@@ -156,13 +156,15 @@ class CeleryConsumer(AbstractConsumer):
     '''
 
     def custom_init(self):
-        # 这就是核心，@boost时候回注册任务路由到celery_app
+        # 这就是核心，@boost时候会 @ celery app.task装饰器
         @celery_app.task(name=self.queue_name, rate_limit=f'{self._qps}/s', soft_time_limit=self._function_timeout,
                          max_retries=self._max_retry_times,
                          **self.broker_exclusive_config['celery_task_config'])
         def f(*args, **kwargs):
             self.logger.debug(f' 这条消息是 celery 从 {self.queue_name} 队列中取出 ,是由 celery 框架调度 {self.consuming_function.__name__} 函数处理: args:  {args} ,  kwargs: {kwargs}')
             return self.consuming_function(*args, **kwargs)
+
+        celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})  # 自动配置celery每个函数使用不同的队列名。
         self.celery_task = f
         CeleryHelper.concurrent_mode = self._concurrent_mode
 

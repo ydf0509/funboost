@@ -84,9 +84,16 @@ class CeleryHelper:
             pool_name = 'gevent'
         if cls.concurrent_mode == ConcurrentModeEnum.EVENTLET:
             pool_name = 'eventlet'
+        '''
+        并发数量在app配置中已经制定了。自己用 update_celery_app_conf 方法更新就好了。
+        celery_app.conf.update({
+             'worker_redirect_stdouts': False,
+             'worker_concurrency': 200
+         }
+        '''
         argv = ['worker', f'--pool={pool_name}',
                 '-n', f'worker_funboost_{worker_name}@%h', f'--loglevel={loglevel}',
-                f'--queues={queue_names_str}',
+                f'--queues={queue_names_str}',         # 并发数量是
                 ]
         logger.info(f'celery 启动work参数 {argv}')
         celery_app.worker_main(argv)

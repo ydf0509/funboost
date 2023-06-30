@@ -373,6 +373,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._consuming_function_cost_time_total_every_unit_time = 0
         self._last_execute_task_time = time.time()  # 最近一次执行任务的时间。
 
+        self._last_show_remaining_execution_time = 0
+        self._show_remaining_execution_time_interval = 300
+
         self._msg_num_in_broker = 0
         self._last_timestamp_when_has_task_in_queue = 0
         self._last_timestamp_print_msg_num = 0
@@ -451,13 +454,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     ''' 日志跳转代码行不正确，不用这种方式'''
 
-    # def _log_error(self, msg, exc_info=None):
-    #     self.logger.error(msg=f'{msg} \n', exc_info=exc_info)
-    #     self.error_file_logger.error(msg=f'{msg} \n', exc_info=exc_info)
-    #
-    # def _log_critical(self, msg, exc_info=None):
-    #     self.logger.critical(msg=f'{msg} \n', exc_info=exc_info)
-    #     self.error_file_logger.critical(msg=f'{msg} \n', exc_info=exc_info)
+    def _log_error(self, msg, exc_info=None):
+        self.logger.error(msg=f'{msg} \n', exc_info=exc_info,extra={'sys_getframe_n': 3})
+        self.error_file_logger.error(msg=f'{msg} \n', exc_info=exc_info,extra={'sys_getframe_n': 3})
+
+    def _log_critical(self, msg, exc_info=None):
+        self.logger.critical(msg=f'{msg} \n', exc_info=exc_info,extra={'sys_getframe_n': 3})
+        self.error_file_logger.critical(msg=f'{msg} \n', exc_info=exc_info,extra={'sys_getframe_n': 3})
 
     @property
     @decorators.synchronized
@@ -492,8 +495,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                         except BaseException as e:
                             log_msg = func.__name__ + '   运行出错\n ' + traceback.format_exc(
                                 limit=10) if is_display_detail_exception else str(e)
-                            self.logger.error(msg=f'{log_msg} \n', exc_info=True)
-                            self.error_file_logger.error(msg=f'{log_msg} \n', exc_info=True)
+                            # self.logger.error(msg=f'{log_msg} \n', exc_info=True)
+                            # self.error_file_logger.error(msg=f'{log_msg} \n', exc_info=True)
+                            self._log_error(msg=log_msg, exc_info=True)
                         finally:
                             time.sleep(time_sleep)
 
@@ -524,10 +528,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._distributed_consumer_statistics.run()
             self.logger.warning(f'启动了分布式环境 使用 redis 的键 hearbeat:{self._queue_name} 统计活跃消费者 ，当前消费者唯一标识为 {self.consumer_identification}')
 
-        self.keep_circulating(10, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
+        self.keep_circulating(60, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
         if self._is_support_remote_kill_task:
             self.keep_circulating(10, block=False)(kill_remote_task.RemoteTaskKiller(self.queue_name, None).start_cycle_kill_task)()
-            self._is_show_message_get_from_broker = True    # 方便用户看到从消息队列取出来的消息的task_id,然后使用task_id杀死运行中的消息。
+            self._is_show_message_get_from_broker = True  # 方便用户看到从消息队列取出来的消息的task_id,然后使用task_id杀死运行中的消息。
         if self._do_task_filtering:
             self._redis_filter.delete_expire_filter_task_cycle()  # 这个默认是RedisFilter类，是个pass不运行。所以用别的消息中间件模式，不需要安装和配置redis。
         if self._schedule_tasks_on_main_thread:
@@ -740,8 +744,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if self._is_push_to_dlx_queue_when_retry_max_times:
                     log_msg += f'  。发送到死信队列 {self._dlx_queue_name} 中'
                     self.publisher_of_dlx_queue.publish(kw['body'])
-                self.logger.critical(msg=f'{log_msg} \n', )
-                self.error_file_logger.critical(msg=f'{log_msg} \n')
+                # self.logger.critical(msg=f'{log_msg} \n', )
+                # self.error_file_logger.critical(msg=f'{log_msg} \n')
+                self._log_critical(msg=log_msg)
 
             if self._get_priority_conf(kw, 'is_using_rpc_mode'):
                 # print(function_result_status.get_status_dict(without_datetime_obj=
@@ -761,23 +766,26 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
                     avarage_function_spend_time = round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)
                     msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
-                          f'函数平均运行耗时 {avarage_function_spend_time} 秒'
-                    if self._msg_num_in_broker != -1:  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
+                          f'函数平均运行耗时 {avarage_function_spend_time} 秒。 '
+                    self.logger.debug(msg)
+                    if self._msg_num_in_broker != -1 and time.time() - self._last_show_remaining_execution_time > self._show_remaining_execution_time_interval:  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
                         # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
                         need_time = time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / (self._execute_task_times_every_unit_time / self._unit_time_for_count) /
                                                                             self._distributed_consumer_statistics.active_consumer_num)
-                        msg += f''' ，预计还需要 {need_time}''' + \
-                               f''' 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
-                    self.logger.info(msg)
+                        msg += f''' 预计还需要 {need_time} 时间 才能执行完成 队列 {self.queue_name} 中的 {self._msg_num_in_broker} 个剩余任务'''
+                        self.logger.info(msg)
+                        self._last_show_remaining_execution_time = time.time()
                     self._current_time_for_execute_task_times_every_unit_time = time.time()
                     self._consuming_function_cost_time_total_every_unit_time = 0
                     self._execute_task_times_every_unit_time = 0
+
             if self._user_custom_record_process_info_func:
                 self._user_custom_record_process_info_func(current_function_result_status)
         except BaseException as e:
             log_msg = f' error 严重错误 {type(e)} {e} '
-            self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
-            self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
+            # self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
+            # self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
+            self._log_critical(msg=log_msg, exc_info=True)
 
     # noinspection PyProtectedMember
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
@@ -800,8 +808,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             function_result_status.result = function_run(**function_only_params)
             if asyncio.iscoroutine(function_result_status.result):
                 log_msg = f'''异步的协程消费函数必须使用 async 并发模式并发,请设置消费函数 {self.consuming_function.__name__} 的concurrent_mode 为 ConcurrentModeEnum.ASYNC 或 4'''
-                self.logger.critical(msg=f'{log_msg} \n')
-                self.error_file_logger.critical(msg=f'{log_msg} \n')
+                # self.logger.critical(msg=f'{log_msg} \n')
+                # self.error_file_logger.critical(msg=f'{log_msg} \n')
+                self._log_critical(msg=log_msg)
                 # noinspection PyProtectedMember,PyUnresolvedReferences
 
                 os._exit(4)
@@ -814,8 +823,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         except BaseException as e:
             if isinstance(e, (ExceptionForRequeue,)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
                 log_msg = f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e} 。消息重新放入当前队列 {self._queue_name}'
-                self.logger.critical(msg=f'{log_msg} \n')
-                self.error_file_logger.critical(msg=f'{log_msg} \n')
+                # self.logger.critical(msg=f'{log_msg} \n')
+                # self.error_file_logger.critical(msg=f'{log_msg} \n')
+                self._log_critical(msg=log_msg)
                 time.sleep(0.1)  # 防止快速无限出错入队出队，导致cpu和中间件忙
                 # 重回队列如果不修改task_id,insert插入函数消费状态结果到mongo会主键重复。要么保存函数消费状态使用replace，要么需要修改taskikd
                 # kw_new = copy.deepcopy(kw)
@@ -826,21 +836,25 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 function_result_status._has_requeue = True
             if isinstance(e, ExceptionForPushToDlxqueue):
                 log_msg = f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}，消息放入死信队列 {self._dlx_queue_name}'
-                self.logger.critical(msg=f'{log_msg} \n')
-                self.error_file_logger.critical(msg=f'{log_msg} \n')
+                # self.logger.critical(msg=f'{log_msg} \n')
+                # self.error_file_logger.critical(msg=f'{log_msg} \n')
+                self._log_critical(msg=log_msg)
                 self.publisher_of_dlx_queue.publish(kw['body'])  # 发布到死信队列，不重回当前队列
                 function_result_status._has_to_dlx_queue = True
             if isinstance(e, kill_remote_task.TaskHasKilledError):
                 log_msg = f'task_id 为 {task_id} , 函数 [{self.consuming_function.__name__}] 运行入参 {function_only_params}   ，已被远程指令杀死 {type(e)}  {e}'
-                self.logger.critical(msg=f'{log_msg} ')
-                self.error_file_logger.critical(msg=f'{log_msg} ')
+                # self.logger.critical(msg=f'{log_msg} ')
+                # self.error_file_logger.critical(msg=f'{log_msg} ')
+                self._log_critical(msg=log_msg)
                 function_result_status._has_kill_task = True
             if isinstance(e, (ExceptionForRequeue, ExceptionForPushToDlxqueue, kill_remote_task.TaskHasKilledError)):
                 return function_result_status
             log_msg = f'''函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次运行发生错误，
-                              函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是  {function_only_params}    \n 原因是 {type(e)} {e} '''
-            self.logger.error(msg=f'{log_msg} \n', exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
-            self.error_file_logger.error(msg=f'{log_msg} \n', exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
+                          函数运行时间是 {round(time.time() - t_start, 4)} 秒,  入参是  {function_only_params}    
+                          {type(e)} {e} '''
+            # self.logger.error(msg=f'{log_msg} \n', exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
+            # self.error_file_logger.error(msg=f'{log_msg} \n', exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
+            self._log_error(msg=log_msg, exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
             # traceback.print_exc()
             function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
             function_result_status.result = FunctionResultStatus.FUNC_RUN_ERROR
@@ -877,8 +891,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if self._is_push_to_dlx_queue_when_retry_max_times:
                     log_msg += f'  。发送到死信队列 {self._dlx_queue_name} 中'
                     await simple_run_in_executor(self.publisher_of_dlx_queue.publish, kw['body'])
-                self.logger.critical(msg=f'{log_msg} \n', )
-                self.error_file_logger.critical(msg=f'{log_msg} \n')
+                # self.logger.critical(msg=f'{log_msg} \n', )
+                # self.error_file_logger.critical(msg=f'{log_msg} \n')
+                self._log_critical(msg=log_msg)
 
                 # self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
             if self._get_priority_conf(kw, 'is_using_rpc_mode'):
@@ -899,24 +914,26 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
                 avarage_function_spend_time = round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)
                 msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
-                      f'函数平均运行耗时 {avarage_function_spend_time} 秒'
-                if self._msg_num_in_broker != -1:
-                    if self._msg_num_in_broker != -1:  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
-                        # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
-                        need_time = time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / (self._execute_task_times_every_unit_time / self._unit_time_for_count) /
-                                                                            self._distributed_consumer_statistics.active_consumer_num)
-                        msg += f''' ，预计还需要 {need_time}''' + \
-                               f''' 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
-                self.logger.info(msg)
+                      f'函数平均运行耗时 {avarage_function_spend_time} 秒。 '
+                self.logger.debug(msg)
+                if self._msg_num_in_broker != -1 and time.time() - self._last_show_remaining_execution_time > self._show_remaining_execution_time_interval:  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
+                    # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
+                    need_time = time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / (self._execute_task_times_every_unit_time / self._unit_time_for_count) /
+                                                                        self._distributed_consumer_statistics.active_consumer_num)
+                    msg += f''' 预计还需要 {need_time} 时间 才能执行完成 队列 {self.queue_name} 中的 {self._msg_num_in_broker} 个剩余任务'''
+                    self.logger.info(msg)
+                    self._last_show_remaining_execution_time = time.time()
                 self._current_time_for_execute_task_times_every_unit_time = time.time()
                 self._consuming_function_cost_time_total_every_unit_time = 0
                 self._execute_task_times_every_unit_time = 0
+
             if self._user_custom_record_process_info_func:
                 await self._user_custom_record_process_info_func(current_function_result_status)
         except BaseException as e:
             log_msg = f' error 严重错误 {type(e)} {e} '
-            self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
-            self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
+            # self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
+            # self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
+            self._log_critical(msg=log_msg, exc_info=True)
 
     # noinspection PyProtectedMember
     async def _async_run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
@@ -931,8 +948,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             corotinue_obj = self.consuming_function(**function_only_params)
             if not asyncio.iscoroutine(corotinue_obj):
                 log_msg = f'''当前设置的并发模式为 async 并发模式，但消费函数不是异步协程函数，请不要把消费函数 {self.consuming_function.__name__} 的 concurrent_mode 设置为 4'''
-                self.logger.critical(msg=f'{log_msg} \n')
-                self.error_file_logger.critical(msg=f'{log_msg} \n')
+                # self.logger.critical(msg=f'{log_msg} \n')
+                # self.error_file_logger.critical(msg=f'{log_msg} \n')
+                self._log_critical(msg=log_msg)
                 # noinspection PyProtectedMember,PyUnresolvedReferences
                 os._exit(444)
             if self._function_timeout == 0:
@@ -950,8 +968,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         except BaseException as e:
             if isinstance(e, (ExceptionForRequeue,)):  # mongo经常维护备份时候插入不了或挂了，或者自己主动抛出一个ExceptionForRequeue类型的错误会重新入队，不受指定重试次数逇约束。
                 log_msg = f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e} 。 消息重新放入当前队列 {self._queue_name}'
-                self.logger.critical(msg=f'{log_msg} \n')
-                self.error_file_logger.critical(msg=f'{log_msg} \n')
+                # self.logger.critical(msg=f'{log_msg} \n')
+                # self.error_file_logger.critical(msg=f'{log_msg} \n')
+                self._log_critical(msg=log_msg)
                 # time.sleep(1)  # 防止快速无限出错入队出队，导致cpu和中间件忙
                 await asyncio.sleep(0.1)
                 # return self._requeue(kw)
@@ -959,16 +978,19 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 function_result_status._has_requeue = True
             if isinstance(e, ExceptionForPushToDlxqueue):
                 log_msg = f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}，消息放入死信队列 {self._dlx_queue_name}'
-                self.logger.critical(msg=f'{log_msg} \n')
-                self.error_file_logger.critical(msg=f'{log_msg} \n')
+                # self.logger.critical(msg=f'{log_msg} \n')
+                # self.error_file_logger.critical(msg=f'{log_msg} \n')
+                self._log_critical(msg=log_msg)
                 await simple_run_in_executor(self.publisher_of_dlx_queue.publish, kw['body'])  # 发布到死信队列，不重回当前队列
                 function_result_status._has_to_dlx_queue = True
             if isinstance(e, (ExceptionForRequeue, ExceptionForPushToDlxqueue)):
                 return function_result_status
             log_msg = f'''函数 {self.consuming_function.__name__}  第{current_retry_times + 1}次运行发生错误，
-                              函数运行时间是 {round(time.time() - t_start, 4)} 秒,\n  入参是  {function_only_params}    \n 原因是 {type(e)} {e} '''
-            self.logger.error(msg=f'{log_msg} \n', exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
-            self.error_file_logger.error(msg=f'{log_msg} \n', exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
+                          函数运行时间是 {round(time.time() - t_start, 4)} 秒,  入参是  {function_only_params}     
+                          原因是 {type(e)} {e} '''
+            # self.logger.error(msg=f'{log_msg} \n', exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
+            # self.error_file_logger.error(msg=f'{log_msg} \n', exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
+            self._log_error(msg=log_msg, exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
             function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
             function_result_status.result = FunctionResultStatus.FUNC_RUN_ERROR
         return function_result_status
@@ -1005,8 +1027,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         misfire_grace_time = self._get_priority_conf(event.function_kwargs["kw"], 'misfire_grace_time')
         log_msg = f''' 现在时间是 {time_util.DatetimeConverter().datetime_str} ,比此任务规定的本应该的运行时间 {event.scheduled_run_time} 相比 超过了指定的 {misfire_grace_time} 秒,放弃执行此任务 
                              {event.function_kwargs["kw"]["body"]} '''
-        self.logger.critical(msg=f'{log_msg} \n')
-        self.error_file_logger.critical(msg=f'{log_msg} \n')
+        # self.logger.critical(msg=f'{log_msg} \n')
+        # self.error_file_logger.critical(msg=f'{log_msg} \n')
+        self._log_critical(msg=log_msg)
         self._confirm_consume(event.function_kwargs["kw"])
 
         '''

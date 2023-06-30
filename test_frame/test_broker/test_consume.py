@@ -42,7 +42,7 @@ pool2 = ProcessPoolExecutor(4)
 def f2(a, b):
     # time.sleep(100)
     time.sleep(1)
-    if random.random() > 0.91:
+    if random.random() > 0.2:
         raise ValueError('普通错误会对函数重试n次')
     # if random.random() > 0.8:
     #     raise ExceptionForRequeue('重新入队去吧')
@@ -62,11 +62,11 @@ if __name__ == '__main__':
     # nb_log.LogManager(f2.consumer.logger.name).remove_handler_by_handler_class(nb_log.handlers.ColorHandler)
     print(f2.consumer.logger.level)
 
-    for i in range(5):
+    for i in range(1):
         f2.push(i, i * 5)
 
 
-    print(IdeAutoCompleteHelper(f2).__dict__)
+    f2.consume()
 
     # for queue_name,consumex in boost_queue__fun_map.items():
     #     consumex.consume()

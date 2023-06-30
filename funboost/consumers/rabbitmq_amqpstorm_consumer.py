@@ -29,7 +29,7 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
         rp = RabbitmqPublisherUsingAmqpStorm(self.queue_name,broker_exclusive_config=self.broker_exclusive_config)
         rp.init_broker()
         rp.channel_wrapper_by_ampqstormbaic.qos(self._concurrent_num)
-        rp.channel_wrapper_by_ampqstormbaic.consume(callback=callback, queue=self.queue_name, no_ack=False)
+        rp.channel_wrapper_by_ampqstormbaic.consume(callback=callback, queue=self.queue_name, no_ack=False,)
         rp.channel.start_consuming(auto_decode=True)
 
     def _confirm_consume(self, kw):

@@ -27,7 +27,7 @@ from funboost.utils.simple_data_class import DataClassBase
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  以下是中间件连接配置    $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 
-MONGO_CONNECT_URL = f'mongodb://127.0.0.1:27017'  # 如果有密码连接 'mongodb://myUserAdmin:8mwTdy1klnSYepNo@192.168.199.202:27016/MONGO_CONNECT_URL = 'mongodb://root:123456@192.168.64.151:27017?authSource=admin''
+MONGO_CONNECT_URL = f'mongodb://127.0.0.1:27017'  # 如果有密码连接 'mongodb://myUserAdmin:8mwTdy1klnSYepNo@192.168.199.202:27016/'   authSource 指定鉴权db，MONGO_CONNECT_URL = 'mongodb://root:123456@192.168.64.151:27017?authSource=admin'
 
 RABBITMQ_USER = 'rabbitmq_user'
 RABBITMQ_PASS = 'rabbitmq_pass'

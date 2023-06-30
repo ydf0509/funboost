@@ -1,15 +1,20 @@
 import time
 import celery.result
+import requests
+
 from funboost import boost, BrokerEnum
+from funboost.assist.celery_helper import CeleryHelper
 
 
-@boost('tets_funboost_celery_queue31a', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
+@boost('tets_funboost_celery_queue31a5', broker_kind=BrokerEnum.CELERY, concurrent_num=10,is_print_detail_exception=False,
        broker_exclusive_config={'celery_app_config':
                                     {'task_default_rate_limit': '1/s', }}
        )
 def fa(x, y):
     time.sleep(3)
     print(6666, x, y)
+    requests.get('123')
+    1/0
     return x + y
 
 
@@ -25,13 +30,15 @@ def fb(a, b):
 
 if __name__ == '__main__':
     fa.consume()
-    fb.consume()
+    # fb.consume()
 
-    for i in range(1000):
+    for i in range(1):
         r = fa.push(i, i + 1)  # type: celery.result.AsyncResult
-        print(type(r), r)
+        # print(type(r), r)
         # print(r.get())
-        fb.push(i, i * 2)
+        # fb.push(i, i * 2)
+
+    CeleryHelper.realy_start_celery_worker()
 
 '''
 

@@ -41,11 +41,12 @@ def test_fun2(x):
     # random_sleep = random.randrange(1,50000) / 10000
     # time.sleep(random_sleep)
     # print(x,random_sleep)
-    # time.sleep(20000)
+    time.sleep(20)
     print(x )
     return x
 
 
 if __name__ == '__main__':
     # test_fun.consume()
+    test_fun2.push(1)
     test_fun2.consume()

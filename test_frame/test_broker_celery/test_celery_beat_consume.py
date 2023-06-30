@@ -6,14 +6,14 @@ from funboost import boost, BrokerEnum
 from funboost.consumers.celery_consumer import CeleryHelper
 
 
-@boost('celery_beat_queue_7a2b2', broker_kind=BrokerEnum.CELERY, qps=5)
+@boost('celery_beat_queue_7a2b6', broker_kind=BrokerEnum.CELERY, qps=5)
 def f_beat(x, y):
     time.sleep(3)
     print(1111, x, y)
     return x + y
 
 
-@boost('celery_beat_queueb_8a2b2', broker_kind=BrokerEnum.CELERY, qps=1, broker_exclusive_config={'celery_task_config': {'default_retry_delay': 60 * 5}})
+@boost('celery_beat_queueb_8a2b6', broker_kind=BrokerEnum.CELERY, qps=1, broker_exclusive_config={'celery_task_config': {'default_retry_delay': 60 * 5}})
 def f_beat2(a, b):
     time.sleep(2)
     print(2222, a, b)
@@ -36,7 +36,10 @@ beat_schedule = {  # 这是100% 原汁原味的celery 定时任务配置方式
 }
 
 if __name__ == '__main__':
-    f_beat2(a=6,b=2)
+    f_beat2(a=6, b=2)
+    for i in range(10):
+        f_beat.push(i, i * 2)
+        f_beat2.push(i, i * 10)
     CeleryHelper.start_flower(port=5556)  # 启动flower 网页，这个函数也可以单独的脚本中启动
     CeleryHelper.celery_start_beat(beat_schedule)  # 配置和启动定时任务，这个函数也可以在单独的脚本中启动，但脚本中需要 先import 导入@boost装饰器函数所在的脚本，因为@boost时候consumer的custom_init中注册celery任务路由，之后才能使定时任务发送到正确的消息队列。
     print(CeleryHelper.celery_app.conf)

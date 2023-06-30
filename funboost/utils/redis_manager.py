@@ -14,7 +14,7 @@ class RedisManager(object):
         if (host, port, db, password) not in self.__class__._pool_dict:
             # print ('创建一个连接池')
             self.__class__._pool_dict[(host, port, db, password)] = redis.ConnectionPool(host=host, port=port, db=db,
-                                                                                         password=password)
+                                                                                         password=password,max_connections=100)
         self._r = redis.Redis(connection_pool=self._pool_dict[(host, port, db, password)])
         self._ping()
 
@@ -41,7 +41,7 @@ class RedisMixin(object):
     @decorators.cached_method_result
     def redis_db0(self):
         return RedisManager(host=funboost_config_deafult.REDIS_HOST, port=funboost_config_deafult.REDIS_PORT,
-                            password=funboost_config_deafult.REDIS_PASSWORD, db=0).get_redis()
+                            password=funboost_config_deafult.REDIS_PASSWORD, db=0,).get_redis()
 
     @property
     @decorators.cached_method_result

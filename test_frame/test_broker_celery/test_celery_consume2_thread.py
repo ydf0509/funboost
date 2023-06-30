@@ -23,21 +23,25 @@ def f1(x, y):
         return x + y
 
 
-@boost(queue_2, broker_kind=BrokerEnum.CELERY, qps=0.5, )
+@boost('celery_qq4b2', broker_kind=BrokerEnum.CELERY, log_level=20)
 def f2(a, b):
-    time.sleep(2)
-    print('嘻嘻', a, b)
+    # time.sleep(2)
+    # print('嘻嘻', a, b)
+    if a % 1000 == 0:
+        print(a)
     return a - b
 
 
 if __name__ == '__main__':
-    # for i in range(200):
-    #     f1.push(i, i * 2)
-    #     f2.push(a=i, b=i * 10)
+    for i in range(20000):
+        # f1.push(i, i * 2)
+        if i % 1000 == 0:
+            print(i)
+        f2.push(a=i, b=i * 10)
 
-    f1.consume()
+    # f1.consume()
     f2.consume()
-    CeleryHelper.use_nb_log_instead_celery_log(logging.INFO, 'celery_run.log')
+    CeleryHelper.use_nb_log_instead_celery_log(logging.WARNING, 'celery_run.log')
     CeleryHelper.realy_start_celery_worker()
 
     '''

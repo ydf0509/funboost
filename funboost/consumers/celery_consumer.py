@@ -161,22 +161,22 @@ class CeleryConsumer(AbstractConsumer):
                          max_retries=self._max_retry_times,
                          **self.broker_exclusive_config['celery_task_config'],
                          bind=True)
-        def f(this,*args, **kwargs):
+        def f(this, *args, **kwargs):
             self.logger.debug(f' 这条消息是 celery 从 {self.queue_name} 队列中取出 ,是由 celery 框架调度 {self.consuming_function.__name__} 函数处理: args:  {args} ,  kwargs: {kwargs}')
             # return self.consuming_function(*args, **kwargs) # 如果没有声明 autoretry_for ，那么消费函数出错了就不会自动重试了。
             try:
                 return self.consuming_function(*args, **kwargs)
-            except BaseException as exc: # 改成自动重试。
+            except BaseException as exc:  # 改成自动重试。
                 # print(this.request.__dict__,dir(this))
 
                 if this.request.retries != self._max_retry_times:
                     log_msg = f'fun: {self.consuming_function}  args: {args} , kwargs: {kwargs} 消息第{this.request.retries}次运行出错,  {exc} \n'
-                    self._log_error(log_msg,exc_info=self._is_print_detail_exception)
+                    self._log_error(log_msg, exc_info=self._is_print_detail_exception)
                 else:
                     log_msg = f'fun: {self.consuming_function}  args: {args} , kwargs: {kwargs} 消息达到最大重试次数{this.request.retries}次仍然出错,  {exc} \n'
                     self._log_critical(log_msg, exc_info=self._is_print_detail_exception)
                 # 发生异常，尝试重试任务,countdown 是多少秒后重试
-                raise this.retry(exc=exc,countdown=5)
+                raise this.retry(exc=exc, countdown=5)
 
         celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})  # 自动配置celery每个函数使用不同的队列名。
         self.celery_task = f

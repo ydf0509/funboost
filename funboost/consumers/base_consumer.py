@@ -455,12 +455,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     ''' 日志跳转代码行不正确，不用这种方式'''
 
     def _log_error(self, msg, exc_info=None):
-        self.logger.error(msg=f'{msg} \n', exc_info=exc_info,extra={'sys_getframe_n': 3})
-        self.error_file_logger.error(msg=f'{msg} \n', exc_info=exc_info,extra={'sys_getframe_n': 3})
+        self.logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})
+        self.error_file_logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})
 
     def _log_critical(self, msg, exc_info=None):
-        self.logger.critical(msg=f'{msg} \n', exc_info=exc_info,extra={'sys_getframe_n': 3})
-        self.error_file_logger.critical(msg=f'{msg} \n', exc_info=exc_info,extra={'sys_getframe_n': 3})
+        self.logger.critical(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})
+        self.error_file_logger.critical(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})
 
     @property
     @decorators.synchronized

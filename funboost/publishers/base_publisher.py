@@ -15,7 +15,7 @@ from functools import wraps
 from threading import Lock
 import datetime
 import amqpstorm
-from kombu.exceptions import KombuError
+
 from pikav1.exceptions import AMQPError as PikaAMQPError
 
 from nb_log import LoggerLevelSetterMixin, get_logger, LoggerMixin
@@ -312,7 +312,8 @@ def deco_mq_conn_error(f):
             # noinspection PyBroadException
             try:
                 return f(self, *args, **kwargs)
-            except (PikaAMQPError, amqpstorm.AMQPError, KombuError) as e:  # except BaseException as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
+
+            except (PikaAMQPError, amqpstorm.AMQPError, ) as e:  # except BaseException as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
                 self.logger.error(f'中间件链接出错   ,方法 {f.__name__}  出错 ，{e}')
                 self.init_broker()
                 return f(self, *args, **kwargs)

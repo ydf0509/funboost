@@ -87,7 +87,7 @@ class CeleryHelper:
         '''
         并发数量在app配置中已经制定了。自己用 update_celery_app_conf 方法更新就好了。
         celery_app.conf.update({
-             'worker_redirect_stdouts': False,
+             # 'worker_redirect_stdouts': False,
              'worker_concurrency': 200
          }
         '''

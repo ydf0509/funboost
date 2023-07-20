@@ -1,4 +1,4 @@
-## 这里的不用管，没及时更新维护， pip install funboost 自动安装所有依赖包
+## 这里的不用管，没及时更新维护， pip install funboost 自动安装所有依赖包，请看setup.py 这才是及时更新的。
 
 eventlet~=0.33.3
 gevent~=21.12.0

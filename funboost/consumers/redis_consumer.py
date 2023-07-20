@@ -17,7 +17,7 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
     这个是复杂版，一次性拉取100个，简单版在 funboost/consumers/redis_consumer_simple.py
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'redis_bulk_push':0}   #redis_bulk_push 是否redis批量推送
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'redis_bulk_push':1}   #redis_bulk_push 是否redis批量推送
 
     # noinspection DuplicatedCode
     def _shedual_task000(self):
@@ -33,6 +33,8 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
     # noinspection DuplicatedCode
     def _shedual_task(self):
         while True:
+            # if False:
+            #     pass
             with self.redis_db_frame_version3.pipeline() as p:
                 get_msg_batch_size = 100
                 p.lrange(self._queue_name, 0, get_msg_batch_size - 1)

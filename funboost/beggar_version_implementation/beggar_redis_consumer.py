@@ -16,7 +16,7 @@
 import json
 import redis
 from concurrent.futures import ThreadPoolExecutor
-from funboost import patch_print, funboost_config_deafult
+from funboost import funboost_config_deafult
 
 
 

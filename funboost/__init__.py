@@ -10,7 +10,6 @@ from funboost.set_frame_config import patch_frame_config, show_frame_config
 from funboost.funboost_config_deafult import BoostDecoratorDefaultParams
 
 from funboost.core.fabric_deploy_helper import fabric_deploy, kill_all_remote_tasks
-
 from funboost.utils.paramiko_util import ParamikoFolderUploader
 
 from funboost.consumers.base_consumer import (ExceptionForRequeue, ExceptionForRetry, ExceptionForPushToDlxqueue,
@@ -35,6 +34,7 @@ from funboost.core.kill_remote_task import RemoteTaskKiller
 
 from funboost.core.exit_signal import set_interrupt_signal_handler
 from funboost.core.helper_funs import run_forever
+
 
 
 # set_interrupt_signal_handler()

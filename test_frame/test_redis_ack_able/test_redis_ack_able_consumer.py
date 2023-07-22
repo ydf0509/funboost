@@ -8,7 +8,7 @@ from funboost import boost,BrokerEnum,FunctionResultStatusPersistanceConfig
 from funboost.utils import RedisMixin
 import multiprocessing
 
-@boost('test_cost_long_time_fun_queue2d5', broker_kind=BrokerEnum.REDIS, concurrent_num=5,log_level=20,
+@boost('test_cost_long_time_fun_queue2d5', broker_kind=BrokerEnum.REDIS_PRIORITY, concurrent_num=5,log_level=20,
        # function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True)
        )
 def cost_long_time_fun(x):

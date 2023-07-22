@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:07
-from queue import Queue
+from queue import Queue,SimpleQueue
 
 from funboost.publishers.base_publisher import AbstractPublisher
 
@@ -16,7 +16,7 @@ class LocalPythonQueuePublisher(AbstractPublisher):
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
         if self._queue_name not in local_pyhton_queue_name__local_pyhton_queue_obj_map:
-            local_pyhton_queue_name__local_pyhton_queue_obj_map[self._queue_name] = Queue()
+            local_pyhton_queue_name__local_pyhton_queue_obj_map[self._queue_name] = SimpleQueue()
         self.queue = local_pyhton_queue_name__local_pyhton_queue_obj_map[self._queue_name]
 
     def concrete_realization_of_publish(self, msg):

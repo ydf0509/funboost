@@ -2,7 +2,7 @@
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:36
 import json
-from queue import Queue
+from queue import Queue,SimpleQueue
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.publishers import local_python_queue_publisher
@@ -14,7 +14,7 @@ class LocalPythonQueueConsumer(AbstractConsumer):
     """
 
     @property
-    def local_python_queue(self) -> Queue:
+    def local_python_queue(self) -> SimpleQueue:
         return local_python_queue_publisher.local_pyhton_queue_name__local_pyhton_queue_obj_map[self._queue_name]
 
     def _shedual_task(self):

@@ -157,30 +157,22 @@ class CeleryConsumer(AbstractConsumer):
 
     def custom_init(self):
         # 这就是核心，@boost时候会 @ celery app.task装饰器
-<<<<<<< HEAD
         celery_task_deco_options = dict(name=self.queue_name,
-                         max_retries=self._max_retry_times,bind=True)
+                                        max_retries=self._max_retry_times, bind=True)
         if self._qps != 0:
             celery_task_deco_options['rate_limit'] = f'{self._qps}/s'
         if self._function_timeout != 0:
             celery_task_deco_options['soft_time_limit'] = self._function_timeout
         celery_task_deco_options.update(self.broker_exclusive_config['celery_task_config'])
+
         @celery_app.task(**celery_task_deco_options)
-        def f(this, *args, **kwargs):
-=======
-        @celery_app.task(name=self.queue_name, rate_limit=f'{self._qps}/s', time_limit=self._function_timeout,
-                         max_retries=self._max_retry_times,
-                         **self.broker_exclusive_config['celery_task_config'],
-                         bind=True)
-        def f(this:CeleryTask, *args, **kwargs):
->>>>>>> 33eb606217851feab94959eb9f6f53e80fd42199
+        def f(this: CeleryTask, *args, **kwargs):
             self.logger.debug(f' 这条消息是 celery 从 {self.queue_name} 队列中取出 ,是由 celery 框架调度 {self.consuming_function.__name__} 函数处理: args:  {args} ,  kwargs: {kwargs}')
             # return self.consuming_function(*args, **kwargs) # 如果没有声明 autoretry_for ，那么消费函数出错了就不会自动重试了。
             try:
                 return self.consuming_function(*args, **kwargs)
             except BaseException as exc:  # 改成自动重试。
                 # print(this.request.__dict__,dir(this))
-
                 if this.request.retries != self._max_retry_times:
                     log_msg = f'fun: {self.consuming_function}  args: {args} , kwargs: {kwargs} 消息第{this.request.retries}次运行出错,  {exc} \n'
                     self._log_error(log_msg, exc_info=self._is_print_detail_exception)

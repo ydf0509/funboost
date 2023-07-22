@@ -28,11 +28,11 @@ def f_test_speed(x):
 if __name__ == '__main__':
     # f_test_speed.clear()
 
-    for i in range(135000):
+    for i in range(15000):
         f_test_speed.push(i)
 
     f_test_speed.consume()
-    CeleryHelper.realy_start_celery_worker()
+    CeleryHelper.realy_start_celery_worker(loglevel='ERROR')
 
     # f_test_speed.multi_process_consume(1)
     # # f_test_speed2.consume()

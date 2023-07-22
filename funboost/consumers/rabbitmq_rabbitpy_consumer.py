@@ -12,7 +12,8 @@ class RabbitmqConsumerRabbitpy(AbstractConsumer):
     """
     使用rabbitpy实现的
     """
-
+    def custom_init(self):
+        raise Exception('不建议使用这个中间件模式，建议使用 BrokerEnum.RABBITMQ_AMQPSTORM 操作rabbitmq')
 
     def _shedual_task(self):
         # noinspection PyTypeChecker

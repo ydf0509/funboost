@@ -25,6 +25,7 @@ class RabbitmqConsumer(AbstractConsumer):
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
         self._lock_for_pika = Lock()
+        raise Exception('不建议使用这个中间件模式，建议使用 BrokerEnum.RABBITMQ_AMQPSTORM 操作rabbitmq')
 
     def _shedual_task(self):
         # channel = RabbitMqFactory(is_use_rabbitpy=0).get_rabbit_cleint().creat_a_channel()

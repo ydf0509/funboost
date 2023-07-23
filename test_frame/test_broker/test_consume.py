@@ -33,7 +33,7 @@ def f(x, y):
 
 pool2 = ProcessPoolExecutor(4)
 
-@boost('test_queue77h6', log_level=10, broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM,
+@boost('test_queue77h6bstream6', log_level=10, broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM,
        create_logger_file=True,is_show_message_get_from_broker=True,concurrent_mode=ConcurrentModeEnum.THREADING,
        concurrent_num=50,qps=4,is_print_detail_exception=False,is_push_to_dlx_queue_when_retry_max_times=True,
        # specify_concurrent_pool= pool2,

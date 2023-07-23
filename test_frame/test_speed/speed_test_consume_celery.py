@@ -28,7 +28,7 @@ def f_test_speed(x):
 if __name__ == '__main__':
     # f_test_speed.clear()
 
-    for i in range(15000):
+    for i in range(75000):
         f_test_speed.push(i)
 
     f_test_speed.consume()

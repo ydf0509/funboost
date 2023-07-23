@@ -19,7 +19,7 @@ class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher):
     DURABLE = True
 
     def custom_init(self):
-        arguments = {'x-queue-type':'classic'}    # classic stream lazy quorum
+        arguments = {}     #  {'x-queue-type':'classic'} classic stream lazy quorum
         if self.broker_exclusive_config['x-max-priority']:
             arguments['x-max-priority'] = self.broker_exclusive_config['x-max-priority']
         self.queue_declare_params = dict(queue=self._queue_name, durable=self.DURABLE, arguments=arguments,auto_delete=False)

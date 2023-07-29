@@ -27,9 +27,11 @@ def f_test_speed(x):
 if __name__ == '__main__':
     # f_test_speed.clear()
 
-    for i in range(135000):
+    for i in range(735000):
+        if i % 5000 == 0:
+            print(i)
         f_test_speed.push(i)
 
-    f_test_speed.consume()
-    # f_test_speed.multi_process_consume(1)
+    # f_test_speed.consume()
+    f_test_speed.multi_process_consume(2)
     # # f_test_speed2.consume()

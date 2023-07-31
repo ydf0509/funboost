@@ -10,7 +10,7 @@ print('导入nb_log之后的print是强化版的可点击跳转的')
 logger = get_logger('lalala', log_filename='lalala.log',is_add_elastic_handler=False)
 
 t1 = time.time()
-for i in range(10000):
+for i in range(100000):
     # logger.debug(f'debug是绿色，说明是调试的，代码ok。 ' * 3)
     # logger.info('info是天蓝色，日志正常。 ' * 4)
     # logger.warning('黄色yello，有警告了。 ' * 4)

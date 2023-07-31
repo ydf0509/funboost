@@ -29,7 +29,7 @@ from funboost.timing_job import fsdf_background_scheduler, timing_publish_deco, 
 from funboost.constant import BrokerEnum, ConcurrentModeEnum
 
 from funboost.core.booster import boost, Booster
-from funboost.core.get_booster import get_booster
+from funboost.core.get_booster import get_booster,get_or_create_booster,get_boost_params_and_consuming_function
 from funboost.core.kill_remote_task import RemoteTaskKiller
 
 from funboost.core.exit_signal import set_interrupt_signal_handler

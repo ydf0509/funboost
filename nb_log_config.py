@@ -69,13 +69,13 @@ MONGO_URL = 'mongodb://myUserAdmin:mimamiama@127.0.0.1:27016/admin'
 
 # 项目中的print是否自动写入到文件中。值为None则不重定向print到文件中。 自动每天一个文件， 2023-06-30.my_proj.print,生成的文件位置在定义的LOG_PATH
 # 如果你设置了环境变量，export PRINT_WRTIE_FILE_NAME="my_proj.print" (linux临时环境变量语法，windows语法自己百度这里不举例),那就优先使用环境变量中设置的文件名字，而不是nb_log_config.py中设置的名字
-PRINT_WRTIE_FILE_NAME = Path(sys.path[1]).name + '.print'
-# PRINT_WRTIE_FILE_NAME = None
+# PRINT_WRTIE_FILE_NAME = Path(sys.path[1]).name + '.print'
+PRINT_WRTIE_FILE_NAME = None
 
 # 项目中的所有标准输出（不仅包括print，还包括了streamHandler日志）都写入到这个文件，为None将不把标准输出重定向到文件。自动每天一个文件， 2023-06-30.my_proj.std,生成的文件位置在定义的LOG_PATH
 # 如果你设置了环境变量，export SYS_STD_FILE_NAME="my_proj.std"  (linux临时环境变量语法，windows语法自己百度这里不举例),那就优先使用环境变量中设置的文件名字，，而不是nb_log_config.py中设置的名字
-SYS_STD_FILE_NAME = Path(sys.path[1]).name + '.std'
-# SYS_STD_FILE_NAME = None
+# SYS_STD_FILE_NAME = Path(sys.path[1]).name + '.std'
+SYS_STD_FILE_NAME = None
 
 USE_BULK_STDOUT_ON_WINDOWS = True # 在win上是否每隔0.1秒批量stdout,win的io太差了
 

@@ -14,7 +14,7 @@ class LocalPythonQueueConsumer(AbstractConsumer):
     """
 
     @property
-    def local_python_queue(self) -> SimpleQueue:
+    def local_python_queue(self) -> Queue:
         return local_python_queue_publisher.local_pyhton_queue_name__local_pyhton_queue_obj_map[self._queue_name]
 
     def _shedual_task(self):

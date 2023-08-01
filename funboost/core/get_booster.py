@@ -23,3 +23,16 @@ def get_boost_params_and_consuming_function(queue_name: str) -> (dict, typing.Ca
     booster_current_pid = boost(**boost_params)(consuming_function)
     """
     return queue_name__boost_params_consuming_function_map[queue_name]
+
+
+def get_or_create_booster(queue_name, consuming_function, **boost_params, ) -> Booster:
+    """
+    当前进程获得或者创建booster对象。方便有的人需要在函数内部临时动态根据队列名创建booster,不会无数次临时生成消费者、生产者、创建消息队列连接。
+    :param boost_params: 就是 Booster的入参。
+    :return:
+    """
+    try:
+        return get_booster(queue_name)
+    except ValueError:  # 不存在就创建。
+        boost_params['queue_name'] = queue_name
+        return Booster(**boost_params)(consuming_function)

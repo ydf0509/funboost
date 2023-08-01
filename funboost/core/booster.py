@@ -21,6 +21,8 @@ class Booster:
     funboost极其重视代码能在pycharm下自动补全。元编程经常造成在pycharm下代码无法自动补全提示，要是实现代码补全难。
     这种__call__写法在pycahrm下 不仅能补全消费函数的 push consume等方法，也能补全函数本身的入参，一举两得。代码能自动补全很重要。
     一个函数fun被 boost装饰器装饰后， isinstance(fun,Booster) 为True.
+
+    Booster 是把Consumer 和 Publisher的方法集为一体。
     """
 
     def __init__(self, queue_name,

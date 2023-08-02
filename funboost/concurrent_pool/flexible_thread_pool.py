@@ -1,5 +1,9 @@
 """
-比更简单的 ThreadPoolExecutorShrinkAble 的弹性线程池，因为 funboost的并发池永远不需要判断代码结束，所以不用 ThreadPoolExecutorShrinkAble 那么复杂来兼容判断并发池要随代码退出而结束循环
+比更简单的 ThreadPoolExecutorShrinkAble 的弹性线程池。完全彻底从头手工开发
+
+这个线程池 submit没有返回值，不返回future对象，不支持map方法。
+
+此线程池性能比concurrent.futures.ThreadPoolExecutor高200%
 """
 
 import asyncio
@@ -68,20 +72,12 @@ def run_sync_or_async_fun000(func, *args, **kwargs):
 
 
 def run_sync_or_async_fun(func, *args, **kwargs):
-    t1 = time.time()
     fun_is_asyncio = inspect.iscoroutinefunction(func)
-
     if fun_is_asyncio:
-
         loop = asyncio.new_event_loop()
-        # print(time.time() - t1)
         try:
-            # result =  asyncio.run_coroutine_threadsafe(func(*args, **kwargs),loop)
-            # r =result.result()
-            # return r
             return loop.run_until_complete(func(*args, **kwargs))
         finally:
-            pass
             loop.close()
     else:
         return func(*args, **kwargs)
@@ -97,7 +93,7 @@ def sync_or_async_fun_deco(func):
 
 # noinspection PyProtectedMember
 class _KeepAliveTimeThread(threading.Thread):
-    logger = nb_log.get_logger('_KeepAliveTimeThread',log_level_int=20)
+    logger = nb_log.get_logger('_KeepAliveTimeThread', log_level_int=20)
 
     def __init__(self, thread_pool: FlexibleThreadPool):
         super().__init__()

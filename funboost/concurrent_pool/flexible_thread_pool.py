@@ -26,6 +26,7 @@ class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
         self._lock_for_adjust_thread = threading.Lock()
         self._lock_for_judge_threads_free_count = threading.Lock()
         self.pool_ident = id(self)
+        self.asyncio_loop = asyncio.new_event_loop()
 
     def _change_threads_free_count(self, change_num):
         with self._lock_compute_threads_free_count:

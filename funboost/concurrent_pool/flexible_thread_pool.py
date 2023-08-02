@@ -42,10 +42,11 @@ class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
             if self.threads_free_count <= self.MIN_WORKERS and self._threads_num < self.max_workers:
                 _KeepAliveTimeThread(self).start()
 
+
 # loop = asyncio.get_event_loop()
 
 def run_sync_or_async_fun000(func, *args, **kwargs):
-    t1 =time.time()
+    t1 = time.time()
     fun_is_asyncio = inspect.iscoroutinefunction(func)
 
     if fun_is_asyncio:
@@ -65,8 +66,9 @@ def run_sync_or_async_fun000(func, *args, **kwargs):
     else:
         return func(*args, **kwargs)
 
+
 def run_sync_or_async_fun(func, *args, **kwargs):
-    t1 =time.time()
+    t1 = time.time()
     fun_is_asyncio = inspect.iscoroutinefunction(func)
 
     if fun_is_asyncio:
@@ -95,7 +97,7 @@ def sync_or_async_fun_deco(func):
 
 # noinspection PyProtectedMember
 class _KeepAliveTimeThread(threading.Thread):
-    logger = nb_log.get_logger('_KeepAliveTimeThread')
+    logger = nb_log.get_logger('_KeepAliveTimeThread',log_level_int=20)
 
     def __init__(self, thread_pool: FlexibleThreadPool):
         super().__init__()
@@ -109,7 +111,6 @@ class _KeepAliveTimeThread(threading.Thread):
             try:
                 func, args, kwargs = self.pool.work_queue.get(block=True, timeout=self.pool.KEEP_ALIVE_TIME)
             except queue.Empty:
-
                 with self.pool._lock_for_judge_threads_free_count:
                     # print(self.pool.threads_free_count)
                     if self.pool.threads_free_count > self.pool.MIN_WORKERS:

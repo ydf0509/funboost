@@ -42,8 +42,9 @@ class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
             if self.threads_free_count <= self.MIN_WORKERS and self._threads_num < self.max_workers:
                 _KeepAliveTimeThread(self).start()
 
+# loop = asyncio.get_event_loop()
 
-def run_sync_or_async_fun(func, *args, **kwargs):
+def run_sync_or_async_fun000(func, *args, **kwargs):
     t1 =time.time()
     fun_is_asyncio = inspect.iscoroutinefunction(func)
 
@@ -52,14 +53,34 @@ def run_sync_or_async_fun(func, *args, **kwargs):
             loop = asyncio.get_event_loop()
         except RuntimeError:
             loop = asyncio.new_event_loop()
-        print(time.time() - t1)
+        # print(time.time() - t1)
         try:
-            result =  loop.run_until_complete(func(*args, **kwargs))
-
-            return result
+            # result =  asyncio.run_coroutine_threadsafe(func(*args, **kwargs),loop)
+            # r =result.result()
+            # return r
+            return loop.run_until_complete(func(*args, **kwargs))
         finally:
             pass
             # loop.close()
+    else:
+        return func(*args, **kwargs)
+
+def run_sync_or_async_fun(func, *args, **kwargs):
+    t1 =time.time()
+    fun_is_asyncio = inspect.iscoroutinefunction(func)
+
+    if fun_is_asyncio:
+
+        loop = asyncio.new_event_loop()
+        # print(time.time() - t1)
+        try:
+            # result =  asyncio.run_coroutine_threadsafe(func(*args, **kwargs),loop)
+            # r =result.result()
+            # return r
+            return loop.run_until_complete(func(*args, **kwargs))
+        finally:
+            pass
+            loop.close()
     else:
         return func(*args, **kwargs)
 
@@ -103,7 +124,7 @@ class _KeepAliveTimeThread(threading.Thread):
                 t1 = time.time()
                 fun = sync_or_async_fun_deco(func)
                 result = fun(*args, **kwargs)
-                print(time.time()-t1)
+                # print(time.time()-t1)
                 # print(result)
             except BaseException as exc:
                 self.logger.exception(f'函数 {func.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
@@ -124,7 +145,8 @@ if __name__ == '__main__':
 
     async def aiotestf(x):
         # await asyncio.sleep(1)
-        # print(x)
+        if x % 10 == 0:
+            print(x)
         return x * 2
 
 
@@ -132,9 +154,13 @@ if __name__ == '__main__':
     # pool = ThreadPoolExecutor(100)
     # pool = ThreadPoolExecutorShrinkAble(100)
 
-    for i in range(2000):
+    for i in range(20000):
         # time.sleep(2)
         pool.submit(aiotestf, i)
 
     # for i in range(1000000):
     #     pool.submit(testf, i)
+
+    # while 1:
+    #     time.sleep(1000)
+    # loop.run_forever()

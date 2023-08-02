@@ -9,7 +9,6 @@ import nb_log
 from nb_log import LoggerMixin, LoggerLevelSetterMixin
 
 
-
 class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
     KEEP_ALIVE_TIME = 10
     MIN_WORKERS = 0
@@ -57,7 +56,7 @@ class _KeepAliveTimeThread(threading.Thread):
             except queue.Empty:
 
                 with self._lock_for_judge_threads_free_count:
-                    print(self.pool.threads_free_count)
+                    # print(self.pool.threads_free_count)
                     if self.pool.threads_free_count > self.pool.MIN_WORKERS:
                         self.logger.debug(f'停止线程 {self._ident}, 触发条件是 {self.pool.pool_ident} 线程池中的 {self.ident} 线程 超过 {self.pool.KEEP_ALIVE_TIME} 秒没有任务，线程池中不在工作状态中的线程数量是 {self.pool.threads_free_count}，超过了指定的最小核心数量 {self.pool.MIN_WORKERS}')
                         self.pool._change_threads_free_count(-1)
@@ -71,7 +70,6 @@ class _KeepAliveTimeThread(threading.Thread):
 
                 result = func(*args, **kwargs)
                 if asyncio.iscoroutine(result):
-
                     loop = asyncio.new_event_loop()
                     loop.run_until_complete(result)
                     loop.close()
@@ -83,19 +81,27 @@ class _KeepAliveTimeThread(threading.Thread):
 if __name__ == '__main__':
     from concurrent.futures import ThreadPoolExecutor
     from custom_threadpool_executor import ThreadPoolExecutorShrinkAble
+
+
     def testf(x):
         # time.sleep(10)
-        if x%10000 == 0:
+        if x % 10000 == 0:
             print(x)
 
-    async  def aiotestf(x):
+
+    async def aiotestf(x):
         # time.sleep(10)
         await asyncio.sleep(1)
         print(x)
 
 
-    pool = FlexibleThreadPool(3)
+    pool = FlexibleThreadPool(100)
     # pool = ThreadPoolExecutor(100)
     # pool = ThreadPoolExecutorShrinkAble(100)
-    for i in range(20):
-        pool.submit(aiotestf, i)
+
+    # for i in range(20):
+    #     time.sleep(2)
+    #     pool.submit(aiotestf, i)
+
+    for i in range(1000000):
+        pool.submit(testf, i)

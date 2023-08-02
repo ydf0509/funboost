@@ -16,7 +16,7 @@ class LocalPythonQueuePublisher(AbstractPublisher):
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
         if self._queue_name not in local_pyhton_queue_name__local_pyhton_queue_obj_map:
-            local_pyhton_queue_name__local_pyhton_queue_obj_map[self._queue_name] = Queue()
+            local_pyhton_queue_name__local_pyhton_queue_obj_map[self._queue_name] = Queue(10000)
         self.queue = local_pyhton_queue_name__local_pyhton_queue_obj_map[self._queue_name]
 
     def concrete_realization_of_publish(self, msg):

@@ -21,6 +21,7 @@ class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
         self._lock_compute_start_thread = threading.Lock()
         self._lock_compute_threads_free_count = threading.Lock()
         self._lock_for_adjust_thread = threading.Lock()
+        self._lock_for_judge_threads_free_count = threading.Lock()
         self.pool_ident = id(self)
 
     def _change_threads_free_count(self, change_num):
@@ -38,8 +39,8 @@ class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
                 _KeepAliveTimeThread(self).start()
 
 
+# noinspection PyProtectedMember
 class _KeepAliveTimeThread(threading.Thread):
-    _lock_for_judge_threads_free_count = threading.Lock()
     logger = nb_log.get_logger('_KeepAliveTimeThread')
 
     def __init__(self, thread_pool: FlexibleThreadPool):
@@ -47,7 +48,7 @@ class _KeepAliveTimeThread(threading.Thread):
         self.pool = thread_pool
 
     def run(self) -> None:
-        self.logger.debug(f'新启动线程 {self._ident} ')
+        self.logger.debug(f'新启动线程 {self.ident} ')
         self.pool._change_threads_free_count(1)
         self.pool._change_threads_start_count(1)
         while 1:
@@ -55,24 +56,25 @@ class _KeepAliveTimeThread(threading.Thread):
                 func, args, kwargs = self.pool.work_queue.get(block=True, timeout=self.pool.KEEP_ALIVE_TIME)
             except queue.Empty:
 
-                with self._lock_for_judge_threads_free_count:
+                with self.pool._lock_for_judge_threads_free_count:
                     # print(self.pool.threads_free_count)
                     if self.pool.threads_free_count > self.pool.MIN_WORKERS:
-                        self.logger.debug(f'停止线程 {self._ident}, 触发条件是 {self.pool.pool_ident} 线程池中的 {self.ident} 线程 超过 {self.pool.KEEP_ALIVE_TIME} 秒没有任务，线程池中不在工作状态中的线程数量是 {self.pool.threads_free_count}，超过了指定的最小核心数量 {self.pool.MIN_WORKERS}')
+                        self.logger.debug(f'停止线程 {self._ident}, 触发条件是 {self.pool.pool_ident} 线程池中的 {self.ident} 线程 超过 {self.pool.KEEP_ALIVE_TIME} 秒没有任务，线程池中不在工作状态中的线程数量是 {self.pool.threads_free_count}，超过了指定的最小核心数量 {self.pool.MIN_WORKERS}')  # noqa
                         self.pool._change_threads_free_count(-1)
                         self.pool._change_threads_start_count(-1)
                         break  # 退出while 1，即是结束。
                     else:
                         continue
-
             self.pool._change_threads_free_count(-1)
             try:
 
                 result = func(*args, **kwargs)
                 if asyncio.iscoroutine(result):
                     loop = asyncio.new_event_loop()
-                    loop.run_until_complete(result)
-                    loop.close()
+                    try:
+                        loop.run_until_complete(result)
+                    finally:
+                        loop.close()
             except BaseException as exc:
                 self.logger.exception(f'函数 {func.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
             self.pool._change_threads_free_count(1)

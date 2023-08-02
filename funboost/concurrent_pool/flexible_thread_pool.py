@@ -4,6 +4,8 @@
 这个线程池 submit没有返回值，不返回future对象，不支持map方法。
 
 此线程池性能比concurrent.futures.ThreadPoolExecutor高200%
+
+顺便兼容asyns def的函数并发运行
 """
 
 import asyncio
@@ -45,30 +47,6 @@ class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
         with self._lock_for_adjust_thread:
             if self.threads_free_count <= self.MIN_WORKERS and self._threads_num < self.max_workers:
                 _KeepAliveTimeThread(self).start()
-
-
-# loop = asyncio.get_event_loop()
-
-def run_sync_or_async_fun000(func, *args, **kwargs):
-    t1 = time.time()
-    fun_is_asyncio = inspect.iscoroutinefunction(func)
-
-    if fun_is_asyncio:
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-        # print(time.time() - t1)
-        try:
-            # result =  asyncio.run_coroutine_threadsafe(func(*args, **kwargs),loop)
-            # r =result.result()
-            # return r
-            return loop.run_until_complete(func(*args, **kwargs))
-        finally:
-            pass
-            # loop.close()
-    else:
-        return func(*args, **kwargs)
 
 
 def run_sync_or_async_fun(func, *args, **kwargs):
@@ -118,11 +96,8 @@ class _KeepAliveTimeThread(threading.Thread):
                         continue
             self.pool._change_threads_free_count(-1)
             try:
-                t1 = time.time()
                 fun = sync_or_async_fun_deco(func)
-                result = fun(*args, **kwargs)
-                # print(time.time()-t1)
-                # print(result)
+                fun(*args, **kwargs)
             except BaseException as exc:
                 self.logger.exception(f'函数 {func.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
             self.pool._change_threads_free_count(1)

@@ -1,10 +1,10 @@
-'''
+"""
 比更简单的 ThreadPoolExecutorShrinkAble 的弹性线程池，因为 funboost的并发池永远不需要判断代码结束，所以不用 ThreadPoolExecutorShrinkAble 那么复杂来兼容判断并发池要随代码退出而结束循环
-'''
+"""
+
 import asyncio
 import queue
 import threading
-import time
 import nb_log
 from nb_log import LoggerMixin, LoggerLevelSetterMixin
 
@@ -38,6 +38,15 @@ class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
             if self.threads_free_count <= self.MIN_WORKERS and self._threads_num < self.max_workers:
                 _KeepAliveTimeThread(self).start()
 
+def run_fun(func,*args, **kwargs):
+    result = func(*args, **kwargs)
+    if asyncio.iscoroutine(result):
+        loop = asyncio.new_event_loop()
+        try:
+            result = loop.run_until_complete(result)
+        finally:
+            loop.close()
+    return result
 
 # noinspection PyProtectedMember
 class _KeepAliveTimeThread(threading.Thread):
@@ -67,20 +76,14 @@ class _KeepAliveTimeThread(threading.Thread):
                         continue
             self.pool._change_threads_free_count(-1)
             try:
-
-                result = func(*args, **kwargs)
-                if asyncio.iscoroutine(result):
-                    loop = asyncio.new_event_loop()
-                    try:
-                        loop.run_until_complete(result)
-                    finally:
-                        loop.close()
+                run_fun(func,*args,**kwargs)
             except BaseException as exc:
                 self.logger.exception(f'函数 {func.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
             self.pool._change_threads_free_count(1)
 
 
 if __name__ == '__main__':
+    import time
     from concurrent.futures import ThreadPoolExecutor
     from custom_threadpool_executor import ThreadPoolExecutorShrinkAble
 
@@ -92,7 +95,6 @@ if __name__ == '__main__':
 
 
     async def aiotestf(x):
-        # time.sleep(10)
         await asyncio.sleep(1)
         print(x)
 
@@ -101,9 +103,9 @@ if __name__ == '__main__':
     # pool = ThreadPoolExecutor(100)
     # pool = ThreadPoolExecutorShrinkAble(100)
 
-    # for i in range(20):
-    #     time.sleep(2)
-    #     pool.submit(aiotestf, i)
+    for i in range(20):
+        time.sleep(2)
+        pool.submit(aiotestf, i)
 
-    for i in range(1000000):
-        pool.submit(testf, i)
+    # for i in range(1000000):
+    #     pool.submit(testf, i)

@@ -43,13 +43,22 @@ class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
 
 
 def run_sync_or_async_fun(func, *args, **kwargs):
+    t1 =time.time()
     fun_is_asyncio = inspect.iscoroutinefunction(func)
+
     if fun_is_asyncio:
-        loop = asyncio.new_event_loop()
         try:
-            return loop.run_until_complete(func(*args, **kwargs))
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+        print(time.time() - t1)
+        try:
+            result =  loop.run_until_complete(func(*args, **kwargs))
+
+            return result
         finally:
-            loop.close()
+            pass
+            # loop.close()
     else:
         return func(*args, **kwargs)
 
@@ -90,8 +99,10 @@ class _KeepAliveTimeThread(threading.Thread):
                         continue
             self.pool._change_threads_free_count(-1)
             try:
+                t1 = time.time()
                 fun = sync_or_async_fun_deco(func)
                 result = fun(*args, **kwargs)
+                print(time.time()-t1)
                 # print(result)
             except BaseException as exc:
                 self.logger.exception(f'函数 {func.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
@@ -111,8 +122,8 @@ if __name__ == '__main__':
 
 
     async def aiotestf(x):
-        await asyncio.sleep(1)
-        print(x)
+        # await asyncio.sleep(1)
+        # print(x)
         return x * 2
 
 
@@ -120,8 +131,8 @@ if __name__ == '__main__':
     # pool = ThreadPoolExecutor(100)
     # pool = ThreadPoolExecutorShrinkAble(100)
 
-    for i in range(20):
-        time.sleep(2)
+    for i in range(2000):
+        # time.sleep(2)
         pool.submit(aiotestf, i)
 
     # for i in range(1000000):

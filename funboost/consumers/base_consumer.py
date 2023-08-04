@@ -53,6 +53,7 @@ from funboost.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_
     GeventPoolExecutor, check_gevent_monkey_patch
 from funboost.concurrent_pool.custom_threadpool_executor import \
     CustomThreadPoolExecutor, check_not_monkey
+from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool,sync_or_async_fun_deco,run_sync_or_async_fun
 # from funboost.concurrent_pool.concurrent_pool_with_multi_process import ConcurrentPoolWithProcess
 from funboost.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from funboost.factories.publisher_factotry import get_publisher
@@ -793,10 +794,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         t_start = time.time()
         function_result_status.run_times = current_retry_times + 1
         try:
+            function_run = sync_or_async_fun_deco(self.consuming_function)
             function_timeout = self._get_priority_conf(kw, 'function_timeout')
-            function_run0 = self.consuming_function if self._consumin_function_decorator is None else self._consumin_function_decorator(self.consuming_function)
+            function_run0 = function_run if self._consumin_function_decorator is None else self._consumin_function_decorator(function_run)
             function_run = function_run0 if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
                 function_timeout)(function_run0)
+
             if self._is_support_remote_kill_task:
                 if kill_remote_task.RemoteTaskKiller(self.queue_name, task_id).judge_need_revoke_run():  # 如果远程指令杀死任务，如果还没开始运行函数，就取消运行
                     function_result_status._has_kill_task = True
@@ -1128,8 +1131,9 @@ class ConcurrentModeDispatcher(LoggerMixin):
 
         pool_type = None  # 是按照ThreadpoolExecutor写的三个鸭子类，公有方法名和功能写成完全一致，可以互相替换。
         if self._concurrent_mode == ConcurrentModeEnum.THREADING:
-            pool_type = CustomThreadPoolExecutor
+            # pool_type = CustomThreadPoolExecutor
             # pool_type = BoundedThreadPoolExecutor
+            pool_type = FlexibleThreadPool
         elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
             pool_type = GeventPoolExecutor
         elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:

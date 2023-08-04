@@ -1,5 +1,5 @@
 """
-比更简单的 ThreadPoolExecutorShrinkAble 的弹性线程池。完全彻底从头手工开发
+比 ThreadPoolExecutorShrinkAble 更简单的的弹性线程池。完全彻底从头手工开发
 
 这个线程池 submit没有返回值，不返回future对象，不支持map方法。
 
@@ -20,7 +20,7 @@ from nb_log import LoggerMixin, LoggerLevelSetterMixin
 
 class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
     KEEP_ALIVE_TIME = 10
-    MIN_WORKERS = 0
+    MIN_WORKERS = 1
 
     def __init__(self, max_workers: int = None):
         self.work_queue = queue.Queue(10)
@@ -71,7 +71,7 @@ def sync_or_async_fun_deco(func):
 
 # noinspection PyProtectedMember
 class _KeepAliveTimeThread(threading.Thread):
-    logger = nb_log.get_logger('_KeepAliveTimeThread', log_level_int=20)
+    logger = nb_log.get_logger('_KeepAliveTimeThread', log_level_int=10)
 
     def __init__(self, thread_pool: FlexibleThreadPool):
         super().__init__()

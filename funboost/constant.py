@@ -80,7 +80,7 @@ class BrokerEnum:
 
 
 class ConcurrentModeEnum:
-    THREADING = 1
+    THREADING = 1   # 线程方式运行，兼容支持 async def 的异步函数。
     GEVENT = 2
     EVENTLET = 3
     ASYNC = 4  # asyncio并发，适用于async def定义的函数。

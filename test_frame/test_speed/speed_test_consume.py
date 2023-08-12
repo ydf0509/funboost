@@ -32,6 +32,7 @@ if __name__ == '__main__':
             print(i)
         f_test_speed.push(i)
 
+
     # f_test_speed.consume()
     f_test_speed.multi_process_consume(2)
     # # f_test_speed2.consume()

@@ -26,7 +26,7 @@ class BrokerEnum:
 
     REDIS_ACK_ABLE = 9  # 基于redis的 list + 临时unack的set队列，采用了 lua脚本操持了取任务和加到pengding为原子性，随意重启和掉线不会丢失任务。
 
-    REDIS_PRIORITY = 109 #  # 基于redis的多 list + 临时unack的set队列，blpop监听多个key，和rabbitmq的x-max-priority属性一样，支持任务优先级。看文档4.29优先级队列说明。
+    REDIS_PRIORITY = 109  # # 基于redis的多 list + 临时unack的set队列，blpop监听多个key，和rabbitmq的x-max-priority属性一样，支持任务优先级。看文档4.29优先级队列说明。
 
     SQLACHEMY = 10  # 基于SQLACHEMY 的连接作为分布式消息队列中间件支持持久化和消费确认。支持mysql oracle sqlserver等5种数据库。
 
@@ -70,17 +70,17 @@ class BrokerEnum:
 
     CELERY = 30  # funboost支持celery框架来发布和消费任务，由celery框架来调度执行任务，但是写法简单暴击celery，永无无需关心和操作Celery对象实例。
 
-    DRAMATIQ = 31 # funboost使用 dramatiq 框架作为消息队列，dramatiq类似celery也是任务队列框架。用户使用funboost api来操作dramatiq核心调度。
+    DRAMATIQ = 31  # funboost使用 dramatiq 框架作为消息队列，dramatiq类似celery也是任务队列框架。用户使用funboost api来操作dramatiq核心调度。
 
-    HUEY = 32 # huey任务队列框架作为funboost调度核心
+    HUEY = 32  # huey任务队列框架作为funboost调度核心
 
-    RQ = 33  # huey任务队列框架作为funboost调度核心
+    RQ = 33  # rq任务队列框架作为funboost调度核心
 
     NAMEKO = 40  # funboost支持python微服务框架nameko，用户无需掌握nameko api语法，就玩转python nameko微服务
 
 
 class ConcurrentModeEnum:
-    THREADING = 1   # 线程方式运行，兼容支持 async def 的异步函数。
+    THREADING = 1  # 线程方式运行，兼容支持 async def 的异步函数。
     GEVENT = 2
     EVENTLET = 3
     ASYNC = 4  # asyncio并发，适用于async def定义的函数。

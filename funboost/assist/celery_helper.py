@@ -93,7 +93,7 @@ class CeleryHelper:
         '''
         argv = ['worker', f'--pool={pool_name}',
                 '-n', f'worker_funboost_{worker_name}@%h', f'--loglevel={loglevel}',
-                f'--queues={queue_names_str}',         # 并发数量是
+                f'--queues={queue_names_str}',         # 并发数量是 在app配置中已经制定了。自己用 update_celery_app_conf 方法更新就好了。
                 ]
         logger.info(f'celery 启动work参数 {argv}')
         celery_app.worker_main(argv)

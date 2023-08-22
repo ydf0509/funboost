@@ -6,6 +6,8 @@ from funboost.core import show_funboost_flag
 
 # noinspection PyUnresolvedReferences
 import nb_log
+# noinspection PyUnresolvedReferences
+from nb_log import get_logger,nb_print
 from funboost.set_frame_config import patch_frame_config, show_frame_config
 from funboost.funboost_config_deafult import BoostDecoratorDefaultParams
 

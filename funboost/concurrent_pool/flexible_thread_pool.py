@@ -1,5 +1,11 @@
 """
-比更简单的 ThreadPoolExecutorShrinkAble 的弹性线程池，因为 funboost的并发池永远不需要判断代码结束，所以不用 ThreadPoolExecutorShrinkAble 那么复杂来兼容判断并发池要随代码退出而结束循环
+比 ThreadPoolExecutorShrinkAble 更简单的的弹性线程池。完全彻底从头手工开发
+
+这个线程池 submit没有返回值，不返回future对象，不支持map方法。
+
+此线程池性能比concurrent.futures.ThreadPoolExecutor高200%
+
+顺便兼容asyns def的函数并发运行
 """
 
 import asyncio
@@ -14,7 +20,7 @@ from nb_log import LoggerMixin, LoggerLevelSetterMixin
 
 class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
     KEEP_ALIVE_TIME = 10
-    MIN_WORKERS = 0
+    MIN_WORKERS = 1
 
     def __init__(self, max_workers: int = None):
         self.work_queue = queue.Queue(10)
@@ -44,22 +50,13 @@ class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
 
 
 def run_sync_or_async_fun(func, *args, **kwargs):
-    t1 =time.time()
     fun_is_asyncio = inspect.iscoroutinefunction(func)
-
     if fun_is_asyncio:
+        loop = asyncio.new_event_loop()
         try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-        print(time.time() - t1)
-        try:
-            result =  loop.run_until_complete(func(*args, **kwargs))
-
-            return result
+            return loop.run_until_complete(func(*args, **kwargs))
         finally:
-            pass
-            # loop.close()
+            loop.close()
     else:
         return func(*args, **kwargs)
 
@@ -74,7 +71,7 @@ def sync_or_async_fun_deco(func):
 
 # noinspection PyProtectedMember
 class _KeepAliveTimeThread(threading.Thread):
-    logger = nb_log.get_logger('_KeepAliveTimeThread')
+    logger = nb_log.get_logger('_KeepAliveTimeThread', log_level_int=10)
 
     def __init__(self, thread_pool: FlexibleThreadPool):
         super().__init__()
@@ -88,7 +85,6 @@ class _KeepAliveTimeThread(threading.Thread):
             try:
                 func, args, kwargs = self.pool.work_queue.get(block=True, timeout=self.pool.KEEP_ALIVE_TIME)
             except queue.Empty:
-
                 with self.pool._lock_for_judge_threads_free_count:
                     # print(self.pool.threads_free_count)
                     if self.pool.threads_free_count > self.pool.MIN_WORKERS:
@@ -100,11 +96,8 @@ class _KeepAliveTimeThread(threading.Thread):
                         continue
             self.pool._change_threads_free_count(-1)
             try:
-                t1 = time.time()
                 fun = sync_or_async_fun_deco(func)
-                result = fun(*args, **kwargs)
-                print(time.time()-t1)
-                # print(result)
+                fun(*args, **kwargs)
             except BaseException as exc:
                 self.logger.exception(f'函数 {func.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
             self.pool._change_threads_free_count(1)
@@ -124,7 +117,8 @@ if __name__ == '__main__':
 
     async def aiotestf(x):
         # await asyncio.sleep(1)
-        # print(x)
+        if x % 10 == 0:
+            print(x)
         return x * 2
 
 
@@ -132,9 +126,13 @@ if __name__ == '__main__':
     # pool = ThreadPoolExecutor(100)
     # pool = ThreadPoolExecutorShrinkAble(100)
 
-    for i in range(2000):
+    for i in range(20000):
         # time.sleep(2)
         pool.submit(aiotestf, i)
 
     # for i in range(1000000):
     #     pool.submit(testf, i)
+
+    # while 1:
+    #     time.sleep(1000)
+    # loop.run_forever()

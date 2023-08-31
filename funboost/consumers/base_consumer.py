@@ -543,7 +543,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         from funboost.timing_job import FsdfBackgroundScheduler
         jobstores = {
             "default": RedisJobStore(db=funboost_config_deafult.REDIS_DB, host=funboost_config_deafult.REDIS_HOST,
-                                     port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD, )
+                                     port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD,
+                                     username=funboost_config_deafult.REDIS_USERNAME)
         }
         self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False,
                                                              jobstores=jobstores  # push 方法的序列化带thredignn.lock

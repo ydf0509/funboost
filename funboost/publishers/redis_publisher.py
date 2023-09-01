@@ -9,7 +9,7 @@ from threading import Lock
 
 from funboost import funboost_config_deafult
 from funboost.publishers.base_publisher import AbstractPublisher
-from funboost.publishers.redis_queue_flush import FlushRedisQueueMixin
+from funboost.publishers.redis_queue_flush_mixin import FlushRedisQueueMixin
 from funboost.utils import RedisMixin, decorators
 
 

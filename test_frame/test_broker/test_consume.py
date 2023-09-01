@@ -33,9 +33,9 @@ def f(x, y):
 
 pool2 = ProcessPoolExecutor(4)
 
-@boost('test_queue77h6bstream6', log_level=10, broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM,
+@boost('test_queue77h6bstream6b', log_level=10, broker_kind=BrokerEnum.REDIS_STREAM,
        create_logger_file=True,is_show_message_get_from_broker=True,concurrent_mode=ConcurrentModeEnum.THREADING,
-       concurrent_num=50,qps=4,is_print_detail_exception=False,is_push_to_dlx_queue_when_retry_max_times=True,
+       concurrent_num=50,qps=20,is_print_detail_exception=False,is_push_to_dlx_queue_when_retry_max_times=True,
        # specify_concurrent_pool= pool2,
        # concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,function_timeout=10,
        # function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True,expire_seconds=500000,is_use_bulk_insert=True)
@@ -43,7 +43,7 @@ pool2 = ProcessPoolExecutor(4)
 def f2(a, b):
     # time.sleep(100)
     time.sleep(1)
-    if random.random() > 0.8:
+    if random.random() > 0.5:
         raise ValueError('普通错误会对函数重试n次')
     # if random.random() > 0.8:
     #     raise ExceptionForRequeue('重新入队去吧')

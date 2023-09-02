@@ -145,7 +145,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
         local v = redis.call("blpop",KEYS[1],60)  # redis 的lua 脚本禁止使用blpop
         local v = redis.call("lpop",KEYS[1])
         """
-        script = self.redis_db_frame_version3.register_script(lua)
+        script = self.redis_db_frame.register_script(lua)
         while True:
             task_str_list = script(keys=[self._queue_name, self._unack_zset_name], args=[time.time()])
             if task_str_list:

@@ -24,7 +24,7 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
         while True:
             # if False:
             #     pass
-            with self.redis_db_frame_version3.pipeline() as p:
+            with self.redis_db_frame.pipeline() as p:
                 get_msg_batch_size = 100
                 p.lrange(self._queue_name, 0, get_msg_batch_size - 1)
                 p.ltrim(self._queue_name, get_msg_batch_size, -1)

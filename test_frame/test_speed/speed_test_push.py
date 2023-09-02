@@ -17,7 +17,7 @@ for i in range(500000):
 #
 #
 #
-# r = RedisMixin().redis_db_frame_version3
+# r = RedisMixin().redis_db_frame
 #
 # for _ in range(30):
 #     # r.lpush('speed_test_queue',*[f'{{"x":{i}}}'  for i in  range (200000)])

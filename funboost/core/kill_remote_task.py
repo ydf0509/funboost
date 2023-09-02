@@ -74,11 +74,11 @@ class RemoteTaskKillerZset(RedisMixin, nb_log.LoggerMixin):
         self._lsat_kill_task_ts = time.time()
 
     def send_remote_task_comd(self):
-        self.redis_db_frame_version3.zadd(self._redis_zset_key, {self.task_id: time.time()})
+        self.redis_db_frame.zadd(self._redis_zset_key, {self.task_id: time.time()})
 
     def judge_need_revoke_run(self):
-        if self.redis_db_frame_version3.zrank(self._redis_zset_key, self.task_id) is not None:
-            self.redis_db_frame_version3.zrem(self._redis_zset_key, self.task_id)
+        if self.redis_db_frame.zrank(self._redis_zset_key, self.task_id) is not None:
+            self.redis_db_frame.zrem(self._redis_zset_key, self.task_id)
             return True
         return False
 
@@ -91,8 +91,8 @@ class RemoteTaskKillerZset(RedisMixin, nb_log.LoggerMixin):
                 for t in threading.enumerate():
                     if isinstance(t, ThreadKillAble):
                         thread_task_id = getattr(t, 'task_id', None)
-                        if self.redis_db_frame_version3.zrank(self._redis_zset_key, thread_task_id) is not None:
-                            self.redis_db_frame_version3.zrem(self._redis_zset_key, thread_task_id)
+                        if self.redis_db_frame.zrank(self._redis_zset_key, thread_task_id) is not None:
+                            self.redis_db_frame.zrem(self._redis_zset_key, thread_task_id)
                             t.killed = True
                             t.event_kill.set()
                             kill_thread(t.ident)
@@ -120,12 +120,12 @@ class RemoteTaskKiller(RedisMixin, nb_log.LoggerMixin):
         self._recent_scan_need_kill_task = False
 
     def send_kill_remote_task_comd(self):
-        # self.redis_db_frame_version3.zadd(self.redis_zset_key, {self.task_id: time.time()})
-        self.redis_db_frame_version3.hset(self._redis_hash_key, key=self.task_id, value=time.time())
+        # self.redis_db_frame.zadd(self.redis_zset_key, {self.task_id: time.time()})
+        self.redis_db_frame.hset(self._redis_hash_key, key=self.task_id, value=time.time())
 
     def judge_need_revoke_run(self):
-        if self.redis_db_frame_version3.hexists(self._redis_hash_key, self.task_id):
-            self.redis_db_frame_version3.hdel(self._redis_hash_key, self.task_id)
+        if self.redis_db_frame.hexists(self._redis_hash_key, self.task_id):
+            self.redis_db_frame.hdel(self._redis_hash_key, self.task_id)
             return True
         return False
 
@@ -150,10 +150,10 @@ class RemoteTaskKiller(RedisMixin, nb_log.LoggerMixin):
                         thread_task_id_list.append(thread_task_id)
                         task_id__thread_map[thread_task_id] = t
                 if thread_task_id_list:
-                    values = self.redis_db_frame_version3.hmget(self._redis_hash_key, keys=thread_task_id_list)
+                    values = self.redis_db_frame.hmget(self._redis_hash_key, keys=thread_task_id_list)
                     for idx, thread_task_id in enumerate(thread_task_id_list):
                         if values[idx] is not None:
-                            self.redis_db_frame_version3.hdel(self._redis_hash_key, thread_task_id)
+                            self.redis_db_frame.hdel(self._redis_hash_key, thread_task_id)
                             t = task_id__thread_map[thread_task_id]
                             t.killed = True
                             t.event_kill.set()

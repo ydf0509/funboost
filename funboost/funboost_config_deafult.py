@@ -34,15 +34,16 @@ RABBITMQ_PASS = 'rabbitmq_pass'
 RABBITMQ_HOST = '127.0.0.1'
 RABBITMQ_PORT = 5672
 RABBITMQ_VIRTUAL_HOST = ''  # my_host # 这个是rabbitmq的虚拟子host用户自己创建的，如果你想直接用rabbitmq的根host而不是使用虚拟子host，这里写 空字符串 即可。
-RABBITMQ_URL= f'amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VIRTUAL_HOST}'
+RABBITMQ_URL = f'amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VIRTUAL_HOST}'
 
 REDIS_HOST = '127.0.0.1'
-REDIS_USERNAME=''
+REDIS_USERNAME = ''
 REDIS_PASSWORD = ''
 REDIS_PORT = 6379
 REDIS_DB = 7  # redis消息队列所在db，请不要在这个db放太多其他键值对，框架里面有的功能会scan扫描unacked的键名，使用单独的db。
 REDIS_DB_FILTER_AND_RPC_RESULT = 8  # 如果函数做任务参数过滤 或者使用rpc获取结果，使用这个db，因为这个db的键值对多，和redis消息队列db分开
-REDIS_URL= f'redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+REDIS_URL = f'redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+REDIS_CONN_KWARGS = {'host': REDIS_HOST, 'port': REDIS_PORT, 'username': REDIS_USERNAME, 'password': REDIS_PASSWORD,'db':REDIS_DB}
 
 NSQD_TCP_ADDRESSES = ['127.0.0.1:4150']
 NSQD_HTTP_CLIENT_HOST = '127.0.0.1'
@@ -92,13 +93,6 @@ NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 11  # 7是简短的不可跳�
 FSDF_DEVELOP_LOG_LEVEL = 50  # 作者开发时候的调试代码的日志，仅供我自己用，所以日志级别跳到最高，用户不需要管。
 
 TIMEZONE = 'Asia/Shanghai'
-
-
-
-
-
-
-
 
 # *********************************************** 以下是 boost装饰器的默认全局配置 *******************************************
 """

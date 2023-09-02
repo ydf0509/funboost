@@ -110,14 +110,14 @@ class RedisImpermanencyFilterUsingRedisKey(RedisFilter):
 
     def add_a_value(self, value: typing.Union[str, dict]):
         redis_key = self.__add_dir_prefix(self._get_ordered_str(value))
-        self.redis_db6.set(redis_key, 1)
-        self.redis_db6.expire(redis_key, self._redis_filter_task_expire_seconds)
+        self.redis_db_filter_and_rpc_result.set(redis_key, 1)
+        self.redis_db_filter_and_rpc_result.expire(redis_key, self._redis_filter_task_expire_seconds)
 
     def manual_delete_a_value(self, value: typing.Union[str, dict]):
-        self.redis_db6.delete(self.__add_dir_prefix(self._get_ordered_str(value)))
+        self.redis_db_filter_and_rpc_result.delete(self.__add_dir_prefix(self._get_ordered_str(value)))
 
     def check_value_exists(self, value):
-        return True if self.redis_db6.exists(self.__add_dir_prefix(self._get_ordered_str(value))) else True
+        return True if self.redis_db_filter_and_rpc_result.exists(self.__add_dir_prefix(self._get_ordered_str(value))) else True
 
     def delete_expire_filter_task_cycle(self):
         """

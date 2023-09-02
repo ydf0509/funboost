@@ -8,7 +8,7 @@ lock_key = 'redis_locka2'
 
 
 def f(x):
-    with RedisDistributedLockContextManager(RedisMixin().redis_db_frame_version3, lock_key, ).set_log_level(30) as lock:
+    with RedisDistributedLockContextManager(RedisMixin().redis_db_frame, lock_key, ).set_log_level(30) as lock:
         if lock:
             print(f'获得锁 {x}')
             time.sleep(60)

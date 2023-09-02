@@ -12,6 +12,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired, Length
 from flask_login import login_user, logout_user, login_required, LoginManager, UserMixin
 
+import nb_log
 from funboost import nb_print
 from funboost.function_result_web.functions import get_cols, query_result, get_speed, Statistic
 
@@ -26,6 +27,7 @@ login_manager.login_message = 'Access denied.'
 login_manager.init_app(app)
 
 
+
 class User(UserMixin):
     pass
 
@@ -36,6 +38,9 @@ users = [
     {'id': 'admin', 'user_name': 'admin', 'password': '123456'}
 ]
 
+
+nb_log.get_logger('flask')
+nb_log.get_logger('werkzeug')
 
 def query_user(user_name):
     for user in users:
@@ -133,11 +138,11 @@ def speed_statistic_for_echarts():
 
 
 if __name__ == '__main__':
-    app.jinja_env.auto_reload = True
-    with app.test_request_context():
-        print(url_for('query_cols_view'))
+    # app.jinja_env.auto_reload = True
+    # with app.test_request_context():
+    #     print(url_for('query_cols_view'))
 
-    app.run(debug=True, threaded=True, host='0.0.0.0', port=27018)
+    app.run(debug=False, threaded=True, host='0.0.0.0', port=27018)
 
     '''
     # 第一步 export PYTHONPATH=你的项目根目录 ，这么做是为了这个web可以读取到你项目根目录下的 funboost_config.py里面的配置

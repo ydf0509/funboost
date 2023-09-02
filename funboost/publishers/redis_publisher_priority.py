@@ -3,7 +3,7 @@
 # @Time    : 2022/8/8 0008 12:12
 
 from funboost.publishers.base_publisher import AbstractPublisher
-from funboost.publishers.redis_queue_flush import FlushRedisQueueMixin
+from funboost.publishers.redis_queue_flush_mixin import FlushRedisQueueMixin
 from funboost.utils.redis_manager import RedisMixin
 
 

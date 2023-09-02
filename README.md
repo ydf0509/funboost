@@ -1,5 +1,15 @@
 
+
 # 1.分布式函数调度框架简介
+
+Stargazers:
+
+[![Stargazers repo roster for @ydf0509/funboost](https://reporoster.com/stars/ydf0509/funboost)](https://github.com/ydf0509/funboost/stargazers)
+
+Forkers:
+
+[![Forkers repo roster for @ydf0509/funboost](https://reporoster.com/forks/ydf0509/funboost)](https://github.com/ydf0509/funboost/network/members)
+
 
 <pre style="color: greenyellow;background-color: #0c1119; font-size: medium;">
 pip install funboost ,python全功能分布式函数调度框架,。 支持python所有类型的并发模式和全球一切知名消息队列中间件，

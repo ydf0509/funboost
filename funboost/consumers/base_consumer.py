@@ -346,15 +346,17 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         log_file_handler_type = 1
         if int(os.getenv('is_fsdf_remote_run', 0)) == 1:  # 这个是远程部署的自动的环境变量，用户不需要亲自自己设置这个值。
             log_file_handler_type = 5  # 如果是fabric_deploy 自动化远程部署函数时候，python -c 启动的使用第一个filehandler没记录文件，现在使用第5种filehandler。
-        self.logger = get_logger(logger_name, log_level_int=log_level, log_filename=f'{logger_name}.log' if create_logger_file else None,
-                                 # log_file_handler_type=log_file_handler_type,
-                                 formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+        self.logger = nb_log.LogManager(logger_name, logger_cls=nb_log.CompatibleLogger).get_logger_and_add_handlers(
+            log_level_int=log_level, log_filename=f'{logger_name}.log' if create_logger_file else None,
+            # log_file_handler_type=log_file_handler_type,
+            formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
         self._logger_name = logger_name
         # self.logger.info(f'{self.__class__} 在 {current_queue__info_dict["where_to_instantiate"]}  被实例化')
         logger_name_error = f'{logger_name}_error'
-        self.error_file_logger = get_logger(logger_name_error, log_level_int=log_level, log_filename=f'{logger_name_error}.log',
-                                            is_add_stream_handler=False,
-                                            formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+        self.error_file_logger = nb_log.LogManager(logger_name_error, logger_cls=nb_log.CompatibleLogger).get_logger_and_add_handlers(
+            log_level_int=log_level, log_filename=f'{logger_name_error}.log',
+            is_add_stream_handler=False,
+            formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
 
         stdout_write(f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;37;44m此行 '
                      f'实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')

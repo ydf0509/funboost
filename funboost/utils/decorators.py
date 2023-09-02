@@ -737,15 +737,7 @@ class _Test(unittest.TestCase):
 
         f(5)
 
-    @unittest.skip
-    def test_pysnooper(self):
-        @snoop_deco()
-        def fun2(x):
-            x += 1
-            x += 2
-            print(x)
 
-        fun2(0)
 
 
 if __name__ == '__main__':

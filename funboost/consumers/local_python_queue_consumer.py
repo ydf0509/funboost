@@ -32,3 +32,4 @@ class LocalPythonQueueConsumer(AbstractConsumer):
 
     def _requeue(self, kw):
         self.local_python_queue.put(kw['body'])
+

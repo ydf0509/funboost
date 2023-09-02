@@ -33,11 +33,7 @@ def f(x, y):
 
 pool2 = ProcessPoolExecutor(4)
 
-<<<<<<< HEAD
-@boost('test_queue77h6g', log_level=10, broker_kind=BrokerEnum.REDIS,
-=======
 @boost('test_queue77h6bstream6b', log_level=10, broker_kind=BrokerEnum.REDIS_STREAM,
->>>>>>> master
        create_logger_file=True,is_show_message_get_from_broker=True,concurrent_mode=ConcurrentModeEnum.THREADING,
        concurrent_num=50,qps=20,is_print_detail_exception=False,is_push_to_dlx_queue_when_retry_max_times=True,
        # specify_concurrent_pool= pool2,

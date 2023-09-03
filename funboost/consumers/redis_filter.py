@@ -98,7 +98,7 @@ class RedisImpermanencyFilterUsingRedisKey(RedisFilter):
     直接把任务当做redis的key，使用redis自带的过期机制删除过期的过滤任务。
     基于函数参数的任务过滤。这个是非永久性的过滤，例如设置过滤过期时间是1800秒 ，30分钟前发布过1 + 2 的任务，现在仍然执行，
     如果是30分钟内发布过这个任务，则不执行1 + 2，现在把这个逻辑集成到框架，一般用于接口缓存。
-    这种过滤模式键太多了，很难看，固定放到db6，不放到消息队列的db里面。
+    这种过滤模式键太多了，很难看，固定放到 redis_db_filter_and_rpc_result ，不放到消息队列的db里面。
     """
 
     def __add_dir_prefix(self, value):

@@ -20,7 +20,7 @@ from funboost import funboost_config_deafult
 
 
 
-redis_db_frame = redis.Redis(host=funboost_config_deafult.REDIS_HOST, password=funboost_config_deafult.REDIS_PASSWORD, port=funboost_config_deafult.REDIS_PORT, db=funboost_config_deafult.REDIS_DB)
+redis_db_frame = redis.Redis(host=funboost_config_deafult.REDIS_HOST, password=funboost_config_deafult.REDIS_PASSWORD, port=funboost_config_deafult.REDIS_PORT, db=funboost_config_deafult.REDIS_DB,decode_responses=True)
 
 
 class BeggarRedisConsumer:
@@ -36,7 +36,7 @@ class BeggarRedisConsumer:
             try:
                 redis_task = redis_db_frame.blpop(self.queue_name, timeout=60)
                 if redis_task:
-                    task_str = redis_task[1].decode()
+                    task_str = redis_task[1]
                     print(f'从redis的 [{self.queue_name}] 队列中 取出的消息是： {task_str}  ')
                     task_dict = json.loads(task_str)
                     self.pool.submit(self.consume_function, **task_dict)
@@ -57,7 +57,7 @@ def start_consuming_message(queue_name, consume_function, threads_num=50):
         try:
             redis_task = redis_db_frame.brpop(queue_name, timeout=60)
             if redis_task:
-                task_str = redis_task[1].decode()
+                task_str = redis_task[1]
                 # print(f'从redis的 {queue_name} 队列中 取出的消息是： {task_str}')
                 pool.submit(consume_function, **json.loads(task_str))
             else:

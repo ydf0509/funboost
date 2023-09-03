@@ -11,7 +11,7 @@
 import json
 import time
 
-import redis3
+import redis5
 
 from funboost.consumers.redis_consumer_ack_able import RedisConsumerAckAble
 
@@ -84,7 +84,7 @@ class RedisPriorityConsumer(RedisConsumerAckAble):
                             p.unwatch()
                             p.execute()
                             break
-                except redis3.WatchError:
+                except redis5.WatchError:
                     continue
             if task_tuple:
                 self._print_message_get_from_broker('redis', msg)

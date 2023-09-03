@@ -57,10 +57,9 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHand
         return self._get_all_hearbeat_info_by_redis_key_name(redis_key)
 
     def _get_all_hearbeat_info_partition_by_redis_key_prefix(self, redis_key_prefix):
-        keys = self.redis_db_frame.scan(0, f'{redis_key_prefix}*', 10000)[1]
+        keys = self.redis_db_frame.scan(0, f'{redis_key_prefix}*', count=10000)[1]
         infos_map = {}
         for key in keys:
-            key = key.decode()
             infos = self.redis_db_frame.smembers(key)
             dict_key = key.replace(redis_key_prefix, '')
             infos_map[dict_key] = []

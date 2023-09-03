@@ -2,7 +2,7 @@
 # @Author  : ydf
 # @Time    : 2021/4/3 0008 13:32
 import json
-import redis3
+import redis5
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.utils import RedisMixin, decorators
@@ -35,7 +35,7 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
 
         try:
             self.redis_db_frame.xgroup_create(self._queue_name,self.group , id=0, mkstream=True)
-        except redis3.exceptions.ResponseError as e:
+        except redis5.exceptions.ResponseError as e:
             self.logger.info(e)  # BUSYGROUP Consumer Group name already exists  不能重复创建消费者组。
         while True:
             # redis服务端必须是5.0以上，并且确保这个键的类型是stream不能是list数据结构。

@@ -26,13 +26,13 @@ class RedisBrpopLpushConsumer(AbstractConsumer, RedisMixin):
         while True:
             msg = self.redis_db_frame.brpoplpush(self._queue_name, unack_list_name, timeout=60)
             if msg:
-                self._print_message_get_from_broker('redis', msg.decode())
+                self._print_message_get_from_broker('redis', msg)
                 task_dict = json.loads(msg)
                 kw = {'body': task_dict, 'raw_msg': msg}
                 self._submit_task(kw)
 
     def _confirm_consume(self, kw):
-        self.redis_db_frame.lrem(f'unack_{self._queue_name}_{self.consumer_identification}', kw['raw_msg'], num=1)
+        self.redis_db_frame.lrem(f'unack_{self._queue_name}_{self.consumer_identification}',count=1,value= kw['raw_msg'], )
 
     def _requeue(self, kw):
         self.redis_db_frame.lpush(self._queue_name, json.dumps(kw['body']))
@@ -43,9 +43,9 @@ class RedisBrpopLpushConsumer(AbstractConsumer, RedisMixin):
             if lock.has_aquire_lock:
                 self._distributed_consumer_statistics.send_heartbeat()
                 current_queue_hearbeat_ids = self._distributed_consumer_statistics.get_queue_heartbeat_ids(without_time=True)
-                current_queue_unacked_msg_queues = self.redis_db_frame.scan(0, f'unack_{self._queue_name}_*', 100)
+                current_queue_unacked_msg_queues = self.redis_db_frame.scan(0, f'unack_{self._queue_name}_*', count=100)
                 for current_queue_unacked_msg_queue in current_queue_unacked_msg_queues[1]:
-                    current_queue_unacked_msg_queue_str = current_queue_unacked_msg_queue.decode()
+                    current_queue_unacked_msg_queue_str = current_queue_unacked_msg_queue
                     if current_queue_unacked_msg_queue_str.split(f'unack_{self._queue_name}_')[1] not in current_queue_hearbeat_ids:
                         msg_list = self.redis_db_frame.lrange(current_queue_unacked_msg_queue_str, 0, -1)
                         self.logger.warning(f"""{current_queue_unacked_msg_queue_str} 是掉线或关闭消费者的待确认任务, 将 一共 {len(msg_list)} 个消息,

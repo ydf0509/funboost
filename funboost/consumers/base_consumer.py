@@ -544,9 +544,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _start_delay_task_scheduler(self):
         from funboost.timing_job import FsdfBackgroundScheduler
         jobstores = {
-            "default": RedisJobStore(db=funboost_config_deafult.REDIS_DB, host=funboost_config_deafult.REDIS_HOST,
-                                     port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD,
-                                     username=funboost_config_deafult.REDIS_USERNAME)
+            "default": RedisJobStore(**funboost_config_deafult.REDIS_CONN_KWARGS)
         }
         self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False,
                                                              jobstores=jobstores  # push 方法的序列化带thredignn.lock
@@ -1251,8 +1249,8 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
         results = self.redis_db_frame.smembers(self._redis_key_name)
         with self.redis_db_frame.pipeline() as p:
             for result in results:
-                if self.timestamp() - float(result.decode().split('&&')[-1]) > 15 or \
-                        self._consumer_identification == result.decode().split('&&')[0]:  # 因为这个是10秒钟运行一次，15秒还没更新，那肯定是掉线了。如果消费者本身是自己也先删除。
+                if self.timestamp() - float(result.split('&&')[-1]) > 15 or \
+                        self._consumer_identification == result.split('&&')[0]:  # 因为这个是10秒钟运行一次，15秒还没更新，那肯定是掉线了。如果消费者本身是自己也先删除。
                     p.srem(self._redis_key_name, result)
             p.sadd(self._redis_key_name, f'{self._consumer_identification}&&{self.timestamp()}')
             p.execute()
@@ -1270,9 +1268,9 @@ class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandle
 
     def get_queue_heartbeat_ids(self, without_time: bool):
         if without_time:
-            return [idx.decode().split('&&')[0] for idx in self.redis_db_frame.smembers(self._redis_key_name)]
+            return [idx.split('&&')[0] for idx in self.redis_db_frame.smembers(self._redis_key_name)]
         else:
-            return [idx.decode() for idx in self.redis_db_frame.smembers(self._redis_key_name)]
+            return [idx for idx in self.redis_db_frame.smembers(self._redis_key_name)]
 
     # noinspection PyProtectedMember
     def _get_stop_and_pause_flag_from_redis(self):

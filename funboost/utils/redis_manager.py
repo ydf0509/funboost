@@ -9,6 +9,10 @@ from funboost.utils import decorators
 
 from aioredis.client import Redis as AioRedis
 
+REDIS_CONN_KWARGS = {'host': funboost_config_deafult.REDIS_HOST, 'port': funboost_config_deafult.REDIS_PORT,
+                     'username': funboost_config_deafult.REDIS_USERNAME,
+                     'password': funboost_config_deafult.REDIS_PASSWORD, 'db': funboost_config_deafult.REDIS_DB}
+
 
 class RedisManager(object):
     _redis_db__conn_map = {}
@@ -45,7 +49,7 @@ class AioRedisManager(object):
 
 
 def _get_redis_conn_kwargs_by_db(db):
-    conn_kwargs = copy.copy(funboost_config_deafult.REDIS_CONN_KWARGS)
+    conn_kwargs = copy.copy(REDIS_CONN_KWARGS)
     conn_kwargs['db'] = db
     return conn_kwargs
 
@@ -62,7 +66,7 @@ class RedisMixin(object):
     @property
     @decorators.cached_method_result
     def redis_db_frame(self):
-        return RedisManager(**funboost_config_deafult.REDIS_CONN_KWARGS).get_redis()
+        return RedisManager(**REDIS_CONN_KWARGS).get_redis()
 
     @property
     @decorators.cached_method_result

@@ -53,11 +53,11 @@ from funboost.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_
     GeventPoolExecutor, check_gevent_monkey_patch
 from funboost.concurrent_pool.custom_threadpool_executor import \
     CustomThreadPoolExecutor, check_not_monkey
-from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool,sync_or_async_fun_deco,run_sync_or_async_fun
+from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool, sync_or_async_fun_deco, run_sync_or_async_fun
 # from funboost.concurrent_pool.concurrent_pool_with_multi_process import ConcurrentPoolWithProcess
 from funboost.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from funboost.factories.publisher_factotry import get_publisher
-from funboost.utils import decorators, time_util, RedisMixin, un_strict_json_dumps
+from funboost.utils import decorators, time_util, RedisMixin, un_strict_json_dumps, redis_manager
 # noinspection PyUnresolvedReferences
 from funboost.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
 from funboost import funboost_config_deafult
@@ -544,7 +544,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _start_delay_task_scheduler(self):
         from funboost.timing_job import FsdfBackgroundScheduler
         jobstores = {
-            "default": RedisJobStore(**funboost_config_deafult.REDIS_CONN_KWARGS)
+            "default": RedisJobStore(**redis_manager.REDIS_CONN_KWARGS)
         }
         self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False,
                                                              jobstores=jobstores  # push 方法的序列化带thredignn.lock

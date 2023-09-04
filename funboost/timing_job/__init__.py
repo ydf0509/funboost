@@ -84,7 +84,7 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
         # kwargs['queue_name'] = func.queue_name
 
         """
-        用户如果不使用funboost的 FunboostBackgroundScheduler 类型对象，而是使用原生的apscheduler类型对象，可以scheduler.add_jon(push_fun_params_to_broker,args=(,),kwargs={}) 
+        用户如果不使用funboost的 FunboostBackgroundScheduler 类型对象，而是使用原生的apscheduler类型对象，可以scheduler.add_job(push_fun_params_to_broker,args=(,),kwargs={}) 
         push_fun_params_to_broker函数入参是消费函数队列的 queue_name 加上 原消费函数的入参
         """
         if args is None:

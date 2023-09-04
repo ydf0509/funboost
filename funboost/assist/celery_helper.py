@@ -72,6 +72,10 @@ class CeleryHelper:
         threading.Thread(target=_f).start()
 
     @classmethod
+    def add_start_work_celery_queue_name(cls,queue_name):
+        cls.to_be_start_work_celery_queue_name_set.add(queue_name)
+
+    @classmethod
     def realy_start_celery_worker(cls, worker_name=None, loglevel='INFO'):
         if len(cls.to_be_start_work_celery_queue_name_set) == 0:
             raise Exception('celery worker 没有需要运行的queue')

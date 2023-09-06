@@ -112,7 +112,7 @@ python setup.py sdist upload -r pypi
 
 # python setup.py bdist_wheel
 python setup.py bdist_wheel ; python -m twine upload dist/funboost-23.5-py3-none-any.whl
-python setup.py bdist_wheel && python -m twine upload dist/funboost-24.3-py3-none-any.whl
+python setup.py bdist_wheel && python -m twine upload dist/funboost-24.4-py3-none-any.whl
 python setup.py sdist & twine upload dist/funboost-10.9.tar.gz
 
 最快的下载方式，上传立即可安装。阿里云源同步官网pypi间隔要等很久。

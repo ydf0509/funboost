@@ -129,12 +129,12 @@ if __name__ == '__main__':
     # pool = ThreadPoolExecutor(100)
     # pool = ThreadPoolExecutorShrinkAble(100)
 
-    for i in range(20000):
-        # time.sleep(2)
-        pool.submit(aiotestf, i)
+    # for i in range(20000):
+    #     # time.sleep(2)
+    #     pool.submit(aiotestf, i)
 
-    # for i in range(1000000):
-    #     pool.submit(testf, i)
+    for i in range(100000):
+        pool.submit(testf, i)
 
     # while 1:
     #     time.sleep(1000)

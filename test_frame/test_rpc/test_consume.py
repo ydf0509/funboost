@@ -3,7 +3,7 @@
 # @Time    : 2022/8/8 0008 14:57
 
 from auto_run_on_remote import run_current_script_on_remote
-run_current_script_on_remote()
+# run_current_script_on_remote()
 
 import random
 

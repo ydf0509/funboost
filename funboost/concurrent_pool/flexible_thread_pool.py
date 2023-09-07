@@ -48,6 +48,9 @@ class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
             if self.threads_free_count <= self.MIN_WORKERS and self._threads_num < self.max_workers:
                 _KeepAliveTimeThread(self).start()
 
+class FlexibleThreadPoolMinWorkers0(FlexibleThreadPool):
+    MIN_WORKERS = 0
+
 
 def run_sync_or_async_fun(func, *args, **kwargs):
     fun_is_asyncio = inspect.iscoroutinefunction(func)

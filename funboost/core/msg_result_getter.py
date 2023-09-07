@@ -6,6 +6,7 @@ import json
 from funboost.utils.mongo_util import MongoMixin
 
 from funboost.concurrent_pool import CustomThreadPoolExecutor
+from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPoolMinWorkers0
 from funboost.utils import RedisMixin
 from funboost.utils.redis_manager import AioRedisMixin
 
@@ -18,7 +19,7 @@ NO_RESULT = 'no_result'
 
 
 class AsyncResult(RedisMixin):
-    callback_run_executor = CustomThreadPoolExecutor(200)
+    callback_run_executor = FlexibleThreadPoolMinWorkers0(200)
 
     def __init__(self, task_id, timeout=120):
         self.task_id = task_id

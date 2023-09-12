@@ -8,8 +8,7 @@ def f(x):
     print(x)
 
 
-for i in range(100):
-    f.push(i)
-
-f.consume()
-
+if __name__ == '__main__':
+    for i in range(100):
+        f.push(i)
+    f.consume()

@@ -9,5 +9,6 @@ def f(x):
 
 pool = ThreadPoolExecutor(10)
 
-for i in range(100):
-    pool.submit(f,i)
+if __name__ == '__main__':
+    for i in range(100):
+        pool.submit(f, i)

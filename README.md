@@ -12,12 +12,14 @@ Forkers:
 
 
 <pre style="color: greenyellow;background-color: #0c1119; font-size: medium;">
-pip install funboost ,python全功能分布式函数调度框架,。 支持python所有类型的并发模式和全球一切知名消息队列中间件，
+pip install funboost ,python全功能分布式函数调度框架,。 
+支持python所有类型的并发模式和全球一切知名消息队列中间件，
 同时funboost支持celery整个框架作为核心来发布和消费消息，使用funboost的极简api方式来自动化配置和利用celery调度,
 也支持huey dramatiq rq等任务队列框架作为funboost的broker。 
 python函数加速器，框架包罗万象，一统编程思维，兼容50% python编程业务场景，适用范围广。
 只需要一行代码即可分布式执行python一切函数，99%用过funboost的pythoner 感受是 方便 快速 强大。
-python万能分布式函数调度框架，支持5种并发模式，30+种消息队列中间件(或任务队列框架)，20种任务控制功能。给任意python函数赋能。
+python万能分布式函数调度框架，支持5种并发模式，30+种消息队列中间件(或任务队列框架)，
+20种任务控制功能。给任意python函数赋能。
 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。
 框架只需要学习@boost这一个装饰器的入参就可以，所有用法几乎和1.3例子一摸一样，非常简化简单。
 </pre>
@@ -132,10 +134,45 @@ pip install funboost --upgrade
 这么多并发方式能够满足任意编程场景。
 ```
 
-以下两种方式，都是10线程加python内存queue方式运行f函数，有了此框架，用户无需代码手写手动操作线程 协程 进程并发。
-[![T69zJP.png](https://s4.ax1x.com/2021/12/28/T69zJP.png)](https://imgtu.com/i/T69zJP)
-<br>
-[![T6CPsg.md.png](https://s4.ax1x.com/2021/12/28/T6CPsg.md.png)](https://imgtu.com/i/T6CPsg)
+以下两种方式，都是10线程加python内存queue方式运行f函数，有了此框架，用户无需代码手写手动操作线程 协程 asyncio 进程 来并发。
+
+1)手动开启线程池方式
+```python
+import time
+from concurrent.futures import ThreadPoolExecutor
+
+
+def f(x):
+    time.sleep(3)
+    print(x)
+
+
+pool = ThreadPoolExecutor(10)
+
+if __name__ == '__main__':
+    for i in range(100):
+        pool.submit(f, i)
+
+```
+
+2)funboost 使用内存队列,设置10线程并发
+```python
+import time
+from funboost import boost, BrokerEnum
+
+
+@boost("test_insteda_thread_queue", broker_kind=BrokerEnum.MEMORY_QUEUE, concurrent_num=10)
+def f(x):
+    time.sleep(3)
+    print(x)
+
+
+if __name__ == '__main__':
+    for i in range(100):
+        f.push(i)
+    f.consume()
+```
+
 
 ### 1.2.2 框架支持20种中间件
 
@@ -323,6 +360,15 @@ if __name__ == "__main__":
 用户可以修改此函数的sleep大小和@boost的数十种入参来学习 验证 测试框架的功能。
 """
 ```
+
+运行截图:
+
+[![pP2AtUA.png](https://s1.ax1x.com/2023/09/12/pP2AtUA.png)](https://imgse.com/i/pP2AtUA)
+
+[![pP2AsbQ.png](https://s1.ax1x.com/2023/09/12/pP2AsbQ.png)](https://imgse.com/i/pP2AsbQ)
+
+
+
 
 
 ## 1.4  python分布式函数执行为什么重要？

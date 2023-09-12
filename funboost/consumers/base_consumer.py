@@ -3,7 +3,7 @@
 # @Time    : 2022/8/8 0008 13:11
 """
 所有中间件类型消费者的抽象基类。使实现不同中间件的消费者尽可能代码少。
-整个流程最难的都在这里面。因为要实现多种并发模型，和对函数施加20运行种控制方式，所以代码非常长。
+整个流程最难的都在这里面。因为要实现多种并发模型，和对函数施加20多种运行控制方式，所以代码非常长。
 """
 import typing
 import abc
@@ -44,16 +44,15 @@ from nb_log import (get_logger, LoggerLevelSetterMixin, nb_print, LoggerMixin,
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
 # noinspection PyUnresolvedReferences
-from funboost.concurrent_pool.bounded_threadpoolexcutor import \
-    BoundedThreadPoolExecutor
+from funboost.concurrent_pool.bounded_threadpoolexcutor import BoundedThreadPoolExecutor
 from func_timeout import func_set_timeout  # noqa
-from funboost.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco, \
-    check_evenlet_monkey_patch, CustomEventletPoolExecutor
-from funboost.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_deco, \
-    GeventPoolExecutor, check_gevent_monkey_patch
-from funboost.concurrent_pool.custom_threadpool_executor import \
-    CustomThreadPoolExecutor, check_not_monkey
-from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool, sync_or_async_fun_deco, run_sync_or_async_fun
+from funboost.concurrent_pool.custom_evenlet_pool_executor import (evenlet_timeout_deco,
+                                                                   check_evenlet_monkey_patch, CustomEventletPoolExecutor)
+from funboost.concurrent_pool.custom_gevent_pool_executor import (gevent_timeout_deco,
+                                                                  GeventPoolExecutor, check_gevent_monkey_patch)
+from funboost.concurrent_pool.custom_threadpool_executor import (
+    CustomThreadPoolExecutor, check_not_monkey)
+from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool, sync_or_async_fun_deco
 # from funboost.concurrent_pool.concurrent_pool_with_multi_process import ConcurrentPoolWithProcess
 from funboost.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from funboost.factories.publisher_factotry import get_publisher
@@ -456,7 +455,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             check_not_monkey()
 
     def _log_error(self, msg, exc_info=None):
-        self.logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})
+        self.logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})  # 这是改变日志栈层级
         self.error_file_logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})
 
     def _log_critical(self, msg, exc_info=None):
@@ -531,7 +530,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self.keep_circulating(60, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
         if self._is_support_remote_kill_task:
-            self.keep_circulating(10, block=False)(kill_remote_task.RemoteTaskKiller(self.queue_name, None).start_cycle_kill_task)()
+            kill_remote_task.RemoteTaskKiller(self.queue_name, None).start_cycle_kill_task()
             self._is_show_message_get_from_broker = True  # 方便用户看到从消息队列取出来的消息的task_id,然后使用task_id杀死运行中的消息。
         if self._do_task_filtering:
             self._redis_filter.delete_expire_filter_task_cycle()  # 这个默认是RedisFilter类，是个pass不运行。所以用别的消息中间件模式，不需要安装和配置redis。
@@ -797,9 +796,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         try:
             function_run = sync_or_async_fun_deco(self.consuming_function)
             function_timeout = self._get_priority_conf(kw, 'function_timeout')
-            function_run0 = function_run if self._consumin_function_decorator is None else self._consumin_function_decorator(function_run)
-            function_run = function_run0 if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
-                function_timeout)(function_run0)
+            function_run = function_run if self._consumin_function_decorator is None else self._consumin_function_decorator(function_run)
+            function_run = function_run if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
+                function_timeout)(function_run)
 
             if self._is_support_remote_kill_task:
                 if kill_remote_task.RemoteTaskKiller(self.queue_name, task_id).judge_need_revoke_run():  # 如果远程指令杀死任务，如果还没开始运行函数，就取消运行

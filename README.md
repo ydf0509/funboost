@@ -21,7 +21,7 @@ python函数加速器，框架包罗万象，一统编程思维，兼容50% pyth
 python万能分布式函数调度框架，支持5种并发模式，30+种消息队列中间件(或任务队列框架)，
 20种任务控制功能。给任意python函数赋能。
 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。
-框架只需要学习@boost这一个装饰器的入参就可以，所有用法几乎和1.3例子一摸一样，非常简化简单
+框架只需要学习@boost这一个装饰器的入参就可以，所有用法几乎和1.3例子一摸一样，非常简化简单。
 </pre>
 
 ### 框架评价
@@ -106,7 +106,15 @@ pip install funboost --upgrade
 
 有了这个框架，用户再也无需亲自手写操作redis rabbitmq socket kafka celery nameko了。
 
-[![sgV2xP.png](https://z3.ax1x.com/2021/01/19/sgV2xP.png)](https://imgtu.com/i/sgV2xP)
+[//]: # ([![sgV2xP.png]&#40;https://z3.ax1x.com/2021/01/19/sgV2xP.png&#41;]&#40;https://imgtu.com/i/sgV2xP&#41;)
+
+[//]: # ()
+[//]: # ([img-46.png]&#40;https://postimg.cc/hfW0VhCX&#41;)
+
+funboosts示图：
+
+[//]: # ([![img-46.png]&#40;https://i.postimg.cc/tC7mQxWN/img-46.png&#41;]&#40;https://postimg.cc/hfW0VhCX&#41;)
+[![aacY4.png](https://img.vinua.cn/images/aacY4.png)](https://img.vinua.cn/image/aacY4)
 
 ### 1.2.1 框架支持5种并发模式
 

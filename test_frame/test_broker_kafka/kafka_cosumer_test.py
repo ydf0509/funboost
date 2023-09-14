@@ -16,4 +16,5 @@ if __name__ == '__main__':
     # for i in range(200):
     #     f.push(i)
     # f.publisher.get_message_count()
-    f.consume()
+    print(type(f))
+    # f.consume()

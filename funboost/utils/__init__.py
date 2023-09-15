@@ -11,6 +11,7 @@ from nb_log import (LogManager, simple_logger, defaul_logger, LoggerMixin, Logge
 
 from funboost.utils.redis_manager import RedisMixin
 
+
 class _CustomEncoder(json.JSONEncoder):
     """自定义的json解析器，mongodb返回的字典中的时间格式是datatime，json直接解析出错"""
 

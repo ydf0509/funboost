@@ -20,6 +20,12 @@ def get_redis_conn_kwargs():
             'password': funboost_config_deafult.REDIS_PASSWORD, 'db': funboost_config_deafult.REDIS_DB}
 
 
+def _get_redis_conn_kwargs_by_db(db):
+    conn_kwargs = copy.copy(get_redis_conn_kwargs())
+    conn_kwargs['db'] = db
+    return conn_kwargs
+
+
 class RedisManager(object):
     _redis_db__conn_map = {}
 
@@ -52,12 +58,6 @@ class AioRedisManager(object):
         :rtype :redis5.Redis
         """
         return self.redis
-
-
-def _get_redis_conn_kwargs_by_db(db):
-    conn_kwargs = copy.copy(get_redis_conn_kwargs())
-    conn_kwargs['db'] = db
-    return conn_kwargs
 
 
 # noinspection PyArgumentEqualDefault

@@ -5,8 +5,10 @@ from nb_log import get_logger, nb_print
 
 '''
 set_frame_config 这行要放在所有导入其他代码之前最好,以便防止其他项目提前 from funboost.funboost_config_deafult import xx ,
-如果是 from funboost import funboost_config_deafult,在函数内部使用他的配置就没事
+如果是 from funboost import funboost_config_deafult,在函数内部使用他的配置就没事,但最后不要让其他模块在 set_frame_config 之前导入.
 set_frame_config这个模块的 use_config_form_funboost_config_module() 是核心,把用户的funboost_config.py的配置覆盖到funboost_config_deafult模块了
+
+这段注释说明和使用的用户无关.
 '''
 from funboost.set_frame_config import patch_frame_config, show_frame_config
 

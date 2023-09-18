@@ -44,15 +44,16 @@ from nb_log import (get_logger, LoggerLevelSetterMixin, nb_print, LoggerMixin,
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
 # noinspection PyUnresolvedReferences
-from funboost.concurrent_pool.bounded_threadpoolexcutor import BoundedThreadPoolExecutor
+from funboost.concurrent_pool.bounded_threadpoolexcutor import \
+    BoundedThreadPoolExecutor
 from func_timeout import func_set_timeout  # noqa
-from funboost.concurrent_pool.custom_evenlet_pool_executor import (evenlet_timeout_deco,
-                                                                   check_evenlet_monkey_patch, CustomEventletPoolExecutor)
-from funboost.concurrent_pool.custom_gevent_pool_executor import (gevent_timeout_deco,
-                                                                  GeventPoolExecutor, check_gevent_monkey_patch)
-from funboost.concurrent_pool.custom_threadpool_executor import (
-    CustomThreadPoolExecutor, check_not_monkey)
-from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool, sync_or_async_fun_deco
+from funboost.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco, \
+    check_evenlet_monkey_patch, CustomEventletPoolExecutor
+from funboost.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_deco, \
+    GeventPoolExecutor, check_gevent_monkey_patch
+from funboost.concurrent_pool.custom_threadpool_executor import \
+    CustomThreadPoolExecutor, check_not_monkey
+from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool, sync_or_async_fun_deco, run_sync_or_async_fun
 # from funboost.concurrent_pool.concurrent_pool_with_multi_process import ConcurrentPoolWithProcess
 from funboost.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from funboost.factories.publisher_factotry import get_publisher
@@ -186,10 +187,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     # noinspection PyProtectedMember,PyUnresolvedReferences
     def __init__(self, queue_name, *, consuming_function: Callable = None,
                  consumin_function_decorator: typing.Callable = None, function_timeout=0, concurrent_num=50,
-                 specify_concurrent_pool=None, specify_async_loop=None, concurrent_mode=ConcurrentModeEnum.THREADING,
+                 specify_concurrent_pool=None,
+                 qps: float = 0, is_using_distributed_frequency_control=False,
+                 specify_async_loop=None, concurrent_mode=ConcurrentModeEnum.THREADING,
                  max_retry_times=3, is_push_to_dlx_queue_when_retry_max_times=False,
                  log_level=10, is_print_detail_exception=True, is_show_message_get_from_broker=False,
-                 qps: float = 0, is_using_distributed_frequency_control=False,
                  msg_expire_senconds=0, is_send_consumer_hearbeat_to_redis=False,
                  logger_prefix='', create_logger_file=True, do_task_filtering=False,
                  task_filtering_expire_seconds=0,
@@ -455,7 +457,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             check_not_monkey()
 
     def _log_error(self, msg, exc_info=None):
-        self.logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})  # 这是改变日志栈层级
+        self.logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3}) # 这是改变日志栈层级
         self.error_file_logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})
 
     def _log_critical(self, msg, exc_info=None):
@@ -543,7 +545,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _start_delay_task_scheduler(self):
         from funboost.timing_job import FsdfBackgroundScheduler
         jobstores = {
-            "default": RedisJobStore(**redis_manager.get_redis_conn_kwargs())
+            "default": RedisJobStore(**redis_manager.REDIS_CONN_KWARGS)
         }
         self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False,
                                                              jobstores=jobstores  # push 方法的序列化带thredignn.lock

@@ -34,18 +34,18 @@ def f(x, y):
 pool2 = ProcessPoolExecutor(4)
 
 
-@boost('test_queue77h6j', log_level=10, broker_kind=BrokerEnum.REDIS_ACK_ABLE,
+@boost('test_queue77h6j', log_level=10, broker_kind=BrokerEnum.MEMORY_QUEUE,
        create_logger_file=True, is_show_message_get_from_broker=True, concurrent_mode=ConcurrentModeEnum.THREADING,
        concurrent_num=50, qps=20, is_print_detail_exception=False, is_push_to_dlx_queue_when_retry_max_times=True,
        # specify_concurrent_pool= pool2,
        # concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,function_timeout=10,
        # function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True,expire_seconds=500000,is_use_bulk_insert=True)
-       is_using_rpc_mode=True,is_support_remote_kill_task=True,is_using_distributed_frequency_control=True,do_task_filtering=False,
+       # is_using_rpc_mode=True,is_support_remote_kill_task=True,is_using_distributed_frequency_control=True,do_task_filtering=False,
        )
 def f2(a, b):
     # time.sleep(100)
     time.sleep(1)
-    if random.random() > 0.999:
+    if random.random() > 0.99999:
         raise ValueError('普通错误会对函数重试n次')
     # if random.random() > 0.8:
     #     raise ExceptionForRequeue('重新入队去吧')
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     # f2.clear()
     f2.consume()
 
-    for i in range(5000):
+    for i in range(1):
         # f.push(i, i * 10)
         r = f2.push(i, i * 5)
         # print(r.result)

@@ -545,7 +545,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _start_delay_task_scheduler(self):
         from funboost.timing_job import FsdfBackgroundScheduler
         jobstores = {
-            "default": RedisJobStore(**redis_manager.REDIS_CONN_KWARGS)
+            "default": RedisJobStore(**redis_manager.get_redis_conn_kwargs())
         }
         self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False,
                                                              jobstores=jobstores  # push 方法的序列化带thredignn.lock

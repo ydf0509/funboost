@@ -29,14 +29,15 @@ import weakref
 from nb_log import LoggerMixin, nb_print, LoggerLevelSetterMixin, LogManager
 from concurrent.futures import Executor, Future
 
-from funboost.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch
-from funboost.concurrent_pool.custom_gevent_pool_executor import check_gevent_monkey_patch
+
 
 _shutdown = False
 _threads_queues = weakref.WeakKeyDictionary()
 
 
 def check_not_monkey():
+    from funboost.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch
+    from funboost.concurrent_pool.custom_gevent_pool_executor import check_gevent_monkey_patch
     if check_gevent_monkey_patch(raise_exc=False):
         raise Exception('指定使用多线程模式时候，请不要打gevent包的补丁')
     if check_evenlet_monkey_patch(raise_exc=False):

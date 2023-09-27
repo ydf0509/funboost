@@ -114,7 +114,11 @@ pip install funboost --upgrade
 funboosts示图：
 
 [//]: # ([![img-46.png]&#40;https://i.postimg.cc/tC7mQxWN/img-46.png&#41;]&#40;https://postimg.cc/hfW0VhCX&#41;)
+就是最普通的生产者消费者流程图
 [![aacY4.png](https://img.vinua.cn/images/aacY4.png)](https://img.vinua.cn/image/aacY4)
+
+也就是这种非常普通的流程图,一样的意思
+[![pPbCmyd.png](https://z1.ax1x.com/2023/09/27/pPbCmyd.png)](https://imgse.com/i/pPbCmyd)
 
 ### 1.2.1 框架支持5种并发模式
 
@@ -182,7 +186,7 @@ if __name__ == '__main__':
 ```
 
 
-### 1.2.2 框架支持20种中间件
+### 1.2.2 框架支持30种中间件或三方框架
 
 框架支持 rabbitmq redis python自带的queue.Queue  sqlite sqlachemy kafka pulsar mongodb 直接socket celery  nameko 等作为消息中间件。
 
@@ -311,7 +315,7 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
      优先级队列：
          支持队列优先级消息。
 
-     远程杀死任务：
+     远程杀死(取消)任务：
          支持在发布端杀死正在运行的消息，发送杀死命令时候对还未取出的消息则放弃运行消息。
 
 </pre>

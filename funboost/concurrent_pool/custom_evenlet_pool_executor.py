@@ -8,6 +8,7 @@ from eventlet import greenpool, monkey_patch, patcher, Timeout
 
 from nb_log import LogManager, nb_print
 
+print('eventlet 导入')
 
 def check_evenlet_monkey_patch(raise_exc=True):
     if not patcher.is_monkey_patched('socket'):  # 随便选一个检测标志

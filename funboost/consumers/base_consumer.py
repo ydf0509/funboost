@@ -25,38 +25,39 @@ from typing import Callable
 from functools import wraps
 import threading
 from threading import Lock, Thread
-import gevent
 import asyncio
 
-from apscheduler.jobstores.redis import RedisJobStore
-from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
+from nb_log import (get_logger, LoggerLevelSetterMixin, nb_print, LoggerMixin,LogManager,CompatibleLogger,
+                    LoggerMixinDefaultWithFileHandler, stdout_write, is_main_process,
+                    nb_log_config_default)
 
-import nb_log
+from apscheduler.jobstores.redis import RedisJobStore
+ 
+from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
+ 
 from funboost.concurrent_pool.single_thread_executor import SoloExecutor
+ 
 from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig, ResultPersistenceHelper, FunctionResultStatus
 
 # noinspection PyUnresolvedReferences
 from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_publish_time
-from nb_log import (get_logger, LoggerLevelSetterMixin, nb_print, LoggerMixin,
-                    LoggerMixinDefaultWithFileHandler, stdout_write, is_main_process,
-                    nb_log_config_default)
+
 # noinspection PyUnresolvedReferences
+ 
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
 # noinspection PyUnresolvedReferences
 from funboost.concurrent_pool.bounded_threadpoolexcutor import \
     BoundedThreadPoolExecutor
 from func_timeout import func_set_timeout  # noqa
-from funboost.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco, \
-    check_evenlet_monkey_patch, CustomEventletPoolExecutor
-from funboost.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_deco, \
-    GeventPoolExecutor, check_gevent_monkey_patch
+ 
 from funboost.concurrent_pool.custom_threadpool_executor import \
     CustomThreadPoolExecutor, check_not_monkey
 from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool, sync_or_async_fun_deco, run_sync_or_async_fun
 # from funboost.concurrent_pool.concurrent_pool_with_multi_process import ConcurrentPoolWithProcess
 from funboost.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from funboost.factories.publisher_factotry import get_publisher
+ 
 from funboost.utils import decorators, time_util, RedisMixin, un_strict_json_dumps, redis_manager
 # noinspection PyUnresolvedReferences
 from funboost.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
@@ -65,7 +66,7 @@ from funboost import funboost_config_deafult
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
 from funboost.core import kill_remote_task
 
-
+ 
 # patch_apscheduler_run_job()
 
 
@@ -108,6 +109,7 @@ class ConsumersManager:
             elif cls.global_concurrent_mode == ConcurrentModeEnum.GEVENT:
                 # cls.logger.info()
                 # nb_print(cls.schedulal_thread_to_be_join)
+                import gevent
                 gevent.joinall(cls.schedulal_thread_to_be_join, raise_error=True, )
             elif cls.global_concurrent_mode == ConcurrentModeEnum.EVENTLET:
                 for g in cls.schedulal_thread_to_be_join:
@@ -347,14 +349,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         log_file_handler_type = 1
         if int(os.getenv('is_fsdf_remote_run', 0)) == 1:  # 这个是远程部署的自动的环境变量，用户不需要亲自自己设置这个值。
             log_file_handler_type = 5  # 如果是fabric_deploy 自动化远程部署函数时候，python -c 启动的使用第一个filehandler没记录文件，现在使用第5种filehandler。
-        self.logger = nb_log.LogManager(logger_name, logger_cls=nb_log.CompatibleLogger).get_logger_and_add_handlers(
+        self.logger = LogManager(logger_name, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
             log_level_int=log_level, log_filename=f'{logger_name}.log' if create_logger_file else None,
             # log_file_handler_type=log_file_handler_type,
             formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
         self._logger_name = logger_name
         # self.logger.info(f'{self.__class__} 在 {current_queue__info_dict["where_to_instantiate"]}  被实例化')
         logger_name_error = f'{logger_name}_error'
-        self.error_file_logger = nb_log.LogManager(logger_name_error, logger_cls=nb_log.CompatibleLogger).get_logger_and_add_handlers(
+        self.error_file_logger = LogManager(logger_name_error, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
             log_level_int=log_level, log_filename=f'{logger_name_error}.log',
             is_add_stream_handler=False,
             formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
@@ -450,14 +452,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _check_monkey_patch(self):
         if self._concurrent_mode == 2:
+            from funboost.concurrent_pool.custom_gevent_pool_executor import check_gevent_monkey_patch
             check_gevent_monkey_patch()
         elif self._concurrent_mode == 3:
+            from funboost.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch
             check_evenlet_monkey_patch()
         else:
             check_not_monkey()
 
     def _log_error(self, msg, exc_info=None):
-        self.logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3}) # 这是改变日志栈层级
+        self.logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})  # 这是改变日志栈层级
         self.error_file_logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})
 
     def _log_critical(self, msg, exc_info=None):
@@ -555,7 +559,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._delay_task_scheduler.start()
         self.logger.warning('启动延时任务sheduler')
 
-    logger_apscheduler = nb_log.get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')
+    logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')
 
     @classmethod
     def _push_for_apscheduler_use_database_store(cls, queue_name, msg, ):
@@ -1106,8 +1110,10 @@ class ConcurrentModeDispatcher(LoggerMixin):
             # self.timeout_deco = decorators.timeout
             self.timeout_deco = func_set_timeout  # 这个超时装饰器性能好很多。
         elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
+            from funboost.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_deco
             self.timeout_deco = gevent_timeout_deco
         elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
+            from funboost.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco
             self.timeout_deco = evenlet_timeout_deco
         self.logger.warning(f'{self.consumer} 设置并发模式'
                             f'为{ConsumersManager.get_concurrent_name_by_concurrent_mode(self._concurrent_mode)}')
@@ -1137,8 +1143,10 @@ class ConcurrentModeDispatcher(LoggerMixin):
             # pool_type = BoundedThreadPoolExecutor
             pool_type = FlexibleThreadPool
         elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
+            from funboost.concurrent_pool.custom_gevent_pool_executor import GeventPoolExecutor
             pool_type = GeventPoolExecutor
         elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
+            from funboost.concurrent_pool.custom_evenlet_pool_executor import CustomEventletPoolExecutor
             pool_type = CustomEventletPoolExecutor
         elif self._concurrent_mode == ConcurrentModeEnum.ASYNC:
             pool_type = AsyncPoolExecutor
@@ -1171,6 +1179,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
                 ConsumersManager.schedulal_thread_to_be_join.append(t)
                 t.start()
             elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
+                import gevent
                 g = gevent.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
                 ConsumersManager.schedulal_thread_to_be_join.append(g)
             elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:

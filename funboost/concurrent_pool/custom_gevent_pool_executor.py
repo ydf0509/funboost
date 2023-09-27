@@ -14,6 +14,7 @@ from gevent.queue import JoinableQueue
 
 from nb_log import LoggerMixin, nb_print, LogManager
 
+print('gevent 导入')
 
 def check_gevent_monkey_patch(raise_exc=True):
     if not monkey.is_module_patched('socket'):  # 随便选一个检测标志

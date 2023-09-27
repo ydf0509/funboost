@@ -7,8 +7,7 @@ import atexit
 import os
 import typing
 from funboost.concurrent_pool.custom_threadpool_executor import CustomThreadpoolExecutor
-from funboost.concurrent_pool.custom_gevent_pool_executor import GeventPoolExecutor
-from funboost.concurrent_pool.custom_evenlet_pool_executor import CustomEventletPoolExecutor
+
 from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
 
 

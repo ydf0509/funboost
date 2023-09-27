@@ -7,7 +7,7 @@ import threading
 
 import typing
 from funboost.constant import BrokerEnum
-from funboost.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch
+
 
 from nameko.containers import ServiceContainer
 from nameko.rpc import rpc
@@ -27,6 +27,7 @@ class NamekoConsumer(AbstractConsumer, ):
 
     def custom_init(self):
         try:
+            from funboost.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch
             check_evenlet_monkey_patch()
         except Exception as e:
             self.logger.critical('nameko 必须使用eventlet 并发，并且eventlet包打猴子补丁')

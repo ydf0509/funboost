@@ -1,6 +1,5 @@
 import typing
 
-
 from funboost.publishers.http_publisher import HTTPPublisher
 from funboost.publishers.nats_publisher import NatsPublisher
 from funboost.publishers.peewee_publisher import PeeweePublisher
@@ -14,7 +13,7 @@ from funboost.publishers.zeromq_publisher import ZeroMqPublisher
 from funboost.publishers.kafka_publisher import KafkaPublisher
 from funboost.publishers.local_python_queue_publisher import LocalPythonQueuePublisher
 from funboost.publishers.mongomq_publisher import MongoMqPublisher
-from funboost.publishers.nsq_publisher import NsqPublisher
+
 from funboost.publishers.persist_queue_publisher import PersistQueuePublisher
 from funboost.publishers.rabbitmq_amqpstorm_publisher import RabbitmqPublisherUsingAmqpStorm
 from funboost.publishers.rabbitmq_pika_publisher import RabbitmqPublisher
@@ -32,7 +31,7 @@ from funboost.consumers.kafka_consumer import KafkaConsumer
 from funboost.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
 from funboost.consumers.mongomq_consumer import MongoMqConsumer
 from funboost.consumers.nats_consumer import NatsConsumer
-from funboost.consumers.nsq_consumer import NsqConsumer
+
 from funboost.consumers.peewee_conusmer import PeeweeConsumer
 from funboost.consumers.persist_queue_consumer import PersistQueueConsumer
 from funboost.consumers.rabbitmq_amqpstorm_consumer import RabbitmqConsumerAmqpStorm
@@ -62,10 +61,9 @@ broker_kind__publsiher_consumer_type_map = {
     BrokerEnum.RABBITMQ_PIKA: (RabbitmqPublisher, RabbitmqConsumer),
     BrokerEnum.MONGOMQ: (MongoMqPublisher, MongoMqConsumer),
     BrokerEnum.PERSISTQUEUE: (PersistQueuePublisher, PersistQueueConsumer),
-    BrokerEnum.NSQ: (NsqPublisher, NsqConsumer),
     BrokerEnum.KAFKA: (KafkaPublisher, KafkaConsumer),
     BrokerEnum.REDIS_ACK_ABLE: (RedisPublisher, RedisConsumerAckAble),
-    BrokerEnum.REDIS_PRIORITY:(RedisPriorityPublisher,RedisPriorityConsumer),
+    BrokerEnum.REDIS_PRIORITY: (RedisPriorityPublisher, RedisPriorityConsumer),
     BrokerEnum.ROCKETMQ: (RocketmqPublisher, RocketmqConsumer),
     BrokerEnum.REDIS_STREAM: (RedisStreamPublisher, RedisStreamConsumer),
     BrokerEnum.ZEROMQ: (ZeroMqPublisher, ZeroMqConsumer),
@@ -152,3 +150,13 @@ def regist_to_funboost(broker_kind: int):
         from funboost.consumers.kombu_consumer import KombuConsumer
         from funboost.publishers.kombu_publisher import KombuPublisher
         register_custom_broker(broker_kind, KombuPublisher, KombuConsumer)
+
+    if broker_kind == BrokerEnum.NSQ:
+        from funboost.publishers.nsq_publisher import NsqPublisher
+        from funboost.consumers.nsq_consumer import NsqConsumer
+        register_custom_broker(broker_kind, NsqPublisher, NsqConsumer)
+
+
+if __name__ == '__main__':
+    import sys
+    print(sys.modules)

@@ -18,6 +18,8 @@ def _run_consumer_by_init_params(queue_name):
     booster_current_pid = boost(**boost_params)(consuming_function)
     booster_current_pid.consume()
     ConsumersManager.join_all_consumer_shedual_task_thread()
+    while True:
+        time.sleep(1000)
 
 
 def run_consumer_with_multi_process(booster: Booster, process_num=1):
@@ -48,6 +50,7 @@ def run_consumer_with_multi_process(booster: Booster, process_num=1):
             # print(i)
             Process(target=_run_consumer_by_init_params,
                     args=(booster.queue_name,)).start()
+
 
 
 def _multi_process_pub_params_list_by_consumer_init_params(queue_name, msgs: List[dict]):

@@ -51,8 +51,8 @@ class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
 class FlexibleThreadPoolMinWorkers0(FlexibleThreadPool):
     MIN_WORKERS = 0
 
-
-def run_sync_or_async_fun(func, *args, **kwargs):
+def run_sync_or_async_fun000(func, *args, **kwargs):
+    """这种方式造成电脑很卡,不行"""
     fun_is_asyncio = inspect.iscoroutinefunction(func)
     if fun_is_asyncio:
         loop = asyncio.new_event_loop()
@@ -60,6 +60,24 @@ def run_sync_or_async_fun(func, *args, **kwargs):
             return loop.run_until_complete(func(*args, **kwargs))
         finally:
             loop.close()
+    else:
+        return func(*args, **kwargs)
+
+tl = threading.local()
+def _get_thread_local_loop() -> asyncio.AbstractEventLoop:
+    if not hasattr(tl,'asyncio_loop'):
+        tl.asyncio_loop = asyncio.new_event_loop()
+    return tl.asyncio_loop
+
+def run_sync_or_async_fun(func, *args, **kwargs):
+    fun_is_asyncio = inspect.iscoroutinefunction(func)
+    if fun_is_asyncio:
+        loop = _get_thread_local_loop()
+        try:
+            return loop.run_until_complete(func(*args, **kwargs))
+        finally:
+            pass
+            # loop.close()
     else:
         return func(*args, **kwargs)
 
@@ -120,7 +138,7 @@ if __name__ == '__main__':
 
     async def aiotestf(x):
         # await asyncio.sleep(1)
-        if x % 10 == 0:
+        if x % 10 == 0 or 1:
             print(x)
         return x * 2
 
@@ -129,12 +147,12 @@ if __name__ == '__main__':
     # pool = ThreadPoolExecutor(100)
     # pool = ThreadPoolExecutorShrinkAble(100)
 
-    # for i in range(20000):
-    #     # time.sleep(2)
-    #     pool.submit(aiotestf, i)
+    for i in range(20000):
+        # time.sleep(2)
+        pool.submit(aiotestf, i)
 
-    for i in range(100000):
-        pool.submit(testf, i)
+    # for i in range(100000):
+    #     pool.submit(testf, i)
 
     # while 1:
     #     time.sleep(1000)

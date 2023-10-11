@@ -35,12 +35,17 @@ if __name__ == '__main__':
     python test_cli.py publish test_cli1_queue "{'x':3,'y':4}"  # 发布消息传递一个字典
     python test_cli.py publish test_cli1_queue '{"x":3,"y":4}' # 错误方式
     
+    
+    python test_cli.py consume test_cli1_queue test_cli2_queue  # 启动两个队列的函数消费
+    python test_cli.py m_consume --test_cli1_queue=2 --test_cli2_queue=3 # 叠加多进程启动消费
+    
     # 发布消息,由于当前代码没有import def_tasks3模块,所以需要传递入参 import_modules_str,然后再发布
     # 如果需要导入多个模块,import_modules_str的值使用逗号隔开
     python test_cli.py --import_modules_str "test_frame.test_funboost_cli.def_tasks3"  publish test_cli3_queue "{'x':3,'y':4}"
     
-    python test_cli.py consume test_cli1_queue test_cli2_queue  # 启动两个队列的函数消费
-    python test_cli.py m_consume --test_cli1_queue=2 --test_cli2_queue=3 # 叠加多进程启动消费
+    
+    python test_cli.py --boost_dirs "['./test_find_boosters','./test_find_boosters/d2']"  push test_find_queue1 --x=1 --y=2
+    
     '''
 
 

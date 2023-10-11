@@ -10,7 +10,7 @@ sys.path.insert(1, project_root_path)  # 这个是为了方便命令行不用用
 ##### $$$$$$$$$$$$
 
 
-from funboost.core.funboost_cli import funboost_cli
+from funboost.core.funboost_fire import funboost_fire
 from funboost.utils.ctrl_c_end import ctrl_c_recv
 # 需要启动的函数,那么该模块或函数建议一定要被import到这来. 否则需要要在 --import_modules_str 中指定
 # noinspection PyUnresolvedReferences
@@ -19,7 +19,7 @@ import def_tasks  # 这是为了导入被boost装饰的函数,这个重要,不�
 # def_tasks3.py 文件由于没有导入,如果想操作def_tasks3的队列,那么需要  --import_modules_str
 
 if __name__ == '__main__':
-    funboost_cli()
+    funboost_fire()
     # ctrl_c_recv()
 
     '''
@@ -41,4 +41,9 @@ if __name__ == '__main__':
     
     python test_cli.py consume test_cli1_queue test_cli2_queue  # 启动两个队列的函数消费
     python test_cli.py m_consume --test_cli1_queue=2 --test_cli2_queue=3 # 叠加多进程启动消费
+    '''
+
+
+    '''
+    cd D:\codes\funboost\test_frame\test_funboost_cli && python test_cli.py consume test_cli1_queue test_cli2_queue
     '''

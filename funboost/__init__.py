@@ -47,7 +47,7 @@ from funboost.core.exit_signal import set_interrupt_signal_handler
 from funboost.core.helper_funs import run_forever
 
 from funboost.utils.ctrl_c_end import ctrl_c_recv
-atexit.register(ctrl_c_recv)  # 还是需要用户自己在代码末尾加才好.
+# atexit.register(ctrl_c_recv)  # 还是需要用户自己在代码末尾加才可以.
 # set_interrupt_signal_handler()
 
 # 有的包默认没加handlers，原始的日志不漂亮且不可跳转不知道哪里发生的。这里把warnning级别以上的日志默认加上handlers。

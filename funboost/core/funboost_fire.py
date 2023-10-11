@@ -7,7 +7,7 @@ from funboost import get_booster
 from funboost.utils.ctrl_c_end import ctrl_c_recv
 
 
-class BoosterCli(object):
+class BoosterFire(object):
     def __init__(self, import_modules_str: str = None):
         self.import_modules_str = import_modules_str
         if import_modules_str:
@@ -48,9 +48,9 @@ class BoosterCli(object):
     m_consume = multi_process_consume
 
 
-def funboost_cli():
-    fire.Fire(BoosterCli)
+def funboost_fire():
+    fire.Fire(BoosterFire)
 
 
 if __name__ == '__main__':
-    funboost_cli()
+    funboost_fire()

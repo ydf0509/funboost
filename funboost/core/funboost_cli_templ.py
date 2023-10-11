@@ -9,7 +9,7 @@ from pathlib import Path
 from funboost.core.discovery_boosters import BoosterDiscovery
 
 project_root_path = Path(__file__).absolute()
-print(f'project_root_path is : {project_root_path}')
+print(f'project_root_path is : {project_root_path}  ,请确认是否正确')
 sys.path.insert(1, str(project_root_path))  # 这个是为了方便命令行不用用户手动先 export PYTHONPATTH=项目根目录
 
 ##### $$$$$$$$$$$$

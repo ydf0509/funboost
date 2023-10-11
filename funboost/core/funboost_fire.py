@@ -9,14 +9,21 @@ from funboost.utils.ctrl_c_end import ctrl_c_recv
 
 
 class BoosterFire(object):
-    def __init__(self, import_modules_str: str = None, boost_dirs=None):
+    def __init__(self, import_modules_str: str = None,
+                 boost_dirs_str:str=None,max_depth=None,py_file_re_str: str = None):
+        """
+        :param import_modules_str:
+        :param boost_dirs_str:
+        :param py_file_re_str:
+        """
         self.import_modules_str = import_modules_str
         if import_modules_str:
             for m in self.import_modules_str.split(','):
                 importlib.import_module(m)
+        boost_dirs = boost_dirs_str.split(',')
         if boost_dirs:
-            BoosterDiscovery(boost_dirs,
-                             max_depth=2, py_file_re_str='task').auto_discovery()
+            BoosterDiscovery(booster_dirs=boost_dirs,
+                             max_depth=max_depth, py_file_re_str=py_file_re_str).auto_discovery()
 
     def clear(self, *queue_names: str):
         """清空queue"""

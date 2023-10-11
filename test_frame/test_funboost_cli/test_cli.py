@@ -43,11 +43,10 @@ if __name__ == '__main__':
     # 如果需要导入多个模块,import_modules_str的值使用逗号隔开
     python test_cli.py --import_modules_str "test_frame.test_funboost_cli.def_tasks3"  publish test_cli3_queue "{'x':3,'y':4}"
     
-    
-    python test_cli.py --boost_dirs "['./test_find_boosters','./test_find_boosters/d2']"  push test_find_queue1 --x=1 --y=2
+    # 如果没有亲自import boost函数所在模块,则可以自动扫描文件夹下的py文件,自动import
+    python test_cli.py --boost_dirs_str './test_find_boosters,./test_find_boosters/d2'  push test_find_queue1 --x=1 --y=2
     
     '''
-
 
     '''
     cd D:\codes\funboost\test_frame\test_funboost_cli && python test_cli.py consume test_cli1_queue test_cli2_queue

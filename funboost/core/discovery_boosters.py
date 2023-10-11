@@ -10,6 +10,12 @@ from funboost.core.global_boosters import show_all_boosters
 
 class BoosterDiscovery(nb_log.LoggerMixin):
     def __init__(self, booster_dirs: typing.List[typing.Union[PathLike, str]], max_depth=1, py_file_re_str: str = None):
+        """
+        :param booster_dirs: @boost装饰器函数所在的模块的文件夹
+        :param max_depth: 查找多少深层级子目录
+        :param py_file_re_str: 文件名匹配过滤. 例如只import task_xx.py的,你可以传参 task , 避免自动import不需要导入的文件
+        """
+
         self.booster_dirs = booster_dirs
         self.max_depth = max_depth
         self.py_file_re_str = py_file_re_str
@@ -17,6 +23,7 @@ class BoosterDiscovery(nb_log.LoggerMixin):
         self.py_files = []
 
     def get_py_files_recursively(self, current_folder_path: Path, current_depth=0, ):
+        """先找到所有py文件"""
         if current_depth > self.max_depth:
             return
         for item in current_folder_path.iterdir():
@@ -32,6 +39,7 @@ class BoosterDiscovery(nb_log.LoggerMixin):
             self.logger.debug(f)
 
     def auto_discovery(self, ):
+        """把所有py文件自动执行import"""
         for dir in self.booster_dirs:
             if not Path(dir).exists():
                 raise Exception(f'没有这个文件夹 ->  {dir}')

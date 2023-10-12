@@ -13,3 +13,9 @@ def _interrupt_signal_handler(signalx, framex):
 def set_interrupt_signal_handler():
     ''' 有的包里面自己写了 signal.signal，导致这个_interrupt_signal_handler函数不能生效'''
     signal.signal(signal.SIGINT, _interrupt_signal_handler)
+
+
+
+'''
+用户自己导入 from funboost.utils.ctrl_c_end import ctrl_c_recv 函数加到文件最末尾.
+'''

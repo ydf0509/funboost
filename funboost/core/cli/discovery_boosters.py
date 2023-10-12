@@ -5,18 +5,21 @@ from os import PathLike
 from pathlib import Path
 import importlib.util
 import nb_log
-from funboost.core.global_boosters import show_all_boosters
+from funboost.core.global_boosters import show_all_boosters, pid_queue_name__booster_map
 
 
 class BoosterDiscovery(nb_log.LoggerMixin):
-    def __init__(self, booster_dirs: typing.List[typing.Union[PathLike, str]], max_depth=1, py_file_re_str: str = None):
+    def __init__(self, project_root_path: typing.Union[PathLike, str],
+                 booster_dirs: typing.List[typing.Union[PathLike, str]],
+                 max_depth=1, py_file_re_str: str = None):
         """
-        :param booster_dirs: @boost装饰器函数所在的模块的文件夹
+        :param project_root_path 项目根目录
+        :param booster_dirs: @boost装饰器函数所在的模块的文件夹,不用包含项目根目录长路径
         :param max_depth: 查找多少深层级子目录
         :param py_file_re_str: 文件名匹配过滤. 例如你所有的消费函数都在xxx_task.py yyy_task.py这样的,  你可以传参 task.py , 避免自动import了不需要导入的模块
         """
 
-        self.booster_dirs = booster_dirs
+        self.booster__full_path_dirs = [Path(project_root_path) / Path(boost_dir) for boost_dir in booster_dirs]
         self.max_depth = max_depth
         self.py_file_re_str = py_file_re_str
 
@@ -35,12 +38,14 @@ class BoosterDiscovery(nb_log.LoggerMixin):
                         self.py_files.append(item)
                 else:
                     self.py_files.append(item)
+        self.py_files=list(set(self.py_files))
         for f in self.py_files:
             self.logger.debug(f)
 
     def auto_discovery(self, ):
         """把所有py文件自动执行import"""
-        for dir in self.booster_dirs:
+        self.logger.info(self.booster__full_path_dirs)
+        for dir in self.booster__full_path_dirs:
             if not Path(dir).exists():
                 raise Exception(f'没有这个文件夹 ->  {dir}')
 
@@ -52,7 +57,9 @@ class BoosterDiscovery(nb_log.LoggerMixin):
         show_all_boosters()
 
 
+
 if __name__ == '__main__':
     # 指定文件夹路径
-    BoosterDiscovery([r'D:\codes\funboost\test_frame\test_funboost_cli\test_find_boosters'],
+    BoosterDiscovery(project_root_path='/codes/funboost',
+                     booster_dirs=['test_frame/test_funboost_cli/test_find_boosters'],
                      max_depth=2, py_file_re_str='task').auto_discovery()

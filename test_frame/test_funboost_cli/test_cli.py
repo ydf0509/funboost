@@ -10,8 +10,7 @@ sys.path.insert(1, project_root_path)  # 这个是为了方便命令行不用用
 ##### $$$$$$$$$$$$
 
 
-from funboost.core.funboost_fire import funboost_fire
-from funboost.utils.ctrl_c_end import ctrl_c_recv
+from funboost.core.cli.funboost_fire import funboost_fire
 # 需要启动的函数,那么该模块或函数建议一定要被import到这来. 否则需要要在 --import_modules_str 中指定
 # noinspection PyUnresolvedReferences
 import def_tasks  # 这是为了导入被boost装饰的函数,这个重要,不然不知道队列对应的函数在哪里

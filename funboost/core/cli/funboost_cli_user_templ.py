@@ -6,7 +6,9 @@ funboost现在 新增 命令行启动消费 发布  和清空消息
 import sys
 from pathlib import Path
 
-from funboost.core.discovery_boosters import BoosterDiscovery
+import fire
+
+
 
 project_root_path = Path(__file__).absolute()
 print(f'project_root_path is : {project_root_path}  ,请确认是否正确')
@@ -17,19 +19,22 @@ sys.path.insert(1, str(project_root_path))  # 这个是为了方便命令行不�
 ##### $$$$$$$$$$$$
 
 
-from funboost.core.funboost_fire import funboost_fire
+from funboost.core.cli.funboost_fire import BoosterFire
+from funboost.core.cli.discovery_boosters import BoosterDiscovery
+
 
 # 需要启动的函数,那么该模块或函数建议建议要被import到这来, 否则需要要在 --import_modules_str 中指定用户项目中有哪些模块包括了booster
 '''
-有三种方式,自动找到有@boost装饰器,注册booster
+有4种方式,自动找到有@boost装饰器,注册booster
 
 1. 用户亲自把要启动的消费函数所在模块或函数 手动 import 一下到此模块来
 2. 用户在使用命令行时候 --import_modules_str 指定导入哪些模块路径,就能启动那些队列名来消费和发布了.
 3. 用户使用BoosterDiscovery.auto_discovery_boosters  自动 import 指定文件夹下的 .py 文件来实现.
+4  用户在使用命令行时候传参 project_root_path booster_dirs ,自动扫描模块,自动import
 '''
 
-# BoosterDiscovery(['用户的消费函数文件的目录1','用户的消费函数文件的目录2']).auto_discovery_boosters()
-BoosterDiscovery([]).auto_discovery()
+# BoosterDiscovery('project_root_path',['dir1/用户的消费函数文件的目录1','dir2/用户的消费函数文件的目录2']).auto_discovery_boosters()
+
 
 if __name__ == '__main__':
-    funboost_fire()
+    fire.Fire(BoosterFire,command=[f'--project_root_path={project_root_path}'])

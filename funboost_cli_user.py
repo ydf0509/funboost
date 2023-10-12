@@ -5,16 +5,15 @@ funboost现在 新增 命令行启动消费 发布  和清空消息
 """
 import sys
 from pathlib import Path
-
 import fire
 
 project_root_path = Path(__file__).absolute().parent
 print(f'project_root_path is : {project_root_path}  ,请确认是否正确')
 sys.path.insert(1, str(project_root_path))  # 这个是为了方便命令行不用用户手动先 export PYTHONPATTH=项目根目录
 
-##### $$$$$$$$$$$$
-#  以上的sys.path代码需要放在最上面,先设置好pythonpath再导入funboost相关的模块
-##### $$$$$$$$$$$$
+# $$$$$$$$$$$$
+# 以上的sys.path代码需要放在最上面,先设置好pythonpath再导入funboost相关的模块
+# $$$$$$$$$$$$
 
 
 from funboost.core.cli.funboost_fire import BoosterFire, env_dict
@@ -30,17 +29,14 @@ from funboost.core.cli.discovery_boosters import BoosterDiscovery
 4  用户在使用命令行时候传参 project_root_path booster_dirs ,自动扫描模块,自动import
 '''
 
-BoosterDiscovery(project_root_path,[]).auto_discovery()
+BoosterDiscovery(project_root_path, booster_dirs=[], max_depth=1).auto_discovery()  # booster_dirs 用户可以自己增加扫描的文件夹,这样可以命令行少传了.
 
 env_dict['project_root_path'] = project_root_path
 
 if __name__ == '__main__':
     fire.Fire(BoosterFire, )
 
-
 '''
-
-python funboost_cli_user.py --booster_dirs_str='./test_find_boosters,./test_find_boosters/d2'  push test_find_queue1 --x=1 --y=2
 
 python funboost_cli_user.py   --booster_dirs_str=test_frame/test_funboost_cli/test_find_boosters --max_depth=2  push test_find_queue1 --x=1 --y=2
 

@@ -14,8 +14,7 @@ def regist_booster(queue_name: str, booster):
 
 def show_all_boosters():
     queues = []
-    logger.info(f'queues: {queues}')
     for pid_queue_name, booster in pid_queue_name__booster_map.items():
         queues.append(pid_queue_name[1])
-        logger.info(f'booster: {pid_queue_name[1]}  {booster}')
-
+        logger.debug(f'booster: {pid_queue_name[1]}  {booster}')
+    logger.info(f'queues: {queues}')

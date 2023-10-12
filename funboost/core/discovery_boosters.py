@@ -13,7 +13,7 @@ class BoosterDiscovery(nb_log.LoggerMixin):
         """
         :param booster_dirs: @boost装饰器函数所在的模块的文件夹
         :param max_depth: 查找多少深层级子目录
-        :param py_file_re_str: 文件名匹配过滤. 例如只import task_xx.py的,你可以传参 task , 避免自动import不需要导入的文件
+        :param py_file_re_str: 文件名匹配过滤. 例如你所有的消费函数都在xxx_task.py yyy_task.py这样的,  你可以传参 task.py , 避免自动import了不需要导入的模块
         """
 
         self.booster_dirs = booster_dirs

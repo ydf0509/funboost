@@ -7,7 +7,7 @@ from funboost.core.global_boosters import pid_queue_name__booster_map, queue_nam
 def get_booster(queue_name: str) -> Booster:
     pid = os.getpid()
     if (pid, queue_name) not in pid_queue_name__booster_map:
-        err_msg = f'进程 {pid} ，没有 {queue_name} 对应的 booster'
+        err_msg = f'进程 {pid} ，没有 {queue_name} 对应的 booster   , pid_queue_name__booster_map: {pid_queue_name__booster_map}'
         raise ValueError(err_msg)
     return pid_queue_name__booster_map[(pid, queue_name)]
 

@@ -18,11 +18,10 @@ jobstores = {
 # funboost_background_scheduler_redis_store = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False, jobstores=jobstores)
 
 
-def f(x,y):
-    print(x,y)
 
-funboost_background_scheduler_redis_store.add_job(f,'interval', id='17', name='namexx3', seconds=5,
-                                                  args=(1,2),replace_existing=True)
+
+# funboost_background_scheduler_redis_store.add_job(f,'interval', id='17', name='namexx3', seconds=5,
+#                                                   args=(1,2),replace_existing=True)
 
 funboost_background_scheduler_redis_store.start()
 

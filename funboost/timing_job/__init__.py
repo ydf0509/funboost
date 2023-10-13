@@ -2,6 +2,7 @@
 集成定时任务。
 """
 import atexit
+import copy
 import importlib
 
 import pickle
@@ -16,12 +17,14 @@ from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.base import STATE_STOPPED, STATE_RUNNING
 from apscheduler.util import undefined
 import deprecated
+from funboost.utils import RedisMixin
 
 from funboost import funboost_config_deafult
 
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost.core.get_booster import get_booster,Booster
+from funboost.core.get_booster import get_booster, Booster
 from funboost.publishers.base_publisher import AbstractPublisher
+
 
 @deprecated.deprecated(reason='以后不要再使用这种方式，对于job_store为数据库时候需要序列化不好。使用内存和数据库都兼容的添加任务方式: add_push_job')
 def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, AbstractConsumer]):
@@ -40,7 +43,14 @@ def push_fun_params_to_broker(queue_name: str, *args, **kwargs, ):
     """
     *args **kwargs 是消费函数的入参
     """
-    get_booster(queue_name).push(*args, **kwargs)
+    runonce_uuid = kwargs['runonce_uuid']
+    kwargs.pop('runonce_uuid')
+    if runonce_uuid:
+        key = 'apscheduler.redisjobstore_runonce2'
+        if RedisMixin().redis_db_frame.sadd(key, runonce_uuid):
+            get_booster(queue_name).push(*args, **kwargs)
+    else:
+        get_booster(queue_name).push(*args, **kwargs)
 
 
 class FunboostBackgroundScheduler(BackgroundScheduler):
@@ -59,10 +69,10 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
                             next_run_time, jobstore, executor,
                             replace_existing, **trigger_args)
 
-    def add_push_job(self, func:Booster, trigger=None, args=None, kwargs=None, id=None, name=None,
+    def add_push_job(self, func: Booster, trigger=None, args=None, kwargs=None, id=None, name=None,
                      misfire_grace_time=undefined, coalesce=undefined, max_instances=undefined,
                      next_run_time=undefined, jobstore='default', executor='default',
-                     replace_existing=False, **trigger_args):
+                     replace_existing=False, runonce_uuid=None, **trigger_args, ):
         """
         :param func: 被@boost装饰器装饰的函数
         :param trigger:
@@ -92,10 +102,12 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
         args_list = list(args)
         args_list.insert(0, func.queue_name)
         args = tuple(args_list)
+        kwargs = kwargs or {}
+        kwargs['runonce_uuid'] = runonce_uuid
         return self.add_job(push_fun_params_to_broker, trigger, args, kwargs, id, name,
                             misfire_grace_time, coalesce, max_instances,
                             next_run_time, jobstore, executor,
-                            replace_existing, **trigger_args)
+                            replace_existing, **trigger_args, )
 
     def start(self, paused=False, block_exit=True):
         # def _block_exit():
@@ -150,14 +162,15 @@ fsdf_background_scheduler = funboost_aps_scheduler  # 兼容一下老名字。
 if __name__ == '__main__':
     # 定时运行消费演示
     import datetime
-    from funboost import boost, BrokerEnum, fsdf_background_scheduler, timing_publish_deco,run_forever,Booster
+    from funboost import boost, BrokerEnum, fsdf_background_scheduler, timing_publish_deco, run_forever, Booster
 
 
     @Booster('queue_test_666', broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
     def consume_func(x, y):
         print(f'{x} + {y} = {x + y}')
 
-    print(consume_func,type(consume_func))
+
+    print(consume_func, type(consume_func))
     # 定时每隔3秒执行一次。
     funboost_aps_scheduler.add_push_job(consume_func,
                                         'interval', id='3_second_job', seconds=3, kwargs={"x": 5, "y": 6})

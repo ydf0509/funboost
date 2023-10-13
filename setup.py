@@ -85,6 +85,7 @@ setup(
         'cryptography',
         'auto_run_on_remote',
         'frozenlist',
+        'fire',
     ],
     extras_require={'extra_brokers': ['confluent_kafka==1.7.0',
                                       "pulsar-client==3.1.0; python_version>='3.7'",
@@ -98,6 +99,12 @@ setup(
                                       'rq==1.15.0',
                                       'kombu'
                                       ]},
+
+    entry_points={
+        'console_scripts': [
+            'funboost = funboost.__main__:main',
+            'funboost_cli_super = funboost.__main__:main',
+        ]}
 )
 
 """

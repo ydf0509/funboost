@@ -25,10 +25,13 @@ class BoosterFire(object):
         :param py_file_re_str:
         """
         project_root_path = env_dict['project_root_path'] or project_root_path
-        print(f'project_root_path is :{project_root_path}')
+        print(f'project_root_path is :{project_root_path} ,请确认')
+        if project_root_path is None:
+            raise Exception('project_root_path is none')
         loc = copy.copy(locals())
         for k,v in loc.items():
             print(f'{k} : {v}')
+        sys.path.insert(1, project_root_path)
         self.import_modules_str = import_modules_str
         if import_modules_str:
             for m in self.import_modules_str.split(','):

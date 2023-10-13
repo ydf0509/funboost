@@ -4,7 +4,7 @@ import sys
 import shutil
 
 # Ensure dependencies
-os.system(f"{sys.executable} -m pip install --user --upgrade setuptools wheel twine")
+# os.system(f"{sys.executable} -m pip install --user --upgrade setuptools wheel twine")
 
 # Delete previous build
 shutil.rmtree("dist", ignore_errors=True)

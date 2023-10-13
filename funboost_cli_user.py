@@ -19,7 +19,7 @@ sys.path.insert(1, str(project_root_path))  # 这个是为了方便命令行不�
 from funboost.core.cli.funboost_fire import BoosterFire, env_dict
 from funboost.core.cli.discovery_boosters import BoosterDiscovery
 
-# 需要启动的函数,那么该模块或函数建议建议要被import到这来, 否则需要要在 --import_modules_str 中指定用户项目中有哪些模块包括了booster
+# 需要启动的函数,那么该模块或函数建议建议要被import到这来, 否则需要要在 --import_modules_str 或 booster_dirs 中指定用户项目中有哪些模块包括了booster
 '''
 有4种方式,自动找到有@boost装饰器,注册booster
 

@@ -214,5 +214,8 @@ def auto_creat_config_file_to_project_root_path():
     #     nb_print(f'在 {file_name} 目录下自动生成了一个文件， 请查看或修改 \n "{file_name}:1" 文件')
     #     f.write(config_file_content)
 
+    file_name = Path(sys.path[1]) / Path('funboost_cli_user.py')
+    copyfile(Path(__file__).absolute().parent / Path('core/cli/funboost_cli_user_templ.py'), file_name)
+
 
 use_config_form_funboost_config_module()

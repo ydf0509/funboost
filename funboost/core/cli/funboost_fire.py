@@ -33,11 +33,11 @@ class BoosterFire(object):
         self.import_modules_str = import_modules_str
         if import_modules_str:
             for m in self.import_modules_str.split(','):
-                importlib.import_module(m)
+                importlib.import_module(m)  # 发现@boost函数
         if booster_dirs_str and project_root_path:
             boost_dirs = booster_dirs_str.split(',')
             BoosterDiscovery(project_root_path=str(project_root_path), booster_dirs=boost_dirs,
-                             max_depth=max_depth, py_file_re_str=py_file_re_str).auto_discovery()
+                             max_depth=max_depth, py_file_re_str=py_file_re_str).auto_discovery()  # 发现@boost函数
 
     def show_all_queues(self):
         """显示扫描到的所有queue name"""

@@ -43,7 +43,7 @@ class BoosterDiscovery(nb_log.LoggerMixin):
             self.logger.debug(f)
 
     def auto_discovery(self, ):
-        """把所有py文件自动执行import"""
+        """把所有py文件自动执行import,主要是把 所有的@boost函数装饰器注册到 pid_queue_name__booster_map 中"""
         self.logger.info(self.booster__full_path_dirs)
         for dir in self.booster__full_path_dirs:
             if not Path(dir).exists():

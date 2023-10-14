@@ -38,7 +38,7 @@ class BoosterDiscovery(nb_log.LoggerMixin):
                         self.py_files.append(item)
                 else:
                     self.py_files.append(item)
-        self.py_files=list(set(self.py_files))
+        self.py_files = list(set(self.py_files))
         for f in self.py_files:
             self.logger.debug(f)
 
@@ -55,7 +55,6 @@ class BoosterDiscovery(nb_log.LoggerMixin):
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
         show_all_boosters()
-
 
 
 if __name__ == '__main__':

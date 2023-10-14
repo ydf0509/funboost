@@ -1,4 +1,3 @@
-
 import os
 import sys
 import shutil
@@ -7,6 +6,8 @@ import shutil
 # os.system(f"{sys.executable} -m pip install --user --upgrade setuptools wheel twine")
 
 # Delete previous build
+import time
+
 shutil.rmtree("dist", ignore_errors=True)
 
 # Build
@@ -17,4 +18,4 @@ os.system(f"{sys.executable} -m twine upload dist/*")
 
 shutil.rmtree("build", ignore_errors=True)
 
-
+time.sleep(1000000)

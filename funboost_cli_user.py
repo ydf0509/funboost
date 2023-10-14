@@ -28,10 +28,10 @@ from funboost.core.cli.discovery_boosters import BoosterDiscovery
 3. 用户使用BoosterDiscovery.auto_discovery_boosters  自动 import 指定文件夹下的 .py 文件来实现.
 4  用户在使用命令行时候传参 project_root_path booster_dirs ,自动扫描模块,自动import
 '''
-
+env_dict['project_root_path'] = project_root_path
 BoosterDiscovery(project_root_path, booster_dirs=[], max_depth=1).auto_discovery()  # booster_dirs 用户可以自己增加扫描的文件夹,这样可以命令行少传了.
 
-env_dict['project_root_path'] = project_root_path
+
 
 if __name__ == '__main__':
     fire.Fire(BoosterFire, )

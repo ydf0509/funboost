@@ -19,6 +19,8 @@ sys.path.insert(1, str(project_root_path))  # 这个是为了方便命令行不�
 from funboost.core.cli.funboost_fire import BoosterFire, env_dict
 from funboost.core.cli.discovery_boosters import BoosterDiscovery
 
+env_dict['project_root_path'] = project_root_path
+
 # 需要启动的函数,那么该模块或函数建议建议要被import到这来, 否则需要要在 --import_modules_str 中指定用户项目中有哪些模块包括了booster
 '''
 有4种方式,自动找到有@boost装饰器,注册booster
@@ -31,14 +33,12 @@ from funboost.core.cli.discovery_boosters import BoosterDiscovery
 
 BoosterDiscovery(project_root_path, booster_dirs=[], max_depth=1).auto_discovery()  # booster_dirs 用户可以自己增加扫描的文件夹,这样可以命令行少传了.
 
-env_dict['project_root_path'] = project_root_path
-
 if __name__ == '__main__':
     fire.Fire(BoosterFire, )
 
 '''
+python funboost_cli_user.py   --booster_dirs_str=test_frame/test_funboost_cli/test_find_boosters --max_depth=2  show_all_queues
 
 python funboost_cli_user.py   --booster_dirs_str=test_frame/test_funboost_cli/test_find_boosters --max_depth=2  push test_find_queue1 --x=1 --y=2
-
 
 '''

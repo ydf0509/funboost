@@ -1,9 +1,10 @@
 # coding=utf-8
 from setuptools import setup, find_packages
+from funboost import __version__
 
 setup(
     name='funboost',  #
-    version='25.0',
+    version=__version__,
     description=(
         'pip install funboost，python全功能分布式函数调度框架,。支持python所有类型的并发模式和一切知名消息队列中间件，支持celery框架整体作为funboost中间件，python函数加速器，框架包罗万象，一统编程思维，兼容50% python业务场景，适用范围广。只需要一行代码即可分布式执行python一切函数，99%用过funboost的pythoner 感受是 方便 快速 强大，相见恨晚 '
     ),

@@ -115,7 +115,7 @@ funboosts示图：
 
 [//]: # ([![img-46.png]&#40;https://i.postimg.cc/tC7mQxWN/img-46.png&#41;]&#40;https://postimg.cc/hfW0VhCX&#41;)
 就是最普通的生产者消费者流程图
-![https://img.vinua.cn/images/aacY4.png](https://img.vinua.cn/images/aacY4.png)
+![https://img.vinua.cn/images/aacY4.png](https://img.vinua.cn/images/aacY4.png?raw=true)
 
 也就是这种非常普通的流程图,一样的意思
 [![pPbCmyd.png](https://z1.ax1x.com/2023/09/27/pPbCmyd.png)](https://imgse.com/i/pPbCmyd)

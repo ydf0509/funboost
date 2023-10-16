@@ -19,8 +19,9 @@ class BoosterFire(object):
         """
         :param project_root_path : 用户项目根目录
         :param import_modules_str:
-        :param booster_dirs_str:
-        :param py_file_re_str:
+        :param booster_dirs_str: 扫描@boost函数所在的目录，多个目录用,隔开
+        :param max_depth: 扫描目录代码层级
+        :param py_file_re_str: python文件的正则， 例如  tasks.py那么就不自动import其他名字的python模块
         """
         project_root_path = env_dict['project_root_path']
         print(f'project_root_path is :{project_root_path} ,请确认')

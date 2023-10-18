@@ -29,7 +29,7 @@ from funboost.core.cli.discovery_boosters import BoosterDiscovery
 4  用户在使用命令行时候传参 project_root_path booster_dirs ,自动扫描模块,自动import
 '''
 env_dict['project_root_path'] = project_root_path
-BoosterDiscovery(project_root_path, booster_dirs=[], max_depth=1).auto_discovery()  # booster_dirs 用户可以自己增加扫描的文件夹,这样可以命令行少传了.
+BoosterDiscovery(project_root_path, booster_dirs=[], max_depth=1,py_file_re_str=None).auto_discovery()  # booster_dirs 用户可以自己增加扫描的文件夹,这样可以命令行少传了.
 
 
 

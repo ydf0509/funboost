@@ -19,9 +19,7 @@ sys.path.insert(1, str(project_root_path))  # 这个是为了方便命令行不�
 from funboost.core.cli.funboost_fire import BoosterFire, env_dict
 from funboost.core.cli.discovery_boosters import BoosterDiscovery
 
-env_dict['project_root_path'] = project_root_path
-
-# 需要启动的函数,那么该模块或函数建议建议要被import到这来, 否则需要要在 --import_modules_str 中指定用户项目中有哪些模块包括了booster
+# 需要启动的函数,那么该模块或函数建议建议要被import到这来, 否则需要要在 --import_modules_str 或 booster_dirs 中指定用户项目中有哪些模块包括了booster
 '''
 有4种方式,自动找到有@boost装饰器,注册booster
 
@@ -30,15 +28,18 @@ env_dict['project_root_path'] = project_root_path
 3. 用户使用BoosterDiscovery.auto_discovery_boosters  自动 import 指定文件夹下的 .py 文件来实现.
 4  用户在使用命令行时候传参 project_root_path booster_dirs ,自动扫描模块,自动import
 '''
+env_dict['project_root_path'] = project_root_path
+BoosterDiscovery(project_root_path, booster_dirs=[], max_depth=1,py_file_re_str=None).auto_discovery()  # booster_dirs 用户可以自己增加扫描的文件夹,这样可以命令行少传了.
 
-BoosterDiscovery(project_root_path, booster_dirs=[], max_depth=1).auto_discovery()  # booster_dirs 用户可以自己增加扫描的文件夹,这样可以命令行少传了.
+
 
 if __name__ == '__main__':
     fire.Fire(BoosterFire, )
 
 '''
-python funboost_cli_user.py   --booster_dirs_str=test_frame/test_funboost_cli/test_find_boosters --max_depth=2  show_all_queues
 
-python funboost_cli_user.py   --booster_dirs_str=test_frame/test_funboost_cli/test_find_boosters --max_depth=2  push test_find_queue1 --x=1 --y=2
+python /codes/funboost/funboost_cli_user.py   --booster_dirs_str=test_frame/test_funboost_cli/test_find_boosters --max_depth=2  push test_find_queue1 --x=1 --y=2
+
+python /codes/funboost/funboost_cli_user.py   --booster_dirs_str=test_frame/test_funboost_cli/test_find_boosters --max_depth=2  consume test_find_queue1 
 
 '''

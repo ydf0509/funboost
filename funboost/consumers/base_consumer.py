@@ -34,7 +34,8 @@ from nb_log import (get_logger, LoggerLevelSetterMixin, nb_print, LoggerMixin,Lo
 from apscheduler.jobstores.redis import RedisJobStore
  
 from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
- 
+
+from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
 from funboost.concurrent_pool.single_thread_executor import SoloExecutor
  
 from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig, ResultPersistenceHelper, FunctionResultStatus
@@ -49,6 +50,7 @@ from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
 # noinspection PyUnresolvedReferences
 from funboost.concurrent_pool.bounded_threadpoolexcutor import \
     BoundedThreadPoolExecutor
+from funboost.utils.redis_manager import RedisMixin
 from func_timeout import func_set_timeout  # noqa
  
 from funboost.concurrent_pool.custom_threadpool_executor import \
@@ -58,10 +60,10 @@ from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool, sy
 from funboost.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from funboost.factories.publisher_factotry import get_publisher
  
-from funboost.utils import decorators, time_util, RedisMixin, un_strict_json_dumps, redis_manager
+from funboost.utils import decorators, time_util,  un_strict_json_dumps, redis_manager
 # noinspection PyUnresolvedReferences
 from funboost.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 # noinspection PyUnresolvedReferences
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
 from funboost.core import kill_remote_task
@@ -352,14 +354,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.logger = LogManager(logger_name, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
             log_level_int=log_level, log_filename=f'{logger_name}.log' if create_logger_file else None,
             # log_file_handler_type=log_file_handler_type,
-            formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+            formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
         self._logger_name = logger_name
         # self.logger.info(f'{self.__class__} 在 {current_queue__info_dict["where_to_instantiate"]}  被实例化')
         logger_name_error = f'{logger_name}_error'
         self.error_file_logger = LogManager(logger_name_error, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
             log_level_int=log_level, log_filename=f'{logger_name_error}.log',
             is_add_stream_handler=False,
-            formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+            formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
 
         stdout_write(f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;37;44m此行 '
                      f'实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
@@ -544,14 +546,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.keep_circulating(1)(self._shedual_task)()
         else:
             self._concurrent_mode_dispatcher.schedulal_task_with_no_block()
-        setattr(funboost_config_deafult, 'has_start_a_consumer_flag', 1)
+        # setattr(funboost_config_deafult, 'has_start_a_consumer_flag', 1)
 
     def _start_delay_task_scheduler(self):
         from funboost.timing_job import FsdfBackgroundScheduler
         jobstores = {
             "default": RedisJobStore(**redis_manager.get_redis_conn_kwargs())
         }
-        self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False,
+        self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=FunboostCommonConfig.TIMEZONE, daemon=False,
                                                              jobstores=jobstores  # push 方法的序列化带thredignn.lock
                                                              )
         self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。

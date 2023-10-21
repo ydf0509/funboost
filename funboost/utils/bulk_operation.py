@@ -20,8 +20,9 @@ import unittest
 from pymongo import UpdateOne, InsertOne, UpdateMany, collection, MongoClient
 import redis
 
+from funboost.utils.redis_manager import RedisMixin
 from funboost.utils.time_util import DatetimeConverter
-from funboost.utils import LoggerMixin, decorators, RedisMixin
+from funboost.utils import LoggerMixin, decorators
 
 
 class RedisOperation:

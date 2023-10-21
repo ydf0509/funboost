@@ -1,6 +1,5 @@
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 
-from funboost import funboost_config_deafult
 
 from funboost.timing_job import FsdfBackgroundScheduler
 

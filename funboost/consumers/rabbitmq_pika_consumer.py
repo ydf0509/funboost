@@ -12,7 +12,7 @@ import pikav1.exceptions
 from pikav1.exceptions import AMQPError
 import pikav1
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 
 get_logger('pikav1', log_level_int=20)
 
@@ -48,9 +48,9 @@ class RabbitmqConsumer(AbstractConsumer):
                 # self.rabbit_client = RabbitMqFactory(is_use_rabbitpy=0).get_rabbit_cleint()
                 # self.channel = self.rabbit_client.creat_a_channel()
 
-                credentials = pikav1.PlainCredentials(funboost_config_deafult.RABBITMQ_USER, funboost_config_deafult.RABBITMQ_PASS)
+                credentials = pikav1.PlainCredentials(BrokerConnConfig.RABBITMQ_USER, BrokerConnConfig.RABBITMQ_PASS)
                 self.connection = pikav1.BlockingConnection(pikav1.ConnectionParameters(
-                    funboost_config_deafult.RABBITMQ_HOST, funboost_config_deafult.RABBITMQ_PORT, funboost_config_deafult.RABBITMQ_VIRTUAL_HOST, credentials, heartbeat=600))
+                    BrokerConnConfig.RABBITMQ_HOST, BrokerConnConfig.RABBITMQ_PORT, BrokerConnConfig.RABBITMQ_VIRTUAL_HOST, credentials, heartbeat=600))
                 self.channel = self.connection.channel()
                 self.rabbitmq_queue = self.channel.queue_declare(queue=self._queue_name, durable=True)
                 self.channel.basic_consume(on_message_callback = callback,

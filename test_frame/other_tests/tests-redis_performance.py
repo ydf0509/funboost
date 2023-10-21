@@ -1,7 +1,7 @@
 """
 测试redis无其他逻辑时候的性能
 """
-from funboost.utils import RedisMixin
+from funboost.utils.redis_manager import RedisMixin
 from redis3 import Redis
 import decorator_libs
 import nb_log

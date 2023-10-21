@@ -4,7 +4,7 @@
 import json
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost.utils import RedisMixin
+from funboost.utils.redis_manager import RedisMixin
 
 
 class RedisConsumer(AbstractConsumer, RedisMixin):

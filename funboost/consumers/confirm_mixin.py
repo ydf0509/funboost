@@ -3,8 +3,8 @@
 # @Time    : 2022/8/23 0023 21:10
 import json
 import time
-
-from funboost.utils import RedisMixin, decorators
+from funboost.utils.redis_manager import RedisMixin
+from funboost.utils import decorators
 
 """
 此模块是依赖redis的确认消费，所以比较复杂。

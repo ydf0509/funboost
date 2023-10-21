@@ -80,66 +80,33 @@ def dict2json(dictx: dict, indent=4):
     return json.dumps(dict_new, ensure_ascii=False, indent=indent)
 
 
-# noinspection PyPep8Naming
-# 这是手动调用函数设置配置，框架会自动调用use_config_form_funboost_config_module读当前取项目根目录下的funboost_config.py，不需要嗲用这里
-def patch_frame_config(MONGO_CONNECT_URL: str = None,
-
-                       RABBITMQ_USER: str = None,
-                       RABBITMQ_PASS: str = None,
-                       RABBITMQ_HOST: str = None,
-                       RABBITMQ_PORT: int = None,
-                       RABBITMQ_VIRTUAL_HOST: str = None,
-
-                       REDIS_HOST: str = None,
-                       REDIS_PASSWORD: str = None,
-                       REDIS_PORT: int = None,
-                       REDIS_DB: int = None,
-
-                       NSQD_TCP_ADDRESSES: list = None,
-                       NSQD_HTTP_CLIENT_HOST: str = None,
-                       NSQD_HTTP_CLIENT_PORT: int = None,
-
-                       KAFKA_BOOTSTRAP_SERVERS: list = None,
-
-                       SQLACHEMY_ENGINE_URL='sqlite:////sqlachemy_queues/queues.db',
-
-                       **other_configs,  # 其他入参可以是其他中间件的配置名字，例如 MQTT_HOST
-
-                       ):
-    """
-    对框架的配置使用猴子补丁的方式进行更改。利用了模块天然是单利的特性。格式参考frame_config.py
-    :return:
-    """
-    kw = copy.copy(locals())
-    kw.update(kw['other_configs'])
-    kw.pop('other_configs')
-    for var_name, var_value in kw.items():
-        if var_value is not None:
-            setattr(funboost_config_deafult, var_name, var_value)
-    nb_print('使用patch_frame_config 函数设置框架配置了。')
-    show_frame_config()
-
-
 def show_frame_config():
     only_print_on_main_process('显示当前的项目中间件配置参数')
-    for var_name in dir(funboost_config_deafult):
-        if var_name.isupper():
-            var_value = getattr(funboost_config_deafult, var_name)
-            if var_name == 'MONGO_CONNECT_URL':
-                if re.match('mongodb://.*?:.*?@.*?/.*', var_value):
-                    mongo_pass = re.search('mongodb://.*?:(.*?)@', var_value).group(1)
-                    mongo_pass_encryption = f'{"*" * (len(mongo_pass) - 2)}{mongo_pass[-1]}' if len(
-                        mongo_pass) > 3 else mongo_pass
-                    var_value_encryption = re.sub(r':(\w+)@', f':{mongo_pass_encryption}@', var_value)
-                    only_print_on_main_process(f'{var_name}:             {var_value_encryption}')
-                    continue
-            if 'PASS' in var_name and var_value is not None and len(var_value) > 3:  # 对密码打*
-                only_print_on_main_process(f'{var_name}:                {var_value[0]}{"*" * (len(var_value) - 2)}{var_value[-1]}')
-            else:
-                only_print_on_main_process(f'{var_name}:                {var_value}')
+    # for var_name in dir(funboost_config_deafult):
+    #     if var_name.isupper():
+    #         var_value = getattr(funboost_config_deafult, var_name)
+    #         if var_name == 'MONGO_CONNECT_URL':
+    #             if re.match('mongodb://.*?:.*?@.*?/.*', var_value):
+    #                 mongo_pass = re.search('mongodb://.*?:(.*?)@', var_value).group(1)
+    #                 mongo_pass_encryption = f'{"*" * (len(mongo_pass) - 2)}{mongo_pass[-1]}' if len(
+    #                     mongo_pass) > 3 else mongo_pass
+    #                 var_value_encryption = re.sub(r':(\w+)@', f':{mongo_pass_encryption}@', var_value)
+    #                 only_print_on_main_process(f'{var_name}:             {var_value_encryption}')
+    #                 continue
+    #         if 'PASS' in var_name and var_value is not None and len(var_value) > 3:  # 对密码打*
+    #             only_print_on_main_process(f'{var_name}:                {var_value[0]}{"*" * (len(var_value) - 2)}{var_value[-1]}')
+    #         else:
+    #             only_print_on_main_process(f'{var_name}:                {var_value}')
+    only_print_on_main_process(f'''读取的 BrokerConnConfig 配置是: 
+    {funboost_config_deafult.BrokerConnConfig().get_json()}
+    ''')
+
+    only_print_on_main_process(f'''读取的 FunboostCommonConfig 配置是: 
+        {funboost_config_deafult.FunboostCommonConfig().get_json()}
+        ''')
 
     only_print_on_main_process(f'读取的 BoostDecoratorDefaultParams 默认 @boost 装饰器入参的默认全局配置是： \n  '
-                               f'{dict2json(funboost_config_deafult.BoostDecoratorDefaultParams().get_dict())}')
+                               f'{funboost_config_deafult.BoostDecoratorDefaultParams().get_json()}')
 
 
 def use_config_form_funboost_config_module():
@@ -168,24 +135,22 @@ def use_config_form_funboost_config_module():
         # print(dir(m))
         # nb_print(m.__dict__.items())
         only_print_on_main_process(f'分布式函数调度框架 读取到\n "{m.__file__}:1" 文件里面的变量作为优先配置了\n')
-        for var_namex, var_valuex in m.__dict__.items():
-            # print(m, var_namex, var_valuex)
-            if var_namex.isupper():
-                setattr(funboost_config_deafult, var_namex, var_valuex)  # 用用户自定义的配置覆盖框架的默认配置。
-            if var_namex == 'BoostDecoratorDefaultParams':
-                for k, v in var_valuex().get_dict().items():
-                    setattr(funboost_config_deafult.BoostDecoratorDefaultParams, k, v)
+
+        funboost_config_deafult.BrokerConnConfig.update_cls_attribute(**m.BrokerConnConfig().get_dict())
+        funboost_config_deafult.FunboostCommonConfig.update_cls_attribute(**m.FunboostCommonConfig().get_dict())
+        funboost_config_deafult.BoostDecoratorDefaultParams.update_cls_attribute(**m.BoostDecoratorDefaultParams().get_dict())
+
 
     except ModuleNotFoundError:
         nb_print(
             f'''分布式函数调度框架检测到 你的项目根目录 {project_root_path} 和当前文件夹 {current_script_path}  下没有 funboost_config.py 文件，\n''')
-        auto_creat_config_file_to_project_root_path()
+        _auto_creat_config_file_to_project_root_path()
     else:
         show_frame_config()
         # print(getattr(m,'BoostDecoratorDefaultParams')().get_dict())
 
 
-def auto_creat_config_file_to_project_root_path():
+def _auto_creat_config_file_to_project_root_path():
     """
     在没有使用pycahrm运行代码时候，如果实在cmd 或者 linux 运行， python xx.py，
     请在临时会话窗口设置linux export PYTHONPATH=你的项目根目录 ，winwdos set PYTHONPATH=你的项目根目录

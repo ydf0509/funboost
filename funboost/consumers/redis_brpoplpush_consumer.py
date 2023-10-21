@@ -5,7 +5,8 @@ import json
 # import time
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost.utils import RedisMixin, decorators
+from funboost.utils import  decorators
+from funboost.utils.redis_manager import RedisMixin
 
 
 class RedisBrpopLpushConsumer(AbstractConsumer, RedisMixin):

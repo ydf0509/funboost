@@ -5,7 +5,7 @@ import json
 from funboost.publishers.base_publisher import AbstractPublisher
 import http.client
 from urllib.parse import quote
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 import urllib3
 
 """
@@ -20,8 +20,8 @@ class HttpsqsPublisher(AbstractPublisher):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        conn = http.client.HTTPConnection(host=funboost_config_deafult.HTTPSQS_HOST, port=funboost_config_deafult.HTTPSQS_PORT)
-        url = f"/?name={self._queue_name}&opt=maxqueue&num=1000000000&auth={funboost_config_deafult.HTTPSQS_AUTH}&charset=utf-8"
+        conn = http.client.HTTPConnection(host=BrokerConnConfig.HTTPSQS_HOST, port=BrokerConnConfig.HTTPSQS_PORT)
+        url = f"/?name={self._queue_name}&opt=maxqueue&num=1000000000&auth={BrokerConnConfig.HTTPSQS_AUTH}&charset=utf-8"
         conn.request("GET", url)
         self.logger.info(conn.getresponse().read(1000))
 
@@ -29,14 +29,14 @@ class HttpsqsPublisher(AbstractPublisher):
 
     def opt_httpsqs000(self, opt=None, data=''):
         data_url_encode = quote(data)
-        resp = self.http.request('get', url=f'http://{funboost_config_deafult.HTTPSQS_HOST}:{funboost_config_deafult.HTTPSQS_PORT}' +
-                                            f"/?name={self._queue_name}&opt={opt}&data={data_url_encode}&auth={funboost_config_deafult.HTTPSQS_AUTH}&charset=utf-8")
+        resp = self.http.request('get', url=f'http://{BrokerConnConfig.HTTPSQS_HOST}:{BrokerConnConfig.HTTPSQS_PORT}' +
+                                            f"/?name={self._queue_name}&opt={opt}&data={data_url_encode}&auth={BrokerConnConfig.HTTPSQS_AUTH}&charset=utf-8")
         return resp.data.decode()
 
     def opt_httpsqs(self, opt=None, data=''):
-        conn = http.client.HTTPConnection(host=funboost_config_deafult.HTTPSQS_HOST, port=funboost_config_deafult.HTTPSQS_PORT)
+        conn = http.client.HTTPConnection(host=BrokerConnConfig.HTTPSQS_HOST, port=BrokerConnConfig.HTTPSQS_PORT)
         data_url_encode = quote(data)
-        url = f"/?name={self._queue_name}&opt={opt}&data={data_url_encode}&auth={funboost_config_deafult.HTTPSQS_AUTH}&charset=utf-8"
+        url = f"/?name={self._queue_name}&opt={opt}&data={data_url_encode}&auth={BrokerConnConfig.HTTPSQS_AUTH}&charset=utf-8"
         conn.request("GET", url)
         r = conn.getresponse()
         resp_text = r.read(1000000).decode()

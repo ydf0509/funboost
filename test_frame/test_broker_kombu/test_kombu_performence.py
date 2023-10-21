@@ -1,4 +1,4 @@
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 from vine.promises import promise
 from kombu import Exchange, Queue
 from kombu import Connection
@@ -11,7 +11,7 @@ import time
 
 
 # amqp_uri = 'amqp://pon:pon@192.168.31.245:5672//'
-amqp_uri = f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@127.0.0.1:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'
+amqp_uri = f'amqp://{BrokerConnConfig.RABBITMQ_USER}:{BrokerConnConfig.RABBITMQ_PASS}@127.0.0.1:{BrokerConnConfig.RABBITMQ_PORT}/{BrokerConnConfig.RABBITMQ_VIRTUAL_HOST}'
 
 def declare_exchange(exchange: Exchange):
     with Connection(amqp_uri) as conn:

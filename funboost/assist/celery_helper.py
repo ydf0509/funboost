@@ -7,12 +7,13 @@ from functools import partial
 
 import celery
 
-from funboost import funboost_config_deafult, ConcurrentModeEnum
+from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
+from funboost import  ConcurrentModeEnum
 from nb_log import get_logger
 
-celery_app = celery.Celery(main='funboost_celery', broker=funboost_config_deafult.CELERY_BROKER_URL,
-                           backend=funboost_config_deafult.CELERY_RESULT_BACKEND,
-                           task_routes={}, timezone=funboost_config_deafult.TIMEZONE, enable_utc=False, )
+celery_app = celery.Celery(main='funboost_celery', broker=BrokerConnConfig.CELERY_BROKER_URL,
+                           backend=BrokerConnConfig.CELERY_RESULT_BACKEND,
+                           task_routes={}, timezone=FunboostCommonConfig.TIMEZONE, enable_utc=False, )
 
 celery_app.conf.task_acks_late = True
 celery_app.conf.update({
@@ -64,7 +65,7 @@ class CeleryHelper:
             python_executable = sys.executable
             # print(python_executable)
             # cmd = f'''{python_executable} -m celery -A funboost.publishers.celery_publisher --broker={funboost_config_deafult.CELERY_BROKER_URL}  --result-backend={funboost_config_deafult.CELERY_RESULT_BACKEND}   flower --address=0.0.0.0 --port={port}  --auto_refresh=True '''
-            cmd = f'''{python_executable} -m celery  --broker={funboost_config_deafult.CELERY_BROKER_URL}  --result-backend={funboost_config_deafult.CELERY_RESULT_BACKEND}   flower --address=0.0.0.0 --port={port}  --auto_refresh=True '''
+            cmd = f'''{python_executable} -m celery  --broker={BrokerConnConfig.CELERY_BROKER_URL}  --result-backend={BrokerConnConfig.CELERY_RESULT_BACKEND}   flower --address=0.0.0.0 --port={port}  --auto_refresh=True '''
 
             logger.info(f'启动flower命令:   {cmd}')
             os.system(cmd)

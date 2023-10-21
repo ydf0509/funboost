@@ -10,7 +10,7 @@ from kafka.admin import NewTopic
 from kafka.errors import TopicAlreadyExistsError
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 from nb_log import get_logger, LogManager
 
 # LogManager('kafka').get_logger_and_add_handlers(30)
@@ -36,14 +36,14 @@ class KafkaConsumer(AbstractConsumer):
 
     def _shedual_task(self):
         try:
-            admin_client = KafkaAdminClient(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
+            admin_client = KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
             admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
         except TopicAlreadyExistsError:
             pass
 
-        self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
-        consumer = OfficialKafkaConsumer(self._queue_name, bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS,
+        self._producer = KafkaProducer(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
+        consumer = OfficialKafkaConsumer(self._queue_name, bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS,
                                          group_id=self.broker_exclusive_config["group_id"],
                                          enable_auto_commit=True,
                                          auto_offset_reset=self.broker_exclusive_config["auto_offset_reset"],

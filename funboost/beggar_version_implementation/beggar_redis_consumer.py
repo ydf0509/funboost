@@ -16,11 +16,10 @@
 import json
 import redis
 from concurrent.futures import ThreadPoolExecutor
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 
-
-
-redis_db_frame = redis.Redis(host=funboost_config_deafult.REDIS_HOST, password=funboost_config_deafult.REDIS_PASSWORD, port=funboost_config_deafult.REDIS_PORT, db=funboost_config_deafult.REDIS_DB,decode_responses=True)
+redis_db_frame = redis.Redis(host=BrokerConnConfig.REDIS_HOST, password=BrokerConnConfig.REDIS_PASSWORD,
+                             port=BrokerConnConfig.REDIS_PORT, db=BrokerConnConfig.REDIS_DB, decode_responses=True)
 
 
 class BeggarRedisConsumer:
@@ -73,6 +72,7 @@ if __name__ == '__main__':
     def add(x, y):
         time.sleep(5)
         print(f'{x} + {y} 的结果是 {x + y}')
+
 
     # 推送任务
     for i in range(100):

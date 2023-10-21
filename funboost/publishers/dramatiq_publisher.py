@@ -4,7 +4,7 @@
 import copy
 import json
 
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.assist.dramatiq_helper import DramatiqHelper
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.utils.redis_manager import RedisMixin
@@ -33,9 +33,9 @@ class DramatiqPublisher(AbstractPublisher, ):
     def get_message_count(self):
         # pass
         # return -1
-        if funboost_config_deafult.DRAMATIQ_URL.startswith('redis'):
+        if BrokerConnConfig.DRAMATIQ_URL.startswith('redis'):
             return RedisMixin().redis_db_frame.llen(self.queue_name)  # redis 无，需要自己实现
-        if funboost_config_deafult.DRAMATIQ_URL.startswith('amqp'):
+        if BrokerConnConfig.DRAMATIQ_URL.startswith('amqp'):
             cnts = DramatiqHelper.broker.get_queue_message_counts(self.queue_name)
             return cnts[0]
         return -1

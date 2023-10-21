@@ -1,7 +1,7 @@
 import json
 import typing
 
-from funboost.utils import RedisMixin
+from funboost.utils.redis_manager import RedisMixin
 from nb_log import LoggerMixinDefaultWithFileHandler, nb_log_config_default
 
 

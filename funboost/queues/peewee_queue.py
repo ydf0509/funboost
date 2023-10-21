@@ -5,7 +5,7 @@ from peewee import ModelSelect
 from playhouse.shortcuts import model_to_dict, dict_to_model
 
 from nb_log import LoggerMixin, LoggerLevelSetterMixin
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 from peewee import *
 
 
@@ -40,11 +40,11 @@ class PeeweeQueue(LoggerMixin, LoggerLevelSetterMixin):
             class Meta:
                 db_table = self.queue_name
                 conn_params = dict(
-                    host=funboost_config_deafult.MYSQL_HOST,
-                    port=funboost_config_deafult.MYSQL_PORT,
-                    user=funboost_config_deafult.MYSQL_USER,
-                    passwd=funboost_config_deafult.MYSQL_PASSWORD,
-                    database=funboost_config_deafult.MYSQL_DATABASE,
+                    host=BrokerConnConfig.MYSQL_HOST,
+                    port=BrokerConnConfig.MYSQL_PORT,
+                    user=BrokerConnConfig.MYSQL_USER,
+                    passwd=BrokerConnConfig.MYSQL_PASSWORD,
+                    database=BrokerConnConfig.MYSQL_DATABASE,
                 )
                 database = MySQLDatabase(**conn_params)
 

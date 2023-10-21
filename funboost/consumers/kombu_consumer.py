@@ -15,9 +15,8 @@ from kombu.transport.redis import Empty
 
 from nb_log import get_logger
 from funboost.constant import BrokerEnum
-from funboost import funboost_config_deafult
 from funboost.consumers.base_consumer import AbstractConsumer
-
+from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
 
 def patch_kombu_redis000():
     # 这个也可以，代码长了一点。
@@ -173,12 +172,12 @@ Transport Options
       '''
 
     def custom_init(self):
-        self.kombu_url = self.broker_exclusive_config['kombu_url'] or funboost_config_deafult.KOMBU_URL
+        self.kombu_url = self.broker_exclusive_config['kombu_url'] or BrokerConnConfig.KOMBU_URL
         self._middware_name = self.kombu_url.split(":")[0]
         logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._middware_name}--{self._queue_name}'
         self.logger = get_logger(logger_name, log_level_int=self._log_level,
                                  log_filename=f'{logger_name}.log' if self._create_logger_file else None,
-                                 formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
+                                 formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
                                  )  #
         if self.kombu_url.startswith('filesystem://'):
             self._create_msg_file_dir()

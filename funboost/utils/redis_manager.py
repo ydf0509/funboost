@@ -4,7 +4,7 @@ import copy
 # import redis2 as redis
 # import redis3
 import redis5
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.utils import decorators
 
 from aioredis.client import Redis as AioRedis
@@ -15,9 +15,9 @@ from aioredis.client import Redis as AioRedis
 #                      'password': funboost_config_deafult.REDIS_PASSWORD, 'db': funboost_config_deafult.REDIS_DB}
 
 def get_redis_conn_kwargs():
-    return {'host': funboost_config_deafult.REDIS_HOST, 'port': funboost_config_deafult.REDIS_PORT,
-            'username': funboost_config_deafult.REDIS_USERNAME,
-            'password': funboost_config_deafult.REDIS_PASSWORD, 'db': funboost_config_deafult.REDIS_DB}
+    return {'host': BrokerConnConfig.REDIS_HOST, 'port': BrokerConnConfig.REDIS_PORT,
+            'username': BrokerConnConfig.REDIS_USERNAME,
+            'password': BrokerConnConfig.REDIS_PASSWORD, 'db': BrokerConnConfig.REDIS_DB}
 
 
 def _get_redis_conn_kwargs_by_db(db):
@@ -77,7 +77,7 @@ class RedisMixin(object):
     @property
     @decorators.cached_method_result
     def redis_db_filter_and_rpc_result(self):
-        return RedisManager(**_get_redis_conn_kwargs_by_db(funboost_config_deafult.REDIS_DB_FILTER_AND_RPC_RESULT)).get_redis()
+        return RedisManager(**_get_redis_conn_kwargs_by_db(BrokerConnConfig.REDIS_DB_FILTER_AND_RPC_RESULT)).get_redis()
 
     def timestamp(self):
         """ 如果是多台机器做分布式控频 乃至确认消费，每台机器取自己的时间，如果各机器的时间戳不一致会发生问题，改成统一使用从redis服务端获取时间，单位是时间戳秒。"""
@@ -90,4 +90,4 @@ class AioRedisMixin(object):
     @property
     @decorators.cached_method_result
     def aioredis_db_filter_and_rpc_result(self):
-        return AioRedisManager(**_get_redis_conn_kwargs_by_db(funboost_config_deafult.REDIS_DB_FILTER_AND_RPC_RESULT)).get_redis()
+        return AioRedisManager(**_get_redis_conn_kwargs_by_db(BrokerConnConfig.REDIS_DB_FILTER_AND_RPC_RESULT)).get_redis()

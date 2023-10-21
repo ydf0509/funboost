@@ -11,8 +11,10 @@ import time
 from collections import OrderedDict
 import typing
 
-from funboost.utils import RedisMixin, decorators
+from funboost.utils import  decorators
 from nb_log import LoggerMixinDefaultWithFileHandler
+
+from funboost.utils.redis_manager import RedisMixin
 
 
 class RedisFilter(RedisMixin, LoggerMixinDefaultWithFileHandler):

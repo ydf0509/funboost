@@ -1,8 +1,8 @@
 from nameko.standalone.rpc import ClusterRpcProxy
 
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 
-url = f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'
+url = f'amqp://{BrokerConnConfig.RABBITMQ_USER}:{BrokerConnConfig.RABBITMQ_PASS}@{BrokerConnConfig.RABBITMQ_HOST}:{BrokerConnConfig.RABBITMQ_PORT}/{BrokerConnConfig.RABBITMQ_VIRTUAL_HOST}'
 
 CONFIG = {'AMQP_URI': url}
 

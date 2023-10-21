@@ -16,7 +16,7 @@ import random
 import nb_log
 from concurrent.futures import ProcessPoolExecutor
 from funboost import boost, BrokerEnum, ConcurrentModeEnum, FunctionResultStatusPersistanceConfig, ExceptionForRequeue, ExceptionForPushToDlxqueue
-from funboost.utils import RedisMixin
+from funboost.utils.redis_manager import RedisMixin
 from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
 
 pool = ThreadPoolExecutorShrinkAble(10)

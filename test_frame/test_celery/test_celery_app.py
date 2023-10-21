@@ -10,7 +10,7 @@ from datetime import timedelta
 import celery
 from celery import platforms
 from auto_run_on_remote import run_current_script_on_remote
-import funboost_config
+from funboost_config import Br
 
 
 # import celery_helper

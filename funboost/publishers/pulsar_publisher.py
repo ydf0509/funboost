@@ -21,7 +21,7 @@ import os
 from pulsar.schema import schema
 
 from funboost.publishers.base_publisher import AbstractPublisher
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 
 
 class PulsarPublisher(AbstractPublisher, ):
@@ -31,7 +31,7 @@ class PulsarPublisher(AbstractPublisher, ):
 
     def custom_init(self):
         import pulsar
-        self._client = pulsar.Client(funboost_config_deafult.PULSAR_URL, )
+        self._client = pulsar.Client(BrokerConnConfig.PULSAR_URL, )
         self._producer = self._client.create_producer(self._queue_name, schema=schema.StringSchema(), producer_name=f'funboost_publisher_{os.getpid()}')
 
     def concrete_realization_of_publish(self, msg):

@@ -5,7 +5,7 @@ from huey.consumer import Consumer
 
 from funboost import AbstractConsumer
 from funboost.assist.huey_helper import HueyHelper
-from funboost import funboost_config_deafult
+
 
 class HueyConsumer(AbstractConsumer):
     """

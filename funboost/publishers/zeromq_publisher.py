@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 import zmq
-from funboost import funboost_config_deafult
 from funboost.publishers.base_publisher import AbstractPublisher
 
 

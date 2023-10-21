@@ -5,7 +5,7 @@
 from gnsq import Producer, NsqdHTTPClient
 from gnsq.errors import NSQHttpError
 from funboost.publishers.base_publisher import AbstractPublisher
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 
 
 class NsqPublisher(AbstractPublisher, ):
@@ -15,8 +15,8 @@ class NsqPublisher(AbstractPublisher, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        self._nsqd_cleint = NsqdHTTPClient(funboost_config_deafult.NSQD_HTTP_CLIENT_HOST, funboost_config_deafult.NSQD_HTTP_CLIENT_PORT)
-        self._producer = Producer(funboost_config_deafult.NSQD_TCP_ADDRESSES)
+        self._nsqd_cleint = NsqdHTTPClient(BrokerConnConfig.NSQD_HTTP_CLIENT_HOST, BrokerConnConfig.NSQD_HTTP_CLIENT_PORT)
+        self._producer = Producer(BrokerConnConfig.NSQD_TCP_ADDRESSES)
         self._producer.start()
 
     def concrete_realization_of_publish(self, msg):

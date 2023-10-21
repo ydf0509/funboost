@@ -2,7 +2,7 @@
 from pynats import NATSClient, NATSMessage  # noqa
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 
 
 class NatsConsumer(AbstractConsumer):
@@ -13,7 +13,7 @@ class NatsConsumer(AbstractConsumer):
 
     def _shedual_task(self):
         # print(88888888888888)
-        nats_client = NATSClient(funboost_config_deafult.NATS_URL, socket_timeout=600, socket_keepalive=True)
+        nats_client = NATSClient(BrokerConnConfig.NATS_URL, socket_timeout=600, socket_keepalive=True)
         nats_client.connect()
 
         def callback(msg: NATSMessage):

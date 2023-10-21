@@ -2,7 +2,7 @@
 # @Author  : ydf
 # @Time    : 2021/4/3 0008 13:32
 from funboost.publishers.base_publisher import AbstractPublisher
-from funboost.utils import RedisMixin
+from funboost.utils.redis_manager import RedisMixin
 
 
 class RedisStreamPublisher(AbstractPublisher, RedisMixin):

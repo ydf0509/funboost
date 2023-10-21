@@ -12,7 +12,7 @@ from kombu.connection import Connection
 from nb_log import get_logger
 
 from funboost.publishers.base_publisher import AbstractPublisher, deco_mq_conn_error
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
 
 # nb_log.get_logger(name=None,log_level_int=10)
 """
@@ -46,12 +46,12 @@ class KombuPublisher(AbstractPublisher, ):
     """
 
     def custom_init(self):
-        self.kombu_url = self.broker_exclusive_config['kombu_url'] or funboost_config_deafult.KOMBU_URL
+        self.kombu_url = self.broker_exclusive_config['kombu_url'] or BrokerConnConfig.KOMBU_URL
         self._kombu_broker_url_prefix = self.kombu_url.split(":")[0]
         logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._kombu_broker_url_prefix}--{self._queue_name}'
         self.logger = get_logger(logger_name, log_level_int=self._log_level_int,
                                  log_filename=f'{logger_name}.log' if self._is_add_file_handler else None,
-                                 formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
+                                 formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
                                  )  #
         if self.kombu_url.startswith('filesystem://'):
             self._create_msg_file_dir()

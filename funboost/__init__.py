@@ -13,13 +13,13 @@ set_frame_config这个模块的 use_config_form_funboost_config_module() 是核�
 这段注释说明和使用的用户无关.
 '''
 
-from funboost.set_frame_config import patch_frame_config, show_frame_config
+from funboost.set_frame_config import  show_frame_config
 
 # noinspection PyUnresolvedReferences
 from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath  # 这是把 dependency_packages_in_pythonpath 添加到 PYTHONPATH了。
 from funboost.utils import monkey_patches
 
-from funboost.funboost_config_deafult import BoostDecoratorDefaultParams
+from funboost.funboost_config_deafult import BoostDecoratorDefaultParams,FunboostCommonConfig,BrokerConnConfig
 
 from funboost.core.fabric_deploy_helper import fabric_deploy, kill_all_remote_tasks
 from funboost.utils.paramiko_util import ParamikoFolderUploader
@@ -48,6 +48,7 @@ from funboost.core.exit_signal import set_interrupt_signal_handler
 from funboost.core.helper_funs import run_forever
 
 from funboost.utils.ctrl_c_end import ctrl_c_recv
+from funboost.utils.redis_manager import RedisMixin
 # atexit.register(ctrl_c_recv)  # 还是需要用户自己在代码末尾加才可以.
 # set_interrupt_signal_handler()
 

@@ -6,9 +6,8 @@
 测试改版的pysnooper装饰器。
 '''
 import requests
-from funboost.utils import RedisMixin, pysnooper_ydf, LogManager
-
-
+from funboost.utils import  pysnooper_ydf, LogManager
+from funboost.utils.redis_manager import RedisMixin
 
 
 def foo():

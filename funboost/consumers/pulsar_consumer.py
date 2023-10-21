@@ -24,7 +24,7 @@ from _pulsar import ConsumerType
 from pulsar.schema import schema
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 
 
 class PulsarConsumer(AbstractConsumer, ):
@@ -45,7 +45,7 @@ class PulsarConsumer(AbstractConsumer, ):
             import pulsar  # 需要用户自己 pip install pulsar-client ，目前20221206只支持linux安装此python包。
         except ImportError:
             raise ImportError('需要用户自己 pip install pulsar-client ，')
-        self._client = pulsar.Client(funboost_config_deafult.PULSAR_URL, )
+        self._client = pulsar.Client(BrokerConnConfig.PULSAR_URL, )
         self._consumer = self._client.subscribe(self._queue_name, schema=schema.StringSchema(), consumer_name=f'funboost_consumer_{os.getpid()}',
                                                 subscription_name=self.broker_exclusive_config['subscription_name'],
                                                 consumer_type=self.broker_exclusive_config['consumer_type'],

@@ -3,7 +3,7 @@
 # @Time    : 2022/9/17 0017 15:26
 import os
 import pymongo
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.utils import decorators
 
 
@@ -20,7 +20,7 @@ class MongoMixin0000:
     @property
     @decorators.cached_method_result
     def mongo_client(self):
-        return pymongo.MongoClient(funboost_config_deafult.MONGO_CONNECT_URL, connect=False)  # connect等于False原因见注释
+        return pymongo.MongoClient(BrokerConnConfig.MONGO_CONNECT_URL, connect=False)  # connect等于False原因见注释
 
     @property
     @decorators.cached_method_result
@@ -46,7 +46,7 @@ class MongoMixin:
         pid = os.getpid()
         key = pid
         if key not in MongoMixin.processid__client_map:
-            MongoMixin.processid__client_map[key] = pymongo.MongoClient(funboost_config_deafult.MONGO_CONNECT_URL,
+            MongoMixin.processid__client_map[key] = pymongo.MongoClient(BrokerConnConfig.MONGO_CONNECT_URL,
                                                                         connect=False, maxIdleTimeMS=60 * 1000, minPoolSize=3, maxPoolSize=20)
         return MongoMixin.processid__client_map[key]
 

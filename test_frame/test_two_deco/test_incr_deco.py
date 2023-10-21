@@ -1,7 +1,7 @@
 import inspect
 import nb_log
 from funboost import boost
-from funboost.utils import RedisMixin
+from funboost.utils.redis_manager import RedisMixin
 from functools import wraps
 
 

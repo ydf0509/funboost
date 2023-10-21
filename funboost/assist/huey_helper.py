@@ -1,11 +1,11 @@
 import multiprocessing
 import threading
 
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 from huey import RedisHuey
 from huey.consumer import Consumer
 
-huey_obj = RedisHuey('funboost_huey', url=funboost_config_deafult.REDIS_URL,)
+huey_obj = RedisHuey('funboost_huey', url=BrokerConnConfig.REDIS_URL,)
 
 class HueyHelper:
     huey_obj = huey_obj

@@ -1,4 +1,4 @@
-from funboost.utils import RedisMixin
+from funboost.utils.redis_manager import RedisMixin
 
 
 def f(x,y,runonce_uuid):

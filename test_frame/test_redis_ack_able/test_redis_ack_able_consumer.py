@@ -5,7 +5,7 @@ import os
 import time
 
 from funboost import boost,BrokerEnum,FunctionResultStatusPersistanceConfig
-from funboost.utils import RedisMixin
+from funboost.utils.redis_manager import RedisMixin
 import multiprocessing
 
 @boost('test_cost_long_time_fun_queue2d5', broker_kind=BrokerEnum.REDIS_PRIORITY, concurrent_num=5,log_level=20,

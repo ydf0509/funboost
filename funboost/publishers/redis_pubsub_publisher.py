@@ -2,7 +2,7 @@
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 12:12
 from funboost.publishers.base_publisher import AbstractPublisher
-from funboost.utils import RedisMixin
+from funboost.utils.redis_manager import RedisMixin
 
 
 class RedisPubSubPublisher(AbstractPublisher, RedisMixin, ):

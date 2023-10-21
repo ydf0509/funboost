@@ -17,9 +17,9 @@ from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.base import STATE_STOPPED, STATE_RUNNING
 from apscheduler.util import undefined
 import deprecated
-from funboost.utils import RedisMixin
+from funboost.utils.redis_manager import RedisMixin
 
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
 
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.core.get_booster import get_booster, Booster
@@ -156,7 +156,7 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
 FsdfBackgroundScheduler = FunboostBackgroundScheduler  # 兼容一下名字，fsdf是 function-scheduling-distributed-framework 老框架名字的缩写
 # funboost_aps_scheduler定时配置基于内存的，不可以跨机器远程动态添加/修改/删除定时任务配置。如果需要动态增删改查定时任务，可以使用funboost_background_scheduler_redis_store
 
-funboost_aps_scheduler = FunboostBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False, )
+funboost_aps_scheduler = FunboostBackgroundScheduler(timezone=FunboostCommonConfig.TIMEZONE, daemon=False, )
 fsdf_background_scheduler = funboost_aps_scheduler  # 兼容一下老名字。
 
 if __name__ == '__main__':

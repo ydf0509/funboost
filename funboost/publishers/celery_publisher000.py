@@ -11,7 +11,7 @@ import celery.result
 import typing
 
 from funboost.publishers.base_publisher import AbstractPublisher, PriorityConsumingControlConfig
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
 
 
 # celery_app = celery.Celery(broker='redis://192.168.64.151:6378/11',task_routes={})
@@ -41,9 +41,9 @@ class CeleryPublisher(AbstractPublisher, ):
         self._has_build_celery_app = False
 
     def _build_celery_app(self):
-        celery_app = celery.Celery(broker=funboost_config_deafult.CELERY_BROKER_URL,
-                                   backend=funboost_config_deafult.CELERY_RESULT_BACKEND,
-                                   task_routes={}, timezone=funboost_config_deafult.TIMEZONE, enable_utc=False)
+        celery_app = celery.Celery(broker=BrokerConnConfig.CELERY_BROKER_URL,
+                                   backend=BrokerConnConfig.CELERY_RESULT_BACKEND,
+                                   task_routes={}, timezone=FunboostCommonConfig.TIMEZONE, enable_utc=False)
         celery_app.config_from_object(self.broker_exclusive_config['celery_app_config'])
         celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})
 

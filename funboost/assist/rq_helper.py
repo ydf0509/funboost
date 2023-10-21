@@ -5,7 +5,7 @@ from rq.worker import RandomWorker
 import nb_log
 from redis3 import Redis
 from rq import Worker
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.assist.rq_windows_worker import WindowsWorker
 
 
@@ -24,7 +24,7 @@ class RandomWindowsWorker(RandomWorker, WindowsWorker):
 
 
 class RqHelper:
-    redis_conn = Redis.from_url(funboost_config_deafult.REDIS_URL)
+    redis_conn = Redis.from_url(BrokerConnConfig.REDIS_URL)
 
     queue_name__rq_job_map = {}
     to_be_start_work_rq_queue_name_set = set()

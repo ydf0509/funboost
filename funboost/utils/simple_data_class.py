@@ -1,4 +1,6 @@
 import copy
+import typing
+
 from funboost.utils import un_strict_json_dumps
 
 
@@ -30,7 +32,12 @@ class DataClassBase:
         return getattr(self, item)
 
     def get_json(self):
-        un_strict_json_dumps.dict2json(self.get_dict())
+        return un_strict_json_dumps.dict2json(self.get_dict())
+
+    @classmethod
+    def update_cls_attribute(cls,**kwargs):
+        for k ,v in kwargs.items():
+            setattr(cls,k,v)
 
 
 if __name__ == '__main__':

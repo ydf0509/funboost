@@ -6,7 +6,7 @@ import json
 
 from huey import RedisHuey
 
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.assist.huey_helper import HueyHelper
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.utils.redis_manager import RedisMixin

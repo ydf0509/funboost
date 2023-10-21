@@ -7,10 +7,11 @@ import time
 from queue import Queue, Empty
 from threading import Lock
 
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.publishers.redis_queue_flush_mixin import FlushRedisQueueMixin
-from funboost.utils import RedisMixin, decorators
+from funboost.utils import decorators
+from funboost.utils.redis_manager import RedisMixin
 
 
 class RedisPublisher(FlushRedisQueueMixin, AbstractPublisher, RedisMixin, ):

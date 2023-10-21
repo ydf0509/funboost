@@ -2,11 +2,12 @@
 
 import time
 
-from funboost import BrokerEnum, boost, funboost_config_deafult
+from funboost import BrokerEnum, boost
+from funboost.funboost_config_deafult import BrokerConnConfig
 
 @boost('test_kombu2b', broker_kind=BrokerEnum.KOMBU, qps=0.1,
        broker_exclusive_config={
-           'kombu_url': funboost_config_deafult.RABBITMQ_URL,
+           'kombu_url': BrokerConnConfig.RABBITMQ_URL,
            'transport_options': {},
            'prefetch_count': 1000},log_level=20)
 def f1(x, y):

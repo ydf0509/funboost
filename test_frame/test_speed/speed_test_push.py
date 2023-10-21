@@ -1,11 +1,13 @@
 import time
 
 import redis
-from funboost import funboost_config_deafult
+
+
+from funboost.funboost_config_deafult import BrokerConnConfig
 
 from test_frame.test_speed.speed_test_consume import f_test_speed
 
-redis_db_frame = redis.Redis(host=funboost_config_deafult.REDIS_HOST, password=funboost_config_deafult.REDIS_PASSWORD, port=funboost_config_deafult.REDIS_PORT, db=funboost_config_deafult.REDIS_DB)
+redis_db_frame = redis.Redis(host=BrokerConnConfig.REDIS_HOST, password=BrokerConnConfig.REDIS_PASSWORD, port=BrokerConnConfig.REDIS_PORT, db=BrokerConnConfig.REDIS_DB)
 
 # f_test_speed.clear()
 for i in range(500000):

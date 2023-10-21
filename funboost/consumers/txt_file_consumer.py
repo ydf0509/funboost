@@ -6,7 +6,7 @@ import json
 from persistqueue.serializers import json as json_serializer
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 
 
 class TxtFileConsumer(AbstractConsumer, ):
@@ -16,9 +16,9 @@ class TxtFileConsumer(AbstractConsumer, ):
     """
 
     def _shedual_task(self):
-        file_queue_path = str((Path(funboost_config_deafult.TXT_FILE_PATH) / self.queue_name).absolute())
+        file_queue_path = str((Path(BrokerConnConfig.TXT_FILE_PATH) / self.queue_name).absolute())
         file_lock = FileLock(Path(file_queue_path) / f'_funboost_txtfile_{self.queue_name}.lock')
-        queue = Queue(str((Path(funboost_config_deafult.TXT_FILE_PATH) / self.queue_name).absolute()), autosave=True, serializer=json_serializer)
+        queue = Queue(str((Path(BrokerConnConfig.TXT_FILE_PATH) / self.queue_name).absolute()), autosave=True, serializer=json_serializer)
         while True:
             with file_lock:
                 item = queue.get()

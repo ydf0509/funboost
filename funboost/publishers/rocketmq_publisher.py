@@ -3,7 +3,7 @@
 # @Time    : 2022/7/9 0008 12:12
 import threading
 import time
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 
 from funboost.publishers.base_publisher import AbstractPublisher
 
@@ -25,7 +25,7 @@ class RocketmqPublisher(AbstractPublisher, ):
         with self._lock_for_create_producer:
             if group_id not in self.__class__._group_id__rocketmq_producer:  # 同一个进程中创建多个同组消费者会报错。
                 producer = Producer(group_id)
-                producer.set_namesrv_addr(funboost_config_deafult.ROCKETMQ_NAMESRV_ADDR)
+                producer.set_namesrv_addr(BrokerConnConfig.ROCKETMQ_NAMESRV_ADDR)
                 producer.start()
                 self.__class__._group_id__rocketmq_producer[group_id] = producer
             else:

@@ -22,7 +22,7 @@ from nb_log import LoggerLevelSetterMixin, get_logger, LoggerMixin
 
 from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
 from funboost.utils import decorators, time_util
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
 
 RedisAsyncResult = AsyncResult  # 别名
 RedisAioAsyncResult = AioAsyncResult  # 别名
@@ -157,7 +157,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}'
         self.logger = get_logger(logger_name, log_level_int=log_level_int,
                                  log_filename=f'{logger_name}.log' if is_add_file_handler else None,
-                                 formatter_template=funboost_config_deafult.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
+                                 formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
                                  )  #
         self.publish_params_checker = PublishParamsChecker(consuming_function) if consuming_function else None
         if broker_exclusive_config is None:

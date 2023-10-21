@@ -1,5 +1,6 @@
 import time
-from funboost import BrokerEnum, boost,funboost_config_deafult
+from funboost import BrokerEnum, boost
+from funboost.funboost_config_deafult import BrokerConnConfig
 
 '''
 默认自动创建表 kombu_message 和 kombu_queue, sqlalchemy版本要选对，测试 1.4.8 可以，2.0.15版本报错。 
@@ -7,8 +8,8 @@ from funboost import BrokerEnum, boost,funboost_config_deafult
 '''
 @boost('test_kombu_sqlalchemy_queue2', broker_kind=BrokerEnum.KOMBU, qps=0.1,
        broker_exclusive_config={
-           'kombu_url': f'sqla+mysql+pymysql://{funboost_config_deafult.MYSQL_USER}:{funboost_config_deafult.MYSQL_PASSWORD}'
-                        f'@{funboost_config_deafult.MYSQL_HOST}:{funboost_config_deafult.MYSQL_PORT}/{funboost_config_deafult.MYSQL_DATABASE}',
+           'kombu_url': f'sqla+mysql+pymysql://{BrokerConnConfig.MYSQL_USER}:{BrokerConnConfig.MYSQL_PASSWORD}'
+                        f'@{BrokerConnConfig.MYSQL_HOST}:{BrokerConnConfig.MYSQL_PORT}/{BrokerConnConfig.MYSQL_DATABASE}',
            'transport_options': {},
            'prefetch_count': 500})
 def f2(x, y):
@@ -20,8 +21,8 @@ def f2(x, y):
 
 @boost('test_kombu_sqlalchemy_queue3', broker_kind=BrokerEnum.KOMBU, qps=0.1,
        broker_exclusive_config={
-           'kombu_url': f'sqla+mysql+pymysql://{funboost_config_deafult.MYSQL_USER}:{funboost_config_deafult.MYSQL_PASSWORD}'
-                        f'@{funboost_config_deafult.MYSQL_HOST}:{funboost_config_deafult.MYSQL_PORT}/{funboost_config_deafult.MYSQL_DATABASE}',
+           'kombu_url': f'sqla+mysql+pymysql://{BrokerConnConfig.MYSQL_USER}:{BrokerConnConfig.MYSQL_PASSWORD}'
+                        f'@{BrokerConnConfig.MYSQL_HOST}:{BrokerConnConfig.MYSQL_PORT}/{BrokerConnConfig.MYSQL_DATABASE}',
            'transport_options': {},
            'prefetch_count': 500})
 def f3(x, y):

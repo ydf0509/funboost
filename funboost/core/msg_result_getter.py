@@ -7,7 +7,7 @@ from funboost.utils.mongo_util import MongoMixin
 
 from funboost.concurrent_pool import CustomThreadPoolExecutor
 from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPoolMinWorkers0
-from funboost.utils import RedisMixin
+from funboost.utils.redis_manager import RedisMixin
 from funboost.utils.redis_manager import AioRedisMixin
 
 

@@ -1,6 +1,6 @@
 from apscheduler.jobstores.redis import RedisJobStore
 
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
 
 from funboost.timing_job import FunboostBackgroundScheduler
 
@@ -9,12 +9,12 @@ from funboost.timing_job import FunboostBackgroundScheduler
 """
 
 jobstores = {
-    "default": RedisJobStore(db=funboost_config_deafult.REDIS_DB, host=funboost_config_deafult.REDIS_HOST,
-                             port=funboost_config_deafult.REDIS_PORT, password=funboost_config_deafult.REDIS_PASSWORD,
-                             username=funboost_config_deafult.REDIS_USERNAME)
+    "default": RedisJobStore(db=BrokerConnConfig.REDIS_DB, host=BrokerConnConfig.REDIS_HOST,
+                             port=BrokerConnConfig.REDIS_PORT, password=BrokerConnConfig.REDIS_PASSWORD,
+                             username=BrokerConnConfig.REDIS_USERNAME)
 }
 
-funboost_background_scheduler_redis_store = FunboostBackgroundScheduler(timezone=funboost_config_deafult.TIMEZONE, daemon=False, jobstores=jobstores)
+funboost_background_scheduler_redis_store = FunboostBackgroundScheduler(timezone=FunboostCommonConfig.TIMEZONE, daemon=False, jobstores=jobstores)
 
 
 

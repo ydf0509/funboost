@@ -9,10 +9,12 @@ import uuid
 
 from nameko.standalone.rpc import ClusterRpcProxy
 
-from funboost import funboost_config_deafult
+from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.publishers.base_publisher import AbstractPublisher, PriorityConsumingControlConfig
 
-NAMEKO_CONFIG = {'AMQP_URI': f'amqp://{funboost_config_deafult.RABBITMQ_USER}:{funboost_config_deafult.RABBITMQ_PASS}@{funboost_config_deafult.RABBITMQ_HOST}:{funboost_config_deafult.RABBITMQ_PORT}/{funboost_config_deafult.RABBITMQ_VIRTUAL_HOST}'}
+
+def get_nameko_config():
+    return {'AMQP_URI': f'amqp://{BrokerConnConfig.RABBITMQ_USER}:{BrokerConnConfig.RABBITMQ_PASS}@{BrokerConnConfig.RABBITMQ_HOST}:{BrokerConnConfig.RABBITMQ_PORT}/{BrokerConnConfig.RABBITMQ_VIRTUAL_HOST}'}
 
 
 class NamekoPublisher(AbstractPublisher, ):
@@ -21,11 +23,11 @@ class NamekoPublisher(AbstractPublisher, ):
     """
 
     def custom_init(self):
-        self._rpc = ClusterRpcProxy(NAMEKO_CONFIG)
+        self._rpc = ClusterRpcProxy(get_nameko_config())
 
     def publish(self, msg: typing.Union[str, dict], task_id=None,
                 priority_control_config: PriorityConsumingControlConfig = None):
-        msg, msg_function_kw, extra_params,task_id = self._convert_msg(msg, task_id, priority_control_config)
+        msg, msg_function_kw, extra_params, task_id = self._convert_msg(msg, task_id, priority_control_config)
         t_start = time.time()
         with self._rpc as rpc:
             res = getattr(rpc, self.queue_name).call(**msg_function_kw)

@@ -55,4 +55,4 @@ from funboost.utils.redis_manager import RedisMixin
 # 有的包默认没加handlers，原始的日志不漂亮且不可跳转不知道哪里发生的。这里把warnning级别以上的日志默认加上handlers。
 # nb_log.get_logger(name='', log_level_int=30, log_filename='pywarning.log')
 
-__version__ = "25.8"
+__version__ = "30.0"

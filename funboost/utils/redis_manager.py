@@ -10,9 +10,6 @@ from funboost.utils import decorators
 from aioredis.client import Redis as AioRedis
 
 
-# REDIS_CONN_KWARGS = {'host': funboost_config_deafult.REDIS_HOST, 'port': funboost_config_deafult.REDIS_PORT,
-#                      'username': funboost_config_deafult.REDIS_USERNAME,
-#                      'password': funboost_config_deafult.REDIS_PASSWORD, 'db': funboost_config_deafult.REDIS_DB}
 
 def get_redis_conn_kwargs():
     return {'host': BrokerConnConfig.REDIS_HOST, 'port': BrokerConnConfig.REDIS_PORT,

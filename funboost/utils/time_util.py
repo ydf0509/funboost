@@ -4,7 +4,7 @@ import datetime
 import time
 import re
 import pytz
-# from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
+from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
 
 from funboost.utils import nb_print
 
@@ -70,7 +70,6 @@ class DatetimeConverter:
         """
         :param datetimex: 接受时间戳  datatime类型 和 时间字符串三种类型
         """
-        from funboost.funboost_config_deafult import FunboostCommonConfig
         if isinstance(datetimex, str):
             if not re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', datetimex):
                 raise ValueError('时间字符串的格式不符合此传参的规定')

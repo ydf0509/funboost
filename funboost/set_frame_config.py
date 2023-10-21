@@ -135,7 +135,8 @@ def use_config_form_funboost_config_module():
         # print(dir(m))
         # nb_print(m.__dict__.items())
         only_print_on_main_process(f'分布式函数调度框架 读取到\n "{m.__file__}:1" 文件里面的变量作为优先配置了\n')
-
+        if not hasattr(m,'BrokerConnConfig'):
+            raise EnvironmentError('funboost 30.0版本升级了配置文件，中间件配置写成了类，请删除原来老的配置文件')
         funboost_config_deafult.BrokerConnConfig.update_cls_attribute(**m.BrokerConnConfig().get_dict())
         funboost_config_deafult.FunboostCommonConfig.update_cls_attribute(**m.FunboostCommonConfig().get_dict())
         funboost_config_deafult.BoostDecoratorDefaultParams.update_cls_attribute(**m.BoostDecoratorDefaultParams().get_dict())

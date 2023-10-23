@@ -88,3 +88,12 @@ class BoosterFire(object):
         ctrl_c_recv()
 
     m_consume = multi_process_consume
+
+    def pause(self, *queue_names: str):
+        """
+        暂停多个消息队列名的消费;
+        例子: pause queue1 queue2
+        """
+        for queue_anme in queue_names:
+            get_booster(queue_anme).pause()
+

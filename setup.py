@@ -2,6 +2,18 @@
 from setuptools import setup, find_packages
 from funboost import __version__
 
+extra_brokers = ['confluent_kafka==1.7.0',
+                 "pulsar-client==3.1.0; python_version>='3.7'",
+                 'celery',
+                 'flower',
+                 'nameko==2.14.1',
+                 'sqlalchemy==1.4.8',
+                 'sqlalchemy_utils==0.36.1',
+                 'dramatiq==1.14.2',
+                 'huey==2.4.5',
+                 'rq==1.15.0',
+                 'kombu'
+                 ]
 setup(
     name='funboost',  #
     version=__version__,
@@ -88,18 +100,8 @@ setup(
         'frozenlist',
         'fire',
     ],
-    extras_require={'extra_brokers': ['confluent_kafka==1.7.0',
-                                      "pulsar-client==3.1.0; python_version>='3.7'",
-                                      'celery',
-                                      'flower',
-                                      'nameko==2.14.1',
-                                      'sqlalchemy==1.4.8',
-                                      'sqlalchemy_utils==0.36.1',
-                                      'dramatiq==1.14.2',
-                                      'huey==2.4.5',
-                                      'rq==1.15.0',
-                                      'kombu'
-                                      ]},
+    extras_require={'extra_brokers': extra_brokers,
+                    'all': extra_brokers},
 
     entry_points={
         'console_scripts': [

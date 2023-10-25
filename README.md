@@ -52,10 +52,10 @@ funboost的旧框架名字是function_scheduling_distributed_framework , 关系�
 
 ## 1.0 github地址和文档地址
 
-### 1.0.1 [分布式函数调度框架文档地址](https://funboost.readthedocs.io/zh/latest/index.html)
-[查看分布式函数调度框架文档](https://funboost.readthedocs.io/zh/latest/index.html)
+### 1.0.1 [分布式函数调度框架文档地址 ](https://funboost.readthedocs.io/zh/latest/index.html)
+[查看分布式函数调度框架文档 https://funboost.readthedocs.io/zh/latest/index.html](https://funboost.readthedocs.io/zh/latest/index.html)
 
-[funboost依赖的nb_log日志文档](https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2)
+[funboost依赖的nb_log日志文档 https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2](https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2)
 
 ```
 文档很长，但归根结底只需要学习 1.3 里面的这1个例子就行，主要是修改下@boost的各种参数，
@@ -115,9 +115,11 @@ funboosts示图：
 
 [//]: # ([![img-46.png]&#40;https://i.postimg.cc/tC7mQxWN/img-46.png&#41;]&#40;https://postimg.cc/hfW0VhCX&#41;)
 就是最普通的生产者消费者流程图
-[![pPbCmyd.png](https://img.vinua.cn/images/aacY4.png)](https://img.vinua.cn/images/aacY4.png)
+
+![https://img.vinua.cn/images/aacY4.png](https://img.vinua.cn/images/aacY4.png)
 
 也就是这种非常普通的流程图,一样的意思
+
 [![pPbCmyd.png](https://z1.ax1x.com/2023/09/27/pPbCmyd.png)](https://imgse.com/i/pPbCmyd)
 
 ### 1.2.1 框架支持5种并发模式

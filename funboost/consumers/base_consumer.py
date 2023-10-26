@@ -27,24 +27,24 @@ import threading
 from threading import Lock, Thread
 import asyncio
 
-from nb_log import (get_logger, LoggerLevelSetterMixin, nb_print, LoggerMixin,LogManager,CompatibleLogger,
+from nb_log import (get_logger, LoggerLevelSetterMixin, nb_print, LoggerMixin, LogManager, CompatibleLogger,
                     LoggerMixinDefaultWithFileHandler, stdout_write, is_main_process,
                     nb_log_config_default)
 
 from apscheduler.jobstores.redis import RedisJobStore
- 
+
 from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
 
-from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
+from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
 from funboost.concurrent_pool.single_thread_executor import SoloExecutor
- 
+
 from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig, ResultPersistenceHelper, FunctionResultStatus
 
 # noinspection PyUnresolvedReferences
 from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_publish_time
 
 # noinspection PyUnresolvedReferences
- 
+
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
 # noinspection PyUnresolvedReferences
@@ -52,15 +52,15 @@ from funboost.concurrent_pool.bounded_threadpoolexcutor import \
     BoundedThreadPoolExecutor
 from funboost.utils.redis_manager import RedisMixin
 from func_timeout import func_set_timeout  # noqa
- 
+
 from funboost.concurrent_pool.custom_threadpool_executor import \
     CustomThreadPoolExecutor, check_not_monkey
 from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool, sync_or_async_fun_deco, run_sync_or_async_fun
 # from funboost.concurrent_pool.concurrent_pool_with_multi_process import ConcurrentPoolWithProcess
 from funboost.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from funboost.factories.publisher_factotry import get_publisher
- 
-from funboost.utils import decorators, time_util,  un_strict_json_dumps, redis_manager
+
+from funboost.utils import decorators, time_util, un_strict_json_dumps, redis_manager
 # noinspection PyUnresolvedReferences
 from funboost.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
 from funboost.funboost_config_deafult import BrokerConnConfig
@@ -68,7 +68,7 @@ from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
 from funboost.core import kill_remote_task
 
- 
+
 # patch_apscheduler_run_job()
 
 
@@ -149,9 +149,7 @@ class ConsumersManager:
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     time_interval_for_check_do_not_run_time = 60
     BROKER_KIND = None
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {}
-
-    # 每种中间件的概念有所不同，用户可以从 broker_exclusive_config 中传递该种中间件特有的配置意义参数。
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {}  # 每种中间件的概念有所不同，用户可以从 broker_exclusive_config 中传递该种中间件特有的配置意义参数。
 
     @property
     @decorators.synchronized
@@ -564,9 +562,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')
 
     @classmethod
-    def _push_for_apscheduler_use_database_store(cls, queue_name, msg,runonce_uuid ):
+    def _push_for_apscheduler_use_database_store(cls, queue_name, msg, runonce_uuid):
         key = 'apscheduler.redisjobstore_runonce'
-        if RedisMixin().redis_db_frame.sadd(key,runonce_uuid): # 这样可以阻止多次启动同队列名消费者 redis jobstore多次运行函数.
+        if RedisMixin().redis_db_frame.sadd(key, runonce_uuid):  # 这样可以阻止多次启动同队列名消费者 redis jobstore多次运行函数.
             cls.logger_apscheduler.debug(f'延时任务用普通消息重新发布到普通队列 {msg}')
             from funboost.core.get_booster import get_booster
             get_booster(queue_name).publish(msg)
@@ -638,7 +636,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # print(msg_no_delay)
             # 数据库作为apscheduler的jobstores时候， 不能用 self.pbulisher_of_same_queue.publish，self不能序列化
             self._delay_task_scheduler.add_job(self._push_for_apscheduler_use_database_store, 'date', run_date=run_date,
-                                               kwargs={'queue_name': self.queue_name, 'msg': msg_no_delay, 'runonce_uuid':str(uuid.uuid4())},
+                                               kwargs={'queue_name': self.queue_name, 'msg': msg_no_delay, 'runonce_uuid': str(uuid.uuid4())},
                                                misfire_grace_time=misfire_grace_time)
             self._confirm_consume(kw)
 

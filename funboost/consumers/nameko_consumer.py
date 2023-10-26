@@ -14,7 +14,7 @@ from nameko.rpc import rpc
 from nameko.runners import ServiceRunner
 
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost.publishers.nameko_publisher import NAMEKO_CONFIG
+from funboost.publishers.nameko_publisher import get_nameko_config
 
 all_queue_name__nameko_service_cls_map = {}
 
@@ -56,7 +56,7 @@ class NamekoConsumer(AbstractConsumer, ):
 
 
 def batch_start_nameko_consumers(boost_fun_list: typing.List):
-    runner = ServiceRunner(config=NAMEKO_CONFIG)
+    runner = ServiceRunner(config=get_nameko_config())
     for boost_fun in boost_fun_list:
         runner.add_service(all_queue_name__nameko_service_cls_map[boost_fun.queue_name])
     runner.start()

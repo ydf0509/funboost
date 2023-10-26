@@ -11,7 +11,7 @@ from funboost.publishers.rabbitmq_amqpstorm_publisher import RabbitmqPublisherUs
 class RabbitmqConsumerAmqpStorm(AbstractConsumer):
     """
     使用AmqpStorm实现的，多线程安全的，不用加锁。
-    funboost 强烈推荐使用这个做消息对内中间件。
+    funboost 强烈推荐使用这个做消息队列中间件。
     """
     BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'x-max-priority':None}   # x-max-priority 是 rabbitmq的优先级队列配置，必须为整数，强烈建议要小于5。为None就代表队列不支持优先级。
 

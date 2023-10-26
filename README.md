@@ -94,7 +94,7 @@ funboost 是 function_scheduling_distributed_framework的包名更新版本
 ```
 pip install funboost --upgrade
 
-或pip install funboost[extra_brokers]  一次性安装所有小众三方中间件
+或pip install funboost[all]  一次性安装所有小众三方中间件
 ```
 
 ## 1.2 框架功能介绍
@@ -115,8 +115,7 @@ funboosts示图：
 
 [//]: # ([![img-46.png]&#40;https://i.postimg.cc/tC7mQxWN/img-46.png&#41;]&#40;https://postimg.cc/hfW0VhCX&#41;)
 就是最普通的生产者消费者流程图
-
-![https://img.vinua.cn/images/aacY4.png](https://img.vinua.cn/images/aacY4.png)
+[![piZnp9S.png](https://z1.ax1x.com/2023/10/26/piZnp9S.png)](https://imgse.com/i/piZnp9S)
 
 也就是这种非常普通的流程图,一样的意思
 

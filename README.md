@@ -1,14 +1,17 @@
 
 
-# 1.分布式函数调度框架简介
+# 1.python万能分布式函数调度框架简funboost简介
 
-Stargazers:
+[//]: # (Stargazers:)
 
-[![Stargazers repo roster for @ydf0509/funboost](https://reporoster.com/stars/ydf0509/funboost)](https://github.com/ydf0509/funboost/stargazers)
+[//]: # ()
+[//]: # ([![Stargazers repo roster for @ydf0509/funboost]&#40;https://reporoster.com/stars/ydf0509/funboost&#41;]&#40;https://github.com/ydf0509/funboost/stargazers&#41;)
 
-Forkers:
+[//]: # ()
+[//]: # (Forkers:)
 
-[![Forkers repo roster for @ydf0509/funboost](https://reporoster.com/forks/ydf0509/funboost)](https://github.com/ydf0509/funboost/network/members)
+[//]: # ()
+[//]: # ([![Forkers repo roster for @ydf0509/funboost]&#40;https://reporoster.com/forks/ydf0509/funboost&#41;]&#40;https://github.com/ydf0509/funboost/network/members&#41;)
 
 
 <pre style="color: greenyellow;background-color: #0c1119; font-size: medium;">
@@ -55,11 +58,13 @@ funboost的旧框架名字是function_scheduling_distributed_framework , 关系�
 ### 1.0.1 [分布式函数调度框架文档地址 ](https://funboost.readthedocs.io/zh/latest/index.html)
 [查看分布式函数调度框架文档 https://funboost.readthedocs.io/zh/latest/index.html](https://funboost.readthedocs.io/zh/latest/index.html)
 
+
 [funboost依赖的nb_log日志文档 https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2](https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2)
 
 ```
 文档很长，但归根结底只需要学习 1.3 里面的这1个例子就行，主要是修改下@boost的各种参数，
 通过不同的入参，实践测试下各种控制功能。
+其中文档第四章列举了所有用法举例，
 
 对比 celery 有20种改善，其中之一是无依赖文件夹层级和文件夹名字 文件名字。
 首先能把  https://github.com/ydf0509/celery_demo
@@ -318,6 +323,9 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
 
      远程杀死(取消)任务：
          支持在发布端杀死正在运行的消息，发送杀死命令时候对还未取出的消息则放弃运行消息。
+    
+     funboost支持命令行操作：
+         使用fire实现的命令行，见文档第12章
 
 </pre>
 

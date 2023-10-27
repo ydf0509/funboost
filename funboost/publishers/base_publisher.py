@@ -15,6 +15,9 @@ from functools import wraps
 from threading import Lock
 import datetime
 import amqpstorm
+import decorator_libs
+
+from funboost.utils.develop_log import develop_logger
 
 from pikav1.exceptions import AMQPError as PikaAMQPError
 
@@ -22,7 +25,7 @@ from nb_log import LoggerLevelSetterMixin, get_logger, LoggerMixin
 
 from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
 from funboost.utils import decorators, time_util
-from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
+from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
 
 RedisAsyncResult = AsyncResult  # 别名
 RedisAioAsyncResult = AioAsyncResult  # 别名
@@ -128,7 +131,6 @@ class PublishParamsChecker(LoggerMixin):
 
 
 class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
-
     def __init__(self, queue_name, log_level_int=10, logger_prefix='', is_add_file_handler=True,
                  clear_queue_within_init=False, is_add_publish_time=True, consuming_function: callable = None,
                  broker_exclusive_config: dict = None,
@@ -146,6 +148,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 :param broker_exclusive_config 加上一个不同种类中间件非通用的配置,不同中间件自身独有的配置，不是所有中间件都兼容的配置，因为框架支持30种消息队列，消息队列不仅仅是一般的先进先出queue这么简单的概念，
                         例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，每一种消息队列都有独特的配置参数意义，可以通过这里传递。
                 """
+        develop_logger.warning(locals())
         self.queue_name = self._queue_name = queue_name
         if logger_prefix != '':
             logger_prefix += '--'
@@ -159,6 +162,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                  log_filename=f'{logger_name}.log' if is_add_file_handler else None,
                                  formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
                                  )  #
+
         self.publish_params_checker = PublishParamsChecker(consuming_function) if consuming_function else None
         if broker_exclusive_config is None:
             broker_exclusive_config = {}
@@ -230,6 +234,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         t_start = time.time()
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
             self.concrete_realization_of_publish)(json.dumps(msg, ensure_ascii=False))
+
         self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}')  # 显示msg太长了。
         with self._lock_for_count:
             self.count_per_minute += 1
@@ -313,7 +318,7 @@ def deco_mq_conn_error(f):
             try:
                 return f(self, *args, **kwargs)
 
-            except (PikaAMQPError, amqpstorm.AMQPError, ) as e:  # except BaseException as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
+            except (PikaAMQPError, amqpstorm.AMQPError,) as e:  # except BaseException as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
                 self.logger.error(f'中间件链接出错   ,方法 {f.__name__}  出错 ，{e}')
                 self.init_broker()
                 return f(self, *args, **kwargs)

@@ -171,7 +171,7 @@ class CeleryConsumer(AbstractConsumer):
             # return self.consuming_function(*args, **kwargs) # 如果没有声明 autoretry_for ，那么消费函数出错了就不会自动重试了。
             try:
                 return self.consuming_function(*args, **kwargs)
-            except BaseException as exc:  # 改成自动重试。
+            except Exception as exc:  # 改成自动重试。
                 # print(this.request.__dict__,dir(this))
                 if this.request.retries != self._max_retry_times:
                     log_msg = f'fun: {self.consuming_function}  args: {args} , kwargs: {kwargs} 消息第{this.request.retries}次运行出错,  {exc} \n'

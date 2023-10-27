@@ -12,9 +12,8 @@ class PersistQueueConsumer(AbstractConsumer):
     persist queue包实现的本地持久化消息队列。
     """
 
-
     def _shedual_task(self):
-        pub = PersistQueuePublisher(self.queue_name)
+        pub = PersistQueuePublisher(self.queue_name, )
         while True:
             item = pub.queue.get()
             # self.logger.debug(f'从本地持久化sqlite的 [{self._queue_name}] 队列中 取出的消息是：   {item}  ')

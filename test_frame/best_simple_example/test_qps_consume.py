@@ -7,7 +7,7 @@ from funboost import boost, BrokerEnum,ConcurrentModeEnum
 
 t_start = time.time()
 
-@boost('queue_test2_qps', qps=2, broker_kind=BrokerEnum.PERSISTQUEUE, concurrent_mode=ConcurrentModeEnum.THREADING, concurrent_num=600)
+@boost('queue_test2_qps', qps=2, broker_kind=BrokerEnum.REDIS, concurrent_mode=ConcurrentModeEnum.THREADING, )
 def f2(a, b):
     """
     concurrent_num = 600 不用怕，因为这是智能线程池，如果函数耗时短，不会真开那么多线程。

@@ -100,8 +100,9 @@ setup(
         'frozenlist',
         'fire',
     ],
-    extras_require={'extra_brokers': extra_brokers,
-                    'all': extra_brokers},
+    extras_require={'all': extra_brokers,
+                    'extra_brokers': extra_brokers,
+                    },
 
     entry_points={
         'console_scripts': [

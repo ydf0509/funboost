@@ -97,3 +97,10 @@ class BoosterFire(object):
         for queue_anme in queue_names:
             get_booster(queue_anme).pause()
 
+    def continue_consume(self, *queue_names: str):
+        """
+        继续多个消息队列名的消费;
+        例子: continue_consume queue1 queue2
+        """
+        for queue_anme in queue_names:
+            get_booster(queue_anme).continue_consume()

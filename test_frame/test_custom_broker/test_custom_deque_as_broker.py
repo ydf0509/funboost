@@ -3,7 +3,7 @@ import threading
 import time
 from collections import deque
 from funboost import register_custom_broker, AbstractConsumer, AbstractPublisher
-from funboost import boost
+from funboost import boost,ConcurrentModeEnum,BrokerEnum
 
 """
 此文件是演示添加自定义类型的中间件,已python的 deque 作为内存消息队列，这里只是演示怎么自定义扩展中间件
@@ -50,7 +50,7 @@ class DequeConsumer(AbstractConsumer):
             try:
                 task_str = self.msg_deque.popleft()
             except IndexError:  # 说明是空的
-                time.sleep(0.1)
+                time.sleep(0.01)
                 continue
             kw = {'body': json.loads(task_str)}
             self._submit_task(kw)
@@ -62,17 +62,18 @@ class DequeConsumer(AbstractConsumer):
         self.msg_deque.append(json.dumps(kw['body']))
 
 
-BROKER_KIND_DEQUE = 102
-register_custom_broker(BROKER_KIND_DEQUE, DequePublisher, DequeConsumer)  # 核心，这就是将自己写的类注册到框架中，框架可以自动使用用户的类，这样用户无需修改框架的源代码了。
+BrokerEnum.BROKER_KIND_DEQUE = 102
+register_custom_broker(BrokerEnum.BROKER_KIND_DEQUE, DequePublisher, DequeConsumer)  # 核心，这就是将自己写的类注册到框架中，框架可以自动使用用户的类，这样用户无需修改框架的源代码了。
 
 
-@boost('test_list_queue', broker_kind=BROKER_KIND_DEQUE, qps=10, )
+@boost('test_list_queue', broker_kind=BrokerEnum.MEMORY_QUEUE, qps=0, log_level=20,concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,concurrent_num=1)
 def f(x):
-    print(x * 10)
+    if x % 10000 == 0:
+        print(x)
 
 
 if __name__ == '__main__':
-    for i in range(50):
+    for i in range(1000000):
         f.push(i)
     print(f.publisher.get_message_count())
     f.consume()

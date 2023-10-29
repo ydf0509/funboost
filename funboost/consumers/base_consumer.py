@@ -20,6 +20,7 @@ import os
 import uuid
 import time
 import traceback
+import inspect
 # from collections import Callable
 from typing import Callable
 from functools import wraps
@@ -437,6 +438,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._check_broker_exclusive_config()
 
         self._has_start_delay_task_scheduler = False
+        self._consuming_function_is_asyncio = inspect.iscoroutinefunction(self.consuming_function)
         self.custom_init()
 
         atexit.register(self.join_shedual_task_thread)
@@ -801,7 +803,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         t_start = time.time()
         function_result_status.run_times = current_retry_times + 1
         try:
-            function_run = sync_or_async_fun_deco(self.consuming_function)
+            function_run = self.consuming_function
+            if self._consuming_function_is_asyncio:
+                function_run = sync_or_async_fun_deco(function_run)
             function_timeout = self._get_priority_conf(kw, 'function_timeout')
             function_run = function_run if self._consumin_function_decorator is None else self._consumin_function_decorator(function_run)
             function_run = function_run if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
@@ -814,14 +818,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     return function_result_status
                 function_run = kill_remote_task.kill_fun_deco(task_id)(function_run)  # 用杀死装饰器包装起来在另一个线程运行函数,以便等待远程杀死。
             function_result_status.result = function_run(**function_only_params)
-            if asyncio.iscoroutine(function_result_status.result):
-                log_msg = f'''异步的协程消费函数必须使用 async 并发模式并发,请设置消费函数 {self.consuming_function.__name__} 的concurrent_mode 为 ConcurrentModeEnum.ASYNC 或 4'''
-                # self.logger.critical(msg=f'{log_msg} \n')
-                # self.error_file_logger.critical(msg=f'{log_msg} \n')
-                self._log_critical(msg=log_msg)
-                # noinspection PyProtectedMember,PyUnresolvedReferences
-
-                os._exit(4)
+            # if asyncio.iscoroutine(function_result_status.result):
+            #     log_msg = f'''异步的协程消费函数必须使用 async 并发模式并发,请设置消费函数 {self.consuming_function.__name__} 的concurrent_mode 为 ConcurrentModeEnum.ASYNC 或 4'''
+            #     # self.logger.critical(msg=f'{log_msg} \n')
+            #     # self.error_file_logger.critical(msg=f'{log_msg} \n')
+            #     self._log_critical(msg=log_msg)
+            #     # noinspection PyProtectedMember,PyUnresolvedReferences
+            #
+            #     os._exit(4)
             function_result_status.success = True
             if self._log_level <= logging.DEBUG:
                 result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '

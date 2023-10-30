@@ -15,7 +15,7 @@ def f(x):
 if __name__ == '__main__':
     f.consume()
     f.clear()
-    for i in range(500):
+    for i in range(50000):
         f.push(i)
     print(f.publisher.get_message_count())
     CeleryHelper.start_flower()

@@ -66,14 +66,16 @@ BrokerEnum.BROKER_KIND_DEQUE = 102
 register_custom_broker(BrokerEnum.BROKER_KIND_DEQUE, DequePublisher, DequeConsumer)  # 核心，这就是将自己写的类注册到框架中，框架可以自动使用用户的类，这样用户无需修改框架的源代码了。
 
 
-@boost('test_list_queue', broker_kind=BrokerEnum.MEMORY_QUEUE, qps=0, log_level=20,concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,concurrent_num=1)
+@boost('test_list_queue', broker_kind=BrokerEnum.BROKER_KIND_DEQUE, qps=0, log_level=20,concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,concurrent_num=1,
+       )
 def f(x):
     if x % 10000 == 0:
         print(x)
 
 
 if __name__ == '__main__':
-    for i in range(1000000):
+    for i in range(1000):
         f.push(i)
     print(f.publisher.get_message_count())
     f.consume()
+

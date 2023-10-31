@@ -110,6 +110,8 @@ class BoostDecoratorDefaultParams(DataClassBase):
     所以boost装饰器只有一个是必传参数。
     """
 
+    broker_kind: int = BrokerEnum.PERSISTQUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
+
     concurrent_mode = ConcurrentModeEnum.THREADING
     concurrent_num = 50
     specify_concurrent_pool = None
@@ -148,4 +150,4 @@ class BoostDecoratorDefaultParams(DataClassBase):
 
     broker_exclusive_config = {}
 
-    broker_kind: int = BrokerEnum.PERSISTQUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
+

@@ -39,6 +39,10 @@ class DataClassBase:
         for k ,v in kwargs.items():
             setattr(cls,k,v)
 
+    def update_instance_attribute(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
 
 if __name__ == '__main__':
     import datetime

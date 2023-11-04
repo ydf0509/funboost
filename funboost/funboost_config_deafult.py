@@ -7,7 +7,7 @@ from funboost.core.function_result_status_config import FunctionResultStatusPers
 from funboost.utils.simple_data_class import DataClassBase
 
 '''
-此文件是第一次运行框架自动生成到你的项目根目录的，不需要用由户手动创建。
+funboost_config.py 文件是第一次运行框架自动生成到你的项目根目录的，不需要用由户手动创建。
 此文件里面可以写任意python代码。例如 中间件 帐号 密码自己完全可以从apola配置中心获取或者从环境变量获取。
 '''
 

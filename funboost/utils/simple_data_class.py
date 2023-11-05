@@ -38,10 +38,12 @@ class DataClassBase:
     def update_cls_attribute(cls,**kwargs):
         for k ,v in kwargs.items():
             setattr(cls,k,v)
+        return cls
 
     def update_instance_attribute(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
+        return self
 
 
 if __name__ == '__main__':

@@ -43,6 +43,7 @@ class BoosterFire(object):
     def show_all_queues(self):
         """显示扫描到的所有queue name"""
         print(f'get_all_queues: {get_all_queues()}')
+        return self
 
     def clear(self, *queue_names: str):
         """
@@ -51,6 +52,7 @@ class BoosterFire(object):
 
         for queue_anme in queue_names:
             get_booster(queue_anme).clear()
+        return self
 
     def push(self, queue_anme, *args, **kwargs):
         """push发布消息到消息队列 ;
@@ -60,6 +62,11 @@ class BoosterFire(object):
         或者 push add_queue -x 1 -y 2;
         """
         get_booster(queue_anme).push(*args, **kwargs)
+        return self
+
+    def __str__(self):
+        # print('over')  # 这行重要,否则命令行链式调用无法自动结束
+        return ''
 
     def publish(self, queue_anme, msg):
         """publish发布消息到消息队列;
@@ -68,6 +75,7 @@ class BoosterFire(object):
         """
 
         get_booster(queue_anme).publish(msg)
+        return self
 
     def consume(self, *queue_names: str):
         """

@@ -1,6 +1,7 @@
 # coding= utf-8
 class BrokerEnum:
     RABBITMQ_AMQPSTORM = 0  # 使用 amqpstorm 包操作rabbitmq  作为 分布式消息队列，支持消费确认.强烈推荐这个作为funboost中间件。
+    RABBITMQ = RABBITMQ_AMQPSTORM
 
     RABBITMQ_RABBITPY = 1  # 使用 rabbitpy 包操作rabbitmq  作为 分布式消息队列，支持消费确认。
 
@@ -68,7 +69,8 @@ class BrokerEnum:
 
     REDIS_PUBSUB = 27  # 基于redis 发布订阅的，发布一个消息多个消费者都能收到消息，但不支持持久化
 
-    CELERY = 30  # funboost支持celery框架来发布和消费任务，由celery框架来调度执行任务，但是写法简单暴击celery，永无无需关心和操作Celery对象实例。
+    CELERY = 30  # funboost支持celery框架来发布和消费任务，由celery框架来调度执行任务，但是写法简单远远暴击用户亲自使用celery的麻烦程度，
+                 # 用户永无无需关心和操作Celery对象实例,无需关心celery的task_routes和include配置,funboost来自动化设置这些celery配置。
 
     DRAMATIQ = 31  # funboost使用 dramatiq 框架作为消息队列，dramatiq类似celery也是任务队列框架。用户使用funboost api来操作dramatiq核心调度。
 

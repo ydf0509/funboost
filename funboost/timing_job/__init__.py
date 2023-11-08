@@ -162,7 +162,7 @@ fsdf_background_scheduler = funboost_aps_scheduler  # 兼容一下老名字。
 if __name__ == '__main__':
     # 定时运行消费演示
     import datetime
-    from funboost import boost, BrokerEnum, fsdf_background_scheduler, timing_publish_deco, run_forever, Booster
+    from funboost import boost, BrokerEnum, fsdf_background_scheduler, timing_publish_deco, run_forever
 
 
     @Booster('queue_test_666', broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
@@ -171,6 +171,8 @@ if __name__ == '__main__':
 
 
     print(consume_func, type(consume_func))
+
+
     # 定时每隔3秒执行一次。
     funboost_aps_scheduler.add_push_job(consume_func,
                                         'interval', id='3_second_job', seconds=3, kwargs={"x": 5, "y": 6})

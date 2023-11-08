@@ -1,6 +1,9 @@
+from __future__ import annotations
 import copy
 import types
 import typing
+
+
 from functools import wraps
 
 from funboost.core.function_result_status_config import FunctionResultStatusPersistanceConfig
@@ -156,7 +159,7 @@ class Booster:
         else:
             return types.MethodType(self, instance)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> Booster:
         if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], typing.Callable):
             consuming_function = args[0]
             self.consuming_function = consuming_function

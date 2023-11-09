@@ -19,7 +19,7 @@ from apscheduler.util import undefined
 import deprecated
 from funboost.utils.redis_manager import RedisMixin
 
-from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
+from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
 
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.core.get_booster import get_booster, Booster
@@ -39,12 +39,12 @@ def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, Ab
     return _deco
 
 
-def push_fun_params_to_broker(queue_name: str, *args, **kwargs, ):
+def push_fun_params_to_broker(queue_name: str, *args, runonce_uuid=None, **kwargs):
     """
+    queue_name 队列名字
     *args **kwargs 是消费函数的入参
+    发布消息中可以包括,runonce_uuid这个入参,确保分布式多个脚本都启动了定时器,导致每个定时器重复发布到消息队列,值你自己写  str(uuid.uuid4())
     """
-    runonce_uuid = kwargs['runonce_uuid']
-    kwargs.pop('runonce_uuid')
     if runonce_uuid:
         key = 'apscheduler.redisjobstore_runonce2'
         if RedisMixin().redis_db_frame.sadd(key, runonce_uuid):
@@ -69,10 +69,11 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
                             next_run_time, jobstore, executor,
                             replace_existing, **trigger_args)
 
-    def add_push_job(self, func: Booster, trigger=None, args=None, kwargs=None, id=None, name=None,
+    def add_push_job(self, func: Booster, trigger=None, args=None, kwargs=None, runonce_uuid=None,
+                     id=None, name=None,
                      misfire_grace_time=undefined, coalesce=undefined, max_instances=undefined,
                      next_run_time=undefined, jobstore='default', executor='default',
-                     replace_existing=False, runonce_uuid=None, **trigger_args, ):
+                     replace_existing=False, **trigger_args, ):
         """
         :param func: 被@boost装饰器装饰的函数
         :param trigger:
@@ -171,7 +172,6 @@ if __name__ == '__main__':
 
 
     print(consume_func, type(consume_func))
-
 
     # 定时每隔3秒执行一次。
     funboost_aps_scheduler.add_push_job(consume_func,

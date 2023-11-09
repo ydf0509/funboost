@@ -67,7 +67,7 @@ class BrokerEnum:
 
     PEEWEE = 26  # peewee包操作mysql，使用表模拟消息队列
 
-    REDIS_PUBSUB = 27  # 基于redis 发布订阅的，发布一个消息多个消费者都能收到消息，但不支持持久化
+    REDIS_PUBSUB = 27  # 基于redis 发布订阅的，发布一个消息多个消费者都能收到同一条消息，但不支持持久化
 
     CELERY = 30  # funboost支持celery框架来发布和消费任务，由celery框架来调度执行任务，但是写法简单远远暴击用户亲自使用celery的麻烦程度，
                  # 用户永无无需关心和操作Celery对象实例,无需关心celery的task_routes和include配置,funboost来自动化设置这些celery配置。

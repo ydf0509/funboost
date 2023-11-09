@@ -87,4 +87,6 @@ class AioRedisMixin(object):
     @property
     @decorators.cached_method_result
     def aioredis_db_filter_and_rpc_result(self):
-        return AioRedisManager(**_get_redis_conn_kwargs_by_db(BrokerConnConfig.REDIS_DB_FILTER_AND_RPC_RESULT)).get_redis()
+        # aioredis 包已经不再更新了,推荐使用redis包的asyncio中的类
+        # return AioRedisManager(**_get_redis_conn_kwargs_by_db(BrokerConnConfig.REDIS_DB_FILTER_AND_RPC_RESULT)).get_redis()
+        return redis5.asyncio.Redis(**_get_redis_conn_kwargs_by_db(BrokerConnConfig.REDIS_DB_FILTER_AND_RPC_RESULT),decode_responses=True)

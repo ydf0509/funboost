@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 import typing
 import json
@@ -141,6 +142,7 @@ if __name__ == '__main__':
     @property
     async def status_and_result(self):
         if not self._has_pop:
+            t1 = time.time()
             redis_value = await self.aioredis_db_filter_and_rpc_result.blpop(self.task_id, self.timeout)
             self._has_pop = True
             if redis_value is not None:

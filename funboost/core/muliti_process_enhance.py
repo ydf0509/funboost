@@ -7,12 +7,12 @@ from concurrent.futures import ProcessPoolExecutor
 import nb_log
 from funboost.core.booster import Booster
 
-logger = nb_log.get_logger('funboost')
+logger = nb_log.get_logger(__name__)
 
 
-def _run_consumer_by_init_params(consuming_function,boost_params,):
+def _run_consumer_by_init_params(consuming_function, boost_params, ):
     from funboost.core.booster import BoostersManager
-    booster_current_pid = BoostersManager.get_or_create_booster(consuming_function,**boost_params)
+    booster_current_pid = BoostersManager.get_or_create_booster(consuming_function, **boost_params)
     # booster_current_pid = boost(**boost_params)(consuming_function)
     booster_current_pid.consume()
     # ConsumersManager.join_all_consumer_shedual_task_thread()
@@ -47,11 +47,10 @@ def run_consumer_with_multi_process(booster: Booster, process_num=1):
         for i in range(process_num):
             # print(i)
             Process(target=_run_consumer_by_init_params,
-                    args=(booster.boost_params,booster.consuming_function)).start()
+                    args=(booster.boost_params, booster.consuming_function)).start()
 
 
-
-def _multi_process_pub_params_list_by_consumer_init_params(consuming_function,boost_params, msgs: List[dict]):
+def _multi_process_pub_params_list_by_consumer_init_params(consuming_function, boost_params, msgs: List[dict]):
     from funboost.core.booster import BoostersManager
     booster_current_pid = BoostersManager.get_or_create_booster(consuming_function, **boost_params)
     publisher = booster_current_pid.publisher
@@ -73,6 +72,6 @@ def multi_process_pub_params_list(booster: Booster, params_list, process_num=16)
         for i in range(process_num):
             msgs = params_list[i * ava_len: (i + 1) * ava_len]
             # print(msgs)
-            pool.submit(_multi_process_pub_params_list_by_consumer_init_params,booster.consuming_function, booster.boost_params,
+            pool.submit(_multi_process_pub_params_list_by_consumer_init_params, booster.consuming_function, booster.boost_params,
                         msgs)
     logger.info(f'\n 通过 multi_process_pub_params_list 多进程子进程的发布方式，发布了 {params_list_len} 个任务。耗时 {time.time() - t0} 秒')

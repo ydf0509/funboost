@@ -5,8 +5,7 @@ from os import PathLike
 from pathlib import Path
 import importlib.util
 import nb_log
-from funboost.core.global_boosters import show_all_boosters, pid_queue_name__booster_map
-
+from funboost.core.booster import BoostersManager
 
 class BoosterDiscovery(nb_log.LoggerMixin):
     def __init__(self, project_root_path: typing.Union[PathLike, str],
@@ -54,7 +53,7 @@ class BoosterDiscovery(nb_log.LoggerMixin):
                 spec = importlib.util.spec_from_file_location('module', file_path)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
-        show_all_boosters()
+        BoostersManager.show_all_boosters()
 
 
 if __name__ == '__main__':

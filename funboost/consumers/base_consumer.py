@@ -567,8 +567,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         key = 'apscheduler.redisjobstore_runonce'
         if RedisMixin().redis_db_frame.sadd(key, runonce_uuid):  # 这样可以阻止多次启动同队列名消费者 redis jobstore多次运行函数.
             cls.logger_apscheduler.debug(f'延时任务用普通消息重新发布到普通队列 {msg}')
-            from funboost.core.get_booster import get_booster
-            get_booster(queue_name).publish(msg)
+            from funboost.core.booster import BoostersManager
+            BoostersManager.get_booster(queue_name).publish(msg)
 
     @abc.abstractmethod
     def _shedual_task(self):

@@ -1,19 +1,17 @@
 from __future__ import annotations
 import copy
+import os
 import types
 import typing
 
-
+import nb_log
 from functools import wraps
 
 from funboost.core.function_result_status_config import FunctionResultStatusPersistanceConfig
 
-from funboost.core.global_boosters import regist_booster
-
 from funboost.funboost_config_deafult import BoostDecoratorDefaultParams
 
 from funboost.factories.consumer_factory import get_consumer
-
 
 
 class _Undefined:
@@ -184,7 +182,7 @@ class Booster:
             self.continue_consume = consumer.continue_consume
 
             wraps(consuming_function)(self)
-            regist_booster(self.queue_name, self)
+            BoostersManager.regist_booster(self.queue_name, self)
             return self
         else:
             return self.consuming_function(*args, **kwargs)
@@ -233,3 +231,63 @@ class Booster:
 
 boost = Booster
 task_deco = boost  # 两个装饰器名字都可以。task_deco是原来名字，兼容一下。
+
+
+class BoostersManager:
+    logger = nb_log.get_logger('BoostersManager')
+
+    # pid_queue_name__booster_map字典存放 {(进程id,queue_name):Booster对象}
+    pid_queue_name__booster_map = {}  # type: typing.Dict[typing.Tuple[int,str],Booster]
+
+    # queue_name__boost_params_consuming_function_map 字典存放  {queue_name,(@boost的入参字典,@boost装饰的函数)}
+    queue_name__boost_params_consuming_function_map = {}  # type: typing.Dict[str,typing.Tuple[dict,typing.Callable]]
+
+    @classmethod
+    def regist_booster(cls, queue_name: str, booster: Booster):
+        cls.pid_queue_name__booster_map[(os.getpid(), queue_name)] = booster
+        cls.queue_name__boost_params_consuming_function_map[queue_name] = (booster.boost_params, booster.consuming_function)
+
+    @classmethod
+    def show_all_boosters(cls):
+        queues = []
+        for pid_queue_name, booster in cls.pid_queue_name__booster_map.items():
+            queues.append(pid_queue_name[1])
+            cls.logger.debug(f'booster: {pid_queue_name[1]}  {booster}')
+
+    @classmethod
+    def get_all_queues(cls):
+        return cls.queue_name__boost_params_consuming_function_map.keys()
+
+    @classmethod
+    def get_booster(cls, queue_name: str) -> Booster:
+        pid = os.getpid()
+        if (pid, queue_name) not in cls.pid_queue_name__booster_map:
+            err_msg = f'进程 {pid} ，没有 {queue_name} 对应的 booster   , pid_queue_name__booster_map: {cls.pid_queue_name__booster_map}'
+            raise ValueError(err_msg)
+        return cls.pid_queue_name__booster_map[(pid, queue_name)]
+
+    @classmethod
+    def get_boost_params_and_consuming_function(cls, queue_name: str) -> (dict, typing.Callable):
+        """
+        这个函数是为了在别的进程实例化 booster，consumer和publisher,获取queue_name队列对应的booster的当时的入参。
+        有些中间件python包的对中间件连接对象不是多进程安全的，不要在进程2中去操作进程1中生成的booster consumer publisher等对象。
+        """
+
+        """
+        boost_params,consuming_function = get_boost_params_and_consuming_function(queue_name)
+        booster_current_pid = boost(**boost_params)(consuming_function)
+        """
+        return cls.queue_name__boost_params_consuming_function_map[queue_name]
+
+    @classmethod
+    def get_or_create_booster(cls, queue_name, consuming_function, **boost_params, ) -> Booster:
+        """
+        当前进程获得或者创建booster对象。方便有的人需要在函数内部临时动态根据队列名创建booster,不会无数次临时生成消费者、生产者、创建消息队列连接。
+        :param boost_params: 就是 Booster的入参。
+        :return:
+        """
+        try:
+            return cls.get_booster(queue_name)
+        except ValueError:  # 不存在就创建。
+            boost_params['queue_name'] = queue_name
+            return Booster(**boost_params)(consuming_function)

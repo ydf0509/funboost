@@ -1,4 +1,4 @@
-from funboost import Booster, get_or_create_booster
+from funboost import Booster, BoostersManager
 
 
 def add(a, b):
@@ -6,7 +6,7 @@ def add(a, b):
 
 
 def my_push(quue_name, a, b):
-    booster = get_or_create_booster(quue_name, qps=0.2, consuming_function=add)  # type: Booster
+    booster = BoostersManager.get_or_create_booster(quue_name, qps=0.2, consuming_function=add)  # type: Booster
     # get_or_create_booster 这种就不会无数次去创建 消息队列连接了。
     booster.push(a, b)
 
@@ -17,6 +17,6 @@ if __name__ == '__main__':
         my_push(queue_namx, i, i * 2)
 
     for j in range(10):
-        booster = get_or_create_booster(f'queue_{j}', qps=0.2, consuming_function=add)  # type: Booster
+        booster = BoostersManager.get_or_create_booster(f'queue_{j}', qps=0.2, consuming_function=add)  # type: Booster
         booster.consume()
 

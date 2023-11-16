@@ -3,7 +3,7 @@ import traceback
 from funboost import AioAsyncResult, AsyncResult
 
 from funboost.core.cli.discovery_boosters import BoosterDiscovery
-from funboost.core.get_booster import get_booster
+from funboost import BoostersManager
 from fastapi import FastAPI
 from pydantic import BaseModel
 
@@ -26,7 +26,7 @@ app = FastAPI()
 
 '''
 如果你在发布消息后还需要获取函数执行结果,
-推荐使用asyncio类型的web框架例如 fastapi tornado,而不是使用flask django,更好的应付由于获取结果而需要的阻塞时间.不使用asyncio的话web框架需要设置开启很高的线程才行.
+那么推荐使用asyncio类型的web框架例如 fastapi tornado,而不是使用flask django,更好的应付由于获取结果而需要的阻塞时间.不使用asyncio的话web框架需要设置开启很高的线程才行.
 '''
 
 
@@ -34,7 +34,7 @@ app = FastAPI()
 async def publish_msg(msg_item: MsgItem):
     status_and_result = None
     try:
-        booster = get_booster(msg_item.queue_name)
+        booster = BoostersManager.get_booster(msg_item.queue_name)
         if msg_item.need_result:
             if booster.boost_params['is_using_rpc_mode'] is False:
                 raise ValueError(f' need_result 为true,{booster.queue_name} 队列消费者 需要@boost设置支持rpc模式')

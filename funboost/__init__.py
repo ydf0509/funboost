@@ -40,8 +40,9 @@ from funboost.factories.consumer_factory import get_consumer
 from funboost.timing_job import fsdf_background_scheduler, timing_publish_deco, funboost_aps_scheduler
 from funboost.constant import BrokerEnum, ConcurrentModeEnum
 
-from funboost.core.booster import boost, Booster
-from funboost.core.get_booster import get_booster, get_or_create_booster, get_boost_params_and_consuming_function
+from funboost.core.booster import boost, Booster,BoostersManager
+# from funboost.core.get_booster import get_booster, get_or_create_booster, get_boost_params_and_consuming_function
+from funboost.core.booster import BoostersManager
 from funboost.core.kill_remote_task import RemoteTaskKiller
 from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig,BoostDecoratorDefaultParams
 

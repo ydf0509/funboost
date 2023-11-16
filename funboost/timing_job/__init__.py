@@ -22,7 +22,7 @@ from funboost.utils.redis_manager import RedisMixin
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
 
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost.core.get_booster import get_booster, Booster
+from funboost.core.booster import BoostersManager, Booster
 from funboost.publishers.base_publisher import AbstractPublisher
 
 
@@ -48,9 +48,9 @@ def push_fun_params_to_broker(queue_name: str, *args, runonce_uuid=None, **kwarg
     if runonce_uuid:
         key = 'apscheduler.redisjobstore_runonce2'
         if RedisMixin().redis_db_frame.sadd(key, runonce_uuid):
-            get_booster(queue_name).push(*args, **kwargs)
+            BoostersManager.get_booster(queue_name).push(*args, **kwargs)
     else:
-        get_booster(queue_name).push(*args, **kwargs)
+        BoostersManager.get_booster(queue_name).push(*args, **kwargs)
 
 
 class FunboostBackgroundScheduler(BackgroundScheduler):

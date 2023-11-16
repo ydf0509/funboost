@@ -4,9 +4,8 @@ import sys
 import typing
 from os import PathLike
 
-from funboost import get_booster
+from funboost.core.booster import BoostersManager
 from funboost.core.cli.discovery_boosters import BoosterDiscovery
-from funboost.core.global_boosters import get_all_queues
 from funboost.utils.ctrl_c_end import ctrl_c_recv
 
 env_dict = {'project_root_path': None}
@@ -42,7 +41,7 @@ class BoosterFire(object):
 
     def show_all_queues(self):
         """显示扫描到的所有queue name"""
-        print(f'get_all_queues: {get_all_queues()}')
+        print(f'get_all_queues: {BoostersManager.get_all_queues()}')
         return self
 
     def clear(self, *queue_names: str):
@@ -51,7 +50,7 @@ class BoosterFire(object):
         """
 
         for queue_anme in queue_names:
-            get_booster(queue_anme).clear()
+            BoostersManager.get_booster(queue_anme).clear()
         return self
 
     def push(self, queue_anme, *args, **kwargs):
@@ -61,7 +60,7 @@ class BoosterFire(object):
         或者 push add_queue --x=1 --y=2;
         或者 push add_queue -x 1 -y 2;
         """
-        get_booster(queue_anme).push(*args, **kwargs)
+        BoostersManager.get_booster(queue_anme).push(*args, **kwargs)
         return self
 
     def __str__(self):
@@ -74,7 +73,7 @@ class BoosterFire(object):
            publish add_queue "{'x':1,'y':2}"
         """
 
-        get_booster(queue_anme).publish(msg)
+        BoostersManager.get_booster(queue_anme).publish(msg)
         return self
 
     def consume(self, *queue_names: str):
@@ -83,7 +82,7 @@ class BoosterFire(object):
         例子: consume queue1 queue2
         """
         for queue_anme in queue_names:
-            get_booster(queue_anme).consume()
+            BoostersManager.get_booster(queue_anme).consume()
         ctrl_c_recv()
 
     def multi_process_consume(self, **queue_name__process_num):
@@ -92,7 +91,7 @@ class BoosterFire(object):
         例子:  m_consume --queue1=2 --queue2=3    # queue1启动两个单独进程消费  queue2 启动3个单独进程消费
         """
         for queue_anme, process_num in queue_name__process_num.items():
-            get_booster(queue_anme).multi_process_consume(process_num)
+            BoostersManager.get_booster(queue_anme).multi_process_consume(process_num)
         ctrl_c_recv()
 
     m_consume = multi_process_consume
@@ -103,7 +102,7 @@ class BoosterFire(object):
         例子: pause queue1 queue2
         """
         for queue_anme in queue_names:
-            get_booster(queue_anme).pause()
+            BoostersManager.get_booster(queue_anme).pause()
 
     def continue_consume(self, *queue_names: str):
         """
@@ -111,4 +110,4 @@ class BoosterFire(object):
         例子: continue_consume queue1 queue2
         """
         for queue_anme in queue_names:
-            get_booster(queue_anme).continue_consume()
+            BoostersManager.get_booster(queue_anme).continue_consume()

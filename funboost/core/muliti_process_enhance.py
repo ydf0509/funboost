@@ -10,13 +10,12 @@ from funboost.core.booster import Booster
 logger = nb_log.get_logger('funboost')
 
 
-def _run_consumer_by_init_params(queue_name):
+def _run_consumer_by_init_params(boost_params,consuming_function):
     from funboost.core.booster import boost,BoostersManager
-    from funboost import ConsumersManager
-    boost_params, consuming_function = BoostersManager.get_boost_params_and_consuming_function(queue_name)
-    booster_current_pid = boost(**boost_params)(consuming_function)
+    booster_current_pid = BoostersManager.get_or_create_booster(consuming_function,**boost_params)
+    # booster_current_pid = boost(**boost_params)(consuming_function)
     booster_current_pid.consume()
-    ConsumersManager.join_all_consumer_shedual_task_thread()
+    # ConsumersManager.join_all_consumer_shedual_task_thread()
     while True:
         time.sleep(1000)
 
@@ -48,7 +47,7 @@ def run_consumer_with_multi_process(booster: Booster, process_num=1):
         for i in range(process_num):
             # print(i)
             Process(target=_run_consumer_by_init_params,
-                    args=(booster.queue_name,)).start()
+                    args=(booster.boost_params,booster.consuming_function)).start()
 
 
 

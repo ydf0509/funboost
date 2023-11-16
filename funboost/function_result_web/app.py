@@ -145,6 +145,7 @@ if __name__ == '__main__':
     app.run(debug=False, threaded=True, host='0.0.0.0', port=27018)
 
     '''
+    linux 是export , win是 set
     # 第一步 export PYTHONPATH=你的项目根目录 ，这么做是为了这个web可以读取到你项目根目录下的 funboost_config.py里面的配置
     # 例如 export PYTHONPATH=/home/ydf/codes/ydfhome
       或者  export PYTHONPATH=./   (./是相对路径，前提是已近cd到你的项目根目录了，也可以写绝对路径全路径)

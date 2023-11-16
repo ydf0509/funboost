@@ -62,7 +62,7 @@ class RedisImpermanencyFilter(RedisFilter):
     """
 
     def add_a_value(self, value: typing.Union[str, dict]):
-        self.redis_db_filter_and_rpc_result.zadd(self._redis_key_name, self._get_ordered_str(value), time.time())
+        self.redis_db_filter_and_rpc_result.zadd(self._redis_key_name, {self._get_ordered_str(value):time.time()})
 
     def manual_delete_a_value(self, value: typing.Union[str, dict]):
         self.redis_db_filter_and_rpc_result.zrem(self._redis_key_name, self._get_ordered_str(value))
@@ -86,6 +86,7 @@ class RedisImpermanencyFilter(RedisFilter):
     @decorators.keep_circulating(60, block=False)
     def delete_expire_filter_task_cycle(self):
         """
+
         一直循环删除过期的过滤任务。任务过滤过期时间最好不要小于60秒，否则删除会不及时,导致发布的新任务不能触发执行。一般实时价格接口是缓存5分钟或30分钟。
         :return:
         """

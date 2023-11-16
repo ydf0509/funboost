@@ -32,7 +32,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
         self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
 
     def _add_task_str_to_unack_zset(self, task_str, ):
-        self.redis_db_frame.zadd(self._unack_zset_name, task_str, time.time())
+        self.redis_db_frame.zadd(self._unack_zset_name, {task_str: time.time()})
 
     def _confirm_consume(self, kw):
         self.redis_db_frame.zrem(self._unack_zset_name, kw['task_str'])

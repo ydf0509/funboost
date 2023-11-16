@@ -15,6 +15,7 @@ from funboost.funboost_config_deafult import BoostDecoratorDefaultParams
 from funboost.factories.consumer_factory import get_consumer
 
 
+
 class _Undefined:
     pass
 

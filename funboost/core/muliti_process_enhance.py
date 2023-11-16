@@ -10,8 +10,8 @@ from funboost.core.booster import Booster
 logger = nb_log.get_logger('funboost')
 
 
-def _run_consumer_by_init_params(boost_params,consuming_function):
-    from funboost.core.booster import boost,BoostersManager
+def _run_consumer_by_init_params(consuming_function,boost_params,):
+    from funboost.core.booster import BoostersManager
     booster_current_pid = BoostersManager.get_or_create_booster(consuming_function,**boost_params)
     # booster_current_pid = boost(**boost_params)(consuming_function)
     booster_current_pid.consume()
@@ -51,11 +51,9 @@ def run_consumer_with_multi_process(booster: Booster, process_num=1):
 
 
 
-def _multi_process_pub_params_list_by_consumer_init_params(queue_name, msgs: List[dict]):
-
-    from funboost.core.booster import boost,BoostersManager
-    boost_params, consuming_function = BoostersManager.get_boost_params_and_consuming_function(queue_name)
-    booster_current_pid = boost(**boost_params)(consuming_function)
+def _multi_process_pub_params_list_by_consumer_init_params(consuming_function,boost_params, msgs: List[dict]):
+    from funboost.core.booster import BoostersManager
+    booster_current_pid = BoostersManager.get_or_create_booster(consuming_function, **boost_params)
     publisher = booster_current_pid.publisher
     publisher.set_log_level(20)  # 超高速发布，如果打印详细debug日志会卡死屏幕和严重降低代码速度。
     for msg in msgs:
@@ -75,6 +73,6 @@ def multi_process_pub_params_list(booster: Booster, params_list, process_num=16)
         for i in range(process_num):
             msgs = params_list[i * ava_len: (i + 1) * ava_len]
             # print(msgs)
-            pool.submit(_multi_process_pub_params_list_by_consumer_init_params, booster.queue_name,
+            pool.submit(_multi_process_pub_params_list_by_consumer_init_params,booster.consuming_function, booster.boost_params,
                         msgs)
     logger.info(f'\n 通过 multi_process_pub_params_list 多进程子进程的发布方式，发布了 {params_list_len} 个任务。耗时 {time.time() - t0} 秒')

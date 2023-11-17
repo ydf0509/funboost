@@ -47,7 +47,7 @@ def run_consumer_with_multi_process(booster: Booster, process_num=1):
         for i in range(process_num):
             # print(i)
             Process(target=_run_consumer_by_init_params,
-                    args=(booster.boost_params, booster.consuming_function)).start()
+                    args=( booster.consuming_function,booster.boost_params,)).start()
 
 
 def _multi_process_pub_params_list_by_consumer_init_params(consuming_function, boost_params, msgs: List[dict]):

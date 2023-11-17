@@ -41,6 +41,8 @@ async def publish_msg(msg_item: MsgItem):
             async_result = booster.publish(msg_item.msg_body)
             status_and_result = await AioAsyncResult(async_result.task_id, timeout=msg_item.timeout).status_and_result
             # status_and_result = AsyncResult(async_result.task_id, timeout=msg_item.timeout).status_and_result
+        else:
+            booster.publish(msg_item.msg_body)
         return PublishResponse(succ=True, msg=f'{msg_item.queue_name} 队列,消息发布成功', status_and_result=status_and_result)
     except Exception as e:
         return PublishResponse(succ=False, msg=f'{msg_item.queue_name} 队列,消息发布失败 {type(e)} {e} {traceback.format_exc()}',

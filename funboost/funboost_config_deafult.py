@@ -52,8 +52,8 @@ class BrokerConnConfig(DataClassBase):
     KAFKA_BOOTSTRAP_SERVERS = ['127.0.0.1:9092']
     KFFKA_SASL_CONFIG = {
         "bootstrap_servers": KAFKA_BOOTSTRAP_SERVERS,
-        "sasl_plain_username": "username",
-        "sasl_plain_password": "password",
+        "sasl_plain_username": "",
+        "sasl_plain_password": "",
         "sasl_mechanism": "SCRAM-SHA-256",
         "security_protocol": "SASL_PLAINTEXT",
     }

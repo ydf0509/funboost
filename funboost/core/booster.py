@@ -182,7 +182,7 @@ class Booster:
             self.continue_consume = consumer.continue_consume
 
             wraps(consuming_function)(self)
-            BoostersManager.regist_booster(self.queue_name, self)
+            BoostersManager.regist_booster(self.queue_name, self) # 这一句是个关键.
             return self
         else:
             return self.consuming_function(*args, **kwargs)
@@ -234,12 +234,17 @@ task_deco = boost  # 两个装饰器名字都可以。task_deco是原来名字�
 
 
 class BoostersManager:
+    """
+    消费函数生成Booster对象时候,会自动调用BoostersManager.regist_booster方法,把队列名和入参信息保存到pid_queue_name__booster_map字典中.
+    """
+
+
     logger = nb_log.get_logger('BoostersManager')
 
     # pid_queue_name__booster_map字典存放 {(进程id,queue_name):Booster对象}
     pid_queue_name__booster_map = {}  # type: typing.Dict[typing.Tuple[int,str],Booster]
 
-    # queue_name__boost_params_consuming_function_map 字典存放  {queue_name,(@boost的入参字典,@boost装饰的函数)}
+    # queue_name__boost_params_consuming_function_map 字典存放  {queue_name,(@boost的入参字典,@boost装饰的消费函数)}
     queue_name__boost_params_consuming_function_map = {}  # type: typing.Dict[str,typing.Tuple[dict,typing.Callable]]
 
     @classmethod
@@ -260,12 +265,19 @@ class BoostersManager:
 
     @classmethod
     def get_booster(cls, queue_name: str) -> Booster:
+        """
+        当前进程获得booster对象。注意和下面的get_or_create_booster_by_queue_name方法的区别,主要是开了多进程时候有区别.
+        :param queue_name:
+        :return:
+        """
         pid = os.getpid()
         key = (pid, queue_name)
-        if key not in cls.pid_queue_name__booster_map:
+        if key  in cls.pid_queue_name__booster_map:
+            return cls.pid_queue_name__booster_map[key]
+        else:
             err_msg = f'进程 {pid} ，没有 {queue_name} 对应的 booster   , pid_queue_name__booster_map: {cls.pid_queue_name__booster_map}'
             raise ValueError(err_msg)
-        return cls.pid_queue_name__booster_map[key]
+
 
     @classmethod
     def get_or_create_booster_by_queue_name(cls, queue_name, ) -> Booster:
@@ -296,7 +308,7 @@ class BoostersManager:
         return cls.queue_name__boost_params_consuming_function_map[queue_name]
 
     @classmethod
-    def get_or_create_booster(cls, *, consuming_function=None, **boost_params, ) -> Booster:
+    def get_or_create_booster(cls, *, consuming_function, **boost_params, ) -> Booster:
         """
         当前进程获得或者创建booster对象。方便有的人需要在函数内部临时动态根据队列名创建booster,不会无数次临时生成消费者、生产者、创建消息队列连接。
         :param boost_params: 就是 @boost的入参。

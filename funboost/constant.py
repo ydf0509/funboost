@@ -24,6 +24,7 @@ class BrokerEnum:
     """基于confluent-kafka包，包的性能比kafka-python提升10倍。同时应对反复随意重启部署消费代码的场景，此消费者实现至少消费一次，第8种BrokerEnum.KAFKA是最多消费一次。"""
     CONFLUENT_KAFKA = 16
     KAFKA_CONFLUENT = CONFLUENT_KAFKA
+    SASlPlAIN_KAFKA = 160
 
     REDIS_ACK_ABLE = 9  # 基于redis的 list + 临时unack的set队列，采用了 lua脚本操持了取任务和加到pengding为原子性，随意重启和掉线不会丢失任务。
 
@@ -79,6 +80,8 @@ class BrokerEnum:
     RQ = 33  # rq任务队列框架作为funboost调度核心
 
     NAMEKO = 40  # funboost支持python微服务框架nameko，用户无需掌握nameko api语法，就玩转python nameko微服务
+
+
 
 
 class ConcurrentModeEnum:

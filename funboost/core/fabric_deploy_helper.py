@@ -42,7 +42,7 @@ def fabric_deploy(booster:Booster, host, port, user, password,
     可以很灵活的指定在哪台机器运行什么函数，开几个进程。这个比celery更为强大，celery需要登录到每台机器，手动下载代码并部署在多台机器，celery不支持代码自动运行在别的机器上
 
 
-    :param task_fun:被@boost 装饰的函数
+    :param booster:被@boost 装饰的函数
     :param host: 需要部署的远程linux机器的 ip
     :param port:需要部署的远程linux机器的 port
     :param user: 需要部署的远程linux机器的用户名

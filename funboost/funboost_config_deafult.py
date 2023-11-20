@@ -50,6 +50,13 @@ class BrokerConnConfig(DataClassBase):
     NSQD_HTTP_CLIENT_PORT = 4151
 
     KAFKA_BOOTSTRAP_SERVERS = ['127.0.0.1:9092']
+    KFFKA_CONFIG = {
+        "bootstrap_servers": KAFKA_BOOTSTRAP_SERVERS,
+        "sasl_plain_username": "username",
+        "sasl_plain_password": "password",
+        "sasl_mechanism": "SCRAM-SHA-256",
+        "security_protocol": "SASL_PLAINTEXT",
+    }
 
     SQLACHEMY_ENGINE_URL = 'sqlite:////sqlachemy_queues/queues.db'
 
@@ -149,5 +156,3 @@ class BoostDecoratorDefaultParams(DataClassBase):
     schedule_tasks_on_main_thread = False
 
     broker_exclusive_config = {}
-
-

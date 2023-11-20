@@ -16,7 +16,6 @@ from kafka import KafkaProducer, KafkaAdminClient
 from kafka.admin import NewTopic
 # noinspection PyPackageRequirements
 from kafka.errors import TopicAlreadyExistsError
-from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.funboost_config_deafult import BrokerConnConfig
 from confluent_kafka.cimpl import TopicPartition
@@ -124,3 +123,53 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
 
     def _requeue(self, kw):
         self._producer.send(self._queue_name, json.dumps(kw['body']).encode())
+
+
+class SaslPlainKafkaConsumer(KafkaConsumerManuallyCommit):
+
+    def _shedual_task(self):
+
+        try:
+            admin_client = KafkaAdminClient(
+                **BrokerConnConfig.KFFKA_CONFIG)
+            admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
+            # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
+        except TopicAlreadyExistsError:
+            pass
+
+        self._producer = KafkaProducer(
+            **BrokerConnConfig.KFFKA_CONFIG)
+        # consumer 配置 https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
+        self._confluent_consumer = ConfluentConsumer({
+            'bootstrap.servers': ','.join(BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS),
+            'security.protocol': BrokerConnConfig.KFFKA_CONFIG['security_protocol'],
+            'sasl.mechanisms': BrokerConnConfig.KFFKA_CONFIG['sasl_mechanism'],
+            'sasl.username': BrokerConnConfig.KFFKA_CONFIG['sasl_plain_username'],
+            'sasl.password': BrokerConnConfig.KFFKA_CONFIG['sasl_plain_password'],
+            'group.id': self.broker_exclusive_config["group_id"],
+            'auto.offset.reset': self.broker_exclusive_config["auto_offset_reset"],
+            'enable.auto.commit': False
+        })
+        self._confluent_consumer.subscribe([self._queue_name])
+
+        self._recent_commit_time = time.time()
+        self._partion__offset_consume_status_map = defaultdict(OrderedDict)
+
+        while 1:
+            msg = self._confluent_consumer.poll(timeout=10)
+            self._manually_commit()
+            if msg is None:
+                continue
+            if msg.error():
+                print("Consumer error: {}".format(msg.error()))
+                continue
+            # msg的类型  https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html#message
+            # value()  offset() partition()
+            # print('Received message: {}'.format(msg.value().decode('utf-8'))) # noqa
+            self._partion__offset_consume_status_map[msg.partition(
+            )][msg.offset()] = 0
+            kw = {'partition': msg.partition(), 'offset': msg.offset(), 'body': json.loads(msg.value())}  # noqa
+            if self._is_show_message_get_from_broker:
+                self.logger.debug(
+                    f'从kafka的 [{self._queue_name}] 主题,分区 {msg.partition()} 中 的 offset {msg.offset()} 取出的消息是：  {msg.value()}')  # noqa
+            self._submit_task(kw)

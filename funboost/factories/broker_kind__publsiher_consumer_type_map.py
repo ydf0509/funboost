@@ -157,6 +157,11 @@ def regist_to_funboost(broker_kind: int):
         from funboost.consumers.nsq_consumer import NsqConsumer
         register_custom_broker(broker_kind, NsqPublisher, NsqConsumer)
 
+    if broker_kind == BrokerEnum.SASlPlAIN_KAFKA:
+        from funboost.consumers.kafka_consumer_manually_commit import SaslPlainKafkaConsumer
+        from funboost.publishers.confluent_kafka_publisher import SaslPlainKafkaPublisher
+        register_custom_broker(broker_kind, SaslPlainKafkaPublisher, SaslPlainKafkaConsumer)
+
 
 if __name__ == '__main__':
     import sys

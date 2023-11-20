@@ -261,10 +261,26 @@ class BoostersManager:
     @classmethod
     def get_booster(cls, queue_name: str) -> Booster:
         pid = os.getpid()
-        if (pid, queue_name) not in cls.pid_queue_name__booster_map:
+        key = (pid, queue_name)
+        if key not in cls.pid_queue_name__booster_map:
             err_msg = f'进程 {pid} ，没有 {queue_name} 对应的 booster   , pid_queue_name__booster_map: {cls.pid_queue_name__booster_map}'
             raise ValueError(err_msg)
-        return cls.pid_queue_name__booster_map[(pid, queue_name)]
+        return cls.pid_queue_name__booster_map[key]
+
+    @classmethod
+    def get_or_create_booster_by_queue_name(cls, queue_name, ) -> Booster:
+        """
+        当前进程获得booster对象。如果是多进程,在进程内部创建一个新的booster对象,因为多进程操作有些中间件的同一个conn不行.
+        :param queue_name: 就是 @boost的入参。
+        :return:
+        """
+        pid = os.getpid()
+        key = (pid, queue_name)
+        if key in cls.pid_queue_name__booster_map:
+            return cls.pid_queue_name__booster_map[key]
+        else:
+            boost_params, consuming_function = cls.queue_name__boost_params_consuming_function_map[queue_name]
+            return Booster(**boost_params)(consuming_function)
 
     @classmethod
     def get_boost_params_and_consuming_function(cls, queue_name: str) -> (dict, typing.Callable):
@@ -280,13 +296,17 @@ class BoostersManager:
         return cls.queue_name__boost_params_consuming_function_map[queue_name]
 
     @classmethod
-    def get_or_create_booster(cls, consuming_function, **boost_params, ) -> Booster:
+    def get_or_create_booster(cls, *, consuming_function=None, **boost_params, ) -> Booster:
         """
         当前进程获得或者创建booster对象。方便有的人需要在函数内部临时动态根据队列名创建booster,不会无数次临时生成消费者、生产者、创建消息队列连接。
         :param boost_params: 就是 @boost的入参。
+        :param consuming_function: 消费函数
         :return:
         """
-        try:
-            return cls.get_booster(boost_params['queue_name'])
-        except ValueError:  # 不存在就创建。
+        pid = os.getpid()
+        key = (pid, boost_params['queue_name'])
+        if key in cls.pid_queue_name__booster_map:
+            return cls.pid_queue_name__booster_map[key]
+        else:
+            cls.logger.info(f'创建booster {boost_params} {consuming_function}')
             return Booster(**boost_params)(consuming_function)

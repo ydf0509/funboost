@@ -30,7 +30,7 @@ from kafka import KafkaProducer, KafkaAdminClient
 from kafka.admin import NewTopic
 # noinspection PyPackageRequirements
 from kafka.errors import TopicAlreadyExistsError
-
+from confluent_kafka import Producer as ConfluentProducer
 from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.publishers.base_publisher import AbstractPublisher
 
@@ -42,7 +42,7 @@ class ConfluentKafkaPublisher(AbstractPublisher, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        from confluent_kafka import Producer as ConfluentProducer  # 这个包不好安装，用户用这个中间件的时候自己再想办法安装。win用户需要安装c++ 14.0以上环境。
+
         # self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         try:
             admin_client = KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
@@ -90,10 +90,9 @@ class SaslPlainKafkaPublisher(ConfluentKafkaPublisher):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        from confluent_kafka import Producer as ConfluentProducer  # 这个包不好安装，用户用这个中间件的时候自己再想办法安装。win用户需要安装c++ 14.0以上环境。
         # self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         try:
-            admin_client = KafkaAdminClient(**BrokerConnConfig.KFFKA_CONFIG)
+            admin_client = KafkaAdminClient(**BrokerConnConfig.KFFKA_SASL_CONFIG)
             admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
         except TopicAlreadyExistsError:
@@ -103,9 +102,9 @@ class SaslPlainKafkaPublisher(ConfluentKafkaPublisher):
         atexit.register(self.close)  # 程序退出前不主动关闭，会报错。
         self._confluent_producer = ConfluentProducer({
             'bootstrap.servers': ','.join(BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS),
-            'security.protocol': BrokerConnConfig.KFFKA_CONFIG['security_protocol'],
-            'sasl.mechanisms': BrokerConnConfig.KFFKA_CONFIG['sasl_mechanism'],
-            'sasl.username': BrokerConnConfig.KFFKA_CONFIG['sasl_plain_username'],
-            'sasl.password': BrokerConnConfig.KFFKA_CONFIG['sasl_plain_password']
+            'security.protocol': BrokerConnConfig.KFFKA_SASL_CONFIG['security_protocol'],
+            'sasl.mechanisms': BrokerConnConfig.KFFKA_SASL_CONFIG['sasl_mechanism'],
+            'sasl.username': BrokerConnConfig.KFFKA_SASL_CONFIG['sasl_plain_username'],
+            'sasl.password': BrokerConnConfig.KFFKA_SASL_CONFIG['sasl_plain_password']
         })
         self._recent_produce_time = time.time()

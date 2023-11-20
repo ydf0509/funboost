@@ -142,6 +142,11 @@ def regist_to_funboost(broker_kind: int):
         from funboost.publishers.confluent_kafka_publisher import ConfluentKafkaPublisher
         register_custom_broker(BrokerEnum.KAFKA_CONFLUENT, ConfluentKafkaPublisher, KafkaConsumerManuallyCommit)
 
+    if broker_kind == BrokerEnum.KAFKA_CONFLUENT_SASlPlAIN:
+        from funboost.consumers.kafka_consumer_manually_commit import SaslPlainKafkaConsumer
+        from funboost.publishers.confluent_kafka_publisher import SaslPlainKafkaPublisher
+        register_custom_broker(broker_kind, SaslPlainKafkaPublisher, SaslPlainKafkaConsumer)
+
     if broker_kind == BrokerEnum.RQ:
         from funboost.consumers.rq_consumer import RqConsumer
         from funboost.publishers.rq_publisher import RqPublisher
@@ -157,10 +162,7 @@ def regist_to_funboost(broker_kind: int):
         from funboost.consumers.nsq_consumer import NsqConsumer
         register_custom_broker(broker_kind, NsqPublisher, NsqConsumer)
 
-    if broker_kind == BrokerEnum.SASlPlAIN_KAFKA:
-        from funboost.consumers.kafka_consumer_manually_commit import SaslPlainKafkaConsumer
-        from funboost.publishers.confluent_kafka_publisher import SaslPlainKafkaPublisher
-        register_custom_broker(broker_kind, SaslPlainKafkaPublisher, SaslPlainKafkaConsumer)
+
 
 
 if __name__ == '__main__':

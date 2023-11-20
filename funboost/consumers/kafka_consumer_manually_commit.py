@@ -131,21 +131,21 @@ class SaslPlainKafkaConsumer(KafkaConsumerManuallyCommit):
 
         try:
             admin_client = KafkaAdminClient(
-                **BrokerConnConfig.KFFKA_CONFIG)
+                **BrokerConnConfig.KFFKA_SASL_CONFIG)
             admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
         except TopicAlreadyExistsError:
             pass
 
         self._producer = KafkaProducer(
-            **BrokerConnConfig.KFFKA_CONFIG)
+            **BrokerConnConfig.KFFKA_SASL_CONFIG)
         # consumer 配置 https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
         self._confluent_consumer = ConfluentConsumer({
             'bootstrap.servers': ','.join(BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS),
-            'security.protocol': BrokerConnConfig.KFFKA_CONFIG['security_protocol'],
-            'sasl.mechanisms': BrokerConnConfig.KFFKA_CONFIG['sasl_mechanism'],
-            'sasl.username': BrokerConnConfig.KFFKA_CONFIG['sasl_plain_username'],
-            'sasl.password': BrokerConnConfig.KFFKA_CONFIG['sasl_plain_password'],
+            'security.protocol': BrokerConnConfig.KFFKA_SASL_CONFIG['security_protocol'],
+            'sasl.mechanisms': BrokerConnConfig.KFFKA_SASL_CONFIG['sasl_mechanism'],
+            'sasl.username': BrokerConnConfig.KFFKA_SASL_CONFIG['sasl_plain_username'],
+            'sasl.password': BrokerConnConfig.KFFKA_SASL_CONFIG['sasl_plain_password'],
             'group.id': self.broker_exclusive_config["group_id"],
             'auto.offset.reset': self.broker_exclusive_config["auto_offset_reset"],
             'enable.auto.commit': False

@@ -182,7 +182,7 @@ class Booster:
             self.continue_consume = consumer.continue_consume
 
             wraps(consuming_function)(self)
-            BoostersManager.regist_booster(self.queue_name, self) # 这一句是个关键.
+            BoostersManager.regist_booster(self.queue_name, self)  # 这一句是登记
             return self
         else:
             return self.consuming_function(*args, **kwargs)
@@ -238,7 +238,6 @@ class BoostersManager:
     消费函数生成Booster对象时候,会自动调用BoostersManager.regist_booster方法,把队列名和入参信息保存到pid_queue_name__booster_map字典中.
     """
 
-
     logger = nb_log.get_logger('BoostersManager')
 
     # pid_queue_name__booster_map字典存放 {(进程id,queue_name):Booster对象}
@@ -272,12 +271,11 @@ class BoostersManager:
         """
         pid = os.getpid()
         key = (pid, queue_name)
-        if key  in cls.pid_queue_name__booster_map:
+        if key in cls.pid_queue_name__booster_map:
             return cls.pid_queue_name__booster_map[key]
         else:
             err_msg = f'进程 {pid} ，没有 {queue_name} 对应的 booster   , pid_queue_name__booster_map: {cls.pid_queue_name__booster_map}'
             raise ValueError(err_msg)
-
 
     @classmethod
     def get_or_create_booster_by_queue_name(cls, queue_name, ) -> Booster:
@@ -291,7 +289,7 @@ class BoostersManager:
         if key in cls.pid_queue_name__booster_map:
             return cls.pid_queue_name__booster_map[key]
         else:
-            boost_params, consuming_function = cls.queue_name__boost_params_consuming_function_map[queue_name]
+            boost_params, consuming_function = cls.get_boost_params_and_consuming_function(queue_name)
             return Booster(**boost_params)(consuming_function)
 
     @classmethod

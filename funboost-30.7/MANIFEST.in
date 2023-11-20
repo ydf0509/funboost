@@ -1,3 +1,0 @@
-include README.md
-recursive-include funboost/function_result_web *
-recursive-include funboost/utils/dependency_packages_in_pythonpath *

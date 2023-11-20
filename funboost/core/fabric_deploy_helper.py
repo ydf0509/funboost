@@ -94,8 +94,8 @@ def fabric_deploy(booster:Booster, host, port, user, password,
         conn = Connection(host, port=port, user=user, connect_kwargs={"password": password}, )
         kill_shell = f'''ps -aux|grep {process_mark}|grep -v grep|awk '{{print $2}}' |xargs kill -9'''
         logger.warning(f'{kill_shell} 命令杀死 {process_mark} 标识的进程')
-        uploader.ssh.exec_command(kill_shell)
-        # conn.run(kill_shell, encoding='utf-8',warn=True)  # 不想提示，免得烦扰用户以为有什么异常了。所以用上面的paramiko包的ssh.exec_command
+        # uploader.ssh.exec_command(kill_shell)
+        conn.run(kill_shell, encoding='utf-8',warn=True)  # 不想提示，免得烦扰用户以为有什么异常了。所以用上面的paramiko包的ssh.exec_command
 
         python_exec_str = f'''export is_funboost_remote_run=1;export PYTHONPATH={remote_dir}:$PYTHONPATH ;{python_interpreter} -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -funboostmark {process_mark} '''
         shell_str = f'''cd {remote_dir}; {python_exec_str}'''

@@ -5,7 +5,7 @@ from os import PathLike
 from pathlib import Path
 import importlib.util
 import nb_log
-from funboost.core.booster import BoostersManager
+
 
 class BoosterDiscovery(nb_log.LoggerMixin):
     def __init__(self, project_root_path: typing.Union[PathLike, str],
@@ -53,6 +53,7 @@ class BoosterDiscovery(nb_log.LoggerMixin):
                 spec = importlib.util.spec_from_file_location('module', file_path)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
+        from funboost.core.booster import BoostersManager
         BoostersManager.show_all_boosters()
 
 

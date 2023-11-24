@@ -48,9 +48,9 @@ def push_fun_params_to_broker(queue_name: str, *args, runonce_uuid=None, **kwarg
     if runonce_uuid:
         key = 'apscheduler.redisjobstore_runonce2'
         if RedisMixin().redis_db_frame.sadd(key, runonce_uuid):
-            BoostersManager.get_booster(queue_name).push(*args, **kwargs)
+            BoostersManager.get_or_create_booster_by_queue_name(queue_name).push(*args, **kwargs)
     else:
-        BoostersManager.get_booster(queue_name).push(*args, **kwargs)
+        BoostersManager.get_or_create_booster_by_queue_name(queue_name).push(*args, **kwargs)
 
 
 class FunboostBackgroundScheduler(BackgroundScheduler):

@@ -34,7 +34,7 @@ app = FastAPI()
 async def publish_msg(msg_item: MsgItem):
     status_and_result = None
     try:
-        booster = BoostersManager.get_booster(msg_item.queue_name)
+        booster = BoostersManager.get_or_create_booster_by_queue_name(msg_item.queue_name)
         if msg_item.need_result:
             if booster.boost_params['is_using_rpc_mode'] is False:
                 raise ValueError(f' need_result 为true,{booster.queue_name} 队列消费者 需要@boost设置支持rpc模式')
@@ -54,3 +54,7 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run('funboost.contrib.api_publish_msg:app', host="0.0.0.0", port=16666, workers=4)
+
+    '''
+    test_frame/test_api_publish_msg 中有使用例子.
+    '''

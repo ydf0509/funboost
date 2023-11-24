@@ -19,8 +19,8 @@ from nb_log import LoggerMixin, LoggerLevelSetterMixin
 
 
 class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
-    KEEP_ALIVE_TIME = 60
-    MIN_WORKERS = 3
+    KEEP_ALIVE_TIME = 10
+    MIN_WORKERS = 2
 
     def __init__(self, max_workers: int = None):
         self.work_queue = queue.Queue(10)

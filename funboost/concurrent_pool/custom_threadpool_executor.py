@@ -212,7 +212,7 @@ def show_current_threads_num(sleep_time=600, process_name='', block=False, daemo
             # logger_show_current_threads_num.info(f'{process_name} 进程 的 并发数量是 -->  {threading.active_count()}')
             # nb_print(f'  {process_name} {os.getpid()} 进程 的 线程数量是 -->  {threading.active_count()}')
             logger_show_current_threads_num.info(
-                f'  {process_name} {os.getpid()} 进程 的 线程数量是 -->  {threading.active_count()}')
+                f'  {process_name} {os.getpid()} 进程 的 总线程数量是 -->  {threading.active_count()}')
             time.sleep(sleep_time)
 
     if process_name not in process_name_set:

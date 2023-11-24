@@ -15,7 +15,7 @@ import random
 # from distributed_frame_config import REDIS_HOST
 import nb_log
 from concurrent.futures import ProcessPoolExecutor
-from funboost import boost, BrokerEnum, ConcurrentModeEnum, FunctionResultStatusPersistanceConfig, ExceptionForRequeue, ExceptionForPushToDlxqueue
+from funboost import boost, BrokerEnum, ConcurrentModeEnum, FunctionResultStatusPersistanceConfig, ExceptionForRequeue, ExceptionForPushToDlxqueue,show_current_threads_num
 from funboost.utils.redis_manager import RedisMixin
 from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
 
@@ -64,15 +64,19 @@ if __name__ == '__main__':
     from nb_log import handlers
 
     # nb_log.LogManager(f2.consumer.logger.name).remove_handler_by_handler_class(nb_log.handlers.ColorHandler)
-    print(f2.consumer.logger.level)
+    # print(f2.consumer.logger.level)
 
     # f2.clear()
-    f2.consume()
 
-    for i in range(1):
+
+    for i in range(5):
         # f.push(i, i * 10)
         r = f2.push(i, i * 5)
         # print(r.result)
+
+    f2.consume()
+
+    show_current_threads_num(sleep_time=600)
 
     # f.consume()
 
@@ -100,8 +104,8 @@ if __name__ == '__main__':
 
     # f2.multi_process_consume(5)
 
-    while 1:
-        time.sleep(60)
+    # while 1:
+    #     time.sleep(60)
 
     """
     win命令行运行

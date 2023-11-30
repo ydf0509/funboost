@@ -61,7 +61,7 @@ from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool, sy
 from funboost.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from funboost.factories.publisher_factotry import get_publisher
 
-from funboost.utils import decorators, time_util, un_strict_json_dumps, redis_manager
+from funboost.utils import decorators, time_util, json_helper, redis_manager
 # noinspection PyUnresolvedReferences
 from funboost.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
 from funboost.funboost_config_deafult import BrokerConnConfig
@@ -365,7 +365,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                      f'实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
         # only_print_on_main_process(f'{current_queue__info_dict["queue_name"]} 的消费者配置:\n', un_strict_json_dumps.dict2json(current_queue__info_dict))
         if is_main_process:
-            self.logger.info(f'{current_queue__info_dict["queue_name"]} 的消费者配置:\n {un_strict_json_dumps.dict2json(current_queue__info_dict)}')
+            self.logger.info(f'{current_queue__info_dict["queue_name"]} 的消费者配置:\n {json_helper.dict_to_un_strict_json(current_queue__info_dict)}')
 
         self._do_task_filtering = do_task_filtering
         self._redis_filter_key_name = f'filter_zset:{queue_name}' if task_filtering_expire_seconds else f'filter_set:{queue_name}'

@@ -236,6 +236,7 @@ task_deco = boost  # 两个装饰器名字都可以。task_deco是原来名字�
 class BoostersManager:
     """
     消费函数生成Booster对象时候,会自动调用BoostersManager.regist_booster方法,把队列名和入参信息保存到pid_queue_name__booster_map字典中.
+    使用这个类,可以创建booster对象,达到无需使用装饰器的目的.
     """
 
     logger = nb_log.get_logger('BoostersManager')
@@ -248,6 +249,7 @@ class BoostersManager:
 
     @classmethod
     def regist_booster(cls, queue_name: str, booster: Booster):
+        """这个是框架在@boost时候自动调用的,无需用户亲自调用"""
         cls.pid_queue_name__booster_map[(os.getpid(), queue_name)] = booster
         cls.queue_name__boost_params_consuming_function_map[queue_name] = (booster.boost_params, booster.consuming_function)
 

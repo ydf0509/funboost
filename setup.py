@@ -58,7 +58,7 @@ setup(
         'pymongo==4.3.3',  # 3.5.1  -> 4.0.2
         'AMQPStorm==2.10.6',
         'rabbitpy==2.0.1',
-        'decorator==4.4.0',
+        'decorator==5.1.1',
         # 'pysnooper==0.0.11',
         'Flask',
         'flask_bootstrap',

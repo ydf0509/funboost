@@ -7,6 +7,8 @@ import typing
 import nb_log
 from functools import wraps
 
+from funboost.core.exceptions import BoostDecoParamsIsOldVersion
+from funboost.core.func_params_model import BoosterParams,BoosterParamsContainConsumingFunction
 from funboost.core.function_result_status_config import FunctionResultStatusPersistanceConfig
 
 from funboost.funboost_config_deafult import BoostDecoratorDefaultParams
@@ -27,38 +29,7 @@ class Booster:
     Booster 是把Consumer 和 Publisher的方法集为一体。
     """
 
-    def __init__(self, queue_name,
-                 *,
-                 consumin_function_decorator: typing.Callable = _Undefined,
-                 function_timeout: float = _Undefined,
-                 concurrent_num: int = _Undefined,
-                 specify_concurrent_pool=_Undefined,
-                 specify_async_loop=_Undefined,
-                 concurrent_mode: int = _Undefined,
-                 qps: float = _Undefined,
-                 is_using_distributed_frequency_control: bool = _Undefined,
-                 max_retry_times: int = _Undefined,
-                 is_push_to_dlx_queue_when_retry_max_times: bool = _Undefined,
-                 log_level: int = _Undefined,
-                 is_print_detail_exception: bool = _Undefined,
-                 is_show_message_get_from_broker: bool = _Undefined,
-                 msg_expire_senconds: float = _Undefined,
-                 is_send_consumer_hearbeat_to_redis: bool = _Undefined,
-                 logger_prefix: str = _Undefined,
-                 create_logger_file: bool = _Undefined,
-                 log_filename = _Undefined,
-                 do_task_filtering: bool = _Undefined,
-                 task_filtering_expire_seconds: float = _Undefined,
-                 is_do_not_run_by_specify_time_effect: bool = _Undefined,
-                 do_not_run_by_specify_time: bool = _Undefined,
-                 schedule_tasks_on_main_thread: bool = _Undefined,
-                 function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = _Undefined,
-                 user_custom_record_process_info_func: typing.Union[typing.Callable, None] = _Undefined,
-                 is_using_rpc_mode: bool = _Undefined,
-                 is_support_remote_kill_task: bool = _Undefined,
-                 broker_exclusive_config: dict = _Undefined,
-                 broker_kind: int = _Undefined,
-                 boost_decorator_default_params=BoostDecoratorDefaultParams()):
+    def __init__(self, boost_params: BoosterParams):
         """
            funboost.funboost_config_deafult.BoostDecoratorDefaultParams 的值会自动被你项目根目录下的funboost_config.BoostDecoratorDefaultParams的值覆盖，
            如果boost装饰器不传参，默认使用funboost_config.BoostDecoratorDefaultParams的配置
@@ -133,22 +104,11 @@ class Booster:
         # f.multi_process_conusme(8)             # # 这个是新加的方法，细粒度 线程 协程并发 同时叠加8个进程，速度炸裂。主要是无需导入run_consumer_with_multi_process函数。
         '''
         """
-        loc = locals()
-        loc.pop('self')
-        self.boost_params = self.__get_final_boost_params(boost_params_include_boost_decorator_default_params=loc)
-
-    @staticmethod
-    def __get_final_boost_params(boost_params_include_boost_decorator_default_params):
-        # 下面这段代码 boost_params 是综合funboost_config.BoostDecoratorDefaultParams全局入参 和boost装饰器入参，最终得到的入参。
-        # 如果@boost装饰器没有亲自执行boost的某个入参，则使用BoostDecoratorDefaultParams全局入参
-        boost_params0 = copy.copy(boost_params_include_boost_decorator_default_params)
-        boost_params0.pop('boost_decorator_default_params')
-        boost_params = copy.copy(boost_params0)
-        for k, v in boost_params0.items():
-            if v == _Undefined:
-                # print(k,v,boost_decorator_default_params[k])
-                boost_params[k] = boost_params_include_boost_decorator_default_params['boost_decorator_default_params'][k]  # boost装饰器没有亲指定某个传参，就使用funboost_config.py的BoostDecoratorDefaultParams的全局配置。
-        return boost_params
+        local = copy.deepcopy(locals())
+        if 'queue_name' in locals():
+            raise BoostDecoParamsIsOldVersion()
+        self.boost_params = boost_params
+        self.queue_name = boost_params.queue_name
 
     def __str__(self):
         return f'{type(self)}  队列为 {self.queue_name} 函数为 {self.consuming_function} 的 booster'
@@ -164,11 +124,9 @@ class Booster:
         if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], typing.Callable):
             consuming_function = args[0]
             self.consuming_function = consuming_function
-            self.boost_params = self.boost_params  # boost装饰器的入参
-            self.queue_name = self.boost_params['queue_name']
             self.is_decorated_as_consume_function = True
 
-            consumer = get_consumer(**self.boost_params, consuming_function=consuming_function)
+            consumer = get_consumer(BoosterParamsContainConsumingFunction())
             self.consumer = consumer
             self.publisher = consumer.publisher_of_same_queue
             self.publish = self.pub = self.apply_async = consumer.publisher_of_same_queue.publish

@@ -73,16 +73,6 @@ from funboost.core import kill_remote_task
 # patch_apscheduler_run_job()
 
 
-class ExceptionForRetry(Exception):
-    """为了重试的，抛出错误。只是定义了一个子类，用不用都可以，函数出任何类型错误了框架都会自动重试"""
-
-
-class ExceptionForRequeue(Exception):
-    """框架检测到此错误，重新放回当前队列中"""
-
-
-class ExceptionForPushToDlxqueue(Exception):
-    """框架检测到ExceptionForPushToDlxqueue错误，发布到死信队列"""
 
 
 # noinspection PyClassHasNoInit,DuplicatedCode

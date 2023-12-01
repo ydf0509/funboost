@@ -32,7 +32,8 @@ class FunctionResultStatusPersistanceConfig(BaseModel):
 
 
 class ConsumerParams:
-    concurrent_mode = ConcurrentModeEnum.THREADING
+    queue_name: str
+    concurrent_mode: int = ConcurrentModeEnum.THREADING
     concurrent_num = 50
     specify_concurrent_pool = None
     specify_async_loop = None

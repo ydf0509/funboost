@@ -46,6 +46,7 @@ class Booster:
                  is_send_consumer_hearbeat_to_redis: bool = _Undefined,
                  logger_prefix: str = _Undefined,
                  create_logger_file: bool = _Undefined,
+                 log_filename = _Undefined,
                  do_task_filtering: bool = _Undefined,
                  task_filtering_expire_seconds: float = _Undefined,
                  is_do_not_run_by_specify_time_effect: bool = _Undefined,
@@ -91,6 +92,7 @@ class Booster:
            :param is_send_consumer_hearbeat_to_redis   是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
            :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志前缀
            :param create_logger_file : 是否创建文件日志
+           :param log_filename : 用户可以指定文件日志名字,如果为None,则会自动 消费者class--队列名.log 作为文件日志名字.,日志文件夹位置,是在nb_log_confoig.py中的LOG_PATH
            :param do_task_filtering :是否执行基于函数参数的任务过滤
            :param task_filtering_expire_seconds:任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ，
                   30分钟前发布过1 + 2 的任务，现在仍然执行，

@@ -196,7 +196,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                  max_retry_times=3, is_push_to_dlx_queue_when_retry_max_times=False,
                  log_level=10, is_print_detail_exception=True, is_show_message_get_from_broker=False,
                  msg_expire_senconds=0, is_send_consumer_hearbeat_to_redis=False,
-                 logger_prefix='', create_logger_file=True, do_task_filtering=False,
+                 logger_prefix='', create_logger_file=True,
+                 log_filename = None,
+                 do_task_filtering=False,
                  task_filtering_expire_seconds=0,
                  is_do_not_run_by_specify_time_effect=False,
                  do_not_run_by_specify_time=('10:00:00', '22:00:00'),
@@ -236,6 +238,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param is_send_consumer_hearbeat_to_redis   时候将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
         :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
         :param create_logger_file : 是否创建文件日志
+        :param log_filename : 用户可以指定文件日志名字,如果为None,则会自动 消费者class--队列名.log 作为文件日志名字.,日志文件夹位置,是在nb_log_confoig.py中的LOG_PATH
         :param do_task_filtering :是否执行基于函数参数的任务过滤
         :param task_filtering_expire_seconds:任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ，
                30分钟前发布过1 + 2 的任务，现在仍然执行，
@@ -345,19 +348,22 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # logger_name = f'{logger_prefix}{self.__class__.__name__}--{concurrent_name}--{queue_name}--{self.consuming_function.__name__}'
         logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}'
         self._create_logger_file = create_logger_file
+        self._log_filename = log_filename or f'{logger_name}.log'
         self._log_level = log_level
         log_file_handler_type = 1
         if int(os.getenv('is_fsdf_remote_run', 0)) == 1:  # 这个是远程部署的自动的环境变量，用户不需要亲自自己设置这个值。
             log_file_handler_type = 5  # 如果是fabric_deploy 自动化远程部署函数时候，python -c 启动的使用第一个filehandler没记录文件，现在使用第5种filehandler。
+
         self.logger = LogManager(logger_name, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
-            log_level_int=log_level, log_filename=f'{logger_name}.log' if create_logger_file else None,
+            log_level_int=log_level, log_filename=self._log_filename if create_logger_file else None,
             # log_file_handler_type=log_file_handler_type,
             formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
         self._logger_name = logger_name
         # self.logger.info(f'{self.__class__} 在 {current_queue__info_dict["where_to_instantiate"]}  被实例化')
         logger_name_error = f'{logger_name}_error'
+        self._log_filename_error = f'{log_filename.split[0]}_error.{log_filename.split[1]}' or f'{logger_name_error}.log'
         self.error_file_logger = LogManager(logger_name_error, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
-            log_level_int=log_level, log_filename=f'{logger_name_error}.log',
+            log_level_int=log_level, log_filename=self._log_filename_error,
             is_add_stream_handler=False,
             formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
 

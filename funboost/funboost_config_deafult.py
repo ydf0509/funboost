@@ -137,6 +137,7 @@ class BoostDecoratorDefaultParams(DataClassBase):
     log_level = 10
     logger_prefix = ''
     create_logger_file = True
+    log_filename = None
     is_show_message_get_from_broker = False
     is_print_detail_exception = True
 

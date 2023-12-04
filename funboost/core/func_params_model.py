@@ -12,7 +12,7 @@ from funboost.core.function_result_status_config import FunctionResultStatusPers
 
 class PyDanticModelJsonMixin:
     def get_str_dict(self):
-        model_dict: dict = self.dict()
+        model_dict: dict = self.dict()  # noqa
         model_dict_copy = copy.deepcopy(model_dict)
         for k, v in model_dict.items():
             if isinstance(v, typing.Callable):
@@ -31,43 +31,43 @@ class PyDanticModelJsonMixin:
 class BoosterParams(PyDanticModelJsonMixin, BaseModel, ):
     queue_name: str
     concurrent_mode: int = ConcurrentModeEnum.THREADING
-    concurrent_num :int= 50
+    concurrent_num: int = 50
     specify_concurrent_pool: typing.Callable = None
     specify_async_loop: typing.Callable = None
     qps: float = 0
-    is_using_distributed_frequency_control :bool= False
-    is_send_consumer_hearbeat_to_redis:bool = False
+    is_using_distributed_frequency_control: bool = False
+    is_send_consumer_hearbeat_to_redis: bool = False
 
-    max_retry_times:int = 3
-    is_push_to_dlx_queue_when_retry_max_times:bool = False
+    max_retry_times: int = 3
+    is_push_to_dlx_queue_when_retry_max_times: bool = False
 
     consumin_function_decorator: typing.Callable = None
-    function_timeout:float = 0
+    function_timeout: float = 0
 
     log_level: int = logging.DEBUG
-    logger_prefix :str= ''
-    create_logger_file = True
-    log_filename: str = None
-    is_show_message_get_from_broker:bool = False
-    is_print_detail_exception :bool= True
+    logger_prefix: str = ''
+    create_logger_file :bool= True
+    log_filename: typing.Union[str,None] = None
+    is_show_message_get_from_broker: bool = False
+    is_print_detail_exception: bool = True
 
-    msg_expire_senconds :float= 0
+    msg_expire_senconds: float = 0
 
-    do_task_filtering:bool = False
-    task_filtering_expire_seconds:int = 0
+    do_task_filtering: bool = False
+    task_filtering_expire_seconds: int = 0
 
-    function_result_status_persistance_conf = FunctionResultStatusPersistanceConfig(is_save_result=False, is_save_status=False, expire_seconds=70 * 24 * 3600)
+    function_result_status_persistance_conf :FunctionResultStatusPersistanceConfig= FunctionResultStatusPersistanceConfig(is_save_result=False, is_save_status=False, expire_seconds=70 * 24 * 3600)
     user_custom_record_process_info_func: typing.Callable = None
 
-    is_using_rpc_mode = False
-    is_support_remote_kill_task = False
+    is_using_rpc_mode: bool = False
+    is_support_remote_kill_task: bool = False
 
-    is_do_not_run_by_specify_time_effect = False
-    do_not_run_by_specify_time = ('10:00:00', '22:00:00')
+    is_do_not_run_by_specify_time_effect: bool = False
+    do_not_run_by_specify_time: tuple = ('10:00:00', '22:00:00')
 
-    schedule_tasks_on_main_thread = False
+    schedule_tasks_on_main_thread: bool = False
 
-    broker_exclusive_config = {}
+    broker_exclusive_config: dict = {}
 
     consuming_function: typing.Callable = None
 
@@ -100,7 +100,7 @@ class PriorityConsumingControlConfig(BaseModel):
     misfire_grace_time: typing.Union[int, None] = None
     other_extra_params: dict = None
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def cehck_values(cls, values: dict):
         if values['countdown'] and values['eta']:
             raise ValueError('不能同时设置eta和countdown')
@@ -112,10 +112,10 @@ class PriorityConsumingControlConfig(BaseModel):
 class PublisherParams(PyDanticModelJsonMixin, BaseModel):
     queue_name: str
     log_level: int = logging.DEBUG
-    logger_prefix = ''
-    create_logger_file = True
-    log_filename: str = None
-    clear_queue_within_init = False
+    logger_prefix: str = ''
+    create_logger_file: bool = True
+    log_filename: typing.Optional[str] = None
+    clear_queue_within_init: bool = False
     consuming_function: typing.Callable = None
     broker_kind: int = None
     broker_exclusive_config: dict = None

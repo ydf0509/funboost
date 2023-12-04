@@ -230,7 +230,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._last_timestamp_print_msg_num = 0
 
         self._result_persistence_helper: ResultPersistenceHelper
-        self.consumer_params.broker_exclusive_config.update(self.consumer_params.broker_exclusive_config_DEFAULT)
+        self.consumer_params.broker_exclusive_config.update(self.BROKER_EXCLUSIVE_CONFIG_DEFAULT)
 
         self._stop_flag = None
         self._pause_flag = None  # 暂停消费标志，从reids读取
@@ -270,6 +270,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._has_start_delay_task_scheduler = False
         self._consuming_function_is_asyncio = inspect.iscoroutinefunction(self.consuming_function)
         self.custom_init()
+        develop_logger.warning(consumer_params.log_filename)
         self.publisher_params = PublisherParams(queue_name=consumer_params.queue_name, consuming_function=consumer_params.consuming_function,
                                                 broker_kind=self.BROKER_KIND, log_level=consumer_params.log_level,
                                                 logger_prefix=consumer_params.logger_prefix,
@@ -301,7 +302,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
 
     def _check_broker_exclusive_config(self):
-        broker_exclusive_config_keys = self.consumer_params.broker_exclusive_config_DEFAULT.keys()
+        broker_exclusive_config_keys = self.consumer_params.broker_exclusive_config.keys()
         if set(self.consumer_params.broker_exclusive_config.keys()).issubset(broker_exclusive_config_keys):
             self.logger.info(f'当前消息队列中间件能支持特殊独有配置 {self.consumer_params.broker_exclusive_config.keys()}')
         else:

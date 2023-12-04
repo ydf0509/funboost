@@ -1,36 +1,15 @@
-# -*- coding: utf-8 -*-
-# @Author  : ydf
-# @Time    : 2022/8/8 0008 14:57
-from multiprocessing import Process
 import time
-from funboost import get_consumer, get_publisher, AbstractConsumer
-from funboost.consumers.redis_consumer import RedisConsumer
-from funboost.utils import LogManager
+from funboost import boost, BrokerEnum, BoosterParams
 
 
+@boost(boost_params=BoosterParams(queue_name="task_queue_name2", qps=5, broker_kind=BrokerEnum.REDIS, log_level=10))  # 入参包括20种，运行控制方式非常多，想得到的控制都会有。
+def task_fun(x, y):
+    print(f'{x} + {y} = {x + y}')
+    time.sleep(3)  # 框架会自动并发绕开这个阻塞，无论函数内部随机耗时多久都能自动调节并发达到每秒运行 5 次 这个 task_fun 函数的目的。
+    return x + y
 
-logger = LogManager('complex_example').get_logger_and_add_handlers()
 
-pb2 = get_publisher('task2_queue', broker_kind=2)
-
-
-def task1(x, y):
-    logger.info(f'消费此消息 {x} - {y} ,结果是  {x - y}')
+if __name__ == "__main__":
     for i in range(10):
-        pb2.publish({'n': x * 100 + i})  # 消费时候发布任务到别的队列或自己的队列。可以边消费边推送。
-    time.sleep(10)  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
-
-
-def task2(n):
-    logger.info(n)
-    time.sleep(3)
-
-
-def multi_processing_consume():
-    get_consumer('task1_queue', consuming_function=task1, broker_kind=2).start_consuming_message()
-    RedisConsumer('task2_queue', consuming_function=task2, concurrent_num=100).start_consuming_message()
-    AbstractConsumer.join_shedual_task_thread()  # linux多进程启动时候一定要加这一句,否则即使是while 1 的线程如果不join，子进程也会迅速退出。windows下可以不需要这一句。
-
-
-if __name__ == '__main__':
-    [Process(target=multi_processing_consume).start() for _ in range(4)]
+        task_fun.push(i, y=i * 2)  # 发布者发布任务
+    task_fun.multi_process_consume(2)  # 消费者启动循环调度并发消费任务

@@ -11,7 +11,7 @@ from funboost.core.helper_funs import run_forever
 logger = nb_log.get_logger(__name__)
 
 
-def _run_consumer_by_init_params(queue_name, ):
+def _run_consumer_in_new_process(queue_name, ):
     from funboost.core.booster import BoostersManager
     booster_current_pid = BoostersManager.get_or_create_booster_by_queue_name(queue_name)
     # booster_current_pid = boost(**boost_params)(consuming_function)
@@ -46,11 +46,11 @@ def run_consumer_with_multi_process(booster: Booster, process_num=1):
     else:
         for i in range(process_num):
             # print(i)
-            Process(target=_run_consumer_by_init_params,
+            Process(target=_run_consumer_in_new_process,
                     args=(booster.queue_name,)).start()
 
 
-def _multi_process_pub_params_list_by_consumer_init_params(queue_name, msgs: List[dict]):
+def _multi_process_pub_params_list_in_new_process(queue_name, msgs: List[dict]):
     from funboost.core.booster import BoostersManager
     booster_current_pid = BoostersManager.get_or_create_booster_by_queue_name(queue_name)
     publisher = booster_current_pid.publisher
@@ -72,6 +72,6 @@ def multi_process_pub_params_list(booster: Booster, params_list, process_num=16)
         for i in range(process_num):
             msgs = params_list[i * ava_len: (i + 1) * ava_len]
             # print(msgs)
-            pool.submit(_multi_process_pub_params_list_by_consumer_init_params, booster.queue_name,
+            pool.submit(_multi_process_pub_params_list_in_new_process, booster.queue_name,
                         msgs)
     logger.info(f'\n 通过 multi_process_pub_params_list 多进程子进程的发布方式，发布了 {params_list_len} 个任务。耗时 {time.time() - t0} 秒')

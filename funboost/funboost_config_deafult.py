@@ -99,7 +99,7 @@ class FunboostCommonConfig(DataClassBase):
     # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
     NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 11  # 7是简短的不可跳转，5是可点击跳转的，11是可显示ip 进程 线程的模板。
     TIMEZONE = 'Asia/Shanghai'
-    FSDF_DEVELOP_LOG_LEVEL = 50  # 作者开发时候的调试代码的日志，仅供我自己用，所以日志级别跳到最高，用户不需要管。
+    FSDF_DEVELOP_LOG_LEVEL = 30  # 作者开发时候的调试代码的日志，仅供我自己用，所以日志级别跳到最高，用户不需要管。
 
 
 class BoostDecoratorDefaultParams(DataClassBase):
@@ -146,7 +146,7 @@ class BoostDecoratorDefaultParams(DataClassBase):
     do_task_filtering = False
     task_filtering_expire_seconds = 0
 
-    function_result_status_persistance_conf = FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600)
+    # function_result_status_persistance_conf = FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600)
     user_custom_record_process_info_func = None
 
     is_using_rpc_mode = False

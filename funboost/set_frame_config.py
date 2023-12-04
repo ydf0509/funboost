@@ -139,7 +139,7 @@ def use_config_form_funboost_config_module():
             raise EnvironmentError(f'funboost 30.0版本升级了配置文件，中间件配置写成了类，请删除原来老的funboost_config.py配置文件 {m.__file__}')
         funboost_config_deafult.BrokerConnConfig.update_cls_attribute(**m.BrokerConnConfig().get_dict())
         funboost_config_deafult.FunboostCommonConfig.update_cls_attribute(**m.FunboostCommonConfig().get_dict())
-        funboost_config_deafult.BoostDecoratorDefaultParams.update_cls_attribute(**m.BoostDecoratorDefaultParams().get_dict())
+        # funboost_config_deafult.BoostDecoratorDefaultParams.update_cls_attribute(**m.BoostDecoratorDefaultParams().get_dict())
 
 
     except ModuleNotFoundError:

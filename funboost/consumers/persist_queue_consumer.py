@@ -5,7 +5,7 @@ import json
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.publishers.persist_queue_publisher import PersistQueuePublisher
-
+from funboost.core.func_params_model import PublisherParams
 
 class PersistQueueConsumer(AbstractConsumer):
     """
@@ -13,7 +13,7 @@ class PersistQueueConsumer(AbstractConsumer):
     """
 
     def _shedual_task(self):
-        pub = PersistQueuePublisher(self.queue_name, )
+        pub = PersistQueuePublisher(PublisherParams(queue_name=self.queue_name))
         while True:
             item = pub.queue.get()
             # self.logger.debug(f'从本地持久化sqlite的 [{self._queue_name}] 队列中 取出的消息是：   {item}  ')

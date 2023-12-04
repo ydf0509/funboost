@@ -1,42 +1,39 @@
+import asyncio
+import copy
 import datetime
+import json
+import logging
 import typing
 
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
-from pydantic import BaseModel, validator, root_validator
-import nb_log
+from pydantic import BaseModel, validator, root_validator, PrivateAttr
+from funboost.core.function_result_status_config import FunctionResultStatusPersistanceConfig
 
 
-class FunctionResultStatusPersistanceConfig(BaseModel):
-    _logger = nb_log.get_logger('FunctionResultStatusPersistanceConfig')
-    is_save_status: bool
-    is_save_result: bool
-    expire_seconds: int = 7 * 24 * 3600
-    is_use_bulk_insert: bool = False
+class PyDanticModelJsonMixin:
+    def get_str_dict(self):
+        model_dict: dict = self.dict()
+        model_dict_copy = copy.deepcopy(model_dict)
+        for k, v in model_dict.items():
+            if isinstance(v, typing.Callable):
+                model_dict_copy[k] = str(v)
+        return model_dict_copy
 
-    @validator('expire_seconds')
-    def check_expire_seconds(cls, value):
-        if value > 10 * 24 * 3600:
-            cls._logger.warning(f'你设置的过期时间为 {value} ,设置的时间过长。 ')
+    def json(self, **dumps_kwargs: typing.Any):
+        # 创建一个字典表示模型字段和对应值
+        # 使用 json.dumps() 方法进行序列化
+        return json.dumps(self.get_str_dict(), **dumps_kwargs)
 
-    @root_validator
-    def cehck_values(cls, values: dict):
-        """
-        :param is_save_status:
-        :param is_save_result:
-        :param expire_seconds: 设置统计的过期时间，在mongo里面自动会移除这些过期的执行记录。
-        :param is_use_bulk_insert : 是否使用批量插入来保存结果，批量插入是每隔0.5秒钟保存一次最近0.5秒内的所有的函数消费状态结果，始终会出现最后0.5秒内的执行结果没及时插入mongo。为False则，每完成一次函数就实时写入一次到mongo。
-        """
-        if not values['is_save_status'] and values['is_save_result']:
-            raise ValueError(f'你设置的是不保存函数运行状态但保存函数运行结果。不允许你这么设置')
-        return values
+    def json_pre(self):
+        return json.dumps(self.get_str_dict(), ensure_ascii=False, indent=4)
 
 
-class ConsumerParams:
+class BoosterParams(PyDanticModelJsonMixin, BaseModel, ):
     queue_name: str
     concurrent_mode: int = ConcurrentModeEnum.THREADING
     concurrent_num = 50
-    specify_concurrent_pool = None
-    specify_async_loop = None
+    specify_concurrent_pool: typing.Callable = None
+    specify_async_loop: typing.Callable = None
     qps: float = 0
     is_using_distributed_frequency_control = False
     is_send_consumer_hearbeat_to_redis = False
@@ -44,12 +41,13 @@ class ConsumerParams:
     max_retry_times = 3
     is_push_to_dlx_queue_when_retry_max_times = False
 
-    consumin_function_decorator = None
+    consumin_function_decorator: typing.Callable = None
     function_timeout = 0
 
-    log_level = 10
+    log_level: int = logging.DEBUG
     logger_prefix = ''
     create_logger_file = True
+    log_filename: str = None
     is_show_message_get_from_broker = False
     is_print_detail_exception = True
 
@@ -59,7 +57,7 @@ class ConsumerParams:
     task_filtering_expire_seconds = 0
 
     function_result_status_persistance_conf = FunctionResultStatusPersistanceConfig(is_save_result=False, is_save_status=False, expire_seconds=70 * 24 * 3600)
-    user_custom_record_process_info_func = None
+    user_custom_record_process_info_func: typing.Callable = None
 
     is_using_rpc_mode = False
     is_support_remote_kill_task = False
@@ -71,16 +69,22 @@ class ConsumerParams:
 
     broker_exclusive_config = {}
 
+    consuming_function: typing.Callable = None
 
-class BoosterParams(ConsumerParams):
     broker_kind: int = BrokerEnum.PERSISTQUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
 
+    auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
+    # class Config:
+    #     json_encoders = {
+    #         typing.Callable: lambda v: str(v)  # 自定义 函数 类型的序列化逻辑
+    #     }
+    #     underscore_attrs_are_private = True
+    #
+    # _where_to_instantiate: str = None
+    # _lock = PrivateAttr(default_factory=Lock)
 
-class BoosterParamsContainConsumingFunction(BoosterParams):
-    consuming_function: typing.Callable
 
-
-class PriorityConsumingControlConfig:
+class PriorityConsumingControlConfig(BaseModel):
     """
     为每个独立的任务设置控制参数，和函数参数一起发布到中间件。可能有少数时候有这种需求。
     例如消费为add函数，可以每个独立的任务设置不同的超时时间，不同的重试次数，是否使用rpc模式。这里的配置优先，可以覆盖生成消费者时候的配置。
@@ -102,18 +106,22 @@ class PriorityConsumingControlConfig:
             raise ValueError('不能同时设置eta和countdown')
         if values['misfire_grace_time'] is not None and values['misfire_grace_time'] < 1:
             raise ValueError(f'misfire_grace_time 的值要么是大于1的整数， 要么等于None')
+        return values
 
 
-class PublisherParams(BaseModel):
+class PublisherParams(PyDanticModelJsonMixin, BaseModel):
     queue_name: str
-    log_level_int: int = 10
+    log_level: int = logging.DEBUG
     logger_prefix = ''
-    is_add_file_handler = True
+    create_logger_file = True
+    log_filename: str = None
     clear_queue_within_init = False
-    is_add_publish_time = True
-    consuming_function: callable = None
+    consuming_function: typing.Callable = None
+    broker_kind: int = None
     broker_exclusive_config: dict = None
 
 
 if __name__ == '__main__':
     print(FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=70 * 24 * 3600))
+
+    print(PriorityConsumingControlConfig().dict())

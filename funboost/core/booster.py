@@ -280,7 +280,7 @@ class BoostersManager:
     @classmethod
     def get_or_create_booster_by_queue_name(cls, queue_name, ) -> Booster:
         """
-        当前进程获得booster对象。如果是多进程,会在新的进程内部创建一个新的booster对象,因为多进程操作有些中间件的同一个conn不行.
+        当前进程获得booster对象，如果是多进程,会在新的进程内部创建一个新的booster对象,因为多进程操作有些中间件的同一个conn不行.
         :param queue_name: 就是 @boost的入参。
         :return:
         """

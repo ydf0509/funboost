@@ -172,20 +172,20 @@ Transport Options
       '''
 
     def custom_init(self):
-        self.kombu_url = self.broker_exclusive_config['kombu_url'] or BrokerConnConfig.KOMBU_URL
+        self.kombu_url = self.consumer_params.broker_exclusive_config['kombu_url'] or BrokerConnConfig.KOMBU_URL
         self._middware_name = self.kombu_url.split(":")[0]
-        logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._middware_name}--{self._queue_name}'
-        self.logger = get_logger(logger_name, log_level_int=self._log_level,
-                                 log_filename=f'{logger_name}.log' if self._create_logger_file else None,
-                                 formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
-                                 )  #
+        # logger_name = f'{self.consumer_params.logger_prefix}{self.__class__.__name__}--{self._middware_name}--{self._queue_name}'
+        # self.logger = get_logger(logger_name, log_level_int=self.consumer_params.log_level,
+        #                          log_filename=f'{logger_name}.log' if self.consumer_params.create_logger_file else None,
+        #                          formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
+        #                          )  #
         if self.kombu_url.startswith('filesystem://'):
             self._create_msg_file_dir()
 
     def _create_msg_file_dir(self):
-        os.makedirs(self.broker_exclusive_config['transport_options']['data_folder_in'], exist_ok=True)
-        os.makedirs(self.broker_exclusive_config['transport_options']['data_folder_out'], exist_ok=True)
-        processed_folder = self.broker_exclusive_config['transport_options'].get('processed_folder', None)
+        os.makedirs(self.consumer_params.broker_exclusive_config['transport_options']['data_folder_in'], exist_ok=True)
+        os.makedirs(self.consumer_params.broker_exclusive_config['transport_options']['data_folder_out'], exist_ok=True)
+        processed_folder = self.consumer_params.broker_exclusive_config['transport_options'].get('processed_folder', None)
         if processed_folder:
             os.makedirs(processed_folder, exist_ok=True)
 
@@ -203,9 +203,9 @@ Transport Options
         self.exchange = Exchange('funboost_exchange', 'direct', durable=True)
         self.queue = Queue(self._queue_name, exchange=self.exchange, routing_key=self._queue_name, auto_delete=False, no_ack=False)
         # https://docs.celeryq.dev/projects/kombu/en/stable/reference/kombu.html?highlight=visibility_timeout#kombu.Connection 每种中间件的transport_options不一样。
-        self.conn = Connection(self.kombu_url, transport_options=self.broker_exclusive_config['transport_options'])
+        self.conn = Connection(self.kombu_url, transport_options=self.consumer_params.broker_exclusive_config['transport_options'])
         self.queue(self.conn).declare()
-        with self.conn.Consumer(self.queue, callbacks=[callback], no_ack=False, prefetch_count=self.broker_exclusive_config['prefetch_count']) as consumer:
+        with self.conn.Consumer(self.queue, callbacks=[callback], no_ack=False, prefetch_count=self.consumer_params.broker_exclusive_config['prefetch_count']) as consumer:
             # Process messages and handle events on all channels
             channel = consumer.channel  # type:Channel
             channel.body_encoding = 'no_encode'  # 这里改了编码，存到中间件的参数默认把消息base64了，我觉得没必要不方便查看消息明文。

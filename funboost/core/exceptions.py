@@ -21,7 +21,7 @@ def f(x):
     
 
 用户需要做的改变如下:
-@boost(BoosterParams(queue_name='queue_name_xx',qps=3))
+@boost(boost_paams=BoosterParams(queue_name='queue_name_xx',qps=3))
 def f(x):
     pass
 

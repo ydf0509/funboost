@@ -31,30 +31,30 @@ class PyDanticModelJsonMixin:
 class BoosterParams(PyDanticModelJsonMixin, BaseModel, ):
     queue_name: str
     concurrent_mode: int = ConcurrentModeEnum.THREADING
-    concurrent_num = 50
+    concurrent_num :int= 50
     specify_concurrent_pool: typing.Callable = None
     specify_async_loop: typing.Callable = None
     qps: float = 0
-    is_using_distributed_frequency_control = False
-    is_send_consumer_hearbeat_to_redis = False
+    is_using_distributed_frequency_control :bool= False
+    is_send_consumer_hearbeat_to_redis:bool = False
 
-    max_retry_times = 3
-    is_push_to_dlx_queue_when_retry_max_times = False
+    max_retry_times:int = 3
+    is_push_to_dlx_queue_when_retry_max_times:bool = False
 
     consumin_function_decorator: typing.Callable = None
-    function_timeout = 0
+    function_timeout:float = 0
 
     log_level: int = logging.DEBUG
-    logger_prefix = ''
+    logger_prefix :str= ''
     create_logger_file = True
     log_filename: str = None
-    is_show_message_get_from_broker = False
-    is_print_detail_exception = True
+    is_show_message_get_from_broker:bool = False
+    is_print_detail_exception :bool= True
 
-    msg_expire_senconds = 0
+    msg_expire_senconds :float= 0
 
-    do_task_filtering = False
-    task_filtering_expire_seconds = 0
+    do_task_filtering:bool = False
+    task_filtering_expire_seconds:int = 0
 
     function_result_status_persistance_conf = FunctionResultStatusPersistanceConfig(is_save_result=False, is_save_status=False, expire_seconds=70 * 24 * 3600)
     user_custom_record_process_info_func: typing.Callable = None

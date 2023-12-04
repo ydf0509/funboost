@@ -168,12 +168,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         while 1:
             time.sleep(10)
 
+
     def __init__(self, consumer_params: BoosterParams):
 
         """
         """
+        self.raw_consumer_params = copy.copy(consumer_params)
         self.consumer_params = copy.copy(consumer_params)
+        # noinspection PyUnresolvedReferences
         file_name = self.consumer_params.consuming_function.__code__.co_filename
+        # noinspection PyUnresolvedReferences
         line = self.consumer_params.consuming_function.__code__.co_firstlineno
         self.consumer_params.auto_generate_info['where_to_instantiate'] = f'{file_name}:{line}'
 
@@ -185,16 +189,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
         # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
         if consumer_params.qps != 0 and consumer_params.concurrent_num == 50:
-            self._concurrent_num = 500
+            self.consumer_params.concurrent_num = 500
         else:
-            self._concurrent_num = consumer_params.concurrent_num
+            self.consumer_params.concurrent_num = consumer_params.concurrent_num
         if consumer_params.concurrent_mode == ConcurrentModeEnum.SINGLE_THREAD:
-            self._concurrent_num = 1
+            self.consumer_params.concurrent_num = 1
 
         self._msg_schedule_time_intercal = 0 if consumer_params.qps == 0 else 1.0 / consumer_params.qps
 
-        self._is_send_consumer_hearbeat_to_redis = consumer_params.is_send_consumer_hearbeat_to_redis or consumer_params.is_using_distributed_frequency_control
-        print(consumer_params.concurrent_mode, ConcurrentModeEnum.__dict__.values())
+        self.consumer_params.is_send_consumer_hearbeat_to_redis = consumer_params.is_send_consumer_hearbeat_to_redis or consumer_params.is_using_distributed_frequency_control
         if consumer_params.concurrent_mode not in ConcurrentModeEnum.__dict__.values():
             raise ValueError('设置的并发模式不正确')
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
@@ -204,11 +207,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._build_logger()
         stdout_write(f'''{time.strftime("%H:%M:%S")} "{self.consumer_params.auto_generate_info['where_to_instantiate']}"  \033[0;37;44m此行 实例化队列名 {self.queue_name} 的消费者, 类型为 {self.__class__}\033[0m\n''')
         # only_print_on_main_process(f'{current_queue__info_dict["queue_name"]} 的消费者配置:\n', un_strict_json_dumps.dict2json(current_queue__info_dict))
-        if is_main_process:
-            self.logger.info(f'{self.queue_name} 的消费者配置:\n {self.consumer_params.json_pre()}')
 
-        self._do_task_filtering = consumer_params.do_task_filtering
-        self._is_show_message_get_from_broker = consumer_params.is_show_message_get_from_broker
+
+        # self._do_task_filtering = consumer_params.do_task_filtering
+        # self.consumer_params.is_show_message_get_from_broker = consumer_params.is_show_message_get_from_broker
         self._redis_filter_key_name = f'filter_zset:{consumer_params.queue_name}' if consumer_params.task_filtering_expire_seconds else f'filter_set:{consumer_params.queue_name}'
         filter_class = RedisFilter if consumer_params.task_filtering_expire_seconds == 0 else RedisImpermanencyFilter
         self._redis_filter = filter_class(self._redis_filter_key_name, consumer_params.task_filtering_expire_seconds)
@@ -228,9 +230,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._last_timestamp_print_msg_num = 0
 
         self._result_persistence_helper: ResultPersistenceHelper
-
-        self.broker_exclusive_config = copy.deepcopy(consumer_params.broker_exclusive_config)
-        self.broker_exclusive_config.update(self.BROKER_EXCLUSIVE_CONFIG_DEFAULT)
+        self.consumer_params.broker_exclusive_config.update(self.consumer_params.broker_exclusive_config_DEFAULT)
 
         self._stop_flag = None
         self._pause_flag = None  # 暂停消费标志，从reids读取
@@ -267,7 +267,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                             }
 
         self._check_broker_exclusive_config()
-
         self._has_start_delay_task_scheduler = False
         self._consuming_function_is_asyncio = inspect.iscoroutinefunction(self.consuming_function)
         self.custom_init()
@@ -276,7 +275,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                 logger_prefix=consumer_params.logger_prefix,
                                                 create_logger_file=consumer_params.create_logger_file,
                                                 log_filename=consumer_params.log_filename,
-                                                broker_exclusive_config=self.broker_exclusive_config)
+                                                broker_exclusive_config=self.consumer_params.broker_exclusive_config)
+        if is_main_process:
+            self.logger.info(f'{self.queue_name} 的消费者配置:\n {self.consumer_params.json_pre()}')
         atexit.register(self.join_shedual_task_thread)
 
     def _build_logger(self):
@@ -300,11 +301,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
 
     def _check_broker_exclusive_config(self):
-        broker_exclusive_config_keys = self.BROKER_EXCLUSIVE_CONFIG_DEFAULT.keys()
-        if set(self.broker_exclusive_config.keys()).issubset(broker_exclusive_config_keys):
-            self.logger.info(f'当前消息队列中间件能支持特殊独有配置 {self.broker_exclusive_config.keys()}')
+        broker_exclusive_config_keys = self.consumer_params.broker_exclusive_config_DEFAULT.keys()
+        if set(self.consumer_params.broker_exclusive_config.keys()).issubset(broker_exclusive_config_keys):
+            self.logger.info(f'当前消息队列中间件能支持特殊独有配置 {self.consumer_params.broker_exclusive_config.keys()}')
         else:
-            self.logger.warning(f'当前消息队列中间件含有不支持的特殊配置 {self.broker_exclusive_config.keys()}，能支持的特殊独有配置包括 {broker_exclusive_config_keys}')
+            self.logger.warning(f'当前消息队列中间件含有不支持的特殊配置 {self.consumer_params.broker_exclusive_config.keys()}，能支持的特殊独有配置包括 {broker_exclusive_config_keys}')
 
     def _check_monkey_patch(self):
         if self.consumer_params.concurrent_mode == ConcurrentModeEnum.GEVENT:
@@ -383,18 +384,18 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             traceback.print_exc()
             os._exit(4444)  # noqa
         self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
-        self._result_persistence_helper = ResultPersistenceHelper(self.consumer_params.function_result_status_persistance_conf, self._queue_name)
+        self._result_persistence_helper = ResultPersistenceHelper(self.consumer_params.function_result_status_persistance_conf, self.queue_name)
 
         self._distributed_consumer_statistics = DistributedConsumerStatistics(self)
-        if self._is_send_consumer_hearbeat_to_redis:
+        if self.consumer_params.is_send_consumer_hearbeat_to_redis:
             self._distributed_consumer_statistics.run()
             self.logger.warning(f'启动了分布式环境 使用 redis 的键 hearbeat:{self._queue_name} 统计活跃消费者 ，当前消费者唯一标识为 {self.consumer_identification}')
 
         self.keep_circulating(60, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
         if self.consumer_params.is_support_remote_kill_task:
             kill_remote_task.RemoteTaskKiller(self.queue_name, None).start_cycle_kill_task()
-            self._is_show_message_get_from_broker = True  # 方便用户看到从消息队列取出来的消息的task_id,然后使用task_id杀死运行中的消息。
-        if self._do_task_filtering:
+            self.consumer_params.is_show_message_get_from_broker = True  # 方便用户看到从消息队列取出来的消息的task_id,然后使用task_id杀死运行中的消息。
+        if self.consumer_params.do_task_filtering:
             self._redis_filter.delete_expire_filter_task_cycle()  # 这个默认是RedisFilter类，是个pass不运行。所以用别的消息中间件模式，不需要安装和配置redis。
         if self.consumer_params.schedule_tasks_on_main_thread:
             self.keep_circulating(1)(self._shedual_task)()
@@ -545,7 +546,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _print_message_get_from_broker(self, broker_name, msg):
         # print(999)
-        if self._is_show_message_get_from_broker:
+        if self.consumer_params.is_show_message_get_from_broker:
             if isinstance(msg, (dict, list)):
                 msg = json.dumps(msg, ensure_ascii=False)
             self.logger.debug(f'从 {broker_name} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
@@ -1019,11 +1020,10 @@ class ConcurrentModeDispatcher(LoggerMixin):
         # pool_type = ProcessPoolExecutor
         if self._concurrent_mode == ConcurrentModeEnum.ASYNC:
             self.consumer._concurrent_pool = self.consumer.consumer_params.specify_concurrent_pool or pool_type(
-                self.consumer._concurrent_num, loop=self.consumer.consumer_params.specify_async_loop)
+                self.consumer.consumer_params.concurrent_num, loop=self.consumer.consumer_params.specify_async_loop)
         else:
             # print(pool_type)
-            self.consumer._concurrent_pool = self.consumer.consumer_params.specify_concurrent_pool if self.consumer.consumer_params.specify_concurrent_pool is not None else pool_type(
-                self.consumer._concurrent_num)
+            self.consumer._concurrent_pool = self.consumer.consumer_params.specify_concurrent_pool or pool_type( self.consumer.consumer_params.concurrent_num)
         # print(self._concurrent_mode,self.consumer._concurrent_pool)
         return self.consumer._concurrent_pool
 

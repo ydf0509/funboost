@@ -107,7 +107,7 @@ class Booster:
         '''
         """
         local = copy.deepcopy(locals())
-        if 'queue_name' in locals():
+        if 'queue_name' in locals() or isinstance(boost_params,str):
             raise BoostDecoParamsIsOldVersion()
         self.boost_params = boost_params
         self.queue_name = boost_params.queue_name

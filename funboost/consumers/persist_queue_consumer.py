@@ -13,7 +13,7 @@ class PersistQueueConsumer(AbstractConsumer):
     """
 
     def _shedual_task(self):
-        pub = PersistQueuePublisher(PublisherParams(queue_name=self.queue_name))
+        pub = PersistQueuePublisher(publisher_params=PublisherParams(queue_name=self.queue_name))
         while True:
             item = pub.queue.get()
             # self.logger.debug(f'从本地持久化sqlite的 [{self._queue_name}] 队列中 取出的消息是：   {item}  ')

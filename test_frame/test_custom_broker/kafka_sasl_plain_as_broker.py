@@ -59,8 +59,8 @@ class SaslPlainKafkaConsumer(KafkaConsumerManuallyCommit):
             'sasl.mechanisms': BrokerConnConfig.KFFKA_SASL_CONFIG['sasl_mechanism'],
             'sasl.username': BrokerConnConfig.KFFKA_SASL_CONFIG['sasl_plain_username'],
             'sasl.password': BrokerConnConfig.KFFKA_SASL_CONFIG['sasl_plain_password'],
-            'group.id': self.broker_exclusive_config["group_id"],
-            'auto.offset.reset': self.broker_exclusive_config["auto_offset_reset"],
+            'group.id': self.consumer_params.broker_exclusive_config["group_id"],
+            'auto.offset.reset': self.consumer_params.broker_exclusive_config["auto_offset_reset"],
             'enable.auto.commit': False
         })
         self._confluent_consumer.subscribe([self._queue_name])
@@ -81,7 +81,7 @@ class SaslPlainKafkaConsumer(KafkaConsumerManuallyCommit):
             self._partion__offset_consume_status_map[msg.partition(
             )][msg.offset()] = 0
             kw = {'partition': msg.partition(), 'offset': msg.offset(), 'body': json.loads(msg.value())}  # noqa
-            if self._is_show_message_get_from_broker:
+            if self.consumer_params.is_show_message_get_from_broker:
                 self.logger.debug(
                     f'从kafka的 [{self._queue_name}] 主题,分区 {msg.partition()} 中 的 offset {msg.offset()} 取出的消息是：  {msg.value()}')  # noqa
             self._submit_task(kw)

@@ -31,19 +31,22 @@ from nb_log import LoggerMixin
 #         return f'<FunctionResultStatusPersistanceConfig> {id(self)} {self.to_dict()}'
 #
 
+logger = nb_log.get_logger('funboost')
+
 class FunctionResultStatusPersistanceConfig(BaseModel):
-    _logger = nb_log.get_logger('FunctionResultStatusPersistanceConfig')
+
     is_save_status: bool
     is_save_result: bool
     expire_seconds: int = 7 * 24 * 3600
     is_use_bulk_insert: bool = False
 
+
     @validator('expire_seconds')
     def check_expire_seconds(cls, value):
         if value > 10 * 24 * 3600:
-            cls._logger.warning(f'你设置的过期时间为 {value} ,设置的时间过长。 ')
+            logger.warning(f'你设置的过期时间为 {value} ,设置的时间过长。 ')
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def cehck_values(cls, values: dict):
         """
         :param is_save_status:

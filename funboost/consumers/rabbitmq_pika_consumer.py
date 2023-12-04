@@ -32,7 +32,7 @@ class RabbitmqConsumer(AbstractConsumer):
     def _shedual_task(self):
         # channel = RabbitMqFactory(is_use_rabbitpy=0).get_rabbit_cleint().creat_a_channel()
         # channel.queue_declare(queue=self._queue_name, durable=True)
-        # channel.basic_qos(prefetch_count=self._concurrent_num)
+        # channel.basic_qos(prefetch_count=self.consumer_params.concurrent_num)
         def callback(ch, method, properties, body):
             body = body.decode()
             # self.logger.debug(f'从rabbitmq的 [{self._queue_name}] 队列中 取出的消息是：  {body}')

@@ -20,8 +20,8 @@ class HueyConsumer(AbstractConsumer):
 
     def custom_init(self):
         # 这就是核心，
-        huey_task_kwargs = self.broker_exclusive_config['huey_task_kwargs']
-        huey_task_kwargs['retries'] = self._max_retry_times
+        huey_task_kwargs = self.consumer_params.broker_exclusive_config['huey_task_kwargs']
+        huey_task_kwargs['retries'] = self.consumer_params.max_retry_times
 
         @HueyHelper.huey_obj.task(name=self.queue_name,
                         **huey_task_kwargs)

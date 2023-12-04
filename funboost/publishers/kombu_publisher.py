@@ -12,7 +12,7 @@ from kombu.connection import Connection
 from nb_log import get_logger
 
 from funboost.publishers.base_publisher import AbstractPublisher, deco_mq_conn_error
-from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
+from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
 
 # nb_log.get_logger(name=None,log_level_int=10)
 """
@@ -46,27 +46,27 @@ class KombuPublisher(AbstractPublisher, ):
     """
 
     def custom_init(self):
-        self.kombu_url = self.broker_exclusive_config['kombu_url'] or BrokerConnConfig.KOMBU_URL
+        self.kombu_url = self.publisher_params.broker_exclusive_config['kombu_url'] or BrokerConnConfig.KOMBU_URL
         self._kombu_broker_url_prefix = self.kombu_url.split(":")[0]
-        logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._kombu_broker_url_prefix}--{self._queue_name}'
-        self.logger = get_logger(logger_name, log_level_int=self._log_level_int,
-                                 log_filename=f'{logger_name}.log' if self._is_add_file_handler else None,
-                                 formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
-                                 )  #
+        # logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._kombu_broker_url_prefix}--{self._queue_name}'
+        # self.logger = get_logger(logger_name, log_level_int=self._log_level_int,
+        #                          log_filename=f'{logger_name}.log' if self._is_add_file_handler else None,
+        #                          formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
+        #                          )  #
         if self.kombu_url.startswith('filesystem://'):
             self._create_msg_file_dir()
 
     def _create_msg_file_dir(self):
-        os.makedirs(self.broker_exclusive_config['transport_options']['data_folder_in'], exist_ok=True)
-        os.makedirs(self.broker_exclusive_config['transport_options']['data_folder_out'], exist_ok=True)
-        processed_folder = self.broker_exclusive_config['transport_options'].get('processed_folder', None)
+        os.makedirs(self.publisher_params.broker_exclusive_config['transport_options']['data_folder_in'], exist_ok=True)
+        os.makedirs(self.publisher_params.broker_exclusive_config['transport_options']['data_folder_out'], exist_ok=True)
+        processed_folder = self.publisher_params.broker_exclusive_config['transport_options'].get('processed_folder', None)
         if processed_folder:
             os.makedirs(processed_folder, exist_ok=True)
 
     def init_broker(self):
         self.exchange = Exchange('funboost_exchange', 'direct', durable=True)
         self.queue = Queue(self._queue_name, exchange=self.exchange, routing_key=self._queue_name, auto_delete=False)
-        self.conn = Connection(self.kombu_url, transport_options=self.broker_exclusive_config['transport_options'])
+        self.conn = Connection(self.kombu_url, transport_options=self.publisher_params.broker_exclusive_config['transport_options'])
         self.queue(self.conn).declare()
         self.producer = self.conn.Producer(serializer='json')
         self.channel = self.producer.channel  # type: Channel

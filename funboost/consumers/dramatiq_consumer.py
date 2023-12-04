@@ -2,7 +2,7 @@ import time
 
 import dramatiq
 
-from funboost import AbstractConsumer
+from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.assist.dramatiq_helper import DramatiqHelper
 
 
@@ -19,10 +19,10 @@ class DramatiqConsumer(AbstractConsumer):
 
     def custom_init(self):
         # 这就是核心，
-        dramatiq_actor_options = self.broker_exclusive_config['dramatiq_actor_options']
-        if self._function_timeout:
-            dramatiq_actor_options['time_limit'] = self._function_timeout * 1000  # dramatiq的超时单位是毫秒，funboost是秒。
-        dramatiq_actor_options['max_retries'] = self._max_retry_times
+        dramatiq_actor_options = self.consumer_params.broker_exclusive_config['dramatiq_actor_options']
+        if self.consumer_params.function_timeout:
+            dramatiq_actor_options['time_limit'] = self.consumer_params.function_timeout * 1000  # dramatiq的超时单位是毫秒，funboost是秒。
+        dramatiq_actor_options['max_retries'] = self.consumer_params.max_retry_times
 
         @dramatiq.actor(actor_name=self.queue_name, queue_name=self.queue_name,
                         **dramatiq_actor_options)

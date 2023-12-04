@@ -24,6 +24,7 @@ from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonCon
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.core.booster import BoostersManager, Booster
 from funboost.publishers.base_publisher import AbstractPublisher
+from funboost import BoosterParams
 
 
 @deprecated.deprecated(reason='以后不要再使用这种方式，对于job_store为数据库时候需要序列化不好。使用内存和数据库都兼容的添加任务方式: add_push_job')
@@ -166,7 +167,7 @@ if __name__ == '__main__':
     from funboost import boost, BrokerEnum, fsdf_background_scheduler, timing_publish_deco, run_forever
 
 
-    @Booster('queue_test_666', broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE)
+    @Booster(boost_params=BoosterParams(queue_name='queue_test_666', broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE))
     def consume_func(x, y):
         print(f'{x} + {y} = {x + y}')
 

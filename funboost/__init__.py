@@ -26,7 +26,7 @@ from funboost.core.fabric_deploy_helper import fabric_deploy, kill_all_remote_ta
 from funboost.utils.paramiko_util import ParamikoFolderUploader
 
 from funboost.consumers.base_consumer import (wait_for_possible_has_finish_all_tasks_by_conusmer_list,
-                                              FunctionResultStatus)
+                                              FunctionResultStatus,AbstractConsumer)
 from funboost.core.function_result_status_config import FunctionResultStatusPersistanceConfig
 from funboost.core.exceptions import *
 from funboost.core.active_cousumer_info_getter import ActiveCousumerProcessInfoGetter

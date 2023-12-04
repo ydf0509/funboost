@@ -5,7 +5,7 @@ import time
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.publishers.mongomq_publisher import MongoMixin, MongoMqPublisher
-
+from funboost.core.func_params_model import PublisherParams
 
 class MongoMqConsumer(AbstractConsumer, MongoMixin):
     """
@@ -14,7 +14,7 @@ class MongoMqConsumer(AbstractConsumer, MongoMixin):
 
 
     def _shedual_task(self):
-        mp = MongoMqPublisher(self.queue_name)
+        mp = MongoMqPublisher(publisher_params=PublisherParams(queue_name=self.queue_name))
         while True:
             job = mp.queue.next()
             if job is not None:

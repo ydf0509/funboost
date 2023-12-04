@@ -6,7 +6,7 @@ import time
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.publishers.httpsqs_publisher import HttpsqsPublisher
-
+from funboost.core.func_params_model import PublisherParams
 
 class HttpsqsConsumer(AbstractConsumer):
     """
@@ -16,7 +16,7 @@ class HttpsqsConsumer(AbstractConsumer):
 
     def custom_init(self):
         # noinspection PyAttributeOutsideInit
-        self.httpsqs_publisher = HttpsqsPublisher(self._queue_name)
+        self.httpsqs_publisher = HttpsqsPublisher(publisher_params=PublisherParams(queue_name=self.queue_name))
 
     # noinspection DuplicatedCode
     def _shedual_task(self):

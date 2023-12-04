@@ -135,7 +135,6 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def __init__(self, publisher_params: PublisherParams, ):
         self.publisher_params = publisher_params
         self.queue_name = self._queue_name = publisher_params.queue_name
-        self.broker_exclusive_config = publisher_params.broker_exclusive_config
         self._build_logger()
         self.publish_params_checker = PublishParamsChecker(publisher_params.consuming_function) if publisher_params.consuming_function else None
 

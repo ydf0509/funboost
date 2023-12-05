@@ -64,7 +64,7 @@ class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
 class BoosterParams(BaseJsonAbleModel):
     queue_name: str
 
-    concurrent_mode: int = ConcurrentModeEnum.THREADING
+    concurrent_mode: str = ConcurrentModeEnum.THREADING
     concurrent_num: int = 50
     specify_concurrent_pool: typing.Callable = None
     specify_async_loop: typing.Callable = None
@@ -107,7 +107,7 @@ class BoosterParams(BaseJsonAbleModel):
 
     consuming_function: typing.Callable = None
 
-    broker_kind: int = BrokerEnum.PERSISTQUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
+    broker_kind: str = BrokerEnum.PERSISTQUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
 
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
 
@@ -145,7 +145,7 @@ class PublisherParams(BaseJsonAbleModel):
     log_filename: typing.Optional[str] = None
     clear_queue_within_init: bool = False
     consuming_function: typing.Callable = None
-    broker_kind: int = None
+    broker_kind: str = None
     broker_exclusive_config: dict = None
 
 

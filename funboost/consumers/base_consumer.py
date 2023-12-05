@@ -26,7 +26,7 @@ import threading
 from threading import Lock
 import asyncio
 
-from funboost.utils.develop_log import develop_logger
+from funboost.core.loggers import develop_logger
 
 from funboost.core.func_params_model import BoosterParams, PublisherParams
 from nb_log import (get_logger, LoggerLevelSetterMixin, LoggerMixin, LogManager, CompatibleLogger,
@@ -295,7 +295,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         logger_name_error = f'{logger_name}_error'
         log_filename_error = f'{logger_name_error}.log'
         if self.consumer_params.log_filename:
-            log_filename_error = f'{self.consumer_params.log_filename.split(",")[0]}_error.{self.consumer_params.log_filename.split(",")[1]}'
+            log_filename_error = f'{self.consumer_params.log_filename.split(".")[0]}_error.{self.consumer_params.log_filename.split(".")[1]}'
         self.error_file_logger = LogManager(logger_name_error, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
             log_level_int=logging.ERROR, log_filename=log_filename_error,
             is_add_stream_handler=False,
@@ -684,7 +684,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             #
             #     os._exit(4)
             function_result_status.success = True
-            develop_logger.warning(self.consumer_params.log_level)
             if self.consumer_params.log_level <= logging.DEBUG:
                 result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '

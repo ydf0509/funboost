@@ -4,8 +4,8 @@ import os
 import types
 import typing
 
-from funboost.core.loggers import booster_logger
-from funboost.utils.develop_log import develop_logger
+from funboost.core.loggers import booster_logger, flogger
+from funboost.core.loggers import develop_logger
 
 import nb_log
 from functools import wraps
@@ -173,7 +173,7 @@ class BoostersManager:
     使用这个类,可以创建booster对象,达到无需使用装饰器的目的.
     """
 
-    logger = nb_log.get_logger('BoostersManager')
+
 
     # pid_queue_name__booster_map字典存放 {(进程id,queue_name):Booster对象}
     pid_queue_name__booster_map = {}  # type: typing.Dict[typing.Tuple[int,str],Booster]
@@ -192,7 +192,7 @@ class BoostersManager:
         queues = []
         for pid_queue_name, booster in cls.pid_queue_name__booster_map.items():
             queues.append(pid_queue_name[1])
-            cls.logger.debug(f'booster: {pid_queue_name[1]}  {booster}')
+            flogger.debug(f'booster: {pid_queue_name[1]}  {booster}')
 
     @classmethod
     def get_all_queues(cls):

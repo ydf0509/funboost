@@ -13,6 +13,8 @@ import importlib
 import json
 from pathlib import Path
 from shutil import copyfile
+
+from funboost.core.loggers import flogger
 from nb_log import nb_print, stderr_write, stdout_write,get_logger
 from nb_log.monkey_print import is_main_process, only_print_on_main_process
 from funboost import funboost_config_deafult
@@ -20,7 +22,7 @@ from funboost import funboost_config_deafult
 
 def show_funboost_flag():
 
-    logger = get_logger('funboost.show_funboost_flag')
+
 
     funboost_flag_str = '''
 
@@ -63,9 +65,9 @@ def show_funboost_flag():
 
     '''
 
-    logger.debug('\033[0m' + funboost_flag_str2 + '\033[0m')
+    flogger.debug('\033[0m' + funboost_flag_str2 + '\033[0m')
 
-    logger.info(f'''分布式函数调度框架funboost文档地址：  \033[0m https://funboost.readthedocs.io/zh/latest/ \033[0m ''')
+    flogger.info(f'''分布式函数调度框架funboost文档地址：  \033[0m https://funboost.readthedocs.io/zh/latest/ \033[0m ''')
 
 show_funboost_flag()
 

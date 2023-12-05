@@ -18,7 +18,7 @@ import amqpstorm
 
 import nb_log
 from funboost.core.func_params_model import PublisherParams, PriorityConsumingControlConfig
-from funboost.utils.develop_log import develop_logger
+from funboost.core.loggers import develop_logger
 
 from pikav1.exceptions import AMQPError as PikaAMQPError
 

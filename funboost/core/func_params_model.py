@@ -27,6 +27,21 @@ class PyDanticModelJsonMixin:
     def json_pre(self):
         return json.dumps(self.get_str_dict(), ensure_ascii=False, indent=4)
 
+    def update_from_dict(self,dictx:dict):
+        for k,v in dictx.items():
+            setattr(self,k,v)
+        return self
+
+    def update_from_kwargs(self,**kwargs):
+        for k,v in kwargs.items():
+            setattr(self,k,v)
+        return self
+
+    def update_from_model(self,modelx:BaseModel):
+        for k,v in modelx.dict().items():
+            setattr(self,k,v)
+        return self
+
 
 class BoosterParams(PyDanticModelJsonMixin, BaseModel, ):
     queue_name: str

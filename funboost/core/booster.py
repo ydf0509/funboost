@@ -22,7 +22,10 @@ class _Undefined:
     pass
 
 
-class Booster:
+booster_logger = nb_log.get_logger('funboost.Booster', log_filename='booster.log')
+
+
+class Booster():
     """
     funboost极其重视代码能在pycharm下自动补全。元编程经常造成在pycharm下代码无法自动补全提示，主要是实现代码补全难。
     这种__call__写法在pycahrm下 不仅能补全消费函数的 push consume等方法，也能补全函数本身的入参，一举两得。代码能自动补全很重要。
@@ -31,71 +34,19 @@ class Booster:
     Booster 是把Consumer 和 Publisher的方法集为一体。
     """
 
-    def __init__(self, boost_params: BoosterParams):
+    def __init__(self, queue_name: typing.Union[BoosterParams, str] = None, *, boost_params: BoosterParams = None, **kwargs):
         """
-           funboost.funboost_config_deafult.BoostDecoratorDefaultParams 的值会自动被你项目根目录下的funboost_config.BoostDecoratorDefaultParams的值覆盖，
-           如果boost装饰器不传参，默认使用funboost_config.BoostDecoratorDefaultParams的配置
+        @boost 这是funboost框架最重要的一个函数，必须看懂里面的入参有哪些。
 
-           入参也可以看文档 https://funboost.readthedocs.io/zh/latest/articles/c3.html   3.3章节。
+        强烈建议所有入参放在 BoosterParams() 中,不要直接在BoosterParams之外传参.现在是兼容老的直接在@boost中传参方式.
 
-           # 为了代码提示好，这里重复一次入参意义。被此装饰器装饰的函数f，函数f对象本身自动加了一些方法，例如f.push 、 f.consume等。
-           :param queue_name: 队列名字。
-           :param consumin_function_decorator : 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
-           :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。设置后代码性能会变差，非必要不要轻易设置。
-           # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
-           # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
-           :param concurrent_num:并发数量
-           :param specify_concurrent_pool:使用指定的线程池（协程池），可以多个消费者共使用一个线程池，不为None时候。threads_num失效
-           :param specify_async_loop:指定的async的loop循环，设置并发模式为async才能起作用。
-           :param concurrent_mode:并发模式，1线程(ConcurrentModeEnum.THREADING) 2gevent(ConcurrentModeEnum.GEVENT)
-                                     3eventlet(ConcurrentModeEnum.EVENTLET) 4 asyncio(ConcurrentModeEnum.ASYNC) 5单线程(ConcurrentModeEnum.SINGLE_THREAD)
-           :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
-                  可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。
-                  主动抛出ExceptionForRequeue异常，则当前 消息会重返中间件，
-                  主动抛出 ExceptionForPushToDlxqueue  异常，可以使消息发送到单独的死信队列中，死信队列的名字是 队列名字 + _dlx。
-                  。
-           :param is_push_to_dlx_queue_when_retry_max_times : 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
-           :param log_level:框架的日志级别。logging.DEBUG(10)  logging.DEBUG(10) logging.INFO(20) logging.WARNING(30) logging.ERROR(40) logging.CRITICAL(50)
-           :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
-           :param is_show_message_get_from_broker: 从中间件取出消息时候时候打印显示出来
-           :param qps:指定1秒内的函数执行次数，例如可以是小数0.01代表每100秒执行一次，也可以是50代表1秒执行50次.为0则不控频。
-           :param msg_expire_senconds:消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
-           :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis统计消费者数量，然后频率平分），默认只对当前实例化的消费者空频有效。
-                   假如实例化了2个qps为10的使用同一队列名的消费者，并且都启动，则每秒运行次数会达到20。如果使用分布式空频则所有消费者加起来的总运行次数是10。
-           :param is_send_consumer_hearbeat_to_redis   是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
-           :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志前缀
-           :param create_logger_file : 是否创建文件日志
-           :param log_filename : 用户可以指定文件日志名字,如果为None,则会自动 消费者class--队列名.log 作为文件日志名字.,日志文件夹位置,是在nb_log_confoig.py中的LOG_PATH
-           :param do_task_filtering :是否执行基于函数参数的任务过滤
-           :param task_filtering_expire_seconds:任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ，
-                  30分钟前发布过1 + 2 的任务，现在仍然执行，
-                  如果是30分钟以内发布过这个任务，则不执行1 + 2，现在把这个逻辑集成到框架，一般用于接口价格缓存。
-           :param is_do_not_run_by_specify_time_effect :是否使不运行的时间段生效
-           :param do_not_run_by_specify_time   :不运行的时间段
-           :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。fun.consume()就阻塞了，这之后的代码不会运行
-           :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。
-                  这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
-           :param user_custom_record_process_info_func  提供一个用户自定义的保存消息处理记录到某个地方例如mysql数据库的函数，函数仅仅接受一个入参，入参类型是 FunctionResultStatus，用户可以打印参数
-           :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。。
-           :param is_support_remote_kill_task 是否支持远程任务杀死功能，如果任务数量少，单个任务耗时长，确实需要远程发送命令来杀死正在运行的函数，才设置为true，否则不建议开启此功能。
-           :param broker_exclusive_config 加上一个不同种类中间件非通用的配置,不同中间件自身独有的配置，不是所有中间件都兼容的配置，因为框架支持30种消息队列，消息队列不仅仅是一般的先进先出queue这么简单的概念，
-                   例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，每一种消息队列都有独特的配置参数意义，可以通过这里传递。
-           :param broker_kind:中间件种类，支持30种消息队列。 入参见 BrokerEnum枚举类的属性。
-           :param boost_decorator_default_params: oostDecoratorDefaultParams是
-                   @boost装饰器默认的全局入参。如果boost没有亲自指定某个入参，就自动使用funboost_config.py的BoostDecoratorDefaultParams中的配置。
-                           如果你嫌弃每个 boost 装饰器相同入参太多重复了，可以在 funboost_config.py 文件中设置boost装饰器的全局默认值。
-                   BoostDecoratorDefaultParams() 实例化时候也可以传递这个boost装饰器任何的入参，BoostDecoratorDefaultParams是个数据类，百度python3.7dataclass的概念，类似。
-
-                   funboost.funboost_config_deafult.BoostDecoratorDefaultParams 的值会自动被你项目根目录下的funboost_config.BoostDecoratorDefaultParams的值覆盖
-
-           """
 
         """
-        这是此框架最重要的一个函数，必须看懂里面的入参有哪些。
-        此函数的入参意义请查看 get_consumer的入参注释。
 
+        """
         '''
-        @boost('queue_test_f01', qps=0.2, broker_kind=2)
+        # @boost('queue_test_f01', qps=0.2, broker_kind=2) # 老的入参方式
+        @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, broker_kind=2)) # 新的入参方式,所有入参放在 最流行的三方包 pydantic model BoosterParams 里面.
         def f(a, b):
             print(a + b)
 
@@ -106,11 +57,31 @@ class Booster:
         # f.multi_process_conusme(8)             # # 这个是新加的方法，细粒度 线程 协程并发 同时叠加8个进程，速度炸裂。主要是无需导入run_consumer_with_multi_process函数。
         '''
         """
+
+        # 以下代码主要是兼容老的在@boost直接传参的方式,强烈建议使用新的入参方式,所有入参放在一个 BoosterParams 中.
         local = copy.deepcopy(locals())
-        if 'queue_name' in locals() or isinstance(boost_params,str):
-            raise BoostDecoParamsIsOldVersion()
-        self.boost_params = boost_params
-        self.queue_name = boost_params.queue_name
+        local_exlude_boost_params = copy.deepcopy(local)
+        local_exlude_boost_params.pop('boost_params')
+        local_exlude_boost_params.pop('self')
+        local_exlude_boost_params.pop('kwargs')
+        local_exlude_boost_params.update(kwargs)
+        # if 'queue_name' in locals() or isinstance(boost_params,str):
+        #     raise BoostDecoParamsIsOldVersion()
+        boost_params_merge = None
+        if isinstance(local['queue_name'], BoosterParams):
+            boost_params_merge = boost_params.copy()
+            # self.boost_params = boost_params
+        elif isinstance(local['queue_name'], str):
+            if boost_params is None:
+                boost_params_merge = BoosterParams(**local_exlude_boost_params)
+            else:
+                boost_params_merge = boost_params.copy()
+                boost_params_merge.update_from_dict(local_exlude_boost_params)
+        boost_params_merge.update_from_dict(local_exlude_boost_params)
+        if boost_params_merge.queue_name is None:
+            raise ValueError('queue_name 没有设置队列名字')
+        self.boost_params = boost_params_merge
+        self.queue_name = boost_params_merge.queue_name
 
     def __str__(self):
         return f'{type(self)}  队列为 {self.queue_name} 函数为 {self.consuming_function} 的 booster'
@@ -126,6 +97,7 @@ class Booster:
         if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], typing.Callable):
             consuming_function = args[0]
             self.boost_params.consuming_function = consuming_function
+            booster_logger.info(f''' {self.boost_params.queue_name} booster 配置是 {self.boost_params.json()}''')
             self.consuming_function = consuming_function
             self.is_decorated_as_consume_function = True
 
@@ -281,7 +253,7 @@ class BoostersManager:
         pid = os.getpid()
         key = (pid, boost_params.queue_name)
         if key in cls.pid_queue_name__booster_map:
-            booster =  cls.pid_queue_name__booster_map[key]
+            booster = cls.pid_queue_name__booster_map[key]
         else:
             if boost_params.consuming_function is None:
                 raise ValueError(f' build_booster 方法的 consuming_function 字段不能为None,必须指定一个函数')

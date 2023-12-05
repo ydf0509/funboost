@@ -19,7 +19,7 @@ from funboost.set_frame_config import show_frame_config
 from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath  # 这是把 dependency_packages_in_pythonpath 添加到 PYTHONPATH了。
 from funboost.utils import monkey_patches
 
-from funboost.core.func_params_model import BoosterParams
+from funboost.core.func_params_model import BoosterParams,FunctionResultStatusPersistanceConfig
 from funboost.funboost_config_deafult import BoostDecoratorDefaultParams, FunboostCommonConfig, BrokerConnConfig
 
 from funboost.core.fabric_deploy_helper import fabric_deploy, kill_all_remote_tasks
@@ -27,7 +27,7 @@ from funboost.utils.paramiko_util import ParamikoFolderUploader
 
 from funboost.consumers.base_consumer import (wait_for_possible_has_finish_all_tasks_by_conusmer_list,
                                               FunctionResultStatus,AbstractConsumer)
-from funboost.core.function_result_status_config import FunctionResultStatusPersistanceConfig
+
 from funboost.core.exceptions import *
 from funboost.core.active_cousumer_info_getter import ActiveCousumerProcessInfoGetter
 from funboost.core.msg_result_getter import HasNotAsyncResult, ResultFromMongo

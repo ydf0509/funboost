@@ -4,6 +4,7 @@ import os
 import types
 import typing
 
+from funboost.core.loggers import booster_logger
 from funboost.utils.develop_log import develop_logger
 
 import nb_log
@@ -11,7 +12,7 @@ from functools import wraps
 
 from funboost.core.exceptions import BoostDecoParamsIsOldVersion
 from funboost.core.func_params_model import BoosterParams
-from funboost.core.function_result_status_config import FunctionResultStatusPersistanceConfig
+from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig
 
 from funboost.funboost_config_deafult import BoostDecoratorDefaultParams
 
@@ -22,7 +23,7 @@ class _Undefined:
     pass
 
 
-booster_logger = nb_log.get_logger('funboost.Booster', log_filename='booster.log')
+
 
 
 class Booster():
@@ -234,11 +235,6 @@ class BoostersManager:
         """
         这个函数是为了在别的进程实例化 booster，consumer和publisher,获取queue_name队列对应的booster的当时的入参。
         有些中间件python包的对中间件连接对象不是多进程安全的，不要在进程2中去操作进程1中生成的booster consumer publisher等对象。
-        """
-
-        """
-        boost_params,consuming_function = get_boost_params_and_consuming_function(queue_name)
-        booster_current_pid = boost(**boost_params)(consuming_function)
         """
         return cls.queue_name__boost_params_map[queue_name]
 

@@ -31,29 +31,4 @@ from nb_log import LoggerMixin
 #         return f'<FunctionResultStatusPersistanceConfig> {id(self)} {self.to_dict()}'
 #
 
-logger = nb_log.get_logger('funboost')
 
-class FunctionResultStatusPersistanceConfig(BaseModel):
-
-    is_save_status: bool
-    is_save_result: bool
-    expire_seconds: int = 7 * 24 * 3600
-    is_use_bulk_insert: bool = False
-
-
-    @validator('expire_seconds')
-    def check_expire_seconds(cls, value):
-        if value > 10 * 24 * 3600:
-            logger.warning(f'你设置的过期时间为 {value} ,设置的时间过长。 ')
-
-    @root_validator(skip_on_failure=True)
-    def cehck_values(cls, values: dict):
-        """
-        :param is_save_status:
-        :param is_save_result:
-        :param expire_seconds: 设置统计的过期时间，在mongo里面自动会移除这些过期的执行记录。
-        :param is_use_bulk_insert : 是否使用批量插入来保存结果，批量插入是每隔0.5秒钟保存一次最近0.5秒内的所有的函数消费状态结果，始终会出现最后0.5秒内的执行结果没及时插入mongo。为False则，每完成一次函数就实时写入一次到mongo。
-        """
-        if not values['is_save_status'] and values['is_save_result']:
-            raise ValueError(f'你设置的是不保存函数运行状态但保存函数运行结果。不允许你这么设置')
-        return values

@@ -13,7 +13,7 @@ import sys
 
 from pymongo import IndexModel, ReplaceOne
 
-from funboost.core.function_result_status_config import FunctionResultStatusPersistanceConfig
+from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig
 from funboost.core.helper_funs import get_publish_time, delete_keys_and_return_new_dict
 from funboost.utils import time_util, decorators
 from funboost.utils.mongo_util import MongoMixin

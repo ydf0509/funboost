@@ -7,43 +7,73 @@ import typing
 
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
 from pydantic import BaseModel, validator, root_validator, PrivateAttr
-from funboost.core.function_result_status_config import FunctionResultStatusPersistanceConfig
+
+from funboost.core.loggers import flogger
+
+BaseModel.json()
 
 
-class PyDanticModelJsonMixin:
+class PydanticModelJsonMixin:
     def get_str_dict(self):
+        """因为model字段包括了 函数,无法json序列化,需要自定义json序列化"""
         model_dict: dict = self.dict()  # noqa
         model_dict_copy = copy.deepcopy(model_dict)
         for k, v in model_dict.items():
-            if isinstance(v, typing.Callable):
+            if isinstance(v, typing.Callable) and not isinstance(v, BaseModel):
                 model_dict_copy[k] = str(v)
         return model_dict_copy
 
-    def json(self, **dumps_kwargs: typing.Any):
-        # 创建一个字典表示模型字段和对应值
-        # 使用 json.dumps() 方法进行序列化
+    def json(self, *,
+             include=None,
+             exclude=None,
+             by_alias: bool = False,
+             skip_defaults: bool = None,
+             exclude_unset: bool = False,
+             exclude_defaults: bool = False,
+             exclude_none: bool = False,
+             encoder=None,
+             models_as_dict: bool = True,
+             **dumps_kwargs: typing.Any) -> str:
         return json.dumps(self.get_str_dict(), **dumps_kwargs)
 
     def json_pre(self):
         return json.dumps(self.get_str_dict(), ensure_ascii=False, indent=4)
 
-    def update_from_dict(self,dictx:dict):
-        for k,v in dictx.items():
-            setattr(self,k,v)
+    def update_from_dict(self, dictx: dict):
+        for k, v in dictx.items():
+            setattr(self, k, v)
         return self
 
-    def update_from_kwargs(self,**kwargs):
-        for k,v in kwargs.items():
-            setattr(self,k,v)
+    def update_from_kwargs(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
         return self
 
-    def update_from_model(self,modelx:BaseModel):
-        for k,v in modelx.dict().items():
-            setattr(self,k,v)
+    def update_from_model(self, modelx: BaseModel):
+        for k, v in modelx.dict().items():
+            setattr(self, k, v)
         return self
 
 
-class BoosterParams(PyDanticModelJsonMixin, BaseModel, ):
+class FunctionResultStatusPersistanceConfig(PydanticModelJsonMixin, BaseModel):
+    is_save_status: bool  # 是否保存函数的运行状态信息
+    is_save_result: bool  # 是否保存函数的运行结果
+    expire_seconds: int = 7 * 24 * 3600  # mongo中的函数运行状态保存多久时间,自动过期
+    is_use_bulk_insert: bool = False  # 是否使用批量插入来保存结果，批量插入是每隔0.5秒钟保存一次最近0.5秒内的所有的函数消费状态结果，始终会出现最后0.5秒内的执行结果没及时插入mongo。为False则，每完成一次函数就实时写入一次到mongo。
+
+    @validator('expire_seconds')
+    def check_expire_seconds(cls, value):
+        if value > 10 * 24 * 3600:
+            flogger.warning(f'你设置的过期时间为 {value} ,设置的时间过长。 ')
+
+    @root_validator(skip_on_failure=True)
+    def cehck_values(cls, values: dict):
+        if not values['is_save_status'] and values['is_save_result']:
+            raise ValueError(f'你设置的是不保存函数运行状态但保存函数运行结果。不允许你这么设置')
+        return values
+
+
+class BoosterParams(PydanticModelJsonMixin, BaseModel, ):
     queue_name: str
     concurrent_mode: int = ConcurrentModeEnum.THREADING
     concurrent_num: int = 50
@@ -61,8 +91,8 @@ class BoosterParams(PyDanticModelJsonMixin, BaseModel, ):
 
     log_level: int = logging.DEBUG
     logger_prefix: str = ''
-    create_logger_file :bool= True
-    log_filename: typing.Union[str,None] = None
+    create_logger_file: bool = True
+    log_filename: typing.Union[str, None] = None
     is_show_message_get_from_broker: bool = False
     is_print_detail_exception: bool = True
 
@@ -71,7 +101,7 @@ class BoosterParams(PyDanticModelJsonMixin, BaseModel, ):
     do_task_filtering: bool = False
     task_filtering_expire_seconds: int = 0
 
-    function_result_status_persistance_conf :FunctionResultStatusPersistanceConfig= FunctionResultStatusPersistanceConfig(is_save_result=False, is_save_status=False, expire_seconds=70 * 24 * 3600)
+    function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=False, is_save_status=False, expire_seconds=70 * 24 * 3600)
     user_custom_record_process_info_func: typing.Callable = None
 
     is_using_rpc_mode: bool = False
@@ -89,14 +119,6 @@ class BoosterParams(PyDanticModelJsonMixin, BaseModel, ):
     broker_kind: int = BrokerEnum.PERSISTQUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
 
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
-    # class Config:
-    #     json_encoders = {
-    #         typing.Callable: lambda v: str(v)  # 自定义 函数 类型的序列化逻辑
-    #     }
-    #     underscore_attrs_are_private = True
-    #
-    # _where_to_instantiate: str = None
-    # _lock = PrivateAttr(default_factory=Lock)
 
 
 class PriorityConsumingControlConfig(BaseModel):
@@ -124,7 +146,7 @@ class PriorityConsumingControlConfig(BaseModel):
         return values
 
 
-class PublisherParams(PyDanticModelJsonMixin, BaseModel):
+class PublisherParams(PydanticModelJsonMixin, BaseModel):
     queue_name: str
     log_level: int = logging.DEBUG
     logger_prefix: str = ''
@@ -137,6 +159,6 @@ class PublisherParams(PyDanticModelJsonMixin, BaseModel):
 
 
 if __name__ == '__main__':
-    print(FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=70 * 24 * 3600))
+    print(FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=70 * 24 * 3600).update_from_kwargs(expire_seconds=100))
 
     print(PriorityConsumingControlConfig().dict())

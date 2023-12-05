@@ -1,6 +1,5 @@
 import nb_log
-
-logger = nb_log.get_logger('funboost.show_funboost_flag')
+from funboost.core.loggers import flogger
 
 funboost_flag_str = '''
 
@@ -43,6 +42,6 @@ funboost_flag_str2 = r'''
 
 '''
 
-logger.debug('\033[0m' + funboost_flag_str2 + '\033[0m')
+flogger.debug('\033[0m' + funboost_flag_str2 + '\033[0m')
 
-logger.info(f'''分布式函数调度框架funboost文档地址：  \033[0m https://funboost.readthedocs.io/zh/latest/ \033[0m ''')
+flogger.info(f'''分布式函数调度框架funboost文档地址：  \033[0m https://funboost.readthedocs.io/zh/latest/ \033[0m ''')

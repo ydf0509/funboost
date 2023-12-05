@@ -37,11 +37,9 @@ class Booster():
 
     def __init__(self, queue_name: typing.Union[BoosterParams, str] = None, *, boost_params: BoosterParams = None, **kwargs):
         """
-        @boost 这是funboost框架最重要的一个函数，必须看懂里面的入参有哪些。
+        @boost 这是funboost框架最重要的一个函数，必须看懂BoosterParams里面的入参有哪些。
 
         强烈建议所有入参放在 BoosterParams() 中,不要直接在BoosterParams之外传参.现在是兼容老的直接在@boost中传参方式.
-
-
         """
 
         """
@@ -98,7 +96,7 @@ class Booster():
         if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], typing.Callable):
             consuming_function = args[0]
             self.boost_params.consuming_function = consuming_function
-            booster_logger.info(f''' {self.boost_params.queue_name} booster 配置是 {self.boost_params.json_str_value()}''')
+            booster_logger.info(f''' {self.boost_params.queue_name} booster 配置是 {self.boost_params.dict()}''')
             self.consuming_function = consuming_function
             self.is_decorated_as_consume_function = True
 

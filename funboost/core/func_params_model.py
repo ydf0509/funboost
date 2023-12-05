@@ -153,4 +153,3 @@ if __name__ == '__main__':
     print(FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=70 * 24 * 3600).update_from_kwargs(expire_seconds=100))
 
     print(PriorityConsumingControlConfig().dict())
-

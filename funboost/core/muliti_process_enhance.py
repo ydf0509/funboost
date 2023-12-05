@@ -7,8 +7,8 @@ from concurrent.futures import ProcessPoolExecutor
 import nb_log
 from funboost.core.booster import Booster
 from funboost.core.helper_funs import run_forever
+from funboost.core.loggers import flogger
 
-logger = nb_log.get_logger(__name__)
 
 
 def _run_consumer_in_new_process(queue_name, ):
@@ -74,4 +74,4 @@ def multi_process_pub_params_list(booster: Booster, params_list, process_num=16)
             # print(msgs)
             pool.submit(_multi_process_pub_params_list_in_new_process, booster.queue_name,
                         msgs)
-    logger.info(f'\n 通过 multi_process_pub_params_list 多进程子进程的发布方式，发布了 {params_list_len} 个任务。耗时 {time.time() - t0} 秒')
+    flogger.info(f'\n 通过 multi_process_pub_params_list 多进程子进程的发布方式，发布了 {params_list_len} 个任务。耗时 {time.time() - t0} 秒')

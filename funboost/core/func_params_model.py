@@ -10,31 +10,19 @@ from pydantic import BaseModel, validator, root_validator, PrivateAttr
 
 from funboost.core.loggers import flogger
 
-BaseModel.json()
 
-
-class PydanticModelJsonMixin:
+class BaseJsonAbleModel(BaseModel):
     def get_str_dict(self):
         """因为model字段包括了 函数,无法json序列化,需要自定义json序列化"""
         model_dict: dict = self.dict()  # noqa
         model_dict_copy = copy.deepcopy(model_dict)
         for k, v in model_dict.items():
-            if isinstance(v, typing.Callable) and not isinstance(v, BaseModel):
+            if isinstance(v, typing.Callable):
                 model_dict_copy[k] = str(v)
         return model_dict_copy
 
-    def json(self, *,
-             include=None,
-             exclude=None,
-             by_alias: bool = False,
-             skip_defaults: bool = None,
-             exclude_unset: bool = False,
-             exclude_defaults: bool = False,
-             exclude_none: bool = False,
-             encoder=None,
-             models_as_dict: bool = True,
-             **dumps_kwargs: typing.Any) -> str:
-        return json.dumps(self.get_str_dict(), **dumps_kwargs)
+    def json_str_value(self):
+        return json.dumps(self.get_str_dict(), ensure_ascii=False, )
 
     def json_pre(self):
         return json.dumps(self.get_str_dict(), ensure_ascii=False, indent=4)
@@ -55,7 +43,7 @@ class PydanticModelJsonMixin:
         return self
 
 
-class FunctionResultStatusPersistanceConfig(PydanticModelJsonMixin, BaseModel):
+class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
     is_save_status: bool  # 是否保存函数的运行状态信息
     is_save_result: bool  # 是否保存函数的运行结果
     expire_seconds: int = 7 * 24 * 3600  # mongo中的函数运行状态保存多久时间,自动过期
@@ -73,14 +61,17 @@ class FunctionResultStatusPersistanceConfig(PydanticModelJsonMixin, BaseModel):
         return values
 
 
-class BoosterParams(PydanticModelJsonMixin, BaseModel, ):
+class BoosterParams(BaseJsonAbleModel):
     queue_name: str
+
     concurrent_mode: int = ConcurrentModeEnum.THREADING
     concurrent_num: int = 50
     specify_concurrent_pool: typing.Callable = None
     specify_async_loop: typing.Callable = None
+
     qps: float = 0
     is_using_distributed_frequency_control: bool = False
+
     is_send_consumer_hearbeat_to_redis: bool = False
 
     max_retry_times: int = 3
@@ -121,7 +112,7 @@ class BoosterParams(PydanticModelJsonMixin, BaseModel, ):
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
 
 
-class PriorityConsumingControlConfig(BaseModel):
+class PriorityConsumingControlConfig(BaseJsonAbleModel):
     """
     为每个独立的任务设置控制参数，和函数参数一起发布到中间件。可能有少数时候有这种需求。
     例如消费为add函数，可以每个独立的任务设置不同的超时时间，不同的重试次数，是否使用rpc模式。这里的配置优先，可以覆盖生成消费者时候的配置。
@@ -146,7 +137,7 @@ class PriorityConsumingControlConfig(BaseModel):
         return values
 
 
-class PublisherParams(PydanticModelJsonMixin, BaseModel):
+class PublisherParams(BaseJsonAbleModel):
     queue_name: str
     log_level: int = logging.DEBUG
     logger_prefix: str = ''
@@ -162,3 +153,4 @@ if __name__ == '__main__':
     print(FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=70 * 24 * 3600).update_from_kwargs(expire_seconds=100))
 
     print(PriorityConsumingControlConfig().dict())
+

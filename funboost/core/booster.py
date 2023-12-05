@@ -98,7 +98,7 @@ class Booster():
         if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], typing.Callable):
             consuming_function = args[0]
             self.boost_params.consuming_function = consuming_function
-            booster_logger.info(f''' {self.boost_params.queue_name} booster 配置是 {self.boost_params.json()}''')
+            booster_logger.info(f''' {self.boost_params.queue_name} booster 配置是 {self.boost_params.json_str_value()}''')
             self.consuming_function = consuming_function
             self.is_decorated_as_consume_function = True
 

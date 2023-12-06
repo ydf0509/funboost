@@ -270,7 +270,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._has_start_delay_task_scheduler = False
         self._consuming_function_is_asyncio = inspect.iscoroutinefunction(self.consuming_function)
         self.custom_init()
-        develop_logger.warning(consumer_params.log_filename)
+        # develop_logger.warning(consumer_params.log_filename)
         self.publisher_params = PublisherParams(queue_name=consumer_params.queue_name, consuming_function=consumer_params.consuming_function,
                                                 broker_kind=self.BROKER_KIND, log_level=consumer_params.log_level,
                                                 logger_prefix=consumer_params.logger_prefix,
@@ -287,13 +287,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             logger_prefix += '--'
             # logger_name = f'{logger_prefix}{self.__class__.__name__}--{concurrent_name}--{queue_name}--{self.consuming_function.__name__}'
         logger_name = f'{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
-        log_filename = self.consumer_params.log_filename or f'{logger_name}.log'
+        log_filename = self.consumer_params.log_filename or f'funboost.{self.queue_name}.log'
         self.logger = LogManager(logger_name, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
             log_level_int=self.consumer_params.log_level, log_filename=log_filename if self.consumer_params.create_logger_file else None,
             formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
 
         logger_name_error = f'{logger_name}_error'
-        log_filename_error = f'{logger_name_error}.log'
+        log_filename_error = f'funboost.{self.queue_name}_error.log'
         if self.consumer_params.log_filename:
             log_filename_error = f'{self.consumer_params.log_filename.split(".")[0]}_error.{self.consumer_params.log_filename.split(".")[1]}'
         self.error_file_logger = LogManager(logger_name_error, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
@@ -384,7 +384,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         except BaseException:
             traceback.print_exc()
             os._exit(4444)  # noqa
-        self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
+        self.logger.info(f'开始消费 {self._queue_name} 中的消息')
         self._result_persistence_helper = ResultPersistenceHelper(self.consumer_params.function_result_status_persistance_conf, self.queue_name)
 
         self._distributed_consumer_statistics = DistributedConsumerStatistics(self)
@@ -977,7 +977,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
         elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
             from funboost.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco
             self.timeout_deco = evenlet_timeout_deco
-        self.logger.warning(f'{self.consumer} 设置并发模式 {self.consumer.consumer_params.concurrent_mode}')
+        self.logger.info(f'{self.consumer} 设置并发模式 {self.consumer.consumer_params.concurrent_mode}')
 
     def check_all_concurrent_mode(self):
         if GlobalConcurrentModeManager.global_concurrent_mode is not None and \

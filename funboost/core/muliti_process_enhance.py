@@ -4,7 +4,6 @@ from multiprocessing import Process
 import time
 from typing import List
 from concurrent.futures import ProcessPoolExecutor
-import nb_log
 from funboost.core.booster import Booster
 from funboost.core.helper_funs import run_forever
 from funboost.core.loggers import flogger

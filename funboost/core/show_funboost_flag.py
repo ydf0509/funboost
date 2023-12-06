@@ -1,4 +1,4 @@
-import nb_log
+
 from funboost.core.loggers import flogger
 
 funboost_flag_str = '''

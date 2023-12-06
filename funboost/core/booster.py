@@ -14,16 +14,11 @@ from funboost.core.exceptions import BoostDecoParamsIsOldVersion
 from funboost.core.func_params_model import BoosterParams
 from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig
 
-from funboost.funboost_config_deafult import BoostDecoratorDefaultParams
-
 from funboost.factories.consumer_factory import get_consumer
 
 
 class _Undefined:
     pass
-
-
-
 
 
 class Booster():
@@ -53,7 +48,7 @@ class Booster():
             f.pub(dict(a=i, b=i * 2))
             f.push(i, i * 2)
         f.consume()
-        # f.multi_process_conusme(8)             # # 这个是新加的方法，细粒度 线程 协程并发 同时叠加8个进程，速度炸裂。主要是无需导入run_consumer_with_multi_process函数。
+        # f.multi_process_conusme(8)             # # 这个是新加的方法，细粒度 线程 协程并发 同时叠加8个进程，速度炸裂。
         '''
         """
 
@@ -66,6 +61,8 @@ class Booster():
         local_exlude_boost_params.update(kwargs)
         # if 'queue_name' in locals() or isinstance(boost_params,str):
         #     raise BoostDecoParamsIsOldVersion()
+        if  isinstance(local['queue_name'],str) or kwargs:
+            flogger.warning(f''' 警告!!! 强烈建议@boost值传递一个 BoosterParams pydantic model 类型的入参,不要直接在@boost函数传递入参 ''')
         boost_params_merge = None
         if isinstance(local['queue_name'], BoosterParams):
             boost_params_merge = boost_params.copy()
@@ -173,8 +170,6 @@ class BoostersManager:
     使用这个类,可以创建booster对象,达到无需使用装饰器的目的.
     """
 
-
-
     # pid_queue_name__booster_map字典存放 {(进程id,queue_name):Booster对象}
     pid_queue_name__booster_map = {}  # type: typing.Dict[typing.Tuple[int,str],Booster]
 
@@ -251,6 +246,6 @@ class BoostersManager:
         else:
             if boost_params.consuming_function is None:
                 raise ValueError(f' build_booster 方法的 consuming_function 字段不能为None,必须指定一个函数')
-            cls.logger.info(f'创建booster {boost_params} {boost_params.consuming_function}')
+            flogger.info(f'创建booster {boost_params} {boost_params.consuming_function}')
             booster = Booster(boost_params)(boost_params.consuming_function)
         return booster

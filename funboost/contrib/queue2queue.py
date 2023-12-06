@@ -11,8 +11,8 @@ from funboost.core.func_params_model import PublisherParams, BoosterParams
 """ 将队列中的消息移到另一个队列名中，例如把死信队列的消息移到正常队列。"""
 
 
-def consume_and_push_to_another_queue(source_queue_name: str, source_broker_kind: int,
-                                      target_queue_name: str, target_broker_kind: int,
+def consume_and_push_to_another_queue(source_queue_name: str, source_broker_kind: str,
+                                      target_queue_name: str, target_broker_kind: str,
                                       log_level: int = logging.DEBUG,
                                       exit_script_when_finish=False):
     """ 将队列中的消息移到另一个队列名中，例如把死信队列的消息移到正常队列。"""
@@ -39,8 +39,8 @@ def consume_and_push_to_another_queue(source_queue_name: str, source_broker_kind
         os._exit(888)  # 结束脚本
 
 
-def _consume_and_push_to_another_queue_for_multi_process(source_queue_name: str, source_broker_kind: int,
-                                                         target_queue_name: str, target_broker_kind: int,
+def _consume_and_push_to_another_queue_for_multi_process(source_queue_name: str, source_broker_kind: str,
+                                                         target_queue_name: str, target_broker_kind: str,
                                                          log_level: int = logging.DEBUG,
                                                          ):
     consume_and_push_to_another_queue(source_queue_name, source_broker_kind, target_queue_name, target_broker_kind, log_level, False)

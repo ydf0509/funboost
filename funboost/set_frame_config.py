@@ -107,8 +107,8 @@ def show_frame_config():
         {funboost_config_deafult.FunboostCommonConfig().get_json()}
         ''')
 
-    only_print_on_main_process(f'读取的 BoostDecoratorDefaultParams 默认 @boost 装饰器入参的默认全局配置是： \n  '
-                               f'{funboost_config_deafult.BoostDecoratorDefaultParams().get_json()}')
+    # only_print_on_main_process(f'读取的 BoostDecoratorDefaultParams 默认 @boost 装饰器入参的默认全局配置是： \n  '
+    #                            f'{funboost_config_deafult.BoostDecoratorDefaultParams().get_json()}')
 
 
 def use_config_form_funboost_config_module():

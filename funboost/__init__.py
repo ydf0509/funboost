@@ -20,7 +20,7 @@ from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath  
 from funboost.utils import monkey_patches
 
 from funboost.core.func_params_model import BoosterParams,FunctionResultStatusPersistanceConfig
-from funboost.funboost_config_deafult import BoostDecoratorDefaultParams, FunboostCommonConfig, BrokerConnConfig
+from funboost.funboost_config_deafult import FunboostCommonConfig, BrokerConnConfig
 
 from funboost.core.fabric_deploy_helper import fabric_deploy, kill_all_remote_tasks
 from funboost.utils.paramiko_util import ParamikoFolderUploader
@@ -43,7 +43,7 @@ from funboost.constant import BrokerEnum, ConcurrentModeEnum
 from funboost.core.booster import boost, Booster, BoostersManager
 # from funboost.core.get_booster import get_booster, get_or_create_booster, get_boost_params_and_consuming_function
 from funboost.core.kill_remote_task import RemoteTaskKiller
-from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig, BoostDecoratorDefaultParams
+from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
 from funboost.core.cli.discovery_boosters import BoosterDiscovery
 
 # from funboost.core.exit_signal import set_interrupt_signal_handler

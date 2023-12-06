@@ -1,18 +1,13 @@
 import nb_log
-from nb_log import get_logger,LoggerLevelSetterMixin,nb_log_config_default
+from nb_log import get_logger, LoggerLevelSetterMixin, nb_log_config_default
 import logging
 
 LOG_FILE_NAME = 'funboost.log'
 
-flogger = get_logger('funboost', log_filename=LOG_FILE_NAME)
-
-# 开发时候的调试日志，比print方便通过级别一键屏蔽。
-develop_logger = nb_log.get_logger('funboost_develop', log_level_int=logging.WARNING, log_filename='funboost_develop.log')
-
 
 def get_funboost_file_logger(name, *, log_level_int: int = None, **kwargs):
     kwargs['log_filename'] = LOG_FILE_NAME
-    return nb_log.get_logger(name, log_level_int=log_level_int, **kwargs,)
+    return nb_log.get_logger(name, log_level_int=log_level_int, **kwargs, )
 
 
 class FunboostFileLoggerMixin(nb_log.LoggerMixin):
@@ -34,6 +29,11 @@ class MetaTypeFileLogger(type):
         super().__init__(name, bases, attrs)
         cls.logger = get_funboost_file_logger(name)
 
+
+flogger = get_funboost_file_logger('funboost', )
+
+# 开发时候的调试日志，比print方便通过级别一键屏蔽。
+develop_logger = get_logger('funboost_develop', log_level_int=logging.WARNING, log_filename='funboost_develop.log')
 
 if __name__ == '__main__':
     logger1 = get_funboost_file_logger('name1')

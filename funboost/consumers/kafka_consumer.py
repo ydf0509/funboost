@@ -11,10 +11,10 @@ from kafka.errors import TopicAlreadyExistsError
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.funboost_config_deafult import BrokerConnConfig
-from nb_log import get_logger, LogManager
-
+# from nb_log import get_logger
+from funboost.core.loggers import get_funboost_file_logger
 # LogManager('kafka').get_logger_and_add_handlers(30)
-get_logger('kafka', log_level_int=30)
+get_funboost_file_logger('kafka', log_level_int=30)
 
 
 class KafkaConsumer(AbstractConsumer):

@@ -5,16 +5,17 @@ import os
 import functools
 import json
 from threading import Lock
-from nb_log import LogManager, get_logger
-from funboost.constant import BrokerEnum
-from funboost.publishers.base_publisher import deco_mq_conn_error
+# # from nb_log import LogManager, get_logger
+# from funboost.constant import BrokerEnum
+# from funboost.publishers.base_publisher import deco_mq_conn_error
+from funboost.core.loggers import get_funboost_file_logger
 import pikav1.exceptions
 from pikav1.exceptions import AMQPError
 import pikav1
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.funboost_config_deafult import BrokerConnConfig
 
-get_logger('pikav1', log_level_int=20)
+get_funboost_file_logger('pikav1', log_level_int=20)
 
 
 class RabbitmqConsumer(AbstractConsumer):

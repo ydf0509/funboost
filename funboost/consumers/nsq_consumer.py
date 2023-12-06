@@ -6,9 +6,10 @@ from gnsq import Consumer, Message
 from funboost.constant import BrokerEnum
 from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.consumers.base_consumer import AbstractConsumer
-from nb_log import LogManager
+# from nb_log import LogManager
+from funboost.core.loggers import get_funboost_file_logger
 
-LogManager('gnsq').get_logger_and_add_handlers(20)
+get_funboost_file_logger('gnsq',log_level_int=20)
 
 
 class NsqConsumer(AbstractConsumer):

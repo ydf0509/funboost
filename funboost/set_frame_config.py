@@ -15,7 +15,7 @@ from pathlib import Path
 from shutil import copyfile
 
 from funboost.core.loggers import flogger
-from nb_log import nb_print, stderr_write, stdout_write,get_logger
+from nb_log import nb_print, stderr_write, stdout_write
 from nb_log.monkey_print import is_main_process, only_print_on_main_process
 from funboost import funboost_config_deafult
 

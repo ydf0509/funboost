@@ -22,8 +22,8 @@ from funboost.core.loggers import develop_logger
 
 from pikav1.exceptions import AMQPError as PikaAMQPError
 
-from nb_log import LoggerLevelSetterMixin, LoggerMixin
-
+# from nb_log import LoggerLevelSetterMixin, LoggerMixin
+from funboost.core.loggers import LoggerLevelSetterMixin,FunboostFileLoggerMixin
 from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
 from funboost.utils import decorators, time_util
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
@@ -97,7 +97,7 @@ RedisAioAsyncResult = AioAsyncResult  # 别名
 #         return priority_consuming_control_config_dict
 
 
-class PublishParamsChecker(LoggerMixin):
+class PublishParamsChecker(FunboostFileLoggerMixin):
     """
     发布的任务的函数参数检查，使发布的任务在消费时候不会出现低级错误。
     """

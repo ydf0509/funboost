@@ -29,9 +29,10 @@ import asyncio
 from funboost.core.loggers import develop_logger
 
 from funboost.core.func_params_model import BoosterParams, PublisherParams
-from nb_log import (get_logger, LoggerLevelSetterMixin, LoggerMixin, LogManager, CompatibleLogger,
+from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, CompatibleLogger,
                     LoggerMixinDefaultWithFileHandler, stdout_write, is_main_process,
                     nb_log_config_default)
+from funboost.core.loggers import FunboostFileLoggerMixin
 
 from apscheduler.jobstores.redis import RedisJobStore
 
@@ -168,7 +169,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         while 1:
             time.sleep(10)
 
-
     def __init__(self, consumer_params: BoosterParams):
 
         """
@@ -207,7 +207,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._build_logger()
         stdout_write(f'''{time.strftime("%H:%M:%S")} "{self.consumer_params.auto_generate_info['where_to_instantiate']}"  \033[0;37;44m此行 实例化队列名 {self.queue_name} 的消费者, 类型为 {self.__class__}\033[0m\n''')
         # only_print_on_main_process(f'{current_queue__info_dict["queue_name"]} 的消费者配置:\n', un_strict_json_dumps.dict2json(current_queue__info_dict))
-
 
         # self._do_task_filtering = consumer_params.do_task_filtering
         # self.consumer_params.is_show_message_get_from_broker = consumer_params.is_show_message_get_from_broker
@@ -962,7 +961,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
 
 # noinspection PyProtectedMember
-class ConcurrentModeDispatcher(LoggerMixin):
+class ConcurrentModeDispatcher(FunboostFileLoggerMixin):
 
     def __init__(self, consumerx: AbstractConsumer):
         self.consumer = consumerx
@@ -1023,7 +1022,7 @@ class ConcurrentModeDispatcher(LoggerMixin):
                 self.consumer.consumer_params.concurrent_num, loop=self.consumer.consumer_params.specify_async_loop)
         else:
             # print(pool_type)
-            self.consumer._concurrent_pool = self.consumer.consumer_params.specify_concurrent_pool or pool_type( self.consumer.consumer_params.concurrent_num)
+            self.consumer._concurrent_pool = self.consumer.consumer_params.specify_concurrent_pool or pool_type(self.consumer.consumer_params.concurrent_num)
         # print(self._concurrent_mode,self.consumer._concurrent_pool)
         return self.consumer._concurrent_pool
 
@@ -1066,7 +1065,7 @@ def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typin
             pool.submit(consumer.wait_for_possible_has_finish_all_tasks(minutes))
 
 
-class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandler):
+class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
     """
     为了兼容模拟mq的中间件（例如redis，他没有实现amqp协议，redis的list结构和真mq差远了），获取一个队列有几个连接活跃消费者数量。
     分布式环境中的消费者统计。主要目的有3点

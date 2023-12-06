@@ -9,10 +9,10 @@ from fabric2 import Connection
 # from funboost.core.booster import Booster
 from funboost.utils.paramiko_util import ParamikoFolderUploader
 
-import nb_log
-
+# import nb_log
+from funboost.core.loggers import get_funboost_file_logger
 from funboost.core.booster import Booster
-logger = nb_log.get_logger(__name__)
+logger = get_funboost_file_logger(__name__)
 
 
 # noinspection PyDefaultArgument

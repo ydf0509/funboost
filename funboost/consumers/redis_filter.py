@@ -12,12 +12,12 @@ from collections import OrderedDict
 import typing
 
 from funboost.utils import  decorators
-from nb_log import LoggerMixinDefaultWithFileHandler
+from funboost.core.loggers import FunboostFileLoggerMixin
 
 from funboost.utils.redis_manager import RedisMixin
 
 
-class RedisFilter(RedisMixin, LoggerMixinDefaultWithFileHandler):
+class RedisFilter(RedisMixin, FunboostFileLoggerMixin):
     """
     使用set结构，
     基于函数参数的任务过滤。这个是永久性的过滤，除非自己手动删除这个键。

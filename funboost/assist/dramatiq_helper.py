@@ -1,5 +1,5 @@
 import argparse
-import nb_log
+from funboost.core.loggers import MetaTypeFileLogger
 import dramatiq
 from dramatiq.cli import main
 from funboost.funboost_config_deafult import BrokerConnConfig
@@ -19,8 +19,8 @@ dramatiq.set_broker(broker)
 """
 
 
-class DramatiqHelper:
-    logger = nb_log.get_logger('funboost.DramatiqHelper')
+class DramatiqHelper(metaclass=MetaTypeFileLogger):
+
     broker = dramatiq.get_broker()
     to_be_start_work_celery_queue_name_set = set()  # 存放需要worker运行的queue name。
 

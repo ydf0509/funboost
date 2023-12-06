@@ -9,9 +9,9 @@ from concurrent.futures import ThreadPoolExecutor, Future
 # noinspection PyProtectedMember
 from concurrent.futures.thread import _WorkItem  # noqa
 
-from nb_log import LogManager
+from funboost.core.loggers import get_funboost_file_logger
 
-logger = LogManager('BoundedThreadPoolExecutor').get_logger_and_add_handlers()
+logger = get_funboost_file_logger('BoundedThreadPoolExecutor')
 
 
 def _deco(f):

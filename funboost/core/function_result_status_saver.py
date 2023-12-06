@@ -17,8 +17,8 @@ from funboost.core.func_params_model import FunctionResultStatusPersistanceConfi
 from funboost.core.helper_funs import get_publish_time, delete_keys_and_return_new_dict
 from funboost.utils import time_util, decorators
 from funboost.utils.mongo_util import MongoMixin
-from nb_log import LoggerMixin, LoggerLevelSetterMixin
-
+# from nb_log import LoggerMixin
+from funboost.core.loggers import FunboostFileLoggerMixin
 
 
 class FunctionResultStatus():
@@ -93,7 +93,7 @@ class FunctionResultStatus():
         return f'''{self.__class__}   {json.dumps(self.get_status_dict(), ensure_ascii=False)}'''
 
 
-class ResultPersistenceHelper(MongoMixin, LoggerMixin):
+class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):
     TASK_STATUS_DB = 'task_status'
 
     def __init__(self, function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig, queue_name):

@@ -13,10 +13,9 @@ from kombu.transport.virtual.base import Message
 from kombu.transport import redis
 from kombu.transport.redis import Empty
 
-from nb_log import get_logger
-from funboost.constant import BrokerEnum
+
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
+from funboost.funboost_config_deafult import BrokerConnConfig
 
 def patch_kombu_redis000():
     # 这个也可以，代码长了一点。

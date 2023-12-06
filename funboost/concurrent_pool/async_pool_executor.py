@@ -6,7 +6,7 @@ import threading
 import time
 import traceback
 from threading import Thread
-import nb_log  # noqa
+from funboost.core.loggers import FunboostFileLoggerMixin
 
 # if os.name == 'posix':
 #     import uvloop
@@ -43,7 +43,7 @@ if __name__ == '__main__':
 """
 
 
-class AsyncPoolExecutorLtPy310(nb_log.LoggerMixin):
+class AsyncPoolExecutorLtPy310(FunboostFileLoggerMixin):
     """
     使api和线程池一样，最好的性能做法是submit也弄成 async def，生产和消费在同一个线程同一个loop一起运行，但会对调用链路的兼容性产生破坏，从而调用方式不兼容线程池。
     """

@@ -6,8 +6,7 @@ import time
 import warnings
 from eventlet import greenpool, monkey_patch, patcher, Timeout
 
-from nb_log import LogManager, nb_print
-
+from funboost.core.loggers import get_funboost_file_logger
 # print('eventlet 导入')
 
 def check_evenlet_monkey_patch(raise_exc=True):
@@ -19,7 +18,7 @@ def check_evenlet_monkey_patch(raise_exc=True):
         return 1
 
 
-logger_evenlet_timeout_deco = LogManager('evenlet_timeout_deco').get_logger_and_add_handlers()
+logger_evenlet_timeout_deco = get_funboost_file_logger('evenlet_timeout_deco')
 
 
 def evenlet_timeout_deco(timeout_t):
@@ -67,11 +66,11 @@ if __name__ == '__main__':
     def f2(x):
 
         time.sleep(2)
-        nb_print(x)
+        print(x)
 
 
     pool = CustomEventletPoolExecutor(4)
 
     for i in range(15):
-        nb_print(f'放入{i}')
+        print(f'放入{i}')
         pool.submit(evenlet_timeout_deco(8)(f2), i)

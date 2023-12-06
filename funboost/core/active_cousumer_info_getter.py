@@ -2,10 +2,10 @@ import json
 import typing
 
 from funboost.utils.redis_manager import RedisMixin
-from nb_log import LoggerMixinDefaultWithFileHandler, nb_log_config_default
 
+from funboost.core.loggers import FunboostFileLoggerMixin,nb_log_config_default
 
-class ActiveCousumerProcessInfoGetter(RedisMixin, LoggerMixinDefaultWithFileHandler):
+class ActiveCousumerProcessInfoGetter(RedisMixin, FunboostFileLoggerMixin):
     """
 
     获取分布式环境中的消费进程信息。

@@ -15,10 +15,10 @@ import threading
 from functools import wraps
 
 import nb_log
-from nb_log import LoggerMixin, LoggerLevelSetterMixin
 
+from funboost.core.loggers import FunboostFileLoggerMixin,LoggerLevelSetterMixin,MetaTypeFileLogger
 
-class FlexibleThreadPool(LoggerMixin, LoggerLevelSetterMixin):
+class FlexibleThreadPool(FunboostFileLoggerMixin, LoggerLevelSetterMixin):
     KEEP_ALIVE_TIME = 10
     MIN_WORKERS = 2
 
@@ -91,9 +91,7 @@ def sync_or_async_fun_deco(func):
 
 
 # noinspection PyProtectedMember
-class _KeepAliveTimeThread(threading.Thread):
-    logger = nb_log.get_logger('_KeepAliveTimeThread', log_level_int=10)
-
+class _KeepAliveTimeThread(threading.Thread,metaclass=MetaTypeFileLogger):
     def __init__(self, thread_pool: FlexibleThreadPool):
         super().__init__()
         self.pool = thread_pool

@@ -39,8 +39,8 @@ users = [
 ]
 
 
-nb_log.get_logger('flask')
-nb_log.get_logger('werkzeug')
+nb_log.get_logger('flask',log_filename='flask.log')
+nb_log.get_logger('werkzeug',log_filename='werkzeug.log')
 
 def query_user(user_name):
     for user in users:

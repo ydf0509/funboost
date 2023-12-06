@@ -5,11 +5,11 @@ from concurrent.futures.process import _ExceptionWithTraceback, _ResultItem  # n
 from functools import wraps
 import os
 
-import nb_log
+from funboost.core.loggers import get_funboost_file_logger
 
 name = 'bounded_pool_executor'
 
-logger = nb_log.get_logger('BoundedProcessPoolExecutor')
+logger = get_funboost_file_logger('BoundedProcessPoolExecutor')
 
 
 def _process_worker(call_queue, result_queue):

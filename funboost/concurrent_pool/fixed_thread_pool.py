@@ -6,10 +6,11 @@ flxed_thread_pool.py 固定大小的线程池, 最简单的实现线程池方式
 import threading
 import traceback
 from queue import Queue
-import nb_log
+# import nb_log
+from funboost.core.loggers import FunboostFileLoggerMixin
 
 
-class FixedThreadPool(nb_log.LoggerMixin):
+class FixedThreadPool(FunboostFileLoggerMixin):
     def __init__(self, max_workers: int = None):
         self._max_workers = max_workers
         self._work_queue = Queue(maxsize=10)
@@ -32,9 +33,6 @@ class FixedThreadPool(nb_log.LoggerMixin):
 
 
 if __name__ == '__main__':
-    import nb_log
-
-
     def f3(x):
         # time.sleep(1)
         # 1 / 0

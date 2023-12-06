@@ -9,7 +9,6 @@ import json
 from kombu.transport.virtual.base import Channel
 from kombu.entity import Exchange, Queue
 from kombu.connection import Connection
-from nb_log import get_logger
 
 from funboost.publishers.base_publisher import AbstractPublisher, deco_mq_conn_error
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig

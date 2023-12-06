@@ -12,8 +12,8 @@ from gevent import pool as gevent_pool
 from gevent import monkey
 from gevent.queue import JoinableQueue
 
-from nb_log import LoggerMixin, nb_print, LogManager
-
+# from nb_log import LoggerMixin, nb_print, LogManager
+from funboost.core.loggers import get_funboost_file_logger,FunboostFileLoggerMixin
 # print('gevent 导入')
 
 def check_gevent_monkey_patch(raise_exc=True):
@@ -25,7 +25,7 @@ def check_gevent_monkey_patch(raise_exc=True):
         return 1
 
 
-logger_gevent_timeout_deco = LogManager('gevent_timeout_deco').get_logger_and_add_handlers()
+logger_gevent_timeout_deco = get_funboost_file_logger('gevent_timeout_deco')
 
 
 def gevent_timeout_deco(timeout_t):
@@ -39,7 +39,7 @@ def gevent_timeout_deco(timeout_t):
             except gevent.Timeout as t:
                 logger_gevent_timeout_deco.error(f'函数 {f} 运行超过了 {timeout_t} 秒')
                 if t is not timeout:
-                    nb_print(t)
+                    print(t)
                     # raise  # not my timeout
             finally:
                 timeout.close()
@@ -63,7 +63,7 @@ class GeventPoolExecutor(gevent_pool.Pool):
         self.join()
 
 
-class GeventPoolExecutor2(LoggerMixin):
+class GeventPoolExecutor2(FunboostFileLoggerMixin):
     def __init__(self, max_works, ):
         self._q = JoinableQueue(maxsize=max_works)
         # self._q = Queue(maxsize=max_works)
@@ -91,7 +91,7 @@ class GeventPoolExecutor2(LoggerMixin):
         self._q.join()
 
 
-class GeventPoolExecutor3(LoggerMixin):
+class GeventPoolExecutor3(FunboostFileLoggerMixin):
     def __init__(self, max_works, ):
         self._q = gevent.queue.Queue(max_works)
         self.g_list = []
@@ -128,14 +128,14 @@ if __name__ == '__main__':
     def f2(x):
 
         time.sleep(3)
-        nb_print(x * 10)
+        print(x * 10)
 
 
     pool = GeventPoolExecutor3(40)
 
     for i in range(20):
         time.sleep(0.1)
-        nb_print(f'放入{i}')
+        print(f'放入{i}')
         pool.submit(gevent_timeout_deco(8)(f2), i)
     # pool.joinall_in_new_thread()
-    nb_print(66666666)
+    print(66666666)

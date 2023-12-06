@@ -26,7 +26,8 @@ import sys
 import threading
 import time
 import weakref
-from nb_log import LoggerMixin, nb_print, LoggerLevelSetterMixin, LogManager
+from nb_log import LoggerLevelSetterMixin
+from funboost.core.loggers import FunboostFileLoggerMixin,get_funboost_file_logger
 from concurrent.futures import Executor, Future
 
 
@@ -57,7 +58,7 @@ def _python_exit():
 atexit.register(_python_exit)
 
 
-class _WorkItem(LoggerMixin):
+class _WorkItem(FunboostFileLoggerMixin):
     def __init__(self, future, fn, args, kwargs):
         self.future = future
         self.fn = fn
@@ -87,7 +88,7 @@ def set_threadpool_executor_shrinkable(min_works=1, keep_alive_time=5):
     ThreadPoolExecutorShrinkAble.KEEP_ALIVE_TIME = keep_alive_time
 
 
-class ThreadPoolExecutorShrinkAble(Executor, LoggerMixin, LoggerLevelSetterMixin):
+class ThreadPoolExecutorShrinkAble(Executor, FunboostFileLoggerMixin, LoggerLevelSetterMixin):
     # 为了和官方自带的THredpoolexecutor保持完全一致的鸭子类，参数设置成死的，不让用户传参了。
     # 建议用猴子补丁修改这两个参数，为了保持入参api和内置的concurrent.futures 相同。
     # MIN_WORKERS = 5   # 最小值可以设置为0，代表线程池无论多久没有任务最少要保持多少个线程待命。
@@ -153,7 +154,7 @@ CustomThreadpoolExecutor = CustomThreadPoolExecutor = ThreadPoolExecutorShrinkAb
 
 
 # noinspection PyProtectedMember
-class _CustomThread(threading.Thread, LoggerMixin, LoggerLevelSetterMixin):
+class _CustomThread(threading.Thread, FunboostFileLoggerMixin, LoggerLevelSetterMixin):
     _lock_for_judge_threads_free_count = threading.Lock()
 
     def __init__(self, executorx: ThreadPoolExecutorShrinkAble):
@@ -199,8 +200,7 @@ class _CustomThread(threading.Thread, LoggerMixin, LoggerLevelSetterMixin):
 
 
 process_name_set = set()
-logger_show_current_threads_num = LogManager('show_current_threads_num').get_logger_and_add_handlers(
-    formatter_template=5, log_filename='show_current_threads_num.log', do_not_use_color_handler=False)
+logger_show_current_threads_num = get_funboost_file_logger('show_current_threads_num',formatter_template=5, do_not_use_color_handler=False)
 
 
 def show_current_threads_num(sleep_time=600, process_name='', block=False, daemon=True):
@@ -234,7 +234,7 @@ if __name__ == '__main__':
 
     def f1(a):
         time.sleep(0.2)  # 可修改这个数字测试多线程数量调节功能。
-        nb_print(f'{a} 。。。。。。。')
+        print(f'{a} 。。。。。。。')
         return a * 10
         # raise Exception('抛个错误测试')  # 官方的不会显示函数出错你，你还以为你写的代码没毛病呢。
 

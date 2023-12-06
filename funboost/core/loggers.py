@@ -8,11 +8,13 @@ LOG_FILE_NAME = 'funboost.log'
 
 
 def get_funboost_file_logger(name, *, log_level_int: int = None, **kwargs):
+    """日志自动写入 funboost.log文件中,不需要亲自指定文件名"""
     kwargs['log_filename'] = LOG_FILE_NAME
     return nb_log.get_logger(name, log_level_int=log_level_int, **kwargs, )
 
 
 class FunboostFileLoggerMixin(nb_log.LoggerMixin):
+    """给对象添加一个logger树形,命名空间是类本身,写入funboost.log"""
     subclass_logger_dict = {}
 
     @property
@@ -27,6 +29,10 @@ class FunboostFileLoggerMixin(nb_log.LoggerMixin):
 
 
 class MetaTypeFileLogger(type):
+    """
+    给类添加一个属性.名空间是类本身,写入funboost.log
+    """
+
     def __init__(cls, name, bases, attrs):
         super().__init__(name, bases, attrs)
         cls.logger = get_funboost_file_logger(name)

@@ -169,10 +169,10 @@ class BoosterParamsComplete(BoosterParams):
     """
 
     function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
-        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=True) # 开启函数消费状态 结果持久化到 mongo,为True用户必须要安装mongo和多浪费一丝丝性能.
-    is_send_consumer_hearbeat_to_redis = True # 消费者心跳发到redis,为True那么用户必须安装reids
-    is_using_rpc_mode = True # 固定支持rpc模式,不用每次指定 (不需要使用rpc模式的同学,就不要指定为True,必须安装redis和浪费一点性能)
-    broker_kind = BrokerEnum.RABBITMQ_AMQPSTORM # 固定使用rabbitmq,不用每次指定
+        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=True)  # 开启函数消费状态 结果持久化到 mongo,为True用户必须要安装mongo和多浪费一丝丝性能.
+    is_send_consumer_hearbeat_to_redis: bool = True  # 消费者心跳发到redis,为True那么用户必须安装reids
+    is_using_rpc_mode: bool = True  # 固定支持rpc模式,不用每次指定 (不需要使用rpc模式的同学,就不要指定为True,必须安装redis和浪费一点性能)
+    broker_kind: str = BrokerEnum.RABBITMQ_AMQPSTORM  # 固定使用rabbitmq,不用每次指定
 
 
 class PriorityConsumingControlConfig(BaseJsonAbleModel):
@@ -189,7 +189,7 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
     countdown: typing.Union[float, int] = None
     eta: datetime.datetime = None
     misfire_grace_time: typing.Union[int, None] = None
-    other_extra_params: dict = None # 其他参数, 例如消息优先级 , priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': priorityxx})，
+    other_extra_params: dict = None  # 其他参数, 例如消息优先级 , priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': priorityxx})，
 
     @root_validator(skip_on_failure=True)
     def cehck_values(cls, values: dict):
@@ -206,8 +206,8 @@ class PublisherParams(BaseJsonAbleModel):
     logger_prefix: str = ''
     create_logger_file: bool = True
     log_filename: typing.Optional[str] = None
-    clear_queue_within_init: bool = False # with 语法发布时候,先清空消息队列
-    consuming_function: typing.Callable = None # consuming_function 作用是 inspect 模块获取函数的入参信息
+    clear_queue_within_init: bool = False  # with 语法发布时候,先清空消息队列
+    consuming_function: typing.Callable = None  # consuming_function 作用是 inspect 模块获取函数的入参信息
     broker_kind: str = None
     broker_exclusive_config: dict = None
 

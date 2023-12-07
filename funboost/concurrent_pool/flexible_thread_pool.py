@@ -14,8 +14,6 @@ import queue
 import threading
 from functools import wraps
 
-import nb_log
-
 from funboost.core.loggers import FunboostFileLoggerMixin,LoggerLevelSetterMixin,MetaTypeFileLogger
 
 class FlexibleThreadPool(FunboostFileLoggerMixin, LoggerLevelSetterMixin):

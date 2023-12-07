@@ -16,14 +16,14 @@ from threading import Lock
 import datetime
 import amqpstorm
 
-import nb_log
+
 from funboost.core.func_params_model import PublisherParams, PriorityConsumingControlConfig
 from funboost.core.loggers import develop_logger
 
 from pikav1.exceptions import AMQPError as PikaAMQPError
 
 # from nb_log import LoggerLevelSetterMixin, LoggerMixin
-from funboost.core.loggers import LoggerLevelSetterMixin,FunboostFileLoggerMixin
+from funboost.core.loggers import LoggerLevelSetterMixin,FunboostFileLoggerMixin,get_logger
 from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
 from funboost.utils import decorators, time_util
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
@@ -158,7 +158,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             logger_prefix += '--'
         logger_name = f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
         log_filename = self.publisher_params.log_filename or f'funboost.{self.queue_name}.log'
-        self.logger = nb_log.get_logger(logger_name,
+        self.logger = get_logger(logger_name,
                                         log_level_int=self.publisher_params.log_level,
                                         log_filename=log_filename if self.publisher_params.create_logger_file else None,
                                         formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )

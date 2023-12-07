@@ -7,7 +7,6 @@ import typing
 from funboost.core.loggers import flogger
 from funboost.core.loggers import develop_logger
 
-import nb_log
 from functools import wraps
 
 from funboost.core.exceptions import BoostDecoParamsIsOldVersion

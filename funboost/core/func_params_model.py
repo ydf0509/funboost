@@ -209,7 +209,7 @@ class PublisherParams(BaseJsonAbleModel):
     clear_queue_within_init: bool = False  # with 语法发布时候,先清空消息队列
     consuming_function: typing.Callable = None  # consuming_function 作用是 inspect 模块获取函数的入参信息
     broker_kind: str = None
-    broker_exclusive_config: dict = None
+    broker_exclusive_config: dict = {}
 
 
 if __name__ == '__main__':

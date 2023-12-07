@@ -1,3 +1,5 @@
 
 
 import flask
+
+import funboost

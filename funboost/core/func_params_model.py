@@ -1,4 +1,3 @@
-import copy
 import datetime
 import json
 import logging
@@ -8,13 +7,16 @@ from collections import OrderedDict
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
 from pydantic import BaseModel, validator, root_validator, PrivateAttr
 
-from funboost.core.loggers import flogger, develop_logger
+# noinspection PyUnresolvedReferences
+from funboost.core.loggers import develop_logger
+from funboost.core.loggers import flogger
 
 
 class BaseJsonAbleModel(BaseModel):
     """
     因为model字段包括了 函数对象,无法json序列化,需要自定义json序列化
     """
+
     def get_str_dict(self):
 
         model_dict: dict = self.dict()  # noqa
@@ -80,8 +82,8 @@ class BoosterParams(BaseJsonAbleModel):
     由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。"""
     concurrent_mode: str = ConcurrentModeEnum.THREADING  # 并发模式,支持THREADING,GEVENT,EVENTLET,ASYNC,SINGLE_THREAD并发,multi_process_consume 支持协程/线程 叠加多进程并发,性能炸裂.
     concurrent_num: int = 50  # 并发数量，并发种类由concurrent_mode决定
-    specify_concurrent_pool: typing.Callable = None # 使用指定的线程池/携程池，可以多个消费者共使用一个线程池,节约线程.不为None时候。threads_num失效
-    specify_async_loop: typing.Callable = None # 指定的async的loop循环，设置并发模式为async才能起作用。 有些包例如aiohttp,请求和httpclient的实例化不能处在两个不同的loop中,可以传过来.
+    specify_concurrent_pool: typing.Callable = None  # 使用指定的线程池/携程池，可以多个消费者共使用一个线程池,节约线程.不为None时候。threads_num失效
+    specify_async_loop: typing.Callable = None  # 指定的async的loop循环，设置并发模式为async才能起作用。 有些包例如aiohttp,请求和httpclient的实例化不能处在两个不同的loop中,可以传过来.
 
     """qps:
     强悍的控制功能,指定1秒内的函数执行次数，例如可以是小数0.01代表每100秒执行一次，也可以是50代表1秒执行50次.为0则不控频。 设置qps时候,不需要指定并发数量,funboost的能够自适应智能动态调节并发池大小."""
@@ -91,7 +93,7 @@ class BoosterParams(BaseJsonAbleModel):
     如果使用分布式空频则所有消费者加起来的总运行次数是10。"""
     is_using_distributed_frequency_control: bool = False
 
-    is_send_consumer_hearbeat_to_redis: bool = False # 是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。这个功能,需要安装redis.
+    is_send_consumer_hearbeat_to_redis: bool = False  # 是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。这个功能,需要安装redis.
 
     """max_retry_times:
     最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
@@ -99,7 +101,7 @@ class BoosterParams(BaseJsonAbleModel):
     主动抛出ExceptionForRequeue异常，则当前 消息会重返中间件，
     主动抛出 ExceptionForPushToDlxqueue  异常，可以使消息发送到单独的死信队列中，死信队列的名字是 队列名字 + _dlx。"""
     max_retry_times: int = 3
-    is_push_to_dlx_queue_when_retry_max_times: bool = False # 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
+    is_push_to_dlx_queue_when_retry_max_times: bool = False  # 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
 
     consumin_function_decorator: typing.Callable = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
     function_timeout: float = 0  # 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
@@ -167,10 +169,10 @@ class BoosterParamsComplete(BoosterParams):
     """
 
     function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
-        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=True)
-    is_send_consumer_hearbeat_to_redis = True
-    is_using_rpc_mode = True
-    broker_kind = BrokerEnum.RABBITMQ_AMQPSTORM
+        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=True) # 开启函数消费状态 结果持久化到 mongo,为True用户必须要安装mongo和多浪费一丝丝性能.
+    is_send_consumer_hearbeat_to_redis = True # 消费者心跳发到redis,为True那么用户必须安装reids
+    is_using_rpc_mode = True # 固定支持rpc模式,不用每次指定 (不需要使用rpc模式的同学,就不要指定为True,必须安装redis和浪费一点性能)
+    broker_kind = BrokerEnum.RABBITMQ_AMQPSTORM # 固定使用rabbitmq,不用每次指定
 
 
 class PriorityConsumingControlConfig(BaseJsonAbleModel):
@@ -187,7 +189,7 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
     countdown: typing.Union[float, int] = None
     eta: datetime.datetime = None
     misfire_grace_time: typing.Union[int, None] = None
-    other_extra_params: dict = None
+    other_extra_params: dict = None # 其他参数, 例如消息优先级 , priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': priorityxx})，
 
     @root_validator(skip_on_failure=True)
     def cehck_values(cls, values: dict):
@@ -204,8 +206,8 @@ class PublisherParams(BaseJsonAbleModel):
     logger_prefix: str = ''
     create_logger_file: bool = True
     log_filename: typing.Optional[str] = None
-    clear_queue_within_init: bool = False
-    consuming_function: typing.Callable = None
+    clear_queue_within_init: bool = False # with 语法发布时候,先清空消息队列
+    consuming_function: typing.Callable = None # consuming_function 作用是 inspect 模块获取函数的入参信息
     broker_kind: str = None
     broker_exclusive_config: dict = None
 

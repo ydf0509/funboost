@@ -12,8 +12,11 @@ from funboost.core.loggers import flogger, develop_logger
 
 
 class BaseJsonAbleModel(BaseModel):
+    """
+    因为model字段包括了 函数对象,无法json序列化,需要自定义json序列化
+    """
     def get_str_dict(self):
-        """因为model字段包括了 函数,无法json序列化,需要自定义json序列化"""
+
         model_dict: dict = self.dict()  # noqa
         model_dict_copy = OrderedDict()
         for k, v in model_dict.items():

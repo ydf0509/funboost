@@ -99,9 +99,11 @@ class BoosterParams(BaseJsonAbleModel):
 
     function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
         is_save_result=False, is_save_status=False, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)
+
     user_custom_record_process_info_func: typing.Callable = None
 
     is_using_rpc_mode: bool = False
+
     is_support_remote_kill_task: bool = False
 
     is_do_not_run_by_specify_time_effect: bool = False
@@ -136,15 +138,19 @@ class BoosterParams(BaseJsonAbleModel):
 
 class BoosterParamsComplete(BoosterParams):
     """
-    例如一个子类,这个子类可以作为@booot的传参,每个@boost可以少写一些重复的入参字段.
+    例如一个子类,这个子类可以作为@booot的传参,每个@boost可以少写一些这些重复的入参字段.
+
     支持函数消费状态 结果状态持久化
     支持发送消费者的心跳到redis,便于统计分布式环境的活跃消费者
     支持rpc模式
+    永远是使用 amqpstorm包 操作 rabbbitmq作为消息队列.
     """
-    is_send_consumer_hearbeat_to_redis = True
-    is_using_rpc_mode = True
+
     function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
         is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=True)
+    is_send_consumer_hearbeat_to_redis = True
+    is_using_rpc_mode = True
+    broker_kind = BrokerEnum.RABBITMQ_AMQPSTORM
 
 
 class PriorityConsumingControlConfig(BaseJsonAbleModel):
@@ -185,6 +191,6 @@ class PublisherParams(BaseJsonAbleModel):
 
 
 if __name__ == '__main__':
-    print(FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=70 * 24 * 3600).update_from_kwargs(expire_seconds=100))
+    print(FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=70 * 24 * 3600).update_from_kwargs(expire_seconds=100).get_str_dict())
 
-    print(PriorityConsumingControlConfig().dict())
+    print(PriorityConsumingControlConfig().get_str_dict())

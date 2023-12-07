@@ -7,7 +7,7 @@ from funboost import boost, BrokerEnum, BoosterParams
 from funboost.core.func_params_model import BoosterParamsComplete
 
 
-@boost(queue_name="task_queue_name1", qps=5, broker_kind=BrokerEnum.SQLITE_QUEUE, log_level=10,
+@boost(queue_name="task_queue_name1", qps=5,  log_level=10,
        boost_params=BoosterParamsComplete(queue_name='task_queue_name1',max_retry_times=4,qps=3,
                                   # log_filename='自定义.log'
                                   ))

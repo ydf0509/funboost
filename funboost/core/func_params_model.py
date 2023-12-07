@@ -62,6 +62,9 @@ class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
 
 
 class BoosterParams(BaseJsonAbleModel):
+    '''
+    pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
+    '''
     queue_name: str
 
     concurrent_mode: str = ConcurrentModeEnum.THREADING
@@ -110,6 +113,22 @@ class BoosterParams(BaseJsonAbleModel):
     broker_kind: str = BrokerEnum.PERSISTQUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
 
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
+
+    @root_validator(skip_on_failure=True)
+    def check_values(vls, values: dict):
+
+        # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
+        # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
+        if values['qps'] and values['concurrent_num'] == 50:
+            values['concurrent_num'] = 500
+        if values['concurrent_mode'] == ConcurrentModeEnum.SINGLE_THREAD:
+            values['concurrent_num'] = 1
+
+        values['is_send_consumer_hearbeat_to_redis'] = values['is_send_consumer_hearbeat_to_redis'] or values['is_using_distributed_frequency_control']
+
+        if values['concurrent_mode'] not in ConcurrentModeEnum.__dict__.values():
+            raise ValueError('设置的并发模式不正确')
+        return values
 
 
 class PriorityConsumingControlConfig(BaseJsonAbleModel):

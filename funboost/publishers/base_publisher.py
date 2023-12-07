@@ -190,7 +190,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
                         'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
         if priority_control_config:
-            extra_params.update(priority_control_config.dict())
+            extra_params.update(priority_control_config.dict(exclude_none=True))
         extra_params.update(raw_extra)
         msg['extra'] = extra_params
         return msg, msg_function_kw, extra_params, task_id

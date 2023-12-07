@@ -62,7 +62,7 @@ class Booster():
         # if 'queue_name' in locals() or isinstance(boost_params,str):
         #     raise BoostDecoParamsIsOldVersion()
         if isinstance(local['queue_name'], str) or kwargs:
-            flogger.warning(f''' 警告!!! 强烈建议@boost值传递一个 BoosterParams pydantic model 类型的入参,不要直接在@boost函数传递入参 ''')
+            flogger.warning(f''' 警告!!! 强烈建议@boost值传递一个 BoosterParams类或子类 pydantic model 类型的入参,不要直接在@boost函数传递入参 ''')
         boost_params_merge = None
         if isinstance(local['queue_name'], BoosterParams):
             boost_params_merge = boost_params.copy()
@@ -93,7 +93,7 @@ class Booster():
         if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], typing.Callable):
             consuming_function = args[0]
             self.boost_params.consuming_function = consuming_function
-            flogger.info(f''' {self.boost_params.queue_name} booster 配置是 {self.boost_params.dict()}''')
+            flogger.info(f''' {self.boost_params.queue_name} booster 配置是 {self.boost_params.json_str_value()}''')
             self.consuming_function = consuming_function
             self.is_decorated_as_consume_function = True
 

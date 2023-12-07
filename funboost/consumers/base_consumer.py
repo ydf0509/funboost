@@ -285,7 +285,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if logger_prefix != '':
             logger_prefix += '--'
             # logger_name = f'{logger_prefix}{self.__class__.__name__}--{concurrent_name}--{queue_name}--{self.consuming_function.__name__}'
-        logger_name = f'{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
+        logger_name = f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
         log_filename = self.consumer_params.log_filename or f'funboost.{self.queue_name}.log'
         self.logger = LogManager(logger_name, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
             log_level_int=self.consumer_params.log_level, log_filename=log_filename if self.consumer_params.create_logger_file else None,

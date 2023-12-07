@@ -186,7 +186,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if consumer_params.consuming_function is None:
             raise ValueError('必须传 consuming_function 参数')
 
-        self._msg_schedule_time_intercal = 0 if consumer_params.qps == 0 else 1.0 / consumer_params.qps
+        self._msg_schedule_time_intercal = 0 if consumer_params.qps is None else 1.0 / consumer_params.qps
 
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
         if consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC:
@@ -508,7 +508,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _frequency_control(self, qpsx: float, msg_schedule_time_intercalx: float):
         # 以下是消费函数qps控制代码。无论是单个消费者空频还是分布式消费控频，都是基于直接计算的，没有依赖redis inrc计数，使得控频性能好。
-        if qpsx == 0:  # 不需要控频的时候，就不需要休眠。
+        if qpsx is None:  # 不需要控频的时候，就不需要休眠。
             return
         if qpsx <= 5:
             """ 原来的简单版 """

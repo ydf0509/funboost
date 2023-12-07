@@ -86,8 +86,8 @@ class BoosterParams(BaseJsonAbleModel):
     specify_async_loop: typing.Callable = None  # 指定的async的loop循环，设置并发模式为async才能起作用。 有些包例如aiohttp,请求和httpclient的实例化不能处在两个不同的loop中,可以传过来.
 
     """qps:
-    强悍的控制功能,指定1秒内的函数执行次数，例如可以是小数0.01代表每100秒执行一次，也可以是50代表1秒执行50次.为0则不控频。 设置qps时候,不需要指定并发数量,funboost的能够自适应智能动态调节并发池大小."""
-    qps: float = 0
+    强悍的控制功能,指定1秒内的函数执行次数，例如可以是小数0.01代表每100秒执行一次，也可以是50代表1秒执行50次.为None则不控频。 设置qps时候,不需要指定并发数量,funboost的能够自适应智能动态调节并发池大小."""
+    qps: typing.Union[float,int] = None
     """is_using_distributed_frequency_control:
     是否使用分布式空频（依赖redis统计消费者数量，然后频率平分），默认只对当前实例化的消费者空频有效。假如实例化了2个qps为10的使用同一队列名的消费者，并且都启动，则每秒运行次数会达到20。
     如果使用分布式空频则所有消费者加起来的总运行次数是10。"""
@@ -104,7 +104,7 @@ class BoosterParams(BaseJsonAbleModel):
     is_push_to_dlx_queue_when_retry_max_times: bool = False  # 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
 
     consumin_function_decorator: typing.Callable = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
-    function_timeout: float = 0  # 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
+    function_timeout: typing.Union[int,float] = 0  # 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
 
     log_level: int = logging.DEBUG  # 消费者和发布者的日志级别,建议设置DEBUG级别,不然无法知道正在运行什么消息
     logger_prefix: str = ''  # 日志名字前缀,可以设置前缀
@@ -113,7 +113,7 @@ class BoosterParams(BaseJsonAbleModel):
     is_show_message_get_from_broker: bool = False  # 运行时候,是否记录从消息队列获取出来的消息内容
     is_print_detail_exception: bool = True  # 消费函数出错时候,是否打印详细的报错堆栈,为False则只打印简略的报错信息不包含堆栈.
 
-    msg_expire_senconds: float = 0  # 消息过期时间,可以设置消息是多久之前发布的就丢弃这条消息,不运行. 为0则永不丢弃
+    msg_expire_senconds: typing.Union[float,int] = None  # 消息过期时间,可以设置消息是多久之前发布的就丢弃这条消息,不运行. 为None则永不丢弃
 
     do_task_filtering: bool = False  # 是否对函数入参进行过滤去重.
     task_filtering_expire_seconds: int = 0  # 任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ， 30分钟前发布过1 + 2 的任务，现在仍然执行，如果是30分钟以内发布过这个任务，则不执行1 + 2
@@ -181,7 +181,7 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
     例如消费为add函数，可以每个独立的任务设置不同的超时时间，不同的重试次数，是否使用rpc模式。这里的配置优先，可以覆盖生成消费者时候的配置。
     """
 
-    function_timeout: float = None
+    function_timeout: typing.Union[float,int] = None
     max_retry_times: int = None
     is_print_detail_exception: bool = None
     msg_expire_senconds: int = None

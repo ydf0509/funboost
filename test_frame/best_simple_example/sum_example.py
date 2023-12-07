@@ -1,14 +1,14 @@
 import time
 from funboost import boost, BrokerEnum, BoosterParams
+from funboost.core.func_params_model import BoosterParamsComplete
 
 
 # @boost(boost_params=BoosterParams(queue_name="task_queue_name1", qps=5, broker_kind=BrokerEnum.SQLITE_QUEUE, log_level=20))  # 入参包括20种，运行控制方式非常多，想得到的控制都会有。
 # @boost(queue_name="task_queue_name1", qps=5, broker_kind=BrokerEnum.SQLITE_QUEUE, log_level=20)
-from funboost.core.func_params_model import BoosterParamsComplete
 
 
-@boost(queue_name="task_queue_name1", qps=5,  log_level=10,
-       boost_params=BoosterParamsComplete(queue_name='task_queue_name1',max_retry_times=4,qps=3,
+
+@boost( boost_params=BoosterParamsComplete(queue_name='task_queue_name1b',max_retry_times=4,qps=3,  log_level=10,
                                   # log_filename='自定义.log'
                                   ))
 def task_fun(x, y):

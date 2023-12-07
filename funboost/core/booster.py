@@ -51,7 +51,7 @@ class Booster():
         '''
         """
 
-        # 以下代码主要是兼容老的在@boost直接传参的方式,强烈建议使用新的入参方式,所有入参放在一个 BoosterParams 中.
+        # 以下代码很复杂，主要是兼容老的在@boost直接传参的方式,强烈建议使用新的入参方式,所有入参放在一个 BoosterParams 中，那就不需要理会下面这段逻辑.
         local = copy.deepcopy(locals())
         local_exlude_boost_params = copy.deepcopy(local)
         local_exlude_boost_params.pop('boost_params')
@@ -60,19 +60,22 @@ class Booster():
         local_exlude_boost_params.update(kwargs)
         # if 'queue_name' in locals() or isinstance(boost_params,str):
         #     raise BoostDecoParamsIsOldVersion()
-        if isinstance(local['queue_name'], str) or kwargs:
+        local_queue_name = local['queue_name']
+        if isinstance(local, str) or kwargs:
             flogger.warning(f''' 警告!!! 强烈建议@boost值传递一个 BoosterParams类或子类 pydantic model 类型的入参,不要直接在@boost函数传递入参 ''')
         boost_params_merge = None
-        if isinstance(local['queue_name'], BoosterParams):
+        if local_exlude_boost_params['queue_name'] is None:
+            local_exlude_boost_params.pop('queue_name')
+        if isinstance(local_queue_name, BoosterParams):
             boost_params_merge = boost_params.copy()
+            boost_params_merge.update_from_dict(local_exlude_boost_params)
             # self.boost_params = boost_params
-        elif isinstance(local['queue_name'], str):
+        elif isinstance(local_queue_name, str)  or local_queue_name is None:
             if boost_params is None:
                 boost_params_merge = BoosterParams(**local_exlude_boost_params)
             else:
                 boost_params_merge = boost_params.copy()
                 boost_params_merge.update_from_dict(local_exlude_boost_params)
-        boost_params_merge.update_from_dict(local_exlude_boost_params)
         if boost_params_merge.queue_name is None:
             raise ValueError('queue_name 没有设置队列名字')
         self.boost_params = boost_params_merge

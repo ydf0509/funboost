@@ -4,8 +4,8 @@ import os
 import types
 import typing
 
-from funboost.core.loggers import flogger
-from funboost.core.loggers import develop_logger
+from funboost.core.loggers import flogger,develop_logger
+
 
 from functools import wraps
 

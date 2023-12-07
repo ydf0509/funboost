@@ -3,21 +3,24 @@ import datetime
 import json
 import logging
 import typing
+from collections import OrderedDict
 
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
 from pydantic import BaseModel, validator, root_validator, PrivateAttr
 
-from funboost.core.loggers import flogger
+from funboost.core.loggers import flogger, develop_logger
 
 
 class BaseJsonAbleModel(BaseModel):
     def get_str_dict(self):
         """因为model字段包括了 函数,无法json序列化,需要自定义json序列化"""
         model_dict: dict = self.dict()  # noqa
-        model_dict_copy = copy.deepcopy(model_dict)
+        model_dict_copy = OrderedDict()
         for k, v in model_dict.items():
             if isinstance(v, typing.Callable):
                 model_dict_copy[k] = str(v)
+            else:
+                model_dict_copy[k] = v
         return model_dict_copy
 
     def json_str_value(self):
@@ -67,55 +70,69 @@ class BoosterParams(BaseJsonAbleModel):
 
     @boost的传参必须是此类或者继承此类,如果你不想每个装饰器入参都很多,你可以写一个子类继承BoosterParams, 传参这个子类,例如下面的 BoosterParamsComplete
     """
-    queue_name: str
 
-    concurrent_mode: str = ConcurrentModeEnum.THREADING
-    concurrent_num: int = 50
-    specify_concurrent_pool: typing.Callable = None
-    specify_async_loop: typing.Callable = None
+    queue_name: str  # 队列名字,必传项,每个函数要使用不同的队列名字.
 
+    """如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
+    由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。"""
+    concurrent_mode: str = ConcurrentModeEnum.THREADING  # 并发模式,支持THREADING,GEVENT,EVENTLET,ASYNC,SINGLE_THREAD并发,multi_process_consume 支持协程/线程 叠加多进程并发,性能炸裂.
+    concurrent_num: int = 50  # 并发数量，并发种类由concurrent_mode决定
+    specify_concurrent_pool: typing.Callable = None # 使用指定的线程池/携程池，可以多个消费者共使用一个线程池,节约线程.不为None时候。threads_num失效
+    specify_async_loop: typing.Callable = None # 指定的async的loop循环，设置并发模式为async才能起作用。 有些包例如aiohttp,请求和httpclient的实例化不能处在两个不同的loop中,可以传过来.
+
+    """qps:
+    强悍的控制功能,指定1秒内的函数执行次数，例如可以是小数0.01代表每100秒执行一次，也可以是50代表1秒执行50次.为0则不控频。 设置qps时候,不需要指定并发数量,funboost的能够自适应智能动态调节并发池大小."""
     qps: float = 0
+    """is_using_distributed_frequency_control:
+    是否使用分布式空频（依赖redis统计消费者数量，然后频率平分），默认只对当前实例化的消费者空频有效。假如实例化了2个qps为10的使用同一队列名的消费者，并且都启动，则每秒运行次数会达到20。
+    如果使用分布式空频则所有消费者加起来的总运行次数是10。"""
     is_using_distributed_frequency_control: bool = False
 
-    is_send_consumer_hearbeat_to_redis: bool = False
+    is_send_consumer_hearbeat_to_redis: bool = False # 是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。这个功能,需要安装redis.
 
+    """max_retry_times:
+    最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
+    可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。
+    主动抛出ExceptionForRequeue异常，则当前 消息会重返中间件，
+    主动抛出 ExceptionForPushToDlxqueue  异常，可以使消息发送到单独的死信队列中，死信队列的名字是 队列名字 + _dlx。"""
     max_retry_times: int = 3
-    is_push_to_dlx_queue_when_retry_max_times: bool = False
+    is_push_to_dlx_queue_when_retry_max_times: bool = False # 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
 
-    consumin_function_decorator: typing.Callable = None
-    function_timeout: float = 0
+    consumin_function_decorator: typing.Callable = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
+    function_timeout: float = 0  # 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
 
-    log_level: int = logging.DEBUG
-    logger_prefix: str = ''
-    create_logger_file: bool = True
-    log_filename: typing.Union[str, None] = None
-    is_show_message_get_from_broker: bool = False
-    is_print_detail_exception: bool = True
+    log_level: int = logging.DEBUG  # 消费者和发布者的日志级别,建议设置DEBUG级别,不然无法知道正在运行什么消息
+    logger_prefix: str = ''  # 日志名字前缀,可以设置前缀
+    create_logger_file: bool = True  # 发布者和消费者是否创建文件文件日志,为False则只打印控制台不写文件.
+    log_filename: typing.Union[str, None] = None  # 消费者发布者的文件日志名字.如果为None,则自动使用 funboost.队列 名字作为文件日志名字.  日志文件夹是在nb_log_config.py的 LOG_PATH中决定的.
+    is_show_message_get_from_broker: bool = False  # 运行时候,是否记录从消息队列获取出来的消息内容
+    is_print_detail_exception: bool = True  # 消费函数出错时候,是否打印详细的报错堆栈,为False则只打印简略的报错信息不包含堆栈.
 
-    msg_expire_senconds: float = 0
+    msg_expire_senconds: float = 0  # 消息过期时间,可以设置消息是多久之前发布的就丢弃这条消息,不运行. 为0则永不丢弃
 
-    do_task_filtering: bool = False
-    task_filtering_expire_seconds: int = 0
+    do_task_filtering: bool = False  # 是否对函数入参进行过滤去重.
+    task_filtering_expire_seconds: int = 0  # 任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ， 30分钟前发布过1 + 2 的任务，现在仍然执行，如果是30分钟以内发布过这个任务，则不执行1 + 2
 
     function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
-        is_save_result=False, is_save_status=False, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)
+        is_save_result=False, is_save_status=False, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)  # 是否保存函数的入参，运行结果和运行状态到mongodb。这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
 
-    user_custom_record_process_info_func: typing.Callable = None
+    user_custom_record_process_info_func: typing.Callable = None  # 提供一个用户自定义的保存消息处理记录到某个地方例如mysql数据库的函数，函数仅仅接受一个入参，入参类型是 FunctionResultStatus，用户可以打印参数
 
-    is_using_rpc_mode: bool = False
+    is_using_rpc_mode: bool = False  # 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。
 
-    is_support_remote_kill_task: bool = False
+    is_support_remote_kill_task: bool = False  # 是否支持远程任务杀死功能，如果任务数量少，单个任务耗时长，确实需要远程发送命令来杀死正在运行的函数，才设置为true，否则不建议开启此功能。
 
-    is_do_not_run_by_specify_time_effect: bool = False
-    do_not_run_by_specify_time: tuple = ('10:00:00', '22:00:00')
+    is_do_not_run_by_specify_time_effect: bool = False  # 是否使不运行的时间段生效
+    do_not_run_by_specify_time: tuple = ('10:00:00', '22:00:00')  # 不运行的时间段,在这个时间段自动不运行函数.
 
-    schedule_tasks_on_main_thread: bool = False
+    schedule_tasks_on_main_thread: bool = False  # 直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
 
-    consuming_function: typing.Callable = None
+    consuming_function: typing.Callable = None  # 消费函数,在@boost时候不用指定,因为装饰器知道下面的函数.
 
     broker_kind: str = BrokerEnum.PERSISTQUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
 
-    broker_exclusive_config: dict = {}
+    broker_exclusive_config: dict = {}  # 加上一个不同种类中间件非通用的配置,不同中间件自身独有的配置，不是所有中间件都兼容的配置，因为框架支持30种消息队列，消息队列不仅仅是一般的先进先出queue这么简单的概念，
+    # 例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，每一种消息队列都有独特的配置参数意义，可以通过这里传递。
 
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
 

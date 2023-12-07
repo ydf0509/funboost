@@ -52,6 +52,7 @@ class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
     def check_expire_seconds(cls, value):
         if value > 10 * 24 * 3600:
             flogger.warning(f'你设置的过期时间为 {value} ,设置的时间过长。 ')
+        return value
 
     @root_validator(skip_on_failure=True)
     def cehck_values(cls, values: dict):
@@ -64,7 +65,7 @@ class BoosterParams(BaseJsonAbleModel):
     """
     pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
 
-    @boost的传参必须是此类或者继承此类,如果你不想每个装饰器入参都很多,你可以写一个子类继承BoosterParams, 传参这个子类
+    @boost的传参必须是此类或者继承此类,如果你不想每个装饰器入参都很多,你可以写一个子类继承BoosterParams, 传参这个子类,例如下面的 BoosterParamsComplete
     """
     queue_name: str
 
@@ -97,7 +98,7 @@ class BoosterParams(BaseJsonAbleModel):
     task_filtering_expire_seconds: int = 0
 
     function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
-        is_save_result=False, is_save_status=False, expire_seconds=70 * 24 * 3600, is_use_bulk_insert=False)
+        is_save_result=False, is_save_status=False, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)
     user_custom_record_process_info_func: typing.Callable = None
 
     is_using_rpc_mode: bool = False
@@ -108,11 +109,11 @@ class BoosterParams(BaseJsonAbleModel):
 
     schedule_tasks_on_main_thread: bool = False
 
-    broker_exclusive_config: dict = {}
-
     consuming_function: typing.Callable = None
 
     broker_kind: str = BrokerEnum.PERSISTQUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
+
+    broker_exclusive_config: dict = {}
 
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
 
@@ -131,6 +132,19 @@ class BoosterParams(BaseJsonAbleModel):
         if values['concurrent_mode'] not in ConcurrentModeEnum.__dict__.values():
             raise ValueError('设置的并发模式不正确')
         return values
+
+
+class BoosterParamsComplete(BoosterParams):
+    """
+    例如一个子类,这个子类可以作为@booot的传参,每个@boost可以少写一些重复的入参字段.
+    支持函数消费状态 结果状态持久化
+    支持发送消费者的心跳到redis,便于统计分布式环境的活跃消费者
+    支持rpc模式
+    """
+    is_send_consumer_hearbeat_to_redis = True
+    is_using_rpc_mode = True
+    function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
+        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=True)
 
 
 class PriorityConsumingControlConfig(BaseJsonAbleModel):

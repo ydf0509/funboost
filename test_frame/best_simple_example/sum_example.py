@@ -8,7 +8,7 @@ from funboost.core.func_params_model import BoosterParamsComplete
 
 
 
-@boost( boost_params=BoosterParamsComplete(queue_name='task_queue_name1b',max_retry_times=4,qps=3,  log_level=10,
+@boost( BoosterParamsComplete(queue_name='task_queue_name1b',max_retry_times=4,qps=3,  log_level=10,
                                   # log_filename='自定义.log'
                                   ))
 def task_fun(x, y):

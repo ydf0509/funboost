@@ -61,14 +61,15 @@ class Booster():
         # if 'queue_name' in locals() or isinstance(boost_params,str):
         #     raise BoostDecoParamsIsOldVersion()
         local_queue_name = local['queue_name']
-        if isinstance(local, str) or kwargs:
+        if isinstance(local_queue_name, str) or kwargs:
             flogger.warning(f''' 警告!!! 强烈建议@boost值传递一个 BoosterParams类或子类 pydantic model 类型的入参,不要直接在@boost函数传递入参 ''')
         boost_params_merge = None
         if local_exlude_boost_params['queue_name'] is None:
             local_exlude_boost_params.pop('queue_name')
         if isinstance(local_queue_name, BoosterParams):
+            boost_params = local_queue_name
             boost_params_merge = boost_params.copy()
-            boost_params_merge.update_from_dict(local_exlude_boost_params)
+            # boost_params_merge.update_from_dict(local_exlude_boost_params)
             # self.boost_params = boost_params
         elif isinstance(local_queue_name, str)  or local_queue_name is None:
             if boost_params is None:

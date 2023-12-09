@@ -4,8 +4,7 @@ import os
 import types
 import typing
 
-from funboost.core.loggers import flogger,develop_logger
-
+from funboost.core.loggers import flogger, develop_logger
 
 from functools import wraps
 
@@ -16,15 +15,13 @@ from funboost.core.func_params_model import FunctionResultStatusPersistanceConfi
 from funboost.factories.consumer_factory import get_consumer
 
 
-class _Undefined:
-    pass
-
-
-class Booster():
+class Booster:
     """
     funboost极其重视代码能在pycharm下自动补全。元编程经常造成在pycharm下代码无法自动补全提示，主要是实现代码补全难。
     这种__call__写法在pycahrm下 不仅能补全消费函数的 push consume等方法，也能补全函数本身的入参，一举两得。代码能自动补全很重要。
     一个函数fun被 boost装饰器装饰后， isinstance(fun,Booster) 为True.
+
+    pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
 
     Booster 是把Consumer 和 Publisher的方法集为一体。
     """
@@ -32,6 +29,7 @@ class Booster():
     def __init__(self, queue_name: typing.Union[BoosterParams, str] = None, *, boost_params: BoosterParams = None, **kwargs):
         """
         @boost 这是funboost框架最重要的一个函数，必须看懂BoosterParams里面的入参有哪些。
+        pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
 
         强烈建议所有入参放在 BoosterParams() 中,不要直接在BoosterParams之外传参.现在是兼容老的直接在@boost中传参方式.
         """
@@ -52,35 +50,57 @@ class Booster():
         """
 
         # 以下代码很复杂，主要是兼容老的在@boost直接传参的方式,强烈建议使用新的入参方式,所有入参放在一个 BoosterParams 中，那就不需要理会下面这段逻辑.
-        local = copy.deepcopy(locals())
-        local_exlude_boost_params = copy.deepcopy(local)
-        local_exlude_boost_params.pop('boost_params')
-        local_exlude_boost_params.pop('self')
-        local_exlude_boost_params.pop('kwargs')
-        local_exlude_boost_params.update(kwargs)
-        # if 'queue_name' in locals() or isinstance(boost_params,str):
-        #     raise BoostDecoParamsIsOldVersion()
-        local_queue_name = local['queue_name']
-        if isinstance(local_queue_name, str) or kwargs:
-            flogger.warning(f''' 警告!!! 强烈建议@boost值传递一个 BoosterParams类或子类 pydantic model 类型的入参,不要直接在@boost函数传递入参 ''')
-        boost_params_merge = None
-        if local_exlude_boost_params['queue_name'] is None:
-            local_exlude_boost_params.pop('queue_name')
-        if isinstance(local_queue_name, BoosterParams):
-            boost_params = local_queue_name
-            boost_params_merge = boost_params.copy()
-            # boost_params_merge.update_from_dict(local_exlude_boost_params)
-            # self.boost_params = boost_params
-        elif isinstance(local_queue_name, str)  or local_queue_name is None:
+        queue_name_final = None
+        if isinstance(queue_name,str):
+            queue_name_final = queue_name
             if boost_params is None:
-                boost_params_merge = BoosterParams(**local_exlude_boost_params)
+                boost_params = BoosterParams(queue_name=queue_name_final)
+        elif queue_name is None:
+            if boost_params is not None:
+                queue_name_final = boost_params.queue_name
             else:
-                boost_params_merge = boost_params.copy()
-                boost_params_merge.update_from_dict(local_exlude_boost_params)
-        if boost_params_merge.queue_name is None:
-            raise ValueError('queue_name 没有设置队列名字')
+                raise ValueError('boost 入参错误')
+        elif isinstance(queue_name,BoosterParams):
+            queue_name_final = queue_name.queue_name
+            boost_params = queue_name
+        boost_params_merge = boost_params.copy()
+        boost_params_merge.update_from_dict(kwargs)
         self.boost_params = boost_params_merge
         self.queue_name = boost_params_merge.queue_name
+
+
+
+
+
+
+        # local = copy.deepcopy(locals())
+        # local_exlude_boost_params = copy.deepcopy(local)
+        # local_exlude_boost_params.pop('boost_params')
+        # local_exlude_boost_params.pop('self')
+        # local_exlude_boost_params.pop('kwargs')
+        # local_exlude_boost_params.update(kwargs)
+        # # if 'queue_name' in locals() or isinstance(boost_params,str):
+        # #     raise BoostDecoParamsIsOldVersion()
+        # local_queue_name = local['queue_name']
+        # if isinstance(local, str) or kwargs:
+        #     flogger.warning(f''' 警告!!! 强烈建议@boost值传递一个 BoosterParams类或子类 pydantic model 类型的入参,不要直接在@boost函数传递入参 ''')
+        # boost_params_merge = None
+        # if local_exlude_boost_params['queue_name'] is None:
+        #     local_exlude_boost_params.pop('queue_name')
+        # if isinstance(local_queue_name, BoosterParams):
+        #     boost_params_merge = boost_params.copy()
+        #     boost_params_merge.update_from_dict(local_exlude_boost_params)
+        #     # self.boost_params = boost_params
+        # elif isinstance(local_queue_name, str) or local_queue_name is None:
+        #     if boost_params is None:
+        #         boost_params_merge = BoosterParams(**local_exlude_boost_params)
+        #     else:
+        #         boost_params_merge = boost_params.copy()
+        #         boost_params_merge.update_from_dict(local_exlude_boost_params)
+        # if boost_params_merge.queue_name is None:
+        #     raise ValueError('queue_name 没有设置队列名字')
+        # self.boost_params = boost_params_merge
+        # self.queue_name = boost_params_merge.queue_name
 
     def __str__(self):
         return f'{type(self)}  队列为 {self.queue_name} 函数为 {self.consuming_function} 的 booster'

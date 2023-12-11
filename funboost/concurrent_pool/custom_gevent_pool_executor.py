@@ -13,6 +13,7 @@ from gevent import monkey
 from gevent.queue import JoinableQueue
 
 # from nb_log import LoggerMixin, nb_print, LogManager
+from funboost.concurrent_pool import FunboostBaseConcurrentPool
 from funboost.core.loggers import get_funboost_file_logger,FunboostFileLoggerMixin
 # print('gevent 导入')
 
@@ -50,7 +51,7 @@ def gevent_timeout_deco(timeout_t):
     return _gevent_timeout_deco
 
 
-class GeventPoolExecutor(gevent_pool.Pool):
+class GeventPoolExecutor(gevent_pool.Pool,FunboostBaseConcurrentPool):
     def __init__(self, size=None, greenlet_class=None):
         check_gevent_monkey_patch() # basecomer.py中检查。
         super().__init__(size, greenlet_class)
@@ -63,7 +64,7 @@ class GeventPoolExecutor(gevent_pool.Pool):
         self.join()
 
 
-class GeventPoolExecutor2(FunboostFileLoggerMixin):
+class GeventPoolExecutor2(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
     def __init__(self, max_works, ):
         self._q = JoinableQueue(maxsize=max_works)
         # self._q = Queue(maxsize=max_works)
@@ -91,7 +92,7 @@ class GeventPoolExecutor2(FunboostFileLoggerMixin):
         self._q.join()
 
 
-class GeventPoolExecutor3(FunboostFileLoggerMixin):
+class GeventPoolExecutor3(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
     def __init__(self, max_works, ):
         self._q = gevent.queue.Queue(max_works)
         self.g_list = []

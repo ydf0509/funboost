@@ -7,10 +7,11 @@ import threading
 import traceback
 from queue import Queue
 # import nb_log
+from funboost.concurrent_pool import FunboostBaseConcurrentPool
 from funboost.core.loggers import FunboostFileLoggerMixin
 
 
-class FixedThreadPool(FunboostFileLoggerMixin):
+class FixedThreadPool(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
     def __init__(self, max_workers: int = None):
         self._max_workers = max_workers
         self._work_queue = Queue(maxsize=10)

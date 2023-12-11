@@ -1,7 +1,9 @@
 from typing import Callable
 
+from funboost.concurrent_pool import FunboostBaseConcurrentPool
 
-class SoloExecutor:
+
+class SoloExecutor(FunboostBaseConcurrentPool):
     # noinspection PyUnusedLocal
     def __init__(self, max_workers: int = 1):
         pass

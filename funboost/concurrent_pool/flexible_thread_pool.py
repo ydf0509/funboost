@@ -14,9 +14,10 @@ import queue
 import threading
 from functools import wraps
 
+from funboost.concurrent_pool import FunboostBaseConcurrentPool
 from funboost.core.loggers import FunboostFileLoggerMixin,LoggerLevelSetterMixin,MetaTypeFileLogger
 
-class FlexibleThreadPool(FunboostFileLoggerMixin, LoggerLevelSetterMixin):
+class FlexibleThreadPool(FunboostFileLoggerMixin, LoggerLevelSetterMixin,FunboostBaseConcurrentPool):
     KEEP_ALIVE_TIME = 10
     MIN_WORKERS = 2
 
@@ -45,6 +46,7 @@ class FlexibleThreadPool(FunboostFileLoggerMixin, LoggerLevelSetterMixin):
         with self._lock_for_adjust_thread:
             if self.threads_free_count <= self.MIN_WORKERS and self._threads_num < self.max_workers:
                 _KeepAliveTimeThread(self).start()
+
 
 class FlexibleThreadPoolMinWorkers0(FlexibleThreadPool):
     MIN_WORKERS = 0

@@ -159,9 +159,9 @@ class CeleryConsumer(AbstractConsumer):
         # 这就是核心，@boost时候会 @ celery app.task装饰器
         celery_task_deco_options = dict(name=self.queue_name,
                                         max_retries=self.consumer_params.max_retry_times, bind=True)
-        if self.consumer_params.qps != 0:
+        if self.consumer_params.qps:
             celery_task_deco_options['rate_limit'] = f'{self.consumer_params.qps}/s'
-        if self.consumer_params.function_timeout != 0:
+        if self.consumer_params.function_timeout:
             celery_task_deco_options['soft_time_limit'] = self.consumer_params.function_timeout
         celery_task_deco_options.update(self.consumer_params.broker_exclusive_config['celery_task_config'])
 

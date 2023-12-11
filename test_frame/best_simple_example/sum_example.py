@@ -22,6 +22,11 @@ def task_fun(x, y):
 
 
 if __name__ == "__main__":
+    task_fun.consume()  # 消费者启动循环调度并发消费任务
     for i in range(10):
         task_fun.push(i, y=i * 2)  # 发布者发布任务
+<<<<<<< HEAD
     task_fun.consume()  # 消费者启动循环调度并发消费任务`
+=======
+
+>>>>>>> 2b8c5bdeba383298ce93fba69a0c6eea5ffd6c49

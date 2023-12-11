@@ -265,7 +265,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                 log_filename=consumer_params.log_filename,
                                                 broker_exclusive_config=self.consumer_params.broker_exclusive_config)
         if is_main_process:
-            self.logger.info(f'{self.queue_name} consumer 的消费者配置:\n {self.consumer_params.json_pre()}')
+            self.logger.info(f'{self.queue_name} consumer 的消费者配置:\n {self.consumer_params.json_str_value()}')
         atexit.register(self.join_shedual_task_thread)
 
     def _build_logger(self):
@@ -541,7 +541,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _get_priority_conf(self, kw: dict, broker_task_config_key: str):
         broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)
-        if broker_task_config is None:
+        if not broker_task_config:
             return getattr(self.consumer_params, f'{broker_task_config_key}', None)
         else:
             return broker_task_config

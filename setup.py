@@ -99,6 +99,7 @@ setup(
         'auto_run_on_remote',
         'frozenlist',
         'fire',
+        'pydantic',
     ],
     extras_require={'all': extra_brokers,
                     'extra_brokers': extra_brokers,

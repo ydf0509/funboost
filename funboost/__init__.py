@@ -22,7 +22,7 @@ from funboost.set_frame_config import show_frame_config
 from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath  # 这是把 dependency_packages_in_pythonpath 添加到 PYTHONPATH了。
 from funboost.utils import monkey_patches
 
-from funboost.core.func_params_model import (BoosterParams, FunctionResultStatusPersistanceConfig,
+from funboost.core.func_params_model import (BoosterParams,BoosterParamsComplete, FunctionResultStatusPersistanceConfig,
                                              PriorityConsumingControlConfig, PublisherParams, BoosterParamsComplete)
 from funboost.funboost_config_deafult import FunboostCommonConfig, BrokerConnConfig
 

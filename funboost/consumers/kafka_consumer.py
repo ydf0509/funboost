@@ -11,10 +11,10 @@ from kafka.errors import TopicAlreadyExistsError
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.funboost_config_deafult import BrokerConnConfig
-from nb_log import get_logger, LogManager
-
+# from nb_log import get_logger
+from funboost.core.loggers import get_funboost_file_logger
 # LogManager('kafka').get_logger_and_add_handlers(30)
-get_logger('kafka', log_level_int=30)
+get_funboost_file_logger('kafka', log_level_int=30)
 
 
 class KafkaConsumer(AbstractConsumer):
@@ -24,7 +24,7 @@ class KafkaConsumer(AbstractConsumer):
     可以让消费函数内部 sleep60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group funboost 来证实自动确认消费和手动确认消费的区别。
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group_id':'funboost_kafka','auto_offset_reset':'earliest'}
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group_id': 'funboost_kafka', 'auto_offset_reset': 'earliest'}
     # not_all_brokers_general_settings配置 ，支持独立的中间件配置参数是 group_id 和 auto_offset_reset
     """
     auto_offset_reset 介绍
@@ -44,9 +44,9 @@ class KafkaConsumer(AbstractConsumer):
 
         self._producer = KafkaProducer(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
         consumer = OfficialKafkaConsumer(self._queue_name, bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS,
-                                         group_id=self.broker_exclusive_config["group_id"],
+                                         group_id=self.consumer_params.broker_exclusive_config["group_id"],
                                          enable_auto_commit=True,
-                                         auto_offset_reset=self.broker_exclusive_config["auto_offset_reset"],
+                                         auto_offset_reset=self.consumer_params.broker_exclusive_config["auto_offset_reset"],
                                          )
         #  auto_offset_reset (str): A policy for resetting offsets on
         #             OffsetOutOfRange errors: 'earliest' will move to the oldest
@@ -60,7 +60,7 @@ class KafkaConsumer(AbstractConsumer):
         # REMIND 好处是并发高。topic像翻书一样，随时可以设置偏移量重新消费。多个分组消费同一个主题，每个分组对相同主题的偏移量互不干扰 。
         for message in consumer:
             # 注意: message ,value都是原始的字节数据，需要decode
-            if self._is_show_message_get_from_broker:
+            if self.consumer_params.is_show_message_get_from_broker:
                 self.logger.debug(
                     f'从kafka的 [{message.topic}] 主题,分区 {message.partition} 中 取出的消息是：  {message.value.decode()}')
             kw = {'consumer': consumer, 'message': message, 'body': json.loads(message.value)}

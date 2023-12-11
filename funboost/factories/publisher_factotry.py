@@ -5,15 +5,12 @@ import copy
 
 from typing import Callable
 from funboost.publishers.base_publisher import AbstractPublisher
+from funboost.core.func_params_model import PublisherParams
 
 
 # broker_kind__publisher_type_map
 
-def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file_handler=True,
-                  clear_queue_within_init=False, is_add_publish_time=True, consuming_function: Callable = None,
-                  broker_kind: int = None,
-                  broker_exclusive_config: dict = None,
-                  ) -> AbstractPublisher:
+def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher:
     """
     :param queue_name:
     :param log_level_int:
@@ -30,10 +27,9 @@ def get_publisher(queue_name, *, log_level_int=10, logger_prefix='', is_add_file
     :return:
     """
 
-    all_kwargs = copy.deepcopy(locals())
-    all_kwargs.pop('broker_kind')
     from funboost.factories.broker_kind__publsiher_consumer_type_map import broker_kind__publsiher_consumer_type_map, regist_to_funboost
+    broker_kind = publisher_params.broker_kind
     regist_to_funboost(broker_kind)  # 动态注册中间件到框架是为了延迟导入，用户没安装不需要的第三方包不报错。
     if broker_kind not in broker_kind__publsiher_consumer_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')
-    return broker_kind__publsiher_consumer_type_map[broker_kind][0](**all_kwargs)
+    return broker_kind__publsiher_consumer_type_map[broker_kind][0](publisher_params)

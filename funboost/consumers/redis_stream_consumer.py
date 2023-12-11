@@ -17,7 +17,7 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
     BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group': 'funboost_group'}
 
     def custom_init(self):
-        self.group = self.broker_exclusive_config['group'] or self.GROUP
+        self.group = self.consumer_params.broker_exclusive_config['group'] or self.GROUP
 
     def start_consuming_message(self):
         redis_server_info_dict = self.redis_db_frame.info()

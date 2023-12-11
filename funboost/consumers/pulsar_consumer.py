@@ -47,9 +47,9 @@ class PulsarConsumer(AbstractConsumer, ):
             raise ImportError('需要用户自己 pip install pulsar-client ，')
         self._client = pulsar.Client(BrokerConnConfig.PULSAR_URL, )
         self._consumer = self._client.subscribe(self._queue_name, schema=schema.StringSchema(), consumer_name=f'funboost_consumer_{os.getpid()}',
-                                                subscription_name=self.broker_exclusive_config['subscription_name'],
-                                                consumer_type=self.broker_exclusive_config['consumer_type'],
-                                                replicate_subscription_state_enabled=self.broker_exclusive_config['replicate_subscription_state_enabled'])
+                                                subscription_name=self.consumer_params.broker_exclusive_config['subscription_name'],
+                                                consumer_type=self.consumer_params.broker_exclusive_config['consumer_type'],
+                                                replicate_subscription_state_enabled=self.consumer_params.broker_exclusive_config['replicate_subscription_state_enabled'])
         while True:
             msg = self._consumer.receive()
             if msg:

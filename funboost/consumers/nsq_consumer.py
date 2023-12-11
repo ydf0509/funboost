@@ -6,9 +6,10 @@ from gnsq import Consumer, Message
 from funboost.constant import BrokerEnum
 from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.consumers.base_consumer import AbstractConsumer
-from nb_log import LogManager
+# from nb_log import LogManager
+from funboost.core.loggers import get_funboost_file_logger
 
-LogManager('gnsq').get_logger_and_add_handlers(20)
+get_funboost_file_logger('gnsq',log_level_int=20)
 
 
 class NsqConsumer(AbstractConsumer):
@@ -19,7 +20,7 @@ class NsqConsumer(AbstractConsumer):
 
     def _shedual_task(self):
         consumer = Consumer(self._queue_name, 'frame_channel', BrokerConnConfig.NSQD_TCP_ADDRESSES,
-                            max_in_flight=self._concurrent_num, heartbeat_interval=60, timeout=600, )  # heartbeat_interval 不能设置为600
+                            max_in_flight=self.consumer_params.concurrent_num, heartbeat_interval=60, timeout=600, )  # heartbeat_interval 不能设置为600
 
         @consumer.on_message.connect
         def handler(consumerx: Consumer, message: Message):

@@ -158,12 +158,12 @@ class CeleryConsumer(AbstractConsumer):
     def custom_init(self):
         # 这就是核心，@boost时候会 @ celery app.task装饰器
         celery_task_deco_options = dict(name=self.queue_name,
-                                        max_retries=self._max_retry_times, bind=True)
-        if self._qps != 0:
-            celery_task_deco_options['rate_limit'] = f'{self._qps}/s'
-        if self._function_timeout != 0:
-            celery_task_deco_options['soft_time_limit'] = self._function_timeout
-        celery_task_deco_options.update(self.broker_exclusive_config['celery_task_config'])
+                                        max_retries=self.consumer_params.max_retry_times, bind=True)
+        if self.consumer_params.qps:
+            celery_task_deco_options['rate_limit'] = f'{self.consumer_params.qps}/s'
+        if self.consumer_params.function_timeout:
+            celery_task_deco_options['soft_time_limit'] = self.consumer_params.function_timeout
+        celery_task_deco_options.update(self.consumer_params.broker_exclusive_config['celery_task_config'])
 
         @celery_app.task(**celery_task_deco_options)
         def f(this: CeleryTask, *args, **kwargs):
@@ -173,18 +173,18 @@ class CeleryConsumer(AbstractConsumer):
                 return self.consuming_function(*args, **kwargs)
             except Exception as exc:  # 改成自动重试。
                 # print(this.request.__dict__,dir(this))
-                if this.request.retries != self._max_retry_times:
+                if this.request.retries != self.consumer_params.max_retry_times:
                     log_msg = f'fun: {self.consuming_function}  args: {args} , kwargs: {kwargs} 消息第{this.request.retries}次运行出错,  {exc} \n'
-                    self._log_error(log_msg, exc_info=self._is_print_detail_exception)
+                    self._log_error(log_msg, exc_info=self.consumer_params.is_print_detail_exception)
                 else:
                     log_msg = f'fun: {self.consuming_function}  args: {args} , kwargs: {kwargs} 消息达到最大重试次数{this.request.retries}次仍然出错,  {exc} \n'
-                    self._log_critical(log_msg, exc_info=self._is_print_detail_exception)
+                    self._log_critical(log_msg, exc_info=self.consumer_params.is_print_detail_exception)
                 # 发生异常，尝试重试任务,countdown 是多少秒后重试
                 raise this.retry(exc=exc, countdown=5)
 
         celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})  # 自动配置celery每个函数使用不同的队列名。
         self.celery_task = f
-        CeleryHelper.concurrent_mode = self._concurrent_mode
+        CeleryHelper.concurrent_mode = self.consumer_params.concurrent_mode
 
     def start_consuming_message(self):
         # 不单独每个函数都启动一次celery的worker消费，是把要消费的 queue name放到列表中，CeleryHelper.realy_start_celery_worker 一次性启动多个函数消费。

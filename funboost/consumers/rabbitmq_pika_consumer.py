@@ -5,16 +5,17 @@ import os
 import functools
 import json
 from threading import Lock
-from nb_log import LogManager, get_logger
-from funboost.constant import BrokerEnum
-from funboost.publishers.base_publisher import deco_mq_conn_error
+# # from nb_log import LogManager, get_logger
+# from funboost.constant import BrokerEnum
+# from funboost.publishers.base_publisher import deco_mq_conn_error
+from funboost.core.loggers import get_funboost_file_logger
 import pikav1.exceptions
 from pikav1.exceptions import AMQPError
 import pikav1
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.funboost_config_deafult import BrokerConnConfig
 
-get_logger('pikav1', log_level_int=20)
+get_funboost_file_logger('pikav1', log_level_int=20)
 
 
 class RabbitmqConsumer(AbstractConsumer):
@@ -32,7 +33,7 @@ class RabbitmqConsumer(AbstractConsumer):
     def _shedual_task(self):
         # channel = RabbitMqFactory(is_use_rabbitpy=0).get_rabbit_cleint().creat_a_channel()
         # channel.queue_declare(queue=self._queue_name, durable=True)
-        # channel.basic_qos(prefetch_count=self._concurrent_num)
+        # channel.basic_qos(prefetch_count=self.consumer_params.concurrent_num)
         def callback(ch, method, properties, body):
             body = body.decode()
             # self.logger.debug(f'从rabbitmq的 [{self._queue_name}] 队列中 取出的消息是：  {body}')

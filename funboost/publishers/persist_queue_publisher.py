@@ -7,9 +7,10 @@ import sqlite3
 import persistqueue
 from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.publishers.base_publisher import AbstractPublisher
-from funboost.utils import LogManager
+# from funboost.utils import LogManager
+from funboost.core.loggers import get_funboost_file_logger
 
-LogManager('persistqueue').get_logger_and_add_handlers(10)
+get_funboost_file_logger('persistqueue')
 
 
 # noinspection PyProtectedMember

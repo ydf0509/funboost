@@ -21,30 +21,29 @@ import uuid
 import time
 import traceback
 import inspect
-# from collections import Callable
-from typing import Callable
 from functools import wraps
 import threading
-from threading import Lock, Thread
+from threading import Lock
 import asyncio
 
-from nb_log import (get_logger, LoggerLevelSetterMixin, nb_print, LoggerMixin, LogManager, CompatibleLogger,
+from funboost.core.loggers import develop_logger
+
+from funboost.core.func_params_model import BoosterParams, PublisherParams
+from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, CompatibleLogger,
                     LoggerMixinDefaultWithFileHandler, stdout_write, is_main_process,
                     nb_log_config_default)
+from funboost.core.loggers import FunboostFileLoggerMixin
 
 from apscheduler.jobstores.redis import RedisJobStore
 
 from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor
 
-from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
+from funboost.funboost_config_deafult import FunboostCommonConfig
 from funboost.concurrent_pool.single_thread_executor import SoloExecutor
 
-from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig, ResultPersistenceHelper, FunctionResultStatus
+from funboost.core.function_result_status_saver import ResultPersistenceHelper, FunctionResultStatus
 
-# noinspection PyUnresolvedReferences
 from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_publish_time
-
-# noinspection PyUnresolvedReferences
 
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
@@ -54,96 +53,83 @@ from funboost.concurrent_pool.bounded_threadpoolexcutor import \
 from funboost.utils.redis_manager import RedisMixin
 from func_timeout import func_set_timeout  # noqa
 
-from funboost.concurrent_pool.custom_threadpool_executor import \
-    CustomThreadPoolExecutor, check_not_monkey
-from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool, sync_or_async_fun_deco, run_sync_or_async_fun
+from funboost.concurrent_pool.custom_threadpool_executor import check_not_monkey
+from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool, sync_or_async_fun_deco
 # from funboost.concurrent_pool.concurrent_pool_with_multi_process import ConcurrentPoolWithProcess
 from funboost.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from funboost.factories.publisher_factotry import get_publisher
 
-from funboost.utils import decorators, time_util, json_helper, redis_manager
-# noinspection PyUnresolvedReferences
-from funboost.utils.bulk_operation import MongoBulkWriteHelper, InsertOne
-from funboost.funboost_config_deafult import BrokerConnConfig
-# noinspection PyUnresolvedReferences
+from funboost.utils import decorators, time_util, redis_manager
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
 from funboost.core import kill_remote_task
+from funboost.core.exceptions import ExceptionForRequeue, ExceptionForPushToDlxqueue
 
 
 # patch_apscheduler_run_job()
 
 
-class ExceptionForRetry(Exception):
-    """为了重试的，抛出错误。只是定义了一个子类，用不用都可以，函数出任何类型错误了框架都会自动重试"""
-
-
-class ExceptionForRequeue(Exception):
-    """框架检测到此错误，重新放回当前队列中"""
-
-
-class ExceptionForPushToDlxqueue(Exception):
-    """框架检测到ExceptionForPushToDlxqueue错误，发布到死信队列"""
+class GlobalConcurrentModeManager:
+    global_concurrent_mode = None
 
 
 # noinspection PyClassHasNoInit,DuplicatedCode
-class ConsumersManager:
-    schedulal_thread_to_be_join = []
-    consumers_queue__info_map = dict()
-    consumers_queue__consumer_obj_map = dict()
-    global_concurrent_mode = None
-    schedual_task_always_use_thread = False
-    _has_show_conusmers_info = False
+# class ConsumersManager:
+#     schedulal_thread_to_be_join = []
+#     consumers_queue__info_map = dict()
+#     global_concurrent_mode = None
+#     schedual_task_always_use_thread = False
+#     _has_show_conusmers_info = False
+#
+#     @classmethod
+#     def join_all_consumer_shedual_task_thread(cls):
+#         """实现这个主要是为了兼容linux和win，在开启多进程时候兼容。在linux + python3.6 （python3.7-3.11不会）环境如果子进程中即使有在一个非守护线程里面运行while 1的逻辑，代码也会很快结束。所以必须把所有循环拉取消息的线程join
+#         否则如果只是为了兼容win，压根不需要这里多此一举
+#         """
+#         # nb_print((cls.schedulal_thread_to_be_join, len(cls.schedulal_thread_to_be_join), '模式：', cls.global_concurrent_mode))
+#         if cls.schedual_task_always_use_thread:
+#             for t in cls.schedulal_thread_to_be_join:
+#                 nb_print(t)
+#                 t.join()
+#         else:
+#             if cls.global_concurrent_mode in [ConcurrentModeEnum.THREADING, ConcurrentModeEnum.ASYNC, ]:
+#                 for t in cls.schedulal_thread_to_be_join:
+#                     # nb_print(t)
+#                     t.join()
+#             elif cls.global_concurrent_mode == ConcurrentModeEnum.GEVENT:
+#                 # cls.logger.info()
+#                 # nb_print(cls.schedulal_thread_to_be_join)
+#                 import gevent
+#                 gevent.joinall(cls.schedulal_thread_to_be_join, raise_error=True, )
+#             elif cls.global_concurrent_mode == ConcurrentModeEnum.EVENTLET:
+#                 for g in cls.schedulal_thread_to_be_join:
+#                     # eventlet.greenthread.GreenThread.
+#                     # nb_print(g)
+#                     g.wait()
 
-    @classmethod
-    def join_all_consumer_shedual_task_thread(cls):
-        """实现这个主要是为了兼容linux和win，在开启多进程时候兼容。在linux + python3.6 （python3.7-3.11不会）环境如果子进程中即使有在一个非守护线程里面运行while 1的逻辑，代码也会很快结束。所以必须把所有循环拉取消息的线程join
-        否则如果只是为了兼容win，压根不需要这里多此一举
-        """
-        # nb_print((cls.schedulal_thread_to_be_join, len(cls.schedulal_thread_to_be_join), '模式：', cls.global_concurrent_mode))
-        if cls.schedual_task_always_use_thread:
-            for t in cls.schedulal_thread_to_be_join:
-                nb_print(t)
-                t.join()
-        else:
-            if cls.global_concurrent_mode in [ConcurrentModeEnum.THREADING, ConcurrentModeEnum.ASYNC, ]:
-                for t in cls.schedulal_thread_to_be_join:
-                    # nb_print(t)
-                    t.join()
-            elif cls.global_concurrent_mode == ConcurrentModeEnum.GEVENT:
-                # cls.logger.info()
-                # nb_print(cls.schedulal_thread_to_be_join)
-                import gevent
-                gevent.joinall(cls.schedulal_thread_to_be_join, raise_error=True, )
-            elif cls.global_concurrent_mode == ConcurrentModeEnum.EVENTLET:
-                for g in cls.schedulal_thread_to_be_join:
-                    # eventlet.greenthread.GreenThread.
-                    # nb_print(g)
-                    g.wait()
+# @classmethod
+# def show_all_consumer_info(cls):
+#     # nb_print(f'当前解释器内，所有消费者的信息是：\n  {cls.consumers_queue__info_map}')
+#     # if only_print_on_main_process(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}'):
+#     if not cls._has_show_conusmers_info:
+#         for _, consumer_info in cls.consumers_queue__info_map.items():
+#             stdout_write(f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}" '
+#                          f' \033[0;37;44m{consumer_info["queue_name"]} 的消费者。 \033[0m\n')
+#     cls._has_show_conusmers_info = True
 
-    @classmethod
-    def show_all_consumer_info(cls):
-        # nb_print(f'当前解释器内，所有消费者的信息是：\n  {cls.consumers_queue__info_map}')
-        # if only_print_on_main_process(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}'):
-        if not cls._has_show_conusmers_info:
-            for _, consumer_info in cls.consumers_queue__info_map.items():
-                stdout_write(f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}" '
-                             f' \033[0;37;44m{consumer_info["queue_name"]} 的消费者。 \033[0m\n')
-        cls._has_show_conusmers_info = True
-
-    @staticmethod
-    def get_concurrent_name_by_concurrent_mode(concurrent_mode):
-        if concurrent_mode == ConcurrentModeEnum.THREADING:
-            return 'thread'
-        elif concurrent_mode == ConcurrentModeEnum.GEVENT:
-            return 'gevent'
-        elif concurrent_mode == ConcurrentModeEnum.EVENTLET:
-            return 'evenlet'
-        elif concurrent_mode == ConcurrentModeEnum.ASYNC:
-            return 'async'
-        elif concurrent_mode == ConcurrentModeEnum.SINGLE_THREAD:
-            return 'single_thread'
-        # elif concurrent_mode == ConcurrentModeEnum.LINUX_FORK:
-        #     return 'linux_fork'
+# @staticmethod
+# def get_concurrent_name_by_concurrent_mode(concurrent_mode):
+#     if concurrent_mode == ConcurrentModeEnum.THREADING:
+#         return 'thread'
+#     elif concurrent_mode == ConcurrentModeEnum.GEVENT:
+#         return 'gevent'
+#     elif concurrent_mode == ConcurrentModeEnum.EVENTLET:
+#         return 'evenlet'
+#     elif concurrent_mode == ConcurrentModeEnum.ASYNC:
+#         return 'async'
+#     elif concurrent_mode == ConcurrentModeEnum.SINGLE_THREAD:
+#         return 'single_thread'
+# elif concurrent_mode == ConcurrentModeEnum.LINUX_FORK:
+#     return 'linux_fork'
 
 
 # noinspection DuplicatedCode
@@ -156,27 +142,21 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     @decorators.synchronized
     def publisher_of_same_queue(self):
         if not self._publisher_of_same_queue:
-            self._publisher_of_same_queue = get_publisher(self._queue_name, consuming_function=self.consuming_function,
-                                                          broker_kind=self.BROKER_KIND, log_level_int=self._log_level,
-                                                          is_add_file_handler=self._create_logger_file, broker_exclusive_config=self.broker_exclusive_config)
-            if self._msg_expire_senconds:
-                self._publisher_of_same_queue.set_is_add_publish_time()
+            self._publisher_of_same_queue = get_publisher(publisher_params=self.publisher_params)
         return self._publisher_of_same_queue
 
     def bulid_a_new_publisher_of_same_queue(self):
-        return get_publisher(self._queue_name, consuming_function=self.consuming_function,
-                             broker_kind=self.BROKER_KIND, log_level_int=self._log_level,
-                             is_add_file_handler=self._create_logger_file, broker_exclusive_config=self.broker_exclusive_config)
+        return get_publisher(publisher_params=self.publisher_params)
 
     @property
     @decorators.synchronized
     def publisher_of_dlx_queue(self):
         """ 死信队列发布者 """
         if not self._publisher_of_dlx_queue:
-            self._publisher_of_dlx_queue = get_publisher(self._dlx_queue_name,
-                                                         # consuming_function=self.consuming_function,
-                                                         broker_kind=self.BROKER_KIND, log_level_int=self._log_level,
-                                                         is_add_file_handler=self._create_logger_file, broker_exclusive_config=self.broker_exclusive_config)
+            publisher_params_dlx = copy.copy(self.publisher_params)
+            publisher_params_dlx.queue_name = self._dlx_queue_name
+            publisher_params_dlx.consuming_function = None
+            self._publisher_of_dlx_queue = get_publisher(publisher_params=publisher_params_dlx)
         return self._publisher_of_dlx_queue
 
     @classmethod
@@ -185,192 +165,42 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         :return:
         """
-        ConsumersManager.join_all_consumer_shedual_task_thread()
+        # ConsumersManager.join_all_consumer_shedual_task_thread()
+        while 1:
+            time.sleep(10)
 
-    # noinspection PyProtectedMember,PyUnresolvedReferences
-    def __init__(self, queue_name, *, consuming_function: Callable = None,
-                 consumin_function_decorator: typing.Callable = None, function_timeout=0, concurrent_num=50,
-                 specify_concurrent_pool=None,
-                 qps: float = 0, is_using_distributed_frequency_control=False,
-                 specify_async_loop=None, concurrent_mode=ConcurrentModeEnum.THREADING,
-                 max_retry_times=3, is_push_to_dlx_queue_when_retry_max_times=False,
-                 log_level=10, is_print_detail_exception=True, is_show_message_get_from_broker=False,
-                 msg_expire_senconds=0, is_send_consumer_hearbeat_to_redis=False,
-                 logger_prefix='', create_logger_file=True, do_task_filtering=False,
-                 task_filtering_expire_seconds=0,
-                 is_do_not_run_by_specify_time_effect=False,
-                 do_not_run_by_specify_time=('10:00:00', '22:00:00'),
-                 function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(
-                     False, False, 7 * 24 * 3600),
-                 user_custom_record_process_info_func: typing.Callable = None,
-                 is_using_rpc_mode=False,
-                 is_support_remote_kill_task=False,
-                 broker_exclusive_config: dict = None,
-                 schedule_tasks_on_main_thread=False,
-                 ):
+    def __init__(self, consumer_params: BoosterParams):
 
         """
-        :param queue_name:
-        :param consuming_function: 处理消息的函数。
-        :param consumin_function_decorator : 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
-        :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。
-         # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
-         # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
-        :param concurrent_num:并发数量，并发种类由concurrent_mode决定
-        :param specify_concurrent_pool:使用指定的线程池/携程池，可以多个消费者共使用一个线程池，不为None时候。threads_num失效
-        :param specify_async_loop:指定的async的loop循环，设置并发模式为async才能起作用。
-        :param concurrent_mode:并发模式，1线程(ConcurrentModeEnum.THREADING) 2gevent(ConcurrentModeEnum.GEVENT)
-                              3eventlet(ConcurrentModeEnum.EVENTLET) 4 asyncio(ConcurrentModeEnum.ASYNC) 5单线程(ConcurrentModeEnum.SINGLE_THREAD)
-        :param max_retry_times: 最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
-           可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。
-           主动抛出ExceptionForRequeue异常，则当前 消息会重返中间件，
-           主动抛出 ExceptionForPushToDlxqueue  异常，可以使消息发送到单独的死信队列中，死信队列的名字是 队列名字 + _dlx。
-           。
-        :param is_push_to_dlx_queue_when_retry_max_times : 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
-        :param log_level: # 这里是设置消费者 发布者日志级别的，如果不想看到很多的细节显示信息，可以设置为 20 (logging.INFO)。
-        :param is_print_detail_exception:函数出错时候时候显示详细的错误堆栈，占用屏幕太多
-        :param is_show_message_get_from_broker: 从中间件取出消息时候时候打印显示出来
-        :param qps:指定1秒内的函数执行次数，例如可以是小数0.01代表每100秒执行一次，也可以是50代表1秒执行50次.为0则不控频。
-        :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis统计消费者数量，然后频率平分），默认只对当前实例化的消费者空频有效。
-            假如实例化了2个qps为10的使用同一队列名的消费者，并且都启动，则每秒运行次数会达到20。如果使用分布式空频则所有消费者加起来的总运行次数是10。
-        :param is_send_consumer_hearbeat_to_redis   时候将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
-        :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志
-        :param create_logger_file : 是否创建文件日志
-        :param do_task_filtering :是否执行基于函数参数的任务过滤
-        :param task_filtering_expire_seconds:任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ，
-               30分钟前发布过1 + 2 的任务，现在仍然执行，
-               如果是30分钟以内发布过这个任务，则不执行1 + 2，现在把这个逻辑集成到框架，一般用于接口价格缓存。
-        :param is_do_not_run_by_specify_time_effect :是否使不运行的时间段生效
-        :param do_not_run_by_specify_time   :不运行的时间段
-        :param schedule_tasks_on_main_thread :直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
-        :param function_result_status_persistance_conf   :配置。是否保存函数的入参，运行结果和运行状态到mongodb。
-               这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
-        :param user_custom_record_process_info_func  提供一个用户自定义的保存消息处理记录到某个地方例如mysql数据库的函数，函数仅仅接受一个入参，入参类型是 FunctionResultStatus，用户可以打印参数
-        :param is_using_rpc_mode 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。
-        :param is_support_remote_kill_task 是否支持远程任务杀死功能，如果任务数量少，单个任务耗时长，确实需要远程发送命令来杀死正在运行的函数，才设置为true，否则不建议开启此功能。
-        :param broker_exclusive_config 加上一个不同种类中间件非通用的配置,不同中间件自身独有的配置，不是所有中间件都兼容的配置，因为框架支持30种消息队列，消息队列不仅仅是一般的先进先出queue这么简单的概念，
-            例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，每一种消息队列都有独特的配置参数意义，可以通过这里传递。
-
-        执行流程为
-        1、 实例化消费者类，设置各种控制属性
-        2、启动 start_consuming_message 启动消费
-        3、start_consuming_message 中 调用 _shedual_task 从中间件循环取消息
-        4、 _shedual_task 中调用 _submit_task 运行 _run方法，将 任务 添加到并发池中并发运行。
-        5、 消费函数执行完成后，运行 _confirm_consume , 确认消费。
-        各种中间件的 取消息、确认消费 单独实现，其他逻辑由于采用了模板模式，自动复用代码。
-
         """
-        self.init_params = copy.copy(locals())
-        self.init_params.pop('self')
-        self.init_params['broker_kind'] = self.__class__.BROKER_KIND
-        self.init_params['consuming_function'] = consuming_function
-        # print(999, self.init_params)
-        ConsumersManager.consumers_queue__info_map[queue_name] = current_queue__info_dict = copy.copy(self.init_params)
-        ConsumersManager.consumers_queue__consumer_obj_map[queue_name] = self
-        current_queue__info_dict['consuming_function'] = str(consuming_function)  # consuming_function.__name__
-        current_queue__info_dict['specify_async_loop'] = str(specify_async_loop)
-        current_queue__info_dict[
-            'function_result_status_persistance_conf'] = function_result_status_persistance_conf.to_dict()
-        current_queue__info_dict['class_name'] = self.__class__.__name__
-        concurrent_name = ConsumersManager.get_concurrent_name_by_concurrent_mode(concurrent_mode)
-        current_queue__info_dict['concurrent_mode_name'] = concurrent_name
+        self.raw_consumer_params = copy.copy(consumer_params)
+        self.consumer_params = copy.copy(consumer_params)
+        # noinspection PyUnresolvedReferences
+        file_name = self.consumer_params.consuming_function.__code__.co_filename
+        # noinspection PyUnresolvedReferences
+        line = self.consumer_params.consuming_function.__code__.co_firstlineno
+        self.consumer_params.auto_generate_info['where_to_instantiate'] = f'{file_name}:{line}'
 
-        # 方便点击跳转定位到当前解释器下所有实例化消费者的文件行，点击可跳转到该处。
-        # 获取被调用函数在被调用时所处代码行数
-        # 直接实例化相应的类和使用工厂模式来实例化相应的类，得到的消费者实际实例化的行是不一样的，希望定位到用户的代码处，而不是定位到工厂模式处。也不要是boost装饰器本身处。
-        # print(consuming_function,dir(consuming_function))
-        # print(dir(consuming_function.__code__))
-        file_name = consuming_function.__code__.co_filename
-        line = consuming_function.__code__.co_firstlineno
-        # line = sys._getframe(2).f_back.f_lineno
-        # # 获取被调用函数所在模块文件名
-        # file_name = sys._getframe(3).f_code.co_filename
-        # print(queue_name,line,file_name)
-        # if 'consumer_factory.py' in file_name:
-        #     line = sys._getframe(2).f_back.f_lineno
-        #     file_name = sys._getframe(3).f_code.co_filename
-        # if r'funboost\__init__.py' in file_name or 'funboost/__init__.py' in file_name:
-        #     line = sys._getframe(3).f_back.f_lineno
-        #     file_name = sys._getframe(4).f_code.co_filename
-        # if r'funboost\helpers.py' in file_name or 'funboost/helpers.py' in file_name:
-        #     line = sys._getframe(4).f_back.f_lineno
-        #     file_name = sys._getframe(5).f_code.co_filename
-        current_queue__info_dict['where_to_instantiate'] = f'{file_name}:{line}'
-
-        self._queue_name = queue_name
-        self.queue_name = queue_name  # 可以换成公有的，免得外部访问有警告。
-        if consuming_function is None:
+        self.queue_name = self._queue_name = consumer_params.queue_name
+        self.consuming_function = consumer_params.consuming_function
+        if consumer_params.consuming_function is None:
             raise ValueError('必须传 consuming_function 参数')
-        self.consuming_function = consuming_function
-        self._consumin_function_decorator = consumin_function_decorator
-        self._function_timeout = function_timeout
 
-        # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
-        # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
+        self._msg_schedule_time_intercal = 0 if consumer_params.qps is None else 1.0 / consumer_params.qps
 
-        if qps != 0 and concurrent_num == 50:
-            self._concurrent_num = 500
-        else:
-            self._concurrent_num = concurrent_num
-        if concurrent_mode == ConcurrentModeEnum.SINGLE_THREAD:
-            self._concurrent_num = 1
-
-        self._specify_concurrent_pool = specify_concurrent_pool
-        self._specify_async_loop = specify_async_loop
-        self._concurrent_pool = None
-        self._concurrent_mode = concurrent_mode
-
-        self._max_retry_times = max_retry_times
-        self._is_push_to_dlx_queue_when_retry_max_times = is_push_to_dlx_queue_when_retry_max_times
-        self._is_print_detail_exception = is_print_detail_exception
-        self._is_show_message_get_from_broker = is_show_message_get_from_broker
-
-        self._qps = qps
-        self._msg_schedule_time_intercal = 0 if qps == 0 else 1.0 / qps
-
-        self._is_using_distributed_frequency_control = is_using_distributed_frequency_control
-        self._is_send_consumer_hearbeat_to_redis = is_send_consumer_hearbeat_to_redis or is_using_distributed_frequency_control
-        self._msg_expire_senconds = msg_expire_senconds
-
-        if self._concurrent_mode not in (1, 2, 3, 4, 5, 6):
-            raise ValueError('设置的并发模式不正确')
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
-        if self._concurrent_mode == ConcurrentModeEnum.ASYNC:
+        if consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC:
             self._run = self._async_run  # 这里做了自动转化，使用async_run代替run
 
-        self._logger_prefix = logger_prefix
-        self._log_level = log_level
-        if logger_prefix != '':
-            logger_prefix += '--'
-        # logger_name = f'{logger_prefix}{self.__class__.__name__}--{concurrent_name}--{queue_name}--{self.consuming_function.__name__}'
-        logger_name = f'{logger_prefix}{self.__class__.__name__}--{queue_name}'
-        self._create_logger_file = create_logger_file
-        self._log_level = log_level
-        log_file_handler_type = 1
-        if int(os.getenv('is_fsdf_remote_run', 0)) == 1:  # 这个是远程部署的自动的环境变量，用户不需要亲自自己设置这个值。
-            log_file_handler_type = 5  # 如果是fabric_deploy 自动化远程部署函数时候，python -c 启动的使用第一个filehandler没记录文件，现在使用第5种filehandler。
-        self.logger = LogManager(logger_name, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
-            log_level_int=log_level, log_filename=f'{logger_name}.log' if create_logger_file else None,
-            # log_file_handler_type=log_file_handler_type,
-            formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
-        self._logger_name = logger_name
-        # self.logger.info(f'{self.__class__} 在 {current_queue__info_dict["where_to_instantiate"]}  被实例化')
-        logger_name_error = f'{logger_name}_error'
-        self.error_file_logger = LogManager(logger_name_error, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
-            log_level_int=log_level, log_filename=f'{logger_name_error}.log',
-            is_add_stream_handler=False,
-            formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
-
-        stdout_write(f'{time.strftime("%H:%M:%S")} "{current_queue__info_dict["where_to_instantiate"]}"  \033[0;37;44m此行 '
-                     f'实例化队列名 {current_queue__info_dict["queue_name"]} 的消费者, 类型为 {self.__class__}\033[0m\n')
+        self._build_logger()
+        stdout_write(f'''{time.strftime("%H:%M:%S")} "{self.consumer_params.auto_generate_info['where_to_instantiate']}"  \033[0;37;44m此行 实例化队列名 {self.queue_name} 的消费者, 类型为 {self.__class__}\033[0m\n''')
         # only_print_on_main_process(f'{current_queue__info_dict["queue_name"]} 的消费者配置:\n', un_strict_json_dumps.dict2json(current_queue__info_dict))
-        if is_main_process:
-            self.logger.info(f'{current_queue__info_dict["queue_name"]} 的消费者配置:\n {json_helper.dict_to_un_strict_json(current_queue__info_dict)}')
 
-        self._do_task_filtering = do_task_filtering
-        self._redis_filter_key_name = f'filter_zset:{queue_name}' if task_filtering_expire_seconds else f'filter_set:{queue_name}'
-        filter_class = RedisFilter if task_filtering_expire_seconds == 0 else RedisImpermanencyFilter
-        self._redis_filter = filter_class(self._redis_filter_key_name, task_filtering_expire_seconds)
+        # self._do_task_filtering = consumer_params.do_task_filtering
+        # self.consumer_params.is_show_message_get_from_broker = consumer_params.is_show_message_get_from_broker
+        self._redis_filter_key_name = f'filter_zset:{consumer_params.queue_name}' if consumer_params.task_filtering_expire_seconds else f'filter_set:{consumer_params.queue_name}'
+        filter_class = RedisFilter if consumer_params.task_filtering_expire_seconds == 0 else RedisImpermanencyFilter
+        self._redis_filter = filter_class(self._redis_filter_key_name, consumer_params.task_filtering_expire_seconds)
 
         self._unit_time_for_count = 10  # 每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。
         self._execute_task_times_every_unit_time = 0  # 每单位时间执行了多少次任务。
@@ -386,21 +216,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._last_timestamp_when_has_task_in_queue = 0
         self._last_timestamp_print_msg_num = 0
 
-        self._is_do_not_run_by_specify_time_effect = is_do_not_run_by_specify_time_effect
-        self._do_not_run_by_specify_time = do_not_run_by_specify_time  # 可以设置在指定的时间段不运行。
-        self._schedule_tasks_on_main_thread = schedule_tasks_on_main_thread
-
-        self._function_result_status_persistance_conf = function_result_status_persistance_conf
         self._result_persistence_helper: ResultPersistenceHelper
-        self._user_custom_record_process_info_func = user_custom_record_process_info_func
-
-        self._is_using_rpc_mode = is_using_rpc_mode  # 是否使用rpc模式 需要安装和配置好redis
-        self._is_support_remote_kill_task = is_support_remote_kill_task  # 是否支持远程杀死函数task，需要安装和配置好redis
-
-        if broker_exclusive_config is None:
-            broker_exclusive_config = {}
-        self.broker_exclusive_config = copy.deepcopy(self.BROKER_EXCLUSIVE_CONFIG_DEFAULT)
-        self.broker_exclusive_config.update(broker_exclusive_config)
+        self.consumer_params.broker_exclusive_config.update(self.BROKER_EXCLUSIVE_CONFIG_DEFAULT)
 
         self._stop_flag = None
         self._pause_flag = None  # 暂停消费标志，从reids读取
@@ -414,10 +231,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._has_execute_times_in_recent_second = 0
 
         self._publisher_of_same_queue = None  #
-        self._dlx_queue_name = f'{queue_name}_dlx'
+        self._dlx_queue_name = f'{self.queue_name}_dlx'
         self._publisher_of_dlx_queue = None  # 死信队列发布者
 
         self._do_not_delete_extra_from_msg = False
+        self._concurrent_pool = None
 
         self.consumer_identification = f'{nb_log_config_default.computer_name}_{nb_log_config_default.computer_ip}_' \
                                        f'{time_util.DatetimeConverter().datetime_str.replace(":", "-")}_{os.getpid()}_{id(self)}'
@@ -436,26 +254,52 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                             }
 
         self._check_broker_exclusive_config()
-
         self._has_start_delay_task_scheduler = False
         self._consuming_function_is_asyncio = inspect.iscoroutinefunction(self.consuming_function)
         self.custom_init()
-
+        # develop_logger.warning(consumer_params.log_filename)
+        self.publisher_params = PublisherParams(queue_name=consumer_params.queue_name, consuming_function=consumer_params.consuming_function,
+                                                broker_kind=self.BROKER_KIND, log_level=consumer_params.log_level,
+                                                logger_prefix=consumer_params.logger_prefix,
+                                                create_logger_file=consumer_params.create_logger_file,
+                                                log_filename=consumer_params.log_filename,
+                                                broker_exclusive_config=self.consumer_params.broker_exclusive_config)
+        if is_main_process:
+            self.logger.info(f'{self.queue_name} consumer 的消费者配置:\n {self.consumer_params.json_str_value()}')
         atexit.register(self.join_shedual_task_thread)
 
+    def _build_logger(self):
+        logger_prefix = self.consumer_params.logger_prefix
+        if logger_prefix != '':
+            logger_prefix += '--'
+            # logger_name = f'{logger_prefix}{self.__class__.__name__}--{concurrent_name}--{queue_name}--{self.consuming_function.__name__}'
+        logger_name = f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
+        log_filename = self.consumer_params.log_filename or f'funboost.{self.queue_name}.log'
+        self.logger = LogManager(logger_name, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
+            log_level_int=self.consumer_params.log_level, log_filename=log_filename if self.consumer_params.create_logger_file else None,
+            formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+
+        logger_name_error = f'{logger_name}_error'
+        log_filename_error = f'funboost.{self.queue_name}_error.log'
+        if self.consumer_params.log_filename:
+            log_filename_error = f'{self.consumer_params.log_filename.split(".")[0]}_error.{self.consumer_params.log_filename.split(".")[1]}'
+        self.error_file_logger = LogManager(logger_name_error, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
+            log_level_int=logging.ERROR, log_filename=log_filename_error,
+            is_add_stream_handler=False,
+            formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+
     def _check_broker_exclusive_config(self):
-        broker_exclusive_config_keys = self.BROKER_EXCLUSIVE_CONFIG_DEFAULT.keys()
-        if self.broker_exclusive_config:
-            if set(self.broker_exclusive_config.keys()).issubset(broker_exclusive_config_keys):
-                self.logger.info(f'当前消息队列中间件能支持特殊独有配置 {self.broker_exclusive_config.keys()}')
-            else:
-                self.logger.warning(f'当前消息队列中间件含有不支持的特殊配置 {self.broker_exclusive_config.keys()}，能支持的特殊独有配置包括 {broker_exclusive_config_keys}')
+        broker_exclusive_config_keys = self.consumer_params.broker_exclusive_config.keys()
+        if set(self.consumer_params.broker_exclusive_config.keys()).issubset(broker_exclusive_config_keys):
+            self.logger.info(f'当前消息队列中间件能支持特殊独有配置 {self.consumer_params.broker_exclusive_config.keys()}')
+        else:
+            self.logger.warning(f'当前消息队列中间件含有不支持的特殊配置 {self.consumer_params.broker_exclusive_config.keys()}，能支持的特殊独有配置包括 {broker_exclusive_config_keys}')
 
     def _check_monkey_patch(self):
-        if self._concurrent_mode == 2:
+        if self.consumer_params.concurrent_mode == ConcurrentModeEnum.GEVENT:
             from funboost.concurrent_pool.custom_gevent_pool_executor import check_gevent_monkey_patch
             check_gevent_monkey_patch()
-        elif self._concurrent_mode == 3:
+        elif self.consumer_params.concurrent_mode == ConcurrentModeEnum.EVENTLET:
             from funboost.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch
             check_evenlet_monkey_patch()
         else:
@@ -519,7 +363,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     # noinspection PyAttributeOutsideInit
     def start_consuming_message(self):
-        ConsumersManager.show_all_consumer_info()
+        # ConsumersManager.show_all_consumer_info()
         # noinspection PyBroadException
         try:
             self._concurrent_mode_dispatcher.check_all_concurrent_mode()
@@ -527,21 +371,21 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         except BaseException:
             traceback.print_exc()
             os._exit(4444)  # noqa
-        self.logger.warning(f'开始消费 {self._queue_name} 中的消息')
-        self._result_persistence_helper = ResultPersistenceHelper(self._function_result_status_persistance_conf, self._queue_name)
+        self.logger.info(f'开始消费 {self._queue_name} 中的消息')
+        self._result_persistence_helper = ResultPersistenceHelper(self.consumer_params.function_result_status_persistance_conf, self.queue_name)
 
         self._distributed_consumer_statistics = DistributedConsumerStatistics(self)
-        if self._is_send_consumer_hearbeat_to_redis:
+        if self.consumer_params.is_send_consumer_hearbeat_to_redis:
             self._distributed_consumer_statistics.run()
             self.logger.warning(f'启动了分布式环境 使用 redis 的键 hearbeat:{self._queue_name} 统计活跃消费者 ，当前消费者唯一标识为 {self.consumer_identification}')
 
         self.keep_circulating(60, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
-        if self._is_support_remote_kill_task:
+        if self.consumer_params.is_support_remote_kill_task:
             kill_remote_task.RemoteTaskKiller(self.queue_name, None).start_cycle_kill_task()
-            self._is_show_message_get_from_broker = True  # 方便用户看到从消息队列取出来的消息的task_id,然后使用task_id杀死运行中的消息。
-        if self._do_task_filtering:
+            self.consumer_params.is_show_message_get_from_broker = True  # 方便用户看到从消息队列取出来的消息的task_id,然后使用task_id杀死运行中的消息。
+        if self.consumer_params.do_task_filtering:
             self._redis_filter.delete_expire_filter_task_cycle()  # 这个默认是RedisFilter类，是个pass不运行。所以用别的消息中间件模式，不需要安装和配置redis。
-        if self._schedule_tasks_on_main_thread:
+        if self.consumer_params.schedule_tasks_on_main_thread:
             self.keep_circulating(1)(self._shedual_task)()
         else:
             self._concurrent_mode_dispatcher.schedulal_task_with_no_block()
@@ -644,11 +488,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         else:  # 普通任务
             self.concurrent_pool.submit(self._run, kw)
 
-        if self._is_using_distributed_frequency_control:  # 如果是需要分布式控频。
+        if self.consumer_params.is_using_distributed_frequency_control:  # 如果是需要分布式控频。
             active_num = self._distributed_consumer_statistics.active_consumer_num
-            self._frequency_control(self._qps / active_num, self._msg_schedule_time_intercal * active_num)
+            self._frequency_control(self.consumer_params.qps / active_num, self._msg_schedule_time_intercal * active_num)
         else:
-            self._frequency_control(self._qps, self._msg_schedule_time_intercal)
+            self._frequency_control(self.consumer_params.qps, self._msg_schedule_time_intercal)
 
     def __delete_eta_countdown(self, msg_body: dict):
         self.__dict_pop(msg_body.get('extra', {}), 'eta')
@@ -664,7 +508,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _frequency_control(self, qpsx: float, msg_schedule_time_intercalx: float):
         # 以下是消费函数qps控制代码。无论是单个消费者空频还是分布式消费控频，都是基于直接计算的，没有依赖redis inrc计数，使得控频性能好。
-        if qpsx == 0:  # 不需要控频的时候，就不需要休眠。
+        if qpsx is None:  # 不需要控频的时候，就不需要休眠。
             return
         if qpsx <= 5:
             """ 原来的简单版 """
@@ -690,15 +534,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _print_message_get_from_broker(self, broker_name, msg):
         # print(999)
-        if self._is_show_message_get_from_broker:
+        if self.consumer_params.is_show_message_get_from_broker:
             if isinstance(msg, (dict, list)):
                 msg = json.dumps(msg, ensure_ascii=False)
             self.logger.debug(f'从 {broker_name} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
 
     def _get_priority_conf(self, kw: dict, broker_task_config_key: str):
         broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)
-        if broker_task_config is None:
-            return getattr(self, f'_{broker_task_config_key}', None)
+        if not broker_task_config:
+            return getattr(self.consumer_params, f'{broker_task_config_key}', None)
         else:
             return broker_task_config
 
@@ -749,7 +593,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
             if current_function_result_status.success is False and current_retry_times == max_retry_times:
                 log_msg = f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} '
-                if self._is_push_to_dlx_queue_when_retry_max_times:
+                if self.consumer_params.is_push_to_dlx_queue_when_retry_max_times:
                     log_msg += f'  。发送到死信队列 {self._dlx_queue_name} 中'
                     self.publisher_of_dlx_queue.publish(kw['body'])
                 # self.logger.critical(msg=f'{log_msg} \n', )
@@ -787,8 +631,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     self._consuming_function_cost_time_total_every_unit_time = 0
                     self._execute_task_times_every_unit_time = 0
 
-            if self._user_custom_record_process_info_func:
-                self._user_custom_record_process_info_func(current_function_result_status)
+            if self.consumer_params.user_custom_record_process_info_func:
+                self.consumer_params.user_custom_record_process_info_func(current_function_result_status)
         except BaseException as e:
             log_msg = f' error 严重错误 {type(e)} {e} '
             # self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
@@ -807,11 +651,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             if self._consuming_function_is_asyncio:
                 function_run = sync_or_async_fun_deco(function_run)
             function_timeout = self._get_priority_conf(kw, 'function_timeout')
-            function_run = function_run if self._consumin_function_decorator is None else self._consumin_function_decorator(function_run)
+            function_run = function_run if self.consumer_params.consumin_function_decorator is None else self.consumer_params.consumin_function_decorator(function_run)
             function_run = function_run if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
                 function_timeout)(function_run)
 
-            if self._is_support_remote_kill_task:
+            if self.consumer_params.is_support_remote_kill_task:
                 if kill_remote_task.RemoteTaskKiller(self.queue_name, task_id).judge_need_revoke_run():  # 如果远程指令杀死任务，如果还没开始运行函数，就取消运行
                     function_result_status._has_kill_task = True
                     self.logger.warning(f'取消运行 {task_id} {function_only_params}')
@@ -827,7 +671,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             #
             #     os._exit(4)
             function_result_status.success = True
-            if self._log_level <= logging.DEBUG:
+            if self.consumer_params.log_level <= logging.DEBUG:
                 result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 {function_only_params}  '
@@ -900,7 +744,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params)
             if current_function_result_status.success is False and current_retry_times == max_retry_times:
                 log_msg = f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} '
-                if self._is_push_to_dlx_queue_when_retry_max_times:
+                if self.consumer_params.is_push_to_dlx_queue_when_retry_max_times:
                     log_msg += f'  。发送到死信队列 {self._dlx_queue_name} 中'
                     await simple_run_in_executor(self.publisher_of_dlx_queue.publish, kw['body'])
                 # self.logger.critical(msg=f'{log_msg} \n', )
@@ -939,8 +783,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._consuming_function_cost_time_total_every_unit_time = 0
                 self._execute_task_times_every_unit_time = 0
 
-            if self._user_custom_record_process_info_func:
-                await self._user_custom_record_process_info_func(current_function_result_status)
+            if self.consumer_params.user_custom_record_process_info_func:
+                await self.consumer_params.user_custom_record_process_info_func(current_function_result_status)
         except BaseException as e:
             log_msg = f' error 严重错误 {type(e)} {e} '
             # self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
@@ -965,14 +809,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._log_critical(msg=log_msg)
                 # noinspection PyProtectedMember,PyUnresolvedReferences
                 os._exit(444)
-            if self._function_timeout == 0:
+            if self.consumer_params.function_timeout == 0:
                 rs = await corotinue_obj
                 # rs = await asyncio.wait_for(corotinue_obj, timeout=4)
             else:
-                rs = await asyncio.wait_for(corotinue_obj, timeout=self._function_timeout)
+                rs = await asyncio.wait_for(corotinue_obj, timeout=self.consumer_params.function_timeout)
             function_result_status.result = rs
             function_result_status.success = True
-            if self._log_level <= logging.DEBUG:
+            if self.consumer_params.log_level <= logging.DEBUG:
                 result_str_to_be_print = str(rs)[:100] if len(str(rs)) < 100 else str(rs)[:100] + '  。。。。。  '
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,'
@@ -1066,10 +910,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)
     def _judge_is_daylight(self):
-        if self._is_do_not_run_by_specify_time_effect and (
-                self._do_not_run_by_specify_time[0] < time_util.DatetimeConverter().time_str < self._do_not_run_by_specify_time[1]):
+        if self.consumer_params.is_do_not_run_by_specify_time_effect and (
+                self.consumer_params.do_not_run_by_specify_time[0] < time_util.DatetimeConverter().time_str < self.consumer_params.do_not_run_by_specify_time[1]):
             self.logger.warning(
-                f'现在时间是 {time_util.DatetimeConverter()} ，现在时间是在 {self._do_not_run_by_specify_time} 之间，不运行')
+                f'现在时间是 {time_util.DatetimeConverter()} ，现在时间是在 {self.consumer_params.do_not_run_by_specify_time} 之间，不运行')
             return True
 
     def wait_for_possible_has_finish_all_tasks(self, minutes: int = 3):
@@ -1105,11 +949,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
 
 # noinspection PyProtectedMember
-class ConcurrentModeDispatcher(LoggerMixin):
+class ConcurrentModeDispatcher(FunboostFileLoggerMixin):
 
     def __init__(self, consumerx: AbstractConsumer):
         self.consumer = consumerx
-        self._concurrent_mode = self.consumer._concurrent_mode
+        self._concurrent_mode = self.consumer.consumer_params.concurrent_mode
         self.timeout_deco = None
         if self._concurrent_mode in (ConcurrentModeEnum.THREADING, ConcurrentModeEnum.SINGLE_THREAD):
             # self.timeout_deco = decorators.timeout
@@ -1120,23 +964,22 @@ class ConcurrentModeDispatcher(LoggerMixin):
         elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
             from funboost.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco
             self.timeout_deco = evenlet_timeout_deco
-        self.logger.warning(f'{self.consumer} 设置并发模式'
-                            f'为{ConsumersManager.get_concurrent_name_by_concurrent_mode(self._concurrent_mode)}')
+        self.logger.info(f'{self.consumer} 设置并发模式 {self.consumer.consumer_params.concurrent_mode}')
 
     def check_all_concurrent_mode(self):
-        if ConsumersManager.global_concurrent_mode is not None and self.consumer._concurrent_mode != ConsumersManager.global_concurrent_mode:
-            ConsumersManager.show_all_consumer_info()
+        if GlobalConcurrentModeManager.global_concurrent_mode is not None and \
+                self.consumer.consumer_params.concurrent_mode != GlobalConcurrentModeManager.global_concurrent_mode:
             # print({self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode})
-            if not {self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode}.issubset({ConcurrentModeEnum.THREADING,
-                                                                                                       ConcurrentModeEnum.ASYNC,
-                                                                                                       ConcurrentModeEnum.SINGLE_THREAD}):
+            if not {self.consumer.consumer_params.concurrent_mode, GlobalConcurrentModeManager.global_concurrent_mode}.issubset({ConcurrentModeEnum.THREADING,
+                                                                                                                                 ConcurrentModeEnum.ASYNC,
+                                                                                                                                 ConcurrentModeEnum.SINGLE_THREAD}):
                 # threding、asyncio、solo 这几种模式可以共存。但同一个解释器不能同时选择 gevent + 其它并发模式，也不能 eventlet + 其它并发模式。
                 raise ValueError('''由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，
                                  搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种(或可以共存),
                                  asyncio threading single_thread 并发模式可以共存，但gevent和threading不可以共存，
                                  gevent和eventlet不可以共存''')
 
-        ConsumersManager.global_concurrent_mode = self.consumer._concurrent_mode
+        GlobalConcurrentModeManager.global_concurrent_mode = self.consumer.consumer_params.concurrent_mode
 
     def build_pool(self):
         if self.consumer._concurrent_pool is not None:
@@ -1163,34 +1006,36 @@ class ConcurrentModeDispatcher(LoggerMixin):
         # from concurrent.futures import ProcessPoolExecutor
         # pool_type = ProcessPoolExecutor
         if self._concurrent_mode == ConcurrentModeEnum.ASYNC:
-            self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool is not None else pool_type(
-                self.consumer._concurrent_num, loop=self.consumer._specify_async_loop)
+            self.consumer._concurrent_pool = self.consumer.consumer_params.specify_concurrent_pool or pool_type(
+                self.consumer.consumer_params.concurrent_num, loop=self.consumer.consumer_params.specify_async_loop)
         else:
             # print(pool_type)
-            self.consumer._concurrent_pool = self.consumer._specify_concurrent_pool if self.consumer._specify_concurrent_pool is not None else pool_type(
-                self.consumer._concurrent_num)
+            self.consumer._concurrent_pool = self.consumer.consumer_params.specify_concurrent_pool or pool_type(self.consumer.consumer_params.concurrent_num)
         # print(self._concurrent_mode,self.consumer._concurrent_pool)
         return self.consumer._concurrent_pool
 
+    # def schedulal_task_with_no_block(self):
+    #     if ConsumersManager.schedual_task_always_use_thread:
+    #         t = Thread(target=self.consumer.keep_circulating(1)(self.consumer._shedual_task))
+    #         ConsumersManager.schedulal_thread_to_be_join.append(t)
+    #         t.start()
+    #     else:
+    #         if self._concurrent_mode in [ConcurrentModeEnum.THREADING, ConcurrentModeEnum.ASYNC,
+    #                                      ConcurrentModeEnum.SINGLE_THREAD, ]:
+    #             t = Thread(target=self.consumer.keep_circulating(1)(self.consumer._shedual_task))
+    #             ConsumersManager.schedulal_thread_to_be_join.append(t)
+    #             t.start()
+    #         elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
+    #             import gevent
+    #             g = gevent.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
+    #             ConsumersManager.schedulal_thread_to_be_join.append(g)
+    #         elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
+    #             import eventlet
+    #             g = eventlet.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
+    #             ConsumersManager.schedulal_thread_to_be_join.append(g)
+
     def schedulal_task_with_no_block(self):
-        if ConsumersManager.schedual_task_always_use_thread:
-            t = Thread(target=self.consumer.keep_circulating(1)(self.consumer._shedual_task))
-            ConsumersManager.schedulal_thread_to_be_join.append(t)
-            t.start()
-        else:
-            if self._concurrent_mode in [ConcurrentModeEnum.THREADING, ConcurrentModeEnum.ASYNC,
-                                         ConcurrentModeEnum.SINGLE_THREAD, ]:
-                t = Thread(target=self.consumer.keep_circulating(1)(self.consumer._shedual_task))
-                ConsumersManager.schedulal_thread_to_be_join.append(t)
-                t.start()
-            elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
-                import gevent
-                g = gevent.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
-                ConsumersManager.schedulal_thread_to_be_join.append(g)
-            elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
-                import eventlet
-                g = eventlet.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
-                ConsumersManager.schedulal_thread_to_be_join.append(g)
+        self.consumer.keep_circulating(1, block=False)(self.consumer._shedual_task)()
 
 
 def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3):
@@ -1208,7 +1053,7 @@ def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typin
             pool.submit(consumer.wait_for_possible_has_finish_all_tasks(minutes))
 
 
-class DistributedConsumerStatistics(RedisMixin, LoggerMixinDefaultWithFileHandler):
+class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
     """
     为了兼容模拟mq的中间件（例如redis，他没有实现amqp协议，redis的list结构和真mq差远了），获取一个队列有几个连接活跃消费者数量。
     分布式环境中的消费者统计。主要目的有3点

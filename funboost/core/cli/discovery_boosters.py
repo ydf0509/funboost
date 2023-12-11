@@ -4,10 +4,10 @@ import typing
 from os import PathLike
 from pathlib import Path
 import importlib.util
-import nb_log
+# import nb_log
+from funboost.core.loggers import FunboostFileLoggerMixin
 
-
-class BoosterDiscovery(nb_log.LoggerMixin):
+class BoosterDiscovery(FunboostFileLoggerMixin):
     def __init__(self, project_root_path: typing.Union[PathLike, str],
                  booster_dirs: typing.List[typing.Union[PathLike, str]],
                  max_depth=1, py_file_re_str: str = None):

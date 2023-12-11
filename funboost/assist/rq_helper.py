@@ -2,7 +2,7 @@ import threading
 import os
 import uuid
 from rq.worker import RandomWorker
-import nb_log
+from funboost.core.loggers import get_funboost_file_logger
 from redis3 import Redis
 from rq import Worker
 from funboost.funboost_config_deafult import BrokerConnConfig
@@ -47,4 +47,4 @@ class RqHelper:
 
     @staticmethod
     def add_nb_log_handler_to_rq():
-        nb_log.get_logger('rq', log_level_int=20, log_filename='rq.log')
+        get_funboost_file_logger('rq', log_level_int=20,)

@@ -9,7 +9,7 @@ import celery
 
 from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
 from funboost import  ConcurrentModeEnum
-from nb_log import get_logger
+from funboost.core.loggers import get_funboost_file_logger,get_logger
 
 celery_app = celery.Celery(main='funboost_celery', broker=BrokerConnConfig.CELERY_BROKER_URL,
                            backend=BrokerConnConfig.CELERY_RESULT_BACKEND,
@@ -22,7 +22,7 @@ celery_app.conf.update({
 }
 )
 
-logger = get_logger('funboost.CeleryHelper')
+logger = get_funboost_file_logger('funboost.CeleryHelper')
 
 
 class CeleryHelper:

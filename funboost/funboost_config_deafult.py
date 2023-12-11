@@ -3,7 +3,7 @@
 from pathlib import Path
 import pytz
 from funboost.constant import BrokerEnum, ConcurrentModeEnum
-from funboost.core.function_result_status_config import FunctionResultStatusPersistanceConfig
+from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig
 from funboost.utils.simple_data_class import DataClassBase
 
 '''
@@ -99,61 +99,5 @@ class FunboostCommonConfig(DataClassBase):
     # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
     NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 11  # 7是简短的不可跳转，5是可点击跳转的，11是可显示ip 进程 线程的模板。
     TIMEZONE = 'Asia/Shanghai'
-    FSDF_DEVELOP_LOG_LEVEL = 50  # 作者开发时候的调试代码的日志，仅供我自己用，所以日志级别跳到最高，用户不需要管。
 
 
-class BoostDecoratorDefaultParams(DataClassBase):
-    """
-     @boost装饰器的默认全局配置
-
-    BoostDecoratorDefaultParams是@boost装饰器默认的全局入参。如果boost没有亲自指定某个入参，就自动使用这里的配置。
-    这里的值不用配置，在boost装饰器中可以为每个消费者指定不同的入参，除非你嫌弃每个 boost 装饰器相同入参太多了，那么可以设置这里的全局默认值。
-
-    例如用户不想每次在boost装饰器指定broker_kind为哪种消息队列，可以设置broker_kind为用户自己希望的默认消息队列类型
-
-    boost入参可以ide跳转到boost函数的docstring查看
-    boost入参也可以看文档3.3章节  https://funboost.readthedocs.io/zh/latest/articles/c3.html
-
-    BoostDecoratorDefaultParams这个类的属性名字和boost装饰器的入参名字一模一样，只有 queue_name 必须每个装饰器是不同的名字，不能作为全局的。
-    所以boost装饰器只有一个是必传参数。
-    """
-
-    broker_kind: int = BrokerEnum.PERSISTQUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
-
-    concurrent_mode = ConcurrentModeEnum.THREADING
-    concurrent_num = 50
-    specify_concurrent_pool = None
-    specify_async_loop = None
-    qps: float = 0
-    is_using_distributed_frequency_control = False
-    is_send_consumer_hearbeat_to_redis = False
-
-    max_retry_times = 3
-    is_push_to_dlx_queue_when_retry_max_times = False
-
-    consumin_function_decorator = None
-    function_timeout = 0
-
-    log_level = 10
-    logger_prefix = ''
-    create_logger_file = True
-    is_show_message_get_from_broker = False
-    is_print_detail_exception = True
-
-    msg_expire_senconds = 0
-
-    do_task_filtering = False
-    task_filtering_expire_seconds = 0
-
-    function_result_status_persistance_conf = FunctionResultStatusPersistanceConfig(False, False, 7 * 24 * 3600)
-    user_custom_record_process_info_func = None
-
-    is_using_rpc_mode = False
-    is_support_remote_kill_task = False
-
-    is_do_not_run_by_specify_time_effect = False
-    do_not_run_by_specify_time = ('10:00:00', '22:00:00')
-
-    schedule_tasks_on_main_thread = False
-
-    broker_exclusive_config = {}

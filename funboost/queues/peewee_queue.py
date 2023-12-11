@@ -4,7 +4,8 @@ import time
 from peewee import ModelSelect
 from playhouse.shortcuts import model_to_dict, dict_to_model
 
-from nb_log import LoggerMixin, LoggerLevelSetterMixin
+# from nb_log import LoggerMixin, LoggerLevelSetterMixin
+from funboost.core.loggers import LoggerLevelSetterMixin,FunboostFileLoggerMixin
 from funboost.funboost_config_deafult import BrokerConnConfig
 from peewee import *
 
@@ -18,7 +19,7 @@ class TaskStatus:
     REQUEUE = 'requeue'
 
 
-class PeeweeQueue(LoggerMixin, LoggerLevelSetterMixin):
+class PeeweeQueue(FunboostFileLoggerMixin, LoggerLevelSetterMixin):
     """
     使用peewee操作数据库模拟消息队列
     """

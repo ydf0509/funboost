@@ -21,8 +21,8 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.pool import StaticPool
 from sqlalchemy_utils import database_exists, create_database
 
-from funboost.utils import LoggerMixin, decorators, LoggerLevelSetterMixin
-
+from funboost.utils import  decorators
+from funboost.core.loggers import FunboostFileLoggerMixin,LoggerLevelSetterMixin
 
 class TaskStatus:
     TO_BE_CONSUMED = 'to_be_consumed'
@@ -75,7 +75,7 @@ class SessionContext:
 
 
 @decorators.flyweight
-class SqlaQueue(LoggerMixin, LoggerLevelSetterMixin):
+class SqlaQueue(FunboostFileLoggerMixin, LoggerLevelSetterMixin):
     # noinspection PyPep8Naming
     @decorators.where_is_it_called
     def __init__(self, queue_name: str, sqla_conn_url: str):

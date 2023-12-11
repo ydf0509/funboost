@@ -9,9 +9,10 @@ from concurrent.futures import ThreadPoolExecutor, Future
 # noinspection PyProtectedMember
 from concurrent.futures.thread import _WorkItem  # noqa
 
-from nb_log import LogManager
+from funboost.concurrent_pool import FunboostBaseConcurrentPool
+from funboost.core.loggers import get_funboost_file_logger
 
-logger = LogManager('BoundedThreadPoolExecutor').get_logger_and_add_handlers()
+logger = get_funboost_file_logger('BoundedThreadPoolExecutor')
 
 
 def _deco(f):
@@ -25,7 +26,7 @@ def _deco(f):
     return __deco if f is not None else f
 
 
-class BoundedThreadPoolExecutor(ThreadPoolExecutor, ):
+class BoundedThreadPoolExecutor(ThreadPoolExecutor,FunboostBaseConcurrentPool ):
     def __init__(self, max_workers=None, thread_name_prefix=''):
         ThreadPoolExecutor.__init__(self, max_workers, thread_name_prefix)
         self._work_queue = queue.Queue(max_workers * 2)

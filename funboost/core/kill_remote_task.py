@@ -3,8 +3,8 @@ import threading
 import time
 from funboost.utils.time_util import DatetimeConverter
 from funboost.utils.redis_manager import RedisMixin
-import nb_log
-
+# import nb_log
+from funboost.core.loggers import FunboostFileLoggerMixin
 
 class ThreadKillAble(threading.Thread):
     task_id = None
@@ -62,7 +62,7 @@ def kill_thread_by_task_id(task_id):
 kill_task = kill_thread_by_task_id
 
 
-class RemoteTaskKillerZset(RedisMixin, nb_log.LoggerMixin):
+class RemoteTaskKillerZset(RedisMixin, FunboostFileLoggerMixin):
     """
     zset实现的，需要zrank 多次。
     """
@@ -106,7 +106,7 @@ class RemoteTaskKillerZset(RedisMixin, nb_log.LoggerMixin):
         threading.Thread(target=_start_cycle_kill_task).start()
 
 
-class RemoteTaskKiller(RedisMixin, nb_log.LoggerMixin):
+class RemoteTaskKiller(RedisMixin, FunboostFileLoggerMixin):
     """
     hash实现的，只需要 hmget 一次
     """

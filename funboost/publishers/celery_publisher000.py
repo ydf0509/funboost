@@ -25,8 +25,8 @@ class CeleryPublisher(AbstractPublisher, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        # self.broker_exclusive_config['task_routes'] = {self.queue_name: {"queue": self.queue_name}}
-        # celery_app.config_from_object(self.broker_exclusive_config)
+        # self.consumer_params.broker_exclusive_config['task_routes'] = {self.queue_name: {"queue": self.queue_name}}
+        # celery_app.config_from_object(self.consumer_params.broker_exclusive_config)
         pass
 
         # celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})
@@ -44,7 +44,7 @@ class CeleryPublisher(AbstractPublisher, ):
         celery_app = celery.Celery(broker=BrokerConnConfig.CELERY_BROKER_URL,
                                    backend=BrokerConnConfig.CELERY_RESULT_BACKEND,
                                    task_routes={}, timezone=FunboostCommonConfig.TIMEZONE, enable_utc=False)
-        celery_app.config_from_object(self.broker_exclusive_config['celery_app_config'])
+        celery_app.config_from_object(self.consumer_params.broker_exclusive_config['celery_app_config'])
         celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})
 
         @celery_app.task(name=self.queue_name)

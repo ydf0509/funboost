@@ -2,7 +2,7 @@ import time
 import multiprocessing
 import threading
 import asyncio
-import nb_log
+from funboost.core.loggers import FunboostFileLoggerMixin
 import atexit
 import os
 import typing
@@ -11,7 +11,7 @@ from funboost.concurrent_pool.custom_threadpool_executor import CustomThreadpool
 from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
 
 
-class ConcurrentPoolWithProcess(nb_log.LoggerMixin):
+class ConcurrentPoolWithProcess(FunboostFileLoggerMixin):
     def _start_a_pool(self, pool_class, max_works):
         pool = pool_class(max_works)
         while True:

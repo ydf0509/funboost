@@ -165,7 +165,7 @@ class AsyncProducerConsumer:
         """
         self.queue = asyncio.Queue()
         self.items = items
-        self._concurrent_num = concurrent_num
+        self.consumer_params.concurrent_num = concurrent_num
         self.consume_fun_specify = consume_fun_specify
 
     async def produce(self):
@@ -203,7 +203,7 @@ class AsyncProducerConsumer:
     async def __run(self):
         # schedule the consumer
         tasks = []
-        for _ in range(self._concurrent_num):
+        for _ in range(self.consumer_params.concurrent_num):
             task = asyncio.ensure_future(self.consume())
             tasks.append(task)
         # run the producer and wait for completion

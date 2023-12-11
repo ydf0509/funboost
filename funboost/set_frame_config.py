@@ -13,14 +13,16 @@ import importlib
 import json
 from pathlib import Path
 from shutil import copyfile
-from nb_log import nb_print, stderr_write, stdout_write,get_logger
+
+from funboost.core.loggers import flogger
+from nb_log import nb_print, stderr_write, stdout_write
 from nb_log.monkey_print import is_main_process, only_print_on_main_process
 from funboost import funboost_config_deafult
 
 
 def show_funboost_flag():
 
-    logger = get_logger('funboost.show_funboost_flag')
+
 
     funboost_flag_str = '''
 
@@ -63,9 +65,9 @@ def show_funboost_flag():
 
     '''
 
-    logger.debug('\033[0m' + funboost_flag_str2 + '\033[0m')
+    flogger.debug('\033[0m' + funboost_flag_str2 + '\033[0m')
 
-    logger.info(f'''分布式函数调度框架funboost文档地址：  \033[0m https://funboost.readthedocs.io/zh/latest/ \033[0m ''')
+    flogger.info(f'''分布式函数调度框架funboost文档地址：  \033[0m https://funboost.readthedocs.io/zh/latest/ \033[0m ''')
 
 show_funboost_flag()
 
@@ -81,7 +83,8 @@ def dict2json(dictx: dict, indent=4):
 
 
 def show_frame_config():
-    only_print_on_main_process('显示当前的项目中间件配置参数')
+    if is_main_process():
+        flogger.info('显示当前的项目中间件配置参数')
     # for var_name in dir(funboost_config_deafult):
     #     if var_name.isupper():
     #         var_value = getattr(funboost_config_deafult, var_name)
@@ -97,16 +100,12 @@ def show_frame_config():
     #             only_print_on_main_process(f'{var_name}:                {var_value[0]}{"*" * (len(var_value) - 2)}{var_value[-1]}')
     #         else:
     #             only_print_on_main_process(f'{var_name}:                {var_value}')
-    only_print_on_main_process(f'''读取的 BrokerConnConfig 配置是: 
-    {funboost_config_deafult.BrokerConnConfig().get_json()}
-    ''')
+        flogger.info(f'''读取的 BrokerConnConfig 配置是:\n {funboost_config_deafult.BrokerConnConfig().get_json(indent=None)} ''')
 
-    only_print_on_main_process(f'''读取的 FunboostCommonConfig 配置是: 
-        {funboost_config_deafult.FunboostCommonConfig().get_json()}
-        ''')
+        flogger.info(f'''读取的 FunboostCommonConfig 配置是:\n  {funboost_config_deafult.FunboostCommonConfig().get_json(indent=None)} ''')
 
-    only_print_on_main_process(f'读取的 BoostDecoratorDefaultParams 默认 @boost 装饰器入参的默认全局配置是： \n  '
-                               f'{funboost_config_deafult.BoostDecoratorDefaultParams().get_json()}')
+    # only_print_on_main_process(f'读取的 BoostDecoratorDefaultParams 默认 @boost 装饰器入参的默认全局配置是： \n  '
+    #                            f'{funboost_config_deafult.BoostDecoratorDefaultParams().get_json()}')
 
 
 def use_config_form_funboost_config_module():
@@ -139,7 +138,9 @@ def use_config_form_funboost_config_module():
             raise EnvironmentError(f'funboost 30.0版本升级了配置文件，中间件配置写成了类，请删除原来老的funboost_config.py配置文件 {m.__file__}')
         funboost_config_deafult.BrokerConnConfig.update_cls_attribute(**m.BrokerConnConfig().get_dict())
         funboost_config_deafult.FunboostCommonConfig.update_cls_attribute(**m.FunboostCommonConfig().get_dict())
-        funboost_config_deafult.BoostDecoratorDefaultParams.update_cls_attribute(**m.BoostDecoratorDefaultParams().get_dict())
+        # funboost_config_deafult.BoostDecoratorDefaultParams.update_cls_attribute(**m.BoostDecoratorDefaultParams().get_dict())
+        if hasattr(m,'BoostDecoratorDefaultParams'):
+            raise ValueError('funboost 40.0版本之后，采用 pydantic model BoostParams类或子类入参，不支持 funboost_config.py的 BoostDecoratorDefaultParams配置')
 
 
     except ModuleNotFoundError:

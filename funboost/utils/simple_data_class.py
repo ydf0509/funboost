@@ -31,8 +31,8 @@ class DataClassBase:
     def __getitem__(self, item):
         return getattr(self, item)
 
-    def get_json(self):
-        return json_helper.dict_to_un_strict_json(self.get_dict())
+    def get_json(self,indent=4):
+        return json_helper.dict_to_un_strict_json(self.get_dict(),indent=indent)
 
     @classmethod
     def update_cls_attribute(cls,**kwargs):

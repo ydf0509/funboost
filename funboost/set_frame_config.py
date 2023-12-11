@@ -140,7 +140,7 @@ def use_config_form_funboost_config_module():
         funboost_config_deafult.FunboostCommonConfig.update_cls_attribute(**m.FunboostCommonConfig().get_dict())
         # funboost_config_deafult.BoostDecoratorDefaultParams.update_cls_attribute(**m.BoostDecoratorDefaultParams().get_dict())
         if hasattr(m,'BoostDecoratorDefaultParams'):
-            raise ValueError('funboost 40.0版本之后，采用 pydantic model BoostParams类或子类入参，不支持 BoostDecoratorDefaultParams配置')
+            raise ValueError('funboost 40.0版本之后，采用 pydantic model BoostParams类或子类入参，不支持 funboost_config.py的 BoostDecoratorDefaultParams配置')
 
 
     except ModuleNotFoundError:

@@ -54,6 +54,8 @@ def f2(a, b):
     #     while 1:
     #         time.sleep(10)
     print(a, b)
+    f2.consumer.logger.info(' 测试把业务日志和框架队列的 test_queue77h6j消费日志写入到一个文件中')
+
     return a - b
 
 

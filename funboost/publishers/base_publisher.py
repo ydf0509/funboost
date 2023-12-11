@@ -229,6 +229,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param priority_control_config:优先级配置，消息可以携带优先级配置，覆盖boost的配置。
         :return:
         """
+        msg = copy.deepcopy(msg) #  字典是可变对象,不要改变影响用户自身的传参字典. 用户可能继续使用这个传参字典.
         msg, msg_function_kw, extra_params, task_id = self._convert_msg(msg, task_id, priority_control_config)
         t_start = time.time()
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(

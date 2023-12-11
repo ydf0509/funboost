@@ -83,7 +83,8 @@ def dict2json(dictx: dict, indent=4):
 
 
 def show_frame_config():
-    only_print_on_main_process('显示当前的项目中间件配置参数')
+    if is_main_process():
+        flogger.info('显示当前的项目中间件配置参数')
     # for var_name in dir(funboost_config_deafult):
     #     if var_name.isupper():
     #         var_value = getattr(funboost_config_deafult, var_name)
@@ -99,13 +100,9 @@ def show_frame_config():
     #             only_print_on_main_process(f'{var_name}:                {var_value[0]}{"*" * (len(var_value) - 2)}{var_value[-1]}')
     #         else:
     #             only_print_on_main_process(f'{var_name}:                {var_value}')
-    only_print_on_main_process(f'''读取的 BrokerConnConfig 配置是: 
-    {funboost_config_deafult.BrokerConnConfig().get_json()}
-    ''')
+        flogger.info(f'''读取的 BrokerConnConfig 配置是:\n {funboost_config_deafult.BrokerConnConfig().get_json(indent=None)} ''')
 
-    only_print_on_main_process(f'''读取的 FunboostCommonConfig 配置是: 
-        {funboost_config_deafult.FunboostCommonConfig().get_json()}
-        ''')
+        flogger.info(f'''读取的 FunboostCommonConfig 配置是:\n  {funboost_config_deafult.FunboostCommonConfig().get_json(indent=None)} ''')
 
     # only_print_on_main_process(f'读取的 BoostDecoratorDefaultParams 默认 @boost 装饰器入参的默认全局配置是： \n  '
     #                            f'{funboost_config_deafult.BoostDecoratorDefaultParams().get_json()}')

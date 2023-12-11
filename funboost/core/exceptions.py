@@ -12,7 +12,7 @@ class ExceptionForPushToDlxqueue(Exception):
 
 class BoostDecoParamsIsOldVersion(Exception):
     new_version_change_hint = """
-你的@boost入参是老的方式.
+你的@boost入参是老的方式,建议用新的入参方式,老入参方式不再支持函数入参代码自动补全了。
 
 老版本的@boost装饰器方式是:
 @boost('queue_name_xx',qps=3)

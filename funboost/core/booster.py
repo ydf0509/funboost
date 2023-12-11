@@ -9,8 +9,8 @@ from funboost.core.loggers import flogger, develop_logger
 from functools import wraps
 
 from funboost.core.exceptions import BoostDecoParamsIsOldVersion
-from funboost.core.func_params_model import BoosterParams
-from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig
+from funboost.core.func_params_model import BoosterParams,FunctionResultStatusPersistanceConfig
+
 
 from funboost.factories.consumer_factory import get_consumer
 

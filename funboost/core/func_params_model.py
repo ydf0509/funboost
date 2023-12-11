@@ -45,7 +45,7 @@ class BaseJsonAbleModel(BaseModel):
         for k, v in model_dict.items():
             if isinstance(v, typing.Callable):
                 model_dict_copy[k] = str(v)
-            elif k in ['specify_concurrent_pool', 'specify_async_loop']:
+            elif k in ['specify_concurrent_pool', 'specify_async_loop'] and v is not None:
                 model_dict_copy[k] = str(v)
             else:
                 model_dict_copy[k] = v

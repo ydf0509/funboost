@@ -1,6 +1,7 @@
 # coding=utf-8
 from setuptools import setup, find_packages
-from funboost import __version__
+
+__version__ = "40.1"
 
 extra_brokers = ['confluent_kafka==1.7.0',
                  "pulsar-client==3.1.0; python_version>='3.7'",

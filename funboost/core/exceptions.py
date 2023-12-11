@@ -30,7 +30,6 @@ def f(x):
 @boost这个最重要的funboost核心方法作出改变的原因是:
 1/由于开发框架时候,Booster和Consumer需要重复声明入参,
 2/入参个数较多,需要locals转化,麻烦
-pycharm 对 pydantic的model 字段的代码补全也支持的比较好,所以pydantic不错.
     """
 
     def __str__(self):

@@ -57,6 +57,8 @@ class Booster:
             raise ValueError('boost 入参错误')
         elif isinstance(queue_name, BoosterParams):
             boost_params = queue_name
+        if isinstance(queue_name, str) or kwargs:
+            flogger.warning(f''' funboost 40.0版本以后： {BoostDecoParamsIsOldVersion.new_version_change_hint}''')
         boost_params_merge = boost_params.copy()
         boost_params_merge.update_from_dict(kwargs)
         self.boost_params = boost_params_merge

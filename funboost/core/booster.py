@@ -36,8 +36,8 @@ class Booster:
 
         """
         '''
-        # @boost('queue_test_f01', qps=0.2, broker_kind=2) # 老的入参方式
-        @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, broker_kind=2)) # 新的入参方式,所有入参放在 最流行的三方包 pydantic model BoosterParams 里面.
+        # @boost('queue_test_f01', qps=0.2, ) # 老的入参方式
+        @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, )) # 新的入参方式,所有入参放在 最流行的三方包 pydantic model BoosterParams 里面.
         def f(a, b):
             print(a + b)
 

@@ -27,25 +27,27 @@ def do_cmd(cmd_strx):
     return retx
 
 
-t0 = time.time()
+def push(path = '../.'):
+    t0 = time.time()
 
-do_cmd('git pull')
+    do_cmd('git pull')
 
-do_cmd('git diff')
+    do_cmd('git diff')
 
-do_cmd('git add ../.')
+    do_cmd(f'git add {path}')
 
-do_cmd('git commit -m commit')
+    do_cmd('git commit -m commit')
 
-do_cmd('git push origin')
+    do_cmd('git push origin')
 
-do_cmd('git push github')
+    do_cmd('git push github')
 
-# print(subprocess.getstatusoutput('git push github'))
-print(f'{time.strftime("%H:%M:%S")}  spend_time {time.time() - t0}')
-time.sleep(2000000)
+    # print(subprocess.getstatusoutput('git push github'))
+    print(f'{time.strftime("%H:%M:%S")}  spend_time {time.time() - t0}')
+
 
 '''dsdsab'''
 
 
-
+if __name__ == '__main__':
+    time.sleep(2000000)

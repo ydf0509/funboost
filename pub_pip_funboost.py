@@ -7,6 +7,8 @@ import shutil
 
 # Delete previous build
 import time
+from test_frame import  git_funboot_all
+git_funboot_all.push('./')
 
 shutil.rmtree("dist", ignore_errors=True)
 

@@ -349,10 +349,10 @@ win cmd和linux 运行时候，设置 PYTHONPATH 为项目根目录，是为了�
 
 ```python
 import time
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum,BoosterParams
 
-
-@boost("task_queue_name1", qps=5, broker_kind=BrokerEnum.PERSISTQUEUE)  # 入参包括20种，运行控制方式非常多，想得到的控制都会有。
+# BoosterParams 代码自动补全请看文档4.1.3
+@boost(BoosterParams(queue_name="task_queue_name1", qps=5, broker_kind=BrokerEnum.SQLITE_QUEUE))  # 入参包括20种，运行控制方式非常多，想得到的控制都会有。
 def task_fun(x, y):
     print(f'{x} + {y} = {x + y}')
     time.sleep(3)  # 框架会自动并发绕开这个阻塞，无论函数内部随机耗时多久都能自动调节并发达到每秒运行 5 次 这个 task_fun 函数的目的。
@@ -363,6 +363,8 @@ if __name__ == "__main__":
         task_fun.push(i, y=i * 2)  # 发布者发布任务
     task_fun.consume()  # 消费者启动循环调度并发消费任务
 ```
+
+<pre style="background-color: #BA2121;color: yellow">tips: sqlite作为消息队列,如果linux或mac运行报错read-only文件夹权限,需修改SQLLITE_QUEUES_PATH 就好啦,见文档10.3 </pre>
 
 ```text
 """

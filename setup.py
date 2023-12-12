@@ -1,7 +1,7 @@
 # coding=utf-8
 from setuptools import setup, find_packages
 
-__version__ = "40.3"
+__version__ = "40.5"
 
 extra_brokers = ['confluent_kafka==1.7.0',
                  "pulsar-client==3.1.0; python_version>='3.7'",
@@ -44,13 +44,22 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python',
         'Programming Language :: Python :: Implementation',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.all',
+        'Programming Language :: Python :: 3.12',
+        # 'Programming Language :: Python :: 3.13',
+        # 'Programming Language :: Python :: 3.14',
+        # 'Programming Language :: Python :: 3.15',
+        # 'Programming Language :: Python :: 3.16',
+        # 'Programming Language :: Python :: 3.17',
+        # 'Programming Language :: Python :: 3.18',
+        # 'Programming Language :: Python :: 3.19',
+        # 'Programming Language :: Python :: 3.20',
+        # 'Programming Language :: Python :: 3.21',
         'Topic :: Software Development :: Libraries'
     ],
     install_requires=[

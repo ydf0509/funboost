@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 from funboost.concurrent_pool import FunboostBaseConcurrentPool
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
-from pydantic import BaseModel, validator, root_validator, PrivateAttr, Field
+from pydantic import BaseModel, validator, root_validator, PrivateAttr, Field, BaseConfig
 
 # noinspection PyUnresolvedReferences
 from funboost.core.loggers import develop_logger
@@ -32,6 +32,9 @@ def patch_for_pydantic_field_deepcopy():
 
 patch_for_pydantic_field_deepcopy()
 
+class NoExtraFieldsConfig(BaseConfig):
+    allow_mutation = False
+    extra = "forbid"
 
 class BaseJsonAbleModel(BaseModel):
     """
@@ -72,9 +75,10 @@ class BaseJsonAbleModel(BaseModel):
             setattr(self, k, v)
         return self
 
-    class Config:
+    class Config(BaseConfig):
         arbitrary_types_allowed = True
-
+        # allow_mutation = False
+        extra = "forbid"
 
 class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
     is_save_status: bool  # 是否保存函数的运行状态信息
@@ -181,6 +185,11 @@ class BoosterParams(BaseJsonAbleModel):
 
         if values['concurrent_mode'] not in ConcurrentModeEnum.__dict__.values():
             raise ValueError('设置的并发模式不正确')
+        # if not set(values.keys()).issubset(set(BoosterParams.__fields__.keys())):
+        #     raise ValueError(f'{cls.__name__} 的字段包含了父类 BoosterParams 不存在的字段')
+        for k in values.keys():
+            if k not in BoosterParams.__fields__.keys():
+                raise ValueError(f'{cls.__name__} 的字段新增了父类 BoosterParams 不存在的字段 "{k}"') # 使 BoosterParams的子类,不能增加字段,只能覆盖字段.
         return values
 
 
@@ -243,3 +252,5 @@ if __name__ == '__main__':
     # print(FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=70 * 24 * 3600).update_from_kwargs(expire_seconds=100).get_str_dict())
     #
     # print(PriorityConsumingControlConfig().get_str_dict())
+
+    print(BoosterParams(queue_name='3213'))

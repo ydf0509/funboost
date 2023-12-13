@@ -11,7 +11,7 @@ gevent协程
 此文件夹包括5种并发池，可以单独用于任何项目，即使没有使用这个函数调度框架。
 """
 from .base_pool_type import FunboostBaseConcurrentPool
-from .async_pool_executor import *
+from .async_pool_executor import AsyncPoolExecutor
 # from .custom_evenlet_pool_executor import CustomEventletPoolExecutor
 # from .custom_gevent_pool_executor import GeventPoolExecutor
 from .bounded_threadpoolexcutor import BoundedThreadPoolExecutor

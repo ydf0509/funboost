@@ -9,8 +9,7 @@ from funboost.core.loggers import flogger, develop_logger
 from functools import wraps
 
 from funboost.core.exceptions import BoostDecoParamsIsOldVersion
-from funboost.core.func_params_model import BoosterParams,FunctionResultStatusPersistanceConfig
-
+from funboost.core.func_params_model import BoosterParams, FunctionResultStatusPersistanceConfig, PriorityConsumingControlConfig
 
 from funboost.factories.consumer_factory import get_consumer
 
@@ -84,9 +83,13 @@ class Booster:
 
             consumer = get_consumer(self.boost_params)
             self.consumer = consumer
+
             self.publisher = consumer.publisher_of_same_queue
-            self.publish = self.pub = self.apply_async = consumer.publisher_of_same_queue.publish
-            self.push = self.delay = consumer.publisher_of_same_queue.push
+            # self.publish = self.pub = self.apply_async = consumer.publisher_of_same_queue.publish
+            # self.push = self.delay = consumer.publisher_of_same_queue.push
+            self.publish = self.pub = self.apply_async = self._safe_publish
+            self.push = self.delay = self._safe_push
+
             self.clear = self.clear_queue = consumer.publisher_of_same_queue.clear
             self.get_message_count = consumer.publisher_of_same_queue.get_message_count
 
@@ -102,6 +105,17 @@ class Booster:
             return self
         else:
             return self.consuming_function(*args, **kwargs)
+
+    def _safe_push(self,*func_args, **func_kwargs):
+        """ 多进程安全的,在fork多进程(非spawn多进程)情况下,有的包多进程不能共享连接,例如kafka"""
+        consumer = BoostersManager.get_or_create_booster_by_queue_name(self.queue_name).consumer
+        consumer.publisher_of_same_queue.push(*func_args, **func_kwargs)
+
+    def _safe_publish(self, msg: typing.Union[str, dict], task_id=None,
+                priority_control_config: PriorityConsumingControlConfig = None):
+        """ 多进程安全的,在fork多进程(非spawn多进程)情况下,有的包多进程不能共享连接,例如kafka"""
+        consumer = BoostersManager.get_or_create_booster_by_queue_name(self.queue_name).consumer
+        consumer.publisher_of_same_queue.publish(msg=msg,task_id=task_id,priority_control_config=priority_control_config)
 
     # noinspection PyMethodMayBeStatic
     def multi_process_consume(self, process_num=1):

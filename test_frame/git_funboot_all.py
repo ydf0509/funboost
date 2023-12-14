@@ -50,4 +50,5 @@ def push(path = '../.'):
 
 
 if __name__ == '__main__':
+    push()
     time.sleep(2000000)

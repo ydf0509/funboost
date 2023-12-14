@@ -69,9 +69,12 @@ from funboost.core.exceptions import ExceptionForRequeue, ExceptionForPushToDlxq
 
 # patch_apscheduler_run_job()
 
-
-class GlobalConcurrentModeManager:
+class GlobalVars:
     global_concurrent_mode = None
+    has_start_a_consumer_flag = False
+
+# class GlobalConcurrentModeManager:
+#     global_concurrent_mode = None
 
 
 # noinspection PyClassHasNoInit,DuplicatedCode
@@ -134,6 +137,7 @@ class GlobalConcurrentModeManager:
 #     return 'linux_fork'
 
 
+
 # noinspection DuplicatedCode
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     time_interval_for_check_do_not_run_time = 60
@@ -168,8 +172,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :return:
         """
         # ConsumersManager.join_all_consumer_shedual_task_thread()
-        while 1:
-            time.sleep(10)
+        if GlobalVars.has_start_a_consumer_flag :
+            while 1:
+                time.sleep(10)
 
     def __init__(self, consumer_params: BoosterParams):
 
@@ -367,6 +372,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def start_consuming_message(self):
         # ConsumersManager.show_all_consumer_info()
         # noinspection PyBroadException
+
+        GlobalVars.has_start_a_consumer_flag =True
         try:
             self._concurrent_mode_dispatcher.check_all_concurrent_mode()
             self._check_monkey_patch()
@@ -391,7 +398,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.keep_circulating(1)(self._shedual_task)()
         else:
             self._concurrent_mode_dispatcher.schedulal_task_with_no_block()
-        # setattr(funboost_config_deafult, 'has_start_a_consumer_flag', 1)
 
     def _start_delay_task_scheduler(self):
         from funboost.timing_job import FsdfBackgroundScheduler
@@ -969,10 +975,10 @@ class ConcurrentModeDispatcher(FunboostFileLoggerMixin):
         self.logger.info(f'{self.consumer} 设置并发模式 {self.consumer.consumer_params.concurrent_mode}')
 
     def check_all_concurrent_mode(self):
-        if GlobalConcurrentModeManager.global_concurrent_mode is not None and \
-                self.consumer.consumer_params.concurrent_mode != GlobalConcurrentModeManager.global_concurrent_mode:
+        if GlobalVars.global_concurrent_mode is not None and \
+                self.consumer.consumer_params.concurrent_mode != GlobalVars.global_concurrent_mode:
             # print({self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode})
-            if not {self.consumer.consumer_params.concurrent_mode, GlobalConcurrentModeManager.global_concurrent_mode}.issubset({ConcurrentModeEnum.THREADING,
+            if not {self.consumer.consumer_params.concurrent_mode, GlobalVars.global_concurrent_mode}.issubset({ConcurrentModeEnum.THREADING,
                                                                                                                                  ConcurrentModeEnum.ASYNC,
                                                                                                                                  ConcurrentModeEnum.SINGLE_THREAD}):
                 # threding、asyncio、solo 这几种模式可以共存。但同一个解释器不能同时选择 gevent + 其它并发模式，也不能 eventlet + 其它并发模式。
@@ -981,7 +987,7 @@ class ConcurrentModeDispatcher(FunboostFileLoggerMixin):
                                  asyncio threading single_thread 并发模式可以共存，但gevent和threading不可以共存，
                                  gevent和eventlet不可以共存''')
 
-        GlobalConcurrentModeManager.global_concurrent_mode = self.consumer.consumer_params.concurrent_mode
+        GlobalVars.global_concurrent_mode = self.consumer.consumer_params.concurrent_mode
 
     def build_pool(self):
         if self.consumer._concurrent_pool is not None:

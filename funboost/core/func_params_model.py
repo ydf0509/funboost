@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 from funboost.concurrent_pool import FunboostBaseConcurrentPool
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
-from pydantic import BaseModel, validator, root_validator, PrivateAttr, Field, BaseConfig
+from pydantic import BaseModel, validator, root_validator, BaseConfig
 
 # noinspection PyUnresolvedReferences
 from funboost.core.loggers import develop_logger
@@ -18,6 +18,7 @@ def patch_for_pydantic_field_deepcopy():
     from concurrent.futures import ThreadPoolExecutor
     from asyncio import AbstractEventLoop
 
+    # noinspection PyUnusedLocal,PyDefaultArgument
     def __deepcopy__(self, memodict={}):
         """
         pydantic 的默认值，需要deepcopy
@@ -32,9 +33,11 @@ def patch_for_pydantic_field_deepcopy():
 
 patch_for_pydantic_field_deepcopy()
 
+
 class NoExtraFieldsConfig(BaseConfig):
     allow_mutation = False
     extra = "forbid"
+
 
 class BaseJsonAbleModel(BaseModel):
     """
@@ -79,6 +82,7 @@ class BaseJsonAbleModel(BaseModel):
         arbitrary_types_allowed = True
         # allow_mutation = False
         extra = "forbid"
+
 
 class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
     is_save_status: bool  # 是否保存函数的运行状态信息
@@ -189,7 +193,7 @@ class BoosterParams(BaseJsonAbleModel):
         #     raise ValueError(f'{cls.__name__} 的字段包含了父类 BoosterParams 不存在的字段')
         for k in values.keys():
             if k not in BoosterParams.__fields__.keys():
-                raise ValueError(f'{cls.__name__} 的字段新增了父类 BoosterParams 不存在的字段 "{k}"') # 使 BoosterParams的子类,不能增加字段,只能覆盖字段.
+                raise ValueError(f'{cls.__name__} 的字段新增了父类 BoosterParams 不存在的字段 "{k}"')  # 使 BoosterParams的子类,不能增加字段,只能覆盖字段.
         return values
 
 

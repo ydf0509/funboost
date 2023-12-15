@@ -28,7 +28,7 @@ def f(x):
 就是把原来函数入参的加个 BoosterParams 就可以了.
 
 @boost这个最重要的funboost核心方法作出改变的原因是:
-1/由于开发框架时候,Booster和Consumer需要重复声明入参,
+1/由于开发框架时候,Booster和Consumer多处需要重复声明入参,
 2/入参个数较多,需要locals转化,麻烦
     """
 

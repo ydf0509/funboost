@@ -45,13 +45,13 @@ class BaseJsonAbleModel(BaseModel):
     """
 
     def get_str_dict(self):
-
         model_dict: dict = self.dict()  # noqa
         model_dict_copy = OrderedDict()
         for k, v in model_dict.items():
             if isinstance(v, typing.Callable):
                 model_dict_copy[k] = str(v)
-            elif k in ['specify_concurrent_pool', 'specify_async_loop'] and v is not None:
+            # elif k in ['specify_concurrent_pool', 'specify_async_loop'] and v is not None:
+            elif type(v).__module__ != "builtins":  # 自定义类型的对象,json不可序列化,需要转化下.
                 model_dict_copy[k] = str(v)
             else:
                 model_dict_copy[k] = v
@@ -252,9 +252,11 @@ class PublisherParams(BaseJsonAbleModel):
 
 
 if __name__ == '__main__':
+    from funboost.concurrent_pool import FlexibleThreadPool
+
     pass
     # print(FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=70 * 24 * 3600).update_from_kwargs(expire_seconds=100).get_str_dict())
     #
     # print(PriorityConsumingControlConfig().get_str_dict())
 
-    print(BoosterParams(queue_name='3213'))
+    print(BoosterParams(queue_name='3213', specify_concurrent_pool=FlexibleThreadPool(100)).json_pre())

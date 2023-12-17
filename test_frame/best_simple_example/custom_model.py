@@ -7,7 +7,7 @@ class BoosterParamsMy(BoosterParams):  # 传这个类就可以少每次都亲自
     """
     定义子类时候，字段也要注意带上类型注释
     """
-    BrokerEnum: str = BrokerEnum.RABBITMQ
+    broker_kind: str = BrokerEnum.RABBITMQ
     max_retry_times: int = 4
     log_level: int = logging.DEBUG
     log_filename :str= '自定义.log'

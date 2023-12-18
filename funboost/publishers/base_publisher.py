@@ -6,6 +6,7 @@ import copy
 import inspect
 import atexit
 import json
+import logging
 import multiprocessing
 import threading
 import uuid
@@ -16,14 +17,14 @@ from threading import Lock
 import datetime
 import amqpstorm
 
-
+import nb_log
 from funboost.core.func_params_model import PublisherParams, PriorityConsumingControlConfig
 from funboost.core.loggers import develop_logger
 
 from pikav1.exceptions import AMQPError as PikaAMQPError
 
 # from nb_log import LoggerLevelSetterMixin, LoggerMixin
-from funboost.core.loggers import LoggerLevelSetterMixin,FunboostFileLoggerMixin,get_logger
+from funboost.core.loggers import LoggerLevelSetterMixin, FunboostFileLoggerMixin, get_logger
 from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
 from funboost.utils import decorators, time_util
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
@@ -135,6 +136,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def __init__(self, publisher_params: PublisherParams, ):
         self.publisher_params = publisher_params
         self.queue_name = self._queue_name = publisher_params.queue_name
+        self.logger: logging.Logger
         self._build_logger()
         self.publish_params_checker = PublishParamsChecker(publisher_params.consuming_function) if publisher_params.consuming_function else None
 
@@ -159,9 +161,10 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         logger_name = f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
         log_filename = self.publisher_params.log_filename or f'funboost.{self.queue_name}.log'
         self.logger = get_logger(logger_name,
-                                        log_level_int=self.publisher_params.log_level,
-                                        log_filename=log_filename if self.publisher_params.create_logger_file else None,
-                                        formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+                                 log_level_int=self.publisher_params.log_level,
+                                 log_filename=log_filename if self.publisher_params.create_logger_file else None,
+                                 error_log_filename=nb_log.generate_error_file_name(log_filename),
+                                 formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
 
     def _init_count(self):
         self._current_time = time.time()

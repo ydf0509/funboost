@@ -97,7 +97,7 @@ USE_BULK_STDOUT_ON_WINDOWS = False # 在win上是否每隔0.1秒批量stdout,win
 DEFAULUT_USE_COLOR_HANDLER = True  # 是否默认使用有彩的日志。
 DEFAULUT_IS_USE_LOGURU_STREAM_HANDLER = True # 是否默认使用 loguru的控制台日志，而非是nb_log的ColorHandler
 DISPLAY_BACKGROUD_COLOR_IN_CONSOLE = True  # 在控制台是否显示彩色块状的日志。为False则不使用大块的背景颜色。
-AUTO_PATCH_PRINT = True  # 是否自动打print的猴子补丁，如果打了猴子补丁，print自动变色和可点击跳转。
+AUTO_PATCH_PRINT = False  # 是否自动打print的猴子补丁，如果打了猴子补丁，print自动变色和可点击跳转。
 
 DEFAULT_ADD_MULTIPROCESSING_SAFE_ROATING_FILE_HANDLER = False  # 是否默认同时将日志记录到记log文件记事本中。
 AUTO_WRITE_ERROR_LEVEL_TO_SEPARATE_FILE = True # 自动把错误error级别以上日志写到单独的文件，根据log_filename名字自动生成错误文件日志名字。
@@ -159,5 +159,12 @@ FORMATTER_DICT = {
 }
 
 FORMATTER_KIND = 5  # 如果get_logger不指定日志模板，则默认选择第几个模板
+
+
+
+
+
+
+
 
 

@@ -15,7 +15,7 @@ import threading
 from functools import wraps
 
 from funboost.concurrent_pool import FunboostBaseConcurrentPool
-from funboost.core.loggers import FunboostFileLoggerMixin,LoggerLevelSetterMixin,MetaTypeFileLogger
+from funboost.core.loggers import FunboostFileLoggerMixin,LoggerLevelSetterMixin,FunboostMetaTypeFileLogger
 
 class FlexibleThreadPool(FunboostFileLoggerMixin, LoggerLevelSetterMixin,FunboostBaseConcurrentPool):
     KEEP_ALIVE_TIME = 10
@@ -91,7 +91,7 @@ def sync_or_async_fun_deco(func):
 
 
 # noinspection PyProtectedMember
-class _KeepAliveTimeThread(threading.Thread,metaclass=MetaTypeFileLogger):
+class _KeepAliveTimeThread(threading.Thread, metaclass=FunboostMetaTypeFileLogger):
     def __init__(self, thread_pool: FlexibleThreadPool):
         super().__init__()
         self.pool = thread_pool

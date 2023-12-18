@@ -29,7 +29,7 @@ class FunboostFileLoggerMixin(nb_log.LoggerMixin):
             return self.subclass_logger_dict[logger_name_key]
 
 
-class MetaTypeFileLogger(type):
+class FunboostMetaTypeFileLogger(type):
     """
     给类添加一个属性.名空间是类本身,写入funboost.log
     """

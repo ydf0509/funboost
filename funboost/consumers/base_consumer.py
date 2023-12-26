@@ -227,7 +227,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                  log_filename=log_filename if self.consumer_params.create_logger_file else None,
                                  error_log_filename=nb_log.generate_error_file_name(log_filename),
                                  formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
-        self.logger.info(f'队列 {self.queue_name} 的日志写入到 {nb_log_config_default.LOG_PATH} 文件夹的 {logger_name} 和 {nb_log.generate_error_file_name(log_filename)} 文件中')
+        self.logger.info(f'队列 {self.queue_name} 的日志写入到 {nb_log_config_default.LOG_PATH} 文件夹的 {log_filename} 和 {nb_log.generate_error_file_name(log_filename)} 文件中')
 
     def _check_broker_exclusive_config(self):
         broker_exclusive_config_keys = self.consumer_params.broker_exclusive_config.keys()

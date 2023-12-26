@@ -74,6 +74,7 @@ class GlobalVars:
     global_concurrent_mode = None
     has_start_a_consumer_flag = False
 
+
 # noinspection DuplicatedCode
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     time_interval_for_check_do_not_run_time = 60
@@ -108,7 +109,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :return:
         """
         # ConsumersManager.join_all_consumer_shedual_task_thread()
-        if GlobalVars.has_start_a_consumer_flag :
+        if GlobalVars.has_start_a_consumer_flag:
             while 1:
                 time.sleep(10)
 
@@ -134,7 +135,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
         if consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC:
             self._run = self._async_run  # 这里做了自动转化，使用async_run代替run
-        self.logger:logging.Logger
+        self.logger: logging.Logger
         self._build_logger()
         # stdout_write(f'''{time.strftime("%H:%M:%S")} "{self.consumer_params.auto_generate_info['where_to_instantiate']}"  \033[0;37;44m此行 实例化队列名 {self.queue_name} 的消费者, 类型为 {self.__class__}\033[0m\n''')
         print(f'''\033[0m
@@ -222,10 +223,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         logger_name = f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
         log_filename = self.consumer_params.log_filename or f'funboost.{self.queue_name}.log'
         self.logger = get_logger(logger_name,
-            log_level_int=self.consumer_params.log_level,
+                                 log_level_int=self.consumer_params.log_level,
                                  log_filename=log_filename if self.consumer_params.create_logger_file else None,
-                                 error_log_filename= nb_log.generate_error_file_name(log_filename),
-            formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+                                 error_log_filename=nb_log.generate_error_file_name(log_filename),
+                                 formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+        self.logger.info(f'队列 {self.queue_name} 的日志写入到 {nb_log_config_default.LOG_PATH} 文件夹的 {logger_name} 和 {nb_log.generate_error_file_name(log_filename)} 文件中')
 
     def _check_broker_exclusive_config(self):
         broker_exclusive_config_keys = self.consumer_params.broker_exclusive_config.keys()
@@ -305,7 +307,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # ConsumersManager.show_all_consumer_info()
         # noinspection PyBroadException
 
-        GlobalVars.has_start_a_consumer_flag =True
+        GlobalVars.has_start_a_consumer_flag = True
         try:
             self._concurrent_mode_dispatcher.check_all_concurrent_mode()
             self._check_monkey_patch()
@@ -911,8 +913,8 @@ class ConcurrentModeDispatcher(FunboostFileLoggerMixin):
                 self.consumer.consumer_params.concurrent_mode != GlobalVars.global_concurrent_mode:
             # print({self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode})
             if not {self.consumer.consumer_params.concurrent_mode, GlobalVars.global_concurrent_mode}.issubset({ConcurrentModeEnum.THREADING,
-                                                                                                                                 ConcurrentModeEnum.ASYNC,
-                                                                                                                                 ConcurrentModeEnum.SINGLE_THREAD}):
+                                                                                                                ConcurrentModeEnum.ASYNC,
+                                                                                                                ConcurrentModeEnum.SINGLE_THREAD}):
                 # threding、asyncio、solo 这几种模式可以共存。但同一个解释器不能同时选择 gevent + 其它并发模式，也不能 eventlet + 其它并发模式。
                 raise ValueError('''由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，
                                  搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种(或可以共存),

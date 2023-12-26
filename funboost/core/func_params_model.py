@@ -200,7 +200,7 @@ class BoosterParams(BaseJsonAbleModel):
 
 class BoosterParamsComplete(BoosterParams):
     """
-    例如一个子类,这个子类可以作为@booot的传参,每个@boost可以少写一些这些重复的入参字段.
+    例如一个子类,这个BoosterParams的子类可以作为@booot的传参,每个@boost可以少写一些这些重复的入参字段.
 
     function_result_status_persistance_conf 永远支持函数消费状态 结果状态持久化
     is_send_consumer_hearbeat_to_redis 永远支持发送消费者的心跳到redis,便于统计分布式环境的活跃消费者
@@ -214,7 +214,7 @@ class BoosterParamsComplete(BoosterParams):
     is_send_consumer_hearbeat_to_redis: bool = True  # 消费者心跳发到redis,为True那么用户必须安装reids
     is_using_rpc_mode: bool = True  # 固定支持rpc模式,不用每次指定 (不需要使用rpc模式的同学,就不要指定为True,必须安装redis和浪费一点性能)
     broker_kind: str = BrokerEnum.RABBITMQ_AMQPSTORM  # 固定使用rabbitmq,不用每次指定
-    specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))
+    specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500)) # 多个消费函数共享线程池
 
 
 class PriorityConsumingControlConfig(BaseJsonAbleModel):

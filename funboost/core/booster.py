@@ -110,13 +110,13 @@ class Booster:
     def _safe_push(self, *func_args, **func_kwargs):
         """ 多进程安全的,在fork多进程(非spawn多进程)情况下,有的包多进程不能共用一个连接,例如kafka"""
         consumer = BoostersManager.get_or_create_booster_by_queue_name(self.queue_name).consumer
-        consumer.publisher_of_same_queue.push(*func_args, **func_kwargs)
+        return consumer.publisher_of_same_queue.push(*func_args, **func_kwargs)
 
     def _safe_publish(self, msg: typing.Union[str, dict], task_id=None,
                       priority_control_config: PriorityConsumingControlConfig = None):
         """ 多进程安全的,在fork多进程(非spawn多进程)情况下,很多包跨线程/进程不能共享中间件连接,"""
         consumer = BoostersManager.get_or_create_booster_by_queue_name(self.queue_name).consumer
-        consumer.publisher_of_same_queue.publish(msg=msg, task_id=task_id, priority_control_config=priority_control_config)
+        return  consumer.publisher_of_same_queue.publish(msg=msg, task_id=task_id, priority_control_config=priority_control_config)
 
     # noinspection PyMethodMayBeStatic
     def multi_process_consume(self, process_num=1):

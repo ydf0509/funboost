@@ -186,6 +186,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self.consumer_identification = f'{nb_log_config_default.computer_name}_{nb_log_config_default.computer_ip}_' \
                                        f'{time_util.DatetimeConverter().datetime_str.replace(":", "-")}_{os.getpid()}_{id(self)}'
+        # noinspection PyUnresolvedReferences
         self.consumer_identification_map = {'queue_name': self.queue_name,
                                             'computer_name': nb_log_config_default.computer_name,
                                             'computer_ip': nb_log_config_default.computer_ip,

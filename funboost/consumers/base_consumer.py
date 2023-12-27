@@ -549,9 +549,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
                         # RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
                         # RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
+                        current_function_result_status.rpc_result_expire_seconds = self.consumer_params.rpc_result_expire_seconds
                         p.lpush(kw['body']['extra']['task_id'],
                                 json.dumps(current_function_result_status.get_status_dict(without_datetime_obj=True)))
-                        p.expire(kw['body']['extra']['task_id'], 600)
+                        p.expire(kw['body']['extra']['task_id'], self.consumer_params.rpc_result_expire_seconds)
                         p.execute()
 
             with self._lock_for_count_execute_task_times_every_unit_time:
@@ -698,9 +699,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             if self._get_priority_conf(kw, 'is_using_rpc_mode'):
                 def push_result():
                     with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
+                        current_function_result_status.rpc_result_expire_seconds = self.consumer_params.rpc_result_expire_seconds
                         p.lpush(kw['body']['extra']['task_id'],
                                 json.dumps(current_function_result_status.get_status_dict(without_datetime_obj=True)))
-                        p.expire(kw['body']['extra']['task_id'], 600)
+                        p.expire(kw['body']['extra']['task_id'], self.consumer_params.rpc_result_expire_seconds)
                         p.execute()
 
                 if (current_function_result_status.success is False and current_retry_times == max_retry_times) or current_function_result_status.success is True:

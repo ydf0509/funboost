@@ -55,6 +55,7 @@ class FunctionResultStatus():
         self._has_requeue = False
         self._has_to_dlx_queue = False
         self._has_kill_task = False
+        self.rpc_result_expire_seconds = None
 
     def get_status_dict(self, without_datetime_obj=False):
         self.time_end = time.time()

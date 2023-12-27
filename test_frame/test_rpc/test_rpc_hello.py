@@ -1,10 +1,10 @@
 import time
 import deprecated
 # from inspect import ismethod, isclass, formatargspec
-from funboost import boost,BrokerEnum
+from funboost import boost,BrokerEnum,BoosterParamsComplete
 
 
-@boost('test_rpc_hello',is_using_rpc_mode=True,broker_kind=BrokerEnum.REDIS_ACK_ABLE)
+@boost(BoosterParamsComplete(queue_name='test_rpc_hello',is_using_rpc_mode=True,broker_kind=BrokerEnum.REDIS_ACK_ABLE))
 def fun(x):
     time.sleep(2)
     print(x)

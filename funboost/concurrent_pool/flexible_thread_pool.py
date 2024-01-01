@@ -10,14 +10,16 @@
 
 import asyncio
 import inspect
+import os
 import queue
 import threading
 from functools import wraps
 
 from funboost.concurrent_pool import FunboostBaseConcurrentPool
-from funboost.core.loggers import FunboostFileLoggerMixin,LoggerLevelSetterMixin,MetaTypeFileLogger
+from funboost.core.loggers import FunboostFileLoggerMixin, LoggerLevelSetterMixin, FunboostMetaTypeFileLogger
 
-class FlexibleThreadPool(FunboostFileLoggerMixin, LoggerLevelSetterMixin,FunboostBaseConcurrentPool):
+
+class FlexibleThreadPool(FunboostFileLoggerMixin, LoggerLevelSetterMixin, FunboostBaseConcurrentPool):
     KEEP_ALIVE_TIME = 10
     MIN_WORKERS = 2
 
@@ -51,6 +53,7 @@ class FlexibleThreadPool(FunboostFileLoggerMixin, LoggerLevelSetterMixin,Funboos
 class FlexibleThreadPoolMinWorkers0(FlexibleThreadPool):
     MIN_WORKERS = 0
 
+
 def run_sync_or_async_fun000(func, *args, **kwargs):
     """这种方式造成电脑很卡,不行"""
     fun_is_asyncio = inspect.iscoroutinefunction(func)
@@ -63,11 +66,15 @@ def run_sync_or_async_fun000(func, *args, **kwargs):
     else:
         return func(*args, **kwargs)
 
+
 tl = threading.local()
+
+
 def _get_thread_local_loop() -> asyncio.AbstractEventLoop:
-    if not hasattr(tl,'asyncio_loop'):
+    if not hasattr(tl, 'asyncio_loop'):
         tl.asyncio_loop = asyncio.new_event_loop()
     return tl.asyncio_loop
+
 
 def run_sync_or_async_fun(func, *args, **kwargs):
     fun_is_asyncio = inspect.iscoroutinefunction(func)
@@ -91,7 +98,7 @@ def sync_or_async_fun_deco(func):
 
 
 # noinspection PyProtectedMember
-class _KeepAliveTimeThread(threading.Thread,metaclass=MetaTypeFileLogger):
+class _KeepAliveTimeThread(threading.Thread, metaclass=FunboostMetaTypeFileLogger):
     def __init__(self, thread_pool: FlexibleThreadPool):
         super().__init__()
         self.pool = thread_pool
@@ -120,6 +127,9 @@ class _KeepAliveTimeThread(threading.Thread,metaclass=MetaTypeFileLogger):
             except BaseException as exc:
                 self.logger.exception(f'函数 {func.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
             self.pool._change_threads_free_count(1)
+
+
+
 
 
 if __name__ == '__main__':

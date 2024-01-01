@@ -28,6 +28,7 @@ import threading
 from threading import Lock
 import asyncio
 
+import nb_log
 from funboost.core.loggers import develop_logger
 
 from funboost.core.func_params_model import BoosterParams, PublisherParams
@@ -73,70 +74,6 @@ class GlobalVars:
     global_concurrent_mode = None
     has_start_a_consumer_flag = False
 
-# class GlobalConcurrentModeManager:
-#     global_concurrent_mode = None
-
-
-# noinspection PyClassHasNoInit,DuplicatedCode
-# class ConsumersManager:
-#     schedulal_thread_to_be_join = []
-#     consumers_queue__info_map = dict()
-#     global_concurrent_mode = None
-#     schedual_task_always_use_thread = False
-#     _has_show_conusmers_info = False
-#
-#     @classmethod
-#     def join_all_consumer_shedual_task_thread(cls):
-#         """实现这个主要是为了兼容linux和win，在开启多进程时候兼容。在linux + python3.6 （python3.7-3.11不会）环境如果子进程中即使有在一个非守护线程里面运行while 1的逻辑，代码也会很快结束。所以必须把所有循环拉取消息的线程join
-#         否则如果只是为了兼容win，压根不需要这里多此一举
-#         """
-#         # nb_print((cls.schedulal_thread_to_be_join, len(cls.schedulal_thread_to_be_join), '模式：', cls.global_concurrent_mode))
-#         if cls.schedual_task_always_use_thread:
-#             for t in cls.schedulal_thread_to_be_join:
-#                 nb_print(t)
-#                 t.join()
-#         else:
-#             if cls.global_concurrent_mode in [ConcurrentModeEnum.THREADING, ConcurrentModeEnum.ASYNC, ]:
-#                 for t in cls.schedulal_thread_to_be_join:
-#                     # nb_print(t)
-#                     t.join()
-#             elif cls.global_concurrent_mode == ConcurrentModeEnum.GEVENT:
-#                 # cls.logger.info()
-#                 # nb_print(cls.schedulal_thread_to_be_join)
-#                 import gevent
-#                 gevent.joinall(cls.schedulal_thread_to_be_join, raise_error=True, )
-#             elif cls.global_concurrent_mode == ConcurrentModeEnum.EVENTLET:
-#                 for g in cls.schedulal_thread_to_be_join:
-#                     # eventlet.greenthread.GreenThread.
-#                     # nb_print(g)
-#                     g.wait()
-
-# @classmethod
-# def show_all_consumer_info(cls):
-#     # nb_print(f'当前解释器内，所有消费者的信息是：\n  {cls.consumers_queue__info_map}')
-#     # if only_print_on_main_process(f'当前解释器内，所有消费者的信息是：\n  {json.dumps(cls.consumers_queue__info_map, indent=4, ensure_ascii=False)}'):
-#     if not cls._has_show_conusmers_info:
-#         for _, consumer_info in cls.consumers_queue__info_map.items():
-#             stdout_write(f'{time.strftime("%H:%M:%S")} "{consumer_info["where_to_instantiate"]}" '
-#                          f' \033[0;37;44m{consumer_info["queue_name"]} 的消费者。 \033[0m\n')
-#     cls._has_show_conusmers_info = True
-
-# @staticmethod
-# def get_concurrent_name_by_concurrent_mode(concurrent_mode):
-#     if concurrent_mode == ConcurrentModeEnum.THREADING:
-#         return 'thread'
-#     elif concurrent_mode == ConcurrentModeEnum.GEVENT:
-#         return 'gevent'
-#     elif concurrent_mode == ConcurrentModeEnum.EVENTLET:
-#         return 'evenlet'
-#     elif concurrent_mode == ConcurrentModeEnum.ASYNC:
-#         return 'async'
-#     elif concurrent_mode == ConcurrentModeEnum.SINGLE_THREAD:
-#         return 'single_thread'
-# elif concurrent_mode == ConcurrentModeEnum.LINUX_FORK:
-#     return 'linux_fork'
-
-
 
 # noinspection DuplicatedCode
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
@@ -172,7 +109,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :return:
         """
         # ConsumersManager.join_all_consumer_shedual_task_thread()
-        if GlobalVars.has_start_a_consumer_flag :
+        if GlobalVars.has_start_a_consumer_flag:
             while 1:
                 time.sleep(10)
 
@@ -198,9 +135,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
         if consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC:
             self._run = self._async_run  # 这里做了自动转化，使用async_run代替run
-
+        self.logger: logging.Logger
         self._build_logger()
-        stdout_write(f'''{time.strftime("%H:%M:%S")} "{self.consumer_params.auto_generate_info['where_to_instantiate']}"  \033[0;37;44m此行 实例化队列名 {self.queue_name} 的消费者, 类型为 {self.__class__}\033[0m\n''')
+        # stdout_write(f'''{time.strftime("%H:%M:%S")} "{self.consumer_params.auto_generate_info['where_to_instantiate']}"  \033[0;37;44m此行 实例化队列名 {self.queue_name} 的消费者, 类型为 {self.__class__}\033[0m\n''')
+        print(f'''\033[0m
+         "{self.consumer_params.auto_generate_info['where_to_instantiate']}" \033[0m此行 实例化队列名 {self.queue_name} 的消费者, 类型为 {self.__class__} ''')
+
         # only_print_on_main_process(f'{current_queue__info_dict["queue_name"]} 的消费者配置:\n', un_strict_json_dumps.dict2json(current_queue__info_dict))
 
         # self._do_task_filtering = consumer_params.do_task_filtering
@@ -246,6 +186,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self.consumer_identification = f'{nb_log_config_default.computer_name}_{nb_log_config_default.computer_ip}_' \
                                        f'{time_util.DatetimeConverter().datetime_str.replace(":", "-")}_{os.getpid()}_{id(self)}'
+        # noinspection PyUnresolvedReferences
         self.consumer_identification_map = {'queue_name': self.queue_name,
                                             'computer_name': nb_log_config_default.computer_name,
                                             'computer_ip': nb_log_config_default.computer_ip,
@@ -282,18 +223,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # logger_name = f'{logger_prefix}{self.__class__.__name__}--{concurrent_name}--{queue_name}--{self.consuming_function.__name__}'
         logger_name = f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
         log_filename = self.consumer_params.log_filename or f'funboost.{self.queue_name}.log'
-        self.logger = LogManager(logger_name, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
-            log_level_int=self.consumer_params.log_level, log_filename=log_filename if self.consumer_params.create_logger_file else None,
-            formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
-
-        logger_name_error = f'{logger_name}_error'
-        log_filename_error = f'funboost.{self.queue_name}_error.log'
-        if self.consumer_params.log_filename:
-            log_filename_error = f'{self.consumer_params.log_filename.split(".")[0]}_error.{self.consumer_params.log_filename.split(".")[1]}'
-        self.error_file_logger = LogManager(logger_name_error, logger_cls=CompatibleLogger).get_logger_and_add_handlers(
-            log_level_int=logging.ERROR, log_filename=log_filename_error,
-            is_add_stream_handler=False,
-            formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+        self.logger = get_logger(logger_name,
+                                 log_level_int=self.consumer_params.log_level,
+                                 log_filename=log_filename if self.consumer_params.create_logger_file else None,
+                                 error_log_filename=nb_log.generate_error_file_name(log_filename),
+                                 formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+        self.logger.info(f'队列 {self.queue_name} 的日志写入到 {nb_log_config_default.LOG_PATH} 文件夹的 {log_filename} 和 {nb_log.generate_error_file_name(log_filename)} 文件中')
 
     def _check_broker_exclusive_config(self):
         broker_exclusive_config_keys = self.consumer_params.broker_exclusive_config.keys()
@@ -312,13 +247,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         else:
             check_not_monkey()
 
-    def _log_error(self, msg, exc_info=None):
-        self.logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})  # 这是改变日志栈层级
-        self.error_file_logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})
-
-    def _log_critical(self, msg, exc_info=None):
-        self.logger.critical(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})
-        self.error_file_logger.critical(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})
+    # def _log_error(self, msg, exc_info=None):
+    #     self.logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})  # 这是改变日志栈层级
+    #     self.error_file_logger.error(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})
+    #
+    # def _log_critical(self, msg, exc_info=None):
+    #     self.logger.critical(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})
+    #     self.error_file_logger.critical(msg=f'{msg} \n', exc_info=exc_info, extra={'sys_getframe_n': 3})
 
     @property
     @decorators.synchronized
@@ -355,7 +290,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                 limit=10) if is_display_detail_exception else str(e)
                             # self.logger.error(msg=f'{log_msg} \n', exc_info=True)
                             # self.error_file_logger.error(msg=f'{log_msg} \n', exc_info=True)
-                            self._log_error(msg=log_msg, exc_info=True)
+                            self.logger.error(msg=log_msg, exc_info=True)
                         finally:
                             time.sleep(time_sleep)
 
@@ -373,7 +308,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # ConsumersManager.show_all_consumer_info()
         # noinspection PyBroadException
 
-        GlobalVars.has_start_a_consumer_flag =True
+        GlobalVars.has_start_a_consumer_flag = True
         try:
             self._concurrent_mode_dispatcher.check_all_concurrent_mode()
             self._check_monkey_patch()
@@ -606,7 +541,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     self.publisher_of_dlx_queue.publish(kw['body'])
                 # self.logger.critical(msg=f'{log_msg} \n', )
                 # self.error_file_logger.critical(msg=f'{log_msg} \n')
-                self._log_critical(msg=log_msg)
+                self.logger.critical(msg=log_msg)
 
             if self._get_priority_conf(kw, 'is_using_rpc_mode'):
                 # print(function_result_status.get_status_dict(without_datetime_obj=
@@ -614,9 +549,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
                         # RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
                         # RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
+                        current_function_result_status.rpc_result_expire_seconds = self.consumer_params.rpc_result_expire_seconds
                         p.lpush(kw['body']['extra']['task_id'],
                                 json.dumps(current_function_result_status.get_status_dict(without_datetime_obj=True)))
-                        p.expire(kw['body']['extra']['task_id'], 600)
+                        p.expire(kw['body']['extra']['task_id'], self.consumer_params.rpc_result_expire_seconds)
                         p.execute()
 
             with self._lock_for_count_execute_task_times_every_unit_time:
@@ -645,7 +581,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             log_msg = f' error 严重错误 {type(e)} {e} '
             # self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
             # self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
-            self._log_critical(msg=log_msg, exc_info=True)
+            self.logger.critical(msg=log_msg, exc_info=True)
 
     # noinspection PyProtectedMember
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
@@ -689,7 +625,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 log_msg = f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e} 。消息重新放入当前队列 {self._queue_name}'
                 # self.logger.critical(msg=f'{log_msg} \n')
                 # self.error_file_logger.critical(msg=f'{log_msg} \n')
-                self._log_critical(msg=log_msg)
+                self.logger.critical(msg=log_msg)
                 time.sleep(0.1)  # 防止快速无限出错入队出队，导致cpu和中间件忙
                 # 重回队列如果不修改task_id,insert插入函数消费状态结果到mongo会主键重复。要么保存函数消费状态使用replace，要么需要修改taskikd
                 # kw_new = copy.deepcopy(kw)
@@ -702,14 +638,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 log_msg = f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}，消息放入死信队列 {self._dlx_queue_name}'
                 # self.logger.critical(msg=f'{log_msg} \n')
                 # self.error_file_logger.critical(msg=f'{log_msg} \n')
-                self._log_critical(msg=log_msg)
+                self.logger.critical(msg=log_msg)
                 self.publisher_of_dlx_queue.publish(kw['body'])  # 发布到死信队列，不重回当前队列
                 function_result_status._has_to_dlx_queue = True
             if isinstance(e, kill_remote_task.TaskHasKilledError):
                 log_msg = f'task_id 为 {task_id} , 函数 [{self.consuming_function.__name__}] 运行入参 {function_only_params}   ，已被远程指令杀死 {type(e)}  {e}'
                 # self.logger.critical(msg=f'{log_msg} ')
                 # self.error_file_logger.critical(msg=f'{log_msg} ')
-                self._log_critical(msg=log_msg)
+                self.logger.critical(msg=log_msg)
                 function_result_status._has_kill_task = True
             if isinstance(e, (ExceptionForRequeue, ExceptionForPushToDlxqueue, kill_remote_task.TaskHasKilledError)):
                 return function_result_status
@@ -718,7 +654,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                           {type(e)} {e} '''
             # self.logger.error(msg=f'{log_msg} \n', exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
             # self.error_file_logger.error(msg=f'{log_msg} \n', exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
-            self._log_error(msg=log_msg, exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
+            self.logger.error(msg=log_msg, exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
             # traceback.print_exc()
             function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
             function_result_status.result = FunctionResultStatus.FUNC_RUN_ERROR
@@ -757,15 +693,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     await simple_run_in_executor(self.publisher_of_dlx_queue.publish, kw['body'])
                 # self.logger.critical(msg=f'{log_msg} \n', )
                 # self.error_file_logger.critical(msg=f'{log_msg} \n')
-                self._log_critical(msg=log_msg)
+                self.logger.critical(msg=log_msg)
 
                 # self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
             if self._get_priority_conf(kw, 'is_using_rpc_mode'):
                 def push_result():
                     with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
+                        current_function_result_status.rpc_result_expire_seconds = self.consumer_params.rpc_result_expire_seconds
                         p.lpush(kw['body']['extra']['task_id'],
                                 json.dumps(current_function_result_status.get_status_dict(without_datetime_obj=True)))
-                        p.expire(kw['body']['extra']['task_id'], 600)
+                        p.expire(kw['body']['extra']['task_id'], self.consumer_params.rpc_result_expire_seconds)
                         p.execute()
 
                 if (current_function_result_status.success is False and current_retry_times == max_retry_times) or current_function_result_status.success is True:
@@ -797,7 +734,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             log_msg = f' error 严重错误 {type(e)} {e} '
             # self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
             # self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
-            self._log_critical(msg=log_msg, exc_info=True)
+            self.logger.critical(msg=log_msg, exc_info=True)
 
     # noinspection PyProtectedMember
     async def _async_run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
@@ -814,7 +751,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 log_msg = f'''当前设置的并发模式为 async 并发模式，但消费函数不是异步协程函数，请不要把消费函数 {self.consuming_function.__name__} 的 concurrent_mode 设置为 4'''
                 # self.logger.critical(msg=f'{log_msg} \n')
                 # self.error_file_logger.critical(msg=f'{log_msg} \n')
-                self._log_critical(msg=log_msg)
+                self.logger.critical(msg=log_msg)
                 # noinspection PyProtectedMember,PyUnresolvedReferences
                 os._exit(444)
             if self.consumer_params.function_timeout == 0:
@@ -834,7 +771,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 log_msg = f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e} 。 消息重新放入当前队列 {self._queue_name}'
                 # self.logger.critical(msg=f'{log_msg} \n')
                 # self.error_file_logger.critical(msg=f'{log_msg} \n')
-                self._log_critical(msg=log_msg)
+                self.logger.critical(msg=log_msg)
                 # time.sleep(1)  # 防止快速无限出错入队出队，导致cpu和中间件忙
                 await asyncio.sleep(0.1)
                 # return self._requeue(kw)
@@ -844,7 +781,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 log_msg = f'函数 [{self.consuming_function.__name__}] 中发生错误 {type(e)}  {e}，消息放入死信队列 {self._dlx_queue_name}'
                 # self.logger.critical(msg=f'{log_msg} \n')
                 # self.error_file_logger.critical(msg=f'{log_msg} \n')
-                self._log_critical(msg=log_msg)
+                self.logger.critical(msg=log_msg)
                 await simple_run_in_executor(self.publisher_of_dlx_queue.publish, kw['body'])  # 发布到死信队列，不重回当前队列
                 function_result_status._has_to_dlx_queue = True
             if isinstance(e, (ExceptionForRequeue, ExceptionForPushToDlxqueue)):
@@ -854,7 +791,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                           原因是 {type(e)} {e} '''
             # self.logger.error(msg=f'{log_msg} \n', exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
             # self.error_file_logger.error(msg=f'{log_msg} \n', exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
-            self._log_error(msg=log_msg, exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
+            self.logger.error(msg=log_msg, exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
             function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
             function_result_status.result = FunctionResultStatus.FUNC_RUN_ERROR
         return function_result_status
@@ -893,7 +830,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                              {event.function_kwargs["kw"]["body"]} '''
         # self.logger.critical(msg=f'{log_msg} \n')
         # self.error_file_logger.critical(msg=f'{log_msg} \n')
-        self._log_critical(msg=log_msg)
+        self.logger.critical(msg=log_msg)
         self._confirm_consume(event.function_kwargs["kw"])
 
         '''
@@ -972,15 +909,15 @@ class ConcurrentModeDispatcher(FunboostFileLoggerMixin):
         elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
             from funboost.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco
             self.timeout_deco = evenlet_timeout_deco
-        self.logger.info(f'{self.consumer} 设置并发模式 {self.consumer.consumer_params.concurrent_mode}')
+        # self.logger.info(f'{self.consumer} 设置并发模式 {self.consumer.consumer_params.concurrent_mode}')
 
     def check_all_concurrent_mode(self):
         if GlobalVars.global_concurrent_mode is not None and \
                 self.consumer.consumer_params.concurrent_mode != GlobalVars.global_concurrent_mode:
             # print({self.consumer._concurrent_mode, ConsumersManager.global_concurrent_mode})
             if not {self.consumer.consumer_params.concurrent_mode, GlobalVars.global_concurrent_mode}.issubset({ConcurrentModeEnum.THREADING,
-                                                                                                                                 ConcurrentModeEnum.ASYNC,
-                                                                                                                                 ConcurrentModeEnum.SINGLE_THREAD}):
+                                                                                                                ConcurrentModeEnum.ASYNC,
+                                                                                                                ConcurrentModeEnum.SINGLE_THREAD}):
                 # threding、asyncio、solo 这几种模式可以共存。但同一个解释器不能同时选择 gevent + 其它并发模式，也不能 eventlet + 其它并发模式。
                 raise ValueError('''由于猴子补丁的原因，同一解释器中不可以设置两种并发类型,请查看显示的所有消费者的信息，
                                  搜索 concurrent_mode 关键字，确保当前解释器内的所有消费者的并发模式只有一种(或可以共存),

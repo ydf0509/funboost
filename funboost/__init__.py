@@ -13,7 +13,7 @@ set_frame_config这个模块的 use_config_form_funboost_config_module() 是核�
 这段注释说明和使用的用户无关,只和框架开发人员有关.
 '''
 
-__version__ = "40.7"
+__version__ = "41.2"
 
 from funboost.set_frame_config import show_frame_config
 
@@ -21,7 +21,7 @@ from funboost.set_frame_config import show_frame_config
 from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath  # 这是把 dependency_packages_in_pythonpath 添加到 PYTHONPATH了。
 from funboost.utils import monkey_patches
 
-from funboost.core.loggers import get_logger, get_funboost_file_logger, FunboostFileLoggerMixin, MetaTypeFileLogger, flogger
+from funboost.core.loggers import get_logger, get_funboost_file_logger, FunboostFileLoggerMixin, FunboostMetaTypeFileLogger, flogger
 from funboost.core.func_params_model import (BoosterParams, BoosterParamsComplete, FunctionResultStatusPersistanceConfig,
                                              PriorityConsumingControlConfig, PublisherParams, BoosterParamsComplete)
 from funboost.funboost_config_deafult import FunboostCommonConfig, BrokerConnConfig

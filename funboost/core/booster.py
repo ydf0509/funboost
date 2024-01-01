@@ -12,7 +12,8 @@ from funboost.core.exceptions import BoostDecoParamsIsOldVersion
 from funboost.core.func_params_model import BoosterParams, FunctionResultStatusPersistanceConfig, PriorityConsumingControlConfig
 
 from funboost.factories.consumer_factory import get_consumer
-
+if typing.TYPE_CHECKING:
+    from funboost.core.msg_result_getter import AsyncResult
 
 class Booster:
     """
@@ -29,6 +30,7 @@ class Booster:
         """
         @boost 这是funboost框架最重要的一个函数，必须看懂BoosterParams里面的入参有哪些。
         pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
+        (高版本的pycharm pydantic是内置支持代码补全的,由此可见,pydantic太好了,pycharm官方都来支持)
 
         强烈建议所有入参放在 BoosterParams() 中,不要直接在BoosterParams之外传参.现在是兼容老的直接在@boost中传参方式.
         """
@@ -106,16 +108,16 @@ class Booster:
         else:
             return self.consuming_function(*args, **kwargs)
 
-    def _safe_push(self, *func_args, **func_kwargs):
+    def _safe_push(self, *func_args, **func_kwargs) -> AsyncResult:
         """ 多进程安全的,在fork多进程(非spawn多进程)情况下,有的包多进程不能共用一个连接,例如kafka"""
         consumer = BoostersManager.get_or_create_booster_by_queue_name(self.queue_name).consumer
-        consumer.publisher_of_same_queue.push(*func_args, **func_kwargs)
+        return consumer.publisher_of_same_queue.push(*func_args, **func_kwargs)
 
     def _safe_publish(self, msg: typing.Union[str, dict], task_id=None,
-                      priority_control_config: PriorityConsumingControlConfig = None):
+                      priority_control_config: PriorityConsumingControlConfig = None) -> AsyncResult:
         """ 多进程安全的,在fork多进程(非spawn多进程)情况下,很多包跨线程/进程不能共享中间件连接,"""
         consumer = BoostersManager.get_or_create_booster_by_queue_name(self.queue_name).consumer
-        consumer.publisher_of_same_queue.publish(msg=msg, task_id=task_id, priority_control_config=priority_control_config)
+        return  consumer.publisher_of_same_queue.publish(msg=msg, task_id=task_id, priority_control_config=priority_control_config)
 
     # noinspection PyMethodMayBeStatic
     def multi_process_consume(self, process_num=1):

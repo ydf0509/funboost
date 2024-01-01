@@ -157,7 +157,7 @@ class CeleryConsumer(AbstractConsumer):
 
     def custom_init(self):
         # 这就是核心，@boost时候会 @ celery app.task装饰器
-        celery_task_deco_options = dict(name=self.queue_name,
+        celery_task_deco_options = dict(name=self. queue_name,
                                         max_retries=self.consumer_params.max_retry_times, bind=True)
         if self.consumer_params.qps:
             celery_task_deco_options['rate_limit'] = f'{self.consumer_params.qps}/s'

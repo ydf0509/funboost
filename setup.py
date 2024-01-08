@@ -63,7 +63,7 @@ setup(
         'Topic :: Software Development :: Libraries'
     ],
     install_requires=[
-        'nb_log>=11.4',
+        'nb_log>=11.9',
         'eventlet==0.33.3',
         'gevent==22.10.2',
         'pymongo==4.3.3',  # 3.5.1  -> 4.0.2

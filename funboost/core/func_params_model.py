@@ -15,7 +15,7 @@ from funboost.core.loggers import develop_logger
 from funboost.core.loggers import flogger
 
 
-def patch_for_pydantic_field_deepcopy():
+def _patch_for_pydantic_field_deepcopy():
     from concurrent.futures import ThreadPoolExecutor
     from asyncio import AbstractEventLoop
 
@@ -32,12 +32,8 @@ def patch_for_pydantic_field_deepcopy():
     # BaseEventLoop.__deepcopy__ = __deepcopy__
 
 
-patch_for_pydantic_field_deepcopy()
+_patch_for_pydantic_field_deepcopy()
 
-
-class NoExtraFieldsConfig(BaseConfig):
-    allow_mutation = False
-    extra = "forbid"
 
 
 class BaseJsonAbleModel(BaseModel):
@@ -173,7 +169,7 @@ class BoosterParams(BaseJsonAbleModel):
     broker_kind: str = BrokerEnum.PERSISTQUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh/latest/articles/c3.html
 
     broker_exclusive_config: dict = {}  # 加上一个不同种类中间件非通用的配置,不同中间件自身独有的配置，不是所有中间件都兼容的配置，因为框架支持30种消息队列，消息队列不仅仅是一般的先进先出queue这么简单的概念，
-    # 例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，每一种消息队列都有独特的配置参数意义，可以通过这里传递。
+    # 例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，每一种消息队列都有独特的配置参数意义，可以通过这里传递。每种中间件能传递的键值对可以看consumer类的 BROKER_EXCLUSIVE_CONFIG_DEFAULT
 
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
 
@@ -214,7 +210,7 @@ class BoosterParamsComplete(BoosterParams):
         is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=True)  # 开启函数消费状态 结果持久化到 mongo,为True用户必须要安装mongo和多浪费一丝丝性能.
     is_send_consumer_hearbeat_to_redis: bool = True  # 消费者心跳发到redis,为True那么用户必须安装reids
     is_using_rpc_mode: bool = True  # 固定支持rpc模式,不用每次指定 (不需要使用rpc模式的同学,就不要指定为True,必须安装redis和浪费一点性能)
-    rpc_result_expire_seconds: int = 1000
+    rpc_result_expire_seconds: int = 3600
     broker_kind: str = BrokerEnum.RABBITMQ_AMQPSTORM  # 固定使用rabbitmq,不用每次指定
     specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))  # 多个消费函数共享线程池
 

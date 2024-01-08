@@ -528,6 +528,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                         or current_function_result_status._has_to_dlx_queue
                         or current_function_result_status._has_kill_task):
                     break
+                else:
+                    if self.consumer_params.retry_interval:
+                        time.sleep(self.consumer_params.retry_interval)
             if not (current_function_result_status._has_requeue and self.BROKER_KIND in [BrokerEnum.RABBITMQ_AMQPSTORM, BrokerEnum.RABBITMQ_PIKA, BrokerEnum.RABBITMQ_RABBITPY]):  # 已经nack了，不能ack，否则rabbitmq delevar tag 报错
                 self._confirm_consume(kw)
 
@@ -678,6 +681,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                                                                                  )
                 if current_function_result_status.success is True or current_retry_times == max_retry_times or current_function_result_status._has_requeue:
                     break
+                else:
+                    if self.consumer_params.retry_interval:
+                        await asyncio.sleep(self.consumer_params.retry_interval)
 
             # self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
             if not (current_function_result_status._has_requeue and self.BROKER_KIND in [BrokerEnum.RABBITMQ_AMQPSTORM, BrokerEnum.RABBITMQ_PIKA, BrokerEnum.RABBITMQ_RABBITPY]):

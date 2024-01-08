@@ -36,7 +36,7 @@ async def publish_msg(msg_item: MsgItem):
     try:
         booster = BoostersManager.get_or_create_booster_by_queue_name(msg_item.queue_name)
         if msg_item.need_result:
-            if booster.boost_params['is_using_rpc_mode'] is False:
+            if booster.boost_params.is_using_rpc_mode is False:
                 raise ValueError(f' need_result 为true,{booster.queue_name} 队列消费者 需要@boost设置支持rpc模式')
             async_result = booster.publish(msg_item.msg_body)
             status_and_result = await AioAsyncResult(async_result.task_id, timeout=msg_item.timeout).status_and_result

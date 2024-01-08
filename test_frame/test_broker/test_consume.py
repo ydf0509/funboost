@@ -15,7 +15,7 @@ import random
 # from distributed_frame_config import REDIS_HOST
 import nb_log
 from concurrent.futures import ProcessPoolExecutor
-from funboost import boost, BrokerEnum, ConcurrentModeEnum, FunctionResultStatusPersistanceConfig, ExceptionForRequeue, ExceptionForPushToDlxqueue,show_current_threads_num
+from funboost import boost, BrokerEnum, ConcurrentModeEnum, FunctionResultStatusPersistanceConfig, ExceptionForRequeue, ExceptionForPushToDlxqueue,show_current_threads_num,BoosterParams
 from funboost.utils.redis_manager import RedisMixin
 from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
 
@@ -34,18 +34,19 @@ def f(x, y):
 pool2 = ProcessPoolExecutor(4)
 
 
-@boost('test_queue77h6j', log_level=10, broker_kind=BrokerEnum.MEMORY_QUEUE,
+@boost(BoosterParams(queue_name='test_queue77h6j', log_level=10, broker_kind=BrokerEnum.MEMORY_QUEUE,
        create_logger_file=True, is_show_message_get_from_broker=True, concurrent_mode=ConcurrentModeEnum.THREADING,
        concurrent_num=50, qps=20, is_print_detail_exception=False, is_push_to_dlx_queue_when_retry_max_times=True,
+       retry_interval=10,
        # specify_concurrent_pool= pool2,
        # concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,function_timeout=10,
        # function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True,expire_seconds=500000,is_use_bulk_insert=True)
        # is_using_rpc_mode=True,is_support_remote_kill_task=True,is_using_distributed_frequency_control=True,do_task_filtering=False,
-       )
+       ))
 def f2(a, b):
     # time.sleep(100)
     time.sleep(1)
-    if random.random() > 0.99999:
+    if random.random() > 0.6:
         raise ValueError('普通错误会对函数重试n次')
     # if random.random() > 0.8:
     #     raise ExceptionForRequeue('重新入队去吧')

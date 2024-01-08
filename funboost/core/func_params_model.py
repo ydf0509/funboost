@@ -35,10 +35,9 @@ def _patch_for_pydantic_field_deepcopy():
 _patch_for_pydantic_field_deepcopy()
 
 
-
 class BaseJsonAbleModel(BaseModel):
     """
-    因为model字段包括了 函数对象,无法json序列化,需要自定义json序列化
+    因为model字段包括了 函数和自定义类型的对象,无法直接json序列化,需要自定义json序列化
     """
 
     def get_str_dict(self):
@@ -132,6 +131,7 @@ class BoosterParams(BaseJsonAbleModel):
     主动抛出ExceptionForRequeue异常，则当前 消息会重返中间件，
     主动抛出 ExceptionForPushToDlxqueue  异常，可以使消息发送到单独的死信队列中，死信队列的名字是 队列名字 + _dlx。"""
     max_retry_times: int = 3
+    retry_interval: typing.Union[float, int] = 0  # 函数出错后间隔多少秒再重试.
     is_push_to_dlx_queue_when_retry_max_times: bool = False  # 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
 
     consumin_function_decorator: typing.Callable = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。

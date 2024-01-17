@@ -213,6 +213,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                 log_filename=consumer_params.log_filename,
                                                 broker_exclusive_config=self.consumer_params.broker_exclusive_config)
         if is_main_process:
+            print(self.consumer_params.get_str_dict())
             self.logger.info(f'{self.queue_name} consumer 的消费者配置:\n {self.consumer_params.json_str_value()}')
         atexit.register(self.join_shedual_task_thread)
 

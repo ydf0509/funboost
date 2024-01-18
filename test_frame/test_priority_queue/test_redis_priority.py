@@ -21,11 +21,11 @@ if __name__ == '__main__':
       
     for i in range(100):
         randx = random.randint(1, 6)
-        if randx > 4:
+        if randx > 10:
             randx = None
         print(randx)
         f.publish({'x': randx}, priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': randx}))
     print(f.get_message_count())
       
-    f.consume()
+    # f.consume()
       

@@ -37,7 +37,7 @@ class RedisPriorityPublisher(FlushRedisQueueMixin,AbstractPublisher, RedisMixin,
 
     def concrete_realization_of_publish(self, msg):
         queue_name = self.build_queue_name_by_msg(msg)
-        self.logger.debug([queue_name, msg])
+        # self.logger.debug([queue_name, msg])
         self.redis_db_frame.rpush(queue_name, msg)
 
 

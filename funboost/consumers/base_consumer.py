@@ -164,7 +164,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._last_timestamp_print_msg_num = 0
 
         self._result_persistence_helper: ResultPersistenceHelper
-        self.consumer_params.broker_exclusive_config.update(self.BROKER_EXCLUSIVE_CONFIG_DEFAULT)
+        broker_exclusive_config_merge = dict()
+        broker_exclusive_config_merge.update(self.BROKER_EXCLUSIVE_CONFIG_DEFAULT)
+        broker_exclusive_config_merge.update(self.consumer_params.broker_exclusive_config)
+        self.consumer_params.broker_exclusive_config = broker_exclusive_config_merge
 
         self._stop_flag = None
         self._pause_flag = None  # 暂停消费标志，从reids读取
@@ -206,6 +209,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._consuming_function_is_asyncio = inspect.iscoroutinefunction(self.consuming_function)
         self.custom_init()
         # develop_logger.warning(consumer_params.log_filename)
+        print(self.consumer_params.broker_exclusive_config)
         self.publisher_params = PublisherParams(queue_name=consumer_params.queue_name, consuming_function=consumer_params.consuming_function,
                                                 broker_kind=self.BROKER_KIND, log_level=consumer_params.log_level,
                                                 logger_prefix=consumer_params.logger_prefix,
@@ -213,7 +217,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                 log_filename=consumer_params.log_filename,
                                                 broker_exclusive_config=self.consumer_params.broker_exclusive_config)
         if is_main_process:
-            print(self.consumer_params.get_str_dict())
             self.logger.info(f'{self.queue_name} consumer 的消费者配置:\n {self.consumer_params.json_str_value()}')
         atexit.register(self.join_shedual_task_thread)
 
@@ -232,11 +235,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.logger.info(f'队列 {self.queue_name} 的日志写入到 {nb_log_config_default.LOG_PATH} 文件夹的 {log_filename} 和 {nb_log.generate_error_file_name(log_filename)} 文件中')
 
     def _check_broker_exclusive_config(self):
-        broker_exclusive_config_keys = self.consumer_params.broker_exclusive_config.keys()
-        if set(self.consumer_params.broker_exclusive_config.keys()).issubset(broker_exclusive_config_keys):
-            self.logger.info(f'当前消息队列中间件能支持特殊独有配置 {self.consumer_params.broker_exclusive_config.keys()}')
-        else:
-            self.logger.warning(f'当前消息队列中间件含有不支持的特殊配置 {self.consumer_params.broker_exclusive_config.keys()}，能支持的特殊独有配置包括 {broker_exclusive_config_keys}')
+        broker_exclusive_config_keys = self.BROKER_EXCLUSIVE_CONFIG_DEFAULT.keys()
+        if self.consumer_params.broker_exclusive_config:
+            if set(self.consumer_params.broker_exclusive_config.keys()).issubset(broker_exclusive_config_keys):
+                self.logger.info(f'当前消息队列中间件能支持特殊独有配置 {self.consumer_params.broker_exclusive_config.keys()}')
+            else:
+                self.logger.warning(f'当前消息队列中间件含有不支持的特殊配置 {self.consumer_params.broker_exclusive_config.keys()}，能支持的特殊独有配置包括 {broker_exclusive_config_keys}')
 
     def _check_monkey_patch(self):
         if self.consumer_params.concurrent_mode == ConcurrentModeEnum.GEVENT:

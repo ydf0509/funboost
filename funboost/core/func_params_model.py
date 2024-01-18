@@ -57,14 +57,13 @@ class BaseJsonAbleModel(BaseModel):
         try:
             return json.dumps(self.get_str_dict(), ensure_ascii=False, )
         except TypeError as e:
-            return  self.get_str_dict()
-
+            return str(self.get_str_dict())
 
     def json_pre(self):
         try:
             return json.dumps(self.get_str_dict(), ensure_ascii=False, indent=4)
         except TypeError as e:
-            return  self.get_str_dict()
+            return str(self.get_str_dict())
 
     def update_from_dict(self, dictx: dict):
         for k, v in dictx.items():

@@ -175,7 +175,7 @@ Transport Options
         self._middware_name = self.kombu_url.split(":")[0]
         # logger_name = f'{self.consumer_params.logger_prefix}{self.__class__.__name__}--{self._middware_name}--{self._queue_name}'
         # self.logger = get_logger(logger_name, log_level_int=self.consumer_params.log_level,
-        #                          log_filename=f'{logger_name}.log' if self.consumer_params.create_logger_file else None,
+        #                          _log_filename=f'{logger_name}.log' if self.consumer_params.create_logger_file else None,
         #                          formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
         #                          )  #
         if self.kombu_url.startswith('filesystem://'):

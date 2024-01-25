@@ -159,6 +159,10 @@ class AsyncPoolExecutorGtPy310(AsyncPoolExecutorLtPy310):
 
 AsyncPoolExecutor = AsyncPoolExecutorLtPy310 if sys.version_info.minor < 10 else AsyncPoolExecutorGtPy310
 
+if sys.platform == "darwin":  # mac 上会出错
+      import selectors
+      selectors.DefaultSelector = selectors.PollSelector
+
 if __name__ == '__main__':
     def test_async_pool_executor():
         from funboost.concurrent_pool import CustomThreadPoolExecutor as ThreadPoolExecutor

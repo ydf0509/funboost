@@ -30,7 +30,7 @@ class RedisManager(object):
         self._key = (host, port, db, username, password,)
         if self._key not in self.__class__._redis_db__conn_map:
             self.__class__._redis_db__conn_map[self._key] = redis5.Redis(host=host, port=port, db=db, username=username,
-                                                                         password=password, max_connections=100, decode_responses=True)
+                                                                         password=password, max_connections=1000, decode_responses=True)
         self.redis = self.__class__._redis_db__conn_map[self._key]
 
     def get_redis(self) -> redis5.Redis:
@@ -47,7 +47,7 @@ class AioRedisManager(object):
         self._key = (host, port, db, username, password,)
         if self._key not in self.__class__._redis_db__conn_map:
             self.__class__._redis_db__conn_map[self._key] = AioRedis(host=host, port=port, db=db, username=username,
-                                                                     password=password, max_connections=100, decode_responses=True)
+                                                                     password=password, max_connections=1000, decode_responses=True)
         self.redis = self.__class__._redis_db__conn_map[self._key]
 
     def get_redis(self) -> AioRedis:

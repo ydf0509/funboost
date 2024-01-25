@@ -49,7 +49,7 @@ class KombuPublisher(AbstractPublisher, ):
         self._kombu_broker_url_prefix = self.kombu_url.split(":")[0]
         # logger_name = f'{self._logger_prefix}{self.__class__.__name__}--{self._kombu_broker_url_prefix}--{self._queue_name}'
         # self.logger = get_logger(logger_name, log_level_int=self._log_level_int,
-        #                          log_filename=f'{logger_name}.log' if self._is_add_file_handler else None,
+        #                          _log_filename=f'{logger_name}.log' if self._is_add_file_handler else None,
         #                          formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER,
         #                          )  #
         if self.kombu_url.startswith('filesystem://'):

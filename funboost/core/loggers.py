@@ -9,7 +9,7 @@ LOG_FILE_NAME = 'funboost.log'
 
 def get_funboost_file_logger(name, *, log_level_int: int = None, **kwargs) -> logging.Logger:
     """日志自动写入 funboost.log文件中,不需要亲自指定文件名"""
-    kwargs['log_filename'] = LOG_FILE_NAME
+    kwargs['_log_filename'] = LOG_FILE_NAME
     kwargs['error_log_filename'] = nb_log.generate_error_file_name(log_filename=LOG_FILE_NAME)
     return nb_log.get_logger(name, log_level_int=log_level_int, **kwargs, )
 

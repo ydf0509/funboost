@@ -164,6 +164,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._last_timestamp_print_msg_num = 0
 
         self._result_persistence_helper: ResultPersistenceHelper
+        self._check_broker_exclusive_config()
         broker_exclusive_config_merge = dict()
         broker_exclusive_config_merge.update(self.BROKER_EXCLUSIVE_CONFIG_DEFAULT)
         broker_exclusive_config_merge.update(self.consumer_params.broker_exclusive_config)
@@ -204,12 +205,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                             'code_filename': Path(self.consuming_function.__code__.co_filename).as_posix()
                                             }
 
-        self._check_broker_exclusive_config()
+
         self._has_start_delay_task_scheduler = False
         self._consuming_function_is_asyncio = inspect.iscoroutinefunction(self.consuming_function)
         self.custom_init()
-        # develop_logger.warning(consumer_params.log_filename)
-        print(self.consumer_params.broker_exclusive_config)
+        # develop_logger.warning(consumer_params._log_filename)
         self.publisher_params = PublisherParams(queue_name=consumer_params.queue_name, consuming_function=consumer_params.consuming_function,
                                                 broker_kind=self.BROKER_KIND, log_level=consumer_params.log_level,
                                                 logger_prefix=consumer_params.logger_prefix,

@@ -120,15 +120,15 @@ funboosts示图：
 
 [//]: # ([![img-46.png]&#40;https://i.postimg.cc/tC7mQxWN/img-46.png&#41;]&#40;https://postimg.cc/hfW0VhCX&#41;)
 就是最普通的生产者消费者流程图
-[![piZnp9S.png](https://z1.ax1x.com/2023/10/26/piZnp9S.png)](https://imgse.com/i/piZnp9S)
+![](https://i.niupic.com/images/2023/12/18/dVaP.png)
 
 也就是这种非常普通的流程图,一样的意思
 
-[![pPbCmyd.png](https://z1.ax1x.com/2023/09/27/pPbCmyd.png)](https://imgse.com/i/pPbCmyd)
+![](https://i.niupic.com/images/2023/12/18/dVaP.png)
 
 ### 1.2.1 框架支持5种并发模式
 
-<div   style=" font-size: xx-large; font-family: 黑体,serif; "> threading  <span style="font-size: medium">(使用的是可变线程池，可以智能自动缩小和扩大线程数量) </span> </div> 
+<div   style=" font-size: xx-large; font-family: 黑体,serif; "> threading  <span style="font-size: medium">(使用的是可变线程池，可以智能自动缩小和扩大线程数量,也可以运行async def的函数) </span> </div> 
 
 
 <div   style=" font-size: xx-large; font-family: 黑体,serif; "> gevent </div>
@@ -386,9 +386,9 @@ if __name__ == "__main__":
 
 运行截图:
 
-[![pP2AtUA.png](https://s1.ax1x.com/2023/09/12/pP2AtUA.png)](https://imgse.com/i/pP2AtUA)
+![](https://i.niupic.com/images/2023/12/18/dVbn.png)
 
-[![pP2AsbQ.png](https://s1.ax1x.com/2023/09/12/pP2AsbQ.png)](https://imgse.com/i/pP2AsbQ)
+![](https://i.niupic.com/images/2023/12/18/dVbz.png)
 
 ![](https://i.niupic.com/images/2019/09/20/_331.png)
 
@@ -445,6 +445,15 @@ funboost通过支持celery作为broker_kind,使celer框架变成了funboost的�
 ```
 
 [查看分布式函数调度框架完整文档](https://funboost.readthedocs.io/zh/latest/index.html)
+
+
+
+
+
+
+
+
+
 
 ![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)
 

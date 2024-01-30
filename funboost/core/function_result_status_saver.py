@@ -107,7 +107,7 @@ class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):
         if self.function_result_status_persistance_conf.is_save_status:
             self._create_indexes()
             # self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
-            self.logger.info(f"函数运行状态结果将保存至mongo的 {self.TASK_STATUS_DB} 库的 {queue_name} 集合中，请确认 funboost.py文件中配置的 MONGO_CONNECT_URL")
+            self.logger.debug(f"函数运行状态结果将保存至mongo的 {self.TASK_STATUS_DB} 库的 {queue_name} 集合中，请确认 funboost.py文件中配置的 MONGO_CONNECT_URL")
 
     def _create_indexes(self):
         task_status_col = self.get_mongo_collection(self.TASK_STATUS_DB, self._queue_name)

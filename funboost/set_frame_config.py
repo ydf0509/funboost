@@ -5,25 +5,28 @@
 
 使用覆盖的方式，做配置。
 """
-import copy
 import sys
 import time
-import re
 import importlib
 import json
 from pathlib import Path
 from shutil import copyfile
 
-from funboost.core.loggers import flogger
+from funboost.core.loggers import flogger, get_funboost_file_logger, logger_prompt
 from nb_log import nb_print, stderr_write, stdout_write
 from nb_log.monkey_print import is_main_process, only_print_on_main_process
 from funboost import funboost_config_deafult
 
 
+def _get_show_how_funboost_config_settings():
+    try:
+        import funboost_config  # 第一次启动funboost前还没这个文件
+        return funboost_config.FunboostCommonConfig.SHOW_HOW_FUNBOOST_CONFIG_SETTINGS
+    except Exception as e:
+        return True
+
+
 def show_funboost_flag():
-
-
-
     funboost_flag_str = '''
 
 
@@ -65,11 +68,13 @@ def show_funboost_flag():
 
     '''
 
-    flogger.debug('\033[0m' + funboost_flag_str2 + '\033[0m')
+    logger_prompt.debug('\033[0m' + funboost_flag_str2 + '\033[0m')
 
-    flogger.info(f'''分布式函数调度框架funboost文档地址：  \033[0m https://funboost.readthedocs.io/zh/latest/ \033[0m ''')
+    logger_prompt.debug(f'''分布式函数调度框架funboost文档地址：  \033[0m https://funboost.readthedocs.io/zh/latest/ \033[0m ''')
+
 
 show_funboost_flag()
+
 
 def dict2json(dictx: dict, indent=4):
     dict_new = {}
@@ -84,25 +89,25 @@ def dict2json(dictx: dict, indent=4):
 
 def show_frame_config():
     if is_main_process():
-        flogger.info('显示当前的项目中间件配置参数')
-    # for var_name in dir(funboost_config_deafult):
-    #     if var_name.isupper():
-    #         var_value = getattr(funboost_config_deafult, var_name)
-    #         if var_name == 'MONGO_CONNECT_URL':
-    #             if re.match('mongodb://.*?:.*?@.*?/.*', var_value):
-    #                 mongo_pass = re.search('mongodb://.*?:(.*?)@', var_value).group(1)
-    #                 mongo_pass_encryption = f'{"*" * (len(mongo_pass) - 2)}{mongo_pass[-1]}' if len(
-    #                     mongo_pass) > 3 else mongo_pass
-    #                 var_value_encryption = re.sub(r':(\w+)@', f':{mongo_pass_encryption}@', var_value)
-    #                 only_print_on_main_process(f'{var_name}:             {var_value_encryption}')
-    #                 continue
-    #         if 'PASS' in var_name and var_value is not None and len(var_value) > 3:  # 对密码打*
-    #             only_print_on_main_process(f'{var_name}:                {var_value[0]}{"*" * (len(var_value) - 2)}{var_value[-1]}')
-    #         else:
-    #             only_print_on_main_process(f'{var_name}:                {var_value}')
-        flogger.info(f'''读取的 BrokerConnConfig 配置是:\n {funboost_config_deafult.BrokerConnConfig().get_json(indent=None)} ''')
+        logger_prompt.debug('显示当前的项目中间件配置参数')
+        # for var_name in dir(funboost_config_deafult):
+        #     if var_name.isupper():
+        #         var_value = getattr(funboost_config_deafult, var_name)
+        #         if var_name == 'MONGO_CONNECT_URL':
+        #             if re.match('mongodb://.*?:.*?@.*?/.*', var_value):
+        #                 mongo_pass = re.search('mongodb://.*?:(.*?)@', var_value).group(1)
+        #                 mongo_pass_encryption = f'{"*" * (len(mongo_pass) - 2)}{mongo_pass[-1]}' if len(
+        #                     mongo_pass) > 3 else mongo_pass
+        #                 var_value_encryption = re.sub(r':(\w+)@', f':{mongo_pass_encryption}@', var_value)
+        #                 only_print_on_main_process(f'{var_name}:             {var_value_encryption}')
+        #                 continue
+        #         if 'PASS' in var_name and var_value is not None and len(var_value) > 3:  # 对密码打*
+        #             only_print_on_main_process(f'{var_name}:                {var_value[0]}{"*" * (len(var_value) - 2)}{var_value[-1]}')
+        #         else:
+        #             only_print_on_main_process(f'{var_name}:                {var_value}')
+        logger_prompt.debug(f'''读取的 BrokerConnConfig 配置是:\n {funboost_config_deafult.BrokerConnConfig().get_json(indent=None)} ''')
 
-        flogger.info(f'''读取的 FunboostCommonConfig 配置是:\n  {funboost_config_deafult.FunboostCommonConfig().get_json(indent=None)} ''')
+        logger_prompt.debug(f'''读取的 FunboostCommonConfig 配置是:\n  {funboost_config_deafult.FunboostCommonConfig().get_json(indent=None)} ''')
 
     # only_print_on_main_process(f'读取的 BoostDecoratorDefaultParams 默认 @boost 装饰器入参的默认全局配置是： \n  '
     #                            f'{funboost_config_deafult.BoostDecoratorDefaultParams().get_json()}')
@@ -124,8 +129,8 @@ def use_config_form_funboost_config_module():
     """
     # sys.stdout.write(f'\033[0;33m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;30;43m{inspect_msg}\033[0m\n')
     # noinspection PyProtectedMember
-    if is_main_process():
-        stdout_write(f'\033[0;93m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;93;100m{inspect_msg}\033[0m\n')
+    if is_main_process() and _get_show_how_funboost_config_settings():
+        logger_prompt.debug(f'\033[0;93m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;93;100m{inspect_msg}\033[0m\n')
     try:
         # noinspection PyUnresolvedReferences
         # import funboost_config
@@ -133,13 +138,14 @@ def use_config_form_funboost_config_module():
         importlib.reload(m)  # 这行是防止用户在导入框架之前，写了 from funboost_config import REDIS_HOST 这种，导致 m.__dict__.items() 不包括所有配置变量了。
         # print(dir(m))
         # nb_print(m.__dict__.items())
-        only_print_on_main_process(f'分布式函数调度框架 读取到\n "{m.__file__}:1" 文件里面的变量作为优先配置了\n')
-        if not hasattr(m,'BrokerConnConfig'):
+        if is_main_process():
+            logger_prompt.debug(f'分布式函数调度框架 读取到\n "{m.__file__}:1" 文件里面的变量作为优先配置了\n')
+        if not hasattr(m, 'BrokerConnConfig'):
             raise EnvironmentError(f'funboost 30.0版本升级了配置文件，中间件配置写成了类，请删除原来老的funboost_config.py配置文件:\n "{m.__file__}:1"')
         funboost_config_deafult.BrokerConnConfig.update_cls_attribute(**m.BrokerConnConfig().get_dict())
         funboost_config_deafult.FunboostCommonConfig.update_cls_attribute(**m.FunboostCommonConfig().get_dict())
         # funboost_config_deafult.BoostDecoratorDefaultParams.update_cls_attribute(**m.BoostDecoratorDefaultParams().get_dict())
-        if hasattr(m,'BoostDecoratorDefaultParams'):
+        if hasattr(m, 'BoostDecoratorDefaultParams'):
             raise ValueError('funboost 40.0版本之后，采用 pydantic model BoostParams类或子类入参，不支持 funboost_config.py的 BoostDecoratorDefaultParams 配置,请删除掉 BoostDecoratorDefaultParams 这个配置')
 
 

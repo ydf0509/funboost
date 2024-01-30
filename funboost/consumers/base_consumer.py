@@ -35,7 +35,7 @@ from funboost.core.func_params_model import BoosterParams, PublisherParams
 from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, CompatibleLogger,
                     LoggerMixinDefaultWithFileHandler, stdout_write, is_main_process,
                     nb_log_config_default)
-from funboost.core.loggers import FunboostFileLoggerMixin
+from funboost.core.loggers import FunboostFileLoggerMixin,logger_prompt
 
 from apscheduler.jobstores.redis import RedisJobStore
 

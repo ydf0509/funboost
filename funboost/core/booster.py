@@ -4,7 +4,7 @@ import os
 import types
 import typing
 
-from funboost.core.loggers import flogger, develop_logger
+from funboost.core.loggers import flogger, develop_logger,logger_prompt
 
 from functools import wraps
 
@@ -79,7 +79,7 @@ class Booster:
         if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], typing.Callable):
             consuming_function = args[0]
             self.boost_params.consuming_function = consuming_function
-            flogger.info(f''' {self.boost_params.queue_name} booster 配置是 {self.boost_params.json_str_value()}''')
+            logger_prompt.debug(f''' {self.boost_params.queue_name} booster 配置是 {self.boost_params.json_str_value()}''')
             self.consuming_function = consuming_function
             self.is_decorated_as_consume_function = True
 

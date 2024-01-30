@@ -120,7 +120,7 @@ class PublishParamsChecker(FunboostFileLoggerMixin):
             self.position_arg_name_set = set(self.position_arg_name_list)
             self.keyword_arg_name_list = []
             self.keyword_arg_name_set = set()
-        self.logger.info(f'{func} 函数的入参要求是 全字段 {self.all_arg_name_set} ,必须字段为 {self.position_arg_name_set} ')
+        self.logger.debug(f'{func} 函数的入参要求是 全字段 {self.all_arg_name_set} ,必须字段为 {self.position_arg_name_set} ')
 
     def check_params(self, publish_params: dict):
         publish_params_keys_set = set(publish_params.keys())

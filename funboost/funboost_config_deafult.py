@@ -100,4 +100,6 @@ class FunboostCommonConfig(DataClassBase):
     NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 11  # 7是简短的不可跳转，5是可点击跳转的，11是可显示ip 进程 线程的模板。
     TIMEZONE = 'Asia/Shanghai'
 
+    SHOW_HOW_FUNBOOST_CONFIG_SETTINGS = True  # 是否显示教你怎么设置 funboost_config.py ,老手熟悉了,可以设置为False不显示
+
 

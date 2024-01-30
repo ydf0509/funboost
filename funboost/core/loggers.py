@@ -1,4 +1,5 @@
 import nb_log
+from funboost.core.helper_funs import _try_get_user_funboost_common_config
 
 # noinspection PyUnresolvedReferences
 from nb_log import get_logger, LoggerLevelSetterMixin, nb_log_config_default
@@ -36,12 +37,14 @@ class FunboostMetaTypeFileLogger(type):
 
     def __init__(cls, name, bases, attrs):
         super().__init__(name, bases, attrs)
-        cls.logger:logging.Logger = get_funboost_file_logger(name)
+        cls.logger: logging.Logger = get_funboost_file_logger(name)
 
 
 flogger = get_funboost_file_logger('funboost', )
 
-logger_prompt = get_funboost_file_logger('funboost.prompt')  # funboost框架的提示,用户自己可以设置日志级别
+print(_try_get_user_funboost_common_config('FUNBOOST_PROMPT_LOG_LEVEL'))
+logger_prompt = get_funboost_file_logger('funboost.prompt', log_level_int=_try_get_user_funboost_common_config('FUNBOOST_PROMPT_LOG_LEVEL') or logging.DEBUG)  # funboost框架的提示,用户自己可以设置日志级别
+nb_log.LogManager('_KeepAliveTimeThread').preset_log_level(_try_get_user_funboost_common_config('KEEPALIVETIMETHREAD_LOG_LEVEL') or logging.DEBUG)
 
 # 开发时候的调试日志，比print方便通过级别一键屏蔽。
 develop_logger = get_logger('funboost_develop', log_level_int=logging.WARNING, log_filename='funboost_develop.log')

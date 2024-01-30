@@ -10,10 +10,6 @@ from funboost.concurrent_pool import FunboostBaseConcurrentPool, FlexibleThreadP
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
 from pydantic import BaseModel, validator, root_validator, BaseConfig, Field
 
-# noinspection PyUnresolvedReferences
-from funboost.core.loggers import develop_logger
-from funboost.core.loggers import flogger
-
 
 def _patch_for_pydantic_field_deepcopy():
     from concurrent.futures import ThreadPoolExecutor
@@ -95,6 +91,7 @@ class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
     @validator('expire_seconds')
     def check_expire_seconds(cls, value):
         if value > 10 * 24 * 3600:
+            from funboost.core.loggers import flogger  # 这个文件不要提前导入日志,以免互相导入.
             flogger.warning(f'你设置的过期时间为 {value} ,设置的时间过长。 ')
         return value
 

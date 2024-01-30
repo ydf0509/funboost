@@ -12,18 +12,11 @@ import json
 from pathlib import Path
 from shutil import copyfile
 
+from funboost.core.helper_funs import _try_get_user_funboost_common_config
 from funboost.core.loggers import flogger, get_funboost_file_logger, logger_prompt
 from nb_log import nb_print, stderr_write, stdout_write
 from nb_log.monkey_print import is_main_process, only_print_on_main_process
 from funboost import funboost_config_deafult
-
-
-def _get_show_how_funboost_config_settings():
-    try:
-        import funboost_config  # 第一次启动funboost前还没这个文件
-        return funboost_config.FunboostCommonConfig.SHOW_HOW_FUNBOOST_CONFIG_SETTINGS
-    except Exception as e:
-        return True
 
 
 def show_funboost_flag():
@@ -129,7 +122,7 @@ def use_config_form_funboost_config_module():
     """
     # sys.stdout.write(f'\033[0;33m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;30;43m{inspect_msg}\033[0m\n')
     # noinspection PyProtectedMember
-    if is_main_process() and _get_show_how_funboost_config_settings():
+    if is_main_process() and _try_get_user_funboost_common_config('SHOW_HOW_FUNBOOST_CONFIG_SETTINGS') in (True, None):
         logger_prompt.debug(f'\033[0;93m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;93;100m{inspect_msg}\033[0m\n')
     try:
         # noinspection PyUnresolvedReferences

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import logging
 from pathlib import Path
 import pytz
 from funboost.constant import BrokerEnum, ConcurrentModeEnum
@@ -58,7 +58,6 @@ class BrokerConnConfig(DataClassBase):
         "security_protocol": "SASL_PLAINTEXT",
     }
 
-
     SQLACHEMY_ENGINE_URL = 'sqlite:////sqlachemy_queues/queues.db'
 
     # 如果broker_kind 使用 peewee 中间件模式会使用mysql配置
@@ -98,8 +97,9 @@ class BrokerConnConfig(DataClassBase):
 class FunboostCommonConfig(DataClassBase):
     # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
     NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 11  # 7是简短的不可跳转，5是可点击跳转的，11是可显示ip 进程 线程的模板。
-    TIMEZONE = 'Asia/Shanghai'
+    TIMEZONE = 'Asia/Shanghai'  # 时区
 
-    SHOW_HOW_FUNBOOST_CONFIG_SETTINGS = True  # 是否显示教你怎么设置 funboost_config.py ,老手熟悉了,可以设置为False不显示
-
-
+    # 以下配置是修改funboost的一些命名空间和启动时候的日志级别,新手不熟练就别去屏蔽日志了
+    SHOW_HOW_FUNBOOST_CONFIG_SETTINGS = True  # 如果你单纯想屏蔽 "分布式函数调度框架会自动导入funboost_config模块当第一次运行脚本时候，函数调度框架会在你的python当前项目的根目录下 ...... "  这句话,
+    FUNBOOST_PROMPT_LOG_LEVEL = logging.DEBUG  # funboost启动时候的相关提示语,用户可以设置这个命名空间的日志级别来调整
+    KEEPALIVETIMETHREAD_LOG_LEVEL = logging.DEBUG  # funboost的作者发明的可缩小自适应线程池,用户对可变线程池的线程创建和销毁线程完全无兴趣,可以提高日志级别.

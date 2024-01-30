@@ -2,7 +2,6 @@
 from setuptools import setup, find_packages
 from funboost import __version__
 
-
 extra_brokers = ['confluent_kafka==1.7.0',
                  "pulsar-client==3.1.0; python_version>='3.7'",
                  'celery',
@@ -63,7 +62,7 @@ setup(
         'Topic :: Software Development :: Libraries'
     ],
     install_requires=[
-        'nb_log>=11.9',
+        'nb_log>=12.2',
         'eventlet==0.33.3',
         'gevent==22.10.2',
         'pymongo==4.3.3',  # 3.5.1  -> 4.0.2

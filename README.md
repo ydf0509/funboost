@@ -116,11 +116,15 @@ pip install funboost --upgrade
 [//]: # ()
 [//]: # ([img-46.png]&#40;https://postimg.cc/hfW0VhCX&#41;)
 
-funboosts示图：
+funboost示图：
+![](https://i.niupic.com/images/2024/02/03/g3tr.png)
+
 
 [//]: # ([![img-46.png]&#40;https://i.postimg.cc/tC7mQxWN/img-46.png&#41;]&#40;https://postimg.cc/hfW0VhCX&#41;)
-就是最普通的生产者消费者流程图
-![](https://i.niupic.com/images/2023/12/18/dVaP.png)
+
+[//]: # (就是最普通的生产者消费者流程图)
+
+[//]: # (![]&#40;https://i.niupic.com/images/2023/12/18/dVaP.png&#41;)
 
 也就是这种非常普通的流程图,一样的意思
 

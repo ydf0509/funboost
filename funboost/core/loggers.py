@@ -42,7 +42,7 @@ class FunboostMetaTypeFileLogger(type):
 
 flogger = get_funboost_file_logger('funboost', )
 
-print(_try_get_user_funboost_common_config('FUNBOOST_PROMPT_LOG_LEVEL'))
+# print(_try_get_user_funboost_common_config('FUNBOOST_PROMPT_LOG_LEVEL'))
 logger_prompt = get_funboost_file_logger('funboost.prompt', log_level_int=_try_get_user_funboost_common_config('FUNBOOST_PROMPT_LOG_LEVEL') or logging.DEBUG)  # funboost框架的提示,用户自己可以设置日志级别
 nb_log.LogManager('_KeepAliveTimeThread').preset_log_level(_try_get_user_funboost_common_config('KEEPALIVETIMETHREAD_LOG_LEVEL') or logging.DEBUG)
 

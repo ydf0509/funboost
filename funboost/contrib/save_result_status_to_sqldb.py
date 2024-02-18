@@ -22,7 +22,7 @@ CREATE TABLE funboost_consume_results
     msg_dict         JSON,
     params           JSON,
     params_str       VARCHAR(255),
-    process_id       INT,
+    process_id       BIGINT(20),
     publish_time     FLOAT,
     publish_time_str VARCHAR(255),
     queue_name       VARCHAR(255),
@@ -32,19 +32,20 @@ CREATE TABLE funboost_consume_results
     script_name_long VARCHAR(255),
     success          BOOLEAN,
     task_id          VARCHAR(255),
-    thread_id        INT,
+    thread_id        BIGINT(20),
     time_cost        FLOAT,
     time_end         FLOAT,
     time_start       FLOAT,
     total_thread     INT,
     utime            VARCHAR(255),
-    exception       MEDIUMTEXT ,
+    `exception`       MEDIUMTEXT ,
     rpc_result_expire_seconds BIGINT(20),
     primary key (_id),
     key idx_insert_time(insert_time),
     key idx_queue_name_insert_time(queue_name,insert_time),
     key idx_params_str(params_str)
 )
+
 
 
 """
@@ -97,8 +98,9 @@ def get_sqla_helper():
 def save_result_status_to_sqlalchemy(function_result_status: FunctionResultStatus):
     """ function_result_status变量上有各种丰富的信息 ,用户可以使用其中的信息
     用户自定义记录函数消费信息的钩子函数
+
+    例如  @boost('test_user_custom', user_custom_record_process_info_func=save_result_status_to_sqlalchemy)
     """
-    # print('保存到数据库', function_result_status.get_status_dict())
     enginex, sqla_helper, t_funboost_consume_results = get_sqla_helper()
 
     with sqla_helper.session as ss:

@@ -15,6 +15,7 @@ from test_frame.my_config import BoosterParamsMy
 def task_fun(x, y):
     print(f'{x} + {y} = {x + y}')
     time.sleep(3)  # 框架会自动并发绕开这个阻塞，无论函数内部随机耗时多久都能自动调节并发达到每秒运行 5 次 这个 task_fun 函数的目的。
+    return x + y
 
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ class BrokerEnum:
 
     MONGOMQ = 'MONGOMQ'  # 使用mongo的表中的行模拟的 作为分布式消息队列，支持消费确认。
 
-    SQLITE_QUEUE = 'sqlite3'  # 使用基于sqlute3模拟消息队列，支持消费确认和持久化，但不支持跨机器共享任务，可以基于本机单机跨脚本和跨进程共享任务，好处是不需要安装中间件。
+    SQLITE_QUEUE = 'sqlite3'  # 使用基于sqlite3模拟消息队列，支持消费确认和持久化，但不支持跨机器共享任务，可以基于本机单机跨脚本和跨进程共享任务，好处是不需要安装中间件。
     PERSISTQUEUE = SQLITE_QUEUE  # PERSISTQUEUE的别名
 
     NSQ = 'NSQ'  # 基于nsq作为分布式消息队列，支持消费确认。

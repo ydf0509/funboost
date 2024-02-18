@@ -1,3 +1,5 @@
+import time
+
 from funboost import boost, BrokerEnum, ConcurrentModeEnum, ExceptionForRequeue
 import asyncio
 import random
@@ -19,3 +21,5 @@ if __name__ == '__main__':
     for i in range(40):
         async_f.push(i, )
     async_f.consume()
+    while 1:
+        time.sleep(10)

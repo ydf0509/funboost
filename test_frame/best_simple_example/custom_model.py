@@ -24,7 +24,7 @@ def task_fun2(x, y):
     print(f'{x} - {y} = {x - y}')
     time.sleep(3)  # 框架会自动并发绕开这个阻塞，无论函数内部随机耗时多久都能自动调节并发达到每秒运行 10 次 这个 task_fun 函数的目的。
     task_fun.push(x*10,y*10)
-    1/0
+    # 1/0
     # BoostersManager.get_or_create_booster_by_queue_name(task_fun.queue_name).push(x*10,y*10)
 
 

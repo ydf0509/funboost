@@ -103,7 +103,6 @@ def save_result_status_to_sqlalchemy(function_result_status: FunctionResultStatu
 
     with sqla_helper.session as ss:
         status_dict = function_result_status.get_status_dict()
-
         status_dict_new = copy.copy(status_dict)
         for k, v in status_dict.items():
             if isinstance(v, dict):

@@ -94,7 +94,9 @@ class BoosterFire(object):
             BoostersManager.get_booster(queue_anme).consume()
         ctrl_c_recv()
 
-    def multi_process_consume_all_queues(self,process_num):
+    consume_all = consume_all_queues
+
+    def multi_process_consume_all_queues(self,process_num=1):
         """
         启动所有消息队列名的消费,无需指定队列名,每个队列启动n个单独的消费进程;
         例子: multi_process_consume_all_queues 2
@@ -102,6 +104,8 @@ class BoosterFire(object):
         for queue_anme in BoostersManager.get_all_queues():
             BoostersManager.get_booster(queue_anme).multi_process_consume(process_num)
         ctrl_c_recv()
+
+    m_consume_all = multi_process_consume_all_queues
 
     def multi_process_consume(self, **queue_name__process_num):
         """

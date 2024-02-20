@@ -49,31 +49,31 @@ class BoosterFire(object):
         清空多个queue ; 例子: clear test_cli1_queue1  test_cli1_queue2   # 清空2个消息队列消息队列
         """
 
-        for queue_anme in queue_names:
-            BoostersManager.get_booster(queue_anme).clear()
+        for queue_name in queue_names:
+            BoostersManager.get_booster(queue_name).clear()
         return self
 
-    def push(self, queue_anme, *args, **kwargs):
+    def push(self, queue_name, *args, **kwargs):
         """push发布消息到消息队列 ;
         例子: 假设函数是 def  add(x,y)  队列名是 add_queue , 发布 1 + 2求和;
         push add_queue 1 2;
         或者 push add_queue --x=1 --y=2;
         或者 push add_queue -x 1 -y 2;
         """
-        BoostersManager.get_booster(queue_anme).push(*args, **kwargs)
+        BoostersManager.get_booster(queue_name).push(*args, **kwargs)
         return self
 
     def __str__(self):
         # print('over')  # 这行重要,否则命令行链式调用无法自动结束
         return ''
 
-    def publish(self, queue_anme, msg):
+    def publish(self, queue_name, msg):
         """publish发布消息到消息队列;
            假设函数是 def  add(x,y)  队列名是 add_queue , 发布 1 + 2求和;
            publish add_queue "{'x':1,'y':2}"
         """
 
-        BoostersManager.get_booster(queue_anme).publish(msg)
+        BoostersManager.get_booster(queue_name).publish(msg)
         return self
 
     def consume(self, *queue_names: str):
@@ -81,28 +81,28 @@ class BoosterFire(object):
         启动多个消息队列名的消费;
         例子: consume queue1 queue2
         """
-        for queue_anme in queue_names:
-            BoostersManager.get_booster(queue_anme).consume()
+        for queue_name in queue_names:
+            BoostersManager.get_booster(queue_name).consume()
         ctrl_c_recv()
 
-    def consume_all_queues(self,):
+    def consume_all_queues(self, ):
         """
         启动所有消息队列名的消费,无需指定队列名;
         例子: consume_all_queues
         """
-        for queue_anme in BoostersManager.get_all_queues():
-            BoostersManager.get_booster(queue_anme).consume()
+        for queue_name in BoostersManager.get_all_queues():
+            BoostersManager.get_booster(queue_name).consume()
         ctrl_c_recv()
 
     consume_all = consume_all_queues
 
-    def multi_process_consume_all_queues(self,process_num=1):
+    def multi_process_consume_all_queues(self, process_num=1):
         """
         启动所有消息队列名的消费,无需指定队列名,每个队列启动n个单独的消费进程;
         例子: multi_process_consume_all_queues 2
         """
-        for queue_anme in BoostersManager.get_all_queues():
-            BoostersManager.get_booster(queue_anme).multi_process_consume(process_num)
+        for queue_name in BoostersManager.get_all_queues():
+            BoostersManager.get_booster(queue_name).multi_process_consume(process_num)
         ctrl_c_recv()
 
     m_consume_all = multi_process_consume_all_queues
@@ -112,8 +112,8 @@ class BoosterFire(object):
         使用多进程启动消费,每个队列开启多个单独的进程消费;
         例子:  m_consume --queue1=2 --queue2=3    # queue1启动两个单独进程消费  queue2 启动3个单独进程消费
         """
-        for queue_anme, process_num in queue_name__process_num.items():
-            BoostersManager.get_booster(queue_anme).multi_process_consume(process_num)
+        for queue_name, process_num in queue_name__process_num.items():
+            BoostersManager.get_booster(queue_name).multi_process_consume(process_num)
         ctrl_c_recv()
 
     m_consume = multi_process_consume
@@ -123,13 +123,13 @@ class BoosterFire(object):
         暂停多个消息队列名的消费;
         例子: pause queue1 queue2
         """
-        for queue_anme in queue_names:
-            BoostersManager.get_booster(queue_anme).pause()
+        for queue_name in queue_names:
+            BoostersManager.get_booster(queue_name).pause()
 
     def continue_consume(self, *queue_names: str):
         """
         继续多个消息队列名的消费;
         例子: continue_consume queue1 queue2
         """
-        for queue_anme in queue_names:
-            BoostersManager.get_booster(queue_anme).continue_consume()
+        for queue_name in queue_names:
+            BoostersManager.get_booster(queue_name).continue_consume()

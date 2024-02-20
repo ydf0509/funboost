@@ -7,6 +7,7 @@ from functools import partial
 
 import celery
 
+import nb_log
 from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
 from funboost import  ConcurrentModeEnum
 from funboost.core.loggers import get_funboost_file_logger,get_logger
@@ -109,4 +110,14 @@ class CeleryHelper:
         使用nb_log的日志来取代celery的日志
         """
         celery_app.conf.worker_hijack_root_logger = False
+        # logging.getLogger('celery').handlers=[]
+        # logging.getLogger('celery.worker.strategy').handlers = []
+        # logging.getLogger('celery.app.trace').handlers = []
+        # logging.getLogger('celery.worker').handlers = []
+        # logging.getLogger('celery.app').handlers = []
+        # logging.getLogger().handlers=[]
         get_logger('celery', log_level_int=log_level, log_filename=log_filename, formatter_template=formatter_template, )
+        get_logger(None, log_level_int=logging.WARNING, log_filename=log_filename, formatter_template=formatter_template, )
+        for name in ['celery','celery.worker.strategy','celery.app.trace','celery.worker','celery.app',None]:
+            nb_log.LogManager(name).prevent_add_handlers()
+        nb_log.LogManager(None).preset_log_level(logging.WARNING)

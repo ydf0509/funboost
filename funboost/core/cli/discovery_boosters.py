@@ -6,7 +6,10 @@ from pathlib import Path
 import importlib.util
 # import nb_log
 from funboost.core.loggers import FunboostFileLoggerMixin
+from funboost.utils.decorators import flyweight
 
+
+@flyweight
 class BoosterDiscovery(FunboostFileLoggerMixin):
     def __init__(self, project_root_path: typing.Union[PathLike, str],
                  booster_dirs: typing.List[typing.Union[PathLike, str]],
@@ -34,12 +37,11 @@ class BoosterDiscovery(FunboostFileLoggerMixin):
             elif item.suffix == '.py':
                 if self.py_file_re_str:
                     if re.search(self.py_file_re_str, str(item), ):
-                        self.py_files.append(item)
+                        self.py_files.append(str(item))
                 else:
-                    self.py_files.append(item)
+                    self.py_files.append(str(item))
         self.py_files = list(set(self.py_files))
-        for f in self.py_files:
-            self.logger.debug(f)
+
 
     def auto_discovery(self, ):
         """把所有py文件自动执行import,主要是把 所有的@boost函数装饰器注册到 pid_queue_name__booster_map 中"""
@@ -50,6 +52,10 @@ class BoosterDiscovery(FunboostFileLoggerMixin):
 
             self.get_py_files_recursively(Path(dir))
             for file_path in self.py_files:
+                self.logger.debug(f'导入模块 {file_path}')
+                if Path(file_path) == Path(sys._getframe(1).f_code.co_filename):
+                    self.logger.warning(f'排除导入调用auto_discovery的模块自身 {file_path}')  # 否则下面的import这个文件,会造成无限懵逼死循环
+                    continue
                 spec = importlib.util.spec_from_file_location('module', file_path)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)

@@ -1,9 +1,11 @@
 from pathlib import Path
 
 import queue_names
-from funboost import BoostersManager,BoosterDiscovery
-import mod1, mod2  # 这个是必须导入的,可以不用,但必须导入,这样BoostersManager才能知道相关模块中的@boost装饰器,或者用下面的 BoosterDiscovery.auto_discovery()来自动导入m1和m2模块.
-BoosterDiscovery(project_root_path=Path(__file__).parent.parent.parent,booster_dirs=[Path(__file__).parent]).auto_discovery()
+from funboost import BoostersManager, BoosterDiscovery
+
+# import mod1, mod2  # 这个是必须导入的,可以不用,但必须导入,这样BoostersManager才能知道相关模块中的@boost装饰器,或者用下面的 BoosterDiscovery.auto_discovery()来自动导入m1和m2模块.
+
+
 
 if __name__ == '__main__':
 
@@ -12,6 +14,7 @@ if __name__ == '__main__':
     mod2.fun2a.consume()
     mod2.fun2b.consume()
     """
+    BoosterDiscovery(project_root_path=Path(__file__).parent.parent.parent, booster_dirs=[Path(__file__).parent]).auto_discovery()
 
     # 选择启动哪些队列名消费
     # BoostersManager.consume(queue_names.q_test_queue_manager1,queue_names.q_test_queue_manager2a)

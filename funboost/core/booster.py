@@ -270,6 +270,7 @@ class BoostersManager:
     def consume_queues(cls, *queue_names):
         """
         启动多个消息队列名的消费,多个函数队列在当前同一个进程内启动消费.
+        这种方式节约总的内存,但无法利用多核cpu
         """
         for queue_name in queue_names:
             cls.get_booster(queue_name).consume()
@@ -293,6 +294,7 @@ class BoostersManager:
     def multi_process_consume_queues(cls, **queue_name__process_num):
         """
         启动多个消息队列名的消费,传递队列名和进程数,每个队列启动n个单独的消费进程;
+        这种方式总的内存使用高,但充分利用多核cpu
         例如 multi_process_consume_queues(queue1=2,queue2=3) 表示启动2个进程消费queue1,启动3个进程消费queue2
         """
         for queue_name, process_num in queue_name__process_num.items():

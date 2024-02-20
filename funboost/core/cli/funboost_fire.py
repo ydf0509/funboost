@@ -60,7 +60,7 @@ class BoosterFire(object):
         或者 push add_queue --x=1 --y=2;
         或者 push add_queue -x 1 -y 2;
         """
-        BoostersManager.get_booster(queue_name).push(*args, **kwargs)
+        BoostersManager.push(queue_name,*args, **kwargs)
         return self
 
     def __str__(self):
@@ -73,7 +73,7 @@ class BoosterFire(object):
            publish add_queue "{'x':1,'y':2}"
         """
 
-        BoostersManager.get_booster(queue_name).publish(msg)
+        BoostersManager.publish(queue_name,msg)
         return self
 
     def consume_queues(self, *queue_names: str):

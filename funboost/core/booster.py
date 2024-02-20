@@ -255,6 +255,18 @@ class BoostersManager:
         return booster
 
     @classmethod
+    def push(cls, queue_name, *args, **kwargs):
+        """push发布消息到消息队列 ;
+        """
+        cls.get_or_create_booster_by_queue_name(queue_name).push(*args, **kwargs)
+
+    @classmethod
+    def publish(cls, queue_name, msg):
+        """publish发布消息到消息队列;
+        """
+        cls.get_or_create_booster_by_queue_name(queue_name).publish(msg)
+
+    @classmethod
     def consume_queues(cls, *queue_names):
         """
         启动多个消息队列名的消费,多个函数队列在当前同一个进程内启动消费.
@@ -269,6 +281,7 @@ class BoostersManager:
     def consume_all_queues(cls):
         """
         启动所有消息队列名的消费,无需一个一个函数亲自 funxx.consume()来启动,多个函数队列在当前同一个进程内启动消费.
+        这种方式节约总的内存,但无法利用多核cpu
         """
         for queue_name in cls.get_all_queues():
             cls.get_booster(queue_name).consume()
@@ -292,6 +305,7 @@ class BoostersManager:
     def multi_process_consume_all_queues(cls, process_num=1):
         """
         启动所有消息队列名的消费,无需指定队列名,每个队列启动n个单独的消费进程;
+        这种方式总的内存使用高,但充分利用多核cpu
         """
         for queue_name in cls.get_all_queues():
             cls.get_booster(queue_name).multi_process_consume(process_num)

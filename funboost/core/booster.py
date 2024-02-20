@@ -4,7 +4,8 @@ import os
 import types
 import typing
 
-from funboost.core.loggers import flogger, develop_logger,logger_prompt
+from funboost.utils.ctrl_c_end import ctrl_c_recv
+from funboost.core.loggers import flogger, develop_logger, logger_prompt
 
 from functools import wraps
 
@@ -12,8 +13,10 @@ from funboost.core.exceptions import BoostDecoParamsIsOldVersion
 from funboost.core.func_params_model import BoosterParams, FunctionResultStatusPersistanceConfig, PriorityConsumingControlConfig
 
 from funboost.factories.consumer_factory import get_consumer
+
 if typing.TYPE_CHECKING:
     from funboost.core.msg_result_getter import AsyncResult
+
 
 class Booster:
     """
@@ -117,7 +120,7 @@ class Booster:
                       priority_control_config: PriorityConsumingControlConfig = None) -> AsyncResult:
         """ 多进程安全的,在fork多进程(非spawn多进程)情况下,很多包跨线程/进程不能共享中间件连接,"""
         consumer = BoostersManager.get_or_create_booster_by_queue_name(self.queue_name).consumer
-        return  consumer.publisher_of_same_queue.publish(msg=msg, task_id=task_id, priority_control_config=priority_control_config)
+        return consumer.publisher_of_same_queue.publish(msg=msg, task_id=task_id, priority_control_config=priority_control_config)
 
     # noinspection PyMethodMayBeStatic
     def multi_process_consume(self, process_num=1):
@@ -250,3 +253,48 @@ class BoostersManager:
             flogger.info(f'创建booster {boost_params} {boost_params.consuming_function}')
             booster = Booster(boost_params)(boost_params.consuming_function)
         return booster
+
+    @classmethod
+    def consume_queues(cls, *queue_names):
+        """
+        启动多个消息队列名的消费,多个函数队列在当前同一个进程内启动消费.
+        """
+        for queue_name in queue_names:
+            cls.get_booster(queue_name).consume()
+        ctrl_c_recv()
+
+    consume = consume_queues
+
+    @classmethod
+    def consume_all_queues(cls):
+        """
+        启动所有消息队列名的消费,无需一个一个函数亲自 funxx.consume()来启动,多个函数队列在当前同一个进程内启动消费.
+        """
+        for queue_name in cls.get_all_queues():
+            cls.get_booster(queue_name).consume()
+        ctrl_c_recv()
+
+    consume_all = consume_all_queues
+
+    @classmethod
+    def multi_process_consume_queues(cls, **queue_name__process_num):
+        """
+        启动多个消息队列名的消费,传递队列名和进程数,每个队列启动n个单独的消费进程;
+        例如 multi_process_consume_queues(queue1=2,queue2=3) 表示启动2个进程消费queue1,启动3个进程消费queue2
+        """
+        for queue_name, process_num in queue_name__process_num.items():
+            cls.get_booster(queue_name).multi_process_consume(process_num)
+        ctrl_c_recv()
+
+    m_consume = multi_process_consume_queues
+
+    @classmethod
+    def multi_process_consume_all_queues(cls, process_num=1):
+        """
+        启动所有消息队列名的消费,无需指定队列名,每个队列启动n个单独的消费进程;
+        """
+        for queue_name in cls.get_all_queues():
+            cls.get_booster(queue_name).multi_process_consume(process_num)
+        ctrl_c_recv()
+
+    m_consume_all = multi_process_consume_all_queues

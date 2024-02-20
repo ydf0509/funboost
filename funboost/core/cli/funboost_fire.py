@@ -76,47 +76,41 @@ class BoosterFire(object):
         BoostersManager.get_booster(queue_name).publish(msg)
         return self
 
-    def consume(self, *queue_names: str):
+    def consume_queues(self, *queue_names: str):
         """
         启动多个消息队列名的消费;
         例子: consume queue1 queue2
         """
-        for queue_name in queue_names:
-            BoostersManager.get_booster(queue_name).consume()
-        ctrl_c_recv()
+        BoostersManager.consume_queues(*queue_names)
+
+    consume = consume_queues
 
     def consume_all_queues(self, ):
         """
         启动所有消息队列名的消费,无需指定队列名;
         例子: consume_all_queues
         """
-        for queue_name in BoostersManager.get_all_queues():
-            BoostersManager.get_booster(queue_name).consume()
-        ctrl_c_recv()
+        BoostersManager.consume_all_queues()
 
     consume_all = consume_all_queues
+
+    def multi_process_consume_queues(self, **queue_name__process_num):
+        """
+        使用多进程启动消费,每个队列开启多个单独的进程消费;
+        例子:  m_consume --queue1=2 --queue2=3    # queue1启动两个单独进程消费  queue2 启动3个单独进程消费
+        """
+        BoostersManager.multi_process_consume_queues(**queue_name__process_num)
+
+    m_consume = multi_process_consume_queues
 
     def multi_process_consume_all_queues(self, process_num=1):
         """
         启动所有消息队列名的消费,无需指定队列名,每个队列启动n个单独的消费进程;
         例子: multi_process_consume_all_queues 2
         """
-        for queue_name in BoostersManager.get_all_queues():
-            BoostersManager.get_booster(queue_name).multi_process_consume(process_num)
-        ctrl_c_recv()
+        BoostersManager.multi_process_consume_all_queues(process_num)
 
     m_consume_all = multi_process_consume_all_queues
-
-    def multi_process_consume(self, **queue_name__process_num):
-        """
-        使用多进程启动消费,每个队列开启多个单独的进程消费;
-        例子:  m_consume --queue1=2 --queue2=3    # queue1启动两个单独进程消费  queue2 启动3个单独进程消费
-        """
-        for queue_name, process_num in queue_name__process_num.items():
-            BoostersManager.get_booster(queue_name).multi_process_consume(process_num)
-        ctrl_c_recv()
-
-    m_consume = multi_process_consume
 
     def pause(self, *queue_names: str):
         """

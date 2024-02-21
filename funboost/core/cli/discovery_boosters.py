@@ -45,7 +45,7 @@ class BoosterDiscovery(FunboostFileLoggerMixin):
 
     def auto_discovery(self, ):
         """把所有py文件自动执行import,主要是把 所有的@boost函数装饰器注册到 pid_queue_name__booster_map 中
-        这个auto_discovery方法最好要放到 if __name__ == '__main__' 中运行,不然如果扫描导入文件本身,无无限懵逼死循环导入
+        这个auto_discovery方法最好放到main里面,如果要扫描自身文件夹,没写正则排除文件本身,会无限懵逼死循环导入,无无限懵逼死循环导入
         """
         if self._has_discovery_import is False:
             self._has_discovery_import = True

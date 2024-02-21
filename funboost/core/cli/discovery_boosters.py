@@ -26,6 +26,7 @@ class BoosterDiscovery(FunboostFileLoggerMixin):
         self.py_file_re_str = py_file_re_str
 
         self.py_files = []
+        self._has_discovery_import = False
 
     def get_py_files_recursively(self, current_folder_path: Path, current_depth=0, ):
         """先找到所有py文件"""
@@ -42,9 +43,15 @@ class BoosterDiscovery(FunboostFileLoggerMixin):
                     self.py_files.append(str(item))
         self.py_files = list(set(self.py_files))
 
-
     def auto_discovery(self, ):
-        """把所有py文件自动执行import,主要是把 所有的@boost函数装饰器注册到 pid_queue_name__booster_map 中"""
+        """把所有py文件自动执行import,主要是把 所有的@boost函数装饰器注册到 pid_queue_name__booster_map 中
+        这个auto_discovery方法最好要放到 if __name__ == '__main__' 中运行,不然如果扫描导入文件本身,无无限懵逼死循环导入
+        """
+        if self._has_discovery_import is False:
+            self._has_discovery_import = True
+        else:
+            pass
+            return  # 这一个判断是避免用户执行BoosterDiscovery.auto_discovery没有放到 if __name__ == '__main__'中,导致无限懵逼死循环.
         self.logger.info(self.booster__full_path_dirs)
         for dir in self.booster__full_path_dirs:
             if not Path(dir).exists():

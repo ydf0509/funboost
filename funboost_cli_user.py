@@ -30,12 +30,13 @@ from funboost.core.cli.discovery_boosters import BoosterDiscovery
 '''
 env_dict['project_root_path'] = project_root_path
 
-# booster_dirs 用户可以自己增加扫描的文件夹,这样可以命令行少传了 --booster_dirs_str
-# BoosterDiscovery 可以多吃调用
-BoosterDiscovery(project_root_path, booster_dirs=[], max_depth=1,py_file_re_str=None).auto_discovery()
+
 
 
 if __name__ == '__main__':
+    # booster_dirs 用户可以自己增加扫描的文件夹,这样可以命令行少传了 --booster_dirs_str
+    # BoosterDiscovery 可以多吃调用
+    BoosterDiscovery(project_root_path, booster_dirs=[], max_depth=1, py_file_re_str=None).auto_discovery()
     fire.Fire(BoosterFire, )
 
 '''

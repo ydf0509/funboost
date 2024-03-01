@@ -44,7 +44,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPo
 from funboost.funboost_config_deafult import FunboostCommonConfig
 from funboost.concurrent_pool.single_thread_executor import SoloExecutor
 
-from funboost.core.function_result_status_saver import ResultPersistenceHelper, FunctionResultStatus
+from funboost.core.function_result_status_saver import ResultPersistenceHelper, FunctionResultStatus, RunStatus
 
 from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_publish_time
 
@@ -524,10 +524,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             current_retry_times = 0
             function_only_params = delete_keys_and_return_new_dict(kw['body'])
             for current_retry_times in range(max_retry_times + 1):
+                current_function_result_status.run_times = current_retry_times + 1
+                current_function_result_status.run_status = RunStatus.running
+                self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
                 current_function_result_status = self._run_consuming_function_with_confirm_and_retry(kw, current_retry_times=current_retry_times,
-                                                                                                     function_result_status=FunctionResultStatus(
-                                                                                                         self.queue_name, self.consuming_function.__name__,
-                                                                                                         kw['body']))
+                                                                                                     function_result_status=current_function_result_status)
                 if (current_function_result_status.success is True or current_retry_times == max_retry_times
                         or current_function_result_status._has_requeue
                         or current_function_result_status._has_to_dlx_queue
@@ -538,7 +539,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                         time.sleep(self.consumer_params.retry_interval)
             if not (current_function_result_status._has_requeue and self.BROKER_KIND in [BrokerEnum.RABBITMQ_AMQPSTORM, BrokerEnum.RABBITMQ_PIKA, BrokerEnum.RABBITMQ_RABBITPY]):  # 已经nack了，不能ack，否则rabbitmq delevar tag 报错
                 self._confirm_consume(kw)
-
+            current_function_result_status.run_status = RunStatus.finish
             self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
             if self._get_priority_conf(kw, 'do_task_filtering'):
                 self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
@@ -597,7 +598,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         function_only_params = delete_keys_and_return_new_dict(kw['body']) if self._do_not_delete_extra_from_msg is False else kw['body']
         task_id = kw['body']['extra']['task_id']
         t_start = time.time()
-        function_result_status.run_times = current_retry_times + 1
+        # function_result_status.run_times = current_retry_times + 1
         try:
             function_run = self.consuming_function
             if self._consuming_function_is_asyncio:
@@ -679,20 +680,20 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             current_retry_times = 0
             function_only_params = delete_keys_and_return_new_dict(kw['body'])
             for current_retry_times in range(max_retry_times + 1):
+                current_function_result_status.run_times = current_retry_times + 1
+                current_function_result_status.run_status = RunStatus.running
+                self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
                 current_function_result_status = await self._async_run_consuming_function_with_confirm_and_retry(kw, current_retry_times=current_retry_times,
-                                                                                                                 function_result_status=FunctionResultStatus(
-                                                                                                                     self.queue_name, self.consuming_function.__name__,
-                                                                                                                     kw['body'], ),
-                                                                                                                 )
+                                                                                                                 function_result_status=current_function_result_status )
                 if current_function_result_status.success is True or current_retry_times == max_retry_times or current_function_result_status._has_requeue:
                     break
                 else:
                     if self.consumer_params.retry_interval:
                         await asyncio.sleep(self.consumer_params.retry_interval)
 
-            # self._result_persistence_helper.save_function_result_to_mongo(function_result_status)
             if not (current_function_result_status._has_requeue and self.BROKER_KIND in [BrokerEnum.RABBITMQ_AMQPSTORM, BrokerEnum.RABBITMQ_PIKA, BrokerEnum.RABBITMQ_RABBITPY]):
                 await simple_run_in_executor(self._confirm_consume, kw)
+            current_function_result_status.run_status = RunStatus.finish
             await simple_run_in_executor(self._result_persistence_helper.save_function_result_to_mongo, current_function_result_status)
             if self._get_priority_conf(kw, 'do_task_filtering'):
                 # self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。

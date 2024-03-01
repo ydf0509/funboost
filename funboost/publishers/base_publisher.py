@@ -223,6 +223,13 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._init_count()
         return AsyncResult(task_id)
 
+    def send_msg(self,msg:typing.Union[dict,str]):
+        """直接发送任意消息内容到消息队列,不生成辅助参数,无视函数入参名字,不校验入参个数和键名"""
+        if isinstance(msg,dict):
+            msg = json.dumps(msg, ensure_ascii=False)
+        decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
+            self.concrete_realization_of_publish)(msg)
+
     def push(self, *func_args, **func_kwargs):
         """
         简写，只支持传递消费函数的本身参数，不支持priority_control_config参数。

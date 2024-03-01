@@ -20,6 +20,9 @@ from funboost.utils.mongo_util import MongoMixin
 # from nb_log import LoggerMixin
 from funboost.core.loggers import FunboostFileLoggerMixin
 
+class RunStatus:
+    running = 'running'
+    finish = 'finish'
 
 class FunctionResultStatus():
     host_name = socket.gethostname()
@@ -51,6 +54,7 @@ class FunctionResultStatus():
         self.time_cost = None
         self.time_end = None
         self.success = False
+        self.run_status = ''
         self.total_thread = threading.active_count()
         self._has_requeue = False
         self._has_to_dlx_queue = False
@@ -60,10 +64,10 @@ class FunctionResultStatus():
     def get_status_dict(self, without_datetime_obj=False):
         self.time_end = time.time()
         self.time_cost = round(self.time_end - self.time_start, 3)
-        item ={}
-        for k,v in self.__dict__.items():
+        item = {}
+        for k, v in self.__dict__.items():
             if not k.startswith('_'):
-                item[k] =v
+                item[k] = v
         item['host_name'] = self.host_name
         item['host_process'] = self.host_process
         item['script_name'] = self.script_name

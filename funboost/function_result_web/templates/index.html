@@ -226,6 +226,7 @@
                     '                        <th>函数结果</th>\n' +
                     '                        <th>消耗时间</th>\n' +
                     '                        <th>执行次数</th>\n' +
+                    '                        <th>运行状态</th>\n' +
                     '                        <th>是否成功</th>\n' +
                     '                        <th>错误原因</th>\n' +
 
@@ -257,11 +258,17 @@
                         '                        <td>{9}</td>\n' +
                         '                        <td>{10}</td>\n' +
                         '                        <td>{11}</td>\n' +
+                        '                        <td>{12}</td>\n' +
 
                         '                    </tr>';
                     var successText = item.success === true ? "成功" : "失败";
+                    console.info(item.run_status);
+                    if (item.run_status==="running"){
+                        successText = "未完成";
+                        displayLevel = "info";
+                    }
                     tr = tr.format(displayLevel, item.host_process + ' - ' + item.script_name, item.insert_time_str, item.function, item.params_str, item.result,
-                        item.time_cost, item.run_times, successText, item.exception, item.publish_time_str, item.total_thread);
+                        item.time_cost, item.run_times, item.run_status,successText, item.exception, item.publish_time_str, item.total_thread);
                     html += tr;
                 }
                 html += '</tbody>';

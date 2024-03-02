@@ -119,7 +119,7 @@ def query_cols_view():
 @app.route('/query_result')
 @login_required
 def query_result_view():
-    nb_print(request.values.to_dict())
+
     return jsonify(query_result(**request.values.to_dict()))
 
 

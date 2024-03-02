@@ -11,6 +11,7 @@ def f(a, b):
     time.sleep(20)
     if random.random() > 0.9:
         raise Exception(f'{a} {b} 模拟出错啦')
+    print(a+b)
     return a + b
 
 

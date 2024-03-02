@@ -163,6 +163,7 @@
         return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
     }
 
+
     //昨天的时间
     var day1 = new Date();
     day1.setDate(day1.getDate() - 2);
@@ -220,17 +221,19 @@
                 var html = '  <thead>\n' +
                     '                    <tr>\n' +
                     '                        <th>执行机器-进程-脚本</th>\n' +
-                    '                        <th>函数执行完成时间</th>\n' +
+
                     '                        <th>函数名称</th>\n' +
                     '                        <th>函数入参</th>\n' +
                     '                        <th>函数结果</th>\n' +
+                    '                        <th>消息发布时间</th>\n' +
+                    '                        <th>开始执行时间</th>\n' +
                     '                        <th>消耗时间</th>\n' +
                     '                        <th>执行次数</th>\n' +
                     '                        <th>运行状态</th>\n' +
                     '                        <th>是否成功</th>\n' +
                     '                        <th>错误原因</th>\n' +
 
-                    '                        <th>消息发布时间</th>\n' +
+
                     '                        <th>线程(协程)数</th>\n' +
                     '                    </tr>\n' +
                     '                    </thead>' +
@@ -267,8 +270,12 @@
                         successText = "未完成";
                         displayLevel = "info";
                     }
-                    tr = tr.format(displayLevel, item.host_process + ' - ' + item.script_name, item.insert_time_str, item.function, item.params_str, item.result,
-                        item.time_cost, item.run_times, item.run_status,successText, item.exception, item.publish_time_str, item.total_thread);
+
+                    var time_start_obj = new Date(item.time_start * 1000);
+                    var time_start_str = dateToString(time_start_obj);
+
+                    tr = tr.format(displayLevel, item.host_process + ' - ' + item.script_name,  item.function, item.params_str, item.result,item.publish_time_str,
+                        time_start_str,item.time_cost, item.run_times, item.run_status,successText, item.exception, item.total_thread);
                     html += tr;
                 }
                 html += '</tbody>';

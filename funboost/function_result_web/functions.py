@@ -23,6 +23,8 @@ from funboost.utils.mongo_util import MongoMixin
 # print(db.list_collection_names())
 
 def get_cols(col_name_search: str):
+    if not col_name_search:
+        return []
     db = MongoMixin().mongo_db_task_status
     if not col_name_search:
         collection_name_list = db.list_collection_names()
@@ -78,8 +80,8 @@ def get_speed(col_name, start_time, end_time):
     with decorators.TimerContextManager():
         # success_num = db.get_collection(col_name).count({**{'success': True}, **condition})
         # fail_num = db.get_collection(col_name).count({**{'success': False}, **condition})
-        success_num = db.get_collection(col_name).count_documents({**{'success': True,'run_sttaus':'finish'}, **condition})
-        fail_num = db.get_collection(col_name).count_documents({**{'success': False,'run_sttaus':'finish'}, **condition})
+        success_num = db.get_collection(col_name).count_documents({**{'success': True,'run_status':'finish'}, **condition})
+        fail_num = db.get_collection(col_name).count_documents({**{'success': False,'run_status':'finish'}, **condition})
         qps = (success_num + fail_num) / (time_util.DatetimeConverter(end_time).timestamp - time_util.DatetimeConverter(start_time).timestamp)
         return {'success_num': success_num, 'fail_num': fail_num, 'qps': round(qps, 1)}
 

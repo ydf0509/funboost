@@ -9,7 +9,7 @@ from funboost import boost, FunctionResultStatusPersistanceConfig,BoosterParams
            is_save_status=True, is_save_result=True, expire_seconds=7 * 24 * 3600)))
 def f(a, b):
     time.sleep(20)
-    if random.random() > 0.9:
+    if random.random() > 0.5:
         raise Exception(f'{a} {b} 模拟出错啦')
     print(a+b)
     return a + b

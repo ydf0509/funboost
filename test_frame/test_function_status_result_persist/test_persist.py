@@ -16,7 +16,7 @@ def f(a, b):
 
 
 if __name__ == '__main__':
-    f(5, 6)  # 可以直接调用
+    # f(5, 6)  # 可以直接调用
 
     for i in range(0, 2000):
         f.push(i, b=i * 2)

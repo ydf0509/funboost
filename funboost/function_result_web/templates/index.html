@@ -229,7 +229,7 @@
                     '                        <th>消息发布时间</th>\n' +
                     '                        <th>开始执行时间</th>\n' +
                     '                        <th>消耗时间(秒)</th>\n' +
-                    '                        <th>执行次数</th>\n' +
+                    '                        <th>执行次数(重试)</th>\n' +
                     '                        <th>运行状态</th>\n' +
                     '                        <th>是否成功</th>\n' +
                     '                        <th>错误原因</th>\n' +
@@ -267,16 +267,20 @@
                         '                    </tr>';
                     var successText = item.success === true ? "成功" : "失败";
 <!--                    console.info(item.run_status);-->
+                    var run_status_text = item.run_status;
                     if (item.run_status==="running"){
                         successText = "未完成";
                         displayLevel = "info";
+                        if ( Date.now() /1000 - item.time_start > 600) {
+                            run_status_text = "running?";
+                        }
                     }
 
                     var time_start_obj = new Date(item.time_start * 1000);
                     var time_start_str = dateToString(time_start_obj);
 
                     tr = tr.format(displayLevel, item.host_process + ' - ' + item.script_name,  item.function, item.params_str, item.result,item.publish_time_str,
-                        time_start_str,item.time_cost, item.run_times, item.run_status,successText, item.exception, item.total_thread);
+                        time_start_str,item.time_cost, item.run_times, run_status_text,successText, item.exception, item.total_thread);
                     html += tr;
                 }
                 html += '</tbody>';

@@ -6,7 +6,7 @@ import json
 from pprint import pprint
 import time
 from flask import jsonify
-
+import copy
 from funboost import nb_print
 from funboost.utils import time_util, decorators, LoggerMixin
 from funboost.utils.mongo_util import MongoMixin
@@ -36,6 +36,10 @@ def get_cols(col_name_search: str):
 
 
 def query_result(col_name, start_time, end_time, is_success, function_params: str, page, ):
+    query_kw = copy.copy(locals())
+    t0 = time.time()
+    if not col_name:
+        return []
     db = MongoMixin().mongo_db_task_status
     condition = {
         'insert_time': {'$gt': time_util.DatetimeConverter(start_time).datetime_obj,
@@ -56,7 +60,8 @@ def query_result(col_name, start_time, end_time, is_success, function_params: st
     # results = list(db.get_collection(col_name).find(condition, ).sort([('insert_time', -1)]).skip(int(page) * 100).limit(100))
     # with decorators.TimerContextManager():
     results = list(db.get_collection(col_name).find(condition, {'insert_time': 0, 'utime': 0}).skip(int(page) * 100).limit(100))
-    # nb_print(result)
+    # nb_print(results)
+    nb_print(time.time() -t0, query_kw)
     return results
 
 
@@ -73,8 +78,8 @@ def get_speed(col_name, start_time, end_time):
     with decorators.TimerContextManager():
         # success_num = db.get_collection(col_name).count({**{'success': True}, **condition})
         # fail_num = db.get_collection(col_name).count({**{'success': False}, **condition})
-        success_num = db.get_collection(col_name).count_documents({**{'success': True}, **condition})
-        fail_num = db.get_collection(col_name).count_documents({**{'success': False}, **condition})
+        success_num = db.get_collection(col_name).count_documents({**{'success': True,'run_status':'finish'}, **condition})
+        fail_num = db.get_collection(col_name).count_documents({**{'success': False,'run_status':'finish'}, **condition})
         qps = (success_num + fail_num) / (time_util.DatetimeConverter(end_time).timestamp - time_util.DatetimeConverter(start_time).timestamp)
         return {'success_num': success_num, 'fail_num': fail_num, 'qps': round(qps, 1)}
 

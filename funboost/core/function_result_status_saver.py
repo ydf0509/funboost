@@ -63,7 +63,10 @@ class FunctionResultStatus():
 
     def get_status_dict(self, without_datetime_obj=False):
         self.time_end = time.time()
-        self.time_cost = round(self.time_end - self.time_start, 3)
+        if self.run_status == RunStatus.running:
+            self.time_cost = None
+        else:
+            self.time_cost = round(self.time_end - self.time_start, 3)
         item = {}
         for k, v in self.__dict__.items():
             if not k.startswith('_'):

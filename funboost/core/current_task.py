@@ -78,9 +78,9 @@ if __name__ == '__main__':
 
 def is_asyncio_environment():
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return True
-    except RuntimeError:
+    except RuntimeError as e:
         return False
 
 
@@ -119,6 +119,7 @@ def funboost_current_task():
 
 
 if __name__ == '__main__':
+    print(is_asyncio_environment())
     print()
     for i in range(100000):
         funboost_current_task()

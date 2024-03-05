@@ -6,8 +6,9 @@ def my_deco(f):
     wraps(f)
     def _inner(y):
         print('开始执行',y)
-        f(y)
+        res = f(y)
         print('结束执行',y)
+        return res
     return _inner
 
 
@@ -16,6 +17,7 @@ def my_deco(f):
 def fun(x):
     time.sleep(10)
     print(x)
+    return x+10
 
 if __name__ == '__main__':
     fun.push(5)

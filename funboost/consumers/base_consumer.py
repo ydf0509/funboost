@@ -29,13 +29,14 @@ from threading import Lock
 import asyncio
 
 import nb_log
+from funboost.core.current_task import funboost_current_task
 from funboost.core.loggers import develop_logger
 
 from funboost.core.func_params_model import BoosterParams, PublisherParams
 from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, CompatibleLogger,
                     LoggerMixinDefaultWithFileHandler, stdout_write, is_main_process,
                     nb_log_config_default)
-from funboost.core.loggers import FunboostFileLoggerMixin,logger_prompt
+from funboost.core.loggers import FunboostFileLoggerMixin, logger_prompt
 
 from apscheduler.jobstores.redis import RedisJobStore
 
@@ -73,6 +74,9 @@ from funboost.core.exceptions import ExceptionForRequeue, ExceptionForPushToDlxq
 class GlobalVars:
     global_concurrent_mode = None
     has_start_a_consumer_flag = False
+
+
+
 
 
 # noinspection DuplicatedCode
@@ -204,7 +208,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                             'consuming_function': self.consuming_function.__name__,
                                             'code_filename': Path(self.consuming_function.__code__.co_filename).as_posix()
                                             }
-
 
         self._has_start_delay_task_scheduler = False
         self._consuming_function_is_asyncio = inspect.iscoroutinefunction(self.consuming_function)
@@ -599,6 +602,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         task_id = kw['body']['extra']['task_id']
         t_start = time.time()
         # function_result_status.run_times = current_retry_times + 1
+        fct = funboost_current_task()
+        fct.function_params=function_only_params
+        fct.set_full_msg=kw['body']
+        fct.function_result_status = function_result_status
         try:
             function_run = self.consuming_function
             if self._consuming_function_is_asyncio:
@@ -684,7 +691,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 current_function_result_status.run_status = RunStatus.running
                 self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
                 current_function_result_status = await self._async_run_consuming_function_with_confirm_and_retry(kw, current_retry_times=current_retry_times,
-                                                                                                                 function_result_status=current_function_result_status )
+                                                                                                                 function_result_status=current_function_result_status)
                 if current_function_result_status.success is True or current_retry_times == max_retry_times or current_function_result_status._has_requeue:
                     break
                 else:
@@ -757,6 +764,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         function_result_status.run_times = current_retry_times + 1
         # noinspection PyBroadException
         t_start = time.time()
+        fct = funboost_current_task()
+        fct.function_params = function_only_params
+        fct.set_full_msg = kw['body']
+        fct.function_result_status = function_result_status
         try:
             corotinue_obj = self.consuming_function(**function_only_params)
             if not asyncio.iscoroutine(corotinue_obj):

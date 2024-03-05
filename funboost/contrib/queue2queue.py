@@ -79,8 +79,8 @@ def multi_prcocess_queue2queue(source_target_list: typing.List[typing.List],
 
 if __name__ == '__main__':
     # 一次转移一个队列，使用单进程
-    consume_and_push_to_another_queue('test_queue77h3_dlx', BrokerEnum.RABBITMQ_AMQPSTORM,
-                                      'test_queue77h3', BrokerEnum.RABBITMQ_AMQPSTORM,
+    consume_and_push_to_another_queue('test_queue77h3_dlx', BrokerEnum.REDIS_PRIORITY,
+                                      'test_queue77h3', BrokerEnum.REDIS_PRIORITY,
                                       log_level=logging.INFO, exit_script_when_finish=True)
 
     # 转移多个队列，并使用多进程。

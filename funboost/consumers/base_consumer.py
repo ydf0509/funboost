@@ -604,7 +604,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # function_result_status.run_times = current_retry_times + 1
         fct = funboost_current_task()
         fct.function_params=function_only_params
-        fct.set_full_msg=kw['body']
+        fct.full_msg=kw['body']
         fct.function_result_status = function_result_status
         try:
             function_run = self.consuming_function
@@ -766,7 +766,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         t_start = time.time()
         fct = funboost_current_task()
         fct.function_params = function_only_params
-        fct.set_full_msg = kw['body']
+        fct.full_msg = kw['body']
         fct.function_result_status = function_result_status
         try:
             corotinue_obj = self.consuming_function(**function_only_params)

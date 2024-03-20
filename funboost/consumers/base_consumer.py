@@ -229,6 +229,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             logger_prefix += '--'
             # logger_name = f'{logger_prefix}{self.__class__.__name__}--{concurrent_name}--{queue_name}--{self.consuming_function.__name__}'
         logger_name = f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
+        self.logger_name = logger_name
         log_filename = self.consumer_params.log_filename or f'funboost.{self.queue_name}.log'
         self.logger = get_logger(logger_name,
                                  log_level_int=self.consumer_params.log_level,

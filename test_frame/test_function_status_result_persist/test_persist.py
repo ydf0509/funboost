@@ -1,8 +1,13 @@
+import logging
 import random
 import time
 
+import nb_log
 from funboost import boost, FunctionResultStatusPersistanceConfig,BoosterParams
 from funboost.core.current_task import funboost_current_task
+from funboost.funboost_config_deafult import FunboostCommonConfig
+
+logger = nb_log.get_logger('my_log',formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER)
 
 @boost(BoosterParams(queue_name='queue_test_f01', qps=2,concurrent_num=5,
        function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(
@@ -13,9 +18,11 @@ def f(a, b):
     print(fct.function_result_status.task_id)
     print(fct.function_result_status.run_times)
     print(fct.full_msg)
+    print(fct.function_result_status.publish_time)
+    logger.debug('cdf')
 
     time.sleep(20)
-    if random.random() > 0.5:
+    if random.random() > 0.9999:
         raise Exception(f'{a} {b} 模拟出错啦')
     print(a+b)
 
@@ -29,3 +36,4 @@ if __name__ == '__main__':
         f.push(i, b=i * 2)
 
     f.consume()
+

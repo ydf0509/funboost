@@ -3,12 +3,7 @@ import threading
 import asyncio
 from funboost.core.function_result_status_saver import FunctionResultStatus
 
-
-class ThreadCurrentTask:
-    """
-    用于在用户自己函数内部去获取 消息的完整体,当前重试次数等.
-    """
-    """ 用法例子 
+""" 用法例子 
     '''
     fct = funboost_current_task()
     print(fct.function_result_status.get_status_dict())
@@ -49,6 +44,12 @@ if __name__ == '__main__':
     f.consume()
 
     """
+
+class ThreadCurrentTask:
+    """
+    用于在用户自己函数内部去获取 消息的完整体,当前重试次数等.
+    """
+
     _local_data = threading.local()
 
     @property
@@ -118,9 +119,18 @@ def funboost_current_task():
     return AsyncioCurrentTask() if is_asyncio_environment() else ThreadCurrentTask()
 
 
+def get_current_taskid():
+    fct = funboost_current_task()
+    # return fct.function_result_status.task_id
+    try:
+        return fct.function_result_status.task_id  # 不在funboost的消费函数里面就获取不到上下文了
+    finally:
+        return 'no_task_id'
+
 if __name__ == '__main__':
     print(is_asyncio_environment())
     print()
     for i in range(100000):
         funboost_current_task()
+        print(get_current_taskid())
     print()

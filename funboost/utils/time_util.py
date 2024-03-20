@@ -1,13 +1,18 @@
 # coding=utf-8
+import functools
 import typing
 import datetime
 import time
 import re
 import pytz
-from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
+
 
 from funboost.utils import nb_print
 
+@functools.lru_cache()
+def _get_funboost_timezone():
+    from funboost.funboost_config_deafult import FunboostCommonConfig
+    return FunboostCommonConfig.TIMEZONE
 
 def build_defualt_date():
     """
@@ -78,11 +83,11 @@ class DatetimeConverter:
         elif isinstance(datetimex, (int, float)):
             if datetimex < 1:
                 datetimex += 86400
-            self.datetime_obj = datetime.datetime.fromtimestamp(datetimex, tz=pytz.timezone(FunboostCommonConfig.TIMEZONE))  # 时间戳0在windows会出错。
+            self.datetime_obj = datetime.datetime.fromtimestamp(datetimex, tz=pytz.timezone(_get_funboost_timezone()))  # 时间戳0在windows会出错。
         elif isinstance(datetimex, datetime.datetime):
             self.datetime_obj = datetimex
         elif datetimex is None:
-            self.datetime_obj = datetime.datetime.now(tz=pytz.timezone(FunboostCommonConfig.TIMEZONE))
+            self.datetime_obj = datetime.datetime.now(tz=pytz.timezone(_get_funboost_timezone()))
         else:
             raise ValueError('实例化时候的传参不符合规定')
 

@@ -26,6 +26,7 @@ from pikav1.exceptions import AMQPError as PikaAMQPError
 # from nb_log import LoggerLevelSetterMixin, LoggerMixin
 from funboost.core.loggers import LoggerLevelSetterMixin, FunboostFileLoggerMixin, get_logger
 from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
+from funboost.core.task_id_logger import TaskIdLogger
 from funboost.utils import decorators, time_util
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
 
@@ -160,7 +161,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             logger_prefix += '--'
         logger_name = f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
         log_filename = self.publisher_params.log_filename or f'funboost.{self.queue_name}.log'
-        self.logger = get_logger(logger_name,
+        self.logger = nb_log.LogManager(logger_name,logger_cls=TaskIdLogger).get_logger_and_add_handlers(
                                  log_level_int=self.publisher_params.log_level,
                                  log_filename=log_filename if self.publisher_params.create_logger_file else None,
                                  error_log_filename=nb_log.generate_error_file_name(log_filename),

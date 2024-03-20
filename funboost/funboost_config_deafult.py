@@ -99,9 +99,9 @@ class BrokerConnConfig(DataClassBase):
 class FunboostCommonConfig(DataClassBase):
     # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
     # NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 11  # 7是简短的不可跳转，5是可点击跳转的，11是可显示ip 进程 线程的模板。
-    NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = ContextFormatter(
-        f'%(asctime)s-({nb_log_config_default.computer_ip},{nb_log_config_default.computer_name})-[p%(process)d_t%(thread)d] - %(name)s - "%(filename)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(context_id)s - %(message)s',
-        "%Y-%m-%d %H:%M:%S",get_context_field_fun=get_current_taskid),  #
+    NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = logging.Formatter(
+        f'%(asctime)s-({nb_log_config_default.computer_ip},{nb_log_config_default.computer_name})-[p%(process)d_t%(thread)d] - %(name)s - "%(filename)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(task_id)s - %(message)s',
+        "%Y-%m-%d %H:%M:%S",),  #
 
     TIMEZONE = 'Asia/Shanghai'  # 时区
 

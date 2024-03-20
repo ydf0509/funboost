@@ -7,6 +7,7 @@
 
 框架做主要的功能都是在这个文件里面实现的.
 """
+import functools
 import typing
 import abc
 import copy
@@ -29,10 +30,11 @@ from threading import Lock
 import asyncio
 
 import nb_log
-from funboost.core.current_task import funboost_current_task
+from funboost.core.current_task import funboost_current_task, get_current_taskid
 from funboost.core.loggers import develop_logger
 
 from funboost.core.func_params_model import BoosterParams, PublisherParams
+from funboost.core.task_id_logger import TaskIdLogger
 from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, CompatibleLogger,
                     LoggerMixinDefaultWithFileHandler, stdout_write, is_main_process,
                     nb_log_config_default)
@@ -231,7 +233,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         logger_name = f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
         self.logger_name = logger_name
         log_filename = self.consumer_params.log_filename or f'funboost.{self.queue_name}.log'
-        self.logger = get_logger(logger_name,
+        self.logger = LogManager(logger_name,logger_cls=TaskIdLogger).get_logger_and_add_handlers(
                                  log_level_int=self.consumer_params.log_level,
                                  log_filename=log_filename if self.consumer_params.create_logger_file else None,
                                  error_log_filename=nb_log.generate_error_file_name(log_filename),
@@ -634,6 +636,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             function_result_status.success = True
             if self.consumer_params.log_level <= logging.DEBUG:
                 result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '
+                # print(funboost_current_task().task_id)
+                # print(fct.function_result_status.task_id)
+                # print(get_current_taskid())
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 {function_only_params} , '
                                   f'结果是  {result_str_to_be_print}   {self._get_concurrent_info()}  ')

@@ -45,36 +45,43 @@ if __name__ == '__main__':
 
     """
 
+
 class ThreadCurrentTask:
     """
     用于在用户自己函数内部去获取 消息的完整体,当前重试次数等.
     """
 
-    _local_data = threading.local()
+
+    _fct_local_data = threading.local()
+
 
     @property
     def function_params(self):
-        return self._local_data.function_params
+        return self._fct_local_data.function_params
 
     @function_params.setter
     def function_params(self, function_params: dict):
-        self._local_data.function_params = function_params
+        self._fct_local_data.function_params = function_params
 
     @property
     def full_msg(self) -> dict:
-        return self._local_data.full_msg
+        return self._fct_local_data.full_msg
 
     @full_msg.setter
     def full_msg(self, full_msg: dict):
-        self._local_data.full_msg = full_msg
+        self._fct_local_data.full_msg = full_msg
 
     @property
     def function_result_status(self) -> FunctionResultStatus:
-        return self._local_data.function_result_status
+        return self._fct_local_data.function_result_status
 
     @function_result_status.setter
     def function_result_status(self, function_result_status: FunctionResultStatus):
-        self._local_data.function_result_status = function_result_status
+        self._fct_local_data.function_result_status = function_result_status
+
+    @property
+    def task_id(self) -> FunctionResultStatus:
+        return self.function_result_status.task_id
 
 
 def is_asyncio_environment():
@@ -114,6 +121,10 @@ class AsyncioCurrentTask:
     def function_result_status(self, function_result_status: FunctionResultStatus):
         self._function_result_status.set(function_result_status)
 
+    @property
+    def task_id(self) :
+        return self.function_result_status.task_id
+
 
 def funboost_current_task():
     return AsyncioCurrentTask() if is_asyncio_environment() else ThreadCurrentTask()
@@ -123,8 +134,9 @@ def get_current_taskid():
     fct = funboost_current_task()
     # return fct.function_result_status.task_id
     try:
-        return fct.function_result_status.task_id  # 不在funboost的消费函数里面就获取不到上下文了
-    finally:
+        return fct.task_id  # 不在funboost的消费函数里面就获取不到上下文了
+    except AttributeError as e:
+        # print(e,type(e))
         return 'no_task_id'
 
 if __name__ == '__main__':

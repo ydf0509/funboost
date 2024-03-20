@@ -5,6 +5,7 @@ import time
 from funboost import boost, FunctionResultStatusPersistanceConfig,BoosterParams
 from funboost.core.current_task import funboost_current_task
 
+# print(f)
 @boost(BoosterParams(queue_name='queue_test_fct', qps=2,concurrent_num=5,))
 def f(a, b):
     fct = funboost_current_task() # 线程/协程隔离级别的上下文
@@ -14,8 +15,8 @@ def f(a, b):
     print(fct.function_result_status.publish_time) # 获取消息的发布时间
     print(fct.function_result_status.get_status_dict()) # 获取任务的信息，可以转成字典看。
 
-    time.sleep(20)
-    if random.random() > 0.5:
+    time.sleep(2)
+    if random.random() > 0.99:
         raise Exception(f'{a} {b} 模拟出错啦')
     print(a+b)
 

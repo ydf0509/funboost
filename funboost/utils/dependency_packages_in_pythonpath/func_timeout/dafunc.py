@@ -9,11 +9,13 @@
 '''
 
 import copy
+import functools
 import inspect
 import threading
 import time
 import types
 import sys
+
 
 from .exceptions import FunctionTimedOut
 from .StoppableThread import StoppableThread
@@ -25,6 +27,8 @@ from .py3_raise import raise_exception
 from functools import wraps
 
 __all__ = ('func_timeout', 'func_set_timeout')
+
+
 
 
 def func_timeout(timeout, func, args=(), kwargs=None):
@@ -60,7 +64,11 @@ def func_timeout(timeout, func, args=(), kwargs=None):
     exception = []
     isStopped = False
 
-    def funcwrap(args2, kwargs2):
+    from funboost.core.current_task import ThreadCurrentTask
+
+    def funcwrap(args2, kwargs2,_fct_local_data_dict):
+        fct = ThreadCurrentTask()
+        fct._fct_local_data.__dict__.update(_fct_local_data_dict)  # 把funboost的消费线程上下文需要传递到超时线程上下文里面来.
         try:
             ret.append( func(*args2, **kwargs2) )
         except FunctionTimedOut:
@@ -76,7 +84,9 @@ def func_timeout(timeout, func, args=(), kwargs=None):
                 e.__traceback__ = exc_info[2].tb_next
                 exception.append( e )
 
-    thread = StoppableThread(target=funcwrap, args=(args, kwargs))
+
+    # fct = funboost_current_task()
+    thread = StoppableThread(target=funcwrap, args=(args, kwargs,ThreadCurrentTask()._fct_local_data.__dict__))
     thread.daemon = True
 
     thread.start()

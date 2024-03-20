@@ -1,4 +1,5 @@
 import contextvars
+import logging
 import threading
 import asyncio
 from funboost.core.function_result_status_saver import FunctionResultStatus
@@ -83,6 +84,14 @@ class ThreadCurrentTask:
     def task_id(self) -> FunctionResultStatus:
         return self.function_result_status.task_id
 
+    @property
+    def logger(self) -> logging.Logger:
+        return self._fct_local_data.logger
+
+    @logger.setter
+    def logger(self, logger: logging.Logger):
+        self._fct_local_data.logger = logger
+
 
 def is_asyncio_environment():
     try:
@@ -96,6 +105,7 @@ class AsyncioCurrentTask:
     _function_params = contextvars.ContextVar("function_params")
     _full_msg = contextvars.ContextVar("full_msg")
     _function_result_status = contextvars.ContextVar("function_result_status")
+    _logger = contextvars.ContextVar('logger')
 
     @property
     def function_params(self):
@@ -124,6 +134,14 @@ class AsyncioCurrentTask:
     @property
     def task_id(self) :
         return self.function_result_status.task_id
+
+    @property
+    def logger(self) -> logging.Logger:
+        return self._logger.get()
+
+    @logger.setter
+    def logger(self, logger: logging.Logger):
+        self._logger.set(logger)
 
 
 def funboost_current_task():

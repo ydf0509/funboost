@@ -609,6 +609,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         fct.function_params=function_only_params
         fct.full_msg=kw['body']
         fct.function_result_status = function_result_status
+        fct.logger = self.logger
         try:
             function_run = self.consuming_function
             if self._consuming_function_is_asyncio:
@@ -774,6 +775,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         fct.function_params = function_only_params
         fct.full_msg = kw['body']
         fct.function_result_status = function_result_status
+        fct.logger=self.logger
         try:
             corotinue_obj = self.consuming_function(**function_only_params)
             if not asyncio.iscoroutine(corotinue_obj):

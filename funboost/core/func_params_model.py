@@ -224,7 +224,7 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
     例如消费为add函数，可以每个独立的任务设置不同的超时时间，不同的重试次数，是否使用rpc模式。这里的配置优先，可以覆盖生成消费者时候的配置。
     """
 
-    function_timeout: typing.Union[float, int] = None
+    function_timeout: typing.Union[float, int] = 0
     max_retry_times: int = None
     is_print_detail_exception: bool = None
     msg_expire_senconds: int = None

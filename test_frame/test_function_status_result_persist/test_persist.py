@@ -4,7 +4,7 @@ import time
 from funboost import boost, FunctionResultStatusPersistanceConfig,BoosterParams
 from funboost.core.current_task import funboost_current_task
 
-@boost(BoosterParams(queue_name='queue_test_f01', qps=2,concurrent_num=5,
+@boost(BoosterParams(queue_name='queue_test_f01', qps=2,concurrent_num=5,function_timeout=100,
        function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(
            is_save_status=True, is_save_result=True, expire_seconds=7 * 24 * 3600)))
 def f(a, b):

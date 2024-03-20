@@ -49,31 +49,31 @@ if __name__ == '__main__':
     f.consume()
 
     """
-    _local_data = threading.local()
+    _fct_local_data = threading.local()
 
     @property
     def function_params(self):
-        return self._local_data.function_params
+        return self._fct_local_data.function_params
 
     @function_params.setter
     def function_params(self, function_params: dict):
-        self._local_data.function_params = function_params
+        self._fct_local_data.function_params = function_params
 
     @property
     def full_msg(self) -> dict:
-        return self._local_data.full_msg
+        return self._fct_local_data.full_msg
 
     @full_msg.setter
     def full_msg(self, full_msg: dict):
-        self._local_data.full_msg = full_msg
+        self._fct_local_data.full_msg = full_msg
 
     @property
     def function_result_status(self) -> FunctionResultStatus:
-        return self._local_data.function_result_status
+        return self._fct_local_data.function_result_status
 
     @function_result_status.setter
     def function_result_status(self, function_result_status: FunctionResultStatus):
-        self._local_data.function_result_status = function_result_status
+        self._fct_local_data.function_result_status = function_result_status
 
 
 def is_asyncio_environment():

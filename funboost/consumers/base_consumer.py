@@ -7,6 +7,7 @@
 
 框架做主要的功能都是在这个文件里面实现的.
 """
+import functools
 import typing
 import abc
 import copy

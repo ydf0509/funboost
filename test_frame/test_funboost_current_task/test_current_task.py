@@ -10,6 +10,7 @@ from funboost.funboost_config_deafult import FunboostCommonConfig
 from nb_log import LogManager
 
 LOG_FILENAME_QUEUE_FCT = 'queue_fct.log'
+# 使用TaskIdLogger创建的日志配合带task_id的日志模板，没调日志会自动带上task_id，方便用户搜索日志，定位某一个任务id的所有日志。
 logger = LogManager('namexx',logger_cls=TaskIdLogger).get_logger_and_add_handlers(
                                  log_filename='queue_fct.log',
                                  error_log_filename=nb_log.generate_error_file_name(LOG_FILENAME_QUEUE_FCT),
@@ -19,6 +20,7 @@ logger = LogManager('namexx',logger_cls=TaskIdLogger).get_logger_and_add_handler
 def f(a, b):
     fct = funboost_current_task() # 线程/协程隔离级别的上下文
 
+    # 以下的没调日志都会自带task_id显示，方便用户串联起来排查问题。
     fct.logger.warning('如果不想亲自创建logger对象，可以使用fct.logger来记录日志，fct.logger是当前队列的消费者logger对象')
     logger.info(fct.function_result_status.task_id) # 获取消息的任务id
     logger.debug(fct.function_result_status.run_times) # 获取消息是第几次重试运行

@@ -29,11 +29,12 @@ def f(a, b):
     logger.debug(fct.function_result_status.get_status_dict()) # 获取任务的信息，可以转成字典看。
 
     time.sleep(2)
-    if random.random() > 0.99:
-        raise Exception(f'{a} {b} 模拟出错啦')
     logger.debug(f'哈哈 a: {a}')
     logger.debug(f'哈哈 b: {b}')
-    logger.info(a+b)
+    logger.info(a + b)
+    if random.random() > 0.99:
+        raise Exception(f'{a} {b} 模拟出错啦')
+
 
 
     return a + b

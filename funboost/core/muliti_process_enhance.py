@@ -7,12 +7,11 @@ from concurrent.futures import ProcessPoolExecutor
 from funboost.core.booster import Booster
 from funboost.core.helper_funs import run_forever
 from funboost.core.loggers import flogger
-
+from funboost.core.lazy_impoter import LazyImpoter
 
 
 def _run_consumer_in_new_process(queue_name, ):
-    from funboost.core.booster import BoostersManager
-    booster_current_pid = BoostersManager.get_or_create_booster_by_queue_name(queue_name)
+    booster_current_pid = LazyImpoter().BoostersManager.get_or_create_booster_by_queue_name(queue_name)
     # booster_current_pid = boost(**boost_params)(consuming_function)
     booster_current_pid.consume()
     # ConsumersManager.join_all_consumer_shedual_task_thread()
@@ -50,8 +49,7 @@ def run_consumer_with_multi_process(booster: Booster, process_num=1):
 
 
 def _multi_process_pub_params_list_in_new_process(queue_name, msgs: List[dict]):
-    from funboost.core.booster import BoostersManager
-    booster_current_pid = BoostersManager.get_or_create_booster_by_queue_name(queue_name)
+    booster_current_pid = LazyImpoter().BoostersManager.get_or_create_booster_by_queue_name(queue_name)
     publisher = booster_current_pid.publisher
     publisher.set_log_level(20)  # 超高速发布，如果打印详细debug日志会卡死屏幕和严重降低代码速度。
     for msg in msgs:

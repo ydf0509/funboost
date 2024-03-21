@@ -24,16 +24,20 @@ tl = threading.local()
 import nb_log
 
 # @functools.lru_cache()
-def import_ThreadCurrentTask():
-    from funboost.core.current_task import ThreadCurrentTask
-    return ThreadCurrentTask
+class ClassProperty:
+    def __init__(self, fget):
+        self.fget = fget
 
-def f():
-    import_ThreadCurrentTask()
+    def __get__(self, instance, owner):
+        return self.fget(owner)
 
+class MyClass:
+    _my_class_property = "Hello, World!"
 
-print()
-for i in range(10000):
-    f()
+    @ClassProperty
+    def my_class_property(cls):
+        return cls._my_class_property
 
-print()
+# 直接通过类名访问类属性的值
+value = MyClass.my_class_property
+print(value)  # 输出: Hello, World!

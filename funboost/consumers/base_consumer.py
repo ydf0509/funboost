@@ -69,6 +69,8 @@ from funboost.utils import decorators, time_util, redis_manager
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
 from funboost.core import kill_remote_task
 from funboost.core.exceptions import ExceptionForRequeue, ExceptionForPushToDlxqueue
+# from funboost.core.booster import BoostersManager  互相导入
+from funboost.core.lazy_impoter import LazyImpoter
 
 
 # patch_apscheduler_run_job()
@@ -76,9 +78,6 @@ from funboost.core.exceptions import ExceptionForRequeue, ExceptionForPushToDlxq
 class GlobalVars:
     global_concurrent_mode = None
     has_start_a_consumer_flag = False
-
-
-
 
 
 # noinspection DuplicatedCode
@@ -233,11 +232,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         logger_name = f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
         self.logger_name = logger_name
         log_filename = self.consumer_params.log_filename or f'funboost.{self.queue_name}.log'
-        self.logger = LogManager(logger_name,logger_cls=TaskIdLogger).get_logger_and_add_handlers(
-                                 log_level_int=self.consumer_params.log_level,
-                                 log_filename=log_filename if self.consumer_params.create_logger_file else None,
-                                 error_log_filename=nb_log.generate_error_file_name(log_filename),
-                                 formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+        self.logger = LogManager(logger_name, logger_cls=TaskIdLogger).get_logger_and_add_handlers(
+            log_level_int=self.consumer_params.log_level,
+            log_filename=log_filename if self.consumer_params.create_logger_file else None,
+            error_log_filename=nb_log.generate_error_file_name(log_filename),
+            formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
         self.logger.info(f'队列 {self.queue_name} 的日志写入到 {nb_log_config_default.LOG_PATH} 文件夹的 {log_filename} 和 {nb_log.generate_error_file_name(log_filename)} 文件中')
 
     def _check_broker_exclusive_config(self):
@@ -365,8 +364,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         key = 'apscheduler.redisjobstore_runonce'
         if RedisMixin().redis_db_frame.sadd(key, runonce_uuid):  # 这样可以阻止多次启动同队列名消费者 redis jobstore多次运行函数.
             cls.logger_apscheduler.debug(f'延时任务用普通消息重新发布到普通队列 {msg}')
-            from funboost.core.booster import BoostersManager
-            BoostersManager.get_or_create_booster_by_queue_name(queue_name).publish(msg)
+            LazyImpoter().BoostersManager.get_or_create_booster_by_queue_name(queue_name).publish(msg)
 
     @abc.abstractmethod
     def _shedual_task(self):
@@ -606,8 +604,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         t_start = time.time()
         # function_result_status.run_times = current_retry_times + 1
         fct = funboost_current_task()
-        fct.function_params=function_only_params
-        fct.full_msg=kw['body']
+        fct.function_params = function_only_params
+        fct.full_msg = kw['body']
         fct.function_result_status = function_result_status
         fct.logger = self.logger
         try:
@@ -775,7 +773,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         fct.function_params = function_only_params
         fct.full_msg = kw['body']
         fct.function_result_status = function_result_status
-        fct.logger=self.logger
+        fct.logger = self.logger
         try:
             corotinue_obj = self.consuming_function(**function_only_params)
             if not asyncio.iscoroutine(corotinue_obj):

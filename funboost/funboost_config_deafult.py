@@ -5,9 +5,8 @@ import pytz
 from funboost.constant import BrokerEnum, ConcurrentModeEnum
 from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig
 from funboost.utils.simple_data_class import DataClassBase
-from nb_log.formatters import ContextFormatter
 from nb_log import nb_log_config_default
-from funboost.core.current_task import get_current_taskid
+
 '''
 funboost_config.py 文件是第一次运行框架自动生成到你的项目根目录的，不需要用由户手动创建。
 此文件里面可以写任意python代码。例如 中间件 帐号 密码自己完全可以从apola配置中心获取或者从环境变量获取。
@@ -101,7 +100,7 @@ class FunboostCommonConfig(DataClassBase):
     # NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 11  # 7是简短的不可跳转，5是可点击跳转的，11是可显示ip 进程 线程的模板。
     NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = logging.Formatter(
         f'%(asctime)s-({nb_log_config_default.computer_ip},{nb_log_config_default.computer_name})-[p%(process)d_t%(thread)d] - %(name)s - "%(filename)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(task_id)s - %(message)s',
-        "%Y-%m-%d %H:%M:%S",),  #
+        "%Y-%m-%d %H:%M:%S",)   # 这个是带task_id的日子模板,日子可以显示task_id,方便用户窗帘排查某一个任务的所有日志.
 
     TIMEZONE = 'Asia/Shanghai'  # 时区
 

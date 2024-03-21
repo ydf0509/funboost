@@ -10,7 +10,7 @@ from funboost.funboost_config_deafult import FunboostCommonConfig
 from nb_log import LogManager
 
 LOG_FILENAME_QUEUE_FCT = 'queue_fct.log'
-# 使用TaskIdLogger创建的日志配合带task_id的日志模板，没调日志会自动带上task_id，方便用户搜索日志，定位某一个任务id的所有日志。
+# 使用TaskIdLogger创建的日志配合带task_id的日志模板，每条日志会自动带上task_id，方便用户搜索日志，定位某一个任务id的所有日志。
 logger = LogManager('namexx',logger_cls=TaskIdLogger).get_logger_and_add_handlers(
                                  log_filename='queue_fct.log',
                                  error_log_filename=nb_log.generate_error_file_name(LOG_FILENAME_QUEUE_FCT),
@@ -46,3 +46,4 @@ if __name__ == '__main__':
         f.push(i, b=i * 2)
 
     f.consume()
+    f.multi_process_consume(2)

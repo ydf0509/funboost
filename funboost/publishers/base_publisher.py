@@ -159,13 +159,13 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         logger_prefix = self.publisher_params.logger_prefix
         if logger_prefix != '':
             logger_prefix += '--'
-        logger_name = f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
-        log_filename = self.publisher_params.log_filename or f'funboost.{self.queue_name}.log'
-        self.logger = nb_log.LogManager(logger_name,logger_cls=TaskIdLogger).get_logger_and_add_handlers(
-                                 log_level_int=self.publisher_params.log_level,
-                                 log_filename=log_filename if self.publisher_params.create_logger_file else None,
-                                 error_log_filename=nb_log.generate_error_file_name(log_filename),
-                                 formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
+        self.logger_name = self.publisher_params.logger_name or f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
+        self.log_filename = self.publisher_params.log_filename or f'funboost.{self.queue_name}.log'
+        self.logger = nb_log.LogManager(self.logger_name, logger_cls=TaskIdLogger).get_logger_and_add_handlers(
+            log_level_int=self.publisher_params.log_level,
+            log_filename=self.log_filename if self.publisher_params.create_logger_file else None,
+            error_log_filename=nb_log.generate_error_file_name(self.log_filename),
+            formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
 
     def _init_count(self):
         self._current_time = time.time()
@@ -214,7 +214,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
             self.concrete_realization_of_publish)(json.dumps(msg, ensure_ascii=False))
 
-        self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}',extra={'task_id':task_id})  # 显示msg太长了。
+        self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}', extra={'task_id': task_id})  # 显示msg太长了。
         with self._lock_for_count:
             self.count_per_minute += 1
             self.publish_msg_num_total += 1
@@ -224,9 +224,9 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._init_count()
         return AsyncResult(task_id)
 
-    def send_msg(self,msg:typing.Union[dict,str]):
+    def send_msg(self, msg: typing.Union[dict, str]):
         """直接发送任意消息内容到消息队列,不生成辅助参数,无视函数入参名字,不校验入参个数和键名"""
-        if isinstance(msg,dict):
+        if isinstance(msg, dict):
             msg = json.dumps(msg, ensure_ascii=False)
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
             self.concrete_realization_of_publish)(msg)

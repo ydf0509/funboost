@@ -143,6 +143,7 @@ class BoosterParams(BaseJsonAbleModel):
     log_level: int = logging.DEBUG  # 消费者和发布者的日志级别,建议设置DEBUG级别,不然无法知道正在运行什么消息
     logger_prefix: str = ''  # 日志名字前缀,可以设置前缀
     create_logger_file: bool = True  # 发布者和消费者是否创建文件文件日志,为False则只打印控制台不写文件.
+    logger_name: str = ''  # 队列消费者发布者的日志命名空间.
     log_filename: typing.Union[str, None] = None  # 消费者发布者的文件日志名字.如果为None,则自动使用 funboost.队列 名字作为文件日志名字.  日志文件夹是在nb_log_config.py的 LOG_PATH中决定的.
     is_show_message_get_from_broker: bool = False  # 运行时候,是否记录从消息队列获取出来的消息内容
     is_print_detail_exception: bool = True  # 消费函数出错时候,是否打印详细的报错堆栈,为False则只打印简略的报错信息不包含堆栈.
@@ -248,6 +249,7 @@ class PublisherParams(BaseJsonAbleModel):
     log_level: int = logging.DEBUG
     logger_prefix: str = ''
     create_logger_file: bool = True
+    logger_name: str = ''  # 队列消费者发布者的日志命名空间.
     log_filename: typing.Optional[str] = None
     clear_queue_within_init: bool = False  # with 语法发布时候,先清空消息队列
     consuming_function: typing.Callable = None  # consuming_function 作用是 inspect 模块获取函数的入参信息

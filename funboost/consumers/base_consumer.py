@@ -219,6 +219,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                 logger_prefix=consumer_params.logger_prefix,
                                                 create_logger_file=consumer_params.create_logger_file,
                                                 log_filename=consumer_params.log_filename,
+                                                logger_name=consumer_params.logger_name,
                                                 broker_exclusive_config=self.consumer_params.broker_exclusive_config)
         if is_main_process:
             self.logger.info(f'{self.queue_name} consumer 的消费者配置:\n {self.consumer_params.json_str_value()}')
@@ -229,7 +230,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if logger_prefix != '':
             logger_prefix += '--'
             # logger_name = f'{logger_prefix}{self.__class__.__name__}--{concurrent_name}--{queue_name}--{self.consuming_function.__name__}'
-        logger_name = f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
+        logger_name = self.consumer_params.logger_name or  f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
         self.logger_name = logger_name
         log_filename = self.consumer_params.log_filename or f'funboost.{self.queue_name}.log'
         self.logger = LogManager(logger_name, logger_cls=TaskIdLogger).get_logger_and_add_handlers(

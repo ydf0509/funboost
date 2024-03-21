@@ -20,7 +20,7 @@ logger = LogManager('namexx',logger_cls=TaskIdLogger).get_logger_and_add_handler
 def f(a, b):
     fct = funboost_current_task() # 线程/协程隔离级别的上下文
 
-    # 以下的没调日志都会自带task_id显示，方便用户串联起来排查问题。
+    # 以下的每一条日志都会自带task_id显示，方便用户串联起来排查问题。
     fct.logger.warning('如果不想亲自创建logger对象，可以使用fct.logger来记录日志，fct.logger是当前队列的消费者logger对象')
     logger.info(fct.function_result_status.task_id) # 获取消息的任务id
     logger.debug(fct.function_result_status.run_times) # 获取消息是第几次重试运行
@@ -46,4 +46,3 @@ if __name__ == '__main__':
         f.push(i, b=i * 2)
 
     f.consume()
-    f.multi_process_consume(2)

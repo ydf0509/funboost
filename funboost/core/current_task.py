@@ -47,7 +47,7 @@ if __name__ == '__main__':
     """
 
 
-class ThreadCurrentTask:
+class __ThreadCurrentTask:
     """
     用于在用户自己函数内部去获取 消息的完整体,当前重试次数等.
     """
@@ -92,7 +92,7 @@ class ThreadCurrentTask:
     def logger(self, logger: logging.Logger):
         self._fct_local_data.logger = logger
 
-thread_current_task = ThreadCurrentTask()
+thread_current_task = __ThreadCurrentTask()
 def is_asyncio_environment():
     try:
         loop = asyncio.get_running_loop()
@@ -101,7 +101,7 @@ def is_asyncio_environment():
         return False
 
 
-class AsyncioCurrentTask:
+class __AsyncioCurrentTask:
     _function_params = contextvars.ContextVar("function_params")
     _full_msg = contextvars.ContextVar("full_msg")
     _function_result_status = contextvars.ContextVar("function_result_status")
@@ -143,7 +143,7 @@ class AsyncioCurrentTask:
     def logger(self, logger: logging.Logger):
         self._logger.set(logger)
 
-asyncio_current_task = AsyncioCurrentTask()
+asyncio_current_task = __AsyncioCurrentTask()
 
 def funboost_current_task():
     return asyncio_current_task if is_asyncio_environment() else thread_current_task

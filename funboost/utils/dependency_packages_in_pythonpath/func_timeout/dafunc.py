@@ -86,7 +86,7 @@ def func_timeout(timeout, func, args=(), kwargs=None):
 
 
     # fct = funboost_current_task()
-    thread = StoppableThread(target=funcwrap, args=(args, kwargs,ThreadCurrentTask()._fct_local_data.__dict__))
+    thread = StoppableThread(target=funcwrap, args=(args, kwargs,thread_current_task._fct_local_data.__dict__))
     thread.daemon = True
 
     thread.start()

@@ -64,10 +64,10 @@ def func_timeout(timeout, func, args=(), kwargs=None):
     exception = []
     isStopped = False
 
-    from funboost.core.current_task import ThreadCurrentTask
+    from funboost.core.current_task import thread_current_task
 
     def funcwrap(args2, kwargs2,_fct_local_data_dict):
-        fct = ThreadCurrentTask()
+        fct = thread_current_task
         fct._fct_local_data.__dict__.update(_fct_local_data_dict)  # 把funboost的消费线程上下文需要传递到超时线程上下文里面来.
         try:
             ret.append( func(*args2, **kwargs2) )

@@ -92,7 +92,7 @@ class ThreadCurrentTask:
     def logger(self, logger: logging.Logger):
         self._fct_local_data.logger = logger
 
-
+thread_current_task = ThreadCurrentTask()
 def is_asyncio_environment():
     try:
         loop = asyncio.get_running_loop()
@@ -143,9 +143,10 @@ class AsyncioCurrentTask:
     def logger(self, logger: logging.Logger):
         self._logger.set(logger)
 
+asyncio_current_task = AsyncioCurrentTask()
 
 def funboost_current_task():
-    return AsyncioCurrentTask() if is_asyncio_environment() else ThreadCurrentTask()
+    return asyncio_current_task if is_asyncio_environment() else thread_current_task
 
 
 def get_current_taskid():
@@ -162,5 +163,5 @@ if __name__ == '__main__':
     print()
     for i in range(100000):
         funboost_current_task()
-        print(get_current_taskid())
+        get_current_taskid()
     print()

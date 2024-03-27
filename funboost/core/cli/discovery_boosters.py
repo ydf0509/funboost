@@ -7,7 +7,7 @@ import importlib.util
 # import nb_log
 from funboost.core.loggers import FunboostFileLoggerMixin
 from funboost.utils.decorators import flyweight
-from funboost.core.lazy_impoter import LazyImpoter
+from funboost.core.lazy_impoter import lazy_impoter
 
 @flyweight
 class BoosterDiscovery(FunboostFileLoggerMixin):
@@ -66,7 +66,7 @@ class BoosterDiscovery(FunboostFileLoggerMixin):
                 spec = importlib.util.spec_from_file_location('module', file_path)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
-        LazyImpoter().BoostersManager.show_all_boosters()
+        lazy_impoter.BoostersManager.show_all_boosters()
 
 
 if __name__ == '__main__':

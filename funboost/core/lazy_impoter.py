@@ -18,8 +18,9 @@ class LazyImpoter:
     #     from funboost.core.current_task import get_current_taskid
     #     return get_current_taskid
 
+lazy_impoter = LazyImpoter()
 
 if __name__ == '__main__':
     for i in range(10000):
-        LazyImpoter().BoostersManager
-        LazyImpoter().BoostersManager
+        lazy_impoter.BoostersManager
+        lazy_impoter.BoostersManager

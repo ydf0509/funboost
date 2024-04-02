@@ -220,7 +220,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.publish_msg_num_total += 1
             if time.time() - self._current_time > 10:
                 self.logger.info(
-                    f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 队列中')
+                    f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 队列中', extra={'task_id': task_id})
                 self._init_count()
         return AsyncResult(task_id)
 

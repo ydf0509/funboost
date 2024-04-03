@@ -13,6 +13,7 @@ from funboost.core.exceptions import BoostDecoParamsIsOldVersion
 from funboost.core.func_params_model import BoosterParams, FunctionResultStatusPersistanceConfig, PriorityConsumingControlConfig
 
 from funboost.factories.consumer_factory import get_consumer
+from collections import defaultdict
 
 if typing.TYPE_CHECKING:
     from funboost.core.msg_result_getter import AsyncResult
@@ -179,6 +180,8 @@ class BoostersManager:
 
     # queue_name__boost_params_consuming_function_map 字典存放  {queue_name,(@boost的入参字典,@boost装饰的消费函数)}
     queue_name__boost_params_map = {}  # type: typing.Dict[str,BoosterParams]
+
+    pid_queue_name__has_start_consume_set = set()
 
     @classmethod
     def regist_booster(cls, queue_name: str, booster: Booster):

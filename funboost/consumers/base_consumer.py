@@ -69,8 +69,9 @@ from funboost.utils import decorators, time_util, redis_manager
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
 from funboost.core import kill_remote_task
 from funboost.core.exceptions import ExceptionForRequeue, ExceptionForPushToDlxqueue
+
 # from funboost.core.booster import BoostersManager  互相导入
-from funboost.core.lazy_impoter import LazyImpoter
+from funboost.core.lazy_impoter import lazy_impoter
 
 
 # patch_apscheduler_run_job()
@@ -230,7 +231,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if logger_prefix != '':
             logger_prefix += '--'
             # logger_name = f'{logger_prefix}{self.__class__.__name__}--{concurrent_name}--{queue_name}--{self.consuming_function.__name__}'
-        logger_name = self.consumer_params.logger_name or  f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
+        logger_name = self.consumer_params.logger_name or f'funboost.{logger_prefix}{self.__class__.__name__}--{self.queue_name}'
         self.logger_name = logger_name
         log_filename = self.consumer_params.log_filename or f'funboost.{self.queue_name}.log'
         self.logger = LogManager(logger_name, logger_cls=TaskIdLogger).get_logger_and_add_handlers(
@@ -318,7 +319,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def start_consuming_message(self):
         # ConsumersManager.show_all_consumer_info()
         # noinspection PyBroadException
-
+        pid_queue_name_tuple = (os.getpid(), self.queue_name)
+        if pid_queue_name_tuple in lazy_impoter.BoostersManager.pid_queue_name__has_start_consume_set:
+            self.logger.warning(f'{pid_queue_name_tuple} 已启动消费,不要一直去启动消费,funboost框架自动阻止.')  # 有的人乱写代码,无数次在函数内部或for循环里面执行 f.consume(),一个队列只需要启动一次消费,不然每启动一次性能消耗很大,直到程序崩溃
+            return
+        else:
+            lazy_impoter.BoostersManager.pid_queue_name__has_start_consume_set.add(pid_queue_name_tuple)
         GlobalVars.has_start_a_consumer_flag = True
         try:
             self._concurrent_mode_dispatcher.check_all_concurrent_mode()
@@ -365,7 +371,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         key = 'apscheduler.redisjobstore_runonce'
         if RedisMixin().redis_db_frame.sadd(key, runonce_uuid):  # 这样可以阻止多次启动同队列名消费者 redis jobstore多次运行函数.
             cls.logger_apscheduler.debug(f'延时任务用普通消息重新发布到普通队列 {msg}')
-            LazyImpoter().BoostersManager.get_or_create_booster_by_queue_name(queue_name).publish(msg)
+            lazy_impoter.BoostersManager.get_or_create_booster_by_queue_name(queue_name).publish(msg)
 
     @abc.abstractmethod
     def _shedual_task(self):

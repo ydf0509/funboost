@@ -63,7 +63,9 @@ class BoosterDiscovery(FunboostFileLoggerMixin):
                 if Path(file_path) == Path(sys._getframe(1).f_code.co_filename):
                     self.logger.warning(f'排除导入调用auto_discovery的模块自身 {file_path}')  # 否则下面的import这个文件,会造成无限懵逼死循环
                     continue
-                spec = importlib.util.spec_from_file_location('module', file_path)
+
+                module_name = Path(file_path).as_posix().replace('/', '.') + '.' + Path(file_path).stem
+                spec = importlib.util.spec_from_file_location(module_name, file_path)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
         lazy_impoter.BoostersManager.show_all_boosters()

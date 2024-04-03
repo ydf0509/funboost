@@ -89,5 +89,6 @@ class ConcurrentModeEnum:
     EVENTLET = 'eventlet'
     ASYNC = 'async'  # asyncio并发，适用于async def定义的函数。
     SINGLE_THREAD = 'single_thread'  # 如果你不想并发，不想预先从消息队列中间件拉取消息到python程序的内存queue队列缓冲中，那么就适合使用此并发模式。
+    SOLO = SINGLE_THREAD
 
 # is_fsdf_remote_run = 0

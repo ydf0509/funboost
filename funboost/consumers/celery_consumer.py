@@ -175,10 +175,10 @@ class CeleryConsumer(AbstractConsumer):
                 # print(this.request.__dict__,dir(this))
                 if this.request.retries != self.consumer_params.max_retry_times:
                     log_msg = f'fun: {self.consuming_function}  args: {args} , kwargs: {kwargs} 消息第{this.request.retries}次运行出错,  {exc} \n'
-                    self._log_error(log_msg, exc_info=self.consumer_params.is_print_detail_exception)
+                    self.logger.error(log_msg, exc_info=self.consumer_params.is_print_detail_exception)
                 else:
                     log_msg = f'fun: {self.consuming_function}  args: {args} , kwargs: {kwargs} 消息达到最大重试次数{this.request.retries}次仍然出错,  {exc} \n'
-                    self._log_critical(log_msg, exc_info=self.consumer_params.is_print_detail_exception)
+                    self.logger.critical(log_msg, exc_info=self.consumer_params.is_print_detail_exception)
                 # 发生异常，尝试重试任务,countdown 是多少秒后重试
                 raise this.retry(exc=exc, countdown=5)
 

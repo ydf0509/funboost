@@ -6,12 +6,12 @@ from funboost import boost, BrokerEnum
 from funboost.assist.celery_helper import CeleryHelper
 
 
-@boost('tets_funboost_celery_queue31a5', broker_kind=BrokerEnum.CELERY, concurrent_num=10,is_print_detail_exception=False,)
+@boost('tets_queue31a5', broker_kind=BrokerEnum.CELERY, concurrent_num=10,is_print_detail_exception=False,)
 def fa(x, y):
     time.sleep(3)
     print(6666, x, y)
-    requests.get('123')
-    1/0
+    # requests.get('123')
+    # 1/0
     return x + y
 
 
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     fa.consume()
     # fb.consume()
 
-    for i in range(1):
+    for i in range(10):
         r = fa.push(i, i + 1)  # type: celery.result.AsyncResult
         # print(type(r), r)
         # print(r.get())

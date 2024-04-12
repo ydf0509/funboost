@@ -1,4 +1,5 @@
 import traceback
+import typing
 
 from funboost import AioAsyncResult, AsyncResult
 
@@ -18,7 +19,7 @@ class MsgItem(BaseModel):
 class PublishResponse(BaseModel):
     succ: bool
     msg: str
-    status_and_result: dict = None  # 消费函数的消费状态和结果.
+    status_and_result: typing.Optional[dict] = None  # 消费函数的消费状态和结果.
 
 
 # 创建 FastAPI 应用实例

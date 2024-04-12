@@ -34,7 +34,7 @@ def f(x, y):
 pool2 = ProcessPoolExecutor(4)
 
 
-@boost(BoosterParams(queue_name='test_queue77h6j', log_level=10, broker_kind=BrokerEnum.MEMORY_QUEUE,
+@boost(BoosterParams(queue_name='test_queue77h6j', log_level=10, broker_kind=BrokerEnum.RABBITMQ,
        create_logger_file=True, is_show_message_get_from_broker=True, concurrent_mode=ConcurrentModeEnum.THREADING,
        concurrent_num=50, qps=20, is_print_detail_exception=False, is_push_to_dlx_queue_when_retry_max_times=True,
        retry_interval=10,

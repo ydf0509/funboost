@@ -40,6 +40,7 @@ class CeleryHelper:
         :return:
         """
         celery_app.conf.update(celery_app_conf)
+        # 例如  celery_app.conf.update({'broker_transport_options':{'visibility_timeout': 18000,'max_retries':5}})
 
     @staticmethod
     def show_celery_app_conf():

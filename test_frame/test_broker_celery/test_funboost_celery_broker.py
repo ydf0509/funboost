@@ -4,7 +4,7 @@ import requests
 
 from funboost import boost, BrokerEnum
 from funboost.assist.celery_helper import CeleryHelper
-
+import kombu
 
 @boost('tets_queue31a5', broker_kind=BrokerEnum.CELERY, concurrent_num=10,is_print_detail_exception=False,)
 def fa(x, y):

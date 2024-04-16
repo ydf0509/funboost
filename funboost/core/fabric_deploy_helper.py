@@ -4,7 +4,7 @@ import sys
 import threading
 import time
 import os
-
+from pathlib import Path
 from fabric2 import Connection
 
 # from funboost.core.booster import Booster
@@ -13,16 +13,12 @@ from funboost.utils.paramiko_util import ParamikoFolderUploader
 # import nb_log
 from funboost.core.loggers import get_funboost_file_logger
 from funboost.core.booster import Booster
+
 logger = get_funboost_file_logger(__name__)
 
-def _remove_drive_letter(path):
-    if os.name == 'nt' and len(path) >= 3 and path[1] == ':':
-        return path[2:]
-    else:
-        return path
 
 # noinspection PyDefaultArgument
-def fabric_deploy(booster:Booster, host, port, user, password,
+def fabric_deploy(booster: Booster, host, port, user, password,
                   path_pattern_exluded_tuple=('/.git/', '/.idea/', '/dist/', '/build/'),
                   file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
                   only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
@@ -71,13 +67,17 @@ def fabric_deploy(booster:Booster, host, port, user, password,
     task_fun.fabric_deploy('192.168.6.133', 22, 'ydf', '123456', process_num=2) 只需要这样就可以自动部署在远程机器运行，无需任何额外操作。
     """
     # print(locals())
-    python_proj_dir = _remove_drive_letter(sys.path[1].replace('\\', '/') + '/')
+    python_proj_dir = sys.path[1].replace('\\', '/') + '/'
     python_proj_dir_short = python_proj_dir.split('/')[-2]
     # 获取被调用函数所在模块文件名
-    file_name = _remove_drive_letter(sys._getframe(2).f_code.co_filename.replace('\\', '/'))  # noqa\
-    print(file_name,python_proj_dir)
-    relative_file_name = re.sub(f'^{python_proj_dir}', '', file_name)
+    file_name = sys._getframe(2).f_code.co_filename.replace('\\', '/')  # noqa\
+    # print(file_name,python_proj_dir)
+    # print(Path(file_name).relative_to(Path(python_proj_dir)))
+    # print(8888)
+    # relative_file_name = re.sub(f'^{python_proj_dir}', '', file_name)
+    relative_file_name = Path(file_name).relative_to(Path(python_proj_dir)).as_posix()
     relative_module = relative_file_name.replace('/', '.')[:-3]  # -3是去掉.py
+    print(relative_module)
     if user == 'root':  # 文件夹会被自动创建，无需用户创建。
         remote_dir = f'/codes/{python_proj_dir_short}'
     else:
@@ -101,7 +101,7 @@ def fabric_deploy(booster:Booster, host, port, user, password,
         kill_shell = f'''ps -aux|grep {process_mark}|grep -v grep|awk '{{print $2}}' |xargs kill -9'''
         logger.warning(f'{kill_shell} 命令杀死 {process_mark} 标识的进程')
         # uploader.ssh.exec_command(kill_shell)
-        conn.run(kill_shell, encoding='utf-8',warn=True)  # 不想提示，免得烦扰用户以为有什么异常了。所以用上面的paramiko包的ssh.exec_command
+        conn.run(kill_shell, encoding='utf-8', warn=True)  # 不想提示，免得烦扰用户以为有什么异常了。所以用上面的paramiko包的ssh.exec_command
 
         python_exec_str = f'''export is_funboost_remote_run=1;export PYTHONPATH={remote_dir}:$PYTHONPATH ;{python_interpreter} -c "from {relative_module} import {func_name};{func_name}.multi_process_consume({process_num})"  -funboostmark {process_mark} '''
         shell_str = f'''cd {remote_dir}; {python_exec_str}'''

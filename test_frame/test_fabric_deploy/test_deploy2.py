@@ -53,12 +53,12 @@ def f3(a, b):
 
 if __name__ == '__main__':
     print(f2.__name__)
-    f2.clear()
-    for i in range(2000):
-        f2.push(i, i * 2)
-        f3.push(i, i * 2)
-    f2.consume()
-    f3.multi_process_consume(2)
+    # f2.clear()
+    # for i in range(2000):
+    #     f2.push(i, i * 2)
+    #     f3.push(i, i * 2)
+    # f2.consume()
+    # f3.multi_process_consume(2)
 
     # # 192.168.114.135  192.168.6.133
     # f2.fabric_deploy('192.168.6.133', 22, 'ydf', '372148', process_num=2)

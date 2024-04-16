@@ -59,6 +59,7 @@ if __name__ == '__main__':
         f3.push(i, i * 2)
     f2.consume()
     f3.multi_process_consume(2)
+
     # # 192.168.114.135  192.168.6.133
     # f2.fabric_deploy('192.168.6.133', 22, 'ydf', '372148', process_num=2)
     f3.fabric_deploy('106.55.xxx.xx', 22, 'root', 'xxxx',

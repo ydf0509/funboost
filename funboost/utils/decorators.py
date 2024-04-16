@@ -1,6 +1,7 @@
 # coding=utf-8
 import base64
 import copy
+import abc
 import logging
 import random
 import uuid
@@ -165,6 +166,60 @@ def singleton(cls):
     return _singleton
 
 
+class SingletonMeta(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super().__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class SingletonBaseCall(metaclass=SingletonMeta):
+    """
+    单例基类。任何继承自这个基类的子类都会自动成为单例。
+
+    示例：
+    class MyClass(SingletonBase):
+        pass
+
+    instance1 = MyClass()
+    instance2 = MyClass()
+
+    assert instance1 is instance2  # 实例1和实例2实际上是同一个对象
+    """
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        # 可以在此处添加对子类的额外处理，比如检查其是否符合单例要求等
+
+
+class SingletonBaseNew:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        # 可以在此处添加对子类的额外处理，比如检查其是否符合单例要求等
+
+
+class SingletonBaseCustomInit(metaclass=abc.ABCMeta):
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+            cls._instance._custom_init(*args, **kwargs)
+        return cls._instance
+
+    def _custom_init(self, *args, **kwargs):
+        raise NotImplemented
+
+
 def flyweight(cls):
     _instance = {}
 
@@ -290,6 +345,7 @@ class RedisDistributedLockContextManager(LoggerMixin, LoggerLevelSetterMixin):
             return True
         else:
             return False
+
 
 """
 @contextmanager
@@ -536,8 +592,6 @@ def timeout(seconds):
 
     def timeout_decorator(func):
 
-
-
         def _(*args, **kwargs):
             def _new_func(oldfunc, result, oldfunc_args, oldfunc_kwargs):
                 result.append(oldfunc(*oldfunc_args, **oldfunc_kwargs))
@@ -736,8 +790,6 @@ class _Test(unittest.TestCase):
             print('hello wprld')
 
         f(5)
-
-
 
 
 if __name__ == '__main__':

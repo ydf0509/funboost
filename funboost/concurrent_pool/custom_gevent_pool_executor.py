@@ -7,23 +7,27 @@ import warnings
 # from collections import Callable
 from typing import Callable
 import threading
-import gevent
-from gevent import pool as gevent_pool
-from gevent import monkey
-from gevent.queue import JoinableQueue
+from funboost.core.lazy_impoter import GeventImporter
 
 # from nb_log import LoggerMixin, nb_print, LogManager
 from funboost.concurrent_pool import FunboostBaseConcurrentPool
-from funboost.core.loggers import get_funboost_file_logger,FunboostFileLoggerMixin
+from funboost.core.loggers import get_funboost_file_logger, FunboostFileLoggerMixin
+
+
 # print('gevent 导入')
 
 def check_gevent_monkey_patch(raise_exc=True):
-    if not monkey.is_module_patched('socket'):  # 随便选一个检测标志
+    try:
+        if not GeventImporter().monkey.is_module_patched('socket'):  # 随便选一个检测标志
+            if raise_exc:
+                warnings.warn(f'检测到 你还没有打gevent包的猴子补丁，请在所运行的起始脚本第一行写上  【import gevent.monkey;gevent.monkey.patch_all()】  这句话。')
+                raise Exception(f'检测到 你还没有打gevent包的猴子补丁，请在所运行的起始脚本第一行写上  【import gevent.monkey;gevent.monkey.patch_all()】  这句话。')
+        else:
+            return 1
+    except ModuleNotFoundError:
         if raise_exc:
             warnings.warn(f'检测到 你还没有打gevent包的猴子补丁，请在所运行的起始脚本第一行写上  【import gevent.monkey;gevent.monkey.patch_all()】  这句话。')
             raise Exception(f'检测到 你还没有打gevent包的猴子补丁，请在所运行的起始脚本第一行写上  【import gevent.monkey;gevent.monkey.patch_all()】  这句话。')
-    else:
-        return 1
 
 
 logger_gevent_timeout_deco = get_funboost_file_logger('gevent_timeout_deco')
@@ -32,12 +36,12 @@ logger_gevent_timeout_deco = get_funboost_file_logger('gevent_timeout_deco')
 def gevent_timeout_deco(timeout_t):
     def _gevent_timeout_deco(f):
         def __gevent_timeout_deceo(*args, **kwargs):
-            timeout = gevent.Timeout(timeout_t, )
+            timeout = GeventImporter().gevent.Timeout(timeout_t, )
             timeout.start()
             result = None
             try:
                 result = f(*args, **kwargs)
-            except gevent.Timeout as t:
+            except GeventImporter().gevent.Timeout as t:
                 logger_gevent_timeout_deco.error(f'函数 {f} 运行超过了 {timeout_t} 秒')
                 if t is not timeout:
                     print(t)
@@ -51,25 +55,28 @@ def gevent_timeout_deco(timeout_t):
     return _gevent_timeout_deco
 
 
-class GeventPoolExecutor(gevent_pool.Pool,FunboostBaseConcurrentPool):
-    def __init__(self, size=None, greenlet_class=None):
-        check_gevent_monkey_patch() # basecomer.py中检查。
-        super().__init__(size, greenlet_class)
-        atexit.register(self.shutdown)
+def get_gevent_pool_executor(size=None, greenlet_class=None):
+    class GeventPoolExecutor(GeventImporter().gevent_pool.Pool, FunboostBaseConcurrentPool):
+        def __init__(self, size2=None, greenlet_class2=None):
+            check_gevent_monkey_patch()  # basecomer.py中检查。
+            super().__init__(size2, greenlet_class2)
+            atexit.register(self.shutdown)
 
-    def submit(self, *args, **kwargs):
-        self.spawn(*args, **kwargs)
+        def submit(self, *args, **kwargs):
+            self.spawn(*args, **kwargs)
 
-    def shutdown(self):
-        self.join()
+        def shutdown(self):
+            self.join()
+
+    return GeventPoolExecutor(size, greenlet_class)
 
 
-class GeventPoolExecutor2(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
+class GeventPoolExecutor2(FunboostFileLoggerMixin, FunboostBaseConcurrentPool):
     def __init__(self, max_works, ):
-        self._q = JoinableQueue(maxsize=max_works)
+        self._q = GeventImporter().JoinableQueue(maxsize=max_works)
         # self._q = Queue(maxsize=max_works)
         for _ in range(max_works):
-            gevent.spawn(self.__worker)
+            GeventImporter().gevent.spawn(self.__worker)
         # atexit.register(self.__atexit)
         self._q.join(timeout=100)
 
@@ -92,12 +99,12 @@ class GeventPoolExecutor2(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
         self._q.join()
 
 
-class GeventPoolExecutor3(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
+class GeventPoolExecutor3(FunboostFileLoggerMixin, FunboostBaseConcurrentPool):
     def __init__(self, max_works, ):
-        self._q = gevent.queue.Queue(max_works)
+        self._q = GeventImporter().gevent.queue.Queue(max_works)
         self.g_list = []
         for _ in range(max_works):
-            self.g_list.append(gevent.spawn(self.__worker))
+            self.g_list.append(GeventImporter().gevent.spawn(self.__worker))
         atexit.register(self.__atexit)
 
     def __worker(self):
@@ -112,7 +119,7 @@ class GeventPoolExecutor3(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
         self._q.put((fn, args, kwargs))
 
     def joinall(self):
-        gevent.joinall(self.g_list)
+        GeventImporter().gevent.joinall(self.g_list)
 
     def joinall_in_new_thread(self):
         threading.Thread(target=self.joinall)
@@ -123,7 +130,7 @@ class GeventPoolExecutor3(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
 
 
 if __name__ == '__main__':
-    monkey.patch_all(thread=False)
+    GeventImporter().monkey.patch_all(thread=False)
 
 
     def f2(x):

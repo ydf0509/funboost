@@ -63,8 +63,8 @@ setup(
     ],
     install_requires=[
         'nb_log>=12.6',
-        'eventlet==0.33.3',
-        'gevent==22.10.2',
+        # 'eventlet==0.33.3',
+        # 'gevent==22.10.2',
         'pymongo==4.3.3',  # 3.5.1  -> 4.0.2
         'AMQPStorm==2.10.6',
         'rabbitpy==2.0.1',

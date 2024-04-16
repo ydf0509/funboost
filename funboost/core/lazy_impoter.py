@@ -1,7 +1,11 @@
-from funboost.utils.decorators import cached_method_result
+import abc
+
+from funboost.utils.decorators import cached_method_result, singleton, SingletonBaseNew, SingletonBaseCustomInit
 
 
-class LazyImpoter:
+# @singleton   # 不方便代码补全
+
+class LazyImpoter(SingletonBaseNew):
     """
     延迟导入,避免需要互相导入.
     """
@@ -18,9 +22,57 @@ class LazyImpoter:
     #     from funboost.core.current_task import get_current_taskid
     #     return get_current_taskid
 
+
 lazy_impoter = LazyImpoter()
+
+
+class GeventImporter(SingletonBaseNew):
+    """
+    import gevent
+    from gevent import pool as gevent_pool
+    from gevent import monkey
+    from gevent.queue import JoinableQueue
+    """
+
+    @property
+    @cached_method_result
+    def gevent(self):
+        import gevent
+        return gevent
+
+    @property
+    @cached_method_result
+    def gevent_pool(self):
+        from gevent import pool as gevent_pool
+        return gevent_pool
+
+    @property
+    @cached_method_result
+    def monkey(self):
+        from gevent import monkey
+        return monkey
+
+    @property
+    @cached_method_result
+    def JoinableQueue(self):
+        from gevent.queue import JoinableQueue
+        return JoinableQueue
+
+
+class EventletImporter(SingletonBaseCustomInit):
+    """
+    from eventlet import greenpool, monkey_patch, patcher, Timeout
+    """
+
+    def _custom_init(self, ):
+        from eventlet import greenpool, monkey_patch, patcher, Timeout
+        self.greenpool = greenpool
+        self.monkey_patch = monkey_patch
+        self.patcher = patcher
+        self.Timeout = Timeout
+
 
 if __name__ == '__main__':
     for i in range(10000):
-        lazy_impoter.BoostersManager
-        lazy_impoter.BoostersManager
+        # lazy_impoter.BoostersManager
+        EventletImporter().greenpool

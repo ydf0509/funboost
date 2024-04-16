@@ -12,8 +12,6 @@ gevent协程
 """
 from .base_pool_type import FunboostBaseConcurrentPool
 from .async_pool_executor import AsyncPoolExecutor
-# from .custom_evenlet_pool_executor import CustomEventletPoolExecutor
-# from .custom_gevent_pool_executor import GeventPoolExecutor
 from .bounded_threadpoolexcutor import BoundedThreadPoolExecutor
 from .custom_threadpool_executor import CustomThreadPoolExecutor
 from .flexible_thread_pool import FlexibleThreadPool

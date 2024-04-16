@@ -972,11 +972,11 @@ class ConcurrentModeDispatcher(FunboostFileLoggerMixin):
             # pool_type = BoundedThreadPoolExecutor
             pool_type = FlexibleThreadPool
         elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
-            from funboost.concurrent_pool.custom_gevent_pool_executor import GeventPoolExecutor
-            pool_type = GeventPoolExecutor
+            from funboost.concurrent_pool.custom_gevent_pool_executor import get_gevent_pool_executor
+            pool_type = get_gevent_pool_executor
         elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
-            from funboost.concurrent_pool.custom_evenlet_pool_executor import CustomEventletPoolExecutor
-            pool_type = CustomEventletPoolExecutor
+            from funboost.concurrent_pool.custom_evenlet_pool_executor import get_eventlet_pool_executor
+            pool_type = get_eventlet_pool_executor
         elif self._concurrent_mode == ConcurrentModeEnum.ASYNC:
             pool_type = AsyncPoolExecutor
         elif self._concurrent_mode == ConcurrentModeEnum.SINGLE_THREAD:

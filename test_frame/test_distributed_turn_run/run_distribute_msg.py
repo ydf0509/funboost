@@ -20,15 +20,6 @@ class GlobalVars:
     i = -1
 
 
-def build_queue2_booster_by_ip(ip):
-    return BoostersManager.build_booster(BoosterParams(queue_name=gen_queue_name_by_ip('queue2', ip),
-                                                       concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,
-                                                       is_using_rpc_mode=True,
-                                                       broker_kind=BrokerEnum.REDIS,
-                                                       consuming_function=execute_msg_on_host,
-                                                       ))
-
-
 @boost(BoosterParams(queue_name='queue1', concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, broker_kind=BrokerEnum.REDIS))
 def distribute_msg(x):
     GlobalVars.i += 1
@@ -48,6 +39,15 @@ def execute_msg_on_host(x):
     time.sleep(5)
     print(x)
     return f'{x} finish from ip_xx '
+
+
+def build_queue2_booster_by_ip(ip):
+    return BoostersManager.build_booster(BoosterParams(queue_name=gen_queue_name_by_ip('queue2', ip),
+                                                       concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,
+                                                       is_using_rpc_mode=True,
+                                                       broker_kind=BrokerEnum.REDIS,
+                                                       consuming_function=execute_msg_on_host,
+                                                       ))
 
 
 if __name__ == '__main__':

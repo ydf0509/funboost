@@ -18,5 +18,6 @@
 ```
 run_distribute_msg.py 是 从queue1 获取消息,并轮流分发到 queue2的各个ip对应的队列名字
 
-run_execute_msg_on_host101.py 和 run_execute_msg_on_host102.py 是为了方便单台机器模拟在两台机器上运行,实际不需要重复的写这两个文件.
+run_execute_msg_on_host101.py 和 run_execute_msg_on_host102.py 是为了方便单台机器模拟在两台机器上运行,
+实际不需要重复的写这两个文件.
 ```

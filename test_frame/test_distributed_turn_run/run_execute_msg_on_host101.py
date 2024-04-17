@@ -4,7 +4,10 @@
 """
 from test_frame.test_distributed_turn_run.run_distribute_msg import build_queue2_booster_by_ip, ip_101
 
-booster = build_queue2_booster_by_ip(ip_101)
+booster_execute_msg_on_host = build_queue2_booster_by_ip(ip_101)
 
 if __name__ == '__main__':
-    booster.consume()
+    booster_execute_msg_on_host.consume()
+    """
+    这个是真正的执行消息,部署在每台机器上
+    """

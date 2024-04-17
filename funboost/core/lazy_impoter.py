@@ -30,6 +30,7 @@ lazy_impoter = LazyImpoter()
 @singleton
 class GeventImporter:
     """
+    避免提前导入
     import gevent
     from gevent import pool as gevent_pool
     from gevent import monkey
@@ -64,6 +65,7 @@ class GeventImporter:
 @singleton
 class EventletImporter:
     """
+    避免提前导入
     from eventlet import greenpool, monkey_patch, patcher, Timeout
     """
 

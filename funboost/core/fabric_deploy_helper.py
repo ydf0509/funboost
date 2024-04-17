@@ -77,7 +77,7 @@ def fabric_deploy(booster: Booster, host, port, user, password,
     # relative_file_name = re.sub(f'^{python_proj_dir}', '', file_name)
     relative_file_name = Path(file_name).relative_to(Path(python_proj_dir)).as_posix()
     relative_module = relative_file_name.replace('/', '.')[:-3]  # -3是去掉.py
-    print(relative_module)
+    # print(relative_module)
     if user == 'root':  # 文件夹会被自动创建，无需用户创建。
         remote_dir = f'/codes/{python_proj_dir_short}'
     else:

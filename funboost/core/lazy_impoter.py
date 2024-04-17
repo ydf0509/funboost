@@ -26,7 +26,9 @@ class LazyImpoter(SingletonBaseNew):
 lazy_impoter = LazyImpoter()
 
 
-class GeventImporter(SingletonBaseNew):
+# noinspection SpellCheckingInspection
+@singleton
+class GeventImporter:
     """
     import gevent
     from gevent import pool as gevent_pool
@@ -59,13 +61,15 @@ class GeventImporter(SingletonBaseNew):
         return JoinableQueue
 
 
-class EventletImporter(SingletonBaseCustomInit):
+@singleton
+class EventletImporter:
     """
     from eventlet import greenpool, monkey_patch, patcher, Timeout
     """
 
-    def _custom_init(self, ):
+    def __init__(self):
         from eventlet import greenpool, monkey_patch, patcher, Timeout
+        print('导入gevent')
         self.greenpool = greenpool
         self.monkey_patch = monkey_patch
         self.patcher = patcher
@@ -76,3 +80,4 @@ if __name__ == '__main__':
     for i in range(10000):
         # lazy_impoter.BoostersManager
         EventletImporter().greenpool
+        GeventImporter().JoinableQueue

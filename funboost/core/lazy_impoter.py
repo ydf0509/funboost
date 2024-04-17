@@ -41,6 +41,7 @@ class GeventImporter:
     @cached_method_result
     def gevent(self):
         import gevent
+        print('导入gevent')
         return gevent
 
     @property
@@ -53,6 +54,7 @@ class GeventImporter:
     @cached_method_result
     def monkey(self):
         from gevent import monkey
+        print('导入gevent')
         return monkey
 
     @property
@@ -71,7 +73,7 @@ class EventletImporter:
 
     def __init__(self):
         from eventlet import greenpool, monkey_patch, patcher, Timeout
-        print('导入gevent')
+        print('导入eventlet')
         self.greenpool = greenpool
         self.monkey_patch = monkey_patch
         self.patcher = patcher

@@ -64,5 +64,5 @@ distribute_msg函数是单线程并发模式,并且采用了rpc模式阻塞等�
 从而保证了每台机器轮流运行一条消息(每台机器轮流获取一个url种子并爬取)
 
 run_execute_msg_on_host101.py 和 run_execute_msg_on_host102.py 是为了方便单台机器模拟在两台机器上运行,
-实际不需要重复的写这两个文件.
+实际不需要重复写这两个文件.
 ```

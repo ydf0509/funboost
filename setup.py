@@ -63,6 +63,7 @@ setup(
     ],
     install_requires=[
         'nb_log>=12.6',
+        'nb_libs>=0.9',
         # 'eventlet==0.33.3',
         # 'gevent==22.10.2',
         'pymongo==4.3.3',  # 3.5.1  -> 4.0.2
@@ -110,6 +111,7 @@ setup(
         'frozenlist',
         'fire',
         'pydantic',
+
     ],
     extras_require={'all': extra_brokers,
                     'extra_brokers': extra_brokers,

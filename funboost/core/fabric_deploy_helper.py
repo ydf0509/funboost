@@ -4,9 +4,10 @@ import sys
 import threading
 import time
 import os
+import typing
 from pathlib import Path
 from fabric2 import Connection
-
+from nb_libs.path_helper import PathHelper
 # from funboost.core.booster import Booster
 from funboost.utils.paramiko_util import ParamikoFolderUploader
 
@@ -18,6 +19,9 @@ logger = get_funboost_file_logger(__name__)
 
 
 # noinspection PyDefaultArgument
+
+
+
 def fabric_deploy(booster: Booster, host, port, user, password,
                   path_pattern_exluded_tuple=('/.git/', '/.idea/', '/dist/', '/build/'),
                   file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
@@ -70,13 +74,18 @@ def fabric_deploy(booster: Booster, host, port, user, password,
     python_proj_dir = sys.path[1].replace('\\', '/') + '/'
     python_proj_dir_short = python_proj_dir.split('/')[-2]
     # 获取被调用函数所在模块文件名
-    file_name = sys._getframe(2).f_code.co_filename.replace('\\', '/')  # noqa\
-    # print(file_name,python_proj_dir)
-    # print(Path(file_name).relative_to(Path(python_proj_dir)))
-    # print(8888)
-    # relative_file_name = re.sub(f'^{python_proj_dir}', '', file_name)
+    file_name = sys._getframe(2).f_code.co_filename.replace('\\', '/')  # noqa
     relative_file_name = Path(file_name).relative_to(Path(python_proj_dir)).as_posix()
     relative_module = relative_file_name.replace('/', '.')[:-3]  # -3是去掉.py
+    func_name = booster.consuming_function.__name__
+    module_obj = PathHelper(sys._getframe(2).f_code.co_filename).import_as_module()  # noqa
+
+    """以下这种是为了兼容 函数没有@boost.而是使用 boosterxx = BoostersManager.build_booster() 来创建的booster. 下面的 python_exec_str 中需要用到 func_name """
+    for var_name,var_value in module_obj.__dict__.items():
+        if isinstance(var_value,Booster) and var_value.queue_name == booster.queue_name:
+            func_name = var_name
+
+    # print(file_name, python_proj_dir, relative_module, func_name)
     # print(relative_module)
     if user == 'root':  # 文件夹会被自动创建，无需用户创建。
         remote_dir = f'/codes/{python_proj_dir_short}'
@@ -93,9 +102,7 @@ def fabric_deploy(booster: Booster, host, port, user, password,
         logger.info(f'上传 本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹耗时 {round(time.perf_counter() - t_start, 3)} 秒')
         # conn.run(f'''export PYTHONPATH={remote_dir}:$PYTHONPATH''')
 
-        func_name = booster.consuming_function.__name__
         queue_name = booster.consumer.queue_name
-
         process_mark = f'funboost_fabric_mark__{queue_name}__{func_name}'
         conn = Connection(host, port=port, user=user, connect_kwargs={"password": password}, )
         kill_shell = f'''ps -aux|grep {process_mark}|grep -v grep|awk '{{print $2}}' |xargs kill -9'''

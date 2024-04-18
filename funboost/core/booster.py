@@ -66,7 +66,7 @@ class Booster:
             flogger.warning(f'''你的 {queue_name} 队列， funboost 40.0版本以后： {BoostDecoParamsIsOldVersion.new_version_change_hint}''')
         boost_params_merge = boost_params.copy()
         boost_params_merge.update_from_dict(kwargs)
-        self.boost_params = boost_params_merge
+        self.boost_params:BoosterParams = boost_params_merge
         self.queue_name = boost_params_merge.queue_name
 
     def __str__(self):

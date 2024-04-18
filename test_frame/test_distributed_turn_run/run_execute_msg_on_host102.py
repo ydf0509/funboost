@@ -5,10 +5,11 @@ from test_frame.test_distributed_turn_run.run_distribute_msg import build_queue2
 实际上是动态自动获取当前机器ip,不需要 run_execute_msg_on_host101.py run_execute_msg_on_host102.py 两个重复的文件
 """
 
-booster_execute_msg_on_host = build_queue2_booster_by_ip(ip_101)
+booster_execute_msg_on_host = build_queue2_booster_by_ip(ip_102)
 
 if __name__ == '__main__':
-    booster_execute_msg_on_host.consume()
+    booster_execute_msg_on_host.fabric_deploy(0,0,0,0)
+
     """
     这个是真正的执行消息,部署在每台机器上
     """

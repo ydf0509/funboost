@@ -29,7 +29,7 @@ def distribute_msg(x):
     async_result = booster.push(x)
     # async_result.set_timeout(10)
     """
-    使用async_result.get() rpc模式是为了阻塞,直到 execute_msg_on_host 函数运行消息完成,
+    使用async_result.get() rpc模式是为了阻塞,直到 really_execute_msg_on_host 函数运行消息完成,
     配合上distribute_msg是单线程并发模式, 这样就是保证了多台机器只有一个机器在使用 really_execute_msg_on_host 函数运行queue1中取出的消息
     """
     print(async_result.get()) # 这一行会阻塞函直到消息在 really_execute_msg_on_host 函数中运行完成.

@@ -78,9 +78,11 @@ def fabric_deploy(booster: Booster, host, port, user, password,
     relative_file_name = Path(file_name).relative_to(Path(python_proj_dir)).as_posix()
     relative_module = relative_file_name.replace('/', '.')[:-3]  # -3是去掉.py
     func_name = booster.consuming_function.__name__
-    module_obj = PathHelper(sys._getframe(2).f_code.co_filename).import_as_module()  # noqa
 
-    """以下这种是为了兼容 函数没有@boost.而是使用 boosterxx = BoostersManager.build_booster() 来创建的booster. 下面的 python_exec_str 中需要用到 func_name """
+    """以下这种是为了兼容 函数没有@boost,而是使用 boosterxx = BoostersManager.build_booster() 来创建的booster. 下面的 python_exec_str 中需要用到 func_name 
+    也可以远程时候使用 BoostersManager.get_booster(queue_name),然后启动消费.  因为import模块后,就能启动了.
+    """
+    module_obj = PathHelper(sys._getframe(2).f_code.co_filename).import_as_module()  # noqa
     for var_name,var_value in module_obj.__dict__.items():
         if isinstance(var_value,Booster) and var_value.queue_name == booster.queue_name:
             func_name = var_name

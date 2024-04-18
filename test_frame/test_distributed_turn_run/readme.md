@@ -29,6 +29,16 @@
 再写一个正正的具体执行消息的函数,该函数必须设置支持rpc模式,is_using_rpc_mode=True,
 ```
 
+## 如果是scrapy和仿scrapy api用法的框架,非常难实现
+
+```
+如果是scrapy和仿scrapy api用法的框架,非常难实现,
+因为你完全不知道需要改框架哪里,这种奇葩需求也不好搜答案.
+
+funboost框架是函数调度框架,部署url调度框架,所以自由灵活,用户任何奇葩独特想法不需要涉及到需要改funboost框架
+```
+
+
 ## 脚本说明
 ```
 run_distribute_msg.py 是 从queue1 获取消息,并轮流分发到 queue2的各个ip对应的队列名字

@@ -1,17 +1,12 @@
 # noinspection PyDefaultArgument
-import re
 import sys
 import threading
 import time
-import os
-import typing
 from pathlib import Path
 from fabric2 import Connection
 from nb_libs.path_helper import PathHelper
-# from funboost.core.booster import Booster
 from funboost.utils.paramiko_util import ParamikoFolderUploader
 
-# import nb_log
 from funboost.core.loggers import get_funboost_file_logger
 from funboost.core.booster import Booster
 
@@ -19,9 +14,6 @@ logger = get_funboost_file_logger(__name__)
 
 
 # noinspection PyDefaultArgument
-
-
-
 def fabric_deploy(booster: Booster, host, port, user, password,
                   path_pattern_exluded_tuple=('/.git/', '/.idea/', '/dist/', '/build/'),
                   file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
@@ -80,7 +72,7 @@ def fabric_deploy(booster: Booster, host, port, user, password,
     func_name = booster.consuming_function.__name__
 
     """以下这种是为了兼容 函数没有@boost,而是使用 boosterxx = BoostersManager.build_booster() 来创建的booster. 下面的 python_exec_str 中需要用到 func_name 
-    也可以远程时候使用 BoostersManager.get_booster(queue_name),然后启动消费.  因为import模块后,就能启动了.
+    也可以远程时候使用 BoostersManager.get_booster(queue_name),然后启动消费.  因为import模块后,就注册booster信息到BoostersManager,所以能启动了.
     """
     module_obj = PathHelper(sys._getframe(2).f_code.co_filename).import_as_module()  # noqa
     for var_name,var_value in module_obj.__dict__.items():

@@ -22,31 +22,32 @@ class GlobalVars:
 
 @boost(BoosterParams(queue_name='queue1', concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, broker_kind=BrokerEnum.REDIS))
 def distribute_msg(x):
+    """轮流分发消息到每台机器,并且阻塞等待函数运行完成,才分发下一个任务到下一台机器"""
     GlobalVars.i += 1
     ip = ip_list[GlobalVars.i % len(ip_list)]  # 轮流向每台机器的队列分发推送消息
-    booster = build_queue2_booster_by_ip(ip)
+    booster = build_booster_really_execute_msg_on_host_by_ip(ip)
     async_result = booster.push(x)
     # async_result.set_timeout(10)
     """
     使用async_result.get() rpc模式是为了阻塞,直到 execute_msg_on_host 函数运行消息完成,
-    配合上distribute_msg是单线程并发模式, 这样就是保证了多台机器只有一个机器在使用 execute_msg_on_host 运行queue1中取出的消息
+    配合上distribute_msg是单线程并发模式, 这样就是保证了多台机器只有一个机器在使用 really_execute_msg_on_host 函数运行queue1中取出的消息
     """
     print(async_result.get())
 
 
-def execute_msg_on_host(x):
-    # 真正的执行消息,在每台机器轮流运行这个函数.
+def really_execute_msg_on_host(x):
+    """真正的执行消息,在每台机器轮流运行这个函数."""
     time.sleep(5)
     print(x)
     return f'{x} finish from ip_xx '
 
 
-def build_queue2_booster_by_ip(ip):
+def build_booster_really_execute_msg_on_host_by_ip(ip):
     return BoostersManager.build_booster(BoosterParams(queue_name=gen_queue_name_by_ip('queue2', ip),
                                                        concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,
                                                        is_using_rpc_mode=True,
                                                        broker_kind=BrokerEnum.REDIS,
-                                                       consuming_function=execute_msg_on_host,
+                                                       consuming_function=really_execute_msg_on_host,
                                                        ))
 
 

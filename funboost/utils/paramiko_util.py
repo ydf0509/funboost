@@ -16,7 +16,7 @@ class ParamikoFolderUploader(LoggerMixin, LoggerLevelSetterMixin):
                  path_pattern_exluded_tuple=('/.git/', '/.idea/', '/dist/', '/build/'),
                  file_suffix_tuple_exluded=('.pyc', '.log', '.gz'),
                  only_upload_within_the_last_modify_time=3650 * 24 * 60 * 60,
-                 file_volume_limit=1000 * 1000, sftp_log_level=20):
+                 file_volume_limit=1000 * 1000, sftp_log_level=20, pkey_file_path=None):
         """
 
         :param host:
@@ -30,6 +30,7 @@ class ParamikoFolderUploader(LoggerMixin, LoggerLevelSetterMixin):
         :param only_upload_within_the_last_modify_time: 仅仅上传最近多少天修改的文件
         :param file_volume_limit: 大于这个体积的不上传，单位b。
         :param sftp_log_level:日志级别
+        :param pkey_file_path: 私钥文件路径，如果设置了这个，那么使用私钥登录。
         """
         self._host = host
         self._port = port
@@ -48,7 +49,11 @@ class ParamikoFolderUploader(LoggerMixin, LoggerLevelSetterMixin):
         self._file_volume_limit = file_volume_limit
 
         t = paramiko.Transport((host, port))
-        t.connect(username=user, password=password)
+        if pkey_file_path is not None and os.path.exists(pkey_file_path):
+            pkey = paramiko.RSAKey.from_private_key_file(open(pkey_file_path))
+            t.connect(username=user, pkey=pkey)
+        else:
+            t.connect(username=user, password=password)
         self.sftp = paramiko.SFTPClient.from_transport(t)
 
         ssh = paramiko.SSHClient()

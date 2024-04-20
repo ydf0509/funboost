@@ -21,7 +21,9 @@ def fabric_deploy(booster: Booster, host, port, user, password,
                   file_volume_limit=1000 * 1000, sftp_log_level=20, extra_shell_str='',
                   invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
                   python_interpreter='python3',
-                  process_num=1):
+                  process_num=1,
+                  pkey_file_path=None,
+                  ):
     """
     不依赖阿里云codepipeline 和任何运维发布管理工具，只需要在python代码层面就能实现多机器远程部署。
     这实现了函数级别的精确部署，而非是部署一个 .py的代码，远程部署一个函数实现难度比远程部署一个脚本更高一点，部署更灵活。
@@ -57,6 +59,7 @@ def fabric_deploy(booster: Booster, host, port, user, password,
                                  pty 的意思是，远程机器的部署的代码进程是否随着当前脚本的结束而结束。如果为True，本机代码结束远程进程就会结束。如果为False，即使本机代码被关闭结束，远程机器还在运行代码。
                                  warn 的意思是如果远程机器控制台返回了异常码本机代码是否立即退出。warn为True这只是警告一下，warn为False,远程机器返回异常code码则本机代码直接终止退出。
     :param process_num:启动几个进程，要达到最大cpu性能就开启cpu核数个进程就可以了。每个进程内部都有任务函数本身指定的并发方式和并发数量，所以是多进程+线程/协程。
+    :param pkey_file_path: 私钥文件路径，如果设置了这个参数，则使用ssh私钥登录远程机器，如果没设置，则使用密码登录。
     :return:
 
 
@@ -91,7 +94,7 @@ def fabric_deploy(booster: Booster, host, port, user, password,
         t_start = time.perf_counter()
         uploader = ParamikoFolderUploader(host, port, user, password, python_proj_dir, remote_dir,
                                           path_pattern_exluded_tuple, file_suffix_tuple_exluded,
-                                          only_upload_within_the_last_modify_time, file_volume_limit, sftp_log_level)
+                                          only_upload_within_the_last_modify_time, file_volume_limit, sftp_log_level, pkey_file_path)
         uploader.upload()
         logger.info(f'上传 本地文件夹代码 {python_proj_dir}  上传到远程 {host} 的 {remote_dir} 文件夹耗时 {round(time.perf_counter() - t_start, 3)} 秒')
         # conn.run(f'''export PYTHONPATH={remote_dir}:$PYTHONPATH''')

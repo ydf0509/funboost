@@ -155,7 +155,9 @@ class Booster:
                       file_volume_limit=1000 * 1000, sftp_log_level=20, extra_shell_str='',
                       invoke_runner_kwargs={'hide': None, 'pty': True, 'warn': False},
                       python_interpreter='python3',
-                      process_num=1):
+                      process_num=1,
+                      pkey_file_path=None,
+                      ):
         """
         入参见 fabric_deploy 函数。这里重复入参是为了代码在pycharm补全提示。
         """

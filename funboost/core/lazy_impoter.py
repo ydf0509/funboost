@@ -79,6 +79,20 @@ class EventletImporter:
         self.patcher = patcher
         self.Timeout = Timeout
 
+@singleton
+class PeeweeImporter:
+    def __init__(self):
+        '''pip install peewee == 3.17'''
+        from peewee import ModelSelect, Model, BigAutoField, CharField, DateTimeField, MySQLDatabase
+        from playhouse.shortcuts import model_to_dict, dict_to_model
+        self.ModelSelect = ModelSelect
+        self.Model = Model
+        self.BigAutoField = BigAutoField
+        self.CharField = CharField
+        self.DateTimeField =DateTimeField
+        self.MySQLDatabase = MySQLDatabase
+        self.model_to_dict = model_to_dict
+        self.dict_to_model =dict_to_model
 
 if __name__ == '__main__':
     for i in range(10000):

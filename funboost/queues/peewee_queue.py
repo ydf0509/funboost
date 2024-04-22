@@ -1,14 +1,14 @@
 import datetime
 import time
-
-from peewee import ModelSelect
-from playhouse.shortcuts import model_to_dict, dict_to_model
+#
+# from peewee import ModelSelect, Model, BigAutoField, CharField, DateTimeField, MySQLDatabase
+# from playhouse.shortcuts import model_to_dict, dict_to_model
 
 # from nb_log import LoggerMixin, LoggerLevelSetterMixin
 from funboost.core.loggers import LoggerLevelSetterMixin,FunboostFileLoggerMixin
 from funboost.funboost_config_deafult import BrokerConnConfig
-from peewee import *
-
+# from peewee import *
+from funboost.core.lazy_impoter import PeeweeImporter
 
 
 class TaskStatus:
@@ -30,13 +30,13 @@ class PeeweeQueue(FunboostFileLoggerMixin, LoggerLevelSetterMixin):
         self._create_table()
 
     def _create_table(self):
-        class FunboostMessage(Model):
+        class FunboostMessage(PeeweeImporter().Model):
             """数据库的一行模拟一条消息"""
-            job_id = BigAutoField(primary_key=True, )
-            body = CharField(max_length=10240, null=False)
-            publish_timestamp = DateTimeField(default=datetime.datetime.now)
-            status = CharField(max_length=40, null=False)
-            consume_start_timestamp = DateTimeField(default=None, null=True)
+            job_id = PeeweeImporter().BigAutoField(primary_key=True, )
+            body = PeeweeImporter().CharField(max_length=10240, null=False)
+            publish_timestamp = PeeweeImporter().DateTimeField(default=datetime.datetime.now)
+            status = PeeweeImporter().CharField(max_length=40, null=False)
+            consume_start_timestamp = PeeweeImporter().DateTimeField(default=None, null=True)
 
             class Meta:
                 db_table = self.queue_name
@@ -47,7 +47,7 @@ class PeeweeQueue(FunboostFileLoggerMixin, LoggerLevelSetterMixin):
                     passwd=BrokerConnConfig.MYSQL_PASSWORD,
                     database=BrokerConnConfig.MYSQL_DATABASE,
                 )
-                database = MySQLDatabase(**conn_params)
+                database = PeeweeImporter().MySQLDatabase(**conn_params)
 
         FunboostMessage.create_table()
         self.FunboostMessage = FunboostMessage
@@ -68,7 +68,7 @@ class PeeweeQueue(FunboostFileLoggerMixin, LoggerLevelSetterMixin):
             # print(ret)
             if len(ret) == 1:
                 row_obj = ret[0]
-                row = model_to_dict(row_obj)
+                row = PeeweeImporter().model_to_dict(row_obj)
                 self.FunboostMessage.update(status=TaskStatus.PENGDING, consume_start_timestamp=datetime.datetime.now()
                                             ).where(self.FunboostMessage.job_id == row['job_id']).execute()
                 return row

@@ -85,7 +85,7 @@ setup(
         'psutil',
         # 'sqlalchemy==1.3.10',
         # 'sqlalchemy_utils==0.36.1',    # 用户使用数据库作为消息队列时候，自行安装，不自动安装这个包。也可以使用kombu中间件的sqlalchemy模式来操作数据库或者peewee操作。
-        'peewee==3.15.1',
+        # 'peewee==3.17.3',    # 'peewee==3.15.1',  # 惰性安装
         'apscheduler==3.10.1',
         'pikav0',
         'pikav1',

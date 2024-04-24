@@ -383,25 +383,26 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         raise NotImplementedError
 
-    def __auto_fill_msg(self, msg: dict):
+    def _auto_fill_msg(self, msg: dict):
         """填充消息,消息没有使用funboost来发送,并且没有extra相关字段时候"""
         """ 一般消息至少包含这样
-       {
-  "a": 42,
-  "b": 84,
-  "extra": {
-    "task_id": "queue_2_result:9b79a372-f765-4a33-8639-9d15d7a95f61",
-    "publish_time": 1701687443.3596,
-    "publish_time_format": "2023-12-04 18:57:23"
-  }
-}
+        {
+          "a": 42,
+          "b": 84,
+          "extra": {
+            "task_id": "queue_2_result:9b79a372-f765-4a33-8639-9d15d7a95f61",
+            "publish_time": 1701687443.3596,
+            "publish_time_format": "2023-12-04 18:57:23"
+          }
+        }
         """
+
         """
         extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
                         'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
         """
         if 'extra' not in msg:
-            msg['extra'] = {}
+            msg['extra'] = {'is_auto_fill_extra': True}
         extra = msg['extra']
         if 'task_id' not in extra:
             extra['task_id'] = generate_task_id(self._queue_name)
@@ -425,7 +426,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
             return
-        self.__auto_fill_msg(kw['body'])
+        self._auto_fill_msg(kw['body'])
         function_only_params = delete_keys_and_return_new_dict(kw['body'], )
         if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
                 function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。

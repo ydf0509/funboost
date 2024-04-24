@@ -1,5 +1,6 @@
 import copy
 import time
+import uuid
 
 
 def get_publish_time(paramsx: dict):
@@ -43,3 +44,6 @@ def _try_get_user_funboost_common_config(funboost_common_conf_field:str):
     except Exception as e:
         print(e)
         return None
+
+def generate_task_id(queue_name:str):
+    return f'{queue_name}_result:{uuid.uuid4()}'

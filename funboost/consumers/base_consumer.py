@@ -33,7 +33,7 @@ import nb_log
 from funboost.core.current_task import funboost_current_task, get_current_taskid
 from funboost.core.loggers import develop_logger
 
-from funboost.core.func_params_model import BoosterParams, PublisherParams
+from funboost.core.func_params_model import BoosterParams, PublisherParams, BaseJsonAbleModel
 from funboost.core.task_id_logger import TaskIdLogger
 from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, CompatibleLogger,
                     LoggerMixinDefaultWithFileHandler, stdout_write, is_main_process,
@@ -49,7 +49,7 @@ from funboost.concurrent_pool.single_thread_executor import SoloExecutor
 
 from funboost.core.function_result_status_saver import ResultPersistenceHelper, FunctionResultStatus, RunStatus
 
-from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_publish_time
+from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_publish_time, generate_task_id
 
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
@@ -215,13 +215,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._consuming_function_is_asyncio = inspect.iscoroutinefunction(self.consuming_function)
         self.custom_init()
         # develop_logger.warning(consumer_params._log_filename)
-        self.publisher_params = PublisherParams(queue_name=consumer_params.queue_name, consuming_function=consumer_params.consuming_function,
-                                                broker_kind=self.BROKER_KIND, log_level=consumer_params.log_level,
-                                                logger_prefix=consumer_params.logger_prefix,
-                                                create_logger_file=consumer_params.create_logger_file,
-                                                log_filename=consumer_params.log_filename,
-                                                logger_name=consumer_params.logger_name,
-                                                broker_exclusive_config=self.consumer_params.broker_exclusive_config)
+        # self.publisher_params = PublisherParams(queue_name=consumer_params.queue_name, consuming_function=consumer_params.consuming_function,
+        #                                         broker_kind=self.BROKER_KIND, log_level=consumer_params.log_level,
+        #                                         logger_prefix=consumer_params.logger_prefix,
+        #                                         create_logger_file=consumer_params.create_logger_file,
+        #                                         log_filename=consumer_params.log_filename,
+        #                                         logger_name=consumer_params.logger_name,
+        #                                         broker_exclusive_config=self.consumer_params.broker_exclusive_config)
+        self.publisher_params = BaseJsonAbleModel.init_by_another_model(PublisherParams, consumer_params)
+        # print(self.publisher_params)
         if is_main_process:
             self.logger.info(f'{self.queue_name} consumer 的消费者配置:\n {self.consumer_params.json_str_value()}')
         atexit.register(self.join_shedual_task_thread)
@@ -381,6 +383,33 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         raise NotImplementedError
 
+    def __auto_fill_msg(self, msg: dict):
+        """填充消息,消息没有使用funboost来发送,并且没有extra相关字段时候"""
+        """ 一般消息至少包含这样
+       {
+  "a": 42,
+  "b": 84,
+  "extra": {
+    "task_id": "queue_2_result:9b79a372-f765-4a33-8639-9d15d7a95f61",
+    "publish_time": 1701687443.3596,
+    "publish_time_format": "2023-12-04 18:57:23"
+  }
+}
+        """
+        """
+        extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
+                        'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
+        """
+        if 'extra' not in msg:
+            msg['extra'] = {}
+        extra = msg['extra']
+        if 'task_id' not in extra:
+            extra['task_id'] = generate_task_id(self._queue_name)
+        if 'publish_time' not in extra:
+            extra['publish_time'] = round(time.time(), 4)
+        if 'publish_time_format':
+            extra['publish_time_format'] = time.strftime('%Y-%m-%d %H:%M:%S')
+
     def _submit_task(self, kw):
         while 1:  # 这一块的代码为支持暂停消费。
             # print(self._pause_flag)
@@ -396,7 +425,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
             return
-
+        self.__auto_fill_msg(kw['body'])
         function_only_params = delete_keys_and_return_new_dict(kw['body'], )
         if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
                 function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。

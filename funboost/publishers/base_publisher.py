@@ -19,6 +19,7 @@ import amqpstorm
 
 import nb_log
 from funboost.core.func_params_model import PublisherParams, PriorityConsumingControlConfig
+from funboost.core.helper_funs import generate_task_id
 from funboost.core.loggers import develop_logger
 
 from pikav1.exceptions import AMQPError as PikaAMQPError
@@ -188,9 +189,9 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if 'extra' in msg:
             msg_function_kw.pop('extra')
             raw_extra = msg['extra']
-        if self.publish_params_checker:
+        if self.publish_params_checker and self.publisher_params.should_check_publish_func_params:
             self.publish_params_checker.check_params(msg_function_kw)
-        task_id = task_id or f'{self._queue_name}_result:{uuid.uuid4()}'
+        task_id = task_id or generate_task_id(self._queue_name)
         extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
                         'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
         if priority_control_config:

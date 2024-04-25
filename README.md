@@ -15,7 +15,7 @@
 
 
 <pre style="color: greenyellow;background-color: #0c1119; font-size: medium;">
-pip install funboost ,python全功能分布式函数调度框架,。 
+pip install funboost ,python全功能分布式函数调度框架,。  用法例子见文档1.3
 支持python所有类型的并发模式和全球一切知名消息队列中间件，
 同时funboost支持celery整个框架作为核心来发布和消费消息，使用funboost的极简api方式来自动化配置和利用celery调度,
 也支持huey dramatiq rq等任务队列框架作为funboost的broker。 

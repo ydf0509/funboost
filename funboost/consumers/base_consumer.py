@@ -820,7 +820,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self.logger.critical(msg=log_msg)
                 # noinspection PyProtectedMember,PyUnresolvedReferences
                 os._exit(444)
-            if self.consumer_params.function_timeout == 0:
+            if not self.consumer_params.function_timeout :
                 rs = await corotinue_obj
                 # rs = await asyncio.wait_for(corotinue_obj, timeout=4)
             else:

@@ -9,7 +9,7 @@
 import atexit
 import re
 import os
-from elasticsearch import helpers
+# from elasticsearch import helpers
 from threading import Thread
 from typing import Union
 import abc
@@ -20,6 +20,7 @@ import unittest
 from pymongo import UpdateOne, InsertOne, UpdateMany, collection, MongoClient
 import redis
 
+from funboost.core.lazy_impoter import ElasticsearchImporter
 from funboost.utils.redis_manager import RedisMixin
 from funboost.utils.time_util import DatetimeConverter
 from funboost.utils import LoggerMixin, decorators
@@ -153,7 +154,7 @@ class ElasticBulkHelper(BaseBulkHelper):
                     break
             if request_list:
                 # self.base_object.bulk_write(request_list, ordered=False)
-                helpers.bulk(self.base_object, request_list)
+                ElasticsearchImporter().helpers.bulk(self.base_object, request_list)
             if self._is_print_log:
                 self.logger.info(f'【{self.base_object}】  批量插入的任务数量是 {count} 消耗的时间是 {round(time.time() - t_start, 6)}')
             self._current_time = time.time()

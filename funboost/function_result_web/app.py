@@ -5,6 +5,9 @@
 import datetime
 import json
 
+"""
+pip install Flask flask_bootstrap  flask_wtf  wtforms flask_login       
+"""
 from flask import render_template, Flask, request, url_for, jsonify, flash, redirect
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm

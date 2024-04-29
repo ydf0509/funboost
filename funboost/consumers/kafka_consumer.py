@@ -3,16 +3,14 @@
 # @Time    : 2022/8/8 0008 13:32
 import json
 # noinspection PyPackageRequirements
-from kafka import KafkaConsumer as OfficialKafkaConsumer, KafkaProducer, KafkaAdminClient
-# noinspection PyPackageRequirements
-from kafka.admin import NewTopic
-# noinspection PyPackageRequirements
-from kafka.errors import TopicAlreadyExistsError
+
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.core.lazy_impoter import KafkaPythonImporter
 from funboost.funboost_config_deafult import BrokerConnConfig
 # from nb_log import get_logger
 from funboost.core.loggers import get_funboost_file_logger
+
 # LogManager('kafka').get_logger_and_add_handlers(30)
 get_funboost_file_logger('kafka', log_level_int=30)
 
@@ -36,18 +34,18 @@ class KafkaConsumer(AbstractConsumer):
 
     def _shedual_task(self):
         try:
-            admin_client = KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
-            admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
+            admin_client = KafkaPythonImporter().KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
+            admin_client.create_topics([KafkaPythonImporter().NewTopic(self._queue_name, 10, 1)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
-        except TopicAlreadyExistsError:
+        except KafkaPythonImporter().TopicAlreadyExistsError:
             pass
 
-        self._producer = KafkaProducer(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
-        consumer = OfficialKafkaConsumer(self._queue_name, bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS,
-                                         group_id=self.consumer_params.broker_exclusive_config["group_id"],
-                                         enable_auto_commit=True,
-                                         auto_offset_reset=self.consumer_params.broker_exclusive_config["auto_offset_reset"],
-                                         )
+        self._producer = KafkaPythonImporter().KafkaProducer(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
+        consumer = KafkaPythonImporter().OfficialKafkaConsumer(self._queue_name, bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS,
+                                                               group_id=self.consumer_params.broker_exclusive_config["group_id"],
+                                                               enable_auto_commit=True,
+                                                               auto_offset_reset=self.consumer_params.broker_exclusive_config["auto_offset_reset"],
+                                                               )
         #  auto_offset_reset (str): A policy for resetting offsets on
         #             OffsetOutOfRange errors: 'earliest' will move to the oldest
         #             available message, 'latest' will move to the most recent. Any

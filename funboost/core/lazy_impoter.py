@@ -2,8 +2,11 @@ import abc
 
 from funboost.utils.decorators import cached_method_result, singleton, SingletonBaseNew, SingletonBaseCustomInit
 
+"""
+延迟导入
+或者使用时候再pip安装
+"""
 
-# @singleton   # 不方便代码补全
 
 class LazyImpoter(SingletonBaseNew):
     """
@@ -105,6 +108,72 @@ class AioHttpImporter:
         from aiohttp.web_request import Request
         self.web = web
         self.Request = Request
+
+
+@singleton
+class NatsImporter:
+    def __init__(self):
+        """pip install nats-python """
+        from pynats import NATSClient, NATSMessage
+        self.NATSClient = NATSClient
+        self.NATSMessage = NATSMessage
+
+@singleton
+class GnsqImporter:
+    def __init__(self):
+        """pip install  gnsq==1.0.1"""
+        from gnsq import Consumer, Message
+        from gnsq import Producer, NsqdHTTPClient
+        from gnsq.errors import NSQHttpError
+        self.Consumer = Consumer
+        self.Message = Message
+        self.Producer = Producer
+        self.NsqdHTTPClient = NsqdHTTPClient
+        self.NSQHttpError = NSQHttpError
+
+@singleton
+class ElasticsearchImporter:
+    def __init__(self):
+        """pip install elasticsearch """
+        from elasticsearch import helpers
+        self.helpers = helpers
+
+
+@singleton
+class PsutilImporter:
+    def __init__(self):
+        """pip install  psutil"""
+        import psutil
+        self.psutil = psutil
+
+@singleton
+class PahoMqttImporter:
+    def __init__(self):
+        """pip install paho-mqtt"""
+        import paho.mqtt.client as mqtt
+        self.mqtt = mqtt
+
+@singleton
+class ZmqImporter:
+    def __init__(self):
+        """pip install zmq pyzmq"""
+        import zmq
+        self.zmq = zmq
+
+@singleton
+class KafkaPythonImporter:
+    def __init__(self):
+        """pip install kafka-python==2.0.2"""
+
+        from kafka import KafkaConsumer as OfficialKafkaConsumer, KafkaProducer, KafkaAdminClient
+        from kafka.admin import NewTopic
+        from kafka.errors import TopicAlreadyExistsError
+
+        self.OfficialKafkaConsumer = OfficialKafkaConsumer
+        self.KafkaProducer = KafkaProducer
+        self.KafkaAdminClient = KafkaAdminClient
+        self.NewTopic = NewTopic
+        self.TopicAlreadyExistsError = TopicAlreadyExistsError
 
 
 if __name__ == '__main__':

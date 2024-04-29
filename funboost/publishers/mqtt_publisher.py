@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 12:12
+from funboost.core.lazy_impoter import PahoMqttImporter
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.funboost_config_deafult import BrokerConnConfig
 
@@ -53,7 +54,7 @@ client.loop_forever() # 保持连接
 著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 """
 
-import paho.mqtt.client as mqtt
+# import paho.mqtt.client as mqtt
 
 
 # def on_connect(client, userdata, flags, rc):
@@ -71,7 +72,7 @@ class MqttPublisher(AbstractPublisher, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        client = mqtt.Client()
+        client = PahoMqttImporter().mqtt.Client()
         # client.username_pw_set('admin', password='public')
         client.on_connect = self._on_connect
         client.on_socket_close = self._on_socket_close

@@ -5,13 +5,7 @@
 # noinspection PyPackageRequirements
 import atexit
 
-# noinspection PyPackageRequirements
-from kafka import KafkaProducer, KafkaAdminClient
-# noinspection PyPackageRequirements
-from kafka.admin import NewTopic
-# noinspection PyPackageRequirements
-from kafka.errors import TopicAlreadyExistsError
-
+from funboost.core.lazy_impoter import KafkaPythonImporter
 from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.publishers.base_publisher import AbstractPublisher
 
@@ -23,12 +17,12 @@ class KafkaPublisher(AbstractPublisher, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        self._producer = KafkaProducer(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
-        self._admin_client = KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
+        self._producer = KafkaPythonImporter().KafkaProducer(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
+        self._admin_client = KafkaPythonImporter().KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
         try:
-            self._admin_client.create_topics([NewTopic(self._queue_name, 10, 2)])
+            self._admin_client.create_topics([KafkaPythonImporter().NewTopic(self._queue_name, 10, 2)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
-        except TopicAlreadyExistsError:
+        except KafkaPythonImporter().TopicAlreadyExistsError:
             pass
         except BaseException as e:
             self.logger.exception(e)

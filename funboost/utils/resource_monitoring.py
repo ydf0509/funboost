@@ -7,7 +7,8 @@ import socket
 import sys
 import threading
 import time
-import psutil
+
+from funboost.core.lazy_impoter import PsutilImporter
 from funboost.utils import LoggerLevelSetterMixin, LoggerMixin, decorators
 from funboost.utils.mongo_util import MongoMixin
 
@@ -59,10 +60,10 @@ print(psutil.virtual_memory())
 
 class ResourceMonitor(LoggerMixin, LoggerLevelSetterMixin, MongoMixin):
     # ResourceMonitor(is_save_info_to_mongo=True).set_log_level(20).start_build_info_loop_on_daemon_thread(60)
-    cpu_count = psutil.cpu_count()
+    cpu_count = PsutilImporter().psutil.cpu_count()
     host_name = socket.gethostname()
 
-    def __init__(self, process=psutil.Process(), is_save_info_to_mongo=False, mongo_col='default'):
+    def __init__(self, process=PsutilImporter().psutil.Process(), is_save_info_to_mongo=False, mongo_col='default'):
         self.process = process
         self.logger.setLevel(20)
         self.all_info = {}
@@ -84,22 +85,22 @@ class ResourceMonitor(LoggerMixin, LoggerLevelSetterMixin, MongoMixin):
         return result
 
     def get_os_cpu_percpu(self):
-        result = psutil.cpu_percent(1, percpu=True)
+        result = PsutilImporter().psutil.cpu_percent(1, percpu=True)
         self.logger.debug(result)
         return result
 
     def get_os_cpu_totalcpu(self):
-        result = round(psutil.cpu_percent(1, percpu=False) * self.cpu_count, 2)
+        result = round(PsutilImporter().psutil.cpu_percent(1, percpu=False) * self.cpu_count, 2)
         self.logger.debug(result)
         return result
 
     def get_os_cpu_avaragecpu(self):
-        result = psutil.cpu_percent(1, percpu=False)
+        result = PsutilImporter().psutil.cpu_percent(1, percpu=False)
         self.logger.debug(result)
         return result
 
     def get_os_virtual_memory(self) -> dict:
-        memory_tuple = psutil.virtual_memory()
+        memory_tuple = PsutilImporter().psutil.virtual_memory()
         self.logger.debug(memory_tuple)
         return {
             'total': self.divide_1m(memory_tuple[0]),
@@ -108,9 +109,9 @@ class ResourceMonitor(LoggerMixin, LoggerLevelSetterMixin, MongoMixin):
         }
 
     def get_os_net_info(self):
-        result1 = psutil.net_io_counters(pernic=False)
+        result1 = PsutilImporter().psutil.net_io_counters(pernic=False)
         time.sleep(1)
-        result2 = psutil.net_io_counters(pernic=False)
+        result2 = PsutilImporter().psutil.net_io_counters(pernic=False)
         speed_dict = dict()
         speed_dict['up_speed'] = self.divide_1m(result2[0] - result1[0])
         speed_dict['down_speed'] = self.divide_1m(result2[1] - result1[1])

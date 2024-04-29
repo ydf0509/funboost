@@ -4,6 +4,8 @@
 
 import os
 
+from funboost.core.lazy_impoter import KafkaPythonImporter
+
 if os.name == 'nt':
     """
     为了保险起见，这样做一下,设置一下path，否则anaconda安装的python可能出现 ImportError: DLL load failed while importing cimpl: 找不到指定的模块。
@@ -24,12 +26,7 @@ if os.name == 'nt':
 
 import atexit
 import time
-# noinspection PyPackageRequirements
-from kafka import KafkaProducer, KafkaAdminClient
-# noinspection PyPackageRequirements
-from kafka.admin import NewTopic
-# noinspection PyPackageRequirements
-from kafka.errors import TopicAlreadyExistsError
+
 from confluent_kafka import Producer as ConfluentProducer
 from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.publishers.base_publisher import AbstractPublisher
@@ -45,10 +42,10 @@ class ConfluentKafkaPublisher(AbstractPublisher, ):
 
         # self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         try:
-            admin_client = KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
-            admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
+            admin_client = KafkaPythonImporter().KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
+            admin_client.create_topics([KafkaPythonImporter().NewTopic(self._queue_name, 10, 1)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
-        except TopicAlreadyExistsError:
+        except KafkaPythonImporter().TopicAlreadyExistsError:
             pass
         except BaseException as e:
             self.logger.exception(e)
@@ -92,10 +89,10 @@ class SaslPlainKafkaPublisher(ConfluentKafkaPublisher):
     def custom_init(self):
         # self._producer = KafkaProducer(bootstrap_servers=funboost_config_deafult.KAFKA_BOOTSTRAP_SERVERS)
         try:
-            admin_client = KafkaAdminClient(**BrokerConnConfig.KFFKA_SASL_CONFIG)
-            admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
+            admin_client = KafkaPythonImporter().KafkaAdminClient(**BrokerConnConfig.KFFKA_SASL_CONFIG)
+            admin_client.create_topics([KafkaPythonImporter().NewTopic(self._queue_name, 10, 1)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
-        except TopicAlreadyExistsError:
+        except KafkaPythonImporter().TopicAlreadyExistsError:
             pass
         except BaseException as e:
             self.logger.exception(e)

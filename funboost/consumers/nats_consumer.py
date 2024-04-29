@@ -1,7 +1,8 @@
 ﻿import json
-from pynats import NATSClient, NATSMessage  # noqa
-from funboost.constant import BrokerEnum
+# from pynats import NATSClient, NATSMessage  # noqa
+
 from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.core.lazy_impoter import NatsImporter
 from funboost.funboost_config_deafult import BrokerConnConfig
 
 
@@ -13,10 +14,10 @@ class NatsConsumer(AbstractConsumer):
 
     def _shedual_task(self):
         # print(88888888888888)
-        nats_client = NATSClient(BrokerConnConfig.NATS_URL, socket_timeout=600, socket_keepalive=True)
+        nats_client = NatsImporter().NATSClient(BrokerConnConfig.NATS_URL, socket_timeout=600, socket_keepalive=True)
         nats_client.connect()
 
-        def callback(msg: NATSMessage):
+        def callback(msg: NatsImporter().NATSMessage):
             # print(type(msg))
             # print(msg.reply)
             # print(f"Received a message with subject {msg.subject}: {msg.payload}")

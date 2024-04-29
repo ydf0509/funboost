@@ -1,4 +1,4 @@
-﻿from pynats import NATSClient  # noqa
+﻿from funboost.core.lazy_impoter import NatsImporter
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.funboost_config_deafult import BrokerConnConfig
 
@@ -10,7 +10,7 @@ class NatsPublisher(AbstractPublisher, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        self.nats_client = NATSClient(BrokerConnConfig.NATS_URL)
+        self.nats_client = NatsImporter().NATSClient(BrokerConnConfig.NATS_URL)
         self.nats_client.connect()
 
     def concrete_realization_of_publish(self, msg):

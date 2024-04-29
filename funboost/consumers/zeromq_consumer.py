@@ -4,10 +4,11 @@ import os
 import socket
 import json
 # import time
-import zmq
+# import zmq
 import multiprocessing
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.core.lazy_impoter import ZmqImporter
 # from nb_log import get_logger
 from funboost.core.loggers import get_funboost_file_logger
 
@@ -32,17 +33,17 @@ logger_zeromq_broker = get_funboost_file_logger('zeromq_broker')
 # noinspection PyUnresolvedReferences
 def start_broker(port_router: int, port_dealer: int):
     try:
-        context = zmq.Context()
+        context = ZmqImporter().zmq.Context()
         # noinspection PyUnresolvedReferences
-        frontend = context.socket(zmq.ROUTER)
-        backend = context.socket(zmq.DEALER)
+        frontend = context.socket(ZmqImporter().zmq.ROUTER)
+        backend = context.socket(ZmqImporter().zmq.DEALER)
         frontend.bind(f"tcp://*:{port_router}")
         backend.bind(f"tcp://*:{port_dealer}")
 
         # Initialize poll set
-        poller = zmq.Poller()
-        poller.register(frontend, zmq.POLLIN)
-        poller.register(backend, zmq.POLLIN)
+        poller = ZmqImporter().zmq.Poller()
+        poller.register(frontend, ZmqImporter().zmq.POLLIN)
+        poller.register(backend, ZmqImporter().zmq.POLLIN)
         logger_zeromq_broker.info(f'broker 绑定端口  {port_router}   {port_dealer}  成功')
 
         # Switch messages between sockets
@@ -50,11 +51,11 @@ def start_broker(port_router: int, port_dealer: int):
         while True:
             socks = dict(poller.poll())  # 轮询器 循环接收
 
-            if socks.get(frontend) == zmq.POLLIN:
+            if socks.get(frontend) == ZmqImporter().zmq.POLLIN:
                 message = frontend.recv_multipart()
                 backend.send_multipart(message)
 
-            if socks.get(backend) == zmq.POLLIN:
+            if socks.get(backend) == ZmqImporter().zmq.POLLIN:
                 message = backend.recv_multipart()
                 frontend.send_multipart(message)
     except BaseException as e:
@@ -87,9 +88,9 @@ class ZeroMqConsumer(AbstractConsumer):
     # noinspection DuplicatedCode
     def _shedual_task(self):
         self.start_broker_queue_name_as_port()
-        context = zmq.Context()
+        context = ZmqImporter().zmq.Context()
         # noinspection PyUnresolvedReferences
-        zsocket = context.socket(zmq.REP)
+        zsocket = context.socket(ZmqImporter().zmq.REP)
         zsocket.connect(f"tcp://localhost:{int(self._queue_name) + 1}")
 
         while True:

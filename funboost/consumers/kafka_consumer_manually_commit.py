@@ -10,13 +10,10 @@ from collections import defaultdict, OrderedDict
 import time
 
 # noinspection PyPackageRequirements
-from kafka import KafkaProducer, KafkaAdminClient
+# pip install kafka-python==2.0.2
 
-# noinspection PyPackageRequirements
-from kafka.admin import NewTopic
-# noinspection PyPackageRequirements
-from kafka.errors import TopicAlreadyExistsError
 from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.core.lazy_impoter import KafkaPythonImporter
 from funboost.funboost_config_deafult import BrokerConnConfig
 from confluent_kafka.cimpl import TopicPartition
 from confluent_kafka import Consumer as ConfluentConsumer  # 这个包在win下不好安装，用户用这个中间件的时候自己再想办法安装。win用户需要安装c++ 14.0以上环境。
@@ -39,13 +36,13 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
     def _shedual_task(self):
 
         try:
-            admin_client = KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
-            admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
+            admin_client = KafkaPythonImporter().KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
+            admin_client.create_topics([KafkaPythonImporter().NewTopic(self._queue_name, 10, 1)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
-        except TopicAlreadyExistsError:
+        except KafkaPythonImporter().TopicAlreadyExistsError:
             pass
 
-        self._producer = KafkaProducer(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
+        self._producer = KafkaPythonImporter().KafkaProducer(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
         # consumer 配置 https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
         self._confluent_consumer = ConfluentConsumer({
             'bootstrap.servers': ','.join(BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS),
@@ -130,14 +127,14 @@ class SaslPlainKafkaConsumer(KafkaConsumerManuallyCommit):
     def _shedual_task(self):
 
         try:
-            admin_client = KafkaAdminClient(
+            admin_client = KafkaPythonImporter().KafkaAdminClient(
                 **BrokerConnConfig.KFFKA_SASL_CONFIG)
-            admin_client.create_topics([NewTopic(self._queue_name, 10, 1)])
+            admin_client.create_topics([KafkaPythonImporter().NewTopic(self._queue_name, 10, 1)])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
-        except TopicAlreadyExistsError:
+        except KafkaPythonImporter().TopicAlreadyExistsError:
             pass
 
-        self._producer = KafkaProducer(
+        self._producer = KafkaPythonImporter().KafkaProducer(
             **BrokerConnConfig.KFFKA_SASL_CONFIG)
         # consumer 配置 https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
         self._confluent_consumer = ConfluentConsumer({

@@ -4,7 +4,7 @@
 """
 
 
-from funboost import boost, BrokerEnum,ConcurrentModeEnum
+from funboost import boost, BrokerEnum,ConcurrentModeEnum,run_forever
 import asyncio
 import time
 import aiohttp
@@ -50,9 +50,10 @@ if __name__ == '__main__':
     async_f.clear()
     f.clear()
 
-    for i in range(10000):
+    for i in range(10):
         async_f.push(i)
         f.push(i * 10)
 
-    # async_f.consume()
-    f.consume()
+    async_f.consume()
+    # f.consume()
+    run_forever()

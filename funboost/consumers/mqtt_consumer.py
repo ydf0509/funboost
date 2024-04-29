@@ -5,8 +5,9 @@ import json
 # import time
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.core.lazy_impoter import PahoMqttImporter
 from funboost.funboost_config_deafult import BrokerConnConfig
-import paho.mqtt.client as mqtt
+# import paho.mqtt.client as mqtt
 
 
 class MqttConsumer(AbstractConsumer):
@@ -23,7 +24,7 @@ class MqttConsumer(AbstractConsumer):
 
     # noinspection DuplicatedCode
     def _shedual_task(self):
-        client = mqtt.Client()
+        client = PahoMqttImporter().mqtt.Client()
         # client.username_pw_set('admin', password='public')
         client.on_connect = self._on_connect
         client.on_message = self._on_message

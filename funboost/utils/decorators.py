@@ -6,8 +6,6 @@ import logging
 import random
 import uuid
 from typing import TypeVar
-
-from flask import request as flask_request
 # noinspection PyUnresolvedReferences
 from contextlib import contextmanager
 import functools

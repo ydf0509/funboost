@@ -12,7 +12,20 @@ extra_brokers = ['confluent_kafka==1.7.0',
                  'dramatiq==1.14.2',
                  'huey==2.4.5',
                  'rq==1.15.0',
-                 'kombu'
+                 'kombu',
+                 'eventlet==0.33.3',
+                 'gevent==22.10.2',
+                 'elasticsearch',
+                 'gnsq==1.0.1',
+                 'psutil',
+                 'peewee==3.17.3',
+                 'nats-python',
+                 'aiohttp==3.8.3',
+                 'paho-mqtt',
+                 'rocketmq',
+                 'zmq',
+                 'pyzmq',
+                 'kafka-python==2.0.2',
                  ]
 setup(
     name='funboost',  #
@@ -65,28 +78,12 @@ setup(
         'nb_log>=12.6',
         'nb_libs>=0.9',
         'nb_time>=1.8',
-        # 'eventlet==0.33.3',
-        # 'gevent==22.10.2',
         'pymongo==4.3.3',  # 3.5.1  -> 4.0.2
         'AMQPStorm==2.10.6',
         'rabbitpy==2.0.1',
         'decorator==5.1.1',
-        # 'pysnooper==0.0.11',
-        'Flask',
-        'flask_bootstrap',
-        'flask_wtf',
-        'wtforms',
-        'flask_login',
         'tomorrow3==1.1.0',
         'persist-queue>=0.4.2',
-        'elasticsearch',
-        'kafka-python==2.0.2',
-        'requests',
-        'gnsq==1.0.1',
-        'psutil',
-        # 'sqlalchemy==1.3.10',
-        # 'sqlalchemy_utils==0.36.1',    # 用户使用数据库作为消息队列时候，自行安装，不自动安装这个包。也可以使用kombu中间件的sqlalchemy模式来操作数据库或者peewee操作。
-        # 'peewee==3.17.3',    # 'peewee==3.15.1',  # 惰性安装
         'apscheduler==3.10.1',
         'pikav0',
         'pikav1',
@@ -94,17 +91,9 @@ setup(
         'redis3',
         'redis5',
         'redis',
-        'rocketmq',
-        'zmq',
-        'pyzmq',
-        'paho-mqtt',
         'setuptools_rust',
         'fabric2==2.6.0',  # 有的机器包rust错误， 这样做 curl https://sh.rustup.rs -sSf | sh
-        'nats-python',
-        # 'pulsar-client==3.1.0',   # python3.6 无法安装 pulsar-client
-        # 'kombu',
         'nb_filelock',
-        # 'aiohttp==3.8.3',
         'pysnooper',
         'deprecated',
         'cryptography',
@@ -112,10 +101,10 @@ setup(
         'frozenlist',
         'fire',
         'pydantic',
-
     ],
     extras_require={'all': extra_brokers,
                     'extra_brokers': extra_brokers,
+                    'flask': ['flask', 'flask_bootstrap', 'flask_wtf', 'wtforms', 'flask_login']
                     },
 
     entry_points={

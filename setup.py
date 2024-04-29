@@ -64,6 +64,7 @@ setup(
     install_requires=[
         'nb_log>=12.6',
         'nb_libs>=0.9',
+        'nb_time>=1.8',
         # 'eventlet==0.33.3',
         # 'gevent==22.10.2',
         'pymongo==4.3.3',  # 3.5.1  -> 4.0.2
@@ -103,7 +104,7 @@ setup(
         # 'pulsar-client==3.1.0',   # python3.6 无法安装 pulsar-client
         # 'kombu',
         'nb_filelock',
-        'aiohttp==3.8.3',
+        # 'aiohttp==3.8.3',
         'pysnooper',
         'deprecated',
         'cryptography',

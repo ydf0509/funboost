@@ -1,5 +1,5 @@
 import nb_log
-from funboost.core.helper_funs import _try_get_user_funboost_common_config
+from funboost.core.funboost_config_getter import _try_get_user_funboost_common_config
 
 # noinspection PyUnresolvedReferences
 from nb_log import get_logger, LoggerLevelSetterMixin, nb_log_config_default

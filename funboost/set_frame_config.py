@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 from shutil import copyfile
 
-from funboost.core.helper_funs import _try_get_user_funboost_common_config
+from funboost.core.funboost_config_getter import _try_get_user_funboost_common_config
 from funboost.core.loggers import flogger, get_funboost_file_logger, logger_prompt
 from nb_log import nb_print, stderr_write, stdout_write
 from nb_log.monkey_print import is_main_process, only_print_on_main_process

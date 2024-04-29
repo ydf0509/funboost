@@ -4,11 +4,11 @@
 import asyncio
 import json
 
-from aiohttp import web
-from aiohttp.web_request import Request
+# from aiohttp import web
+# from aiohttp.web_request import Request
 
 from funboost.consumers.base_consumer import AbstractConsumer
-
+from funboost.core.lazy_impoter import AioHttpImporter
 
 class HTTPConsumer(AbstractConsumer, ):
     """
@@ -38,26 +38,26 @@ class HTTPConsumer(AbstractConsumer, ):
         #
         # flask_app.run('0.0.0.0', port=self._port,debug=False)
 
-        routes = web.RouteTableDef()
+        routes = AioHttpImporter().web.RouteTableDef()
 
         # noinspection PyUnusedLocal
         @routes.get('/')
         async def hello(request):
-            return web.Response(text="Hello, from funboost")
+            return AioHttpImporter().web.Response(text="Hello, from funboost")
 
         @routes.post('/queue')
-        async def recv_msg(request: Request):
+        async def recv_msg(request: AioHttpImporter().Request):
             data = await request.post()
             msg = data['msg']
             kw = {'body': json.loads(msg)}
             self._submit_task(kw)
-            return web.Response(text="finish")
+            return AioHttpImporter().web.Response(text="finish")
 
-        app = web.Application()
+        app = AioHttpImporter().web.Application()
         app.add_routes(routes)
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        web.run_app(app, host='0.0.0.0', port=self._port, )
+        AioHttpImporter().web.run_app(app, host='0.0.0.0', port=self._port, )
 
     def _confirm_consume(self, kw):
         pass  # 没有确认消费的功能。

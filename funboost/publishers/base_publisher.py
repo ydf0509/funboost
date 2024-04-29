@@ -9,17 +9,15 @@ import json
 import logging
 import multiprocessing
 import threading
-import uuid
 import time
 import typing
 from functools import wraps
 from threading import Lock
-import datetime
 import amqpstorm
 
 import nb_log
 from funboost.core.func_params_model import PublisherParams, PriorityConsumingControlConfig
-from funboost.core.helper_funs import generate_task_id
+from funboost.core.helper_funs import MsgGenerater
 from funboost.core.loggers import develop_logger
 
 from pikav1.exceptions import AMQPError as PikaAMQPError
@@ -28,7 +26,7 @@ from pikav1.exceptions import AMQPError as PikaAMQPError
 from funboost.core.loggers import LoggerLevelSetterMixin, FunboostFileLoggerMixin, get_logger
 from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
 from funboost.core.task_id_logger import TaskIdLogger
-from funboost.utils import decorators, time_util
+from funboost.utils import decorators
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
 
 RedisAsyncResult = AsyncResult  # 别名
@@ -191,9 +189,8 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             raw_extra = msg['extra']
         if self.publish_params_checker and self.publisher_params.should_check_publish_func_params:
             self.publish_params_checker.check_params(msg_function_kw)
-        task_id = task_id or generate_task_id(self._queue_name)
-        extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
-                        'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
+        task_id = task_id or MsgGenerater.generate_task_id(self._queue_name)
+        extra_params = MsgGenerater.generate_pulish_time_and_task_id(self._queue_name, task_id=task_id)
         if priority_control_config:
             extra_params.update(priority_control_config.dict(exclude_none=True))
         extra_params.update(raw_extra)

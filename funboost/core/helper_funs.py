@@ -2,6 +2,8 @@ import copy
 import time
 import uuid
 
+from funboost.core.funboost_time import FunboostTime
+
 
 def get_publish_time(paramsx: dict):
     """
@@ -37,13 +39,23 @@ def block_python_main_thread_exit():
 run_forever = block_python_main_thread_exit
 
 
-def _try_get_user_funboost_common_config(funboost_common_conf_field:str):
-    try:
-        import funboost_config  # 第一次启动funboost前还没这个文件,或者还没有初始化配置之前,就要使用使用配置.
-        return getattr(funboost_config.FunboostCommonConfig,funboost_common_conf_field)
-    except Exception as e:
-        print(e)
-        return None
+class MsgGenerater:
+    @staticmethod
+    def generate_task_id(queue_name:str) -> str:
+        return f'{queue_name}_result:{uuid.uuid4()}'
 
-def generate_task_id(queue_name:str):
-    return f'{queue_name}_result:{uuid.uuid4()}'
+    @staticmethod
+    def generate_publish_time() -> float:
+        return round(FunboostTime().timestamp,4)
+
+    @staticmethod
+    def generate_publish_time_format() -> str:
+        return FunboostTime().get_str()
+
+    @classmethod
+    def generate_pulish_time_and_task_id(cls,queue_name:str,task_id=None):
+        extra_params = {'task_id': task_id or cls.generate_task_id(queue_name), 'publish_time': cls.generate_publish_time(),
+                        'publish_time_format': cls.generate_publish_time_format()}
+        return extra_params
+
+

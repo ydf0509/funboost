@@ -49,7 +49,7 @@ from funboost.concurrent_pool.single_thread_executor import SoloExecutor
 
 from funboost.core.function_result_status_saver import ResultPersistenceHelper, FunctionResultStatus, RunStatus
 
-from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_publish_time, generate_task_id
+from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_publish_time, MsgGenerater
 
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
@@ -408,11 +408,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             msg['extra'] = {'is_auto_fill_extra': True}
         extra = msg['extra']
         if 'task_id' not in extra:
-            extra['task_id'] = generate_task_id(self._queue_name)
+            extra['task_id'] = MsgGenerater.generate_task_id(self._queue_name)
         if 'publish_time' not in extra:
-            extra['publish_time'] = round(time.time(), 4)
+            extra['publish_time'] = MsgGenerater.generate_publish_time()
         if 'publish_time_format':
-            extra['publish_time_format'] = time.strftime('%Y-%m-%d %H:%M:%S')
+            extra['publish_time_format'] = MsgGenerater.generate_publish_time_format()
 
     def _submit_task(self, kw):
         while 1:  # 这一块的代码为支持暂停消费。

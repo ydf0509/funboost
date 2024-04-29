@@ -123,7 +123,7 @@ class BoosterParams(BaseJsonAbleModel):
     由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。"""
     concurrent_mode: str = ConcurrentModeEnum.THREADING  # 并发模式,支持THREADING,GEVENT,EVENTLET,ASYNC,SINGLE_THREAD并发,multi_process_consume 支持协程/线程 叠加多进程并发,性能炸裂.
     concurrent_num: int = 50  # 并发数量，并发种类由concurrent_mode决定
-    specify_concurrent_pool: FunboostBaseConcurrentPool = None  # 使用指定的线程池/携程池，可以多个消费者共使用一个线程池,节约线程.不为None时候。threads_num失效
+    specify_concurrent_pool: typing.Optional[FunboostBaseConcurrentPool] = None  # 使用指定的线程池/携程池，可以多个消费者共使用一个线程池,节约线程.不为None时候。threads_num失效
     specify_async_loop: asyncio.AbstractEventLoop = None  # 指定的async的loop循环，设置并发模式为async才能起作用。 有些包例如aiohttp,请求和httpclient的实例化不能处在两个不同的loop中,可以传过来.
 
     """qps:
@@ -159,7 +159,7 @@ class BoosterParams(BaseJsonAbleModel):
     msg_expire_senconds: typing.Union[float, int] = None  # 消息过期时间,可以设置消息是多久之前发布的就丢弃这条消息,不运行. 为None则永不丢弃
 
     do_task_filtering: bool = False  # 是否对函数入参进行过滤去重.
-    task_filtering_expire_seconds: int = 0  # 任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ， 30分钟前发布过1 + 2 的任务，现在仍然执行，如果是30分钟以内发布过这个任务，则不执行1 + 2
+    task_filtering_expire_seconds: int = 0  # 任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ， 30分钟前发布过1 + 2 的任务，现在仍然执行，如果是30分钟以内执行过这个任务，则不执行1 + 2
 
     function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
         is_save_result=False, is_save_status=False, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)  # 是否保存函数的入参，运行结果和运行状态到mongodb。这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
@@ -277,3 +277,4 @@ if __name__ == '__main__':
     # print(PriorityConsumingControlConfig().get_str_dict())
 
     print(BoosterParams(queue_name='3213', specify_concurrent_pool=FlexibleThreadPool(100)).json_pre())
+    print(PublisherParams.schema_json())

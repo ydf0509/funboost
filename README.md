@@ -117,8 +117,7 @@ pip install funboost --upgrade
 [//]: # ([img-46.png]&#40;https://postimg.cc/hfW0VhCX&#41;)
 
 funboost示图：
-![](https://i.niupic.com/images/2024/02/03/g3tr.png)
-
+<a href="https://imgse.com/i/pkFFghj"><img src="https://s21.ax1x.com/2024/04/29/pkFFghj.png" alt="pkFFghj.png" border="0" /></a>
 
 [//]: # ([![img-46.png]&#40;https://i.postimg.cc/tC7mQxWN/img-46.png&#41;]&#40;https://postimg.cc/hfW0VhCX&#41;)
 
@@ -128,7 +127,7 @@ funboost示图：
 
 也就是这种非常普通的流程图,一样的意思
 
-![](https://i.niupic.com/images/2023/12/18/dVaP.png)
+<a href="https://imgse.com/i/pkFFcNQ"><img src="https://s21.ax1x.com/2024/04/29/pkFFcNQ.png" alt="pkFFcNQ.png" border="0" /></a>
 
 ### 1.2.1 框架支持5种并发模式
 
@@ -207,7 +206,7 @@ if __name__ == '__main__':
 [3.1 各种中间件选择的场景和优势](https://funboost.readthedocs.io/zh/latest/articles/c3.html#id2) 
 
 
-### 1.2.3 框架对任务支持20种控制功能。
+### 1.2.3 框架对任务支持30种控制功能。
 
 <pre>
 
@@ -390,12 +389,10 @@ if __name__ == "__main__":
 
 运行截图:
 
-![](https://i.niupic.com/images/2023/12/18/dVbn.png)
+<a href="https://imgse.com/i/pkFkP4H"><img src="https://s21.ax1x.com/2024/04/29/pkFkP4H.png" alt="pkFkP4H.png" border="0" /></a>
 
-![](https://i.niupic.com/images/2023/12/18/dVbz.png)
 
-![](https://i.niupic.com/images/2019/09/20/_331.png)
-
+<a href="https://imgse.com/i/pkFkCUe"><img src="https://s21.ax1x.com/2024/04/29/pkFkCUe.png" alt="pkFkCUe.png" border="0" /></a>
 
 
 ## 1.4  python分布式函数执行为什么重要？

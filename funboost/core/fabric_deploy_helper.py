@@ -103,7 +103,7 @@ def fabric_deploy(booster: Booster, host, port, user, password,
         process_mark = f'funboost_fabric_mark__{queue_name}__{func_name}'
         conn = Connection(host, port=port, user=user, connect_kwargs={"password": password}, )
         kill_shell = f'''ps -aux|grep {process_mark}|grep -v grep|awk '{{print $2}}' |xargs kill -9'''
-        logger.warning(f'{kill_shell} 命令杀死 {process_mark} 标识的进程')
+        logger.warning(f'使用linux命令 {kill_shell} 命令杀死 {process_mark} 标识的进程')
         # uploader.ssh.exec_command(kill_shell)
         conn.run(kill_shell, encoding='utf-8', warn=True)  # 不想提示，免得烦扰用户以为有什么异常了。所以用上面的paramiko包的ssh.exec_command
 
@@ -113,7 +113,7 @@ def fabric_deploy(booster: Booster, host, port, user, password,
         if not extra_shell_str2.endswith(';') and extra_shell_str != '':
             extra_shell_str2 += ';'
         shell_str = extra_shell_str2 + shell_str
-        logger.warning(f'使用语句 {shell_str} 在远程机器 {host} 上启动任务消费')
+        logger.warning(f'使用linux命令 {shell_str} 在远程机器 {host} 上启动任务消费')
         conn.run(shell_str, encoding='utf-8', **invoke_runner_kwargs)
         # uploader.ssh.exec_command(shell_str)
 
@@ -125,6 +125,6 @@ def kill_all_remote_tasks(host, port, user, password):
     uploader = ParamikoFolderUploader(host, port, user, password, '', '')
     funboost_fabric_mark_all = 'funboost_fabric_mark__'
     kill_shell = f'''ps -aux|grep {funboost_fabric_mark_all}|grep -v grep|awk '{{print $2}}' |xargs kill -9'''
-    logger.warning(f'{kill_shell} 命令杀死 {funboost_fabric_mark_all} 标识的进程')
+    logger.warning(f'使用linux命令 {kill_shell} 命令杀死 {funboost_fabric_mark_all} 标识的进程')
     uploader.ssh.exec_command(kill_shell)
     logger.warning(f'杀死 {host}  机器所有的 {funboost_fabric_mark_all} 标识的进程')

@@ -50,7 +50,7 @@ class ParamikoFolderUploader(LoggerMixin, LoggerLevelSetterMixin):
 
         t = paramiko.Transport((host, port))
         if pkey_file_path is not None and os.path.exists(pkey_file_path):
-            pkey = paramiko.RSAKey.from_private_key_file(open(pkey_file_path))
+            pkey = paramiko.RSAKey.from_private_key_file(pkey_file_path)
             t.connect(username=user, pkey=pkey)
         else:
             t.connect(username=user, password=password)

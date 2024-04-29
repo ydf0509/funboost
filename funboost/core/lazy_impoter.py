@@ -98,7 +98,9 @@ class PeeweeImporter:
 
 @singleton
 class AioHttpImporter:
+
     def __init__(self):
+        """pip install aiohttp==3.8.3"""
         from aiohttp import web
         from aiohttp.web_request import Request
         self.web = web

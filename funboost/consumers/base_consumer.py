@@ -383,8 +383,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         raise NotImplementedError
 
-    def _auto_fill_msg(self, msg: dict):
-        """填充消息,消息没有使用funboost来发送,并且没有extra相关字段时候"""
+    def convert_msg_before_run(self, msg: dict):
+        """
+        转换消息,消息没有使用funboost来发送,并且没有extra相关字段时候
+        用户也可以按照4.21文档,继承任意Consumer类,并实现这个方法 convert_msg_before_run,先转换消息.
+        """
         """ 一般消息至少包含这样
         {
           "a": 42,
@@ -426,7 +429,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
             return
-        self._auto_fill_msg(kw['body'])
+        self.convert_msg_before_run(kw['body'])
         function_only_params = delete_keys_and_return_new_dict(kw['body'], )
         if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
                 function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。

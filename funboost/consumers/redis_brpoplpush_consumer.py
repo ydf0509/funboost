@@ -27,9 +27,7 @@ class RedisBrpopLpushConsumer(AbstractConsumer, RedisMixin):
         while True:
             msg = self.redis_db_frame.brpoplpush(self._queue_name, unack_list_name, timeout=60)
             if msg:
-                self._print_message_get_from_broker('redis', msg)
-                task_dict = json.loads(msg)
-                kw = {'body': task_dict, 'raw_msg': msg}
+                kw = {'body': msg, 'raw_msg': msg}
                 self._submit_task(kw)
 
     def _confirm_consume(self, kw):

@@ -27,10 +27,9 @@ class NsqConsumer(AbstractConsumer):
         @consumer.on_message.connect
         def handler(consumerx: GnsqImporter().Consumer, message: GnsqImporter().Message):
             # 第一条消息不能并发，第一条消息之后可以并发。
-            self._print_message_get_from_broker('nsq', message.body.decode())
             # self.logger.debug(f'从nsq的 [{self._queue_name}] 主题中 取出的消息是：  {message.body.decode()}')
             message.enable_async()
-            kw = {'consumer': consumerx, 'message': message, 'body': json.loads(message.body)}
+            kw = {'consumer': consumerx, 'message': message, 'body': message.body}
             self._submit_task(kw)
 
         consumer.start()

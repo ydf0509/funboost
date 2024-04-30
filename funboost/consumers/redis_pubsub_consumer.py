@@ -18,8 +18,8 @@ class RedisPbSubConsumer(AbstractConsumer, RedisMixin):
         pub.subscribe(self.queue_name)
         for item in pub.listen():
             if item['type'] == 'message':
-                self._print_message_get_from_broker('reids', item['data'])
-                kw = {'body': json.loads(item['data'])}
+
+                kw = {'body': item['data']}
                 self._submit_task(kw)
 
     def _shedual_task(self):
@@ -29,7 +29,7 @@ class RedisPbSubConsumer(AbstractConsumer, RedisMixin):
         while True:  # 无限循环
             msg_list = pub.parse_response(timeout=60)  # 得到消息内容
             if msg_list:
-                kw = {'body': json.loads(msg_list[2])}
+                kw = {'body': msg_list[2]}
                 self._submit_task(kw)
 
 

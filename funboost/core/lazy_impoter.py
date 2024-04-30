@@ -1,6 +1,6 @@
 import abc
 
-from funboost.utils.decorators import cached_method_result, singleton, SingletonBaseNew, SingletonBaseCustomInit
+from funboost.utils.decorators import cached_method_result, singleton, SingletonBaseNew, SingletonBaseCustomInit, singleton_no_lock
 
 """
 延迟导入
@@ -8,7 +8,7 @@ from funboost.utils.decorators import cached_method_result, singleton, Singleton
 """
 
 
-class LazyImpoter(SingletonBaseNew):
+class FunboostLazyImpoter(SingletonBaseNew):
     """
     延迟导入,避免需要互相导入.
     """
@@ -26,7 +26,7 @@ class LazyImpoter(SingletonBaseNew):
     #     return get_current_taskid
 
 
-lazy_impoter = LazyImpoter()
+funboost_lazy_impoter = FunboostLazyImpoter()
 
 
 # noinspection SpellCheckingInspection
@@ -40,34 +40,19 @@ class GeventImporter:
     from gevent.queue import JoinableQueue
     """
 
-    @property
-    @cached_method_result
-    def gevent(self):
+    def __init__(self):
         import gevent
         print('导入gevent')
-        return gevent
-
-    @property
-    @cached_method_result
-    def gevent_pool(self):
         from gevent import pool as gevent_pool
-        return gevent_pool
-
-    @property
-    @cached_method_result
-    def monkey(self):
         from gevent import monkey
-        print('导入gevent')
-        return monkey
-
-    @property
-    @cached_method_result
-    def JoinableQueue(self):
         from gevent.queue import JoinableQueue
-        return JoinableQueue
+        self.gevent = gevent
+        self.gevent_pool = gevent_pool
+        self.monkey = monkey
+        self.JoinableQueue = JoinableQueue
 
 
-@singleton
+@singleton_no_lock
 class EventletImporter:
     """
     避免提前导入
@@ -83,7 +68,7 @@ class EventletImporter:
         self.Timeout = Timeout
 
 
-@singleton
+@singleton_no_lock
 class PeeweeImporter:
     def __init__(self):
         """pip install peewee == 3.17"""
@@ -99,7 +84,7 @@ class PeeweeImporter:
         self.dict_to_model = dict_to_model
 
 
-@singleton
+@singleton_no_lock
 class AioHttpImporter:
 
     def __init__(self):
@@ -110,7 +95,7 @@ class AioHttpImporter:
         self.Request = Request
 
 
-@singleton
+@singleton_no_lock
 class NatsImporter:
     def __init__(self):
         """pip install nats-python """
@@ -118,7 +103,8 @@ class NatsImporter:
         self.NATSClient = NATSClient
         self.NATSMessage = NATSMessage
 
-@singleton
+
+@singleton_no_lock
 class GnsqImporter:
     def __init__(self):
         """pip install  gnsq==1.0.1"""
@@ -131,7 +117,8 @@ class GnsqImporter:
         self.NsqdHTTPClient = NsqdHTTPClient
         self.NSQHttpError = NSQHttpError
 
-@singleton
+
+@singleton_no_lock
 class ElasticsearchImporter:
     def __init__(self):
         """pip install elasticsearch """
@@ -139,28 +126,31 @@ class ElasticsearchImporter:
         self.helpers = helpers
 
 
-@singleton
+@singleton_no_lock
 class PsutilImporter:
     def __init__(self):
         """pip install  psutil"""
         import psutil
         self.psutil = psutil
 
-@singleton
+
+@singleton_no_lock
 class PahoMqttImporter:
     def __init__(self):
         """pip install paho-mqtt"""
         import paho.mqtt.client as mqtt
         self.mqtt = mqtt
 
-@singleton
+
+@singleton_no_lock
 class ZmqImporter:
     def __init__(self):
         """pip install zmq pyzmq"""
         import zmq
         self.zmq = zmq
 
-@singleton
+
+@singleton_no_lock
 class KafkaPythonImporter:
     def __init__(self):
         """pip install kafka-python==2.0.2"""
@@ -177,7 +167,10 @@ class KafkaPythonImporter:
 
 
 if __name__ == '__main__':
-    for i in range(10000):
-        # lazy_impoter.BoostersManager
-        EventletImporter().greenpool
-        GeventImporter().JoinableQueue
+    print()
+    for i in range(10000000):
+        # funboost_lazy_impoter.BoostersManager
+        # EventletImporter().greenpool
+        # GeventImporter().JoinableQueue
+        ZmqImporter().zmq
+    print()

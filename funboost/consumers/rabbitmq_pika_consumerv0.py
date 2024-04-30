@@ -34,7 +34,6 @@ class RabbitmqConsumer(AbstractConsumer):
         def callback(ch, method, properties, body):
             body = body.decode()
             self.logger.debug(f'从rabbitmq的 [{self._queue_name}] 队列中 取出的消息是：  {body}')
-            body = json.loads(body)
             kw = {'ch': ch, 'method': method, 'properties': properties, 'body': body}
             self._submit_task(kw)
 

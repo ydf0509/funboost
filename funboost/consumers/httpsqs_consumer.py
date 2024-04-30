@@ -25,7 +25,7 @@ class HttpsqsConsumer(AbstractConsumer):
             if text == 'HTTPSQS_GET_END':
                 time.sleep(0.5)
             else:
-                kw = {'body': json.loads(text)}
+                kw = {'body': text}
                 self._submit_task(kw)
 
     def _confirm_consume(self, kw):

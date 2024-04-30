@@ -164,6 +164,20 @@ def singleton(cls:ClSX)  -> ClSX:
 
     return _singleton
 
+def singleton_no_lock(cls:ClSX)  -> ClSX:
+    """
+    单例模式装饰器,新加入线程锁，更牢固的单例模式，主要解决多线程如100线程同时实例化情况下可能会出现三例四例的情况,实测。
+    """
+    _instance = {}
+
+
+    @wraps(cls)
+    def _singleton(*args, **kwargs):
+        if cls not in _instance:
+            _instance[cls] = cls(*args, **kwargs)
+        return _instance[cls]
+
+    return _singleton
 
 class SingletonMeta(type):
     _instances = {}

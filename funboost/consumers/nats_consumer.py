@@ -21,7 +21,7 @@ class NatsConsumer(AbstractConsumer):
             # print(type(msg))
             # print(msg.reply)
             # print(f"Received a message with subject {msg.subject}: {msg.payload}")
-            kw = {'body': json.loads(msg.payload)}
+            kw = {'body': msg.payload}
             self._submit_task(kw)
 
         nats_client.subscribe(subject=self.queue_name, callback=callback)

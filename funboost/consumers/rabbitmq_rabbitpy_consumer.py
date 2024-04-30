@@ -23,8 +23,7 @@ class RabbitmqConsumerRabbitpy(AbstractConsumer):
         for message in channel.basic_consume(self._queue_name, no_ack=False):
             body = message.body.decode()
             # self.logger.debug(f'从rabbitmq {self._queue_name} 队列中 取出的消息是：  {body}')
-            self._print_message_get_from_broker('rabbitmq', body)
-            kw = {'message': message, 'body': json.loads(message.body.decode())}
+            kw = {'message': message, 'body': body}
             self._submit_task(kw)
 
     def _confirm_consume(self, kw):

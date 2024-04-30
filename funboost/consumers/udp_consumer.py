@@ -31,9 +31,9 @@ class UDPConsumer(AbstractConsumer, ):
         while True:
             data, client_addr = server.recvfrom(self.BUFSIZE)
             # print('server收到的数据', data)
-            self._print_message_get_from_broker(f'udp {ip_port}', data.decode())
+            # self._print_message_get_from_broker(f'udp {ip_port}', data.decode())
             server.sendto('has_recived'.encode(), client_addr)
-            kw = {'body': json.loads(data)}
+            kw = {'body': data}
             self._submit_task(kw)
 
     def _confirm_consume(self, kw):

@@ -42,10 +42,10 @@ class TCPConsumer(AbstractConsumer, ):
                 # print('server收到的数据', data)
                 if not data:
                     break
-                self._print_message_get_from_broker(f'udp {self._ip_port_raw}', data.decode())
+                # self._print_message_get_from_broker(f'udp {self._ip_port_raw}', data.decode())
                 tcp_cli_sock.send('has_recived'.encode())
                 # tcp_cli_sock.close()
-                kw = {'body': json.loads(data)}
+                kw = {'body': data}
                 self._submit_task(kw)
             tcp_cli_sock.close()
         except ConnectionResetError:

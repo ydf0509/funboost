@@ -17,9 +17,8 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
         while True:
             result = self.redis_db_frame.blpop(self._queue_name,timeout=60)
             if result:
-                self._print_message_get_from_broker('redis',result[1])
-                task_dict = json.loads(result[1])
-                kw = {'body': task_dict}
+
+                kw = {'body': result[1]}
                 self._submit_task(kw)
 
     def _confirm_consume(self, kw):

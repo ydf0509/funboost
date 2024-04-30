@@ -71,7 +71,7 @@ from funboost.core import kill_remote_task
 from funboost.core.exceptions import ExceptionForRequeue, ExceptionForPushToDlxqueue
 
 # from funboost.core.booster import BoostersManager  互相导入
-from funboost.core.lazy_impoter import lazy_impoter
+from funboost.core.lazy_impoter import funboost_lazy_impoter
 
 
 # patch_apscheduler_run_job()
@@ -174,6 +174,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         broker_exclusive_config_merge = dict()
         broker_exclusive_config_merge.update(self.BROKER_EXCLUSIVE_CONFIG_DEFAULT)
         broker_exclusive_config_merge.update(self.consumer_params.broker_exclusive_config)
+        # print(broker_exclusive_config_merge)
         self.consumer_params.broker_exclusive_config = broker_exclusive_config_merge
 
         self._stop_flag = None
@@ -222,7 +223,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         #                                         log_filename=consumer_params.log_filename,
         #                                         logger_name=consumer_params.logger_name,
         #                                         broker_exclusive_config=self.consumer_params.broker_exclusive_config)
-        self.publisher_params = BaseJsonAbleModel.init_by_another_model(PublisherParams, consumer_params)
+        self.publisher_params = BaseJsonAbleModel.init_by_another_model(PublisherParams, self.consumer_params)
         # print(self.publisher_params)
         if is_main_process:
             self.logger.info(f'{self.queue_name} consumer 的消费者配置:\n {self.consumer_params.json_str_value()}')
@@ -322,11 +323,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # ConsumersManager.show_all_consumer_info()
         # noinspection PyBroadException
         pid_queue_name_tuple = (os.getpid(), self.queue_name)
-        if pid_queue_name_tuple in lazy_impoter.BoostersManager.pid_queue_name__has_start_consume_set:
+        if pid_queue_name_tuple in funboost_lazy_impoter.BoostersManager.pid_queue_name__has_start_consume_set:
             self.logger.warning(f'{pid_queue_name_tuple} 已启动消费,不要一直去启动消费,funboost框架自动阻止.')  # 有的人乱写代码,无数次在函数内部或for循环里面执行 f.consume(),一个队列只需要启动一次消费,不然每启动一次性能消耗很大,直到程序崩溃
             return
         else:
-            lazy_impoter.BoostersManager.pid_queue_name__has_start_consume_set.add(pid_queue_name_tuple)
+            funboost_lazy_impoter.BoostersManager.pid_queue_name__has_start_consume_set.add(pid_queue_name_tuple)
         GlobalVars.has_start_a_consumer_flag = True
         try:
             self._concurrent_mode_dispatcher.check_all_concurrent_mode()
@@ -373,7 +374,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         key = 'apscheduler.redisjobstore_runonce'
         if RedisMixin().redis_db_frame.sadd(key, runonce_uuid):  # 这样可以阻止多次启动同队列名消费者 redis jobstore多次运行函数.
             cls.logger_apscheduler.debug(f'延时任务用普通消息重新发布到普通队列 {msg}')
-            lazy_impoter.BoostersManager.get_or_create_booster_by_queue_name(queue_name).publish(msg)
+            funboost_lazy_impoter.BoostersManager.get_or_create_booster_by_queue_name(queue_name).publish(msg)
 
     @abc.abstractmethod
     def _shedual_task(self):
@@ -383,7 +384,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         raise NotImplementedError
 
-    def convert_msg_before_run(self, msg: dict):
+    def convert_msg_before_run(self, msg: typing.Union[str,dict]):
         """
         转换消息,消息没有使用funboost来发送,并且没有extra相关字段时候
         用户也可以按照4.21文档,继承任意Consumer类,并实现这个方法 convert_msg_before_run,先转换消息.
@@ -404,6 +405,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
                         'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
         """
+        if isinstance(msg,str):
+            msg = json.loads(msg)
+        # 以下是清洗补全字段.
         if 'extra' not in msg:
             msg['extra'] = {'is_auto_fill_extra': True}
         extra = msg['extra']
@@ -413,6 +417,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             extra['publish_time'] = MsgGenerater.generate_publish_time()
         if 'publish_time_format':
             extra['publish_time_format'] = MsgGenerater.generate_publish_time_format()
+        return msg
 
     def _submit_task(self, kw):
         while 1:  # 这一块的代码为支持暂停消费。
@@ -424,12 +429,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     self._last_show_pause_log_time = time.time()
             else:
                 break
-
+        msg = kw['body']
+        self._print_message_get_from_broker(msg)
+        kw['body'] = self.convert_msg_before_run(msg)
         if self._judge_is_daylight():
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
             return
-        self.convert_msg_before_run(kw['body'])
         function_only_params = delete_keys_and_return_new_dict(kw['body'], )
         if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
                 function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
@@ -524,12 +530,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             if self._has_execute_times_in_recent_second >= qpsx:
                 time.sleep((1 - (time.time() - self._last_start_count_qps_timestamp)) * 1)
 
-    def _print_message_get_from_broker(self, broker_name, msg):
+    def _print_message_get_from_broker(self, msg,broker_name=None):
         # print(999)
         if self.consumer_params.is_show_message_get_from_broker:
             if isinstance(msg, (dict, list)):
                 msg = json.dumps(msg, ensure_ascii=False)
-            self.logger.debug(f'从 {broker_name} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
+            # self.logger.debug(f'从 {broker_name} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
+            self.logger.debug(f'从 {broker_name or self.consumer_params.broker_kind} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
 
     def _get_priority_conf(self, kw: dict, broker_task_config_key: str):
         broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)

@@ -60,8 +60,7 @@ class HttpHandler(BaseHTTPRequestHandler):
         if self.path == '/queue':
             msg = form['msg'].value
             # print(msg)
-            self.consumer._print_message_get_from_broker('http ', msg)
-            kw = {'body': json.loads(msg)}
+            kw = {'body': msg}
             self.consumer._submit_task(kw)
 
         # 开始回复

@@ -66,7 +66,7 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
             # value()  offset() partition()
             # print('Received message: {}'.format(msg.value().decode('utf-8'))) # noqa
             self._partion__offset_consume_status_map[msg.partition()][msg.offset()] = 0
-            kw = {'partition': msg.partition(), 'offset': msg.offset(), 'body': json.loads(msg.value())}  # noqa
+            kw = {'partition': msg.partition(), 'offset': msg.offset(), 'body': msg.value()}  # noqa
             if self.consumer_params.is_show_message_get_from_broker:
                 self.logger.debug(
                     f'从kafka的 [{self._queue_name}] 主题,分区 {msg.partition()} 中 的 offset {msg.offset()} 取出的消息是：  {msg.value()}')  # noqa
@@ -165,7 +165,7 @@ class SaslPlainKafkaConsumer(KafkaConsumerManuallyCommit):
             # print('Received message: {}'.format(msg.value().decode('utf-8'))) # noqa
             self._partion__offset_consume_status_map[msg.partition(
             )][msg.offset()] = 0
-            kw = {'partition': msg.partition(), 'offset': msg.offset(), 'body': json.loads(msg.value())}  # noqa
+            kw = {'partition': msg.partition(), 'offset': msg.offset(), 'body': msg.value()}  # noqa
             if self.consumer_params.is_show_message_get_from_broker:
                 self.logger.debug(
                     f'从kafka的 [{self._queue_name}] 主题,分区 {msg.partition()} 中 的 offset {msg.offset()} 取出的消息是：  {msg.value()}')  # noqa

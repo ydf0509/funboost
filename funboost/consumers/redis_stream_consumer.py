@@ -44,10 +44,10 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
                                                               {self.queue_name: ">"}, count=100, block=60 * 1000)
             if results:
                 # self.logger.debug(f'从redis的 [{self._queue_name}] stream 中 取出的消息是：  {results}  ')
-                self._print_message_get_from_broker('redis', results)
+                self._print_message_get_from_broker( results)
                 # print(results[0][1])
                 for msg_id, msg in results[0][1]:
-                    kw = {'body': json.loads(msg['']), 'msg_id': msg_id}
+                    kw = {'body': msg[''], 'msg_id': msg_id}
                     self._submit_task(kw)
 
     def _confirm_consume(self, kw):
@@ -91,5 +91,5 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
                                 self.logger.warning(f' {self._queue_name}  的分组 {self.group} 的消费者 {self.consumer_identification} 夺取 断开的消费者 {xinfo_item["name"]}'
                                                     f'  {len(xclaim_task_list)} 个任务，详细是 {xclaim_task_list} ')
                                 for task in xclaim_task_list:
-                                    kw = {'body': json.loads(task[1]['']), 'msg_id': task[0]}
+                                    kw = {'body': task[1][''], 'msg_id': task[0]}
                                     self._submit_task(kw)

@@ -53,8 +53,7 @@ class PulsarConsumer(AbstractConsumer, ):
         while True:
             msg = self._consumer.receive()
             if msg:
-                self._print_message_get_from_broker('pulsar', msg.data())
-                kw = {'body': json.loads(msg.data()), 'msg': msg}
+                kw = {'body': msg.data(), 'msg': msg}
                 self._submit_task(kw)
 
     def _confirm_consume(self, kw):

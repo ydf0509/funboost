@@ -194,7 +194,6 @@ Transport Options
 
         def callback(body: dict, message: Message):
             # print(type(body),body,type(message),message)
-            self._print_message_get_from_broker('kombu', body)
             # self.logger.debug(f""" 从 kombu {self._middware_name} 中取出的消息是 {body}""")
             kw = {'body': body, 'message': message, }
             self._submit_task(kw)

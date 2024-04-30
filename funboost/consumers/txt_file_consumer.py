@@ -22,8 +22,8 @@ class TxtFileConsumer(AbstractConsumer, ):
         while True:
             with file_lock:
                 item = queue.get()
-                self._print_message_get_from_broker('txt文件', item)
-                kw = {'body': json.loads(item), 'q': queue, 'item': item}
+
+                kw = {'body': item, 'q': queue, 'item': item}
                 self._submit_task(kw)
 
     def _confirm_consume(self, kw):

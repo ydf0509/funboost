@@ -60,11 +60,9 @@ class RedisPriorityConsumer(RedisConsumerAckAble):
             if task_tuple:
                 msg = task_tuple[1]
                 self.redis_db_frame.zadd(self._unack_zset_name, {msg: time.time()})
-                self.logger.debug(task_tuple)
-                self._print_message_get_from_broker('redis', msg)
+                # self.logger.debug(task_tuple)
                 # self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {task_str_list}  ')
-                task_dict = json.loads(msg)
-                kw = {'body': task_dict, 'task_str': msg}
+                kw = {'body': msg, 'task_str': msg}
                 self._submit_task(kw)
 
     def _shedual_task(self):
@@ -87,10 +85,8 @@ class RedisPriorityConsumer(RedisConsumerAckAble):
                 except redis5.WatchError:
                     continue
             if task_tuple:
-                self._print_message_get_from_broker('redis', msg)
                 # self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {task_str_list}  ')
-                task_dict = json.loads(msg)
-                kw = {'body': task_dict, 'task_str': msg}
+                kw = {'body': msg, 'task_str': msg}
                 self._submit_task(kw)
 
     def _requeue(self, kw):

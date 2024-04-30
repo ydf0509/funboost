@@ -49,7 +49,7 @@ class HTTPConsumer(AbstractConsumer, ):
         async def recv_msg(request: AioHttpImporter().Request):
             data = await request.post()
             msg = data['msg']
-            kw = {'body': json.loads(msg)}
+            kw = {'body': msg}
             self._submit_task(kw)
             return AioHttpImporter().web.Response(text="finish")
 

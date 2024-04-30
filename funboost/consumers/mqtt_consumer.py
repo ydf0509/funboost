@@ -48,7 +48,7 @@ class MqttConsumer(AbstractConsumer):
     # noinspection PyUnusedLocal
     def _on_message(self, client, userdata, msg):
         # print(msg.topic + " " + str(msg.payload))
-        kw = {'body': json.loads(msg.payload)}
+        kw = {'body': msg.payload}
         self._submit_task(kw)
 
     def _confirm_consume(self, kw):

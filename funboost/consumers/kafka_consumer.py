@@ -61,7 +61,7 @@ class KafkaConsumer(AbstractConsumer):
             if self.consumer_params.is_show_message_get_from_broker:
                 self.logger.debug(
                     f'从kafka的 [{message.topic}] 主题,分区 {message.partition} 中 取出的消息是：  {message.value.decode()}')
-            kw = {'consumer': consumer, 'message': message, 'body': json.loads(message.value)}
+            kw = {'consumer': consumer, 'message': message, 'body': message.value}
             self._submit_task(kw)
 
     def _confirm_consume(self, kw):

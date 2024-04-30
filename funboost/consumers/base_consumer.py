@@ -383,10 +383,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         raise NotImplementedError
 
-    def convert_msg_before_run(self, msg: typing.Union[str, dict]):
+    def convert_msg_before_run(self, msg: typing.Union[str, dict]) -> dict:
         """
         转换消息,消息没有使用funboost来发送,并且没有extra相关字段时候
-        用户也可以按照4.21文档,继承任意Consumer类,并实现这个方法 convert_msg_before_run,先转换消息.
+        用户也可以按照4.21文档,继承任意Consumer类,并实现这个方法 convert_msg_before_run,先转换不规范的消息.
         """
         """ 一般消息至少包含这样
         {
@@ -428,9 +428,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     self._last_show_pause_log_time = time.time()
             else:
                 break
-        msg = kw['body']
-        self._print_message_get_from_broker(msg)
-        kw['body'] = self.convert_msg_before_run(msg)
+        self._print_message_get_from_broker(kw['body'])
+        kw['body'] = self.convert_msg_before_run(kw['body'])
         if self._judge_is_daylight():
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)

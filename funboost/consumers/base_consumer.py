@@ -30,13 +30,12 @@ from threading import Lock
 import asyncio
 
 import nb_log
-from funboost.core.current_task import funboost_current_task, get_current_taskid
+from funboost.core.current_task import funboost_current_task
 from funboost.core.loggers import develop_logger
 
 from funboost.core.func_params_model import BoosterParams, PublisherParams, BaseJsonAbleModel
 from funboost.core.task_id_logger import TaskIdLogger
-from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, CompatibleLogger,
-                    LoggerMixinDefaultWithFileHandler, stdout_write, is_main_process,
+from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager,  is_main_process,
                     nb_log_config_default)
 from funboost.core.loggers import FunboostFileLoggerMixin, logger_prompt
 
@@ -332,7 +331,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         try:
             self._concurrent_mode_dispatcher.check_all_concurrent_mode()
             self._check_monkey_patch()
-        except BaseException:
+        except BaseException:  # noqa
             traceback.print_exc()
             os._exit(4444)  # noqa
         self.logger.info(f'开始消费 {self._queue_name} 中的消息')
@@ -384,7 +383,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         raise NotImplementedError
 
-    def convert_msg_before_run(self, msg: typing.Union[str,dict]):
+    def convert_msg_before_run(self, msg: typing.Union[str, dict]):
         """
         转换消息,消息没有使用funboost来发送,并且没有extra相关字段时候
         用户也可以按照4.21文档,继承任意Consumer类,并实现这个方法 convert_msg_before_run,先转换消息.
@@ -405,7 +404,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
                         'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
         """
-        if isinstance(msg,str):
+        if isinstance(msg, str):
             msg = json.loads(msg)
         # 以下是清洗补全字段.
         if 'extra' not in msg:
@@ -530,7 +529,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             if self._has_execute_times_in_recent_second >= qpsx:
                 time.sleep((1 - (time.time() - self._last_start_count_qps_timestamp)) * 1)
 
-    def _print_message_get_from_broker(self, msg,broker_name=None):
+    def _print_message_get_from_broker(self, msg, broker_name=None):
         # print(999)
         if self.consumer_params.is_show_message_get_from_broker:
             if isinstance(msg, (dict, list)):
@@ -624,13 +623,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
                           f'函数平均运行耗时 {avarage_function_spend_time} 秒。 '
                     self.logger.info(msg)
-                    if self._msg_num_in_broker != -1 and time.time() - self._last_show_remaining_execution_time > self._show_remaining_execution_time_interval:  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
-                        # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
-                        need_time = time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / (self._execute_task_times_every_unit_time / self._unit_time_for_count) /
-                                                                            self._distributed_consumer_statistics.active_consumer_num)
-                        msg += f''' 预计还需要 {need_time} 时间 才能执行完成 队列 {self.queue_name} 中的 {self._msg_num_in_broker} 个剩余任务'''
-                        self.logger.info(msg)
-                        self._last_show_remaining_execution_time = time.time()
+                    if  time.time() - self._last_show_remaining_execution_time > self._show_remaining_execution_time_interval:
+                        self._msg_num_in_broker = self.publisher_of_same_queue.get_message_count()
+                        if self._msg_num_in_broker != -1 :  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
+                            # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
+                            need_time = time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / (self._execute_task_times_every_unit_time / self._unit_time_for_count) /
+                                                                                self._distributed_consumer_statistics.active_consumer_num)
+                            msg += f''' 预计还需要 {need_time} 时间 才能执行完成 队列 {self.queue_name} 中的 {self._msg_num_in_broker} 个剩余任务'''
+                            self.logger.info(msg)
+                            self._last_show_remaining_execution_time = time.time()
                     self._current_time_for_execute_task_times_every_unit_time = time.time()
                     self._consuming_function_cost_time_total_every_unit_time = 0
                     self._execute_task_times_every_unit_time = 0
@@ -830,7 +831,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self.logger.critical(msg=log_msg)
                 # noinspection PyProtectedMember,PyUnresolvedReferences
                 os._exit(444)
-            if not self.consumer_params.function_timeout :
+            if not self.consumer_params.function_timeout:
                 rs = await corotinue_obj
                 # rs = await asyncio.wait_for(corotinue_obj, timeout=4)
             else:

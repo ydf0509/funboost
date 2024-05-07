@@ -394,6 +394,7 @@ if __name__ == "__main__":
 
 <a href="https://imgse.com/i/pkFkCUe"><img src="https://s21.ax1x.com/2024/04/29/pkFkCUe.png" alt="pkFkCUe.png" border="0" /></a>
 
+<a href="https://imgse.com/i/pkE6IYR"><img src="https://s21.ax1x.com/2024/05/07/pkE6IYR.png" alt="pkE6IYR.png" border="0" /></a>
 
 ## 1.4  python分布式函数执行为什么重要？
 

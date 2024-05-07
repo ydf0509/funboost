@@ -168,7 +168,7 @@ class KafkaPythonImporter:
 
 if __name__ == '__main__':
     print()
-    for i in range(10000000):
+    for i in range(1000000):
         # funboost_lazy_impoter.BoostersManager
         # EventletImporter().greenpool
         # GeventImporter().JoinableQueue

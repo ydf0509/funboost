@@ -27,6 +27,8 @@ extra_brokers = ['confluent_kafka==1.7.0',
                  'pyzmq',
                  'kafka-python==2.0.2',
                  ]
+
+extra_flask = ['flask', 'flask_bootstrap', 'flask_wtf', 'wtforms', 'flask_login']
 setup(
     name='funboost',  #
     version=__version__,
@@ -102,9 +104,9 @@ setup(
         'fire',
         'pydantic',
     ],
-    extras_require={'all': extra_brokers,
+    extras_require={'all': extra_brokers + extra_flask,
                     'extra_brokers': extra_brokers,
-                    'flask': ['flask', 'flask_bootstrap', 'flask_wtf', 'wtforms', 'flask_login']
+                    'flask': extra_flask,
                     },
 
     entry_points={

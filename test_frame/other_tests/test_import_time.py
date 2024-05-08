@@ -4,8 +4,10 @@ import apscheduler
 
 print(2,datetime.datetime.now())
 import gevent
+from gevent import monkey
 print(3,datetime.datetime.now())
 import eventlet
+from eventlet import monkey_patch
 print(4,datetime.datetime.now())
 import asyncio
 
@@ -26,3 +28,13 @@ print(8,datetime.datetime.now())
 import pysnooper
 
 print(9,datetime.datetime.now())
+
+import fabric2
+
+print(92,datetime.datetime.now())
+
+import nb_log
+print(10,datetime.datetime.now())
+
+import funboost
+print(11,datetime.datetime.now())

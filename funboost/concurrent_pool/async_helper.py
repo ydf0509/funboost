@@ -2,9 +2,11 @@ from functools import partial
 import asyncio
 from concurrent.futures import Executor
 from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
+# from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool
 
 # 没有使用内置的concurrent.futures.ThreadpoolExecutor线程池，而是使用智能伸缩线程池。
-async_executor_default = ThreadPoolExecutorShrinkAble()
+async_executor_default = ThreadPoolExecutorShrinkAble(500)
+# async_executor_default = FlexibleThreadPool(50)  # 这个不支持future特性
 
 
 async def simple_run_in_executor(f, *args, async_executor: Executor = None, async_loop=None, **kwargs):

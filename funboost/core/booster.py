@@ -4,6 +4,8 @@ import os
 import types
 import typing
 
+from funboost.concurrent_pool import FlexibleThreadPool
+from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.utils.ctrl_c_end import ctrl_c_recv
 from funboost.core.loggers import flogger, develop_logger, logger_prompt
 
@@ -15,8 +17,8 @@ from funboost.core.func_params_model import BoosterParams, FunctionResultStatusP
 from funboost.factories.consumer_factory import get_consumer
 from collections import defaultdict
 
-if typing.TYPE_CHECKING:
-    from funboost.core.msg_result_getter import AsyncResult
+
+from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
 
 
 class Booster:
@@ -122,6 +124,19 @@ class Booster:
         """ 多进程安全的,在fork多进程(非spawn多进程)情况下,很多包跨线程/进程不能共享中间件连接,"""
         consumer = BoostersManager.get_or_create_booster_by_queue_name(self.queue_name).consumer
         return consumer.publisher_of_same_queue.publish(msg=msg, task_id=task_id, priority_control_config=priority_control_config)
+
+    async def aio_push(self, *func_args, **func_kwargs) -> AioAsyncResult:
+        """asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
+        但为了更好的防止网络波动(例如发布消息到外网的消息队列耗时达到10毫秒),可以使用aio_push"""
+        async_result = await simple_run_in_executor(self.push, *func_args, **func_kwargs)
+        return AioAsyncResult(async_result.task_id, )
+
+    async def aio_publish(self, msg: typing.Union[str, dict], task_id=None,
+                      priority_control_config: PriorityConsumingControlConfig = None) -> AioAsyncResult:
+        """asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
+        但为了更好的防止网络波动(例如发布消息到外网的消息队列耗时达到10毫秒),可以使用aio_push"""
+        async_result = await simple_run_in_executor(self.publish,msg,task_id,priority_control_config)
+        return AioAsyncResult(async_result.task_id, )
 
     # noinspection PyMethodMayBeStatic
     def multi_process_consume(self, process_num=1):

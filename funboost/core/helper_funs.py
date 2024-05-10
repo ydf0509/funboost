@@ -1,7 +1,8 @@
 import copy
+import pytz
 import time
 import uuid
-
+import datetime
 from funboost.core.funboost_time import FunboostTime
 
 
@@ -46,7 +47,7 @@ class MsgGenerater:
 
     @staticmethod
     def generate_publish_time() -> float:
-        return round(FunboostTime().timestamp,4)
+        return round(time.time(),4)
 
     @staticmethod
     def generate_publish_time_format() -> str:
@@ -59,3 +60,16 @@ class MsgGenerater:
         return extra_params
 
 
+
+if __name__ == '__main__':
+
+    from funboost import FunboostCommonConfig
+
+    print(FunboostTime())
+    for i in range(1000000):
+        # time.time()
+        # MsgGenerater.generate_publish_time_format()
+
+        datetime.datetime.now(tz=pytz.timezone(FunboostCommonConfig.TIMEZONE)).strftime(FunboostTime.FORMATTER_DATETIME_NO_ZONE)
+
+    print(FunboostTime())

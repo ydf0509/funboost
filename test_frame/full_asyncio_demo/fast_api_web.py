@@ -16,7 +16,7 @@ async def root():
 async def api1(name: str):
     async_result = long_time_fun.push(name)  # 通常发布消息时间比较小,局域网内一般少于0.3毫秒,所以在asyncio的异步方法中调用同步io方法一般不会产生过于严重的灾难
     return {"result": await AioAsyncResult(async_result.task_id).result}   # 一般情况下不需要请求时候立即使用rpc模式获取消费结果,直接吧消息发到中间件后就不用管了.前端使用ajx轮训或者mqtt
-
+    # return {"result": async_result.result}  # 如果你直接这样写代码,会产生所有协程全局阻塞灭顶之灾.
 
 # 演示aio_push 异步发布, 并且aio rpc获取消费结果
 @app.get("/url2/{name}")

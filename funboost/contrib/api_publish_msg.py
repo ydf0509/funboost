@@ -1,7 +1,7 @@
 import traceback
 import typing
 
-from funboost import AioAsyncResult, AsyncResult
+from funboost import AioAsyncResult, AsyncResult,PriorityConsumingControlConfig
 
 from funboost.core.cli.discovery_boosters import BoosterDiscovery
 from funboost import BoostersManager
@@ -39,11 +39,12 @@ async def publish_msg(msg_item: MsgItem):
         if msg_item.need_result:
             if booster.boost_params.is_using_rpc_mode is False:
                 raise ValueError(f' need_result 为true,{booster.queue_name} 队列消费者 需要@boost设置支持rpc模式')
-            async_result = booster.publish(msg_item.msg_body)
+            async_result = await booster.aio_publish(msg_item.msg_body,priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True))
             status_and_result = await AioAsyncResult(async_result.task_id, timeout=msg_item.timeout).status_and_result
+            print(status_and_result)
             # status_and_result = AsyncResult(async_result.task_id, timeout=msg_item.timeout).status_and_result
         else:
-            booster.publish(msg_item.msg_body)
+            await booster.aio_publish(msg_item.msg_body)
         return PublishResponse(succ=True, msg=f'{msg_item.queue_name} 队列,消息发布成功', status_and_result=status_and_result)
     except Exception as e:
         return PublishResponse(succ=False, msg=f'{msg_item.queue_name} 队列,消息发布失败 {type(e)} {e} {traceback.format_exc()}',

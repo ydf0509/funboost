@@ -21,6 +21,6 @@ def req_push2(i):
 
 
 pool = ThreadPoolExecutorShrinkAble(10)
-for j in range(1000):
+for j in range(1):
     pool.submit(req_push1, j)
-    pool.submit(req_push2, j)
+    # pool.submit(req_push2, j)

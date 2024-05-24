@@ -1,4 +1,5 @@
 import json
+import typing
 from datetime import datetime as _datetime
 from datetime import date as _date
 
@@ -44,8 +45,20 @@ def monkey_patch_json():
     json.dumps = _dumps
 
 
+class JsonUtils:
+    @staticmethod
+    def to_dict(obj:typing.Union[str,dict,list]):
+        if isinstance(obj,str):
+            return json.loads(obj)
+        else:
+            return obj
 
-
+    @staticmethod
+    def to_json_str(obj:typing.Union[str,dict,list]):
+        if isinstance(obj,str):
+            return obj
+        else:
+            return json.dumps(obj,ensure_ascii=False)
 
 if __name__ == '__main__':
     pass

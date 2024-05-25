@@ -31,7 +31,7 @@ class RedisConsumerAckUsingTimeout(AbstractConsumer, RedisMixin):
     def start_consuming_message(self):
         self._is_send_consumer_hearbeat_to_redis = True
         super().start_consuming_message()
-        self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
+        self.keep_circulating(10, block=False)(self._requeue_tasks_which_unconfirmed)()
 
     # def _add_task_str_to_unack_zset(self, task_str, ):
     #     self.redis_db_frame.zadd(self._unack_zset_name, {task_str: time.time()})

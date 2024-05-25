@@ -14,11 +14,14 @@ class RedisConsumerAckUsingTimeout(AbstractConsumer, RedisMixin):
     redis作为中间件实现的。
     使用超时未能ack就自动重入消息队列，例如消息取出后，由于突然断电或重启或其他原因，导致消息以后再也不能主动ack了，超过一定时间就重新放入消息队列
     """
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'ack_timeout':3600}
+
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'ack_timeout': 3600}
+
+    # RedisConsumerAckUsingTimeout的ack timeot 是代表消息取出后过了多少秒还未ack，就自动重回队列。这个配置一定要大于函数消耗时间，否则不停的重回队列。
 
     def custom_init(self):
         self._unack_zset_name = f'{self._queue_name}__unack_using_timeout'
-        self._ack_timeout= self.consumer_params.broker_exclusive_config['ack_timeout']
+        self._ack_timeout = self.consumer_params.broker_exclusive_config['ack_timeout']
         self._last_show_unack_ts = time.time()
 
     def start_consuming_message(self):
@@ -64,14 +67,7 @@ class RedisConsumerAckUsingTimeout(AbstractConsumer, RedisMixin):
                     self.logger.warning(f'超过了 {self._ack_timeout} 秒未能确认消费, 向 {self._queue_name} 队列重新放入未消费确认的任务 {value} ,')
                     self._requeue({'body': value})
                     self.redis_db_frame.zrem(self._unack_zset_name, value)
-                if time.time() - self._last_show_unack_ts > 600: # 不要频繁提示打扰
+                if time.time() - self._last_show_unack_ts > 600:  # 不要频繁提示打扰
                     self.logger.info(f'{self._unack_zset_name} 中有待确认消费任务的数量是'
                                      f' {self.redis_db_frame.zcard(self._unack_zset_name)}')
                     self._last_show_unack_ts = time.time()
-
-
-
-
-
-
-

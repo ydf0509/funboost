@@ -1,5 +1,6 @@
 import typing
 
+
 from funboost.publishers.http_publisher import HTTPPublisher
 from funboost.publishers.nats_publisher import NatsPublisher
 from funboost.publishers.peewee_publisher import PeeweePublisher
@@ -48,6 +49,7 @@ from funboost.consumers.udp_consumer import UDPConsumer
 from funboost.consumers.zeromq_consumer import ZeroMqConsumer
 from funboost.consumers.mqtt_consumer import MqttConsumer
 from funboost.consumers.httpsqs_consumer import HttpsqsConsumer
+from funboost.consumers.redis_consumer_ack_using_timeout import RedisConsumerAckUsingTimeout
 
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.consumers.base_consumer import AbstractConsumer
@@ -77,6 +79,7 @@ broker_kind__publsiher_consumer_type_map = {
     BrokerEnum.TXT_FILE: (TxtFilePublisher, TxtFileConsumer),
     BrokerEnum.PEEWEE: (PeeweePublisher, PeeweeConsumer),
     BrokerEnum.REDIS_PUBSUB: (RedisPubSubPublisher, RedisPbSubConsumer),
+    BrokerEnum.REIDS_ACK_USING_TIMEOUT: (RedisPublisher, RedisConsumerAckUsingTimeout),
 
 }
 
@@ -161,8 +164,6 @@ def regist_to_funboost(broker_kind: str):
         from funboost.publishers.nsq_publisher import NsqPublisher
         from funboost.consumers.nsq_consumer import NsqConsumer
         register_custom_broker(broker_kind, NsqPublisher, NsqConsumer)
-
-
 
 
 if __name__ == '__main__':

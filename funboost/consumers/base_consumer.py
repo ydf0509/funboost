@@ -35,6 +35,7 @@ from funboost.core.loggers import develop_logger
 
 from funboost.core.func_params_model import BoosterParams, PublisherParams, BaseJsonAbleModel
 from funboost.core.task_id_logger import TaskIdLogger
+from funboost.utils.json_helper import JsonUtils
 from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager,  is_main_process,
                     nb_log_config_default)
 from funboost.core.loggers import FunboostFileLoggerMixin, logger_prompt
@@ -428,8 +429,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     self._last_show_pause_log_time = time.time()
             else:
                 break
-        self._print_message_get_from_broker(kw['body'])
         kw['body'] = self.convert_msg_before_run(kw['body'])
+        self._print_message_get_from_broker(kw['body'])
         if self._judge_is_daylight():
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
@@ -531,10 +532,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _print_message_get_from_broker(self, msg, broker_name=None):
         # print(999)
         if self.consumer_params.is_show_message_get_from_broker:
-            if isinstance(msg, (dict, list)):
-                msg = json.dumps(msg, ensure_ascii=False)
             # self.logger.debug(f'从 {broker_name} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
-            self.logger.debug(f'从 {broker_name or self.consumer_params.broker_kind} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
+            self.logger.debug(f'从 {broker_name or self.consumer_params.broker_kind} 中间件 的 {self._queue_name} 中取出的消息是 {JsonUtils.to_json_str(msg)}')
 
     def _get_priority_conf(self, kw: dict, broker_task_config_key: str):
         broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)

@@ -332,6 +332,7 @@ class RedisDistributedLockContextManager(LoggerMixin, LoggerLevelSetterMixin):
         self._expire_seconds = expire_seconds
         self.identifier = str(uuid.uuid4())
         self.has_aquire_lock = False
+        self.logger.setLevel(logging.INFO)
 
     def __enter__(self):
         self._line = sys._getframe().f_back.f_lineno  # 调用此方法的代码的函数

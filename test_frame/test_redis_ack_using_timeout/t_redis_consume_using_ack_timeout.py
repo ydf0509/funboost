@@ -8,7 +8,7 @@ from funboost import boost, BrokerEnum, FunctionResultStatusPersistanceConfig, B
 
 
 @boost(BoosterParams(queue_name='test_redis_ack__use_timeout', broker_kind=BrokerEnum.REIDS_ACK_USING_TIMEOUT, concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,
-                     log_level=20, broker_exclusive_config={'ack_timeout': 30}))
+                     log_level=20, broker_exclusive_config={'ack_timeout': 600}))
 def cost_long_time_fun(x):
     print(f'start {x}')
     time.sleep(120)

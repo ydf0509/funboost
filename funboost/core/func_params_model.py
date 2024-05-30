@@ -185,6 +185,9 @@ class BoosterParams(BaseJsonAbleModel):
 
     should_check_publish_func_params: bool = True  # 消息发布时候是否校验消息发布内容,比如有的人发布消息,函数只接受a,b两个入参,他去传2个入参,或者传参不存在的参数名字,  如果消费函数你非要写*args,**kwargs,那就需要关掉发布消息时候的函数入参检查
 
+    consumer_override_cls: typing.Optional[typing.Type]  = None
+    publisher_override_cls: typing.Optional[typing.Type]  = None
+
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
 
     @root_validator(skip_on_failure=True)
@@ -266,7 +269,7 @@ class PublisherParams(BaseJsonAbleModel):
     broker_kind: str = None
     broker_exclusive_config: dict = {}
     should_check_publish_func_params: bool = True  # 消息发布时候是否校验消息发布内容,比如有的人发布消息,函数只接受a,b两个入参,他去传2个入参,或者传参不存在的参数名字,  如果消费函数你非要写*args,**kwargs,那就需要关掉发布消息时候的函数入参检查
-
+    publisher_override_cls: typing.Optional[typing.Type] = None
 
 if __name__ == '__main__':
     from funboost.concurrent_pool import FlexibleThreadPool

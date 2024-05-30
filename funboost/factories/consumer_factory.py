@@ -20,4 +20,12 @@ def get_consumer(boost_params: BoosterParams) -> AbstractConsumer:
 
     if boost_params.broker_kind not in broker_kind__publsiher_consumer_type_map:
         raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {boost_params.broker_kind} ')
-    return broker_kind__publsiher_consumer_type_map[boost_params.broker_kind][1](boost_params)
+    consumer_cls = broker_kind__publsiher_consumer_type_map[boost_params.broker_kind][1]
+    if not boost_params.consumer_override_cls:
+        return consumer_cls(boost_params)
+    else:
+        ConsumerClsOverride = type(f'{consumer_cls.__name__}_{boost_params.consumer_override_cls.__name__}', (boost_params.consumer_override_cls, consumer_cls, AbstractConsumer), {})
+        # class ConsumerClsOverride(boost_params.consumer_override_cls, consumer_cls, AbstractConsumer):
+        #     pass
+
+        return ConsumerClsOverride(boost_params)

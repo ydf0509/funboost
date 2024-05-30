@@ -562,6 +562,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         self._do_not_delete_extra_from_msg = True
 
+    def user_custom_record_process_info_func(self,current_function_result_status:FunctionResultStatus):  # 这个可以继承
+        pass
+
     # noinspection PyProtectedMember
     def _run(self, kw: dict, ):
         # print(kw)
@@ -633,7 +636,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     self._current_time_for_execute_task_times_every_unit_time = time.time()
                     self._consuming_function_cost_time_total_every_unit_time = 0
                     self._execute_task_times_every_unit_time = 0
-
+            self.user_custom_record_process_info_func(current_function_result_status)
             if self.consumer_params.user_custom_record_process_info_func:
                 self.consumer_params.user_custom_record_process_info_func(current_function_result_status)
         except BaseException as e:

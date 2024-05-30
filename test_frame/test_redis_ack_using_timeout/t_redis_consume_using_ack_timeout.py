@@ -4,15 +4,20 @@
 
 import time
 
-from funboost import boost, BrokerEnum, FunctionResultStatusPersistanceConfig, BoosterParams, ConcurrentModeEnum
+from funboost import boost, BrokerEnum, FunctionResultStatusPersistanceConfig, BoosterParams, ConcurrentModeEnum,AbstractConsumer,FunctionResultStatus
 
+class MyConsumer(AbstractConsumer):
+    def user_custom_record_process_info_func(self,current_function_result_status:FunctionResultStatus):
+        self.logger.debug(current_function_result_status.get_status_dict())
 
-@boost(BoosterParams(queue_name='test_redis_ack__use_timeout', broker_kind=BrokerEnum.REIDS_ACK_USING_TIMEOUT, concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,
-                     log_level=20, broker_exclusive_config={'ack_timeout': 600}))
+@boost(BoosterParams(queue_name='test_redis_ack_use_timeout_queue', broker_kind=BrokerEnum.REIDS_ACK_USING_TIMEOUT, concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,
+                     log_level=10, broker_exclusive_config={'ack_timeout': 600},consumer_override_cls=MyConsumer,is_show_message_get_from_broker=True))
 def cost_long_time_fun(x):
     print(f'start {x}')
-    time.sleep(120)
+    time.sleep(20)
     print(f'end {x}')
+
+
 
 
 if __name__ == '__main__':

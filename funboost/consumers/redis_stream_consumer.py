@@ -14,7 +14,7 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
     redis 的 stream 结构 作为中间件实现的。需要redis 5.0以上，redis stream结构 是redis的消息队列，概念类似kafka，功能远超 list结构。
     """
     GROUP = 'funboost_group'
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group': 'funboost_group'}
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group': 'funboost_group','pull_msg_batch_size': 100}
 
     def custom_init(self):
         self.group = self.consumer_params.broker_exclusive_config['group'] or self.GROUP
@@ -33,6 +33,7 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
         self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
 
     def _shedual_task(self):
+        pull_msg_batch_size = self.consumer_params.broker_exclusive_config['pull_msg_batch_size']
 
         try:
             self.redis_db_frame.xgroup_create(self._queue_name,self.group , id=0, mkstream=True)
@@ -41,7 +42,7 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
         while True:
             # redis服务端必须是5.0以上，并且确保这个键的类型是stream不能是list数据结构。
             results = self.redis_db_frame.xreadgroup(self.group, self.consumer_identification,
-                                                              {self.queue_name: ">"}, count=100, block=60 * 1000)
+                                                              {self.queue_name: ">"}, count=pull_msg_batch_size, block=60 * 1000)
             if results:
                 # self.logger.debug(f'从redis的 [{self._queue_name}] stream 中 取出的消息是：  {results}  ')
                 self._print_message_get_from_broker( results)

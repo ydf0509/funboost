@@ -17,20 +17,20 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
     redis作为中间件实现的，使用redis list 结构实现的。
     这个如果消费脚本在运行时候随意反复重启或者非正常关闭或者消费宕机，会丢失大批任务。高可靠需要用rabbitmq或者redis_ack_able或者redis_stream的中间件方式。
 
-    这个是复杂版，一次性拉取100个，简单版在 funboost/consumers/redis_consumer_simple.py
+    这个是复杂版，一次性拉取100个,减少和redis的交互，简单版在 funboost/consumers/redis_consumer_simple.py
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'redis_bulk_push':1}   #redis_bulk_push 是否redis批量推送
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'redis_bulk_push':1,'pull_msg_batch_size':100}   #redis_bulk_push 是否redis批量推送
 
     # noinspection DuplicatedCode
     def _shedual_task(self):
+        pull_msg_batch_size =  self.consumer_params.broker_exclusive_config['pull_msg_batch_size']
         while True:
             # if False:
             #     pass
             with self.redis_db_frame.pipeline() as p:
-                get_msg_batch_size = 100
-                p.lrange(self._queue_name, 0, get_msg_batch_size - 1)
-                p.ltrim(self._queue_name, get_msg_batch_size, -1)
+                p.lrange(self._queue_name, 0, pull_msg_batch_size- 1)
+                p.ltrim(self._queue_name, pull_msg_batch_size, -1)
                 task_str_list = p.execute()[0]
             if task_str_list:
                 # self.logger.debug(f'从redis的 [{self._queue_name}] 队列中 取出的消息是：  {task_str_list}  ')

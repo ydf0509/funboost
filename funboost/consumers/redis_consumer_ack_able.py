@@ -99,6 +99,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
     # print(script_4(keys=["text_pipelien1","text_pipelien1b"]))
     """
 
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = { 'pull_msg_batch_size': 100}
 
     def _shedual_task000(self):
         # 可以采用lua脚本，也可以采用redis的watch配合pipeline使用。比代码分两行pop和zadd比还能减少一次io交互，还能防止丢失小概率一个任务。
@@ -122,8 +123,9 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
                 time.sleep(0.5)
 
     def _shedual_task(self):
-        lua = '''
-                     local task_list = redis.call("lrange", KEYS[1],0,99)
+        pull_msg_batch_size = self.consumer_params.broker_exclusive_config['pull_msg_batch_size']
+        lua = f'''
+                     local task_list = redis.call("lrange", KEYS[1],0,{pull_msg_batch_size-1})
                      redis.call("ltrim", KEYS[1],100,-1)
                      if (#task_list > 0) then
                         for task_index,task_value in ipairs(task_list)

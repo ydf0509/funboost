@@ -509,7 +509,7 @@ def cached_method_result_for_instance(fun):
 
 
 class FunctionResultCacher:
-    logger = LogManager('FunctionResultChche').get_logger_and_add_handlers()
+    logger = LogManager('FunctionResultChche').get_logger_and_add_handlers(log_level_int=20)
     func_result_dict = {}
     """
     {

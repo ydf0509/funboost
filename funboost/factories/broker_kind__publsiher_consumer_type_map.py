@@ -1,6 +1,6 @@
 import typing
 
-
+from funboost.publishers.empty_publisher import EmptyPublisher
 from funboost.publishers.http_publisher import HTTPPublisher
 from funboost.publishers.nats_publisher import NatsPublisher
 from funboost.publishers.peewee_publisher import PeeweePublisher
@@ -25,6 +25,7 @@ from funboost.publishers.redis_stream_publisher import RedisStreamPublisher
 from funboost.publishers.mqtt_publisher import MqttPublisher
 from funboost.publishers.httpsqs_publisher import HttpsqsPublisher
 
+from funboost.consumers.empty_consumer import EmptyConsumer
 from funboost.consumers.redis_consumer_priority import RedisPriorityConsumer
 from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer
 from funboost.consumers.http_consumer import HTTPConsumer
@@ -80,6 +81,7 @@ broker_kind__publsiher_consumer_type_map = {
     BrokerEnum.PEEWEE: (PeeweePublisher, PeeweeConsumer),
     BrokerEnum.REDIS_PUBSUB: (RedisPubSubPublisher, RedisPbSubConsumer),
     BrokerEnum.REIDS_ACK_USING_TIMEOUT: (RedisPublisher, RedisConsumerAckUsingTimeout),
+    BrokerEnum.EMPTY:(EmptyPublisher,EmptyConsumer),
 
 }
 

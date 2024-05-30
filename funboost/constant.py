@@ -1,5 +1,7 @@
 # coding= utf-8
 class BrokerEnum:
+    EMPTY = 'empty' # 空的实现，需要搭配 boost入参的 consumer_override_cls 和 publisher_override_cls使用，或者被继承。
+
     RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'  # 使用 amqpstorm 包操作rabbitmq  作为 分布式消息队列，支持消费确认.强烈推荐这个作为funboost中间件。
     RABBITMQ = RABBITMQ_AMQPSTORM
 

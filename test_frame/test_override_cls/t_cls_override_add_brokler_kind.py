@@ -1,3 +1,5 @@
+import threading
+
 import json
 
 import time
@@ -5,6 +7,7 @@ from collections import defaultdict
 from funboost import boost, BrokerEnum, BoosterParams, AbstractConsumer, FunctionResultStatus, EmptyConsumer, EmptyPublisher
 
 queue_name__list_map = defaultdict(list)
+list_lock = threading.Lock()
 
 
 class MyListConsumer(EmptyConsumer):
@@ -14,16 +17,19 @@ class MyListConsumer(EmptyConsumer):
     def _shedual_task(self):
         while True:
             try:
-                msg = self.list.pop()
+                with list_lock:
+                    msg = self.list.pop()
                 self._submit_task({'body': msg})
             except IndexError:
                 time.sleep(1)
 
     def _confirm_consume(self, kw):
+        """ 这里是演示,所以搞简单一点,不实现确认消费 """
         pass
 
     def _requeue(self, kw):
-        self.list.append(kw['body'])
+        with list_lock:
+            self.list.append(kw['body'])
 
 
 class MyListPublisher(EmptyPublisher):
@@ -31,20 +37,24 @@ class MyListPublisher(EmptyPublisher):
         self.list: list = queue_name__list_map[self.queue_name]
 
     def concrete_realization_of_publish(self, msg: str):
-        self.list.append(json.loads(msg))
+        with list_lock:
+            self.list.append(json.loads(msg))
 
     def clear(self):
-        self.list.clear()
+        with list_lock:
+            self.list.clear()
 
     def get_message_count(self):
-        return len(self.list)
+        with list_lock:
+            return len(self.list)
 
     def close(self):
         pass
 
 
-@boost(BoosterParams(queue_name='test_define_cls_queue', broker_kind=BrokerEnum.EMPTY,
-                     concurrent_num=10, consumer_override_cls=MyListConsumer,publisher_override_cls=MyListPublisher,
+@boost(BoosterParams(queue_name='test_define_list_queue',
+                     broker_kind=BrokerEnum.EMPTY,  # 完全重新自定义新增中间件时候,broker_kind 请指定 BrokerEnum.EMPTY
+                     concurrent_num=10, consumer_override_cls=MyListConsumer, publisher_override_cls=MyListPublisher,
                      is_show_message_get_from_broker=True))
 def cost_long_time_fun(x):
     print(f'start {x}')

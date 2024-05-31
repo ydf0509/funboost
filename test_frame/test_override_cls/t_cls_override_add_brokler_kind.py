@@ -4,12 +4,14 @@ import json
 
 import time
 from collections import defaultdict
-from funboost import boost, BrokerEnum, BoosterParams, AbstractConsumer, FunctionResultStatus, EmptyConsumer, EmptyPublisher
+from funboost import boost, BrokerEnum, BoosterParams, EmptyConsumer, EmptyPublisher
 
 queue_name__list_map = defaultdict(list)
 list_lock = threading.Lock()
 
-
+'''
+使用 list 列表作为 消息队列的中间件 实现, 通过指定 consumer_override_cls 和 publisher_override_cls 为用户自定义的类来实现.
+'''
 class MyListConsumer(EmptyConsumer):
     def custom_init(self):
         self.list: list = queue_name__list_map[self.queue_name]
@@ -52,6 +54,11 @@ class MyListPublisher(EmptyPublisher):
         pass
 
 
+'''
+完全重新自定义增加中间件时候,broker_kind 建议指定为 BrokerEnum.EMPTY
+'''
+
+
 @boost(BoosterParams(queue_name='test_define_list_queue',
                      broker_kind=BrokerEnum.EMPTY,  # 完全重新自定义新增中间件时候,broker_kind 请指定 BrokerEnum.EMPTY
                      concurrent_num=10, consumer_override_cls=MyListConsumer, publisher_override_cls=MyListPublisher,
@@ -63,6 +70,7 @@ def cost_long_time_fun(x):
 
 
 if __name__ == '__main__':
+
     for i in range(100):
         cost_long_time_fun.push(i)
     cost_long_time_fun.consume()

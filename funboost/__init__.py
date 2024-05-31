@@ -31,12 +31,13 @@ from funboost.utils.paramiko_util import ParamikoFolderUploader
 
 from funboost.consumers.base_consumer import (wait_for_possible_has_finish_all_tasks_by_conusmer_list,
                                               FunctionResultStatus, AbstractConsumer)
-
+from funboost.consumers.empty_consumer import EmptyConsumer
 from funboost.core.exceptions import ExceptionForRetry, ExceptionForRequeue, ExceptionForPushToDlxqueue
 from funboost.core.active_cousumer_info_getter import ActiveCousumerProcessInfoGetter
 from funboost.core.msg_result_getter import HasNotAsyncResult, ResultFromMongo
 from funboost.publishers.base_publisher import (PriorityConsumingControlConfig,
                                                 AbstractPublisher, AsyncResult, AioAsyncResult)
+from funboost.publishers.empty_publisher import EmptyPublisher
 from funboost.factories.broker_kind__publsiher_consumer_type_map import register_custom_broker
 from funboost.factories.publisher_factotry import get_publisher
 from funboost.factories.consumer_factory import get_consumer

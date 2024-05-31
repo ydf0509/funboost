@@ -12,7 +12,7 @@ class EmptyPublisher(AbstractPublisher, metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def concrete_realization_of_publish(self, msg):
+    def concrete_realization_of_publish(self, msg:str):
         raise NotImplemented('not realization')
 
     @abc.abstractmethod

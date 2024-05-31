@@ -1,18 +1,50 @@
+import json
+
 import time
+from collections import defaultdict
+from funboost import boost, BrokerEnum, BoosterParams, AbstractConsumer, FunctionResultStatus, EmptyConsumer, EmptyPublisher
 
-from funboost import boost, BrokerEnum, BoosterParams, AbstractConsumer, FunctionResultStatus,EmptyConsumer,EmptyPublisher
-
-
-class MyRedisConsumer(EmptyConsumer):
-    def user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus):
-        print('使用指定的consumer_override_cls来自定义或重写方法')
-        self.logger.debug(current_function_result_status.get_status_dict())
+queue_name__list_map = defaultdict(list)
 
 
+class MyListConsumer(EmptyConsumer):
+    def custom_init(self):
+        self.list: list = queue_name__list_map[self.queue_name]
+
+    def _shedual_task(self):
+        while True:
+            try:
+                msg = self.list.pop()
+                self._submit_task({'body': msg})
+            except IndexError:
+                time.sleep(1)
+
+    def _confirm_consume(self, kw):
+        pass
+
+    def _requeue(self, kw):
+        self.list.append(kw['body'])
+
+
+class MyListPublisher(EmptyPublisher):
+    def custom_init(self):
+        self.list: list = queue_name__list_map[self.queue_name]
+
+    def concrete_realization_of_publish(self, msg: str):
+        self.list.append(json.loads(msg))
+
+    def clear(self):
+        self.list.clear()
+
+    def get_message_count(self):
+        return len(self.list)
+
+    def close(self):
+        pass
 
 
 @boost(BoosterParams(queue_name='test_define_cls_queue', broker_kind=BrokerEnum.EMPTY,
-                     concurrent_num=10, consumer_override_cls=MyConsumer,
+                     concurrent_num=10, consumer_override_cls=MyListConsumer,publisher_override_cls=MyListPublisher,
                      is_show_message_get_from_broker=True))
 def cost_long_time_fun(x):
     print(f'start {x}')

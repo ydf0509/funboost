@@ -11,8 +11,11 @@ class EmptyPublisher(AbstractPublisher, metaclass=abc.ABCMeta):
     空的发布者，空的实现，需要搭配 boost入参的 consumer_override_cls 和 publisher_override_cls使用，或者被继承。
     """
 
+    def custom_init(self):
+        pass
+
     @abc.abstractmethod
-    def concrete_realization_of_publish(self, msg:str):
+    def concrete_realization_of_publish(self, msg: str):
         raise NotImplemented('not realization')
 
     @abc.abstractmethod

@@ -10,8 +10,10 @@ queue_name__list_map = defaultdict(list)
 list_lock = threading.Lock()
 
 '''
-使用 list 列表作为 消息队列的中间件 实现, 通过指定 consumer_override_cls 和 publisher_override_cls 为用户自定义的类来实现.
+使用 list 列表作为 消息队列的中间件 实现, 通过指定 consumer_override_cls 和 publisher_override_cls 为用户自定义的类来实现新增消息队列种类。
 '''
+
+
 class MyListConsumer(EmptyConsumer):
     def custom_init(self):
         self.list: list = queue_name__list_map[self.queue_name]

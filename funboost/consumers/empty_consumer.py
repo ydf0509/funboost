@@ -10,6 +10,8 @@ class EmptyConsumer(AbstractConsumer, metaclass=abc.ABCMeta):
     """
     空的消费者没实现，空的实现，需要搭配 boost入参的 consumer_override_cls 和 publisher_override_cls使用，或者被继承。
     """
+    def custom_init(self):
+        pass
 
     @abc.abstractmethod
     def _shedual_task(self):

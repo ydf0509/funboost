@@ -36,7 +36,7 @@ def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher:
     if not publisher_params.publisher_override_cls:
         return publisher_cls(publisher_params)
     else:
-        PublsiherClsOverride = type(f'{publisher_cls.__name__}_{publisher_params.publisher_override_cls.__name__}', (publisher_params.publisher_override_cls, publisher_cls, AbstractPublisher), {})
+        PublsiherClsOverride = type(f'{publisher_cls.__name__}__{publisher_params.publisher_override_cls.__name__}', (publisher_params.publisher_override_cls, publisher_cls, AbstractPublisher), {})
         # class PublsiherClsOverride(publisher_params.publisher_override_cls, publisher_cls, AbstractPublisher):
         #     pass
 

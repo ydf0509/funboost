@@ -1,7 +1,5 @@
 import threading
-
 import json
-
 import time
 from collections import defaultdict
 from funboost import boost, BrokerEnum, BoosterParams, EmptyConsumer, EmptyPublisher
@@ -42,7 +40,7 @@ class MyListPublisher(EmptyPublisher):
 
     def concrete_realization_of_publish(self, msg: str):
         with list_lock:
-            self.list.append(json.loads(msg))
+            self.list.append(msg)
 
     def clear(self):
         with list_lock:
@@ -63,7 +61,7 @@ class MyListPublisher(EmptyPublisher):
 
 @boost(BoosterParams(queue_name='test_define_list_queue',
                      broker_kind=BrokerEnum.EMPTY,  # 完全重新自定义新增中间件时候,broker_kind 请指定 BrokerEnum.EMPTY
-                     concurrent_num=10, consumer_override_cls=MyListConsumer, publisher_override_cls=MyListPublisher,
+                     concurrent_num=1, consumer_override_cls=MyListConsumer, publisher_override_cls=MyListPublisher,
                      is_show_message_get_from_broker=True))
 def cost_long_time_fun(x):
     print(f'start {x}')

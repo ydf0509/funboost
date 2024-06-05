@@ -98,7 +98,7 @@ def show_frame_config():
         #             only_print_on_main_process(f'{var_name}:                {var_value[0]}{"*" * (len(var_value) - 2)}{var_value[-1]}')
         #         else:
         #             only_print_on_main_process(f'{var_name}:                {var_value}')
-        logger_prompt.debug(f'''读取的 BrokerConnConfig 配置是:\n {funboost_config_deafult.BrokerConnConfig().get_json(indent=None)} ''')
+        logger_prompt.debug(f'''读取的 BrokerConnConfig 配置是:\n {funboost_config_deafult.BrokerConnConfig().get_pwd_enc_json(indent=4)} ''')
 
         logger_prompt.debug(f'''读取的 FunboostCommonConfig 配置是:\n  {funboost_config_deafult.FunboostCommonConfig().get_json(indent=None)} ''')
 

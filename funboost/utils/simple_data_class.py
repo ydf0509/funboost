@@ -1,7 +1,10 @@
+import json
+
 import copy
 import typing
 
 from funboost.utils import json_helper
+from funboost.utils.str_utils import PwdEnc, StrHelper
 
 
 class DataClassBase:
@@ -33,6 +36,20 @@ class DataClassBase:
 
     def get_json(self,indent=4):
         return json_helper.dict_to_un_strict_json(self.get_dict(),indent=indent)
+
+    def get_pwd_enc_json(self,indent=4):
+        """防止打印密码明文,泄漏密码"""
+        dict_new = {}
+        for k, v in self.get_dict().items():
+            # only_print_on_main_process(f'{k} :  {v}')
+            if isinstance(v, (bool, tuple, dict, float, int)):
+                dict_new[k] = v
+            else:
+                v_enc =PwdEnc.enc_broker_uri(str(v))
+                if StrHelper(k).judge_contains_str_list(['pwd', 'pass_word', 'password', 'passwd', 'pass']):
+                    v_enc = PwdEnc.enc_pwd(v_enc)
+                dict_new[k] = v_enc
+        return json.dumps(dict_new, ensure_ascii=False, indent=indent)
 
     @classmethod
     def update_cls_attribute(cls,**kwargs):

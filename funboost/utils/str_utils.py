@@ -1,3 +1,6 @@
+import re
+
+
 class PwdEnc:
 
     @classmethod
@@ -44,3 +47,5 @@ if __name__ == '__main__':
     print(PwdEnc.enc_broker_uri(str1))
     print(PwdEnc.enc_broker_uri(str2))
     print(PwdEnc.enc_pwd('465460dsdsd'))
+
+

@@ -1,6 +1,7 @@
+
 import time
 
-from funboost import boost, BrokerEnum, BoosterParams, AbstractConsumer, FunctionResultStatus
+from funboost import boost, BrokerEnum, FunctionResultStatusPersistanceConfig, BoosterParams, ConcurrentModeEnum, AbstractConsumer, FunctionResultStatus
 
 
 class MyConsumer(AbstractConsumer):
@@ -9,8 +10,9 @@ class MyConsumer(AbstractConsumer):
         self.logger.debug(current_function_result_status.get_status_dict())
 
 
-@boost(BoosterParams(queue_name='test_define_cls_queue', broker_kind=BrokerEnum.REDIS,
-                     concurrent_num=10, consumer_override_cls=MyConsumer,
+@boost(BoosterParams(queue_name='test_redis_ack_use_timeout_queue', broker_kind=BrokerEnum.REDIS,
+                     concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,
+                     log_level=10,  consumer_override_cls=MyConsumer,
                      is_show_message_get_from_broker=True))
 def cost_long_time_fun(x):
     print(f'start {x}')

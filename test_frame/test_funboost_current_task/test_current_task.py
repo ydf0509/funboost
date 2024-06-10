@@ -76,5 +76,5 @@ if __name__ == '__main__':
         f.push(i, b=i * 2)
         aiof.push(i*10,i*20)
 
-        f.consume()
+        # f.consume()
         aiof.consume()

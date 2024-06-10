@@ -54,7 +54,7 @@ class __ThreadCurrentTask:
 
 
     _fct_local_data = threading.local()
-
+    _fct_local_data._asynco_use_thread_concurrent_mode = False
 
     @property
     def function_params(self):
@@ -146,7 +146,14 @@ class __AsyncioCurrentTask:
 asyncio_current_task = __AsyncioCurrentTask()
 
 def funboost_current_task():
-    return asyncio_current_task if is_asyncio_environment() else thread_current_task
+    if is_asyncio_environment():
+        if getattr(__ThreadCurrentTask._fct_local_data,'_asynco_use_thread_concurrent_mode',None) is True:
+            # 如果用户使用的是默认的ConcurrentModeEnum.THREADING并发模式，那么也使用线程获取上下文
+            return thread_current_task
+        else:
+            return asyncio_current_task
+    else:
+        return thread_current_task
 
 
 def get_current_taskid():

@@ -660,7 +660,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         try:
             function_run = self.consuming_function
             if self._consuming_function_is_asyncio:
+                fct._fct_local_data._asynco_use_thread_concurrent_mode = True
                 function_run = sync_or_async_fun_deco(function_run)
+            else:
+                fct._fct_local_data._asynco_use_thread_concurrent_mode = False
             function_timeout = self._get_priority_conf(kw, 'function_timeout')
             function_run = function_run if self.consumer_params.consumin_function_decorator is None else self.consumer_params.consumin_function_decorator(function_run)
             function_run = function_run if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
@@ -826,7 +829,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         try:
             corotinue_obj = self.consuming_function(**function_only_params)
             if not asyncio.iscoroutine(corotinue_obj):
-                log_msg = f'''当前设置的并发模式为 async 并发模式，但消费函数不是异步协程函数，请不要把消费函数 {self.consuming_function.__name__} 的 concurrent_mode 设置为 4'''
+                log_msg = f'''当前设置的并发模式为 async 并发模式，但消费函数不是异步协程函数，请不要把消费函数 {self.consuming_function.__name__} 的 concurrent_mode 设置错误'''
                 # self.logger.critical(msg=f'{log_msg} \n')
                 # self.error_file_logger.critical(msg=f'{log_msg} \n')
                 self.logger.critical(msg=log_msg)

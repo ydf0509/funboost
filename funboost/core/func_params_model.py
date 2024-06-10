@@ -188,6 +188,8 @@ class BoosterParams(BaseJsonAbleModel):
     consumer_override_cls: typing.Optional[typing.Type] = None  # 使用 consumer_override_cls 和 publisher_override_cls 来自定义重写或新增消费者 发布者,见文档4.21b介绍，
     publisher_override_cls: typing.Optional[typing.Type] = None
 
+    # func_params_is_pydantic_model: bool = False  # funboost 兼容支持 函数娼还是 pydantic model类型，funboost在发布之前和取出来时候自己转化。
+
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
 
     @root_validator(skip_on_failure=True)
@@ -248,6 +250,7 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
     misfire_grace_time: typing.Union[int, None] = None
     other_extra_params: dict = None  # 其他参数, 例如消息优先级 , priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': priorityxx})，
 
+
     @root_validator(skip_on_failure=True)
     def cehck_values(cls, values: dict):
         if values['countdown'] and values['eta']:
@@ -270,6 +273,7 @@ class PublisherParams(BaseJsonAbleModel):
     broker_exclusive_config: dict = {}
     should_check_publish_func_params: bool = True  # 消息发布时候是否校验消息发布内容,比如有的人发布消息,函数只接受a,b两个入参,他去传2个入参,或者传参不存在的参数名字,  如果消费函数你非要写*args,**kwargs,那就需要关掉发布消息时候的函数入参检查
     publisher_override_cls: typing.Optional[typing.Type] = None
+    # func_params_is_pydantic_model: bool = False  # funboost 兼容支持 函数娼还是 pydantic model类型，funboost在发布之前和取出来时候自己转化。
 
 
 if __name__ == '__main__':

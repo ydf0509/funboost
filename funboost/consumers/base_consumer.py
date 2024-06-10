@@ -660,7 +660,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         try:
             function_run = self.consuming_function
             if self._consuming_function_is_asyncio:
-                fct._fct_local_data._asynco_use_thread_concurrent_mode = True
+                fct._fct_local_data._asyncio_use_thread_concurrent_mode = True
                 function_run = sync_or_async_fun_deco(function_run)
             else:
                 fct._fct_local_data._asynco_use_thread_concurrent_mode = False

@@ -44,7 +44,7 @@ def f(a, b):
 
     return a + b
 
-@boost(BoosterParams(queue_name='aio_queue_test_fct', qps=2, concurrent_num=5, log_filename=LOG_FILENAME_QUEUE_FCT,concurrent_mode=ConcurrentModeEnum.ASYNC))
+@boost(BoosterParams(queue_name='aio_queue_test_fct', qps=2, concurrent_num=5, log_filename=LOG_FILENAME_QUEUE_FCT,concurrent_mode=ConcurrentModeEnum.THREADING))
 async def aiof(a, b):
     fct = funboost_current_task()  # 线程/协程隔离级别的上下文
 

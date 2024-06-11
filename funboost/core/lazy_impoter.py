@@ -16,8 +16,14 @@ class FunboostLazyImpoter(SingletonBaseNew):
     @property
     @cached_method_result
     def BoostersManager(self):
-        from funboost.core.booster import BoostersManager
-        return BoostersManager
+        from funboost.core import booster
+        return booster.BoostersManager
+
+    @property
+    @cached_method_result
+    def boost(self):
+        from funboost.core import  booster
+        return booster.boost
 
     # @property
     # @cached_method_result

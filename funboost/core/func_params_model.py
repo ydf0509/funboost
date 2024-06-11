@@ -10,6 +10,8 @@ from funboost.concurrent_pool import FunboostBaseConcurrentPool, FlexibleThreadP
 from funboost.constant import ConcurrentModeEnum, BrokerEnum
 from pydantic import BaseModel, validator, root_validator, BaseConfig, Field
 
+from funboost.core.lazy_impoter import funboost_lazy_impoter
+
 
 def _patch_for_pydantic_field_deepcopy():
     from concurrent.futures import ThreadPoolExecutor
@@ -212,6 +214,19 @@ class BoosterParams(BaseJsonAbleModel):
             if k not in BoosterParams.__fields__.keys():
                 raise ValueError(f'{cls.__name__} 的字段新增了父类 BoosterParams 不存在的字段 "{k}"')  # 使 BoosterParams的子类,不能增加字段,只能覆盖字段.
         return values
+
+    def __call__(self, func):
+        """
+        新增加一种语法
+        @boost(BoosterParams(queue_name='q1',qps=2)) 这个等效下面
+
+        @BoosterParams(queue_name='q1',qps=2)
+        def f(a,b):
+            print(a,b)
+        :param func:
+        :return:
+        """
+        return funboost_lazy_impoter.boost(self)(func)
 
 
 class BoosterParamsComplete(BoosterParams):

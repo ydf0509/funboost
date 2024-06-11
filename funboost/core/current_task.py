@@ -148,7 +148,7 @@ asyncio_current_task = __AsyncioCurrentTask()
 def funboost_current_task():
     if is_asyncio_environment():
         if getattr(__ThreadCurrentTask._fct_local_data,'_asyncio_use_thread_concurrent_mode',None) is True:
-            # 如果用户使用的是默认的ConcurrentModeEnum.THREADING并发模式，那么也使用线程获取上下文
+            # 如果用户使用的是默认的ConcurrentModeEnum.THREADING并发模式来运行async def 函数，那么也使用线程获取上下文
             return thread_current_task
         else:
             return asyncio_current_task

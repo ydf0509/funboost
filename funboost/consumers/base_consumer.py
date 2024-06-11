@@ -565,6 +565,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def user_custom_record_process_info_func(self,current_function_result_status:FunctionResultStatus):  # 这个可以继承
         pass
 
+    async def aio_user_custom_record_process_info_func(self,current_function_result_status:FunctionResultStatus):  # 这个可以继承
+        pass
+
     # noinspection PyProtectedMember
     def _run(self, kw: dict, ):
         # print(kw)
@@ -804,9 +807,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._consuming_function_cost_time_total_every_unit_time = 0
                 self._execute_task_times_every_unit_time = 0
 
-            self.user_custom_record_process_info_func(current_function_result_status)  # 两种方式都可以自定义,记录结果.
+            self.user_custom_record_process_info_func(current_function_result_status)  # 两种方式都可以自定义,记录结果.建议使用文档4.21.b的方式继承来重写
+            await self.aio_user_custom_record_process_info_func(current_function_result_status)
             if self.consumer_params.user_custom_record_process_info_func:
                 self.consumer_params.user_custom_record_process_info_func(current_function_result_status)
+
         except BaseException as e:
             log_msg = f' error 严重错误 {type(e)} {e} '
             # self.logger.critical(msg=f'{log_msg} \n', exc_info=True)

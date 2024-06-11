@@ -639,7 +639,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     self._current_time_for_execute_task_times_every_unit_time = time.time()
                     self._consuming_function_cost_time_total_every_unit_time = 0
                     self._execute_task_times_every_unit_time = 0
-            self.user_custom_record_process_info_func(current_function_result_status) # 两种方式都可以自定义,记录结果.
+            self.user_custom_record_process_info_func(current_function_result_status) # 两种方式都可以自定义,记录结果,建议继承方式,不使用boost中指定 user_custom_record_process_info_func
             if self.consumer_params.user_custom_record_process_info_func:
                 self.consumer_params.user_custom_record_process_info_func(current_function_result_status)
         except BaseException as e:

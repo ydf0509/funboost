@@ -218,7 +218,7 @@ class BoosterParams(BaseJsonAbleModel):
     def __call__(self, func):
         """
         新增加一种语法
-        @boost(BoosterParams(queue_name='q1',qps=2)) 这个等效下面
+        @BoosterParams(queue_name='q1',qps=2) 这个和 @boost(BoosterParams(queue_name='q1',qps=2)) 写法等效
 
         @BoosterParams(queue_name='q1',qps=2)
         def f(a,b):

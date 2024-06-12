@@ -17,9 +17,12 @@ url = 'http://mini.eastday.com/assets/v1/js/search_word.js'
 loop = asyncio.new_event_loop()
 ss = aiohttp.ClientSession(loop=loop, )
 
+# ss_main_thread = aiohttp.ClientSession()
 
 @boost('test_async_queue2', concurrent_mode=ConcurrentModeEnum.ASYNC, broker_kind=BrokerEnum.REDIS, log_level=10,
-       concurrent_num=500, specify_async_loop=loop)
+       concurrent_num=500,
+       specify_async_loop=loop
+       )
 async def async_f(x):
     # 如果使使用了同一个session，async with ss.request，必须指定specify_async_loop的值和ClientSession的loop相同。
     # 否则 如果使使用 async with aiohttp.request ，则无需指定specify_async_loop参数。

@@ -20,7 +20,7 @@ task_id_logger = LogManager('namexx', logger_cls=TaskIdLogger).get_logger_and_ad
 common_logger = nb_log.get_logger('namexx2',formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER)
 
 
-@boost(BoosterParams(queue_name='queue_test_fct', qps=2, concurrent_num=5, log_filename=LOG_FILENAME_QUEUE_FCT,))
+@boost(BoosterParams(queue_name='queue_test_fct', qps=2, concurrent_num=5, log_filename=LOG_FILENAME_QUEUE_FCT,function_timeout=20))
 def f(a, b):
     fct = funboost_current_task()  # 线程/协程隔离级别的上下文
 
@@ -44,7 +44,7 @@ def f(a, b):
 
     return a + b
 
-@boost(BoosterParams(queue_name='aio_queue_test_fct', qps=2, concurrent_num=5, log_filename=LOG_FILENAME_QUEUE_FCT,concurrent_mode=ConcurrentModeEnum.THREADING))
+@boost(BoosterParams(queue_name='aio_queue_test_fct', qps=2, concurrent_num=5, log_filename=LOG_FILENAME_QUEUE_FCT,concurrent_mode=ConcurrentModeEnum.THREADING,function_timeout=20))
 async def aiof(a, b):
     fct = funboost_current_task()  # 线程/协程隔离级别的上下文
 
@@ -71,7 +71,7 @@ async def aiof(a, b):
 if __name__ == '__main__':
     # f(5, 6)  # 可以直接调用
 
-    for i in range(0, 200):
+    for i in range(0, 2):
         time.sleep(0.1)
         f.push(i, b=i * 2)
         aiof.push(i*10,i*20)

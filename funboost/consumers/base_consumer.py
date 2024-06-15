@@ -30,13 +30,13 @@ from threading import Lock
 import asyncio
 
 import nb_log
-from funboost.core.current_task import funboost_current_task
+from funboost.core.current_task import funboost_current_task, FctContext
 from funboost.core.loggers import develop_logger
 
 from funboost.core.func_params_model import BoosterParams, PublisherParams, BaseJsonAbleModel
 from funboost.core.task_id_logger import TaskIdLogger
 from funboost.utils.json_helper import JsonUtils
-from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager,  is_main_process,
+from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, is_main_process,
                     nb_log_config_default)
 from funboost.core.loggers import FunboostFileLoggerMixin, logger_prompt
 
@@ -562,10 +562,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         self._do_not_delete_extra_from_msg = True
 
-    def user_custom_record_process_info_func(self,current_function_result_status:FunctionResultStatus):  # 这个可以继承
+    def user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus):  # 这个可以继承
         pass
 
-    async def aio_user_custom_record_process_info_func(self,current_function_result_status:FunctionResultStatus):  # 这个可以继承
+    async def aio_user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus):  # 这个可以继承
         pass
 
     # noinspection PyProtectedMember
@@ -627,9 +627,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
                           f'函数平均运行耗时 {avarage_function_spend_time} 秒。 '
                     self.logger.info(msg)
-                    if  time.time() - self._last_show_remaining_execution_time > self._show_remaining_execution_time_interval:
+                    if time.time() - self._last_show_remaining_execution_time > self._show_remaining_execution_time_interval:
                         self._msg_num_in_broker = self.publisher_of_same_queue.get_message_count()
-                        if self._msg_num_in_broker != -1 :  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
+                        if self._msg_num_in_broker != -1:  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
                             # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
                             need_time = time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / (self._execute_task_times_every_unit_time / self._unit_time_for_count) /
                                                                                 self._distributed_consumer_statistics.active_consumer_num)
@@ -639,7 +639,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     self._current_time_for_execute_task_times_every_unit_time = time.time()
                     self._consuming_function_cost_time_total_every_unit_time = 0
                     self._execute_task_times_every_unit_time = 0
-            self.user_custom_record_process_info_func(current_function_result_status) # 两种方式都可以自定义,记录结果,建议继承方式,不使用boost中指定 user_custom_record_process_info_func
+            self.user_custom_record_process_info_func(current_function_result_status)  # 两种方式都可以自定义,记录结果,建议继承方式,不使用boost中指定 user_custom_record_process_info_func
             if self.consumer_params.user_custom_record_process_info_func:
                 self.consumer_params.user_custom_record_process_info_func(current_function_result_status)
         except BaseException as e:
@@ -656,17 +656,19 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         t_start = time.time()
         # function_result_status.run_times = current_retry_times + 1
         fct = funboost_current_task()
-        fct.function_params = function_only_params
-        fct.full_msg = kw['body']
-        fct.function_result_status = function_result_status
-        fct.logger = self.logger
+        fct_context = FctContext(function_params=function_only_params,
+                                 full_msg=kw['body'],
+                                 function_result_status=function_result_status,
+                                 logger=self.logger, )
+
         try:
             function_run = self.consuming_function
             if self._consuming_function_is_asyncio:
-                fct._fct_local_data._asyncio_use_thread_concurrent_mode = True
+                fct_context.asyncio_use_thread_concurrent_mode = True
                 function_run = sync_or_async_fun_deco(function_run)
             else:
-                fct._fct_local_data._asynco_use_thread_concurrent_mode = False
+                fct_context.asynco_use_thread_concurrent_mode = False
+            fct.set_fct_context(fct_context)
             function_timeout = self._get_priority_conf(kw, 'function_timeout')
             function_run = function_run if self.consumer_params.consumin_function_decorator is None else self.consumer_params.consumin_function_decorator(function_run)
             function_run = function_run if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
@@ -828,10 +830,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # noinspection PyBroadException
         t_start = time.time()
         fct = funboost_current_task()
-        fct.function_params = function_only_params
-        fct.full_msg = kw['body']
-        fct.function_result_status = function_result_status
-        fct.logger = self.logger
+        fct_context = FctContext(function_params=function_only_params,
+                                 full_msg=kw['body'],
+                                 function_result_status=function_result_status,
+                                 logger=self.logger, )
+        fct.set_fct_context(fct_context)
         try:
             corotinue_obj = self.consuming_function(**function_only_params)
             if not asyncio.iscoroutine(corotinue_obj):

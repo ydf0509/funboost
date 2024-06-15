@@ -1,10 +1,9 @@
 import abc
 import contextvars
+from dataclasses import dataclass
 import logging
 import threading
 import asyncio
-
-import pydantic
 
 from funboost.core.function_result_status_saver import FunctionResultStatus
 
@@ -51,21 +50,18 @@ if __name__ == '__main__':
     """
 
 
+
+@dataclass
 class FctContext:
     """
     fct 是 funboost current task 的简写
     """
 
-    def __init__(self, function_params: dict,
-                 full_msg: dict,
-                 function_result_status: FunctionResultStatus,
-                 logger: logging.Logger,
-                 asyncio_use_thread_concurrent_mode: bool = False):
-        self.function_params = function_params
-        self.full_msg = full_msg
-        self.function_result_status = function_result_status
-        self.logger = logger
-        self.asyncio_use_thread_concurrent_mode = asyncio_use_thread_concurrent_mode
+    function_params: dict
+    full_msg: dict
+    function_result_status: FunctionResultStatus
+    logger: logging.Logger
+    asyncio_use_thread_concurrent_mode: bool = False
 
 
 class _BaseCurrentTask(metaclass=abc.ABCMeta):
@@ -96,6 +92,9 @@ class _BaseCurrentTask(metaclass=abc.ABCMeta):
     @property
     def logger(self) -> logging.Logger:
         return self.get_fct_context().logger
+
+    def __str__(self):
+        return f'<{self.__class__.__name__} [{self.function_result_status.get_status_dict()}]>'
 
 
 class __ThreadCurrentTask(_BaseCurrentTask):
@@ -155,10 +154,22 @@ def get_current_taskid():
         return 'no_task_id'
 
 
+class FctContextThread(threading.Thread):
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs=None, *, daemon=None,
+                 ):
+        threading.Thread.__init__(**locals())
+        self.fct_context = thread_current_task.get_fct_context()
+
+    def run(self):
+        thread_current_task.set_fct_context(self.fct_context)
+        super().run()
+
+
 if __name__ == '__main__':
     print(is_asyncio_environment())
     print()
-    for i in range(100000):
+    for i in range(2):
         funboost_current_task()
-        get_current_taskid()
+        print(get_current_taskid())
     print()

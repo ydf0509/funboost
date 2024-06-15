@@ -66,9 +66,9 @@ def func_timeout(timeout, func, args=(), kwargs=None):
 
     from funboost.core.current_task import thread_current_task
 
-    def funcwrap(args2, kwargs2,):
-        # fct = thread_current_task
-        # fct.set_fct_context(fct_context)  # 把funboost的消费线程上下文需要传递到超时线程上下文里面来.
+    def funcwrap(args2, kwargs2,fct_context):
+        fct = thread_current_task
+        fct.set_fct_context(fct_context)  # 把funboost的消费线程上下文需要传递到超时线程上下文里面来.
         try:
             ret.append( func(*args2, **kwargs2) )
         except FunctionTimedOut:
@@ -86,7 +86,7 @@ def func_timeout(timeout, func, args=(), kwargs=None):
 
 
     # fct = funboost_current_task()
-    thread = StoppableThread(target=funcwrap, args=(args, kwargs,))
+    thread = StoppableThread(target=funcwrap, args=(args, kwargs,thread_current_task.get_fct_context()))
     thread.daemon = True
 
     thread.start()

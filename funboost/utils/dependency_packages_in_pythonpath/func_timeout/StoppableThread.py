@@ -9,9 +9,10 @@ import os
 import ctypes
 import threading
 
+from funboost.core.current_task import FctContextThread
 __all__ = ('StoppableThread', 'JoinThread')
 
-class StoppableThread(threading.Thread):
+class StoppableThread(FctContextThread):
     '''
         StoppableThread - A thread that can be stopped by forcing an exception in the execution context.
 

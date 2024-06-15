@@ -2,7 +2,7 @@ import asyncio
 import random
 import time
 
-from funboost import boost, FunctionResultStatusPersistanceConfig, BoosterParams,ConcurrentModeEnum
+from funboost import boost, FunctionResultStatusPersistanceConfig, BoosterParams, ConcurrentModeEnum
 from funboost.core.current_task import funboost_current_task
 from funboost.core.task_id_logger import TaskIdLogger
 import nb_log
@@ -17,10 +17,10 @@ task_id_logger = LogManager('namexx', logger_cls=TaskIdLogger).get_logger_and_ad
     formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
 
 # 如果不使用TaskIdLogger来创建logger还想使用task_id的日志模板,需要用户在打印日志时候手动传 extra={'task_id': fct.task_id}
-common_logger = nb_log.get_logger('namexx2',formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER)
+common_logger = nb_log.get_logger('namexx2', formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER)
 
 
-@boost(BoosterParams(queue_name='queue_test_fct', qps=2, concurrent_num=5, log_filename=LOG_FILENAME_QUEUE_FCT,function_timeout=20))
+@boost(BoosterParams(queue_name='queue_test_fct', qps=2, concurrent_num=5, log_filename=LOG_FILENAME_QUEUE_FCT, function_timeout=20))
 def f(a, b):
     fct = funboost_current_task()  # 线程/协程隔离级别的上下文
 
@@ -44,7 +44,8 @@ def f(a, b):
 
     return a + b
 
-@boost(BoosterParams(queue_name='aio_queue_test_fct', qps=2, concurrent_num=5, log_filename=LOG_FILENAME_QUEUE_FCT,concurrent_mode=ConcurrentModeEnum.THREADING,function_timeout=20))
+
+@boost(BoosterParams(queue_name='aio_queue_test_fct', qps=2, concurrent_num=5, log_filename=LOG_FILENAME_QUEUE_FCT, concurrent_mode=ConcurrentModeEnum.THREADING, function_timeout=20))
 async def aiof(a, b):
     fct = funboost_current_task()  # 线程/协程隔离级别的上下文
 
@@ -68,13 +69,14 @@ async def aiof(a, b):
 
     return a + b
 
+
 if __name__ == '__main__':
     # f(5, 6)  # 可以直接调用
 
     for i in range(0, 2):
         time.sleep(0.1)
         f.push(i, b=i * 2)
-        aiof.push(i*10,i*20)
+        aiof.push(i * 10, i * 20)
 
-        # f.consume()
+        f.consume()
         aiof.consume()

@@ -170,6 +170,9 @@ def get_current_taskid():
 
 
 class FctContextThread(threading.Thread):
+    """
+    这个类自动把当前线程的 线程上下文 自动传递给新开的线程。
+    """
     def __init__(self, group=None, target=None, name=None,
                  args=(), kwargs=None, *, daemon=None,
                  ):

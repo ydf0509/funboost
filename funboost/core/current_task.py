@@ -50,17 +50,33 @@ if __name__ == '__main__':
     """
 
 
-@dataclass
+# @dataclass
+# class FctContext:
+#     """
+#     fct 是 funboost current task 的简写
+#     """
+#
+#     function_params: dict
+#     full_msg: dict
+#     function_result_status: FunctionResultStatus
+#     logger: logging.Logger
+#     asyncio_use_thread_concurrent_mode: bool = False
+
 class FctContext:
     """
     fct 是 funboost current task 的简写
     """
 
-    function_params: dict
-    full_msg: dict
-    function_result_status: FunctionResultStatus
-    logger: logging.Logger
-    asyncio_use_thread_concurrent_mode: bool = False
+    def __init__(self, function_params: dict,
+                 full_msg: dict,
+                 function_result_status: FunctionResultStatus,
+                 logger: logging.Logger,
+                 asyncio_use_thread_concurrent_mode: bool = False):
+        self.function_params = function_params
+        self.full_msg = full_msg
+        self.function_result_status = function_result_status
+        self.logger = logger
+        self.asyncio_use_thread_concurrent_mode = asyncio_use_thread_concurrent_mode
 
 
 class _BaseCurrentTask(metaclass=abc.ABCMeta):
@@ -128,7 +144,7 @@ def is_asyncio_environment():
     try:
         asyncio.get_running_loop()
         return True
-    except RuntimeError as e:
+    except RuntimeError:
         return False
 
 

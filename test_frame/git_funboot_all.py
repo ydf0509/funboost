@@ -38,6 +38,8 @@ def push(path = '../.'):
 
     do_cmd('git commit -m commit')
 
+    # do_cmd('git push --set-upstream origin {}')
+
     do_cmd('git push origin')
 
     do_cmd('git push github')

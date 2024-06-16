@@ -255,16 +255,11 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # func_args_list.insert(0, {'first_param_name': self.publish_params_checker.all_arg_name[0],
             #        'cls_type': ClsHelper.get_classs_method_cls(self.publisher_params.consuming_function).__name__},
             #                       )
-            func_args_list[0] = {'first_param_name': self.publish_params_checker.all_arg_name[0],
-                                 'cls_type': self.publisher_params.consuming_function_class_name,}
+            func_args_list.insert(0, {'first_param_name': self.publish_params_checker.all_arg_name[0],
+                                 'cls_type': self.publisher_params.consuming_function_class_name,})
         elif self.publisher_params.consuming_function_kind == FunctionKind.instance_method:
-            # func_args_list.insert(0, {'first_param_name': self.publish_params_checker.all_arg_name[0],
-            #        'obj_init_params_for_funboost': arg.obj_init_params_for_funboost,
-            #        'obj_type': ClsHelper.get_instncae_method_cls(self.publisher_params.consuming_function).__name__})
-            if not hasattr(func_args[0],'obj_init_params_for_funboost'):
-                raise ValueError('消费实例方法时候，类的对象必须定义了 obj_init_params_for_funboost 这个属性')
             func_args_list[0] = {'first_param_name': self.publish_params_checker.all_arg_name[0],
-                                 'obj_init_params_for_funboost': func_args[0].obj_init_params_for_funboost,
+                                 'obj_init_params_for_funboost': func_args[0],
                                  'obj_type': self.publisher_params.consuming_function_class_name}
 
         for index, arg in enumerate(func_args_list):

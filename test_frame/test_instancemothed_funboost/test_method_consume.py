@@ -1,18 +1,13 @@
 import copy
 from funboost import BoosterParams, boost
-from funboost.utils.class_utils import FunctionKind, MethodType
-
-
-def get_obj_init_params_for_funboost(obj_init_params: dict):
-    obj_init_params.pop('self')
-    return copy.deepcopy(obj_init_params)
+from funboost.utils.class_utils import FunctionKind, MethodType, ClsHelper
 
 
 class Myclass:
     m = 1
 
     def __init__(self, x):
-        self.obj_init_params_for_funboost: dict = get_obj_init_params_for_funboost(copy.copy(locals())) # 这行重要，如果实例方法作为消费函数，那么必须定义obj_init_params_for_funboost保存对象的 __init__ 入参，用于还原生成对象。
+        self.obj_init_params_for_funboost: dict = ClsHelper.get_obj_init_params_for_funboost(copy.copy(locals())) # 这行重要，如果实例方法作为消费函数，那么必须定义obj_init_params_for_funboost保存对象的 __init__ 入参，用于还原生成对象。
         # self.obj_init_params_for_funboost= {'x':x}  # 上面这行相当于这行，如果__init__入参太多，一个个的写到字典麻烦，可以使用上面的方式。
         self.x = x
 
@@ -23,8 +18,8 @@ class Myclass:
     #
     @classmethod
     @BoosterParams(queue_name='class_method_queue', is_show_message_get_from_broker=True, )
-    def class_method(clsaaa, y):
-        print(clsaaa.m + y)
+    def class_method(cls, y):
+        print(cls.m + y)
 
     @staticmethod
     @BoosterParams(queue_name='static_method_queue', is_show_message_get_from_broker=True)

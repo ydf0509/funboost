@@ -1,3 +1,4 @@
+import copy
 import gc
 import inspect
 import re
@@ -94,6 +95,11 @@ class ClsHelper:
             return FunctionKind.instance_method
         elif cls.is_common_function(method):
             return FunctionKind.common_function
+
+    @staticmethod
+    def get_obj_init_params_for_funboost(obj_init_params: dict):
+        obj_init_params.pop('self')
+        return copy.deepcopy(obj_init_params)
 
 
 if __name__ == '__main__':

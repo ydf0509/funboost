@@ -88,9 +88,9 @@ class Booster:
         if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], typing.Callable):
             consuming_function = args[0]
             self.boost_params.consuming_function = consuming_function
-            print(consuming_function)
-            print(ClsHelper.get_method_kind(consuming_function))
-            print(inspect.getsourcelines(consuming_function))
+            # print(consuming_function)
+            # print(ClsHelper.get_method_kind(consuming_function))
+            # print(inspect.getsourcelines(consuming_function))
             if self.boost_params.consuming_function_kind is None:
                 self.boost_params.consuming_function_kind = ClsHelper.get_method_kind(consuming_function)
             if self.boost_params.consuming_function_kind in [FunctionKind.class_method,FunctionKind.instance_method]:

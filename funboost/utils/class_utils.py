@@ -39,7 +39,7 @@ class ClsHelper:
         # return False
 
         sourcelines = inspect.getsourcelines(method)
-        print(sourcelines)
+        # print(sourcelines)
         line0: str = sourcelines[0][0]
         if line0.replace(' ', '').startswith('@classmethod'):
             return True

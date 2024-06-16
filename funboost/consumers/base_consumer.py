@@ -588,6 +588,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             elif self.publisher_params.consuming_function_kind == FunctionKind.instance_method:
                 obj = method_cls(**method_first_param_value['obj_init_params_for_funboost'])
                 real_function_only_params[method_first_param_name] = obj
+            # print(real_function_only_params)
             return real_function_only_params
         else:
             return function_only_params

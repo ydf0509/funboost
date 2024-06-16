@@ -100,7 +100,7 @@ def show_frame_config():
         #             only_print_on_main_process(f'{var_name}:                {var_value}')
         logger_prompt.debug(f'''读取的 BrokerConnConfig 配置是:\n {funboost_config_deafult.BrokerConnConfig().get_pwd_enc_json(indent=4)} ''')
 
-        logger_prompt.debug(f'''读取的 FunboostCommonConfig 配置是:\n  {funboost_config_deafult.FunboostCommonConfig().get_json(indent=None)} ''')
+        logger_prompt.debug(f'''读取的 FunboostCommonConfig 配置是:\n  {funboost_config_deafult.FunboostCommonConfig().get_json(indent=4)} ''')
 
     # only_print_on_main_process(f'读取的 BoostDecoratorDefaultParams 默认 @boost 装饰器入参的默认全局配置是： \n  '
     #                            f'{funboost_config_deafult.BoostDecoratorDefaultParams().get_json()}')
@@ -118,6 +118,7 @@ def use_config_form_funboost_config_module():
     当第一次运行脚本时候，函数调度框架会在你的python当前项目的根目录下 {project_root_path} 下，创建一个名为 funboost_config.py 的文件。
     自动读取配置，会优先读取启动脚本的所在目录 {current_script_path} 的funboost_config.py文件，
     如果没有 {current_script_path}/funboost_config.py 文件，则读取项目根目录 {project_root_path} 下的funboost_config.py做配置。
+    只要 funboost_config.py 在任意 PYTHONPATH 的文件夹下，就能自动读取到。
     在 "{project_root_path}/funboost_config.py:1" 文件中，需要按需重新设置要使用到的中间件的键和值，例如没有使用rabbitmq而是使用redis做中间件，则不需要配置rabbitmq。
     """
     # sys.stdout.write(f'\033[0;33m{time.strftime("%H:%M:%S")}\033[0m  "{__file__}:{sys._getframe().f_lineno}"   \033[0;30;43m{inspect_msg}\033[0m\n')

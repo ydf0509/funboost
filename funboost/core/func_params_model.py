@@ -193,6 +193,9 @@ class BoosterParams(BaseJsonAbleModel):
     # func_params_is_pydantic_model: bool = False  # funboost 兼容支持 函数娼还是 pydantic model类型，funboost在发布之前和取出来时候自己转化。
 
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
+    consuming_function_kind :typing.Optional[str]= None  #自动生成的信息,不需要用户主动传参.
+    consuming_function_class_module:typing.Optional[str] = None #自动生成的信息,不需要用户主动传参.
+    consuming_function_class_name: typing.Optional[str] = None #自动生成的信息,不需要用户主动传参.
 
     @root_validator(skip_on_failure=True)
     def check_values(cls, values: dict):
@@ -289,6 +292,10 @@ class PublisherParams(BaseJsonAbleModel):
     should_check_publish_func_params: bool = True  # 消息发布时候是否校验消息发布内容,比如有的人发布消息,函数只接受a,b两个入参,他去传2个入参,或者传参不存在的参数名字,  如果消费函数你非要写*args,**kwargs,那就需要关掉发布消息时候的函数入参检查
     publisher_override_cls: typing.Optional[typing.Type] = None
     # func_params_is_pydantic_model: bool = False  # funboost 兼容支持 函数娼还是 pydantic model类型，funboost在发布之前和取出来时候自己转化。
+
+    consuming_function_kind: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参.
+    consuming_function_class_module: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参.
+    consuming_function_class_name: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参.
 
 
 if __name__ == '__main__':

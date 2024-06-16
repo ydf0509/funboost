@@ -28,6 +28,7 @@ from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
 from funboost.core.task_id_logger import TaskIdLogger
 from funboost.utils import decorators
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
+from funboost.utils.class_utils import ClsHelper, FunctionKind
 
 RedisAsyncResult = AsyncResult  # 别名
 RedisAioAsyncResult = AioAsyncResult  # 别名
@@ -243,15 +244,34 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :param func_kwargs:
         :return:
         """
-        # print(func_args,func_kwargs,self.publish_params_checker.all_arg_name)
+        # print(func_args, func_kwargs, self.publish_params_checker.all_arg_name)
         msg_dict = func_kwargs
         # print(msg_dict)
         # print(self.publish_params_checker.position_arg_name_list)
         # print(func_args)
-        for index, arg in enumerate(func_args):
+        func_args_list = list(func_args)
+        if self.publisher_params.consuming_function_kind == FunctionKind.class_method:
+            # print(self.publish_params_checker.all_arg_name[0])
+            # func_args_list.insert(0, {'first_param_name': self.publish_params_checker.all_arg_name[0],
+            #        'cls_type': ClsHelper.get_classs_method_cls(self.publisher_params.consuming_function).__name__},
+            #                       )
+            func_args_list[0] = {'first_param_name': self.publish_params_checker.all_arg_name[0],
+                                 'cls_type': self.publisher_params.consuming_function_class_name,}
+        elif self.publisher_params.consuming_function_kind == FunctionKind.instance_method:
+            # func_args_list.insert(0, {'first_param_name': self.publish_params_checker.all_arg_name[0],
+            #        'obj_init_params_for_funboost': arg.obj_init_params_for_funboost,
+            #        'obj_type': ClsHelper.get_instncae_method_cls(self.publisher_params.consuming_function).__name__})
+            if not hasattr(func_args[0],'obj_init_params_for_funboost'):
+                raise ValueError('消费实例方法时候，类的对象必须定义了 obj_init_params_for_funboost 这个属性')
+            func_args_list[0] = {'first_param_name': self.publish_params_checker.all_arg_name[0],
+                                 'obj_init_params_for_funboost': func_args[0].obj_init_params_for_funboost,
+                                 'obj_type': self.publisher_params.consuming_function_class_name}
+
+        for index, arg in enumerate(func_args_list):
             # print(index,arg,self.publish_params_checker.position_arg_name_list)
             # msg_dict[self.publish_params_checker.position_arg_name_list[index]] = arg
             msg_dict[self.publish_params_checker.all_arg_name[index]] = arg
+
         # print(msg_dict)
         return self.publish(msg_dict)
 

@@ -1,11 +1,13 @@
 from __future__ import annotations
 import copy
+import inspect
 import os
 import types
 import typing
 
 from funboost.concurrent_pool import FlexibleThreadPool
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
+from funboost.utils.class_utils import ClsHelper, FunctionKind
 from funboost.utils.ctrl_c_end import ctrl_c_recv
 from funboost.core.loggers import flogger, develop_logger, logger_prompt
 
@@ -85,6 +87,14 @@ class Booster:
         if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], typing.Callable):
             consuming_function = args[0]
             self.boost_params.consuming_function = consuming_function
+            print(consuming_function)
+            print(ClsHelper.get_method_kind(consuming_function))
+            print(inspect.getsourcelines(consuming_function))
+            if self.boost_params.consuming_function_kind is None:
+                self.boost_params.consuming_function_kind = ClsHelper.get_method_kind(consuming_function)
+            if self.boost_params.consuming_function_kind in [FunctionKind.class_method,FunctionKind.instance_method]:
+                self.boost_params.consuming_function_class_module = consuming_function.__module__
+                self.boost_params.consuming_function_class_name = consuming_function.__qualname__.split('.')[0]
             logger_prompt.debug(f''' {self.boost_params.queue_name} booster 配置是 {self.boost_params.json_str_value()}''')
             self.consuming_function = consuming_function
             self.is_decorated_as_consume_function = True

@@ -1,6 +1,6 @@
 # coding= utf-8
 class BrokerEnum:
-    EMPTY = 'empty' # 空的实现，需要搭配 boost入参的 consumer_override_cls 和 publisher_override_cls使用，或者被继承。
+    EMPTY = 'empty'  # 空的实现，需要搭配 boost入参的 consumer_override_cls 和 publisher_override_cls使用，或者被继承。
 
     RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'  # 使用 amqpstorm 包操作rabbitmq  作为 分布式消息队列，支持消费确认.强烈推荐这个作为funboost中间件。
     RABBITMQ = RABBITMQ_AMQPSTORM
@@ -41,8 +41,6 @@ class BrokerEnum:
 
     ZEROMQ = 'ZEROMQ'  # 基于zeromq作为分布式消息队列，不需要安装中间件，可以支持跨机器但不支持持久化。
 
-
-
     """
     操作 kombu 包，这个包也是celery的中间件依赖包，这个包可以操作10种中间件(例如rabbitmq redis)，但没包括分布式函数调度框架的kafka nsq zeromq 等。
     同时 kombu 包的性能非常差，可以用原生redis的lpush和kombu的publish测试发布，使用brpop 和 kombu 的 drain_events测试消费，对比差距相差了5到10倍。
@@ -71,7 +69,6 @@ class BrokerEnum:
 
     PEEWEE = 'PEEWEE'  # peewee包操作mysql，使用表模拟消息队列
 
-
     CELERY = 'CELERY'  # funboost支持celery框架来发布和消费任务，由celery框架来调度执行任务，但是写法简单远远暴击用户亲自使用celery的麻烦程度，
     # 用户永无无需关心和操作Celery对象实例,无需关心celery的task_routes和include配置,funboost来自动化设置这些celery配置。
 
@@ -92,4 +89,7 @@ class ConcurrentModeEnum:
     SINGLE_THREAD = 'single_thread'  # 如果你不想并发，不想预先从消息队列中间件拉取消息到python程序的内存queue队列缓冲中，那么就适合使用此并发模式。
     SOLO = SINGLE_THREAD
 
+
 # is_fsdf_remote_run = 0
+
+

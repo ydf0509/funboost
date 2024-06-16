@@ -8,6 +8,7 @@
 框架做主要的功能都是在这个文件里面实现的.
 """
 import functools
+import sys
 import typing
 import abc
 import copy
@@ -35,6 +36,7 @@ from funboost.core.loggers import develop_logger
 
 from funboost.core.func_params_model import BoosterParams, PublisherParams, BaseJsonAbleModel
 from funboost.core.task_id_logger import TaskIdLogger
+from funboost.utils.class_utils import FunctionKind, ClsHelper
 from funboost.utils.json_helper import JsonUtils
 from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, is_main_process,
                     nb_log_config_default)
@@ -568,6 +570,29 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     async def aio_user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus):  # 这个可以继承
         pass
 
+    def _convert_real_function_only_params_by_conusuming_function_kind(self, function_only_params: dict):
+        """对于实例方法和classmethod 方法， 从消息队列的消息恢复第一个入参， self 和 cls"""
+        if self.consumer_params.consuming_function_kind in [FunctionKind.class_method,FunctionKind.instance_method]:
+            real_function_only_params = copy.copy(function_only_params)
+            method_first_param_name = None
+            method_first_param_value = None
+            for k, v in function_only_params.items():
+                if isinstance(v, dict) and 'first_param_name' in v:
+                    method_first_param_name = k
+                    method_first_param_value = v
+                    break
+            if self.publisher_params.consuming_function_kind == FunctionKind.class_method:
+                real_function_only_params[method_first_param_name] = getattr(sys.modules[self.consumer_params.consuming_function_class_module],
+                                                                             self.consumer_params.consuming_function_class_name)
+            elif self.publisher_params.consuming_function_kind == FunctionKind.instance_method:
+                cls = getattr(sys.modules[self.consumer_params.consuming_function_class_module],
+                                                                             self.consumer_params.consuming_function_class_name)
+                obj = cls(**method_first_param_value['obj_init_params_for_funboost'])
+                real_function_only_params[method_first_param_name] = obj
+            return real_function_only_params
+        else:
+            return function_only_params
+
     # noinspection PyProtectedMember
     def _run(self, kw: dict, ):
         # print(kw)
@@ -648,6 +673,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
             self.logger.critical(msg=log_msg, exc_info=True)
 
+
+
     # noinspection PyProtectedMember
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
                                                        function_result_status: FunctionResultStatus, ):
@@ -680,7 +707,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     self.logger.warning(f'取消运行 {task_id} {function_only_params}')
                     return function_result_status
                 function_run = kill_remote_task.kill_fun_deco(task_id)(function_run)  # 用杀死装饰器包装起来在另一个线程运行函数,以便等待远程杀死。
-            function_result_status.result = function_run(**function_only_params)
+            function_result_status.result = function_run(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params))
             # if asyncio.iscoroutine(function_result_status.result):
             #     log_msg = f'''异步的协程消费函数必须使用 async 并发模式并发,请设置消费函数 {self.consuming_function.__name__} 的concurrent_mode 为 ConcurrentModeEnum.ASYNC 或 4'''
             #     # self.logger.critical(msg=f'{log_msg} \n')
@@ -836,7 +863,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                  logger=self.logger, )
         fct.set_fct_context(fct_context)
         try:
-            corotinue_obj = self.consuming_function(**function_only_params)
+            corotinue_obj = self.consuming_function(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params))
             if not asyncio.iscoroutine(corotinue_obj):
                 log_msg = f'''当前设置的并发模式为 async 并发模式，但消费函数不是异步协程函数，请不要把消费函数 {self.consuming_function.__name__} 的 concurrent_mode 设置错误'''
                 # self.logger.critical(msg=f'{log_msg} \n')

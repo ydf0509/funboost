@@ -2,6 +2,7 @@ from __future__ import annotations
 import copy
 import inspect
 import os
+import sys
 import types
 import typing
 
@@ -93,8 +94,10 @@ class Booster:
             if self.boost_params.consuming_function_kind is None:
                 self.boost_params.consuming_function_kind = ClsHelper.get_method_kind(consuming_function)
             if self.boost_params.consuming_function_kind in [FunctionKind.class_method,FunctionKind.instance_method]:
-                self.boost_params.consuming_function_class_module = consuming_function.__module__
-                self.boost_params.consuming_function_class_name = consuming_function.__qualname__.split('.')[0]
+                if self.boost_params.consuming_function_class_module is None:
+                    self.boost_params.consuming_function_class_module = consuming_function.__module__
+                if self.boost_params.consuming_function_class_name is None:
+                    self.boost_params.consuming_function_class_name = consuming_function.__qualname__.split('.')[0]
             logger_prompt.debug(f''' {self.boost_params.queue_name} booster 配置是 {self.boost_params.json_str_value()}''')
             self.consuming_function = consuming_function
             self.is_decorated_as_consume_function = True

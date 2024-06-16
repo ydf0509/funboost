@@ -258,8 +258,10 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             func_args_list.insert(0, {'first_param_name': self.publish_params_checker.all_arg_name[0],
                                  'cls_type': self.publisher_params.consuming_function_class_name,})
         elif self.publisher_params.consuming_function_kind == FunctionKind.instance_method:
+            if not hasattr(func_args[0],'obj_init_params_for_funboost'):
+                raise ValueError('消费函数是实例方法，实例必须有 obj_init_params_for_funboost 属性')
             func_args_list[0] = {'first_param_name': self.publish_params_checker.all_arg_name[0],
-                                 'obj_init_params_for_funboost': func_args[0],
+                                 'obj_init_params_for_funboost': func_args[0].obj_init_params_for_funboost,
                                  'obj_type': self.publisher_params.consuming_function_class_name}
 
         for index, arg in enumerate(func_args_list):

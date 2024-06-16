@@ -581,13 +581,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     method_first_param_name = k
                     method_first_param_value = v
                     break
+            method_cls = getattr(sys.modules[self.consumer_params.consuming_function_class_module],
+                                                                          self.consumer_params.consuming_function_class_name)
             if self.publisher_params.consuming_function_kind == FunctionKind.class_method:
-                real_function_only_params[method_first_param_name] = getattr(sys.modules[self.consumer_params.consuming_function_class_module],
-                                                                             self.consumer_params.consuming_function_class_name)
+                real_function_only_params[method_first_param_name] = method_cls
             elif self.publisher_params.consuming_function_kind == FunctionKind.instance_method:
-                cls = getattr(sys.modules[self.consumer_params.consuming_function_class_module],
-                                                                             self.consumer_params.consuming_function_class_name)
-                obj = cls(**method_first_param_value['obj_init_params_for_funboost'])
+                obj = method_cls(**method_first_param_value['obj_init_params_for_funboost'])
                 real_function_only_params[method_first_param_name] = obj
             return real_function_only_params
         else:

@@ -98,8 +98,8 @@ class FunctionKind:
     STATIC_METHOD = 'STATIC_METHOD'
     COMMON_FUNCTION = 'COMMON_FUNCTION'
 
+
 class ConstStrForClassMethod:
     FIRST_PARAM_NAME = 'first_param_name'
     CLS_NAME = 'cls_name'
     OBJ_INIT_PARAMS = 'obj_init_params'
-

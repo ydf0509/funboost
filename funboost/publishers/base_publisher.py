@@ -261,7 +261,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                  ConstStrForClassMethod.CLS_NAME: self.publisher_params.consuming_function_class_name,})
         elif self.publisher_params.consuming_function_kind == FunctionKind.INSTANCE_METHOD:
             if not hasattr(func_args[0],ConstStrForClassMethod.OBJ_INIT_PARAMS):
-                raise ValueError(f'消费函数是实例方法，实例必须有 {ConstStrForClassMethod.OBJ_INIT_PARAMS} 属性')
+                raise ValueError(f'消费函数 {self.publisher_params.consuming_function} 是实例方法，实例必须有 {ConstStrForClassMethod.OBJ_INIT_PARAMS} 属性')
             func_args_list[0] = {ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
                                  ConstStrForClassMethod.OBJ_INIT_PARAMS: getattr(func_args[0],ConstStrForClassMethod.OBJ_INIT_PARAMS),
                                  ConstStrForClassMethod.CLS_NAME: self.publisher_params.consuming_function_class_name}

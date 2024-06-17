@@ -94,9 +94,10 @@ class ConcurrentModeEnum:
 
 class FunctionKind:
     CLASS_METHOD = 'CLASS_METHOD'
-    INSTANCE_METHOD = 'instance_method'
-    STATIC_METHOD = 'static_method'
-    COMMON_FUNCTION = 'common_function'
+    INSTANCE_METHOD = 'INSTANCE_METHOD'
+    STATIC_METHOD = 'STATIC_METHOD'
+    COMMON_FUNCTION = 'COMMON_FUNCTION'
+
 class ConstStrForClassMethod:
     FIRST_PARAM_NAME = 'first_param_name'
     CLS_NAME = 'cls_name'

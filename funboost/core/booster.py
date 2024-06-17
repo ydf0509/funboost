@@ -8,7 +8,9 @@ import typing
 
 from funboost.concurrent_pool import FlexibleThreadPool
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
-from funboost.utils.class_utils import ClsHelper, FunctionKind
+from funboost.constant import FunctionKind
+from funboost.utils.class_utils import ClsHelper
+
 from funboost.utils.ctrl_c_end import ctrl_c_recv
 from funboost.core.loggers import flogger, develop_logger, logger_prompt
 
@@ -93,7 +95,7 @@ class Booster:
             # print(inspect.getsourcelines(consuming_function))
             if self.boost_params.consuming_function_kind is None:
                 self.boost_params.consuming_function_kind = ClsHelper.get_method_kind(consuming_function)
-            if self.boost_params.consuming_function_kind in [FunctionKind.class_method,FunctionKind.instance_method]:
+            if self.boost_params.consuming_function_kind in [FunctionKind.CLASS_METHOD,FunctionKind.INSTANCE_METHOD]:
                 if self.boost_params.consuming_function_class_module is None:
                     self.boost_params.consuming_function_class_module = consuming_function.__module__
                 if self.boost_params.consuming_function_class_name is None:

@@ -36,7 +36,7 @@ from funboost.core.loggers import develop_logger
 
 from funboost.core.func_params_model import BoosterParams, PublisherParams, BaseJsonAbleModel
 from funboost.core.task_id_logger import TaskIdLogger
-from funboost.utils.class_utils import FunctionKind, ClsHelper
+from funboost.constant import FunctionKind
 from funboost.utils.json_helper import JsonUtils
 from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, is_main_process,
                     nb_log_config_default)
@@ -68,7 +68,7 @@ from funboost.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from funboost.factories.publisher_factotry import get_publisher
 
 from funboost.utils import decorators, time_util, redis_manager
-from funboost.constant import ConcurrentModeEnum, BrokerEnum
+from funboost.constant import ConcurrentModeEnum, BrokerEnum, ConstStrForClassMethod
 from funboost.core import kill_remote_task
 from funboost.core.exceptions import ExceptionForRequeue, ExceptionForPushToDlxqueue
 
@@ -572,21 +572,21 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _convert_real_function_only_params_by_conusuming_function_kind(self, function_only_params: dict):
         """对于实例方法和classmethod 方法， 从消息队列的消息恢复第一个入参， self 和 cls"""
-        if self.consumer_params.consuming_function_kind in [FunctionKind.class_method,FunctionKind.instance_method]:
+        if self.consumer_params.consuming_function_kind in [FunctionKind.CLASS_METHOD, FunctionKind.INSTANCE_METHOD]:
             real_function_only_params = copy.copy(function_only_params)
             method_first_param_name = None
             method_first_param_value = None
             for k, v in function_only_params.items():
-                if isinstance(v, dict) and 'first_param_name' in v:
+                if isinstance(v, dict) and ConstStrForClassMethod.FIRST_PARAM_NAME in v:
                     method_first_param_name = k
                     method_first_param_value = v
                     break
             method_cls = getattr(sys.modules[self.consumer_params.consuming_function_class_module],
-                                                                          self.consumer_params.consuming_function_class_name)
-            if self.publisher_params.consuming_function_kind == FunctionKind.class_method:
+                                 self.consumer_params.consuming_function_class_name)
+            if self.publisher_params.consuming_function_kind == FunctionKind.CLASS_METHOD:
                 real_function_only_params[method_first_param_name] = method_cls
-            elif self.publisher_params.consuming_function_kind == FunctionKind.instance_method:
-                obj = method_cls(**method_first_param_value['obj_init_params_for_funboost'])
+            elif self.publisher_params.consuming_function_kind == FunctionKind.INSTANCE_METHOD:
+                obj = method_cls(**method_first_param_value[ConstStrForClassMethod.OBJ_INIT_PARAMS])
                 real_function_only_params[method_first_param_name] = obj
             # print(real_function_only_params)
             return real_function_only_params
@@ -672,8 +672,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
             # self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
             self.logger.critical(msg=log_msg, exc_info=True)
-
-
 
     # noinspection PyProtectedMember
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,

@@ -8,12 +8,7 @@ import typing
 import nb_log
 from types import MethodType, FunctionType
 
-
-class FunctionKind:
-    class_method = 'class_method'
-    instance_method = 'instance_method'
-    static_method = 'static_method'
-    common_function = 'common_function'
+from funboost.constant import FunctionKind
 
 
 class ClsHelper:
@@ -88,13 +83,13 @@ class ClsHelper:
     @classmethod
     def get_method_kind(cls, method: typing.Callable) -> str:
         if cls.is_class_method(method):
-            return FunctionKind.class_method
+            return FunctionKind.CLASS_METHOD
         elif cls.is_static_method(method):
-            return FunctionKind.static_method
+            return FunctionKind.STATIC_METHOD
         elif cls.is_instance_method(method):
-            return FunctionKind.instance_method
+            return FunctionKind.INSTANCE_METHOD
         elif cls.is_common_function(method):
-            return FunctionKind.common_function
+            return FunctionKind.COMMON_FUNCTION
 
     @staticmethod
     def get_obj_init_params_for_funboost(obj_init_params: dict):

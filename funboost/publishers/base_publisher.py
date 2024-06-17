@@ -16,6 +16,7 @@ from threading import Lock
 import amqpstorm
 
 import nb_log
+from funboost.constant import ConstStrForClassMethod, FunctionKind
 from funboost.core.func_params_model import PublisherParams, PriorityConsumingControlConfig
 from funboost.core.helper_funs import MsgGenerater
 from funboost.core.loggers import develop_logger
@@ -28,7 +29,8 @@ from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
 from funboost.core.task_id_logger import TaskIdLogger
 from funboost.utils import decorators
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
-from funboost.utils.class_utils import ClsHelper, FunctionKind
+
+
 
 RedisAsyncResult = AsyncResult  # 别名
 RedisAioAsyncResult = AioAsyncResult  # 别名
@@ -250,19 +252,19 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # print(self.publish_params_checker.position_arg_name_list)
         # print(func_args)
         func_args_list = list(func_args)
-        if self.publisher_params.consuming_function_kind == FunctionKind.class_method:
+        if self.publisher_params.consuming_function_kind == FunctionKind.CLASS_METHOD:
             # print(self.publish_params_checker.all_arg_name[0])
             # func_args_list.insert(0, {'first_param_name': self.publish_params_checker.all_arg_name[0],
             #        'cls_type': ClsHelper.get_classs_method_cls(self.publisher_params.consuming_function).__name__},
             #                       )
-            func_args_list.insert(0, {'first_param_name': self.publish_params_checker.all_arg_name[0],
-                                 'cls_type': self.publisher_params.consuming_function_class_name,})
-        elif self.publisher_params.consuming_function_kind == FunctionKind.instance_method:
-            if not hasattr(func_args[0],'obj_init_params_for_funboost'):
-                raise ValueError('消费函数是实例方法，实例必须有 obj_init_params_for_funboost 属性')
-            func_args_list[0] = {'first_param_name': self.publish_params_checker.all_arg_name[0],
-                                 'obj_init_params_for_funboost': func_args[0].obj_init_params_for_funboost,
-                                 'obj_type': self.publisher_params.consuming_function_class_name}
+            func_args_list.insert(0, {ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
+                                 ConstStrForClassMethod.CLS_NAME: self.publisher_params.consuming_function_class_name,})
+        elif self.publisher_params.consuming_function_kind == FunctionKind.INSTANCE_METHOD:
+            if not hasattr(func_args[0],ConstStrForClassMethod.OBJ_INIT_PARAMS):
+                raise ValueError(f'消费函数是实例方法，实例必须有 {ConstStrForClassMethod.OBJ_INIT_PARAMS} 属性')
+            func_args_list[0] = {ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
+                                 ConstStrForClassMethod.OBJ_INIT_PARAMS: getattr(func_args[0],ConstStrForClassMethod.OBJ_INIT_PARAMS),
+                                 ConstStrForClassMethod.CLS_NAME: self.publisher_params.consuming_function_class_name}
 
         for index, arg in enumerate(func_args_list):
             # print(index,arg,self.publish_params_checker.position_arg_name_list)

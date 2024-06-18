@@ -160,9 +160,9 @@ def funboost_current_task():
 
 
 def get_current_taskid():
-    fct = funboost_current_task()
     # return fct.function_result_status.task_id
     try:
+        fct = funboost_current_task()
         return fct.task_id  # 不在funboost的消费函数里面就获取不到上下文了
     except (AttributeError, LookupError) as e:
         # print(e,type(e))

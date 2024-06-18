@@ -3,7 +3,7 @@ import random
 import time
 
 from funboost import boost, FunctionResultStatusPersistanceConfig, BoosterParams, ConcurrentModeEnum
-from funboost.core.current_task import funboost_current_task
+from funboost.core.current_task import funboost_current_task,get_current_taskid
 from funboost.core.task_id_logger import TaskIdLogger
 import nb_log
 from funboost.funboost_config_deafult import FunboostCommonConfig
@@ -23,6 +23,7 @@ common_logger = nb_log.get_logger('namexx2', formatter_template=FunboostCommonCo
 @boost(BoosterParams(queue_name='queue_test_fct', qps=2, concurrent_num=5, log_filename=LOG_FILENAME_QUEUE_FCT, function_timeout=20))
 def f(a, b):
     fct = funboost_current_task()  # 线程/协程隔离级别的上下文
+    print(get_current_taskid())
 
     # 以下的每一条日志都会自带task_id显示，方便用户串联起来排查问题。
     fct.logger.warning('如果不想亲自创建logger对象，可以使用fct.logger来记录日志，fct.logger是当前队列的消费者logger对象')

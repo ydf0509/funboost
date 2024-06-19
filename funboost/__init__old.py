@@ -179,7 +179,7 @@ def boost(queue_name,
     funboost.funboost_config_deafult.BoostDecoratorDefaultParams 的值会自动被你项目根目录下的funboost_config.BoostDecoratorDefaultParams的值覆盖，
     如果boost装饰器不传参，默认使用funboost_config.BoostDecoratorDefaultParams的配置
 
-    入参也可以看文档 https://funboost.readthedocs.io/zh/latest/articles/c3.html   3.3章节。
+    入参也可以看文档 https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html   3.3章节。
 
     # 为了代码提示好，这里重复一次入参意义。被此装饰器装饰的函数f，函数f对象本身自动加了一些方法，例如f.push 、 f.consume等。
     :param queue_name: 队列名字。

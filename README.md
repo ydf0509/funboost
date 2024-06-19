@@ -55,8 +55,8 @@ funboost的旧框架名字是function_scheduling_distributed_framework , 关系�
 
 ## 1.0 github地址和文档地址
 
-### 1.0.1 [分布式函数调度框架文档地址 ](https://funboost.readthedocs.io/zh/latest/index.html)
-[查看分布式函数调度框架文档 https://funboost.readthedocs.io/zh/latest/index.html](https://funboost.readthedocs.io/zh/latest/index.html)
+### 1.0.1 [分布式函数调度框架文档地址 ](https://funboost.readthedocs.io/zh-cn/latest/index.html)
+[查看分布式函数调度框架文档 https://funboost.readthedocs.io/zh-cn/latest/index.html](https://funboost.readthedocs.io/zh-cn/latest/index.html)
 
 
 [funboost依赖的nb_log日志文档 https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2](https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2)
@@ -203,7 +203,7 @@ if __name__ == '__main__':
 
 框架支持的中间件种类大全和选型见文档3.1章节的介绍:   
 
-[3.1 各种中间件选择的场景和优势](https://funboost.readthedocs.io/zh/latest/articles/c3.html#id2) 
+[3.1 各种中间件选择的场景和优势](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html#id2) 
 
 
 ### 1.2.3 框架对任务支持30种控制功能。
@@ -446,7 +446,7 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 funboost通过支持celery作为broker_kind,使celer框架变成了funboost的一个子集
 ```
 
-[查看分布式函数调度框架完整文档](https://funboost.readthedocs.io/zh/latest/index.html)
+[查看分布式函数调度框架完整文档](https://funboost.readthedocs.io/zh-cn/latest/index.html)
 
 
 

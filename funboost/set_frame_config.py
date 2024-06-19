@@ -63,7 +63,7 @@ def show_funboost_flag():
 
     logger_prompt.debug('\033[0m' + funboost_flag_str2 + '\033[0m')
 
-    logger_prompt.debug(f'''分布式函数调度框架funboost文档地址：  \033[0m https://funboost.readthedocs.io/zh/latest/ \033[0m ''')
+    logger_prompt.debug(f'''分布式函数调度框架funboost文档地址：  \033[0m https://funboost.readthedocs.io/zh-cn/latest/ \033[0m ''')
 
 
 show_funboost_flag()

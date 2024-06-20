@@ -270,9 +270,9 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             if not hasattr(obj,ConstStrForClassMethod.OBJ_INIT_PARAMS):
                 raise ValueError(f'消费函数 {self.publisher_params.consuming_function} 是实例方法，实例必须有 {ConstStrForClassMethod.OBJ_INIT_PARAMS} 属性')
             func_args_list[0] = {ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
-                                 ConstStrForClassMethod.OBJ_INIT_PARAMS: getattr(obj,ConstStrForClassMethod.OBJ_INIT_PARAMS),
                                  ConstStrForClassMethod.CLS_NAME: cls.__name__,
                                  ConstStrForClassMethod.CLS_FILE: sys.modules[cls.__module__].__file__.replace('\\','/'),
+                                 ConstStrForClassMethod.OBJ_INIT_PARAMS: getattr(obj, ConstStrForClassMethod.OBJ_INIT_PARAMS),
 
                                  }
 

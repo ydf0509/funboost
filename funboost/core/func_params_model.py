@@ -194,10 +194,9 @@ class BoosterParams(BaseJsonAbleModel):
     # func_params_is_pydantic_model: bool = False  # funboost 兼容支持 函数娼还是 pydantic model类型，funboost在发布之前和取出来时候自己转化。
 
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
-    consuming_function_class:typing.Optional[typing.Type] = None
+
     consuming_function_kind :typing.Optional[str]= None  #自动生成的信息,不需要用户主动传参.
-    consuming_function_class_module:typing.Optional[str] = None #自动生成的信息,不需要用户主动传参.
-    consuming_function_class_name: typing.Optional[str] = None #自动生成的信息,不需要用户主动传参.
+
 
     @root_validator(skip_on_failure=True)
     def check_values(cls, values: dict):
@@ -296,8 +295,7 @@ class PublisherParams(BaseJsonAbleModel):
     # func_params_is_pydantic_model: bool = False  # funboost 兼容支持 函数娼还是 pydantic model类型，funboost在发布之前和取出来时候自己转化。
 
     consuming_function_kind: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参.
-    consuming_function_class_module: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参.
-    consuming_function_class_name: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参.
+
 
 
 if __name__ == '__main__':

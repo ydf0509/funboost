@@ -38,6 +38,7 @@ from funboost.core.func_params_model import BoosterParams, PublisherParams, Base
 from funboost.core.task_id_logger import TaskIdLogger
 from funboost.constant import FunctionKind
 from funboost.utils.json_helper import JsonUtils
+from nb_libs.path_helper import PathHelper
 from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, is_main_process,
                     nb_log_config_default)
 from funboost.core.loggers import FunboostFileLoggerMixin, logger_prompt
@@ -581,11 +582,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     method_first_param_name = k
                     method_first_param_value = v
                     break
-            method_cls = getattr(sys.modules[self.consumer_params.consuming_function_class_module],
-                                 self.consumer_params.consuming_function_class_name)
+            # method_cls = getattr(sys.modules[self.consumer_params.consuming_function_class_module],
+            #                      self.consumer_params.consuming_function_class_name)
             if self.publisher_params.consuming_function_kind == FunctionKind.CLASS_METHOD:
+                method_cls = getattr(PathHelper(method_first_param_value[ConstStrForClassMethod.CLS_FILE]).import_as_module(),
+                                     method_first_param_value[ConstStrForClassMethod.CLS_NAME])
                 real_function_only_params[method_first_param_name] = method_cls
             elif self.publisher_params.consuming_function_kind == FunctionKind.INSTANCE_METHOD:
+                method_cls  = getattr(PathHelper(method_first_param_value[ConstStrForClassMethod.CLS_FILE]).import_as_module(),
+                                     method_first_param_value[ConstStrForClassMethod.CLS_NAME])
                 obj = method_cls(**method_first_param_value[ConstStrForClassMethod.OBJ_INIT_PARAMS])
                 real_function_only_params[method_first_param_name] = obj
             # print(real_function_only_params)

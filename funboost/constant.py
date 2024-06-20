@@ -104,4 +104,5 @@ class ConstStrForClassMethod:
     CLS_NAME = 'cls_name'
     OBJ_INIT_PARAMS = 'obj_init_params'
     CLS_MODULE = 'cls_module'
+    CLS_FILE = 'cls_file'
 

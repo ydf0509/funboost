@@ -259,16 +259,22 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             #        'cls_type': ClsHelper.get_classs_method_cls(self.publisher_params.consuming_function).__name__},
             #                       )
             cls = func_args_list[0]
-            print(cls,cls.__name__, sys.modules[cls.__module__].__file__)
+            # print(cls,cls.__name__, sys.modules[cls.__module__].__file__)
             func_args_list[0]={ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
                                  ConstStrForClassMethod.CLS_NAME: cls.__name__,
+                               ConstStrForClassMethod.CLS_FILE : sys.modules[cls.__module__].__file__.replace('\\','/')
                                }
         elif self.publisher_params.consuming_function_kind == FunctionKind.INSTANCE_METHOD:
-            if not hasattr(func_args[0],ConstStrForClassMethod.OBJ_INIT_PARAMS):
+            obj = func_args[0]
+            cls = type(obj)
+            if not hasattr(obj,ConstStrForClassMethod.OBJ_INIT_PARAMS):
                 raise ValueError(f'消费函数 {self.publisher_params.consuming_function} 是实例方法，实例必须有 {ConstStrForClassMethod.OBJ_INIT_PARAMS} 属性')
             func_args_list[0] = {ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
-                                 ConstStrForClassMethod.OBJ_INIT_PARAMS: getattr(func_args[0],ConstStrForClassMethod.OBJ_INIT_PARAMS),
-                                 ConstStrForClassMethod.CLS_NAME: self.publisher_params.consuming_function_class_name}
+                                 ConstStrForClassMethod.OBJ_INIT_PARAMS: getattr(obj,ConstStrForClassMethod.OBJ_INIT_PARAMS),
+                                 ConstStrForClassMethod.CLS_NAME: cls.__name__,
+                                 ConstStrForClassMethod.CLS_FILE: sys.modules[cls.__module__].__file__.replace('\\','/'),
+
+                                 }
 
         for index, arg in enumerate(func_args_list):
             # print(index,arg,self.publish_params_checker.position_arg_name_list)

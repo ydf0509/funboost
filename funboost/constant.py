@@ -103,3 +103,5 @@ class ConstStrForClassMethod:
     FIRST_PARAM_NAME = 'first_param_name'
     CLS_NAME = 'cls_name'
     OBJ_INIT_PARAMS = 'obj_init_params'
+    CLS_MODULE = 'cls_module'
+

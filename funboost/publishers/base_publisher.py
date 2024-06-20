@@ -8,6 +8,7 @@ import atexit
 import json
 import logging
 import multiprocessing
+import sys
 import threading
 import time
 import typing
@@ -257,8 +258,11 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # func_args_list.insert(0, {'first_param_name': self.publish_params_checker.all_arg_name[0],
             #        'cls_type': ClsHelper.get_classs_method_cls(self.publisher_params.consuming_function).__name__},
             #                       )
-            func_args_list.insert(0, {ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
-                                 ConstStrForClassMethod.CLS_NAME: self.publisher_params.consuming_function_class_name,})
+            cls = func_args_list[0]
+            print(cls,cls.__name__, sys.modules[cls.__module__].__file__)
+            func_args_list[0]={ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
+                                 ConstStrForClassMethod.CLS_NAME: cls.__name__,
+                               }
         elif self.publisher_params.consuming_function_kind == FunctionKind.INSTANCE_METHOD:
             if not hasattr(func_args[0],ConstStrForClassMethod.OBJ_INIT_PARAMS):
                 raise ValueError(f'消费函数 {self.publisher_params.consuming_function} 是实例方法，实例必须有 {ConstStrForClassMethod.OBJ_INIT_PARAMS} 属性')

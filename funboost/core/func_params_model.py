@@ -179,6 +179,7 @@ class BoosterParams(BaseJsonAbleModel):
     schedule_tasks_on_main_thread: bool = False  # 直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
 
     consuming_function: typing.Callable = None  # 消费函数,在@boost时候不用指定,因为装饰器知道下面的函数.
+    consuming_function_raw: typing.Callable = None
 
     broker_kind: str = BrokerEnum.SQLITE_QUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html
 

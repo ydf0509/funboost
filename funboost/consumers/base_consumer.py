@@ -585,12 +585,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # method_cls = getattr(sys.modules[self.consumer_params.consuming_function_class_module],
             #                      self.consumer_params.consuming_function_class_name)
             if self.publisher_params.consuming_function_kind == FunctionKind.CLASS_METHOD:
-                method_cls = getattr(PathHelper(method_first_param_value[ConstStrForClassMethod.CLS_FILE]).import_as_module(),
-                                     method_first_param_value[ConstStrForClassMethod.CLS_NAME])
+                method_cls = getattr(PathHelper(method_first_param_value[ConstStrForClassMethod.CLS_FILE]).import_as_module(),method_first_param_value[ConstStrForClassMethod.CLS_NAME])
                 real_function_only_params[method_first_param_name] = method_cls
             elif self.publisher_params.consuming_function_kind == FunctionKind.INSTANCE_METHOD:
-                method_cls  = getattr(PathHelper(method_first_param_value[ConstStrForClassMethod.CLS_FILE]).import_as_module(),
-                                     method_first_param_value[ConstStrForClassMethod.CLS_NAME])
+                method_cls = getattr(PathHelper(method_first_param_value[ConstStrForClassMethod.CLS_FILE]).import_as_module(), method_first_param_value[ConstStrForClassMethod.CLS_NAME])
                 obj = method_cls(**method_first_param_value[ConstStrForClassMethod.OBJ_INIT_PARAMS])
                 real_function_only_params[method_first_param_name] = obj
             # print(real_function_only_params)

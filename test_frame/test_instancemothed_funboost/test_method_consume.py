@@ -41,7 +41,7 @@ if __name__ == '__main__':
     Myclass.instance_method.consume()
 
     for i in range(6, 10):
-        Myclass.class_method.push(Myclass,i * 2)  # 注意发布形式，不是 Myclass.class_method.push(i * 2) ， 而是应该写 Myclass.class_method.push(Myclass,i * 2)
+        Myclass.class_method.push(Myclass,i * 2)  # 注意发布形式，不是 Myclass.class_method.push(i * 2) ， 而是应该写 Myclass.class_method.push(Myclass,i * 2)，cls也要传
     Myclass.class_method.consume()
 
     for i in range(10):

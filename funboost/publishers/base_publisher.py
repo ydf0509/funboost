@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 11:57
+from pathlib import Path
+
 import abc
 import copy
 import inspect
@@ -30,8 +32,6 @@ from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
 from funboost.core.task_id_logger import TaskIdLogger
 from funboost.utils import decorators
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
-
-
 
 RedisAsyncResult = AsyncResult  # 别名
 RedisAioAsyncResult = AioAsyncResult  # 别名
@@ -260,18 +260,18 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             #                       )
             cls = func_args_list[0]
             # print(cls,cls.__name__, sys.modules[cls.__module__].__file__)
-            func_args_list[0]={ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
+            func_args_list[0] = {ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
                                  ConstStrForClassMethod.CLS_NAME: cls.__name__,
-                               ConstStrForClassMethod.CLS_FILE : sys.modules[cls.__module__].__file__.replace('\\','/')
-                               }
+                                 ConstStrForClassMethod.CLS_FILE: Path(sys.modules[cls.__module__].__file__).resolve().as_posix(),
+                                 }
         elif self.publisher_params.consuming_function_kind == FunctionKind.INSTANCE_METHOD:
             obj = func_args[0]
             cls = type(obj)
-            if not hasattr(obj,ConstStrForClassMethod.OBJ_INIT_PARAMS):
+            if not hasattr(obj, ConstStrForClassMethod.OBJ_INIT_PARAMS):
                 raise ValueError(f'消费函数 {self.publisher_params.consuming_function} 是实例方法，实例必须有 {ConstStrForClassMethod.OBJ_INIT_PARAMS} 属性')
             func_args_list[0] = {ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
                                  ConstStrForClassMethod.CLS_NAME: cls.__name__,
-                                 ConstStrForClassMethod.CLS_FILE: sys.modules[cls.__module__].__file__.replace('\\','/'),
+                                 ConstStrForClassMethod.CLS_FILE: Path(sys.modules[cls.__module__].__file__).resolve().as_posix(),
                                  ConstStrForClassMethod.OBJ_INIT_PARAMS: getattr(obj, ConstStrForClassMethod.OBJ_INIT_PARAMS),
 
                                  }

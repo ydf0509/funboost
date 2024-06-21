@@ -1,3 +1,5 @@
+import sys
+
 import copy
 from funboost import BoosterParams, boost
 from funboost.constant import FunctionKind
@@ -11,7 +13,7 @@ class Myclass:
     def __init__(self, x):
         # 这行重要，如果实例方法作为消费函数，那么必须定义obj_init_params_for_funboost保存对象的 __init__ 入参，用于还原生成对象。
         self.obj_init_params: dict = ClsHelper.get_obj_init_params_for_funboost(copy.copy(locals()))
-        # self.obj_init_params_for_funboost= {'x':x}  # 上面这行相当于这行，如果__init__入参太多，一个个的写到字典麻烦，可以使用上面的方式获取__init__入参字典。
+        # self.obj_init_params = {'x':x}  # 上面这行相当于这行，如果__init__入参太多，一个个的写到字典麻烦，可以使用上面的方式获取__init__入参字典。
         self.x = x
 
     @boost(BoosterParams(queue_name='instance_method_queue', is_show_message_get_from_broker=True,qps=2 ))
@@ -36,6 +38,7 @@ def common_f(y):
 
 
 if __name__ == '__main__':
+    print(sys.modules)
 
     for i in range(6, 100):
         Myclass.instance_method.push(Myclass(i), i * 2)  # 注意发布形式，实例方法发布消息不能写成 Myclass(i).push(i * 2) 只发布self之后的入参, self也必须传递。

@@ -78,7 +78,7 @@ setup(
     ],
     install_requires=[
         'nb_log>=12.6',
-        'nb_libs>=1.3',
+        'nb_libs>=1.4',
         'nb_time>=1.8',
         'pymongo==4.3.3',  # 3.5.1  -> 4.0.2
         'AMQPStorm==2.10.6',

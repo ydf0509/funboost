@@ -675,6 +675,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
             # self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
             self.logger.critical(msg=log_msg, exc_info=True)
+        fct = funboost_current_task()
+        fct.set_fct_context(None)
 
     # noinspection PyProtectedMember
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
@@ -847,6 +849,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
             # self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
             self.logger.critical(msg=log_msg, exc_info=True)
+        fct = funboost_current_task()
+        fct.set_fct_context(None)
+
 
     # noinspection PyProtectedMember
     async def _async_run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,

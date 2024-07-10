@@ -150,7 +150,7 @@ def is_asyncio_environment():
 
 def funboost_current_task():
     if is_asyncio_environment():
-        if thread_current_task.get_fct_context().asyncio_use_thread_concurrent_mode is True:
+        if hasattr(thread_current_task._fct_local_data,'fct_context') and thread_current_task.get_fct_context().asyncio_use_thread_concurrent_mode is True:
             # 如果用户使用的是默认的ConcurrentModeEnum.THREADING并发模式来运行async def 函数，那么也使用线程获取上下文
             return thread_current_task
         else:

@@ -29,6 +29,7 @@ from funboost.core.loggers import develop_logger
 # from nb_log import LoggerLevelSetterMixin, LoggerMixin
 from funboost.core.loggers import LoggerLevelSetterMixin, FunboostFileLoggerMixin, get_logger
 from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
+from funboost.core.serialization import Serialization
 from funboost.core.task_id_logger import TaskIdLogger
 from funboost.utils import decorators
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
@@ -214,7 +215,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         msg, msg_function_kw, extra_params, task_id = self._convert_msg(msg, task_id, priority_control_config)
         t_start = time.time()
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
-            self.concrete_realization_of_publish)(json.dumps(msg, ensure_ascii=False))
+            self.concrete_realization_of_publish)(Serialization.to_json_str(msg))
 
         self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}', extra={'task_id': task_id})  # 显示msg太长了。
         with self._lock_for_count:
@@ -228,10 +229,8 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def send_msg(self, msg: typing.Union[dict, str]):
         """直接发送任意消息内容到消息队列,不生成辅助参数,无视函数入参名字,不校验入参个数和键名"""
-        if isinstance(msg, dict):
-            msg = json.dumps(msg, ensure_ascii=False)
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
-            self.concrete_realization_of_publish)(msg)
+            self.concrete_realization_of_publish)(Serialization.to_json_str(msg))
 
     def push(self, *func_args, **func_kwargs):
         """

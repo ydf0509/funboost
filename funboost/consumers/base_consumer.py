@@ -35,6 +35,7 @@ from funboost.core.current_task import funboost_current_task, FctContext
 from funboost.core.loggers import develop_logger
 
 from funboost.core.func_params_model import BoosterParams, PublisherParams, BaseJsonAbleModel
+from funboost.core.serialization import Serialization
 from funboost.core.task_id_logger import TaskIdLogger
 from funboost.constant import FunctionKind
 from funboost.utils.json_helper import JsonUtils
@@ -642,7 +643,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                         # RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
                         current_function_result_status.rpc_result_expire_seconds = self.consumer_params.rpc_result_expire_seconds
                         p.lpush(kw['body']['extra']['task_id'],
-                                json.dumps(current_function_result_status.get_status_dict(without_datetime_obj=True)))
+                                Serialization.to_json_str(current_function_result_status.get_status_dict(without_datetime_obj=True)))
                         p.expire(kw['body']['extra']['task_id'], self.consumer_params.rpc_result_expire_seconds)
                         p.execute()
 
@@ -812,7 +813,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
                         current_function_result_status.rpc_result_expire_seconds = self.consumer_params.rpc_result_expire_seconds
                         p.lpush(kw['body']['extra']['task_id'],
-                                json.dumps(current_function_result_status.get_status_dict(without_datetime_obj=True)))
+                                Serialization.to_json_str(current_function_result_status.get_status_dict(without_datetime_obj=True)))
                         p.expire(kw['body']['extra']['task_id'], self.consumer_params.rpc_result_expire_seconds)
                         p.execute()
 
@@ -1168,7 +1169,7 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
                     p.srem(redis_key, result)
             self._consumer_identification_map['hearbeat_datetime_str'] = time_util.DatetimeConverter().datetime_str
             self._consumer_identification_map['hearbeat_timestamp'] = self.timestamp()
-            value = json.dumps(self._consumer_identification_map, sort_keys=True)
+            value = Serialization.to_json_str(self._consumer_identification_map, )
             p.sadd(redis_key, value)
             p.execute()
 

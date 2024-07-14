@@ -15,6 +15,7 @@ from pymongo import IndexModel, ReplaceOne
 
 from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig
 from funboost.core.helper_funs import get_publish_time, delete_keys_and_return_new_dict
+from funboost.core.serialization import Serialization
 from funboost.utils import time_util, decorators
 from funboost.utils.mongo_util import MongoMixin
 # from nb_log import LoggerMixin
@@ -46,7 +47,7 @@ class FunctionResultStatus():
             self.publish_time_str = time_util.DatetimeConverter(publish_time).datetime_str
         function_params = delete_keys_and_return_new_dict(msg_dict, )
         self.params = function_params
-        self.params_str = json.dumps(function_params, ensure_ascii=False)
+        self.params_str = Serialization.to_json_str(function_params)
         self.result = None
         self.run_times = 0
         self.exception = None
@@ -78,7 +79,8 @@ class FunctionResultStatus():
         # item.pop('time_start')
         datetime_str = time_util.DatetimeConverter().datetime_str
         try:
-            json.dumps(item['result'])  # 不希望存不可json序列化的复杂类型。麻烦。存这种类型的结果是伪需求。
+            Serialization.to_json_str(item['result'])
+            # json.dumps(item['result'])  # 不希望存不可json序列化的复杂类型。麻烦。存这种类型的结果是伪需求。
         except TypeError:
             item['result'] = str(item['result'])[:1000]
         item.update({'insert_time_str': datetime_str,
@@ -98,7 +100,7 @@ class FunctionResultStatus():
         return item
 
     def __str__(self):
-        return f'''{self.__class__}   {json.dumps(self.get_status_dict(), ensure_ascii=False)}'''
+        return f'''{self.__class__}   {Serialization.to_json_str(self.get_status_dict())}'''
 
 
 class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):

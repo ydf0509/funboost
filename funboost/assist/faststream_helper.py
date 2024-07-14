@@ -1,17 +1,15 @@
-
-
-
 import asyncio
-import pydantic
-import anyio
-from faststream import FastStream,Context
-from faststream.annotations import Logger
 
-from faststream.redis import RedisBroker
+from faststream import FastStream
+from faststream.rabbit import RabbitBroker
+from funboost.funboost_config_deafult import BrokerConnConfig
 
-import nb_log
+broker = RabbitBroker(BrokerConnConfig.RABBITMQ_URL, max_consumers=20)
+app = FastStream(broker)
 
-# broker = RedisBroker("redis://localhost:6379/2")
+# asyncio.get_event_loop().run_until_complete(broker.connect())
+#
+# asyncio.get_event_loop().run_until_complete(broker.start())
 
-
-
+def get_broker(max_consumers=None):
+    return RabbitBroker(BrokerConnConfig.RABBITMQ_URL, max_consumers=max_consumers)

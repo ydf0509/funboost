@@ -17,14 +17,14 @@ RABBITMQ_VIRTUAL_HOST = ''  # my_host # 这个是rabbitmq的虚拟子host用户�
 RABBITMQ_URL = f'amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VIRTUAL_HOST}'
 
 # broker = RedisBroker("redis://localhost:6379/2")
-broker = RabbitBroker(RABBITMQ_URL)
+broker = RabbitBroker(RABBITMQ_URL,max_consumers=20)
 app = FastStream(broker)
 
 publisher = broker.publisher("response-queue")
 
 
-@broker.subscriber(list="test-queue")
-@broker.publisher(list="response-queue")
+@broker.subscriber("test-queue")
+@broker.publisher("response-queue")
 async def handle22(msg, logger: Logger,message=Context(),
 
     broker=Context(),
@@ -32,9 +32,9 @@ async def handle22(msg, logger: Logger,message=Context(),
     # await publisher.publish("Response")
     # await broker.publish("Response!", "response-queue")
 
-    nb_log.debug([message,type(message),broker,context])
+    nb_log.debug([msg,message,type(message),broker,context])
     logger.info(msg)
-    await asyncio.sleep(20)
+    await asyncio.sleep(1)
     return "Response!"
 
 
@@ -43,10 +43,10 @@ async def handle_response(msg, logger: Logger):
     logger.info(f"Process response: {msg}")
 
 
-@app.after_startup
+# @app.after_startup
 async def test_publishing():
-    for i in range(100):
-        await broker.publish("Hello!", list="test-queue")
+    for i in range(1000):
+        await broker.publish("Hello!", "test-queue")
 
 
 
@@ -55,4 +55,5 @@ python -m faststream run faststream3:app
 '''
 
 if __name__ == '__main__':
+    anyio.run(test_publishing)
     anyio.run(app.run)

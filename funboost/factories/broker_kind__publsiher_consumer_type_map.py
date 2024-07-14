@@ -16,9 +16,9 @@ from funboost.publishers.local_python_queue_publisher import LocalPythonQueuePub
 from funboost.publishers.mongomq_publisher import MongoMqPublisher
 
 from funboost.publishers.persist_queue_publisher import PersistQueuePublisher
-from funboost.publishers.rabbitmq_amqpstorm_publisher import RabbitmqPublisherUsingAmqpStorm
+
 from funboost.publishers.rabbitmq_pika_publisher import RabbitmqPublisher
-from funboost.publishers.rabbitmq_rabbitpy_publisher import RabbitmqPublisherUsingRabbitpy
+
 from funboost.publishers.redis_publisher import RedisPublisher
 from funboost.publishers.rocketmq_publisher import RocketmqPublisher
 from funboost.publishers.redis_stream_publisher import RedisStreamPublisher
@@ -36,9 +36,8 @@ from funboost.consumers.nats_consumer import NatsConsumer
 
 from funboost.consumers.peewee_conusmer import PeeweeConsumer
 from funboost.consumers.persist_queue_consumer import PersistQueueConsumer
-from funboost.consumers.rabbitmq_amqpstorm_consumer import RabbitmqConsumerAmqpStorm
 from funboost.consumers.rabbitmq_pika_consumer import RabbitmqConsumer
-from funboost.consumers.rabbitmq_rabbitpy_consumer import RabbitmqConsumerRabbitpy
+
 from funboost.consumers.redis_brpoplpush_consumer import RedisBrpopLpushConsumer
 from funboost.consumers.redis_consumer import RedisConsumer
 from funboost.consumers.redis_consumer_ack_able import RedisConsumerAckAble
@@ -57,8 +56,8 @@ from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.constant import BrokerEnum
 
 broker_kind__publsiher_consumer_type_map = {
-    BrokerEnum.RABBITMQ_AMQPSTORM: (RabbitmqPublisherUsingAmqpStorm, RabbitmqConsumerAmqpStorm),
-    BrokerEnum.RABBITMQ_RABBITPY: (RabbitmqPublisherUsingRabbitpy, RabbitmqConsumerRabbitpy),
+
+
     BrokerEnum.REDIS: (RedisPublisher, RedisConsumer),
     BrokerEnum.MEMORY_QUEUE: (LocalPythonQueuePublisher, LocalPythonQueueConsumer),
     BrokerEnum.RABBITMQ_PIKA: (RabbitmqPublisher, RabbitmqConsumer),
@@ -111,6 +110,15 @@ def regist_to_funboost(broker_kind: str):
     这样当用户需要使用某些三方包中间件作为消息队列时候，按照import报错信息，用户自己去pip安装好。或者 pip install funboost[all] 一次性安装所有中间件。
     建议按照 https://github.com/ydf0509/funboost/blob/master/setup.py 中的 extra_brokers 和 install_requires 里面的版本号来安装三方包版本.
     """
+    if broker_kind == BrokerEnum.RABBITMQ_AMQPSTORM:
+        from funboost.publishers.rabbitmq_amqpstorm_publisher import RabbitmqPublisherUsingAmqpStorm
+        from funboost.consumers.rabbitmq_amqpstorm_consumer import RabbitmqConsumerAmqpStorm
+        register_custom_broker(BrokerEnum.RABBITMQ_AMQPSTORM, RabbitmqPublisherUsingAmqpStorm, RabbitmqConsumerAmqpStorm)
+
+    if broker_kind == BrokerEnum.RABBITMQ_RABBITPY:
+        from funboost.publishers.rabbitmq_rabbitpy_publisher import RabbitmqPublisherUsingRabbitpy
+        from funboost.consumers.rabbitmq_rabbitpy_consumer import RabbitmqConsumerRabbitpy
+        register_custom_broker(BrokerEnum.RABBITMQ_RABBITPY, RabbitmqPublisherUsingRabbitpy, RabbitmqConsumerRabbitpy)
 
     if broker_kind == BrokerEnum.PULSAR:
         from funboost.consumers.pulsar_consumer import PulsarConsumer

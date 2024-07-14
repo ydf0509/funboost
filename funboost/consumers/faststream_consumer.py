@@ -27,6 +27,7 @@ class FastStreamConsumer(EmptyConsumer):
             else:
                 result = await simple_run_in_executor(self.consuming_function,**function_only_params)
             # print(result)
+            return result
         subc(f)
         self.faststream_subscriber = subc
 

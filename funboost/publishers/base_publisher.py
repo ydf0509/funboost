@@ -180,13 +180,13 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     @staticmethod
     def _get_from_other_extra_params(k: str, msg):
-        msg_dict = json.loads(msg) if isinstance(msg, str) else msg
+        # msg_dict = json.loads(msg) if isinstance(msg, str) else msg
+        msg_dict = Serialization.to_dict(msg)
         return msg_dict['extra'].get('other_extra_params', {}).get(k, None)
 
     def _convert_msg(self, msg: typing.Union[str, dict], task_id=None,
                      priority_control_config: PriorityConsumingControlConfig = None) -> (typing.Dict, typing.Dict, typing.Dict,str):
-        if isinstance(msg, (str, bytes)):
-            msg = json.loads(msg)
+        msg = Serialization.to_dict(msg)
         msg_function_kw = copy.deepcopy(msg)
         raw_extra = {}
         if 'extra' in msg:

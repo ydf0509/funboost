@@ -10,7 +10,7 @@ from funboost.concurrent_pool import CustomThreadPoolExecutor
 from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPoolMinWorkers0
 from funboost.utils.redis_manager import RedisMixin
 from funboost.utils.redis_manager import AioRedisMixin
-
+from funboost.core.serialization import Serialization
 
 class HasNotAsyncResult(Exception):
     pass
@@ -42,7 +42,7 @@ class AsyncResult(RedisMixin):
             self._has_pop = True
             if redis_value is not None:
                 status_and_result_str = redis_value[1]
-                self._status_and_result = json.loads(status_and_result_str)
+                self._status_and_result = Serialization.to_dict(status_and_result_str)
                 self.redis_db_filter_and_rpc_result.lpush(self.task_id, status_and_result_str)
                 self.redis_db_filter_and_rpc_result.expire(self.task_id, self._status_and_result['rpc_result_expire_seconds'])
                 return self._status_and_result
@@ -147,7 +147,7 @@ if __name__ == '__main__':
             self._has_pop = True
             if redis_value is not None:
                 status_and_result_str = redis_value[1]
-                self._status_and_result = json.loads(status_and_result_str)
+                self._status_and_result = Serialization.to_dict(status_and_result_str)
                 await self.aioredis_db_filter_and_rpc_result.lpush(self.task_id, status_and_result_str)
                 await self.aioredis_db_filter_and_rpc_result.expire(self.task_id, self._status_and_result['rpc_result_expire_seconds'])
                 return self._status_and_result

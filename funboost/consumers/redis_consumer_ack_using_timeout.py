@@ -4,8 +4,8 @@
 import json
 import time
 from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.core.serialization import Serialization
 from funboost.utils.decorators import RedisDistributedLockContextManager
-from funboost.utils.json_helper import JsonUtils
 from funboost.utils.redis_manager import RedisMixin
 
 
@@ -40,7 +40,7 @@ class RedisConsumerAckUsingTimeout(AbstractConsumer, RedisMixin):
         self.redis_db_frame.zrem(self._unack_zset_name, kw['task_str'])
 
     def _requeue(self, kw):
-        self.redis_db_frame.rpush(self._queue_name, JsonUtils.to_json_str(kw['body']))
+        self.redis_db_frame.rpush(self._queue_name, Serialization.to_json_str(kw['body']))
 
     def _shedual_task(self):
         lua = '''

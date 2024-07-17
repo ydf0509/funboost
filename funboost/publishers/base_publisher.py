@@ -16,7 +16,7 @@ import time
 import typing
 from functools import wraps
 from threading import Lock
-import amqpstorm
+
 
 import nb_log
 from funboost.constant import ConstStrForClassMethod, FunctionKind
@@ -24,7 +24,7 @@ from funboost.core.func_params_model import PublisherParams, PriorityConsumingCo
 from funboost.core.helper_funs import MsgGenerater
 from funboost.core.loggers import develop_logger
 
-from pikav1.exceptions import AMQPError as PikaAMQPError
+
 
 # from nb_log import LoggerLevelSetterMixin, LoggerMixin
 from funboost.core.loggers import LoggerLevelSetterMixin, FunboostFileLoggerMixin, get_logger
@@ -183,7 +183,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         return msg_dict['extra'].get('other_extra_params', {}).get(k, None)
 
     def _convert_msg(self, msg: typing.Union[str, dict], task_id=None,
-                     priority_control_config: PriorityConsumingControlConfig = None) -> (typing.Dict, typing.Dict, typing.Dict):
+                     priority_control_config: PriorityConsumingControlConfig = None) -> (typing.Dict, typing.Dict, typing.Dict,str):
         if isinstance(msg, (str, bytes)):
             msg = json.loads(msg)
         msg_function_kw = copy.deepcopy(msg)
@@ -339,11 +339,14 @@ def deco_mq_conn_error(f):
             # noinspection PyBroadException
             try:
                 return f(self, *args, **kwargs)
-
-            except (PikaAMQPError, amqpstorm.AMQPError,) as e:  # except BaseException as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
-                self.logger.error(f'中间件链接出错   ,方法 {f.__name__}  出错 ，{e}')
-                self.init_broker()
-                return f(self, *args, **kwargs)
+            except Exception as e:
+                import amqpstorm
+                from pikav1.exceptions import AMQPError as PikaAMQPError
+                if isinstance(e,(PikaAMQPError, amqpstorm.AMQPError)):
+                # except (PikaAMQPError, amqpstorm.AMQPError,) as e:  # except BaseException as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
+                    self.logger.error(f'中间件链接出错   ,方法 {f.__name__}  出错 ，{e}')
+                    self.init_broker()
+                    return f(self, *args, **kwargs)
             except BaseException as e:
                 self.logger.critical(e, exc_info=True)
 

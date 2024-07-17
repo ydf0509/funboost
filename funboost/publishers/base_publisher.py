@@ -233,6 +233,14 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
             self.concrete_realization_of_publish)(msg)
 
+    @staticmethod
+    def __get_cls_file(cls: type):
+        if cls.__module__ == '__main__':
+            cls_file = Path(sys.argv[0]).resolve().as_posix()
+        else:
+            cls_file = Path(sys.modules[cls.__module__].__file__).resolve().as_posix()
+        return cls_file
+
     def push(self, *func_args, **func_kwargs):
         """
         简写，只支持传递消费函数的本身参数，不支持priority_control_config参数。
@@ -260,9 +268,10 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             #                       )
             cls = func_args_list[0]
             # print(cls,cls.__name__, sys.modules[cls.__module__].__file__)
+
             func_args_list[0] = {ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
                                  ConstStrForClassMethod.CLS_NAME: cls.__name__,
-                                 ConstStrForClassMethod.CLS_FILE: Path(sys.modules[cls.__module__].__file__).resolve().as_posix(),
+                                 ConstStrForClassMethod.CLS_FILE: self.__get_cls_file(cls),
                                  }
         elif self.publisher_params.consuming_function_kind == FunctionKind.INSTANCE_METHOD:
             obj = func_args[0]
@@ -271,7 +280,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 raise ValueError(f'消费函数 {self.publisher_params.consuming_function} 是实例方法，实例必须有 {ConstStrForClassMethod.OBJ_INIT_PARAMS} 属性')
             func_args_list[0] = {ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
                                  ConstStrForClassMethod.CLS_NAME: cls.__name__,
-                                 ConstStrForClassMethod.CLS_FILE: Path(sys.modules[cls.__module__].__file__).resolve().as_posix(),
+                                 ConstStrForClassMethod.CLS_FILE: self.__get_cls_file(cls),
                                  ConstStrForClassMethod.OBJ_INIT_PARAMS: getattr(obj, ConstStrForClassMethod.OBJ_INIT_PARAMS),
 
                                  }

@@ -585,7 +585,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # method_cls = getattr(sys.modules[self.consumer_params.consuming_function_class_module],
             #                      self.consumer_params.consuming_function_class_name)
             if self.publisher_params.consuming_function_kind == FunctionKind.CLASS_METHOD:
-                method_cls = getattr(PathHelper(method_first_param_value[ConstStrForClassMethod.CLS_FILE]).import_as_module(),method_first_param_value[ConstStrForClassMethod.CLS_NAME])
+                method_cls = getattr(PathHelper(method_first_param_value[ConstStrForClassMethod.CLS_FILE]).import_as_module(), method_first_param_value[ConstStrForClassMethod.CLS_NAME])
                 real_function_only_params[method_first_param_name] = method_cls
             elif self.publisher_params.consuming_function_kind == FunctionKind.INSTANCE_METHOD:
                 method_cls = getattr(PathHelper(method_first_param_value[ConstStrForClassMethod.CLS_FILE]).import_as_module(), method_first_param_value[ConstStrForClassMethod.CLS_NAME])
@@ -851,7 +851,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.logger.critical(msg=log_msg, exc_info=True)
         fct = funboost_current_task()
         fct.set_fct_context(None)
-
 
     # noinspection PyProtectedMember
     async def _async_run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,

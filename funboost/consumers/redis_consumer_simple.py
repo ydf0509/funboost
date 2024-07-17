@@ -4,6 +4,7 @@
 import json
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.core.serialization import Serialization
 from funboost.utils.redis_manager import RedisMixin
 
 
@@ -24,6 +25,6 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
         pass  # redis没有确认消费的功能。
 
     def _requeue(self, kw):
-        self.redis_db_frame.rpush(self._queue_name, json.dumps(kw['body']))
+        self.redis_db_frame.rpush(self._queue_name, Serialization.to_json_str(kw['body']))
 
 

@@ -11,6 +11,7 @@ import time
 from collections import OrderedDict
 import typing
 
+from funboost.core.serialization import Serialization
 from funboost.utils import  decorators
 from funboost.core.loggers import FunboostFileLoggerMixin
 
@@ -34,8 +35,7 @@ class RedisFilter(RedisMixin, FunboostFileLoggerMixin):
     @staticmethod
     def _get_ordered_str(value):
         """对json的键值对在redis中进行过滤，需要先把键值对排序，否则过滤会不准确如 {"a":1,"b":2} 和 {"b":2,"a":1}"""
-        if isinstance(value, str):
-            value = json.loads(value)
+        value = Serialization.to_dict(value)
         ordered_dict = OrderedDict()
         for k in sorted(value):
             ordered_dict[k] = value[k]

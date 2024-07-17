@@ -35,9 +35,10 @@ from funboost.core.current_task import funboost_current_task, FctContext
 from funboost.core.loggers import develop_logger
 
 from funboost.core.func_params_model import BoosterParams, PublisherParams, BaseJsonAbleModel
+from funboost.core.serialization import Serialization
 from funboost.core.task_id_logger import TaskIdLogger
 from funboost.constant import FunctionKind
-from funboost.utils.json_helper import JsonUtils
+
 from nb_libs.path_helper import PathHelper
 from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, is_main_process,
                     nb_log_config_default)
@@ -139,7 +140,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if consumer_params.consuming_function is None:
             raise ValueError('必须传 consuming_function 参数')
 
-        self._msg_schedule_time_intercal = 0 if consumer_params.qps is None else 1.0 / consumer_params.qps
+        self._msg_schedule_time_intercal = 0 if consumer_params.qps in (None,0) else 1.0 / consumer_params.qps
 
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
         if consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC:
@@ -408,8 +409,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
                         'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
         """
-        if isinstance(msg, str):
-            msg = json.loads(msg)
+        msg = Serialization.to_dict(msg)
         # 以下是清洗补全字段.
         if 'extra' not in msg:
             msg['extra'] = {'is_auto_fill_extra': True}
@@ -536,7 +536,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # print(999)
         if self.consumer_params.is_show_message_get_from_broker:
             # self.logger.debug(f'从 {broker_name} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
-            self.logger.debug(f'从 {broker_name or self.consumer_params.broker_kind} 中间件 的 {self._queue_name} 中取出的消息是 {JsonUtils.to_json_str(msg)}')
+            self.logger.debug(f'从 {broker_name or self.consumer_params.broker_kind} 中间件 的 {self._queue_name} 中取出的消息是 {Serialization.to_json_str(msg)}')
 
     def _get_priority_conf(self, kw: dict, broker_task_config_key: str):
         broker_task_config = kw['body'].get('extra', {}).get(broker_task_config_key, None)
@@ -642,7 +642,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                         # RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
                         current_function_result_status.rpc_result_expire_seconds = self.consumer_params.rpc_result_expire_seconds
                         p.lpush(kw['body']['extra']['task_id'],
-                                json.dumps(current_function_result_status.get_status_dict(without_datetime_obj=True)))
+                                Serialization.to_json_str(current_function_result_status.get_status_dict(without_datetime_obj=True)))
                         p.expire(kw['body']['extra']['task_id'], self.consumer_params.rpc_result_expire_seconds)
                         p.execute()
 
@@ -812,7 +812,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
                         current_function_result_status.rpc_result_expire_seconds = self.consumer_params.rpc_result_expire_seconds
                         p.lpush(kw['body']['extra']['task_id'],
-                                json.dumps(current_function_result_status.get_status_dict(without_datetime_obj=True)))
+                                Serialization.to_json_str(current_function_result_status.get_status_dict(without_datetime_obj=True)))
                         p.expire(kw['body']['extra']['task_id'], self.consumer_params.rpc_result_expire_seconds)
                         p.execute()
 
@@ -1160,14 +1160,14 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
         results = self.redis_db_frame.smembers(redis_key)
         with self.redis_db_frame.pipeline() as p:
             for result in results:
-                result_dict = json.loads(result)
+                result_dict = Serialization.to_dict(result)
                 if self.timestamp() - result_dict['hearbeat_timestamp'] > 15 \
                         or self._consumer_identification_map['consumer_uuid'] == result_dict['consumer_uuid']:
                     # 因为这个是10秒钟运行一次，15秒还没更新，那肯定是掉线了。如果消费者本身是自己也先删除。
                     p.srem(redis_key, result)
             self._consumer_identification_map['hearbeat_datetime_str'] = time_util.DatetimeConverter().datetime_str
             self._consumer_identification_map['hearbeat_timestamp'] = self.timestamp()
-            value = json.dumps(self._consumer_identification_map, sort_keys=True)
+            value = Serialization.to_json_str(self._consumer_identification_map, )
             p.sadd(redis_key, value)
             p.execute()
 

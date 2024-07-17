@@ -9,6 +9,7 @@ import time
 import typing
 
 from funboost import PriorityConsumingControlConfig
+from funboost.core.serialization import Serialization
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.assist.faststream_helper import app,get_broker
 from faststream import FastStream,Context
@@ -28,7 +29,7 @@ class FastStreamPublisher(AbstractPublisher, metaclass=abc.ABCMeta):
                 priority_control_config: PriorityConsumingControlConfig = None) :
         msg, msg_function_kw, extra_params, task_id = self._convert_msg(msg, task_id, priority_control_config)
         t_start = time.time()
-        faststream_result =  asyncio.get_event_loop().run_until_complete(self.broker.publish(json.dumps(msg), self.queue_name))
+        faststream_result =  asyncio.get_event_loop().run_until_complete(self.broker.publish(Serialization.to_json_str(msg), self.queue_name))
         self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}')  # 显示msg太长了。
         with self._lock_for_count:
             self.count_per_minute += 1

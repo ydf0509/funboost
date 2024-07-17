@@ -5,7 +5,7 @@ import json
 import time
 from funboost.utils.redis_manager import RedisMixin
 from funboost.utils import decorators
-
+from funboost.core.serialization import Serialization
 """
 此模块是依赖redis的确认消费，所以比较复杂。
 """
@@ -46,7 +46,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
                 time_max = time.time() - self.UNCONFIRMED_TIMEOUT
                 for value in self.redis_db_frame.zrangebyscore(self._unack_zset_name, 0, time_max):
                     self.logger.warning(f'向 {self._queue_name} 重新放入未消费确认的任务 {value}')
-                    self._requeue({'body': json.loads(value)})
+                    self._requeue({'body': Serialization.to_dict(value)})
                     self.redis_db_frame.zrem(self._unack_zset_name, value)
                 self.logger.info(f'{self._unack_zset_name} 中有待确认消费任务的数量是'
                                  f' {self.redis_db_frame.zcard(self._unack_zset_name)}')

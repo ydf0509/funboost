@@ -18,7 +18,8 @@ class FastStreamConsumer(EmptyConsumer):
         subc = self.broker.subscriber(self.queue_name)
         # @broker.subscriber(self.queue_name)
         async def f(msg:str, logger: Logger,message=Context(),broker=Context(),context=Context(),):
-            self.logger.debug(f' 这条消息是 faststream 从 {self.queue_name} 队列中取出 ,是由 faststream 框架调度 {self.consuming_function.__name__} 函数处理,msg:{msg}')
+            self.logger.debug(f' 这条消息是 faststream 从 {self.queue_name} 队列中取出 ,是由 faststream 框架调度 {self.consuming_function.__name__} 函数处理,msg:{message} {context}')
+            # print(logger.name)
             # return self.consuming_function(*args, **kwargs) # 如果没有声明 autoretry_for ，那么消费函数出错了就不会自动重试了。
             # print(msg)
             function_only_params = delete_keys_and_return_new_dict(json.loads(msg))

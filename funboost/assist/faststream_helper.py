@@ -3,6 +3,9 @@ import asyncio
 from faststream import FastStream
 from faststream.rabbit import RabbitBroker
 from funboost.funboost_config_deafult import BrokerConnConfig
+from funboost.core.loggers import get_funboost_file_logger
+
+get_funboost_file_logger('faststream.access.rabbit')
 
 broker = RabbitBroker(BrokerConnConfig.RABBITMQ_URL, max_consumers=20)
 app = FastStream(broker)

@@ -103,6 +103,7 @@ setup(
         'frozenlist',
         'fire',
         'pydantic',
+        'orjson'
     ],
     extras_require={'all': extra_brokers + extra_flask,
                     'extra_brokers': extra_brokers,

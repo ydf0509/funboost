@@ -22,6 +22,7 @@ class LocalPythonQueuePublisher(AbstractPublisher):
 
     def concrete_realization_of_publish(self, msg):
         # noinspection PyTypeChecker
+        pass
         self.queue.put(msg)
 
     def clear(self):

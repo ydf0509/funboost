@@ -137,7 +137,7 @@ python setup.py sdist & twine upload dist/funboost-10.9.tar.gz
 最新版下载
 ./pip install funboost --upgrade -i https://pypi.org/simple     
 
-pip install funboost[extra_brokers]     # 安装其他所有冷门的中间件操作包。
+pip install funboost[all]     # 安装其他所有冷门的中间件操作包。
 
 
 从git安装

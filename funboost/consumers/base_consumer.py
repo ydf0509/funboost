@@ -140,7 +140,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if consumer_params.consuming_function is None:
             raise ValueError('必须传 consuming_function 参数')
 
-        self._msg_schedule_time_intercal = 0 if consumer_params.qps in (None,0) else 1.0 / consumer_params.qps
+        self._msg_schedule_time_intercal = 0 if consumer_params.qps in (None, 0) else 1.0 / consumer_params.qps
 
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
         if consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC:
@@ -585,10 +585,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # method_cls = getattr(sys.modules[self.consumer_params.consuming_function_class_module],
             #                      self.consumer_params.consuming_function_class_name)
             if self.publisher_params.consuming_function_kind == FunctionKind.CLASS_METHOD:
-                method_cls = getattr(PathHelper.import_module(method_first_param_value[ConstStrForClassMethod.CLS_MODULE]), method_first_param_value[ConstStrForClassMethod.CLS_NAME])
+                method_cls = getattr(PathHelper.import_module(method_first_param_value[ConstStrForClassMethod.CLS_MODULE]),
+                                     method_first_param_value[ConstStrForClassMethod.CLS_NAME])
                 real_function_only_params[method_first_param_name] = method_cls
             elif self.publisher_params.consuming_function_kind == FunctionKind.INSTANCE_METHOD:
-                method_cls = getattr(PathHelper.import_module(method_first_param_value[ConstStrForClassMethod.CLS_MODULE]), method_first_param_value[ConstStrForClassMethod.CLS_NAME])
+                method_cls = getattr(PathHelper.import_module(method_first_param_value[ConstStrForClassMethod.CLS_MODULE]),
+                                     method_first_param_value[ConstStrForClassMethod.CLS_NAME])
                 obj = method_cls(**method_first_param_value[ConstStrForClassMethod.OBJ_INIT_PARAMS])
                 real_function_only_params[method_first_param_name] = obj
             # print(real_function_only_params)

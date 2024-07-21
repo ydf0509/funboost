@@ -1,13 +1,14 @@
 # import gevent.monkey;gevent.monkey.patch_all()
 import time
 
-from funboost import boost, BrokerEnum,ConcurrentModeEnum
+from funboost import boost, BrokerEnum,ConcurrentModeEnum,BoosterParams
 import nb_log
 
 logger = nb_log.get_logger('sdsda',is_add_stream_handler=False,log_filename='xxx.log')
 
 
-@boost('test_speed_queuex', broker_kind=BrokerEnum.MEMORY_QUEUE, concurrent_num=2, log_level=20, qps=0, concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, )
+@BoosterParams(queue_name='test_speed_queuex', broker_kind=BrokerEnum.MEMORY_QUEUE, concurrent_num=2, log_level=20,
+                     qps=0, concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, auto_start_consuming_message=True)
 def f_test_speed(x):
     pass
     # logger.debug(x)
@@ -27,11 +28,11 @@ def f_test_speed(x):
 if __name__ == '__main__':
     # f_test_speed.clear()
 
-    for i in range(735000):
+    for i in range(73000):
         if i % 10000 == 0:
             print(i)
         f_test_speed.push(i)
-    f_test_speed.consume()
+    # f_test_speed.consume()
 
 
 

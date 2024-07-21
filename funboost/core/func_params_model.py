@@ -177,6 +177,7 @@ class BoosterParams(BaseJsonAbleModel):
     do_not_run_by_specify_time: tuple = ('10:00:00', '22:00:00')  # 不运行的时间段,在这个时间段自动不运行函数.
 
     schedule_tasks_on_main_thread: bool = False  # 直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
+    auto_start_consuming_message: bool = False  # 是否在定义后就自动启动消费，无需用户手动写 .consume() 来启动消息消费。
 
     consuming_function: typing.Callable = None  # 消费函数,在@boost时候不用指定,因为装饰器知道下面的函数.
     consuming_function_raw: typing.Callable = None
@@ -195,8 +196,7 @@ class BoosterParams(BaseJsonAbleModel):
 
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
 
-    consuming_function_kind :typing.Optional[str]= None  #自动生成的信息,不需要用户主动传参.
-
+    consuming_function_kind: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参,如果自动判断失误就传递。
 
     @root_validator(skip_on_failure=True)
     def check_values(cls, values: dict):
@@ -269,7 +269,6 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
     misfire_grace_time: typing.Union[int, None] = None
     other_extra_params: dict = None  # 其他参数, 例如消息优先级 , priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': priorityxx})，
 
-
     @root_validator(skip_on_failure=True)
     def cehck_values(cls, values: dict):
         if values['countdown'] and values['eta']:
@@ -295,7 +294,6 @@ class PublisherParams(BaseJsonAbleModel):
     # func_params_is_pydantic_model: bool = False  # funboost 兼容支持 函数娼还是 pydantic model类型，funboost在发布之前和取出来时候自己转化。
 
     consuming_function_kind: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参.
-
 
 
 if __name__ == '__main__':

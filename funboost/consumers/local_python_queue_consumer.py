@@ -5,7 +5,7 @@ import json
 from queue import Queue,SimpleQueue
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost.publishers import local_python_queue_publisher
+from funboost.queues.memory_queues_map import PythonQueues
 
 
 class LocalPythonQueueConsumer(AbstractConsumer):
@@ -15,7 +15,7 @@ class LocalPythonQueueConsumer(AbstractConsumer):
 
     @property
     def local_python_queue(self) -> Queue:
-        return local_python_queue_publisher.local_pyhton_queue_name__local_pyhton_queue_obj_map[self._queue_name]
+        return PythonQueues.get_queue(self._queue_name)
 
     def _shedual_task(self):
         while True:

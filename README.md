@@ -15,16 +15,25 @@
 
 
 <pre style="color: greenyellow;background-color: #0c1119; font-size: medium;">
-pip install funboost ,python全功能分布式函数调度框架,。  用法例子见文档1.3
-支持python所有类型的并发模式和全球一切知名消息队列中间件，
+pip install funboost ,python全功能分布式函数调度框架。  demo用法例子见文档1.3
+
+只需要一行@boost代码即可分布式执行python一切任意函数，99%用过funboost的pythoner 感受是 方便 快速 强大。
+支持python所有类型的并发模式,消息队列方面支持全球一切知名消息队列中间件和模拟的实现消息队列，
 同时funboost支持celery整个框架作为核心来发布和消费消息，使用funboost的极简api方式来自动化配置和利用celery调度,
 也支持huey dramatiq rq等任务队列框架作为funboost的broker。 
+
 python函数加速器，框架包罗万象，一统编程思维，兼容50% python编程业务场景，适用范围广。
-只需要一行代码即可分布式执行python一切函数，99%用过funboost的pythoner 感受是 方便 快速 强大。
 python万能分布式函数调度框架，支持5种并发模式，30+种消息队列中间件(或任务队列框架)，
 30种任务控制功能。给任意python函数赋能。
 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。
+
 框架只需要学习@boost这一个装饰器的入参就可以，所有用法几乎和1.3例子一摸一样，非常简化简单。
+框架对代码没有入侵,可以加到任意已有项目而对项目python文件目录结构0要求,
+不像 celery django scrapy 这样的框架,要从一开始就开始规划好项目目录结构,如果不想用框架了,
+或者想改变使用其他框架框架,那么已经所写的代码组织形式就几乎成了废物,需要大改特改. 
+但是funboost完全不会这样,加上或去掉@boost装饰器,对你的项目影响为0,用户照常使用,
+所以用户可以对任意项目,任意时候,引入使用funboost或者去掉使用funboost,代码组织形式不需要发生变化.
+
 </pre>
 
 ### 框架评价
@@ -41,6 +50,7 @@ python万能分布式函数调度框架，支持5种并发模式，30+种消息�
 ，连celery命令行运行起来都要反复猜测尝试。
 正因为如此用户从心理已近十分惧怕学习一种叫python框架的东西了，用户顶多愿意学习一个python包或者模块，
 学习一个框架会非常害怕觉得难度高且耗时，所以非常反感尝试新的框架。
+用过的99%都说funboost比celery简单方便太多,看都不看的人第一秒就是开始质疑重复造轮子.
 
 funboost只有一个@boost装饰器，@boost入参能自动补全，更重要的是被@boost装饰的函数，
 有哪些方法，每个方法入参是什么都能自动补全。funboost的中间件配置文件自当生成在用户当前项目根目录，
@@ -179,10 +189,10 @@ if __name__ == '__main__':
 2)funboost 使用内存队列,设置10线程并发
 ```python
 import time
-from funboost import boost, BrokerEnum
+from funboost import BoosterParams, BrokerEnum
 
 
-@boost("test_insteda_thread_queue", broker_kind=BrokerEnum.MEMORY_QUEUE, concurrent_num=10)
+@BoosterParams(queue_name="test_insteda_thread_queue", broker_kind=BrokerEnum.MEMORY_QUEUE, concurrent_num=10, auto_start_consuming_message=True)
 def f(x):
     time.sleep(3)
     print(x)
@@ -191,7 +201,8 @@ def f(x):
 if __name__ == '__main__':
     for i in range(100):
         f.push(i)
-    f.consume()
+
+
 ```
 
 
@@ -446,7 +457,7 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 funboost通过支持celery作为broker_kind,使celer框架变成了funboost的一个子集
 ```
 
-[查看分布式函数调度框架完整文档](https://funboost.readthedocs.io/zh-cn/latest/index.html)
+[查看分布式函数调度框架完整文档](https://funboost.readthedocs.io/)
 
 
 

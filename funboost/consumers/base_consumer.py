@@ -233,8 +233,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.logger.info(f'{self.queue_name} consumer 的消费者配置:\n {self.consumer_params.json_str_value()}')
         atexit.register(self.join_shedual_task_thread)
 
-        if self.consumer_params.auto_start_consuming_message:
-            self.publisher_of_same_queue
+        if self.consumer_params.is_auto_start_consuming_message:
+            _ = self.publisher_of_same_queue
             self.start_consuming_message()
 
     def _build_logger(self):

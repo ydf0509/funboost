@@ -2,7 +2,7 @@
 from funboost import BoosterParams, BrokerEnum
 
 
-@BoosterParams(queue_name="test_insteda_thread_queue", broker_kind=BrokerEnum.MEMORY_QUEUE, concurrent_num=10, auto_start_consuming_message=True)
+@BoosterParams(queue_name="test_insteda_thread_queue", broker_kind=BrokerEnum.MEMORY_QUEUE, concurrent_num=10, is_auto_start_consuming_message=True)
 def f(x):
     time.sleep(3)
     print(x)

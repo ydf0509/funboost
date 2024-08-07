@@ -20,13 +20,21 @@ NO_RESULT = 'no_result'
 
 
 class AsyncResult(RedisMixin):
-    callback_run_executor = FlexibleThreadPoolMinWorkers0(200)
+    default_callback_run_executor = FlexibleThreadPoolMinWorkers0(200,work_queue_maxsize=10000)
+
+    @property
+    def callback_run_executor(self, ):
+        return self._callback_run_executor or self.default_callback_run_executor
+    @callback_run_executor.setter
+    def callback_run_executor(self,thread_pool_executor):
+        self._callback_run_executor = thread_pool_executor
 
     def __init__(self, task_id, timeout=120):
         self.task_id = task_id
         self.timeout = timeout
         self._has_pop = False
         self._status_and_result = None
+        self._callback_run_executor = None
 
     def set_timeout(self, timeout=60):
         self.timeout = timeout

@@ -99,7 +99,7 @@ class ThreadPoolExecutorShrinkAble(Executor, FunboostFileLoggerMixin, LoggerLeve
     MIN_WORKERS = 5
     KEEP_ALIVE_TIME = 60
 
-    def __init__(self, max_workers: int = None, thread_name_prefix=''):
+    def __init__(self, max_workers: int = None, thread_name_prefix='',work_queue_maxsize=10):
         """
         最好需要兼容官方concurren.futures.ThreadPoolExecutor 和改版的BoundedThreadPoolExecutor，入参名字和个数保持了一致。
         :param max_workers:
@@ -110,7 +110,7 @@ class ThreadPoolExecutorShrinkAble(Executor, FunboostFileLoggerMixin, LoggerLeve
         self._thread_name_prefix = thread_name_prefix
         # print(self._max_workers)
         # self.work_queue = self._work_queue = queue.Queue(self._max_workers or 10)
-        self.work_queue = self._work_queue = queue.Queue(10)
+        self.work_queue = self._work_queue = queue.Queue(work_queue_maxsize)
         # self._threads = set()
         self._threads = weakref.WeakSet()
         self._lock_compute_threads_free_count = threading.Lock()

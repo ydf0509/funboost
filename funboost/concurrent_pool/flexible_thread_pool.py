@@ -23,8 +23,8 @@ class FlexibleThreadPool(FunboostFileLoggerMixin, LoggerLevelSetterMixin, Funboo
     KEEP_ALIVE_TIME = 10
     MIN_WORKERS = 2
 
-    def __init__(self, max_workers: int = None):
-        self.work_queue = queue.Queue(10)
+    def __init__(self, max_workers: int = None,work_queue_maxsize=10):
+        self.work_queue = queue.Queue(work_queue_maxsize)
         self.max_workers = max_workers
         self._threads_num = 0
         self.threads_free_count = 0

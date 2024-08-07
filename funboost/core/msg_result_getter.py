@@ -27,6 +27,11 @@ class AsyncResult(RedisMixin):
         return self._callback_run_executor or self.default_callback_run_executor
     @callback_run_executor.setter
     def callback_run_executor(self,thread_pool_executor):
+        """
+        thread_pool_executor 用户可以传递 FlexibleThreadPool或者 ThreadPoolExecutorShrinkAble 或者官方的 concurrent.futures.ThreadPoolExecutor 类型的对象都可以，任意线程池只要实现了submit方法即可。
+        :param thread_pool_executor:
+        :return:
+        """
         self._callback_run_executor = thread_pool_executor
 
     def __init__(self, task_id, timeout=120):

@@ -20,7 +20,7 @@ NO_RESULT = 'no_result'
 
 
 class AsyncResult(RedisMixin):
-    default_callback_run_executor = FlexibleThreadPoolMinWorkers0(200,work_queue_maxsize=10000)
+    default_callback_run_executor = FlexibleThreadPoolMinWorkers0(200,work_queue_maxsize=50)
 
     @property
     def callback_run_executor(self, ):

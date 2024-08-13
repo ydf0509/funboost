@@ -120,6 +120,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         # ConsumersManager.join_all_consumer_shedual_task_thread()
         if GlobalVars.has_start_a_consumer_flag:
+            # self.keep_circulating(10,block=True,)(time.sleep)()
             while 1:
                 time.sleep(10)
 
@@ -287,12 +288,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         pass
 
     def keep_circulating(self, time_sleep=0.001, exit_if_function_run_sucsess=False, is_display_detail_exception=True,
-                         block=True):
+                         block=True, daemon=False):
         """间隔一段时间，一直循环运行某个方法的装饰器
         :param time_sleep :循环的间隔时间
         :param is_display_detail_exception
         :param exit_if_function_run_sucsess :如果成功了就退出循环
         :param block:是否阻塞在当前主线程运行。
+        :param daemon:是否守护线程
         """
 
         def _keep_circulating(func):
@@ -320,7 +322,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if block:
                     return ___keep_circulating()
                 else:
-                    threading.Thread(target=___keep_circulating, ).start()
+                    threading.Thread(target=___keep_circulating, daemon=daemon).start()
 
             return __keep_circulating
 
@@ -351,14 +353,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._distributed_consumer_statistics.run()
             self.logger.warning(f'启动了分布式环境 使用 redis 的键 hearbeat:{self._queue_name} 统计活跃消费者 ，当前消费者唯一标识为 {self.consumer_identification}')
 
-        self.keep_circulating(60, block=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
+        self.keep_circulating(60, block=False, daemon=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
         if self.consumer_params.is_support_remote_kill_task:
             kill_remote_task.RemoteTaskKiller(self.queue_name, None).start_cycle_kill_task()
             self.consumer_params.is_show_message_get_from_broker = True  # 方便用户看到从消息队列取出来的消息的task_id,然后使用task_id杀死运行中的消息。
         if self.consumer_params.do_task_filtering:
             self._redis_filter.delete_expire_filter_task_cycle()  # 这个默认是RedisFilter类，是个pass不运行。所以用别的消息中间件模式，不需要安装和配置redis。
         if self.consumer_params.schedule_tasks_on_main_thread:
-            self.keep_circulating(1)(self._shedual_task)()
+            self.keep_circulating(1, daemon=False)(self._shedual_task)()
         else:
             self._concurrent_mode_dispatcher.schedulal_task_with_no_block()
 
@@ -1108,7 +1110,7 @@ class ConcurrentModeDispatcher(FunboostFileLoggerMixin):
     #             ConsumersManager.schedulal_thread_to_be_join.append(g)
 
     def schedulal_task_with_no_block(self):
-        self.consumer.keep_circulating(1, block=False)(self.consumer._shedual_task)()
+        self.consumer.keep_circulating(1, block=False, daemon=False)(self.consumer._shedual_task)()
 
 
 def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3):
@@ -1157,7 +1159,7 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
 
     def run(self):
         self.send_heartbeat()
-        self._consumer.keep_circulating(10, block=False)(self.send_heartbeat)()
+        self._consumer.keep_circulating(10, block=False, daemon=False)(self.send_heartbeat)()
         # decorators.keep_circulating(5, block=False)(self._show_active_consumer_num)()  # 主要是为快速频繁统计分布式消费者个数，快速调整分布式qps控频率。
 
     def _send_heartbeat_with_dict_value(self, redis_key, ):

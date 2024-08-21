@@ -17,7 +17,7 @@
 <pre style="color: greenyellow;background-color: #0c1119; font-size: medium;">
 pip install funboost ,python全功能分布式函数调度框架。  demo用法例子见文档1.3
 
-funboost的功能是全面性重量级，用户能想得到的功能99%全都有;funboost的使用方式是轻量级，只有@boost一行代码需要学习。
+funboost的功能是全面性重量级，用户能想得到的功能99%全都有;funboost的使用方式是轻量级，只有@boost一行代码需要写。
 
 只需要一行@boost代码即可分布式执行python一切任意函数，99%用过funboost的pythoner 感受是 方便 快速 强大。
 支持python所有类型的并发模式,消息队列方面支持全球一切知名消息队列中间件和模拟的实现消息队列，

@@ -213,6 +213,8 @@ class BoosterParams(BaseJsonAbleModel):
 
         if values['concurrent_mode'] not in ConcurrentModeEnum.__dict__.values():
             raise ValueError('设置的并发模式不正确')
+        if values['broker_kind'] in [BrokerEnum.REDIS_ACK_ABLE, BrokerEnum.REDIS_STREAM, BrokerEnum.REDIS_PRIORITY, BrokerEnum.RedisBrpopLpush]:
+            values['is_send_consumer_hearbeat_to_redis'] = True # 需要心跳进程来辅助判断消息是否属于掉线或关闭的进程，需要重回队列
         # if not set(values.keys()).issubset(set(BoosterParams.__fields__.keys())):
         #     raise ValueError(f'{cls.__name__} 的字段包含了父类 BoosterParams 不存在的字段')
         for k in values.keys():

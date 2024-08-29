@@ -27,13 +27,13 @@ def fb(a, b):
 
 if __name__ == '__main__':
     fa.consume()
-    # fb.consume()
+    fb.consume()
 
     for i in range(10):
         r = fa.push(i, i + 1)  # type: celery.result.AsyncResult
         # print(type(r), r)
         # print(r.get())
-        # fb.push(i, i * 2)
+        fb.delay(i, i * 2)
 
     CeleryHelper.realy_start_celery_worker()
 

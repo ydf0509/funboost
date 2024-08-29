@@ -17,7 +17,7 @@ class RedisBrpopLpushConsumer(AbstractConsumer, RedisMixin):
 
 
     def start_consuming_message(self):
-        self._is_send_consumer_hearbeat_to_redis = True
+        self.consumer_params.is_send_consumer_hearbeat_to_redis = True
         super().start_consuming_message()
         self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
 

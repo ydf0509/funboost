@@ -27,7 +27,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
         self._unack_zset_name = f'{self._queue_name}__unack'
 
     def start_consuming_message(self):
-        self._is_send_consumer_hearbeat_to_redis = True
+        self.consumer_params.is_send_consumer_hearbeat_to_redis = True
         super().start_consuming_message()
         self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
 
@@ -62,14 +62,14 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
         self._unack_zset_name = f'{self._queue_name}__unack_id_{self.consumer_identification}'
-        self._is_send_consumer_hearbeat_to_redis = True
+        self.consumer_params.is_send_consumer_hearbeat_to_redis = True
         self._last_show_unacked_msg_num_log = 0
 
     def _requeue_tasks_which_unconfirmed(self):
         lock_key = f'fsdf_lock__requeue_tasks_which_unconfirmed:{self._queue_name}'
         with decorators.RedisDistributedLockContextManager(self.redis_db_frame, lock_key, ).set_log_level(30) as lock:
             if lock.has_aquire_lock:
-                self._distributed_consumer_statistics.send_heartbeat()
+                # self._distributed_consumer_statistics.send_heartbeat() # 已经周期运行了。
                 current_queue_hearbeat_ids = self._distributed_consumer_statistics.get_queue_heartbeat_ids(without_time=True)
                 current_queue_unacked_msg_queues = self.redis_db_frame.scan(0, f'{self._queue_name}__unack_id_*', count=self.SCAN_COUNT) # 不要在funboost的队列所在db放弃他缓存keys，要保持db的keys少于1000，否则要多次scan。
                 # print(current_queue_unacked_msg_queues)

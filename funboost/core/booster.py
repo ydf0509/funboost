@@ -315,14 +315,15 @@ class BoostersManager:
     consume = consume_queues
 
     @classmethod
-    def consume_all_queues(cls):
+    def consume_all_queues(cls,block=True):
         """
         启动所有消息队列名的消费,无需一个一个函数亲自 funxx.consume()来启动,多个函数队列在当前同一个进程内启动消费.
         这种方式节约总的内存,但无法利用多核cpu
         """
         for queue_name in cls.get_all_queues():
             cls.get_booster(queue_name).consume()
-        ctrl_c_recv()
+        if block:
+            ctrl_c_recv()
 
     consume_all = consume_all_queues
 

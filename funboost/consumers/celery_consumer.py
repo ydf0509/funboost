@@ -180,7 +180,7 @@ class CeleryConsumer(AbstractConsumer):
                     log_msg = f'fun: {self.consuming_function}  args: {args} , kwargs: {kwargs} 消息达到最大重试次数{this.request.retries}次仍然出错,  {exc} \n'
                     self.logger.critical(log_msg, exc_info=self.consumer_params.is_print_detail_exception)
                 # 发生异常，尝试重试任务,countdown 是多少秒后重试
-                raise this.retry(exc=exc, countdown=5)
+                raise this.retry(exc=exc, countdown=self.consumer_params.retry_interval)
 
         celery_app.conf.task_routes.update({self.queue_name: {"queue": self.queue_name}})  # 自动配置celery每个函数使用不同的队列名。
         self.celery_task = f

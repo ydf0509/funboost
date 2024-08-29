@@ -318,6 +318,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                             self.logger.error(msg=log_msg, exc_info=True)
                         finally:
                             time.sleep(time_sleep)
+                            # print(func,time_sleep)
 
                 if block:
                     return ___keep_circulating()
@@ -1141,6 +1142,13 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
 
     3、从redis中获取停止和暂停状态，以便支持在别的地方发送命令停止或者暂停消费。
     """
+    SHOW_CONSUMER_NUM_INTERVAL = 600
+    HEARBEAT_EXPIRE_SECOND = 25
+    SEND_HEARTBEAT_INTERVAL = 10
+
+    if HEARBEAT_EXPIRE_SECOND < SEND_HEARTBEAT_INTERVAL * 2:
+        raise ValueError(f'HEARBEAT_EXPIRE_SECOND:{HEARBEAT_EXPIRE_SECOND} , SEND_HEARTBEAT_INTERVAL:{SEND_HEARTBEAT_INTERVAL} ')
+
 
     def __init__(self, consumer: AbstractConsumer):
         # self._consumer_identification = consumer_identification
@@ -1159,8 +1167,7 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
 
     def run(self):
         self.send_heartbeat()
-        self._consumer.keep_circulating(10, block=False, daemon=False)(self.send_heartbeat)()
-        # decorators.keep_circulating(5, block=False)(self._show_active_consumer_num)()  # 主要是为快速频繁统计分布式消费者个数，快速调整分布式qps控频率。
+        self._consumer.keep_circulating(self.SEND_HEARTBEAT_INTERVAL, block=False, daemon=False)(self.send_heartbeat)()
 
     def _send_heartbeat_with_dict_value(self, redis_key, ):
         # 发送当前消费者进程心跳的，值是字典，按一个机器或者一个队列运行了哪些进程。
@@ -1169,7 +1176,7 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
         with self.redis_db_frame.pipeline() as p:
             for result in results:
                 result_dict = Serialization.to_dict(result)
-                if self.timestamp() - result_dict['hearbeat_timestamp'] > 15 \
+                if self.timestamp() - result_dict['hearbeat_timestamp'] > self.HEARBEAT_EXPIRE_SECOND \
                         or self._consumer_identification_map['consumer_uuid'] == result_dict['consumer_uuid']:
                     # 因为这个是10秒钟运行一次，15秒还没更新，那肯定是掉线了。如果消费者本身是自己也先删除。
                     p.srem(redis_key, result)
@@ -1181,10 +1188,11 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
 
     def send_heartbeat(self):
         # 根据队列名心跳的，值是字符串，方便值作为其他redis的键名
+
         results = self.redis_db_frame.smembers(self._redis_key_name)
         with self.redis_db_frame.pipeline() as p:
             for result in results:
-                if self.timestamp() - float(result.split('&&')[-1]) > 15 or \
+                if self.timestamp() - float(result.split('&&')[-1]) > self.HEARBEAT_EXPIRE_SECOND or \
                         self._consumer_identification == result.split('&&')[0]:  # 因为这个是10秒钟运行一次，15秒还没更新，那肯定是掉线了。如果消费者本身是自己也先删除。
                     p.srem(self._redis_key_name, result)
             p.sadd(self._redis_key_name, f'{self._consumer_identification}&&{self.timestamp()}')
@@ -1195,9 +1203,10 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
         self._show_active_consumer_num()
         self._get_stop_and_pause_flag_from_redis()
 
+
     def _show_active_consumer_num(self):
         self.active_consumer_num = self.redis_db_frame.scard(self._redis_key_name) or 1
-        if time.time() - self._last_show_consumer_num_timestamp > 600:
+        if time.time() - self._last_show_consumer_num_timestamp > self.SHOW_CONSUMER_NUM_INTERVAL:
             self.logger.info(f'分布式所有环境中使用 {self._queue_name} 队列的，一共有 {self.active_consumer_num} 个消费者')
             self._last_show_consumer_num_timestamp = time.time()
 

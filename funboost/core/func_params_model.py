@@ -214,7 +214,7 @@ class BoosterParams(BaseJsonAbleModel):
         if values['concurrent_mode'] not in ConcurrentModeEnum.__dict__.values():
             raise ValueError('设置的并发模式不正确')
         if values['broker_kind'] in [BrokerEnum.REDIS_ACK_ABLE, BrokerEnum.REDIS_STREAM, BrokerEnum.REDIS_PRIORITY, BrokerEnum.RedisBrpopLpush]:
-            values['is_send_consumer_hearbeat_to_redis'] = True # 需要心跳进程来辅助判断消息是否属于掉线或关闭的进程，需要重回队列
+            values['is_send_consumer_hearbeat_to_redis'] = True  # 需要心跳进程来辅助判断消息是否属于掉线或关闭的进程，需要重回队列
         # if not set(values.keys()).issubset(set(BoosterParams.__fields__.keys())):
         #     raise ValueError(f'{cls.__name__} 的字段包含了父类 BoosterParams 不存在的字段')
         for k in values.keys():
@@ -224,8 +224,10 @@ class BoosterParams(BaseJsonAbleModel):
 
     def __call__(self, func):
         """
-        新增加一种语法
-        @BoosterParams(queue_name='q1',qps=2) 这个和 @boost(BoosterParams(queue_name='q1',qps=2)) 写法等效
+        新增加一种语法,
+        一般是使用@boost(BoosterParams(queue_name='q1',qps=2))，你如果图方便可以使用 @BoosterParams(queue_name='q1',qps=2)这样的写法。
+
+        @BoosterParams(queue_name='q1',qps=2) 这个和 @boost(BoosterParams(queue_name='q1',qps=2)) 写法等效,
 
         @BoosterParams(queue_name='q1',qps=2)
         def f(a,b):

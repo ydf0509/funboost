@@ -70,16 +70,18 @@ if __name__ == '__main__':
     # print(f2.consumer.logger.level)
 
     # f2.clear()
+    print(f2)
+    print(f2.consuming_function)
+    print(f2.__wrapped__)
 
-
-    for i in range(5):
-        # f.push(i, i * 10)
-        r = f2.push(i, i * 5)
-        # print(r.result)
-
-    f2.consume()
-
-    show_current_threads_num(sleep_time=600)
+    # for i in range(5):
+    #     # f.push(i, i * 10)
+    #     r = f2.push(i, i * 5)
+    #     # print(r.result)
+    #
+    # f2.consume()
+    #
+    # show_current_threads_num(sleep_time=600)
 
     # f.consume()
 

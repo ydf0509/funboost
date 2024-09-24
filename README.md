@@ -77,7 +77,7 @@ funboost的旧框架名字是function_scheduling_distributed_framework , 关系�
 ```
 文档很长，但归根结底只需要学习 1.3 里面的这1个例子就行，主要是修改下@boost的各种参数，
 通过不同的入参，实践测试下各种控制功能。
-其中文档第四章列举了所有用法举例，
+其中文档第四章列举了所有用法举例。
 
 对比 celery 有20种改善，其中之一是无依赖文件夹层级和文件夹名字 文件名字。
 首先能把  https://github.com/ydf0509/celery_demo

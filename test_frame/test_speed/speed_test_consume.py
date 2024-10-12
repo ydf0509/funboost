@@ -8,7 +8,7 @@ logger = nb_log.get_logger('sdsda',is_add_stream_handler=False,log_filename='xxx
 
 
 @BoosterParams(queue_name='test_speed_queuex', broker_kind=BrokerEnum.MEMORY_QUEUE, concurrent_num=2, log_level=20,
-                     qps=0, concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, is_auto_start_consuming_message=True)
+                     qps=0, concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, is_auto_start_consuming_message=False)
 def f_test_speed(x):
     pass
     # logger.debug(x)
@@ -28,11 +28,11 @@ def f_test_speed(x):
 if __name__ == '__main__':
     # f_test_speed.clear()
 
-    for i in range(73000):
+    for i in range(730000):
         if i % 10000 == 0:
             print(i)
         f_test_speed.push(i)
-    # f_test_speed.consume()
+    f_test_speed.consume()
 
 
 

@@ -267,13 +267,19 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
     """
 
     function_timeout: typing.Union[float, int] = 0
+
     max_retry_times: int = None
+
     is_print_detail_exception: bool = None
+
     msg_expire_senconds: int = None
+
     is_using_rpc_mode: bool = None
+
     countdown: typing.Union[float, int] = None
     eta: datetime.datetime = None
     misfire_grace_time: typing.Union[int, None] = None
+
     other_extra_params: dict = None  # 其他参数, 例如消息优先级 , priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': priorityxx})，
 
     @root_validator(skip_on_failure=True)

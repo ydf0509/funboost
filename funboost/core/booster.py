@@ -59,6 +59,14 @@ class Booster:
         f.consume()
         # f.multi_process_conusme(8)             # # 这个是新加的方法，细粒度 线程 协程并发 同时叠加8个进程，速度炸裂。
         '''
+        
+        
+        @boost('queue_test_f01', qps=0.2, ) 
+        @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, ))
+        @Booster(BoosterParams(queue_name='queue_test_f01', qps=0.2, ))
+        @BoosterParams(queue_name='queue_test_f01', qps=0.2, )
+        以上4种写法等效。 
+        @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, )) 的写法升级到 pycharm 2024.2 版本后，导致被装饰的函数不能自动补全提示了，pycharm升级后自动补全功能反而抽风bug了。
         """
 
         # 以下代码很复杂，主要是兼容老的在@boost直接传参的方式,强烈建议使用新的入参方式,所有入参放在一个 BoosterParams 中，那就不需要理会下面这段逻辑.

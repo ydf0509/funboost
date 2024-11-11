@@ -12,6 +12,7 @@ import sys
 import typing
 import abc
 import copy
+from apscheduler.jobstores.memory import MemoryJobStore
 from pathlib import Path
 # from multiprocessing import Process
 import datetime
@@ -367,16 +368,25 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _start_delay_task_scheduler(self):
         from funboost.timing_job import FsdfBackgroundScheduler
-        jobstores = {
-            "default": RedisJobStore(**redis_manager.get_redis_conn_kwargs(),
-            jobs_key=f'funboost.apscheduler.{self.queue_name}.jobs')
-        }
+        # print(self.consumer_params.delay_task_apsscheduler_jobstores_kind )
+        if self.consumer_params.delay_task_apsscheduler_jobstores_kind == 'redis':
+            jobstores = {
+                "default": RedisJobStore(**redis_manager.get_redis_conn_kwargs(),
+                                         jobs_key=f'funboost.apscheduler.{self.queue_name}.jobs',
+                                         run_times_key=f'funboost.apscheduler.{self.queue_name}.run_times',
+                                         )
+            }
+        elif self.consumer_params.delay_task_apsscheduler_jobstores_kind == 'memory':
+            jobstores = {"default": MemoryJobStore()}
+        else:
+            raise Exception(f'delay_task_apsscheduler_jobstores_kind is error: {self.consumer_params.delay_task_apsscheduler_jobstores_kind}')
         self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=FunboostCommonConfig.TIMEZONE, daemon=False,
                                                              jobstores=jobstores  # push 方法的序列化带thredignn.lock
                                                              )
         self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
         # self._delay_task_scheduler.add_listener(self._apscheduler_job_miss, EVENT_JOB_MISSED)
         self._delay_task_scheduler.start()
+
         self.logger.warning('启动延时任务sheduler')
 
     logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')
@@ -1150,7 +1160,6 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
     if HEARBEAT_EXPIRE_SECOND < SEND_HEARTBEAT_INTERVAL * 2:
         raise ValueError(f'HEARBEAT_EXPIRE_SECOND:{HEARBEAT_EXPIRE_SECOND} , SEND_HEARTBEAT_INTERVAL:{SEND_HEARTBEAT_INTERVAL} ')
 
-
     def __init__(self, consumer: AbstractConsumer):
         # self._consumer_identification = consumer_identification
         # self._consumer_identification_map = consumer_identification_map
@@ -1203,7 +1212,6 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
         self._send_heartbeat_with_dict_value(self._server__consumer_identification_map_key_name)
         self._show_active_consumer_num()
         self._get_stop_and_pause_flag_from_redis()
-
 
     def _show_active_consumer_num(self):
         self.active_consumer_num = self.redis_db_frame.scard(self._redis_key_name) or 1

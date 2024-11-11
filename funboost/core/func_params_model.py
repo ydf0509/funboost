@@ -112,6 +112,9 @@ class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
         return values
 
 
+
+
+
 class BoosterParams(BaseJsonAbleModel):
     """
     pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
@@ -170,6 +173,8 @@ class BoosterParams(BaseJsonAbleModel):
 
     is_using_rpc_mode: bool = False  # 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。
     rpc_result_expire_seconds: int = 600  # 保存rpc结果的过期时间.
+
+    delay_task_apsscheduler_jobstores_kind :typing.Literal[ 'redis', 'memory'] = 'redis'  # 延时任务的aspcheduler对象使用哪种jobstores ，可以为 redis memory 两种作为jobstore
 
     is_support_remote_kill_task: bool = False  # 是否支持远程任务杀死功能，如果任务数量少，单个任务耗时长，确实需要远程发送命令来杀死正在运行的函数，才设置为true，否则不建议开启此功能。(是把函数放在单独的线程中实现的,随时准备线程被远程命令杀死,所以性能会降低)
 

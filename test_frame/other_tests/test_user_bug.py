@@ -30,7 +30,7 @@ def bbb(msg):
         broker_kind=BrokerEnum.MEMORY_QUEUE,
         log_level=20,
         should_check_publish_func_params=False,
-        delay_task_apsscheduler_jobstores_kind='memory',
+        delay_task_apscheduler_jobstores_kind='memory',
     )
 def ccc(msg):
     print(f'ccc:  {msg}')

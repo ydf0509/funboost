@@ -369,17 +369,17 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _start_delay_task_scheduler(self):
         from funboost.timing_job import FsdfBackgroundScheduler
         # print(self.consumer_params.delay_task_apsscheduler_jobstores_kind )
-        if self.consumer_params.delay_task_apsscheduler_jobstores_kind == 'redis':
+        if self.consumer_params.delay_task_apscheduler_jobstores_kind == 'redis':
             jobstores = {
                 "default": RedisJobStore(**redis_manager.get_redis_conn_kwargs(),
                                          jobs_key=f'funboost.apscheduler.{self.queue_name}.jobs',
                                          run_times_key=f'funboost.apscheduler.{self.queue_name}.run_times',
                                          )
             }
-        elif self.consumer_params.delay_task_apsscheduler_jobstores_kind == 'memory':
+        elif self.consumer_params.delay_task_apscheduler_jobstores_kind == 'memory':
             jobstores = {"default": MemoryJobStore()}
         else:
-            raise Exception(f'delay_task_apsscheduler_jobstores_kind is error: {self.consumer_params.delay_task_apsscheduler_jobstores_kind}')
+            raise Exception(f'delay_task_apsscheduler_jobstores_kind is error: {self.consumer_params.delay_task_apscheduler_jobstores_kind}')
         self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=FunboostCommonConfig.TIMEZONE, daemon=False,
                                                              jobstores=jobstores  # push 方法的序列化带thredignn.lock
                                                              )

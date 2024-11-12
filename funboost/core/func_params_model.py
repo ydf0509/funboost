@@ -4,6 +4,7 @@ import functools
 import json
 import logging
 import typing
+from typing_extensions import Literal
 from collections import OrderedDict
 
 from funboost.concurrent_pool import FunboostBaseConcurrentPool, FlexibleThreadPool, ConcurrentPoolBuilder
@@ -98,14 +99,14 @@ class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
     expire_seconds: int = 7 * 24 * 3600  # mongo中的函数运行状态保存多久时间,自动过期
     is_use_bulk_insert: bool = False  # 是否使用批量插入来保存结果，批量插入是每隔0.5秒钟保存一次最近0.5秒内的所有的函数消费状态结果，始终会出现最后0.5秒内的执行结果没及时插入mongo。为False则，每完成一次函数就实时写入一次到mongo。
 
-    @validator('expire_seconds')
+    @validator('expire_seconds',allow_reuse=True)
     def check_expire_seconds(cls, value):
         if value > 10 * 24 * 3600:
             from funboost.core.loggers import flogger  # 这个文件不要提前导入日志,以免互相导入.
             flogger.warning(f'你设置的过期时间为 {value} ,设置的时间过长。 ')
         return value
 
-    @root_validator(skip_on_failure=True)
+    @root_validator(skip_on_failure=True,allow_reuse=True)
     def cehck_values(cls, values: dict):
         if not values['is_save_status'] and values['is_save_result']:
             raise ValueError(f'你设置的是不保存函数运行状态但保存函数运行结果。不允许你这么设置')
@@ -174,7 +175,7 @@ class BoosterParams(BaseJsonAbleModel):
     is_using_rpc_mode: bool = False  # 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。
     rpc_result_expire_seconds: int = 600  # 保存rpc结果的过期时间.
 
-    delay_task_apscheduler_jobstores_kind :typing.Literal[ 'redis', 'memory'] = 'redis'  # 延时任务的aspcheduler对象使用哪种jobstores ，可以为 redis memory 两种作为jobstore
+    delay_task_apscheduler_jobstores_kind :Literal[ 'redis', 'memory'] = 'redis'  # 延时任务的aspcheduler对象使用哪种jobstores ，可以为 redis memory 两种作为jobstore
 
     is_support_remote_kill_task: bool = False  # 是否支持远程任务杀死功能，如果任务数量少，单个任务耗时长，确实需要远程发送命令来杀死正在运行的函数，才设置为true，否则不建议开启此功能。(是把函数放在单独的线程中实现的,随时准备线程被远程命令杀死,所以性能会降低)
 

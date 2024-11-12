@@ -36,11 +36,14 @@ def ccc(msg):
     print(f'ccc:  {msg}')
 
 
-aaa.publish({'msg':'a队列的消息'},priority_control_config=PriorityConsumingControlConfig(countdown=10))
-bbb.publish({'msg':'b队列的消息'},priority_control_config=PriorityConsumingControlConfig(countdown=15))
-ccc.publish({'msg':'c队列的消息'},priority_control_config=PriorityConsumingControlConfig(countdown=20))
+if __name__ == '__main__':
 
-aaa.consume()
-bbb.consume()
-ccc.consume()
-run_forever()
+    aaa.publish({'msg':'a队列的消息'},priority_control_config=PriorityConsumingControlConfig(countdown=10))
+    bbb.publish({'msg':'b队列的消息'},priority_control_config=PriorityConsumingControlConfig(countdown=15))
+    ccc.publish({'msg':'c队列的消息'},priority_control_config=PriorityConsumingControlConfig(countdown=20))
+
+    aaa.consume()
+    aaa.multi_process_consume(2)
+    bbb.consume()
+    ccc.consume()
+    run_forever()

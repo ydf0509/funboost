@@ -40,6 +40,7 @@ from funboost.core.serialization import Serialization
 from funboost.core.task_id_logger import TaskIdLogger
 from funboost.constant import FunctionKind
 
+
 from nb_libs.path_helper import PathHelper
 from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, is_main_process,
                     nb_log_config_default)
@@ -368,6 +369,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _start_delay_task_scheduler(self):
         from funboost.timing_job import FsdfBackgroundScheduler
+        from funboost.timing_job import FunboostBackgroundSchedulerProcessJobsWithinRedisLock
         # print(self.consumer_params.delay_task_apsscheduler_jobstores_kind )
         if self.consumer_params.delay_task_apscheduler_jobstores_kind == 'redis':
             jobstores = {
@@ -376,13 +378,20 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                          run_times_key=f'funboost.apscheduler.{self.queue_name}.run_times',
                                          )
             }
+            self._delay_task_scheduler = FunboostBackgroundSchedulerProcessJobsWithinRedisLock(timezone=FunboostCommonConfig.TIMEZONE, daemon=False,
+                                                       jobstores=jobstores  # push 方法的序列化带thredignn.lock
+                                                       )
+            self._delay_task_scheduler.set_process_jobs_redis_lock_key(f'funboost.BackgroundSchedulerProcessJobsWithinRedisLock.{self.queue_name}')
         elif self.consumer_params.delay_task_apscheduler_jobstores_kind == 'memory':
             jobstores = {"default": MemoryJobStore()}
+            self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=FunboostCommonConfig.TIMEZONE, daemon=False,
+                                                       jobstores=jobstores  # push 方法的序列化带thredignn.lock
+                                                       )
+
         else:
             raise Exception(f'delay_task_apsscheduler_jobstores_kind is error: {self.consumer_params.delay_task_apscheduler_jobstores_kind}')
-        self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=FunboostCommonConfig.TIMEZONE, daemon=False,
-                                                             jobstores=jobstores  # push 方法的序列化带thredignn.lock
-                                                             )
+
+
         self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
         # self._delay_task_scheduler.add_listener(self._apscheduler_job_miss, EVENT_JOB_MISSED)
         self._delay_task_scheduler.start()
@@ -500,7 +509,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # 数据库作为apscheduler的jobstores时候， 不能用 self.pbulisher_of_same_queue.publish，self不能序列化
             self._delay_task_scheduler.add_job(self._push_for_apscheduler_use_database_store, 'date', run_date=run_date,
                                                kwargs={'queue_name': self.queue_name, 'msg': msg_no_delay, 'runonce_uuid': str(uuid.uuid4())},
-                                               misfire_grace_time=misfire_grace_time)
+                                               misfire_grace_time=misfire_grace_time,
+                                              )
             self._confirm_consume(kw)
 
         else:  # 普通任务

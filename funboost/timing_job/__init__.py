@@ -8,6 +8,7 @@ import importlib
 import pickle
 
 import time
+from funboost.utils.decorators import RedisDistributedLockContextManager
 from typing import Union
 import threading
 
@@ -153,6 +154,22 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
                 wait_seconds = MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS
             time.sleep(min(wait_seconds, MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS))  # 这个要取最小值，不然例如定时间隔0.1秒运行，不取最小值，不会每隔0.1秒运行。
             wait_seconds = self._process_jobs()
+
+
+class FunboostBackgroundSchedulerProcessJobsWithinRedisLock(FunboostBackgroundScheduler):
+    process_jobs_redis_lock_key = f'funboost.BackgroundSchedulerProcessJobsWithinRedisLock'
+
+    def set_process_jobs_redis_lock_key(self,lock_key):
+        self.process_jobs_redis_lock_key = lock_key
+
+    def _process_jobs(self):
+        with RedisDistributedLockContextManager(RedisMixin().redis_db_frame, self.process_jobs_redis_lock_key, ) as lock:
+            if lock.has_aquire_lock:
+                return super()._process_jobs()
+            else:
+                return 0.001
+
+
 
 
 FsdfBackgroundScheduler = FunboostBackgroundScheduler  # 兼容一下名字，fsdf是 function-scheduling-distributed-framework 老框架名字的缩写

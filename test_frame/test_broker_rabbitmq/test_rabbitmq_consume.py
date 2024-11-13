@@ -1,12 +1,12 @@
 import time
 import random
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum,BoosterParams
 from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
 
 pool = ThreadPoolExecutorShrinkAble(200)
 
 
-@boost('test_rabbit_queue7', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, is_show_message_get_from_broker=True, specify_concurrent_pool=pool)
+@BoosterParams(queue_name='test_rabbit_queue7', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, is_show_message_get_from_broker=True, specify_concurrent_pool=pool)
 def test_fun(x):
     # time.sleep(2.9)
     # sleep时间随机从0.1毫秒到5秒任意徘徊,最小耗时和最大耗时差距达到了5万倍。
@@ -31,8 +31,8 @@ def test_fun(x):
     return x * 2
 
 
-@boost('test_rabbit_queue8g', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, is_show_message_get_from_broker=True, qps=400, specify_concurrent_pool=pool,
-       broker_exclusive_config={'x-max-priority':4})
+@BoosterParams(queue_name='test_rabbit_queue8g2', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, is_show_message_get_from_broker=True, qps=400, specify_concurrent_pool=pool,
+       broker_exclusive_config={'x-max-priority':4,'no_ack':True})
 def test_fun2(x):
     # time.sleep(2.9)
     # sleep时间随机从0.1毫秒到5秒任意徘徊,最小耗时和最大耗时差距达到了5万倍。
@@ -41,12 +41,14 @@ def test_fun2(x):
     # random_sleep = random.randrange(1,50000) / 10000
     # time.sleep(random_sleep)
     # print(x,random_sleep)
-    time.sleep(20)
-    print(x )
+    print(f'准备运行 {x}')
+    time.sleep(30)
+    print(f'finish运行 {x}')
+
     return x
 
 
 if __name__ == '__main__':
     # test_fun.consume()
-    test_fun2.push(1)
+    # test_fun2.push(1)
     test_fun2.consume()

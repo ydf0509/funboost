@@ -206,7 +206,7 @@ class Booster:
         fabric_deploy(self, **params)
 
 
-boost = Booster
+boost = Booster   # @boost 后消费函数.  不能自动补全方法就用 Booster就可以。 2024版本的 pycharm抽风了，@boost的消费函数不能自动补全提示 .consume  .push 这些方法。
 task_deco = boost  # 两个装饰器名字都可以。task_deco是原来名字，兼容一下。
 
 

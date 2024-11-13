@@ -1,5 +1,5 @@
 
-from funboost import BoosterParams, boost,run_forever,PriorityConsumingControlConfig,BrokerEnum
+from funboost import BoosterParams, boost,run_forever,PriorityConsumingControlConfig,BrokerEnum,Booster
 
 
 @BoosterParams(
@@ -8,18 +8,20 @@ from funboost import BoosterParams, boost,run_forever,PriorityConsumingControlCo
     broker_kind=BrokerEnum.MEMORY_QUEUE,
     log_level=20,
     should_check_publish_func_params=False,
+# delay_task_apscheduler_jobstores_kind='memory',
 )
 def aaa(msg):
     print(f'aaaa: {msg}')
 
 
-@BoosterParams(
+@Booster(BoosterParams(
         queue_name="bbb_queue2",
         concurrent_num=1,
         broker_kind=BrokerEnum.MEMORY_QUEUE,
         log_level=20,
         should_check_publish_func_params=False,
-    )
+# delay_task_apscheduler_jobstores_kind='memory',
+    ))
 def bbb(msg):
     print(f'bbbb:  {msg}')
 
@@ -30,7 +32,7 @@ def bbb(msg):
         broker_kind=BrokerEnum.MEMORY_QUEUE,
         log_level=20,
         should_check_publish_func_params=False,
-        delay_task_apscheduler_jobstores_kind='memory',
+        # delay_task_apscheduler_jobstores_kind='memory',
     )
 def ccc(msg):
     print(f'ccc:  {msg}')
@@ -47,3 +49,15 @@ if __name__ == '__main__':
     bbb.consume()
     ccc.consume()
     run_forever()
+
+
+
+
+
+
+
+
+
+
+
+

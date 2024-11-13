@@ -14,7 +14,7 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
     使用AmqpStorm实现的，多线程安全的，不用加锁。
     funboost 强烈推荐使用这个做消息队列中间件。
     """
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'x-max-priority': None}  # x-max-priority 是 rabbitmq的优先级队列配置，必须为整数，强烈建议要小于5。为None就代表队列不支持优先级。
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'x-max-priority': None,'no_ack':False}  # x-max-priority 是 rabbitmq的优先级队列配置，必须为整数，强烈建议要小于5。为None就代表队列不支持优先级。
 
     def _shedual_task(self):
         # noinspection PyTypeChecker
@@ -28,16 +28,17 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
                                                                               broker_exclusive_config=self.consumer_params.broker_exclusive_config))
         rp.init_broker()
         rp.channel_wrapper_by_ampqstormbaic.qos(self.consumer_params.concurrent_num)
-        rp.channel_wrapper_by_ampqstormbaic.consume(callback=callback, queue=self.queue_name, no_ack=False,
+        rp.channel_wrapper_by_ampqstormbaic.consume(callback=callback, queue=self.queue_name, no_ack=self.consumer_params.broker_exclusive_config['no_ack'],
                                                     )
         rp.channel.start_consuming(auto_decode=True)
 
     def _confirm_consume(self, kw):
         # noinspection PyBroadException
-        try:
-            kw['amqpstorm_message'].ack()  # 确认消费
-        except BaseException as e:
-            self.logger.error(f'AmqpStorm确认消费失败  {type(e)} {e}')
+        if self.consumer_params.broker_exclusive_config['no_ack'] is False:
+            try:
+                kw['amqpstorm_message'].ack()  # 确认消费
+            except BaseException as e:
+                self.logger.error(f'AmqpStorm确认消费失败  {type(e)} {e}')
 
     def _requeue(self, kw):
         # amqpstorm.Message.delivery_tag

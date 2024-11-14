@@ -2,7 +2,7 @@ from apscheduler.jobstores.redis import RedisJobStore
 
 from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
 
-from funboost.timing_job import FunboostBackgroundScheduler
+from funboost.timing_job import FunboostBackgroundSchedulerProcessJobsWithinRedisLock
 
 """
 这个是使用redis作为定时任务持久化，支持动态修改/添加/删除定时任务
@@ -14,7 +14,7 @@ jobstores = {
                              username=BrokerConnConfig.REDIS_USERNAME,jobs_key='funboost.apscheduler.jobs')
 }
 
-funboost_background_scheduler_redis_store = FunboostBackgroundScheduler(timezone=FunboostCommonConfig.TIMEZONE, daemon=False, jobstores=jobstores)
+funboost_background_scheduler_redis_store = FunboostBackgroundSchedulerProcessJobsWithinRedisLock(timezone=FunboostCommonConfig.TIMEZONE, daemon=False, jobstores=jobstores)
 
 
 

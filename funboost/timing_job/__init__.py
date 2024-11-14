@@ -2,34 +2,28 @@
 集成定时任务。
 """
 import atexit
-import copy
-import importlib
-
-import pickle
 
 import time
 from apscheduler.executors.pool import BasePoolExecutor
 
-from funboost.utils.decorators import RedisDistributedLockContextManager,RedisDistributedBlockLockContextManager
 from typing import Union
 import threading
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.jobstores.redis import RedisJobStore
 # noinspection PyProtectedMember
 from apscheduler.schedulers.base import STATE_STOPPED, STATE_RUNNING
-from apscheduler.util import undefined,TIMEOUT_MAX
+from apscheduler.util import undefined, TIMEOUT_MAX
 import deprecated
 from funboost.utils.redis_manager import RedisMixin
 
-from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
+from funboost.funboost_config_deafult import FunboostCommonConfig
 
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.core.booster import BoostersManager, Booster
-from funboost.publishers.base_publisher import AbstractPublisher
+
 from funboost import BoosterParams
-from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool
 from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
+
 
 @deprecated.deprecated(reason='以后不要再使用这种方式，对于job_store为数据库时候需要序列化不好。使用内存和数据库都兼容的添加任务方式: add_push_job')
 def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, AbstractConsumer]):
@@ -57,6 +51,7 @@ def push_fun_params_to_broker(queue_name: str, *args, runonce_uuid=None, **kwarg
     else:
         BoostersManager.get_or_create_booster_by_queue_name(queue_name).push(*args, **kwargs)
 
+
 class ThreadPoolExecutorForAps(BasePoolExecutor):
     """
     An executor that runs jobs in a concurrent.futures thread pool.
@@ -68,9 +63,10 @@ class ThreadPoolExecutorForAps(BasePoolExecutor):
         ThreadPoolExecutor constructor
     """
 
-    def __init__(self, max_workers=10, ):
-        pool = ThreadPoolExecutorShrinkAble(int(max_workers),)
+    def __init__(self, max_workers=10, pool_kwargs=None):
+        pool = ThreadPoolExecutorShrinkAble(int(max_workers), )
         super().__init__(pool)
+
 
 class FunboostBackgroundScheduler(BackgroundScheduler):
     """
@@ -173,7 +169,7 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
             if wait_seconds is None:
                 wait_seconds = MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS
             self._last_wait_seconds = min(wait_seconds, MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS)
-            if wait_seconds in (None,TIMEOUT_MAX):
+            if wait_seconds in (None, TIMEOUT_MAX):
                 self._last_has_task = False
             else:
                 self._last_has_task = True

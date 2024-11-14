@@ -13,7 +13,7 @@ set_frame_config这个模块的 use_config_form_funboost_config_module() 是核�
 这段注释说明和使用的用户无关,只和框架开发人员有关.
 '''
 
-__version__ = "46.6"
+__version__ = "46.7"
 
 from funboost.set_frame_config import show_frame_config
 

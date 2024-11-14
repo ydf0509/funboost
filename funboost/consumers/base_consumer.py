@@ -369,7 +369,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _start_delay_task_scheduler(self):
         from funboost.timing_job import FsdfBackgroundScheduler
-        from funboost.timing_job import FunboostBackgroundSchedulerProcessJobsWithinRedisLock
+        from funboost.timing_job.apscheduler_use_redis_store import FunboostBackgroundSchedulerProcessJobsWithinRedisLock
         # print(self.consumer_params.delay_task_apsscheduler_jobstores_kind )
         if self.consumer_params.delay_task_apscheduler_jobstores_kind == 'redis':
             jobstores = {
@@ -392,7 +392,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             raise Exception(f'delay_task_apsscheduler_jobstores_kind is error: {self.consumer_params.delay_task_apscheduler_jobstores_kind}')
 
 
-        self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
+        # self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
         # self._delay_task_scheduler.add_listener(self._apscheduler_job_miss, EVENT_JOB_MISSED)
         self._delay_task_scheduler.start()
 

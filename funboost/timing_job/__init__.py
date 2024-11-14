@@ -8,7 +8,9 @@ import importlib
 import pickle
 
 import time
-from funboost.utils.decorators import RedisDistributedLockContextManager
+from apscheduler.executors.pool import BasePoolExecutor
+
+from funboost.utils.decorators import RedisDistributedLockContextManager,RedisDistributedBlockLockContextManager
 from typing import Union
 import threading
 
@@ -26,7 +28,8 @@ from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.core.booster import BoostersManager, Booster
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost import BoosterParams
-
+from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool
+from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
 
 @deprecated.deprecated(reason='以后不要再使用这种方式，对于job_store为数据库时候需要序列化不好。使用内存和数据库都兼容的添加任务方式: add_push_job')
 def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, AbstractConsumer]):
@@ -54,6 +57,20 @@ def push_fun_params_to_broker(queue_name: str, *args, runonce_uuid=None, **kwarg
     else:
         BoostersManager.get_or_create_booster_by_queue_name(queue_name).push(*args, **kwargs)
 
+class ThreadPoolExecutorForAps(BasePoolExecutor):
+    """
+    An executor that runs jobs in a concurrent.futures thread pool.
+
+    Plugin alias: ``threadpool``
+
+    :param max_workers: the maximum number of spawned threads.
+    :param pool_kwargs: dict of keyword arguments to pass to the underlying
+        ThreadPoolExecutor constructor
+    """
+
+    def __init__(self, max_workers=10, ):
+        pool = ThreadPoolExecutorShrinkAble(int(max_workers),)
+        super().__init__(pool)
 
 class FunboostBackgroundScheduler(BackgroundScheduler):
     """
@@ -150,7 +167,7 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
         或者下一个需要运行的任务的wait_seconds是3600秒后，此时新加了一个动态任务需要3600秒后，
         现在最多只需要1秒就能扫描到动态新增的定时任务了。
         """
-        MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS = 1.5
+        MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS = 0.5
         wait_seconds = None
         while self.state == STATE_RUNNING:
             if wait_seconds is None:
@@ -163,24 +180,8 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
             time.sleep(self._last_wait_seconds)  # 这个要取最小值，不然例如定时间隔0.1秒运行，不取最小值，不会每隔0.1秒运行。
             wait_seconds = self._process_jobs()
 
-
-class FunboostBackgroundSchedulerProcessJobsWithinRedisLock(FunboostBackgroundScheduler):
-    process_jobs_redis_lock_key = f'funboost.BackgroundSchedulerProcessJobsWithinRedisLock'
-
-    def set_process_jobs_redis_lock_key(self,lock_key):
-        self.process_jobs_redis_lock_key = lock_key
-
-    def _process_jobs(self):
-        for i in range(10) :
-            with RedisDistributedLockContextManager(RedisMixin().redis_db_frame, self.process_jobs_redis_lock_key, ) as lock:
-                if lock.has_aquire_lock:
-                    wait_seconds = super()._process_jobs()
-                    return wait_seconds
-                else:
-                    time.sleep(0.1)
-        return 0.1
-
-
+    def _create_default_executor(self):
+        return ThreadPoolExecutorForAps()  # 必须是apscheduler pool的子类
 
 
 FsdfBackgroundScheduler = FunboostBackgroundScheduler  # 兼容一下名字，fsdf是 function-scheduling-distributed-framework 老框架名字的缩写

@@ -16,7 +16,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.redis import RedisJobStore
 # noinspection PyProtectedMember
 from apscheduler.schedulers.base import STATE_STOPPED, STATE_RUNNING
-from apscheduler.util import undefined
+from apscheduler.util import undefined,TIMEOUT_MAX
 import deprecated
 from funboost.utils.redis_manager import RedisMixin
 
@@ -60,6 +60,9 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
     自定义的， 继承了官方BackgroundScheduler，
     通过重写 _main_loop ，使得动态修改增加删除定时任务配置更好。
     """
+
+    _last_wait_seconds = None
+    _last_has_task = False
 
     @deprecated.deprecated(reason='以后不要再使用这种方式，对于job_store为数据库时候需要序列化不好。使用内存和数据库都兼容的添加任务方式: add_push_job')
     def add_timing_publish_job(self, func, trigger=None, args=None, kwargs=None, id=None, name=None,
@@ -147,12 +150,17 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
         或者下一个需要运行的任务的wait_seconds是3600秒后，此时新加了一个动态任务需要3600秒后，
         现在最多只需要1秒就能扫描到动态新增的定时任务了。
         """
-        MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS = 1
+        MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS = 1.5
         wait_seconds = None
         while self.state == STATE_RUNNING:
             if wait_seconds is None:
                 wait_seconds = MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS
-            time.sleep(min(wait_seconds, MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS))  # 这个要取最小值，不然例如定时间隔0.1秒运行，不取最小值，不会每隔0.1秒运行。
+            self._last_wait_seconds = min(wait_seconds, MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS)
+            if wait_seconds in (None,TIMEOUT_MAX):
+                self._last_has_task = False
+            else:
+                self._last_has_task = True
+            time.sleep(self._last_wait_seconds)  # 这个要取最小值，不然例如定时间隔0.1秒运行，不取最小值，不会每隔0.1秒运行。
             wait_seconds = self._process_jobs()
 
 
@@ -163,11 +171,14 @@ class FunboostBackgroundSchedulerProcessJobsWithinRedisLock(FunboostBackgroundSc
         self.process_jobs_redis_lock_key = lock_key
 
     def _process_jobs(self):
-        with RedisDistributedLockContextManager(RedisMixin().redis_db_frame, self.process_jobs_redis_lock_key, ) as lock:
-            if lock.has_aquire_lock:
-                return super()._process_jobs()
-            else:
-                return 0.001
+        for i in range(10) :
+            with RedisDistributedLockContextManager(RedisMixin().redis_db_frame, self.process_jobs_redis_lock_key, ) as lock:
+                if lock.has_aquire_lock:
+                    wait_seconds = super()._process_jobs()
+                    return wait_seconds
+                else:
+                    time.sleep(0.1)
+        return 0.1
 
 
 

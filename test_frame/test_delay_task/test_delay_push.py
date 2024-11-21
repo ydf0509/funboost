@@ -48,4 +48,6 @@ misfire_grace_time 如果不为None，必须是大于等于1的整数，此值�
 
 f.publish({'x':  10}, priority_control_config=PriorityConsumingControlConfig(
     eta=datetime.datetime.now() + datetime.timedelta(seconds=20)))
-    
+
+
+time.sleep(100000)

@@ -10,6 +10,7 @@ from funboost.funboost_config_deafult import FunboostCommonConfig
 
 class FunboostTime(NbTime):
     default_formatter = NbTime.FORMATTER_DATETIME_NO_ZONE
+
     def get_time_zone_str(self,time_zone: typing.Union[str, datetime.tzinfo,None] = None):
         return time_zone or self.default_time_zone or  FunboostCommonConfig.TIMEZONE  or self.get_localzone_name()
 

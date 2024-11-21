@@ -5,7 +5,7 @@ import datetime
 import time
 import re
 import pytz
-
+from funboost.core.funboost_time import FunboostTime
 
 from funboost.utils import nb_print
 
@@ -75,21 +75,22 @@ class DatetimeConverter:
         """
         :param datetimex: 接受时间戳  datatime类型 和 时间字符串三种类型
         """
-        if isinstance(datetimex, str):
-            if not re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', datetimex):
-                raise ValueError('时间字符串的格式不符合此传参的规定')
-            else:
-                self.datetime_obj = datetime.datetime.strptime(datetimex, self.DATETIME_FORMATTER)
-        elif isinstance(datetimex, (int, float)):
-            if datetimex < 1:
-                datetimex += 86400
-            self.datetime_obj = datetime.datetime.fromtimestamp(datetimex, tz=pytz.timezone(_get_funboost_timezone()))  # 时间戳0在windows会出错。
-        elif isinstance(datetimex, datetime.datetime):
-            self.datetime_obj = datetimex
-        elif datetimex is None:
-            self.datetime_obj = datetime.datetime.now(tz=pytz.timezone(_get_funboost_timezone()))
-        else:
-            raise ValueError('实例化时候的传参不符合规定')
+        # if isinstance(datetimex, str):
+        #     if not re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', datetimex):
+        #         raise ValueError('时间字符串的格式不符合此传参的规定')
+        #     else:
+        #         self.datetime_obj = datetime.datetime.strptime(datetimex, self.DATETIME_FORMATTER)
+        # elif isinstance(datetimex, (int, float)):
+        #     if datetimex < 1:
+        #         datetimex += 86400
+        #     self.datetime_obj = datetime.datetime.fromtimestamp(datetimex, tz=pytz.timezone(_get_funboost_timezone()))  # 时间戳0在windows会出错。
+        # elif isinstance(datetimex, datetime.datetime):
+        #     self.datetime_obj = datetimex
+        # elif datetimex is None:
+        #     self.datetime_obj = datetime.datetime.now(tz=pytz.timezone(_get_funboost_timezone()))
+        # else:
+        #     raise ValueError('实例化时候的传参不符合规定')
+        self.datetime_obj = FunboostTime(datetimex).datetime_obj
 
     @property
     def datetime_str(self):

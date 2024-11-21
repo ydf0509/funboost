@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 14:57
+import multiprocessing
+
 import gevent.monkey;gevent.monkey.patch_all()  # 需要打猴子补丁。
 # import eventlet;eventlet.monkey_patch(all=True)
 import time
-from funboost import ConcurrentModeEnum, BoosterParams
+from funboost import ConcurrentModeEnum, BoosterParams,run_forever
 
 
 @BoosterParams(queue_name='queue_test62', concurrent_num=200, log_level=10, logger_prefix='zz平台消费',
@@ -24,9 +26,17 @@ def f3(a, b):
     time.sleep(10)  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
     print(f'计算 {a} + {b} 得到的结果是  {a + b}')
 
+
+def start_many_fun_consume():
+    f2.consume()
+    f3.consume()
+    run_forever()
+
 if __name__ == '__main__':
     for i in range(100):
         f2.push(1 * i, 2 * i)
         f3.push(1 * i, 2 * i)
-    f2.consume()
-    f3.consume()
+    # f2.consume()
+    # f3.consume()
+    for i in range(6):
+        multiprocessing.Process(target=start_many_fun_consume).start()

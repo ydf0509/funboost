@@ -123,7 +123,7 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
         args_list.insert(0, func.queue_name)
         args = tuple(args_list)
         kwargs = kwargs or {}
-        kwargs['runonce_uuid'] = runonce_uuid
+        kwargs['runonce_uuid'] = runonce_uuid  # 忽略，用户不需要传递runonce_uuid入参。
         return self.add_job(push_fun_params_to_broker, trigger, args, kwargs, id, name,
                             misfire_grace_time, coalesce, max_instances,
                             next_run_time, jobstore, executor,

@@ -13,6 +13,7 @@ import typing
 import abc
 import copy
 from apscheduler.jobstores.memory import MemoryJobStore
+from funboost.core.funboost_time import FunboostTime
 from pathlib import Path
 # from multiprocessing import Process
 import datetime
@@ -487,9 +488,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         run_date = None
         # print(kw)
         if msg_countdown:
-            run_date = time_util.DatetimeConverter(kw['body']['extra']['publish_time']).datetime_obj + datetime.timedelta(seconds=msg_countdown)
+            run_date = FunboostTime(kw['body']['extra']['publish_time']).datetime_obj + datetime.timedelta(seconds=msg_countdown)
         if msg_eta:
-            run_date = time_util.DatetimeConverter(msg_eta).datetime_obj
+
+            run_date = FunboostTime(msg_eta).datetime_obj
         # print(run_date,time_util.DatetimeConverter().datetime_obj)
         # print(run_date.timestamp(),time_util.DatetimeConverter().datetime_obj.timestamp())
         # print(self.concurrent_pool)

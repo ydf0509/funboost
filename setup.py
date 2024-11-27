@@ -86,7 +86,7 @@ setup(
         'decorator==5.1.1',
         'tomorrow3==1.1.0',
         'persist-queue>=0.4.2',
-        'apscheduler==3.10.1',
+        'apscheduler>=3.10.1',
         'pikav0',
         'pikav1',
         'redis2',

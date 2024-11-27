@@ -80,7 +80,7 @@ setup(
         'nb_log>=13.2',
         'nb_libs>=1.8',
         'nb_time>=2.1',
-        'pymongo==4.3.3',  # 3.5.1  -> 4.0.2
+        "pymongo>=4.6.3",  # 3.5.1  -> 4.0.2
         'AMQPStorm==2.10.6',
         'rabbitpy==2.0.1',
         'decorator==5.1.1',

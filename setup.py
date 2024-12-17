@@ -74,6 +74,7 @@ setup(
         # 'Programming Language :: Python :: 3.19',
         # 'Programming Language :: Python :: 3.20',
         # 'Programming Language :: Python :: 3.21',
+        "Programming Language :: Python :: 3 :: Only",
         'Topic :: Software Development :: Libraries'
     ],
     install_requires=[
@@ -103,7 +104,9 @@ setup(
         'frozenlist',
         'fire',
         'pydantic',
-        'orjson'
+        'orjson',
+        "async-timeout",
+        "typing-extensions",
     ],
     extras_require={'all': extra_brokers + extra_flask,
                     'extra_brokers': extra_brokers,

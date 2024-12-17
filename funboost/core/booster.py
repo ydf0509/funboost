@@ -17,11 +17,12 @@ from funboost.core.loggers import flogger, develop_logger, logger_prompt
 from functools import wraps
 
 from funboost.core.exceptions import BoostDecoParamsIsOldVersion
-from funboost.core.func_params_model import BoosterParams, FunctionResultStatusPersistanceConfig, PriorityConsumingControlConfig
+from funboost.core.func_params_model import BoosterParams, FunctionResultStatusPersistanceConfig, PriorityConsumingControlConfig, PublisherParams
 
 from funboost.factories.consumer_factory import get_consumer
+from funboost.factories.publisher_factotry import get_publisher
+from funboost.publishers.base_publisher import AbstractPublisher
 from collections import defaultdict
-
 
 from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
 
@@ -81,7 +82,7 @@ class Booster:
             flogger.warning(f'''你的 {queue_name} 队列， funboost 40.0版本以后： {BoostDecoParamsIsOldVersion.new_version_change_hint}''')
         boost_params_merge = boost_params.copy()
         boost_params_merge.update_from_dict(kwargs)
-        self.boost_params:BoosterParams = boost_params_merge
+        self.boost_params: BoosterParams = boost_params_merge
         self.queue_name = boost_params_merge.queue_name
 
     def __str__(self):
@@ -156,10 +157,10 @@ class Booster:
         return AioAsyncResult(async_result.task_id, )
 
     async def aio_publish(self, msg: typing.Union[str, dict], task_id=None,
-                      priority_control_config: PriorityConsumingControlConfig = None) -> AioAsyncResult:
+                          priority_control_config: PriorityConsumingControlConfig = None) -> AioAsyncResult:
         """asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
         但为了更好的防止网络波动(例如发布消息到外网的消息队列耗时达到10毫秒),可以使用aio_push"""
-        async_result = await simple_run_in_executor(self.publish,msg,task_id,priority_control_config)
+        async_result = await simple_run_in_executor(self.publish, msg, task_id, priority_control_config)
         return AioAsyncResult(async_result.task_id, )
 
     # noinspection PyMethodMayBeStatic
@@ -206,7 +207,7 @@ class Booster:
         fabric_deploy(self, **params)
 
 
-boost = Booster   # @boost 后消费函数.  不能自动补全方法就用 Booster就可以。 2024版本的 pycharm抽风了，@boost的消费函数不能自动补全提示 .consume  .push 这些方法。
+boost = Booster  # @boost 后消费函数.  不能自动补全方法就用 Booster就可以。 2024版本的 pycharm抽风了，@boost的消费函数不能自动补全提示 .consume  .push 这些方法。
 task_deco = boost  # 两个装饰器名字都可以。task_deco是原来名字，兼容一下。
 
 
@@ -298,6 +299,25 @@ class BoostersManager:
             booster = Booster(boost_params)(boost_params.consuming_function)
         return booster
 
+    queue_name__cross_project_publisher_map = {}
+
+    @classmethod
+    def get_cross_project_publisher(cls, publisher_params: PublisherParams) -> AbstractPublisher:
+        """
+        跨不同的项目，发布消息。例如proj1中定义有fun1消费函数，但proj2无法直接到日proj1的函数，无法直接 fun1.push 来发布消息
+        可以使用这个方法，获取一个publisher。
+
+        publisher = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name='proj1_queue', broker_kind=BrokerEnum.SQLITE_QUEUE))
+        publisher.publish({'x': aaa})
+        """
+        pid = os.getpid()
+        key = (pid, publisher_params.queue_name)
+        if key not in cls.queue_name__cross_project_publisher_map:
+            publisher = get_publisher(publisher_params)
+            publisher.push = lambda *args, **kwargs: print('跨项目虚拟publisher不支持push方法，请使用publish来发布消息')
+            cls.queue_name__cross_project_publisher_map[key] = publisher
+        return cls.queue_name__cross_project_publisher_map[key]
+
     @classmethod
     def push(cls, queue_name, *args, **kwargs):
         """push发布消息到消息队列 ;
@@ -323,7 +343,7 @@ class BoostersManager:
     consume = consume_queues
 
     @classmethod
-    def consume_all_queues(cls,block=True):
+    def consume_all_queues(cls, block=True):
         """
         启动所有消息队列名的消费,无需一个一个函数亲自 funxx.consume()来启动,多个函数队列在当前同一个进程内启动消费.
         这种方式节约总的内存,但无法利用多核cpu

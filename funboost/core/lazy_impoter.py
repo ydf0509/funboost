@@ -31,6 +31,8 @@ class FunboostLazyImpoter(SingletonBaseNew):
         from funboost.core import booster
         return booster.Booster
 
+
+
     # @property
     # @cached_method_result
     # def get_current_taskid(self):

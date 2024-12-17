@@ -260,6 +260,8 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # print(self.publish_params_checker.position_arg_name_list)
         # print(func_args)
         func_args_list = list(func_args)
+
+        print(func_args_list)
         if self.publisher_params.consuming_function_kind == FunctionKind.CLASS_METHOD:
             # print(self.publish_params_checker.all_arg_name[0])
             # func_args_list.insert(0, {'first_param_name': self.publish_params_checker.all_arg_name[0],

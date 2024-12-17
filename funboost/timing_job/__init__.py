@@ -12,7 +12,8 @@ import threading
 from apscheduler.schedulers.background import BackgroundScheduler
 # noinspection PyProtectedMember
 from apscheduler.schedulers.base import STATE_STOPPED, STATE_RUNNING
-from apscheduler.util import undefined, TIMEOUT_MAX
+from apscheduler.util import undefined
+from threading import TIMEOUT_MAX
 import deprecated
 from funboost.utils.redis_manager import RedisMixin
 

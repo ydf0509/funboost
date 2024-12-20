@@ -31,6 +31,7 @@ async def async_f(x):
     # print(x,55555555555)
     # await asyncio.sleep(1,)
     # print(x,66666666666)
+    ss = aiohttp.ClientSession( )
     async with ss.request('get', url=url) as resp:  # 如果是这样请求，boost装饰器必须指定specify_async_loop，
         text = await resp.text()
         # print(x, resp.url, text[:10])

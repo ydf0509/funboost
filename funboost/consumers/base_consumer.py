@@ -65,7 +65,7 @@ from funboost.concurrent_pool.bounded_threadpoolexcutor import \
     BoundedThreadPoolExecutor
 from funboost.utils.redis_manager import RedisMixin
 # from func_timeout import func_set_timeout  # noqa
-from funboost.utils.func_timeout.dafunc import func_set_timeout
+from funboost.utils.func_timeout import dafunc
 
 from funboost.concurrent_pool.custom_threadpool_executor import check_not_monkey
 from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool, sync_or_async_fun_deco
@@ -1058,7 +1058,7 @@ class ConcurrentModeDispatcher(FunboostFileLoggerMixin):
         self.timeout_deco = None
         if self._concurrent_mode in (ConcurrentModeEnum.THREADING, ConcurrentModeEnum.SINGLE_THREAD):
             # self.timeout_deco = decorators.timeout
-            self.timeout_deco = func_set_timeout  # 这个超时装饰器性能好很多。
+            self.timeout_deco = dafunc.func_set_timeout  # 这个超时装饰器性能好很多。
         elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
             from funboost.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_deco
             self.timeout_deco = gevent_timeout_deco

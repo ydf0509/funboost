@@ -64,7 +64,8 @@ from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
 from funboost.concurrent_pool.bounded_threadpoolexcutor import \
     BoundedThreadPoolExecutor
 from funboost.utils.redis_manager import RedisMixin
-from func_timeout import func_set_timeout  # noqa
+# from func_timeout import func_set_timeout  # noqa
+from funboost.utils.func_timeout.dafunc import func_set_timeout
 
 from funboost.concurrent_pool.custom_threadpool_executor import check_not_monkey
 from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool, sync_or_async_fun_deco

@@ -205,7 +205,14 @@ class BoosterParams(BaseJsonAbleModel):
 
     # func_params_is_pydantic_model: bool = False  # funboost 兼容支持 函数娼还是 pydantic model类型，funboost在发布之前和取出来时候自己转化。
 
-    consuming_function_kind: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参,如果自动判断失误就传递。是判断消费函数是函数还是实例方法还是类方法
+    consuming_function_kind: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参,如果自动判断失误就传递。是判断消费函数是函数还是实例方法还是类方法。如果传递了，就不自动获取函数类型。
+    ''' consuming_function_kind 可以为以下类型，
+    class FunctionKind:
+        CLASS_METHOD = 'CLASS_METHOD'
+        INSTANCE_METHOD = 'INSTANCE_METHOD'
+        STATIC_METHOD = 'STATIC_METHOD'
+        COMMON_FUNCTION = 'COMMON_FUNCTION'
+    '''
 
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
 

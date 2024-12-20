@@ -14,17 +14,17 @@ from funboost.constant import FunctionKind
 class ClsHelper:
     @staticmethod
     def get_instncae_method_cls(instncae_method):
-        print(instncae_method)
-        print(instncae_method.__qualname__)
-        print(instncae_method.__module__)
+        # print(instncae_method)
+        # print(instncae_method.__qualname__)
+        # print(instncae_method.__module__)
         return getattr(sys.modules[instncae_method.__module__],instncae_method.__qualname__.split('.')[0])
         # return instncae_method.__self__.__class__
 
     @staticmethod
     def get_classs_method_cls(class_method):
-        print(class_method)
-        print(class_method.__qualname__)
-        print(class_method.__module__)
+        # print(class_method)
+        # print(class_method.__qualname__)
+        # print(class_method.__module__)
         return getattr(sys.modules[class_method.__module__],class_method.__qualname__.split('.')[0])
 
     @staticmethod

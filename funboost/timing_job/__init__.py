@@ -167,7 +167,7 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
         """
         MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS = 0.5
         wait_seconds = None
-        while self.state == STATE_RUNNING:
+        while self.state != STATE_STOPPED:
             if wait_seconds is None:
                 wait_seconds = MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS
             self._last_wait_seconds = min(wait_seconds, MAX_WAIT_SECONDS_FOR_NEX_PROCESS_JOBS)

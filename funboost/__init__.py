@@ -58,7 +58,7 @@ from funboost.utils.ctrl_c_end import ctrl_c_recv
 from funboost.utils.redis_manager import RedisMixin
 from funboost.concurrent_pool.custom_threadpool_executor import show_current_threads_num
 
-from funboost.core.current_task import funboost_current_task
+from funboost.core.current_task import funboost_current_task,fct,get_current_taskid
 
 
 # atexit.register(ctrl_c_recv)  # 还是需要用户自己在代码末尾加才可以.

@@ -9,7 +9,7 @@ from funboost.funboost_config_deafult import FunboostCommonConfig
 
 class ApsJobAdder:
     """
-    20250116新增加的统一的新增定时任务的方式，
+    20250116新增加的统一的新增定时任务的方式，推荐这种方式。
     用户不用像之前再去关心使用哪个apscheduler对象去添加定时任务了。
 
     ApsJobAdder(add_numbers,job_store_kind='memory').add_push_job(
@@ -36,6 +36,9 @@ class ApsJobAdder:
 
     @classmethod
     def get_funboost_redis_apscheduler(cls, queue_name):
+        """ 
+        每个队列名字用不同的redis jobstore的 jobs_key 和 run_times_key
+        """
         if queue_name in cls.queue__redis_aps_map:
             return cls.queue__redis_aps_map[queue_name]
         redis_jobstores = {
@@ -64,7 +67,11 @@ class ApsJobAdder:
                      misfire_grace_time=undefined, coalesce=undefined, max_instances=undefined,
                      next_run_time=undefined, jobstore='default', executor='default',
                      replace_existing=False, **trigger_args,):
-        # if
+        """
+        这里的入参都是和apscheduler的add_job的入参一样的，funboost作者没有创造新的入参。
+        但是官方apscheduler的入参第一个入参是函数，funboost的入参去掉了函数，因为类的实例化时候会把函数传进来，不需要再麻烦用户一次了。
+        """
+      
         if not getattr(self.aps_obj, 'has_started_flag', False):
             self.aps_obj.has_started_flag = True
             self.aps_obj.start(paused=False)

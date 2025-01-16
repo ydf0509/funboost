@@ -16,7 +16,7 @@
 import sys
 print(sys.executable)
 
-from funboost import boost, BoosterParams,ctrl_c_recv
+from funboost import boost, BoosterParams,ctrl_c_recv,run_forever
 from funboost.timing_job.apscheduler_use_redis_store import funboost_background_scheduler_redis_store
 from funboost.timing_job.timing_push import ApsJobAdder
 
@@ -53,4 +53,5 @@ if __name__ == '__main__':
 
     # 启动消费者
     add_numbers.consume()
-    ctrl_c_recv()
+    # ctrl_c_recv()
+    run_forever()

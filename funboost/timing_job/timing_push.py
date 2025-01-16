@@ -1,5 +1,5 @@
 from funboost.utils import redis_manager
-from funboost import Booster
+from funboost.core.booster import BoostersManager, Booster
 
 from apscheduler.jobstores.redis import RedisJobStore
 from funboost.timing_job.timing_job_base import funboost_aps_scheduler, undefined

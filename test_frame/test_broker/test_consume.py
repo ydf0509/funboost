@@ -46,7 +46,7 @@ pool2 = ProcessPoolExecutor(4)
 def f2(a, b):
     # time.sleep(100)
     time.sleep(1)
-    if random.random() > 0.6:
+    if random.random() > 0.9:
         raise ValueError('普通错误会对函数重试n次')
     # if random.random() > 0.8:
     #     raise ExceptionForRequeue('重新入队去吧')
@@ -70,16 +70,16 @@ if __name__ == '__main__':
     # print(f2.consumer.logger.level)
 
     # f2.clear()
-    print(f2)
-    print(f2.consuming_function)
-    print(f2.__wrapped__)
+    # print(f2)
+    # print(f2.consuming_function)
+    # print(f2.__wrapped__)
 
-    # for i in range(5):
-    #     # f.push(i, i * 10)
-    #     r = f2.push(i, i * 5)
-    #     # print(r.result)
-    #
-    # f2.consume()
+    for i in range(50):
+        # f.push(i, i * 10)
+        r = f2.push(i, i * 5)
+        # print(r.result)
+
+    f2.consume()
     #
     # show_current_threads_num(sleep_time=600)
 

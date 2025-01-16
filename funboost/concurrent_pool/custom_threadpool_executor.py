@@ -19,6 +19,8 @@
 
 可以在各种地方加入 time.sleep 来验证 第1条和第2条的自动智能缩放功能。
 """
+import logging
+
 import os
 import atexit
 import queue
@@ -175,6 +177,9 @@ class _CustomThread(threading.Thread, FunboostFileLoggerMixin, LoggerLevelSetter
     # noinspection PyProtectedMember
     def run(self):
         # noinspection PyUnresolvedReferences
+        # print(logging.getLogger(None).level,logging.getLogger(None).handlers)
+        # print(self.logger.level)
+        # print(self.logger.handlers)
         self.logger.debug(f'新启动线程 {self._ident} ')
         self._executorx._change_threads_free_count(1)
         while True:

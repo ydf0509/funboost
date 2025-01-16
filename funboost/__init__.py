@@ -13,7 +13,7 @@ set_frame_config这个模块的 use_config_form_funboost_config_module() 是核�
 这段注释说明和使用的用户无关,只和框架开发人员有关.
 '''
 
-__version__ = "46.2"
+__version__ = "47.9"
 
 from funboost.set_frame_config import show_frame_config
 
@@ -58,7 +58,7 @@ from funboost.utils.ctrl_c_end import ctrl_c_recv
 from funboost.utils.redis_manager import RedisMixin
 from funboost.concurrent_pool.custom_threadpool_executor import show_current_threads_num
 
-from funboost.core.current_task import funboost_current_task
+from funboost.core.current_task import funboost_current_task,fct,get_current_taskid
 
 
 # atexit.register(ctrl_c_recv)  # 还是需要用户自己在代码末尾加才可以.

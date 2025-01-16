@@ -12,6 +12,8 @@ import sys
 import typing
 import abc
 import copy
+from apscheduler.jobstores.memory import MemoryJobStore
+from funboost.core.funboost_time import FunboostTime
 from pathlib import Path
 # from multiprocessing import Process
 import datetime
@@ -39,6 +41,7 @@ from funboost.core.serialization import Serialization
 from funboost.core.task_id_logger import TaskIdLogger
 from funboost.constant import FunctionKind
 
+
 from nb_libs.path_helper import PathHelper
 from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, is_main_process,
                     nb_log_config_default)
@@ -61,7 +64,8 @@ from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
 from funboost.concurrent_pool.bounded_threadpoolexcutor import \
     BoundedThreadPoolExecutor
 from funboost.utils.redis_manager import RedisMixin
-from func_timeout import func_set_timeout  # noqa
+# from func_timeout import func_set_timeout  # noqa
+from funboost.utils.func_timeout import dafunc
 
 from funboost.concurrent_pool.custom_threadpool_executor import check_not_monkey
 from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool, sync_or_async_fun_deco
@@ -367,25 +371,44 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def _start_delay_task_scheduler(self):
         from funboost.timing_job import FsdfBackgroundScheduler
-        jobstores = {
-            "default": RedisJobStore(**redis_manager.get_redis_conn_kwargs())
-        }
-        self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=FunboostCommonConfig.TIMEZONE, daemon=False,
-                                                             jobstores=jobstores  # push 方法的序列化带thredignn.lock
-                                                             )
-        self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
+        from funboost.timing_job.apscheduler_use_redis_store import FunboostBackgroundSchedulerProcessJobsWithinRedisLock
+        # print(self.consumer_params.delay_task_apsscheduler_jobstores_kind )
+        if self.consumer_params.delay_task_apscheduler_jobstores_kind == 'redis':
+            jobstores = {
+                "default": RedisJobStore(**redis_manager.get_redis_conn_kwargs(),
+                                         jobs_key=f'funboost.apscheduler.{self.queue_name}.jobs',
+                                         run_times_key=f'funboost.apscheduler.{self.queue_name}.run_times',
+                                         )
+            }
+            self._delay_task_scheduler = FunboostBackgroundSchedulerProcessJobsWithinRedisLock(timezone=FunboostCommonConfig.TIMEZONE, daemon=False,
+                                                       jobstores=jobstores  # push 方法的序列化带thredignn.lock
+                                                       )
+            self._delay_task_scheduler.set_process_jobs_redis_lock_key(f'funboost.BackgroundSchedulerProcessJobsWithinRedisLock.{self.queue_name}')
+        elif self.consumer_params.delay_task_apscheduler_jobstores_kind == 'memory':
+            jobstores = {"default": MemoryJobStore()}
+            self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=FunboostCommonConfig.TIMEZONE, daemon=False,
+                                                       jobstores=jobstores  # push 方法的序列化带thredignn.lock
+                                                       )
+
+        else:
+            raise Exception(f'delay_task_apsscheduler_jobstores_kind is error: {self.consumer_params.delay_task_apscheduler_jobstores_kind}')
+
+
+        # self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
         # self._delay_task_scheduler.add_listener(self._apscheduler_job_miss, EVENT_JOB_MISSED)
         self._delay_task_scheduler.start()
+
         self.logger.warning('启动延时任务sheduler')
 
     logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')
 
     @classmethod
-    def _push_for_apscheduler_use_database_store(cls, queue_name, msg, runonce_uuid):
-        key = 'apscheduler.redisjobstore_runonce'
-        if RedisMixin().redis_db_frame.sadd(key, runonce_uuid):  # 这样可以阻止多次启动同队列名消费者 redis jobstore多次运行函数.
-            cls.logger_apscheduler.debug(f'延时任务用普通消息重新发布到普通队列 {msg}')
-            funboost_lazy_impoter.BoostersManager.get_or_create_booster_by_queue_name(queue_name).publish(msg)
+    def _push_apscheduler_task_to_broker(cls, queue_name, msg, runonce_uuid):
+        funboost_lazy_impoter.BoostersManager.get_or_create_booster_by_queue_name(queue_name).publish(msg)
+        # key = 'apscheduler.redisjobstore_runonce'
+        # if RedisMixin().redis_db_frame.sadd(key, runonce_uuid):  # 这样可以阻止多次启动同队列名消费者 redis jobstore多次运行函数.
+        #     cls.logger_apscheduler.debug(f'延时任务用普通消息重新发布到普通队列 {msg}')
+        #     funboost_lazy_impoter.BoostersManager.get_or_create_booster_by_queue_name(queue_name).publish(msg)
 
     @abc.abstractmethod
     def _shedual_task(self):
@@ -466,9 +489,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         run_date = None
         # print(kw)
         if msg_countdown:
-            run_date = time_util.DatetimeConverter(kw['body']['extra']['publish_time']).datetime_obj + datetime.timedelta(seconds=msg_countdown)
+            run_date = FunboostTime(kw['body']['extra']['publish_time']).datetime_obj + datetime.timedelta(seconds=msg_countdown)
         if msg_eta:
-            run_date = time_util.DatetimeConverter(msg_eta).datetime_obj
+
+            run_date = FunboostTime(msg_eta).datetime_obj
         # print(run_date,time_util.DatetimeConverter().datetime_obj)
         # print(run_date.timestamp(),time_util.DatetimeConverter().datetime_obj.timestamp())
         # print(self.concurrent_pool)
@@ -487,9 +511,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.__delete_eta_countdown(msg_no_delay)
             # print(msg_no_delay)
             # 数据库作为apscheduler的jobstores时候， 不能用 self.pbulisher_of_same_queue.publish，self不能序列化
-            self._delay_task_scheduler.add_job(self._push_for_apscheduler_use_database_store, 'date', run_date=run_date,
+            self._delay_task_scheduler.add_job(self._push_apscheduler_task_to_broker, 'date', run_date=run_date,
                                                kwargs={'queue_name': self.queue_name, 'msg': msg_no_delay, 'runonce_uuid': str(uuid.uuid4())},
-                                               misfire_grace_time=misfire_grace_time)
+                                               misfire_grace_time=misfire_grace_time,
+                                              )
             self._confirm_consume(kw)
 
         else:  # 普通任务
@@ -1033,7 +1058,7 @@ class ConcurrentModeDispatcher(FunboostFileLoggerMixin):
         self.timeout_deco = None
         if self._concurrent_mode in (ConcurrentModeEnum.THREADING, ConcurrentModeEnum.SINGLE_THREAD):
             # self.timeout_deco = decorators.timeout
-            self.timeout_deco = func_set_timeout  # 这个超时装饰器性能好很多。
+            self.timeout_deco = dafunc.func_set_timeout  # 这个超时装饰器性能好很多。
         elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
             from funboost.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_deco
             self.timeout_deco = gevent_timeout_deco
@@ -1149,7 +1174,6 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
     if HEARBEAT_EXPIRE_SECOND < SEND_HEARTBEAT_INTERVAL * 2:
         raise ValueError(f'HEARBEAT_EXPIRE_SECOND:{HEARBEAT_EXPIRE_SECOND} , SEND_HEARTBEAT_INTERVAL:{SEND_HEARTBEAT_INTERVAL} ')
 
-
     def __init__(self, consumer: AbstractConsumer):
         # self._consumer_identification = consumer_identification
         # self._consumer_identification_map = consumer_identification_map
@@ -1202,7 +1226,6 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
         self._send_heartbeat_with_dict_value(self._server__consumer_identification_map_key_name)
         self._show_active_consumer_num()
         self._get_stop_and_pause_flag_from_redis()
-
 
     def _show_active_consumer_num(self):
         self.active_consumer_num = self.redis_db_frame.scard(self._redis_key_name) or 1

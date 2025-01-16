@@ -4,6 +4,7 @@
 import functools
 import os
 import pymongo
+from pymongo.collection import Collection
 from funboost.utils import decorators
 
 

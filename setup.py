@@ -74,19 +74,20 @@ setup(
         # 'Programming Language :: Python :: 3.19',
         # 'Programming Language :: Python :: 3.20',
         # 'Programming Language :: Python :: 3.21',
+        "Programming Language :: Python :: 3 :: Only",
         'Topic :: Software Development :: Libraries'
     ],
     install_requires=[
-        'nb_log>=12.6',
+        'nb_log>=13.2',
         'nb_libs>=1.8',
-        'nb_time>=1.8',
-        'pymongo==4.3.3',  # 3.5.1  -> 4.0.2
+        'nb_time>=2.1',
+        "pymongo>=4.6.3",  # 3.5.1  -> 4.0.2
         'AMQPStorm==2.10.6',
         'rabbitpy==2.0.1',
         'decorator==5.1.1',
         'tomorrow3==1.1.0',
         'persist-queue>=0.4.2',
-        'apscheduler==3.10.1',
+        'apscheduler>=3.10.1',
         'pikav0',
         'pikav1',
         'redis2',
@@ -94,7 +95,7 @@ setup(
         'redis5',
         'redis',
         'setuptools_rust',
-        'fabric2==2.6.0',  # 有的机器包rust错误， 这样做 curl https://sh.rustup.rs -sSf | sh
+        'fabric2>=2.6.0',  # 有的机器包rust错误， 这样做 curl https://sh.rustup.rs -sSf | sh
         'nb_filelock',
         'pysnooper',
         'deprecated',
@@ -103,7 +104,9 @@ setup(
         'frozenlist',
         'fire',
         'pydantic',
-        'orjson'
+        'orjson',
+        "async-timeout",
+        "typing-extensions",
     ],
     extras_require={'all': extra_brokers + extra_flask,
                     'extra_brokers': extra_brokers,

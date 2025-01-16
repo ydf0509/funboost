@@ -1,9 +1,13 @@
+from typing import Any
+
 import asyncio
 import datetime
 import functools
 import json
 import logging
 import typing
+
+from typing_extensions import Literal
 from collections import OrderedDict
 
 from funboost.concurrent_pool import FunboostBaseConcurrentPool, FlexibleThreadPool, ConcurrentPoolBuilder
@@ -98,18 +102,21 @@ class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
     expire_seconds: int = 7 * 24 * 3600  # mongo中的函数运行状态保存多久时间,自动过期
     is_use_bulk_insert: bool = False  # 是否使用批量插入来保存结果，批量插入是每隔0.5秒钟保存一次最近0.5秒内的所有的函数消费状态结果，始终会出现最后0.5秒内的执行结果没及时插入mongo。为False则，每完成一次函数就实时写入一次到mongo。
 
-    @validator('expire_seconds')
+    @validator('expire_seconds',allow_reuse=True)
     def check_expire_seconds(cls, value):
         if value > 10 * 24 * 3600:
             from funboost.core.loggers import flogger  # 这个文件不要提前导入日志,以免互相导入.
             flogger.warning(f'你设置的过期时间为 {value} ,设置的时间过长。 ')
         return value
 
-    @root_validator(skip_on_failure=True)
+    @root_validator(skip_on_failure=True,allow_reuse=True)
     def cehck_values(cls, values: dict):
         if not values['is_save_status'] and values['is_save_result']:
             raise ValueError(f'你设置的是不保存函数运行状态但保存函数运行结果。不允许你这么设置')
         return values
+
+
+
 
 
 class BoosterParams(BaseJsonAbleModel):
@@ -147,8 +154,9 @@ class BoosterParams(BaseJsonAbleModel):
     retry_interval: typing.Union[float, int] = 0  # 函数出错后间隔多少秒再重试.
     is_push_to_dlx_queue_when_retry_max_times: bool = False  # 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
 
+
     consumin_function_decorator: typing.Callable = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
-    function_timeout: typing.Union[int, float] = 0  # 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。 谨慎使用,非必要别去设置超时时间,设置后性能会降低(因为需要把用户函数包装到另一个线单独的程中去运行),而且突然强制超时杀死运行中函数,可能会造成死锁.(例如用户函数在获得线程锁后突然杀死函数,别的线程再也无法获得锁了)
+    function_timeout: typing.Union[int, float,None] = None  # 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。 谨慎使用,非必要别去设置超时时间,设置后性能会降低(因为需要把用户函数包装到另一个线单独的程中去运行),而且突然强制超时杀死运行中函数,可能会造成死锁.(例如用户函数在获得线程锁后突然杀死函数,别的线程再也无法获得锁了)
 
     log_level: int = logging.DEBUG  # 消费者和发布者的日志级别,建议设置DEBUG级别,不然无法知道正在运行什么消息
     logger_prefix: str = ''  # 日志名字前缀,可以设置前缀
@@ -171,6 +179,8 @@ class BoosterParams(BaseJsonAbleModel):
     is_using_rpc_mode: bool = False  # 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。
     rpc_result_expire_seconds: int = 600  # 保存rpc结果的过期时间.
 
+    delay_task_apscheduler_jobstores_kind :Literal[ 'redis', 'memory'] = 'redis'  # 延时任务的aspcheduler对象使用哪种jobstores ，可以为 redis memory 两种作为jobstore
+
     is_support_remote_kill_task: bool = False  # 是否支持远程任务杀死功能，如果任务数量少，单个任务耗时长，确实需要远程发送命令来杀死正在运行的函数，才设置为true，否则不建议开启此功能。(是把函数放在单独的线程中实现的,随时准备线程被远程命令杀死,所以性能会降低)
 
     is_do_not_run_by_specify_time_effect: bool = False  # 是否使不运行的时间段生效
@@ -188,14 +198,22 @@ class BoosterParams(BaseJsonAbleModel):
     broker_exclusive_config: dict = {}  # 加上一个不同种类中间件非通用的配置,不同中间件自身独有的配置，不是所有中间件都兼容的配置，因为框架支持30种消息队列，消息队列不仅仅是一般的先进先出queue这么简单的概念，
     # 例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，有的中间件原生能支持消息优先级有的中间件不支持,每一种消息队列都有独特的配置参数意义，可以通过这里传递。每种中间件能传递的键值对可以看consumer类的 BROKER_EXCLUSIVE_CONFIG_DEFAULT
 
-    should_check_publish_func_params: bool = True  # 消息发布时候是否校验消息发布内容,比如有的人发布消息,函数只接受a,b两个入参,他去传2个入参,或者传参不存在的参数名字,  如果消费函数你非要写*args,**kwargs,那就需要关掉发布消息时候的函数入参检查
+    should_check_publish_func_params: bool = True  # 消息发布时候是否校验消息发布内容,比如有的人发布消息,函数只接受a,b两个入参,他去传2个入参,或者传参不存在的参数名字; 如果消费函数加了装饰器 ，你非要写*args,**kwargs,那就需要关掉发布消息时候的函数入参检查
+    publish_msg_log_use_full_msg: bool = False # 发布到消息队列的消息内容的日志，是否显示消息的完整体，还是只显示函数入参。
 
     consumer_override_cls: typing.Optional[typing.Type] = None  # 使用 consumer_override_cls 和 publisher_override_cls 来自定义重写或新增消费者 发布者,见文档4.21b介绍，
     publisher_override_cls: typing.Optional[typing.Type] = None
 
     # func_params_is_pydantic_model: bool = False  # funboost 兼容支持 函数娼还是 pydantic model类型，funboost在发布之前和取出来时候自己转化。
 
-    consuming_function_kind: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参,如果自动判断失误就传递。是判断消费函数是函数还是实例方法还是类方法
+    consuming_function_kind: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参,如果自动判断失误就传递。是判断消费函数是函数还是实例方法还是类方法。如果传递了，就不自动获取函数类型。
+    ''' consuming_function_kind 可以为以下类型，
+    class FunctionKind:
+        CLASS_METHOD = 'CLASS_METHOD'
+        INSTANCE_METHOD = 'INSTANCE_METHOD'
+        STATIC_METHOD = 'STATIC_METHOD'
+        COMMON_FUNCTION = 'COMMON_FUNCTION'
+    '''
 
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
 
@@ -266,14 +284,25 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
     例如消费为add函数，可以每个独立的任务设置不同的超时时间，不同的重试次数，是否使用rpc模式。这里的配置优先，可以覆盖生成消费者时候的配置。
     """
 
-    function_timeout: typing.Union[float, int] = 0
+    class Config:
+        json_encoders = {
+            datetime.datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S")
+        }
+
+    function_timeout: typing.Union[float, int,None] = None
+
     max_retry_times: int = None
+
     is_print_detail_exception: bool = None
+
     msg_expire_senconds: int = None
+
     is_using_rpc_mode: bool = None
+
     countdown: typing.Union[float, int] = None
-    eta: datetime.datetime = None
+    eta: typing.Union[datetime.datetime, str] = None  # 时间对象， 或 %Y-%m-%d %H:%M:%S 字符串。
     misfire_grace_time: typing.Union[int, None] = None
+
     other_extra_params: dict = None  # 其他参数, 例如消息优先级 , priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': priorityxx})，
 
     @root_validator(skip_on_failure=True)
@@ -283,6 +312,8 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
         if values['misfire_grace_time'] is not None and values['misfire_grace_time'] < 1:
             raise ValueError(f'misfire_grace_time 的值要么是大于1的整数， 要么等于None')
         return values
+
+
 
 
 class PublisherParams(BaseJsonAbleModel):
@@ -299,7 +330,7 @@ class PublisherParams(BaseJsonAbleModel):
     should_check_publish_func_params: bool = True  # 消息发布时候是否校验消息发布内容,比如有的人发布消息,函数只接受a,b两个入参,他去传2个入参,或者传参不存在的参数名字,  如果消费函数你非要写*args,**kwargs,那就需要关掉发布消息时候的函数入参检查
     publisher_override_cls: typing.Optional[typing.Type] = None
     # func_params_is_pydantic_model: bool = False  # funboost 兼容支持 函数娼还是 pydantic model类型，funboost在发布之前和取出来时候自己转化。
-
+    publish_msg_log_use_full_msg: bool = False # 发布到消息队列的消息内容的日志，是否显示消息的完整体，还是只显示函数入参。
     consuming_function_kind: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参.
 
 

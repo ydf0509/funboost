@@ -17,14 +17,11 @@ import typing
 from functools import wraps
 from threading import Lock
 
-
 import nb_log
 from funboost.constant import ConstStrForClassMethod, FunctionKind
 from funboost.core.func_params_model import PublisherParams, PriorityConsumingControlConfig
 from funboost.core.helper_funs import MsgGenerater
 from funboost.core.loggers import develop_logger
-
-
 
 # from nb_log import LoggerLevelSetterMixin, LoggerMixin
 from funboost.core.loggers import LoggerLevelSetterMixin, FunboostFileLoggerMixin, get_logger
@@ -186,7 +183,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         return msg_dict['extra'].get('other_extra_params', {}).get(k, None)
 
     def _convert_msg(self, msg: typing.Union[str, dict], task_id=None,
-                     priority_control_config: PriorityConsumingControlConfig = None) -> (typing.Dict, typing.Dict, typing.Dict,str):
+                     priority_control_config: PriorityConsumingControlConfig = None) -> (typing.Dict, typing.Dict, typing.Dict, str):
         msg = Serialization.to_dict(msg)
         msg_function_kw = copy.deepcopy(msg)
         raw_extra = {}
@@ -198,7 +195,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         task_id = task_id or MsgGenerater.generate_task_id(self._queue_name)
         extra_params = MsgGenerater.generate_pulish_time_and_task_id(self._queue_name, task_id=task_id)
         if priority_control_config:
-            extra_params.update(priority_control_config.dict(exclude_none=True))
+            extra_params.update(Serialization.to_dict(priority_control_config.json(exclude_none=True))) # priority_control_config.json 是为了充分使用 pydantic的自定义时间格式化字符串
         extra_params.update(raw_extra)
         msg['extra'] = extra_params
         return msg, msg_function_kw, extra_params, task_id
@@ -215,10 +212,12 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         msg = copy.deepcopy(msg)  # 字典是可变对象,不要改变影响用户自身的传参字典. 用户可能继续使用这个传参字典.
         msg, msg_function_kw, extra_params, task_id = self._convert_msg(msg, task_id, priority_control_config)
         t_start = time.time()
+        msg_json = Serialization.to_json_str(msg)
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
-            self.concrete_realization_of_publish)(Serialization.to_json_str(msg))
+            self.concrete_realization_of_publish)(msg_json)
 
-        self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}', extra={'task_id': task_id})  # 显示msg太长了。
+        self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_json if self.publisher_params.publish_msg_log_use_full_msg else msg_function_kw}',
+                          extra={'task_id': task_id})  # 显示msg太长了。
         with self._lock_for_count:
             self.count_per_minute += 1
             self.publish_msg_num_total += 1
@@ -261,6 +260,8 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # print(self.publish_params_checker.position_arg_name_list)
         # print(func_args)
         func_args_list = list(func_args)
+
+        # print(func_args_list)
         if self.publisher_params.consuming_function_kind == FunctionKind.CLASS_METHOD:
             # print(self.publish_params_checker.all_arg_name[0])
             # func_args_list.insert(0, {'first_param_name': self.publish_params_checker.all_arg_name[0],
@@ -344,8 +345,8 @@ def deco_mq_conn_error(f):
             except Exception as e:
                 import amqpstorm
                 from pikav1.exceptions import AMQPError as PikaAMQPError
-                if isinstance(e,(PikaAMQPError, amqpstorm.AMQPError)):
-                # except (PikaAMQPError, amqpstorm.AMQPError,) as e:  # except BaseException as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
+                if isinstance(e, (PikaAMQPError, amqpstorm.AMQPError)):
+                    # except (PikaAMQPError, amqpstorm.AMQPError,) as e:  # except BaseException as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
                     self.logger.error(f'中间件链接出错   ,方法 {f.__name__}  出错 ，{e}')
                     self.init_broker()
                     return f(self, *args, **kwargs)

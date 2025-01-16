@@ -16,3 +16,10 @@ from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath #
 
 这样导入时候就能自动补全提示和跳转到这里的包。
 
+
+
+
+
+## 3  现在这个里面的东西已经废弃了，funboost不再使用这里面的东西。
+
+

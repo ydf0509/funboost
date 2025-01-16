@@ -1,4 +1,4 @@
-
+import nb_log
 
 
 dict1 = {'a':1}

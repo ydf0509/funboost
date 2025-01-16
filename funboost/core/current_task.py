@@ -158,6 +158,43 @@ def funboost_current_task():
     else:
         return thread_current_task
 
+class _FctProxy:
+    """后来多新增这个类了，"""
+    @property
+    def fct_context(self) ->FctContext:
+        ct = funboost_current_task()
+        return ct.get_fct_context()
+
+    @property
+    def function_params(self):
+        return self.fct_context.function_params
+
+    @property
+    def full_msg(self) -> dict:
+        return self.fct_context.full_msg
+
+    @property
+    def function_result_status(self) -> FunctionResultStatus:
+        return self.fct_context.function_result_status
+
+    @property
+    def task_id(self) -> FunctionResultStatus:
+        return self.fct_context.function_result_status.task_id
+
+    @property
+    def logger(self) -> logging.Logger:
+        return self.fct_context.logger
+
+    def __str__(self):
+        return f'<{self.__class__.__name__} [{self.function_result_status.get_status_dict()}]>'
+
+"""
+可以直接导入这个fct，不需要 手动写 fct = funboost_current_task() 了。 直接 from funboost import fct就完了，不需要先 fct = funboost_current_task()。
+funboost的fct 相当于flask的request那种对象 ，自动线程/协程 级别隔离。 多个线程不会互相干扰。
+"""
+fct = _FctProxy()
+
+
 
 def get_current_taskid():
     # return fct.function_result_status.task_id

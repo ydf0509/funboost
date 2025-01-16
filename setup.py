@@ -95,7 +95,7 @@ setup(
         'redis5',
         'redis',
         'setuptools_rust',
-        'fabric2==2.6.0',  # 有的机器包rust错误， 这样做 curl https://sh.rustup.rs -sSf | sh
+        'fabric2>=2.6.0',  # 有的机器包rust错误， 这样做 curl https://sh.rustup.rs -sSf | sh
         'nb_filelock',
         'pysnooper',
         'deprecated',

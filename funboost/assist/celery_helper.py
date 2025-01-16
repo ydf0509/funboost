@@ -85,7 +85,7 @@ class CeleryHelper:
 
         if is_start_consume_all_queues is False:
             to_be_start_work_celery_queue_name_set_new = copy.copy(cls.to_be_start_work_celery_queue_name_set)
-            to_be_start_work_celery_queue_name_set_new.update(set(start_consume_queue_name_list))
+            to_be_start_work_celery_queue_name_set_new.update(set(start_consume_queue_name_list or []))
         else:
             from funboost import BoostersManager
             # print(BoostersManager.get_all_queues())

@@ -4,7 +4,7 @@ import time
 
 
 def ctrl_c_recv():
-    for i in range(4):
+    for i in range(3):
         while 1:
             try:
                 time.sleep(2)

@@ -27,3 +27,10 @@ import funboost
 import time
 
 from test_frame.test_broker.test_consume import f, f2
+
+def my_func(keya,parab):
+    pass
+
+
+
+my_func()

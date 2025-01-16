@@ -37,3 +37,4 @@ celerybeat-schedule.bak
 celerybeat-schedule.dat
 celerybeat-schedule.dir
 nb_log_config.py
+.history

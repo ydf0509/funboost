@@ -53,5 +53,12 @@ if __name__ == '__main__':
 
     # 启动消费者
     add_numbers.consume()
-    # ctrl_c_recv()
-    run_forever()
+    ctrl_c_recv()
+    # run_forever()
+
+
+   
+ 
+
+    
+    

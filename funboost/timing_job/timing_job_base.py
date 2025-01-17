@@ -44,7 +44,7 @@ def push_fun_params_to_broker(queue_name: str, *args, runonce_uuid=None, **kwarg
     queue_name 队列名字
     *args **kwargs 是消费函数的入参
     发布消息中可以包括,runonce_uuid这个入参,确保分布式多个脚本都启动了定时器,导致每个定时器重复发布到消息队列,值你自己写  str(uuid.uuid4())
-    # 不需要传递 runonce_uuid 了，已经用专门的 FunboostBackgroundSchedulerProcessJobsWithinRedisLock 解决了。
+    # 现在不需要传递 runonce_uuid 了，已经用专门的 FunboostBackgroundSchedulerProcessJobsWithinRedisLock 解决了。
     """
     if runonce_uuid:   # 不需要传递 runonce_uuid 了，已经用专门的 FunboostBackgroundSchedulerProcessJobsWithinRedisLock 解决了 process_jobs的问题。
         key = 'apscheduler.redisjobstore_runonce2'

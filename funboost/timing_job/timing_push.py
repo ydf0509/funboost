@@ -12,6 +12,7 @@ class ApsJobAdder:
     20250116新增加的统一的新增定时任务的方式，推荐这种方式。
     用户不用像之前再去关心使用哪个apscheduler对象去添加定时任务了。
 
+    例如 add_numbers 是@boost装饰的消费函数
     ApsJobAdder(add_numbers,job_store_kind='memory').add_push_job(
         args=(1, 2),
         trigger='date',  # 使用日期触发器

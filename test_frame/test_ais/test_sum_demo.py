@@ -1,5 +1,5 @@
-from funboost import boost, BrokerEnum,ctrl_c_recv,BoosterParams
-from funboost.timing_job.timing_push import ApsJobAdder  # 导入ApsJobAdder类
+from funboost import boost, BrokerEnum,ctrl_c_recv,BoosterParams,APSJobAdder
+
 
 
 # 定义任务处理函数

@@ -2,7 +2,7 @@
 
 1.永远用中文回答我的提问
 2.funboost是我本人开发的python分布式函数调度框架
-3.写funboost demo时候 请使用  BoosterParams(queue_name='queue_test_f01', qps=0.2, ) 这种模型作为入参，不要把参数直接传给boost装饰器函数
+3.写funboost demo时候 请使用  @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, )) 这种模型作为入参，不要把参数直接传给boost装饰器函数
 
 
 <!-- Add global rules and guidelines for Cascade to follow across all workspaces. The best guidelines are clear and concise, for example:

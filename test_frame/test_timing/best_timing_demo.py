@@ -8,7 +8,7 @@ from funboost import boost, BrokerEnum,ctrl_c_recv,BoosterParams,ApsJobAdder
 
 
 # 定义任务处理函数
-@BoosterParams(queue_name='sum_queue3', broker_kind=BrokerEnum.REDIS)
+@boost(BoosterParams(queue_name='sum_queue3', broker_kind=BrokerEnum.REDIS))
 def sum_two_numbers(x, y):  
     result = x + y 
     print(f'The sum of {x} and {y} is {result}')  

@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		}
+	],
+	"settings": {
+		"terminal.integrated.env.linux": {
+			"PYTHONPATH": "./"
+		},
+		"terminal.integrated.env.windows": {
+			"PYTHONPATH": "${workspaceFolder}"
+		},
+		"terminal.integrated.defaultProfile.windows": "Command Prompt",
+		"workbench.editor.wrapTabs": true,
+		"workbench.editor.tabSizing": "shrink",
+		"json.trace.server": "messages",
+		"git.useEditorAsCommitInput": false
+	}
+}

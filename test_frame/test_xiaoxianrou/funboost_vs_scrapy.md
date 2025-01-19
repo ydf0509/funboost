@@ -93,6 +93,22 @@ class XiaoxianrouSpider(RedisSpider):
   - 必须遵循框架规范编写代码。
   - 文件较多，包括settings.py、items.py、pipelines.py等。
 
+一个scrapy项目的固定目录结构如下：
+  my_scrapy_project/
+├── scrapy.cfg                # 项目配置文件
+├── my_scrapy_project/        # 项目主目录
+│   ├── __init__.py           # 项目初始化文件
+│   ├── items.py              # 定义爬取的数据结构
+│   ├── middlewares.py        # 中间件配置
+│   ├── pipelines.py          # 数据处理管道
+│   ├── settings.py           # 项目设置文件
+│   ├── spiders/              # 爬虫目录
+│   │   ├── __init__.py       # 爬虫初始化文件
+│   │   └── example_spider.py # 示例爬虫文件
+│   └── utils/                # 工具目录（可选）
+│       └── __init__.py       # 工具初始化文件
+└── requirements.txt          # 项目依赖文件（可选）
+
 ### 2. 学习成本
 - **Funboost**:
   - 学习曲线平缓，用户只需掌握装饰器的使用，能够快速上手。

@@ -1,3 +1,9 @@
+---
+noteId: "f63aee30d7be11efb3956b6f0fb3ea8d"
+tags: []
+
+---
+
 # Funboost vs Scrapy
 
 ## 引言

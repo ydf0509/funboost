@@ -126,7 +126,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
         pull_msg_batch_size = self.consumer_params.broker_exclusive_config['pull_msg_batch_size']
         lua = f'''
                      local task_list = redis.call("lrange", KEYS[1],0,{pull_msg_batch_size-1})
-                     redis.call("ltrim", KEYS[1],100,-1)
+                     redis.call("ltrim", KEYS[1],{pull_msg_batch_size},-1)
                      if (#task_list > 0) then
                         for task_index,task_value in ipairs(task_list)
                         do

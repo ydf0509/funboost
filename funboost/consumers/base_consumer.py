@@ -403,13 +403,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')
 
     @classmethod
-    def _push_apscheduler_task_to_broker(cls, queue_name, msg, runonce_uuid):
+    def _push_apscheduler_task_to_broker(cls, queue_name, msg):
         funboost_lazy_impoter.BoostersManager.get_or_create_booster_by_queue_name(queue_name).publish(msg)
-        # key = 'apscheduler.redisjobstore_runonce'
-        # if RedisMixin().redis_db_frame.sadd(key, runonce_uuid):  # 这样可以阻止多次启动同队列名消费者 redis jobstore多次运行函数.
-        #     cls.logger_apscheduler.debug(f'延时任务用普通消息重新发布到普通队列 {msg}')
-        #     funboost_lazy_impoter.BoostersManager.get_or_create_booster_by_queue_name(queue_name).publish(msg)
-
+       
     @abc.abstractmethod
     def _shedual_task(self):
         """
@@ -512,7 +508,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # print(msg_no_delay)
             # 数据库作为apscheduler的jobstores时候， 不能用 self.pbulisher_of_same_queue.publish，self不能序列化
             self._delay_task_scheduler.add_job(self._push_apscheduler_task_to_broker, 'date', run_date=run_date,
-                                               kwargs={'queue_name': self.queue_name, 'msg': msg_no_delay, 'runonce_uuid': str(uuid.uuid4())},
+                                               kwargs={'queue_name': self.queue_name, 'msg': msg_no_delay, },
                                                misfire_grace_time=misfire_grace_time,
                                               )
             self._confirm_consume(kw)

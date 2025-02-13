@@ -39,19 +39,13 @@ def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, Ab
     return _deco
 
 
-def push_fun_params_to_broker(queue_name: str, *args, runonce_uuid=None, **kwargs):
+def push_fun_params_to_broker(queue_name: str, *args, **kwargs):
     """
     queue_name 队列名字
     *args **kwargs 是消费函数的入参
-    发布消息中可以包括,runonce_uuid这个入参,确保分布式多个脚本都启动了定时器,导致每个定时器重复发布到消息队列,值你自己写  str(uuid.uuid4())
-    # 现在不需要传递 runonce_uuid 了，已经用专门的 FunboostBackgroundSchedulerProcessJobsWithinRedisLock 解决了。
     """
-    if runonce_uuid:   # 不需要传递 runonce_uuid 了，已经用专门的 FunboostBackgroundSchedulerProcessJobsWithinRedisLock 解决了 process_jobs的问题。
-        key = 'apscheduler.redisjobstore_runonce2'
-        if RedisMixin().redis_db_frame.sadd(key, runonce_uuid):
-            BoostersManager.get_or_create_booster_by_queue_name(queue_name).push(*args, **kwargs)
-    else:
-        BoostersManager.get_or_create_booster_by_queue_name(queue_name).push(*args, **kwargs)
+    
+    BoostersManager.get_or_create_booster_by_queue_name(queue_name).push(*args, **kwargs)
 
 
 class ThreadPoolExecutorForAps(BasePoolExecutor):
@@ -123,8 +117,6 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
         args_list = list(args)
         args_list.insert(0, func.queue_name)
         args = tuple(args_list)
-        # kwargs = kwargs or {}
-        # kwargs['runonce_uuid'] = runonce_uuid  # 忽略，用户不需要传递runonce_uuid入参。
         return self.add_job(push_fun_params_to_broker, trigger, args, kwargs, id, name,
                             misfire_grace_time, coalesce, max_instances,
                             next_run_time, jobstore, executor,

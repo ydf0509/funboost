@@ -145,7 +145,8 @@ class SaslPlainKafkaConsumer(KafkaConsumerManuallyCommit):
             'sasl.password': BrokerConnConfig.KFFKA_SASL_CONFIG['sasl_plain_password'],
             'group.id': self.consumer_params.broker_exclusive_config["group_id"],
             'auto.offset.reset': self.consumer_params.broker_exclusive_config["auto_offset_reset"],
-            'enable.auto.commit': False
+            'enable.auto.commit': False,
+            "enable.auto.offset.store": False,
         })
         self._confluent_consumer.subscribe([self._queue_name])
 
@@ -170,3 +171,6 @@ class SaslPlainKafkaConsumer(KafkaConsumerManuallyCommit):
                 self.logger.debug(
                     f'从kafka的 [{self._queue_name}] 主题,分区 {msg.partition()} 中 的 offset {msg.offset()} 取出的消息是：  {msg.value()}')  # noqa
             self._submit_task(kw)
+
+    def __exit__(self):
+        self._confluent_consumer.close()

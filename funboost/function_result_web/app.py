@@ -76,11 +76,11 @@ def login():
     form = LoginForm()
     if request.method == 'POST':
 
-        nb_print(form.validate())
-        nb_print(form.password.data)
-        nb_print(form.user_name.data)
-        nb_print(form.user_name.errors)
-        nb_print(form.password.errors)
+        # nb_print(form.validate())
+        # nb_print(form.password.data)
+        # nb_print(form.user_name.data)
+        # nb_print(form.user_name.errors)
+        # nb_print(form.password.errors)
         if form.validate_on_submit():
             user = query_user(form.user_name.data)
             if user is not None and request.form['password'] == user['password']:

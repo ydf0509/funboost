@@ -87,7 +87,7 @@ class FunctionResultStatus():
                      'insert_minutes': datetime_str[:-3],
                      })
         if not without_datetime_obj:
-            item.update({'insert_time': datetime.datetime.now(),
+            item.update({'insert_time': time_util.DatetimeConverter().datetime_obj,
                          'utime': datetime.datetime.utcnow(),
                          })
         else:

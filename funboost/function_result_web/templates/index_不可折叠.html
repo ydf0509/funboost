@@ -10,7 +10,6 @@
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <!-- 引入 Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <title>Left Navbar with Dynamic Content</title>
     <style>
         body {
@@ -19,19 +18,14 @@
 
         .sidebar {
             position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 180px;
-        background-color: #296074;
-        padding-top: 20px;
-        overflow-y: auto;
-        transition: all 0.3s ease;  /* 添加过渡效果 */
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 150px;
+            background-color: #296074;
+            padding-top: 20px;
+            overflow-y: auto;
         }
-        .sidebar.collapsed {
-        width: 50px;
-    }
-
 
         .sidebar .nav-link {
             color: white;
@@ -46,43 +40,10 @@
         }
 
         .main-content {
-            margin-left: 180px;
-            transition: all 0.3s ease;  /* 添加过渡效果 */
+            margin-left: 150px;
+            /* padding: 20px; */
+            height: 100vh;  /* 设置为视窗高度 */
         }
-        
-        .main-content.expanded {
-        margin-left: 50px;
-    }
-
-    .toggle-btn {
-        position: fixed;
-        left: 180px;
-        top: 10px;
-        z-index: 1000;
-        background: #296074;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 0 5px 5px 0;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .toggle-btn.collapsed {
-        left: 50px;
-    }
-
-    .sidebar.collapsed .nav-link span {
-        display: none;
-    }
-
-    .nav-link i {
-        margin-right: 10px;
-        width: 20px;
-        text-align: center;
-    }
-
-
 
         .main-content iframe {
             width: 100%;
@@ -122,38 +83,23 @@
 </head>
 
 <body>
-        <!-- 添加折叠按钮 -->
-        <button class="toggle-btn">
-            <i class="fa fa-angle-left"></i>
-        </button>
-    
     <!-- 左侧导航栏 -->
     <div class="sidebar">
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link active" href="#" data-target="/tpl/fun_result_table.html">
-                    <i class="fa fa-table"></i><span>函数结果表</span>
-                </a>
+                <a class="nav-link active" href="#" data-target="/tpl/fun_result_table.html">函数结果</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" data-target="/tpl/conusme_speed.html">
-                    <i class="fa fa-tachometer"></i><span>消费速率图</span>
-                </a>
+                <a class="nav-link" href="#" data-target="/tpl/conusme_speed.html">消费速率</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" data-target="/tpl/running_consumer_by_ip.html">
-                    <i class="fa fa-server"></i><span>运行中消费者(by ip)</span>
-                </a>
+                <a class="nav-link" href="#" data-target="/tpl/running_consumer_by_ip.html">运行中消费者(by ip)</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" data-target="/tpl/running_consumer_by_queue_name.html">
-                    <i class="fa fa-list"></i><span>运行中消费者(by queue)</span>
-                </a>
+                <a class="nav-link" href="#" data-target="/tpl/running_consumer_by_queue_name.html">运行中消费者(by queue)</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" data-target="/tpl/about.html">
-                    <i class="fa fa-info-circle"></i><span>说明</span>
-                </a>
+                <a class="nav-link" href="#" data-target="/tpl/about.html">说明</a>
             </li>
         </ul>
     </div>
@@ -170,25 +116,6 @@
     
 
     <script>
-            $(document).ready(function () {
-        // ... 现有代码 ...
-
-        // 添加折叠功能
-        $('.toggle-btn').click(function() {
-            $('.sidebar').toggleClass('collapsed');
-            $('.main-content').toggleClass('expanded');
-            $('.toggle-btn').toggleClass('collapsed');
-            
-            // 切换箭头方向
-            var icon = $(this).find('i');
-            if (icon.hasClass('fa-angle-left')) {
-                icon.removeClass('fa-angle-left').addClass('fa-angle-right');
-            } else {
-                icon.removeClass('fa-angle-right').addClass('fa-angle-left');
-            }
-        });
-    });
-
         $(document).ready(function () {
             // 初始加载 Home 页面
             loadPage('/tpl/fun_result_table.html');

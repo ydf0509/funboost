@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/9/18 0018 14:46
+import sys
+print(sys.path)
+
+import os
+print("PYTHONPATH:", os.environ.get('PYTHONPATH'))
+
 
 import datetime
 import json
@@ -16,7 +22,7 @@ from wtforms.validators import DataRequired, Length
 from flask_login import login_user, logout_user, login_required, LoginManager, UserMixin
 
 import nb_log
-from funboost import nb_print
+from funboost import nb_print,ActiveCousumerProcessInfoGetter
 from funboost.function_result_web.functions import get_cols, query_result, get_speed, Statistic
 
 app = Flask(__name__)
@@ -139,13 +145,73 @@ def speed_statistic_for_echarts():
     stat.build_result()
     return jsonify(stat.result)
 
+@app.route('/tpl/<template>')
+@login_required
+def serve_template(template):
+    # 安全检查：确保只能访问templates目录下的html文件
+    if not template.endswith('.html'):
+        return 'Invalid request', 400
+    try:
+        return render_template(template)
+    except Exception as e:
+        return f'Template not found: {template}', 404
+
+
+@app.route('/running_consumer/hearbeat_info_by_queue_name')
+def hearbeat_info_by_queue_name():
+    if request.args.get('queue_name')!='所有':
+        return jsonify(ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_queue_name(request.args.get('queue_name')))
+    else:
+        info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
+        ret_list = []
+        for queue_name,dic in info_map.items():
+            ret_list.extend(dic)
+        return jsonify(ret_list)
+
+@app.route('/running_consumer/hearbeat_info_by_ip')
+def hearbeat_info_by_ip():
+    if request.args.get('ip')!='所有':
+        return jsonify(ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_ip(request.args.get('ip')))
+    else:
+        info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_ip()
+        ret_list = []
+        for queue_name,dic in info_map.items():
+            ret_list.extend(dic)
+        return jsonify(ret_list)
+
+
+@app.route('/running_consumer/hearbeat_info_partion_by_queue_name')
+def hearbeat_info_partion_by_queue_name():
+    info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
+    ret_list = []
+    total_count = 0
+    for k,v in info_map.items():
+        ret_list.append({'collection_name':k,'count':len(v)})
+        total_count +=len(v)
+    ret_list = sorted(ret_list, key=lambda x: x['collection_name'])
+    ret_list.insert(0,{'collection_name':'所有','count':total_count})
+    return jsonify(ret_list)
+
+@app.route('/running_consumer/hearbeat_info_partion_by_ip')
+def hearbeat_info_partion_by_ip():
+    info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_ip()
+    ret_list = []
+    total_count = 0
+    for k,v in info_map.items():
+        ret_list.append({'collection_name':k,'count':len(v)})
+        total_count +=len(v)
+    ret_list = sorted(ret_list, key=lambda x: x['collection_name'])
+    ret_list.insert(0,{'collection_name':'所有','count':total_count})
+    print(ret_list)
+    return jsonify(ret_list)
+
 
 if __name__ == '__main__':
     # app.jinja_env.auto_reload = True
     # with app.test_request_context():
     #     print(url_for('query_cols_view'))
 
-    app.run(debug=False, threaded=True, host='0.0.0.0', port=27019)
+    app.run(debug=True, threaded=True, host='0.0.0.0', port=27019)
 
     '''
     linux 是export , win是 set

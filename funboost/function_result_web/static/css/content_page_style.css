@@ -1,0 +1,16 @@
+.marginLeft20 {
+    margin-left: 20px;
+}
+
+.liActive {
+    background: #FFFF66;
+}
+
+/* 添加 Select2 下拉框样式 */
+.select2-results__options {
+max-height: 600px !important;  /* 设置下拉列表的最大高度 */
+}
+
+.select2-container--default .select2-results > .select2-results__options {
+max-height: 600px !important;  /* 确保覆盖默认样式 */
+}

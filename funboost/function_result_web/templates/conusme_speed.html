@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pytho万能分布式函数调度框架</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://cdn.bootcss.com/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css">
+    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/jquery.mCustomScrollbar.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/custom.css') }}">
+
+    <!-- 在其他 link 标签后添加 -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet">
+    <link href="{{ url_for('static',filename='css/content_page_style.css') }}" rel="stylesheet">
+
+
+    <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
+    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.0/jquery.min.js"></script> -->
+    <!-- 在其他 script 标签后添加 -->
+    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/select2/4.0.13/js/select2.min.js"></script> -->
+    <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
+    <script src="http://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+
+    <script src="{{ url_for('static',filename='js/moment-with-locales.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/bootstrap-datetimepicker.min.js') }}"></script>
+    <!-- <script src="https://cdn.bootcss.com/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script> -->
+    <!-- <script type="text/javascript" src="https://cdn.bootcss.com/echarts/3.3.0/echarts.js"></script> -->
+    <script type="text/javascript" src="{{ url_for('static',filename='js/echarts.min.js') }}"></script>
+
+    <script src="{{ url_for('static',filename='assets/js/jquery.mCustomScrollbar.concat.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='assets/js/custom.js') }}"></script>
+
+
+    </style>
+</head>
+
+<body>
+
+
+
+
+
+    <!-- <li><a href="{{url_for('logout')}}">退出</a></li> -->
+
+    <!-- 添加固定导航栏
+    <nav class="navbar navbar-default navbar-fixed-top" style="min-height: 40px;">
+        <div class="container-fluid">
+            <div class="navbar-header pull-right">
+                <a href="{{url_for('logout')}}" class="btn btn-danger" style="margin: 4px 15px;">
+                    <i class="fa fa-sign-out"></i> 退出
+                </a>
+            </div>
+        </div>
+    </nav> -->
+
+    <!-- 删除原来的退出按钮 -->
+    <!-- 调整主容器的上边距 -->
+    <div class="container-fluid" style="margin-top: 5px;">
+        <div style="margin-top: 5px;">
+            <form class="form-inline" role="form" style="float: left">
+                <div class="form-group ">
+                    <label for="col_name_search">队列名称：</label>
+                    <select class="form-control" id="col_name_search">
+                        <option value="">请选择队列...</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-default marginLeft20" onclick="statistic()">生成消费速率统计图</button>
+            </form>
+        </div>
+        <div id=echartsArea style="display: block">
+            <div id="st4" style="width: 100%;height:600px;margin-top:60px;"></div>
+            <div id="st3" style="width: 100%;height:600px;margin-top:60px;"></div>
+            <div id="st2" style="width: 100%;height:600px;margin-top:60px;"></div>
+            <div id="st1" style="width: 100%;height:600px;margin-top:60px;"></div>
+        </div>
+    </div>
+
+
+
+
+
+
+    <script>
+
+        // 在现有的变量声明后添加
+        var allQueues = [];  // 存储所有队列数据
+        var currentColName;
+
+        // 页面加载完成后立即获取所有队列
+        $(document).ready(function () {
+            $.ajax({
+                url: "{{ url_for('query_cols_view')}}",
+                data: { col_name_search: '' },
+                async: true,
+                success: function (result) {
+                    allQueues = result;
+                    var html = '<option value="">请选择队列...</option>';
+                    for (var item of result) {
+                        html += '<option value="' + item.collection_name + '">' +
+                            item.collection_name + ' (' + item.count + ')</option>';
+                    }
+                    $("#col_name_search").html(html);
+
+                    // 初始化选择框的搜索功能
+                    $("#col_name_search").select2({
+                        placeholder: "请输入队列名称搜索...",
+                        allowClear: true,
+                        width: '300px'
+                    });
+
+                    // 监听选择变化
+                    $("#col_name_search").on('change', function () {
+                        var selectedQueue = $(this).val();
+                        console.log("Selected queue:", selectedQueue);
+                        currentColName = selectedQueue;
+                        // if(selectedQueue) {
+                        //     queryResult(selectedQueue, 0, true);
+                        // }
+                    });
+                }
+            });
+        });
+
+
+
+
+        function statistic() {
+            if (currentColName === undefined) {
+                return;
+            }
+
+            $('#echartsInfoTex').html('生成统计表中，需要一段时间。。。。');
+            $("#echartsInfoTex").css('display', 'block');
+            $("#echartsArea").css('display', 'block');
+            // stopRun();
+            $.ajax({
+                url: "{{ url_for('speed_statistic_for_echarts')}}", data: {
+                    col_name: currentColName
+                }, async: true, success: function (result, status) {
+                    // var msg = '{0}队列,最近一分钟内运行成功了{1}次,失败了{2}次'.format(currentColName, result.success_num, result.fail_num);
+                    console.info(result);
+                    _buildOneChart('st1', '最近10天的消费情况', '运行次数', result['recent_10_days']['time_arr'], result['recent_10_days']['count_arr']);
+                    _buildOneChart('st2', '最近24小时的消费情况', '运行次数', result['recent_24_hours']['time_arr'], result['recent_24_hours']['count_arr']);
+                    _buildOneChart('st3', '最近60分钟的消费情况', '运行次数', result['recent_60_minutes']['time_arr'], result['recent_60_minutes']['count_arr']);
+                    _buildOneChart('st4', '最近60秒的消费情况', '运行次数', result['recent_60_seconds']['time_arr'], result['recent_60_seconds']['count_arr']);
+                    $("#echartsInfoTex").css('display', 'none');
+
+                    // $('#top_text').text(msg);
+                }
+            });
+
+
+        }
+
+        function _buildOneChart(elementId, titelText, legendData, xData, yData) {
+
+            var myChart = echarts.init(document.getElementById(elementId));
+
+
+
+            // 指定图表的配置项和数据
+            var option = {
+                title: {
+                    text: titelText
+                },
+                tooltip: {},
+                legend: {
+                    data: [legendData]
+                },
+
+                xAxis: {
+                    type: 'category',
+                    data: xData,
+                    axisLabel: {
+                        rotate: 90,
+
+                        interval: 0,
+
+                        // formatter: function (value) {
+                        //
+                        //     console.info(value);
+                        //     var v =  value.split("").join("\n");
+                        //     console.info(v);
+                        //     return v;
+                        // },
+
+                        // show: true, interval: 'auto', inside: false, rotate: 90, margin: 8, formatter: null, showMinLabel: null, showMaxLabel: null,
+
+                    },
+
+                },
+
+                yAxis: {},
+                series: [{
+                    name: legendData,
+                    type: 'bar',
+                    data: yData
+                }]
+            };
+
+            // 使用刚指定的配置项和数据显示图表。
+            myChart.setOption(option);
+            console.info(elementId);
+
+
+        }
+
+
+    </script>
+</body>
+
+</html>

@@ -93,8 +93,21 @@ class Statistic(LoggerMixin):
                        'recent_60_seconds': {'time_arr': [], 'count_arr': []}}
 
     def statistic_by_period(self, t_start: str, t_end: str):
-        return self.col.count_documents({'insert_time': {'$gt': time_util.DatetimeConverter(t_start).datetime_obj,
-                                                         '$lt': time_util.DatetimeConverter(t_end).datetime_obj}})
+        condition = {'insert_time': {'$gt': time_util.DatetimeConverter(t_start).datetime_obj,
+                                                         '$lt': time_util.DatetimeConverter(t_end).datetime_obj}}
+        
+        # now = datetime.datetime.now()
+        # start_time = now - datetime.timedelta(hours=1)
+        # end_time = now
+        # condition = {
+        #     'insert_time': {
+        #         '$gt': start_time,
+        #         '$lt': end_time
+        #     }
+        # }
+        count =  self.col.count_documents(condition)
+        print(count,t_start,t_end,time_util.DatetimeConverter(t_start).datetime_obj.timestamp(),condition)
+        return count
 
     def build_result(self):
         with decorators.TimerContextManager():
@@ -133,12 +146,12 @@ class Statistic(LoggerMixin):
 
 
 if __name__ == '__main__':
-    print(get_cols('4'))
+    # print(get_cols('4'))
     # pprint(query_result('queue_test54_task_status', '2019-09-15 00:00:00', '2019-09-25 00:00:00', True, '999', 0))
     # print(json.dumps(query_result(**{'col_name': 'queue_test56', 'start_time': '2019-09-18 16:03:29', 'end_time': '2019-09-21 16:03:29', 'is_success': '1', 'function_params': '', 'page': '0'}))[:1000])
     # nb_print(get_speed_last_minute('queue_test54'))
 
     # nb_print(get_speed('queue_test56', '2019-09-18 16:03:29', '2019-09-23 16:03:29'))
-    stat = Statistic('queue_test56')
+    stat = Statistic('queue_test_f01t')
     stat.build_result()
     nb_print(stat.result)

@@ -27,6 +27,9 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, FunboostFileLoggerMixin):
             result_dict = json.loads(result)
             if self.timestamp() - result_dict['hearbeat_timestamp'] < 15:
                 active_consumers_processor_info_list.append(result_dict)
+            if self.timestamp() - result_dict.get('current_time_for_execute_task_times_every_unit_time',0) > 30:
+                result_dict['last_10s_execute_count'] = 0
+                result_dict['last_10s_execute_count_fail'] = 0
         return active_consumers_processor_info_list
 
     def get_all_hearbeat_info_by_queue_name(self, queue_name) -> typing.List[typing.Dict]:
@@ -71,6 +74,9 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, FunboostFileLoggerMixin):
                 info_dict = json.loads(info_str)
                 if self.timestamp() - info_dict['hearbeat_timestamp'] < 15:
                     infos_map[dict_key].append(info_dict)
+                if self.timestamp() - info_dict.get('current_time_for_execute_task_times_every_unit_time',0) > 30:
+                    info_dict['last_10s_execute_count'] = 0
+                    info_dict['last_10s_execute_count_fail'] = 0
         return infos_map
 
     def get_all_hearbeat_info_partition_by_queue_name(self) -> typing.Dict[typing.AnyStr, typing.List[typing.Dict]]:

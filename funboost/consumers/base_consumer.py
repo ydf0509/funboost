@@ -166,10 +166,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._unit_time_for_count = 10  # 每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。
         self._execute_task_times_every_unit_time = 0  # 每单位时间执行了多少次任务。
+        self._execute_task_times_every_unit_time_fail =0  # 每单位时间执行了多少次任务失败。
         self._lock_for_count_execute_task_times_every_unit_time = Lock()
         self._current_time_for_execute_task_times_every_unit_time = time.time()
         self._consuming_function_cost_time_total_every_unit_time = 0
         self._last_execute_task_time = time.time()  # 最近一次执行任务的时间。
+        self._last_10s_execute_count = 0
+        self._last_10s_execute_count_fail = 0
 
         self._last_show_remaining_execution_time = 0
         self._show_remaining_execution_time_interval = 300
@@ -678,12 +681,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
             with self._lock_for_count_execute_task_times_every_unit_time:
                 self._execute_task_times_every_unit_time += 1
+                if current_function_result_status.success is False:
+                    self._execute_task_times_every_unit_time_fail += 1
                 self._consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
                 self._last_execute_task_time = time.time()
                 if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
                     avarage_function_spend_time = round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)
                     msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
-                          f'函数平均运行耗时 {avarage_function_spend_time} 秒。 '
+                          f'失败了{self._execute_task_times_every_unit_time_fail} 次,函数平均运行耗时 {avarage_function_spend_time} 秒。 '
+                    self._last_10s_execute_count = self._execute_task_times_every_unit_time
+                    self._last_10s_execute_count_fail = self._execute_task_times_every_unit_time_fail
                     self.logger.info(msg)
                     if time.time() - self._last_show_remaining_execution_time > self._show_remaining_execution_time_interval:
                         self._msg_num_in_broker = self.publisher_of_same_queue.get_message_count()
@@ -697,6 +704,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     self._current_time_for_execute_task_times_every_unit_time = time.time()
                     self._consuming_function_cost_time_total_every_unit_time = 0
                     self._execute_task_times_every_unit_time = 0
+                    self._execute_task_times_every_unit_time_fail = 0
             self.user_custom_record_process_info_func(current_function_result_status)  # 两种方式都可以自定义,记录结果,建议继承方式,不使用boost中指定 user_custom_record_process_info_func
             if self.consumer_params.user_custom_record_process_info_func:
                 self.consumer_params.user_custom_record_process_info_func(current_function_result_status)
@@ -851,12 +859,17 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
             # 异步执行不存在线程并发，不需要加锁。
             self._execute_task_times_every_unit_time += 1
+            if current_function_result_status.success is False:
+                self._execute_task_times_every_unit_time_fail += 1
             self._consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
             self._last_execute_task_time = time.time()
+             
             if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
                 avarage_function_spend_time = round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)
                 msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
-                      f'函数平均运行耗时 {avarage_function_spend_time} 秒。 '
+                      f'失败了{self._execute_task_times_every_unit_time_fail} 次,函数平均运行耗时 {avarage_function_spend_time} 秒。 '
+                self._last_10s_execute_count = self._execute_task_times_every_unit_time
+                self._last_10s_execute_count_fail = self._execute_task_times_every_unit_time_fail
                 self.logger.info(msg)
                 if self._msg_num_in_broker != -1 and time.time() - self._last_show_remaining_execution_time > self._show_remaining_execution_time_interval:  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
                     # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
@@ -868,6 +881,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._current_time_for_execute_task_times_every_unit_time = time.time()
                 self._consuming_function_cost_time_total_every_unit_time = 0
                 self._execute_task_times_every_unit_time = 0
+                self._execute_task_times_every_unit_time_fail = 0
 
             self.user_custom_record_process_info_func(current_function_result_status)  # 两种方式都可以自定义,记录结果.建议使用文档4.21.b的方式继承来重写
             await self.aio_user_custom_record_process_info_func(current_function_result_status)
@@ -1211,6 +1225,9 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
                     p.srem(redis_key, result)
             self._consumer_identification_map['hearbeat_datetime_str'] = time_util.DatetimeConverter().datetime_str
             self._consumer_identification_map['hearbeat_timestamp'] = self.timestamp()
+            self._consumer_identification_map['last_10s_execute_count'] = self._consumer._last_10s_execute_count
+            self._consumer_identification_map['last_10s_execute_count_fail'] = self._consumer._last_10s_execute_count_fail
+            self._consumer_identification_map['current_time_for_execute_task_times_every_unit_time'] = self._consumer._current_time_for_execute_task_times_every_unit_time
             value = Serialization.to_json_str(self._consumer_identification_map, )
             p.sadd(redis_key, value)
             p.execute()

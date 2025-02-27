@@ -258,7 +258,8 @@
                                 <td>${consumer.hearbeat_datetime_str}</td>
                                 <td>${consumer.process_id}</td>
                                 <td>${consumer.start_datetime_str}</td>
-                                <td>${consumer.code_filename}</td>
+                                <td>${consumer.code_filename}</td>,
+                                <td>${consumer.last_10s_execute_count}</td>
                             </tr>
                         `;
                     });
@@ -282,6 +283,7 @@
                                                         <th>进程ID</th>
                                                         <th>启动时间</th>
                                                         <th>代码文件名</th>
+                                                        <th>近10秒<br>运行完成<br>消息个数</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -349,7 +351,8 @@
                 "process_id": 51852,
                 "queue_name": "queue_test_g01t",
                 "start_datetime_str": "2025-02-26 20:03:06",
-                "start_timestamp": 1740571386.7500842
+                "start_timestamp": 1740571386.7500842,
+                 "execute_task_times_every_unit_time": 2
             }
         ],
         "queue_params": {
@@ -415,7 +418,8 @@
                 "process_id": 51852,
                 "queue_name": "queue_test_g02t",
                 "start_datetime_str": "2025-02-26 20:03:06",
-                "start_timestamp": 1740571386.7650468
+                "start_timestamp": 1740571386.7650468,
+                 "execute_task_times_every_unit_time": 2
             }
         ],
         "queue_params": {

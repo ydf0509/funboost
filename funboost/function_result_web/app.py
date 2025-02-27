@@ -22,8 +22,10 @@ from wtforms.validators import DataRequired, Length
 from flask_login import login_user, logout_user, login_required, LoginManager, UserMixin
 
 import nb_log
-from funboost import nb_print,ActiveCousumerProcessInfoGetter
+from funboost import nb_print,ActiveCousumerProcessInfoGetter,BoostersManager,PublisherParams,RedisMixin
 from funboost.function_result_web.functions import get_cols, query_result, get_speed, Statistic
+from funboost.core.active_cousumer_info_getter import QueueConusmerParamsGetter
+from funboost.constant import RedisKeys
 
 app = Flask(__name__)
 app.secret_key = 'mtfy54321'
@@ -204,6 +206,33 @@ def hearbeat_info_partion_by_ip():
     ret_list.insert(0,{'collection_name':'所有','count':total_count})
     print(ret_list)
     return jsonify(ret_list)
+
+
+@app.route('/queue/params_and_active_consumers')
+def get_queue_params_and_active_consumers():
+    return jsonify(QueueConusmerParamsGetter().get_queue_params_and_active_consumers())
+
+@app.route('/queue/message_count/<broker_kind>/<queue_name>')
+def get_message_count(broker_kind,queue_name):
+    publisher = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name=queue_name, broker_kind=broker_kind, publish_msg_log_use_full_msg=True))
+    return jsonify({'count':publisher.get_message_count()})
+
+
+@app.route('/queue/clear/<broker_kind>/<queue_name>',methods=['POST'])
+def clear_queue(broker_kind,queue_name):
+    publisher = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name=queue_name, broker_kind=broker_kind, publish_msg_log_use_full_msg=True))
+    publisher.clear()
+    return jsonify({'success':True})
+
+@app.route('/queue/pause/<queue_name>', methods=['POST'])
+def pause_cousume(queue_name):
+    RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name,'1')
+    return jsonify({'success':True})
+
+@app.route('/queue/resume/<queue_name>',methods=['POST'])
+def resume_consume(queue_name):
+    RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name,'0')
+    return jsonify({'success':True})
 
 
 if __name__ == '__main__':

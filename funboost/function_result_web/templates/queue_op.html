@@ -1,0 +1,464 @@
+
+
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>队列操作</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Tabulator CSS -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/tabulator/5.5.0/css/tabulator.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/tabulator/5.5.0/css/tabulator_bootstrap3.min.css" rel="stylesheet">
+    <style>
+        .action-btn {
+            margin: 2px;
+        }
+        .search-container {
+            margin-bottom: 15px;
+        }
+        #searchInput {
+            width: 300px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid" style="margin-top: 5px;">
+        <div class="search-container">
+            <div class="input-group">
+                <input type="text" id="searchInput" class="form-control" placeholder="输入队列名称进行搜索...">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" onclick="clearSearch()">
+                        <i class="glyphicon glyphicon-remove"></i>
+                    </button>
+                </span>
+            </div>
+        </div>
+        <div id="queue-table"></div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <!-- Tabulator JS -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/tabulator/5.5.0/js/tabulator.min.js"></script>
+    <script>
+        // 创建表格实例
+        var table = new Tabulator("#queue-table", {
+            theme: "bootstrap3",
+            ajaxURL: "/queue/params_and_active_consumers",
+            layout: "fitColumns",
+            responsiveLayout: "collapse",
+            pagination: true,
+            paginationSize: 100,
+            locale: true,
+            langs: {
+                "zh-cn": {
+                    "pagination": {
+                        "first": "首页",
+                        "first_title": "首页",
+                        "last": "末页",
+                        "last_title": "末页",
+                        "prev": "上一页",
+                        "prev_title": "上一页",
+                        "next": "下一页",
+                        "next_title": "下一页",
+                    }
+                }
+            },
+            columns: [
+                { title: "队列名字", field: "queue_name", sorter: "string", width: 250 },
+                { title: "broker类型", field: "broker_kind", sorter: "string", width: 150 },
+                { title: "消息数量", field: "msg_count", sorter: "number", width: 200,
+                    formatter: function(cell) {
+                        const row = cell.getRow().getData();
+                        return `
+                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 30px;">
+                                <span id="msg-count-${row.queue_name}" style="min-width: 120px; text-align: right; padding-right: 25px;">${cell.getValue() || ''}</span>
+                                <button class="btn btn-primary btn-sm" onclick="getMessageCount('${row.queue_name}')">获取</button>
+                            </div>
+                        `;
+                    }
+                },
+                { title: "消费者数量", field: "consumer_count", sorter: "number", width: 200,
+                    formatter: function(cell) {
+                        const row = cell.getRow().getData();
+                        var consumers = row.active_consumers;
+                        return `
+                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 10px;">
+                                <span style="min-width: 50px; text-align: right; padding-right: 15px;">${cell.getValue() || ''}</span>
+                                <button class="btn btn-info btn-sm" onclick='showConsumerDetails(${JSON.stringify(consumers)}, "${row.queue_name}")'>
+                                    查看消费者详情
+                                </button>
+                            </div>
+                        `;
+                    }
+                },
+                { 
+                    title: "暂停消费状态", 
+                    field: "pause_flag",
+                    width: 150,
+                    formatter: function(cell) {
+                        return cell.getValue()===1 ? "已暂停" : "";
+                    }
+                },
+                {
+                    title: "操作",
+                    width: 500,
+                    formatter: function(cell) {
+                        const row = cell.getRow().getData();
+                        return `
+                            <button class="btn btn-info btn-sm action-btn" onclick='showParams(${JSON.stringify(row.queue_params)})'>查看消费者配置</button>
+                            <button class="btn btn-danger btn-sm action-btn" onclick="clearQueue('${row.queue_name}')">清空队列消息</button>
+                            <button class="btn btn-warning btn-sm action-btn" onclick="pauseConsume('${row.queue_name}')">暂停消费</button>
+                            <button class="btn btn-success btn-sm action-btn" onclick="resumeConsume('${row.queue_name}')">恢复消费</button>
+                        `;
+                    }
+                },
+            ],
+            ajaxResponse: function(url, params, response) {
+                // 转换API响应为表格数据
+                return Object.entries(response).map(([queue_name, data]) => ({
+                    queue_name: queue_name,
+                    broker_kind: data.queue_params.broker_kind,
+                    msg_count: '', // 初始化为空字符串
+                    consumer_count: data.active_consumers.length,
+                    active_consumers: data.active_consumers,
+                    queue_params: data.queue_params,
+                    pause_flag: data.pause_flag 
+                }));
+            },
+        });
+
+        // 搜索功能实现
+        document.getElementById("searchInput").addEventListener("keyup", function() {
+            table.setFilter("queue_name", "like", this.value);
+        });
+
+        // 清除搜索
+        function clearSearch() {
+            document.getElementById("searchInput").value = "";
+            table.clearFilter();
+        }
+
+        // 显示参数的模态框
+        function showParams(params) {
+            // 如果已存在模态框，先移除
+            if ($("#paramsModal").length) {
+                $("#paramsModal").remove();
+            }
+
+            const modalHtml = `
+                <div class="modal" id="paramsModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">消费者配置详情</h4>
+                            </div>
+                            <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+                                <pre style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #dee2e6; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;">${JSON.stringify(params, null, 2)}</pre>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 添加模态框到body
+            $("body").append(modalHtml);
+            
+            // 初始化并显示模态框
+            $("#paramsModal").modal({
+                backdrop: "static",
+                keyboard: false
+            });
+        }
+        // 操作函数
+        function getMessageCount(queueName) {
+            const row = table.getRows().find(row => row.getData().queue_name === queueName);
+            if (!row) {
+                alert('找不到对应的队列数据');
+                return;
+            }
+            const broker_kind = row.getData().broker_kind;
+            // 获取消息数量的API调用
+            $.get(`/queue/message_count/${broker_kind}/${queueName}`, function(response) {
+                // 更新表格中的消息数量
+                row.update({msg_count: response.count});
+                // 直接更新显示的数字
+                document.getElementById(`msg-count-${queueName}`).textContent = response.count;
+            });
+        }
+
+        function clearQueue(queueName) {
+            const row = table.getRows().find(row => row.getData().queue_name === queueName);
+            if (!row) {
+                alert('找不到对应的队列数据');
+                return;
+            }
+            const broker_kind = row.getData().broker_kind;
+            if (confirm(`确定要清空队列 ${queueName} 的所有消息吗？`)) {
+                $.post(`/queue/clear/${broker_kind}/${queueName}`, function(response) {
+                    alert("清空队列成功");
+                    // table.replaceData();
+                    getMessageCount(queueName); // 自动获取最新的消息数量
+                });
+            }
+        }
+
+        function pauseConsume(queueName) {
+            $.post(`/queue/pause/${queueName}`, function(response) {
+                if (response.success) {
+                    alert("暂停消费成功");
+                    const row = table.getRows().find(row => row.getData().queue_name === queueName);
+                    if (row) {
+                        row.update({pause_flag: 1});
+                    }
+                }
+            });
+        }
+
+        function resumeConsume(queueName) {
+            $.post(`/queue/resume/${queueName}`, function(response) {
+                if (response.success) {
+                    alert("恢复消费成功");
+                    const row = table.getRows().find(row => row.getData().queue_name === queueName);
+                    if (row) {
+                        row.update({pause_flag: 0});
+                    }
+                }
+            });
+        }
+
+        // 显示消费者详情的模态框
+        function showConsumerDetails(consumers, queueName) {
+            // 如果已存在模态框，先移除
+            if ($("#consumerDetailsModal").length) {
+                $("#consumerDetailsModal").remove();
+            }
+
+            // 创建表格HTML
+            let tableRows = '';
+            consumers.forEach(consumer => {
+                tableRows += `
+                    <tr>
+                        <td>${consumer.computer_ip}</td>
+                        <td>${consumer.computer_name}</td>
+                        <td>${consumer.hearbeat_datetime_str}</td>
+                        <td>${consumer.process_id}</td>
+                        <td>${consumer.start_datetime_str}</td>
+                        <td>${consumer.code_filename}</td>
+                    </tr>
+                `;
+            });
+
+            const modalHtml = `
+                <div class="modal" id="consumerDetailsModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" style="width: 80%;" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">${queueName}队列的消费者详情信息</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>计算机IP</th>
+                                                <th>计算机名称</th>
+                                                <th>最后心跳时间</th>
+                                                <th>进程ID</th>
+                                                <th>启动时间</th>
+                                                <th>函数位置</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${tableRows}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 添加模态框到body
+            $("body").append(modalHtml);
+            
+            // 初始化并显示模态框
+            $("#consumerDetailsModal").modal({
+                backdrop: "static",
+                keyboard: false
+            });
+        }
+
+        // 定时刷新表格数据
+        // setInterval(function() {
+        //     table.refreshData();
+        // }, 5000);
+    </script>
+</body>
+</html>
+
+
+<!-- 
+ 队列名字  broker_kind  消息数量  consumer数量 消费者参数   是否暂停消费状态     操作(这一列都是按钮)
+                                                                            获取消息数量、清空队列消息、 暂停消费 、恢复消费
+                                                                        
+          
+                                                                            
+     接口   /queue/params_and_active_consumers 返回的是如下字典,字典中的key是队列名字，
+     value是一个字典，字典中有两个key，一个是active_consumers，一个是 queue_params ，
+     queue_params的broker_kind 是队列的类型，active_consumers 数组长度是 consumer数量
+     
+     
+     显示到表格中
+
+     {
+    "queue_test_g01t": {
+        "active_consumers": [
+            {
+                "code_filename": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py",
+                "computer_ip": "10.0.133.57",
+                "computer_name": "LAPTOP-7V78BBO2",
+                "consumer_id": 2642746547464,
+                "consumer_uuid": "5ba1aa04-1067-4173-8ee6-0c1e29f8b015",
+                "consuming_function": "f",
+                "hearbeat_datetime_str": "2025-02-26 20:29:40",
+                "hearbeat_timestamp": 1740572980.216993,
+                "process_id": 51852,
+                "queue_name": "queue_test_g01t",
+                "start_datetime_str": "2025-02-26 20:03:06",
+                "start_timestamp": 1740571386.7500842
+            }
+        ],
+        "queue_params": {
+            "auto_generate_info": {
+                "where_to_instantiate": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py:10"
+            },
+            "broker_exclusive_config": {
+                "pull_msg_batch_size": 100,
+                "redis_bulk_push": 1
+            },
+            "broker_kind": "REDIS",
+            "concurrent_mode": "threading",
+            "concurrent_num": 50,
+            "consuming_function": "<function f at 0x000002674C8A1708>",
+            "consuming_function_kind": "COMMON_FUNCTION",
+            "consuming_function_raw": "<function f at 0x000002674C8A1708>",
+            "create_logger_file": true,
+            "delay_task_apscheduler_jobstores_kind": "redis",
+            "do_not_run_by_specify_time": [
+                "10:00:00",
+                "22:00:00"
+            ],
+            "do_task_filtering": false,
+            "function_result_status_persistance_conf": {
+                "expire_seconds": 604800,
+                "is_save_result": true,
+                "is_save_status": true,
+                "is_use_bulk_insert": false
+            },
+            "is_auto_start_consuming_message": false,
+            "is_do_not_run_by_specify_time_effect": false,
+            "is_print_detail_exception": true,
+            "is_push_to_dlx_queue_when_retry_max_times": false,
+            "is_send_consumer_hearbeat_to_redis": true,
+            "is_show_message_get_from_broker": false,
+            "is_support_remote_kill_task": false,
+            "is_using_distributed_frequency_control": false,
+            "is_using_rpc_mode": false,
+            "log_level": 10,
+            "logger_name": "",
+            "logger_prefix": "",
+            "max_retry_times": 3,
+            "publish_msg_log_use_full_msg": false,
+            "queue_name": "queue_test_g01t",
+            "retry_interval": 0,
+            "rpc_result_expire_seconds": 600,
+            "schedule_tasks_on_main_thread": false,
+            "should_check_publish_func_params": true,
+            "task_filtering_expire_seconds": 0
+        }
+    },
+    "queue_test_g02t": {
+        "active_consumers": [
+            {
+                "code_filename": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py",
+                "computer_ip": "10.0.133.57",
+                "computer_name": "LAPTOP-7V78BBO2",
+                "consumer_id": 2642746605384,
+                "consumer_uuid": "a5528e66-2949-47ca-9aea-bbf920165c53",
+                "consuming_function": "f2",
+                "hearbeat_datetime_str": "2025-02-26 20:29:40",
+                "hearbeat_timestamp": 1740572980.13895,
+                "process_id": 51852,
+                "queue_name": "queue_test_g02t",
+                "start_datetime_str": "2025-02-26 20:03:06",
+                "start_timestamp": 1740571386.7650468
+            }
+        ],
+        "queue_params": {
+            "auto_generate_info": {
+                "where_to_instantiate": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py:18"
+            },
+            "broker_exclusive_config": {
+                "pull_msg_batch_size": 100,
+                "redis_bulk_push": 1
+            },
+            "broker_kind": "REDIS",
+            "concurrent_mode": "threading",
+            "concurrent_num": 50,
+            "consuming_function": "<function f2 at 0x000002674FF5DE58>",
+            "consuming_function_kind": "COMMON_FUNCTION",
+            "consuming_function_raw": "<function f2 at 0x000002674FF5DE58>",
+            "create_logger_file": true,
+            "delay_task_apscheduler_jobstores_kind": "redis",
+            "do_not_run_by_specify_time": [
+                "10:00:00",
+                "22:00:00"
+            ],
+            "do_task_filtering": false,
+            "function_result_status_persistance_conf": {
+                "expire_seconds": 604800,
+                "is_save_result": true,
+                "is_save_status": true,
+                "is_use_bulk_insert": false
+            },
+            "is_auto_start_consuming_message": false,
+            "is_do_not_run_by_specify_time_effect": false,
+            "is_print_detail_exception": true,
+            "is_push_to_dlx_queue_when_retry_max_times": false,
+            "is_send_consumer_hearbeat_to_redis": true,
+            "is_show_message_get_from_broker": false,
+            "is_support_remote_kill_task": false,
+            "is_using_distributed_frequency_control": false,
+            "is_using_rpc_mode": false,
+            "log_level": 10,
+            "logger_name": "",
+            "logger_prefix": "",
+            "max_retry_times": 3,
+            "publish_msg_log_use_full_msg": false,
+            "queue_name": "queue_test_g02t",
+            "retry_interval": 0,
+            "rpc_result_expire_seconds": 600,
+            "schedule_tasks_on_main_thread": false,
+            "should_check_publish_func_params": true,
+            "task_filtering_expire_seconds": 0
+        }
+    }
+}
+
+-->

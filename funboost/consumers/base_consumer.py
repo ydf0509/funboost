@@ -74,7 +74,7 @@ from funboost.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from funboost.factories.publisher_factotry import get_publisher
 
 from funboost.utils import decorators, time_util, redis_manager
-from funboost.constant import ConcurrentModeEnum, BrokerEnum, ConstStrForClassMethod
+from funboost.constant import ConcurrentModeEnum, BrokerEnum, ConstStrForClassMethod,RedisKeys
 from funboost.core import kill_remote_task
 from funboost.core.exceptions import ExceptionForRequeue, ExceptionForPushToDlxqueue
 
@@ -189,8 +189,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._stop_flag = None
         self._pause_flag = None  # 暂停消费标志，从reids读取
         self._last_show_pause_log_time = 0
-        self._redis_key_stop_flag = f'funboost_stop_flag:{self.queue_name}'
-        self._redis_key_pause_flag = f'funboost_pause_flag:{self.queue_name}'
+        # self._redis_key_stop_flag = f'funboost_stop_flag'
+        # self._redis_key_pause_flag = RedisKeys.REDIS_KEY_PAUSE_FLAG
 
         # 控频要用到的成员变量
         self._last_submit_task_timestamp = 0
@@ -999,11 +999,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def pause_consume(self):
         """从远程机器可以设置队列为暂停消费状态，funboost框架会自动停止消费，此功能需要配置好redis"""
-        RedisMixin().redis_db_frame.set(self._redis_key_pause_flag, 1)
+        RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, self.queue_name,'1')
 
     def continue_consume(self):
         """从远程机器可以设置队列为暂停消费状态，funboost框架会自动继续消费，此功能需要配置好redis"""
-        RedisMixin().redis_db_frame.set(self._redis_key_pause_flag, 0)
+        RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, self.queue_name,'0')
 
     @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)
     def _judge_is_daylight(self):
@@ -1186,8 +1186,17 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
         self._server__consumer_identification_map_key_name = f'funboost_hearbeat_server__dict:{nb_log_config_default.computer_ip}'
 
     def run(self):
+        self._send_consumer_params()
         self.send_heartbeat()
         self._consumer.keep_circulating(self.SEND_HEARTBEAT_INTERVAL, block=False, daemon=False)(self.send_heartbeat)()
+
+    def _send_consumer_params(self):
+        """
+        保存队列的消费者参数，以便在web界面查看。
+        :return:
+        """
+        self.redis_db_frame.hmset('funboost_queue__consumer_parmas',{self._consumer.queue_name: self._consumer.consumer_params.json_str_value()})
+
 
     def _send_heartbeat_with_dict_value(self, redis_key, ):
         # 发送当前消费者进程心跳的，值是字典，按一个机器或者一个队列运行了哪些进程。
@@ -1237,13 +1246,13 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
 
     # noinspection PyProtectedMember
     def _get_stop_and_pause_flag_from_redis(self):
-        stop_flag = self.redis_db_frame.get(self._consumer._redis_key_stop_flag)
+        stop_flag = self.redis_db_frame.hget(RedisKeys.REDIS_KEY_STOP_FLAG,self._consumer.queue_name)
         if stop_flag is not None and int(stop_flag) == 1:
             self._consumer._stop_flag = 1
         else:
             self._consumer._stop_flag = 0
 
-        pause_flag = self.redis_db_frame.get(self._consumer._redis_key_pause_flag)
+        pause_flag = self.redis_db_frame.hget(RedisKeys.REDIS_KEY_PAUSE_FLAG,self._consumer.queue_name)
         if pause_flag is not None and int(pause_flag) == 1:
             self._consumer._pause_flag = 1
         else:

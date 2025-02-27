@@ -1,4 +1,7 @@
 # coding= utf-8
+from calendar import c
+
+
 class BrokerEnum:
     EMPTY = 'empty'  # 空的实现，需要搭配 boost入参的 consumer_override_cls 和 publisher_override_cls使用，或者被继承。
 
@@ -106,3 +109,6 @@ class ConstStrForClassMethod:
     CLS_MODULE = 'cls_module'
     CLS_FILE = 'cls_file'
 
+class RedisKeys:
+    REDIS_KEY_PAUSE_FLAG  = 'funboost_pause_flag' 
+    REDIS_KEY_STOP_FLAG = 'funboost_stop_flag'

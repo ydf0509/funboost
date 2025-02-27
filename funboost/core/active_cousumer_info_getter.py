@@ -1,9 +1,13 @@
 import json
 import typing
 
+from pydantic import main
+
 from funboost.utils.redis_manager import RedisMixin
 
 from funboost.core.loggers import FunboostFileLoggerMixin,nb_log_config_default
+from funboost.core.serialization import Serialization
+from funboost.constant import RedisKeys
 
 class ActiveCousumerProcessInfoGetter(RedisMixin, FunboostFileLoggerMixin):
     """
@@ -80,3 +84,32 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, FunboostFileLoggerMixin):
         infos_map = self._get_all_hearbeat_info_partition_by_redis_key_prefix('funboost_hearbeat_server__dict:')
         self.logger.info(f'获取所有机器ip对应的活跃消费者进程信息，按机器ip划分，结果是 {json.dumps(infos_map, indent=4)}')
         return infos_map
+
+
+
+class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
+
+    def get_queue_params(self):
+        queue__consumer_params_map  = self.redis_db_frame.hgetall('funboost_queue__consumer_parmas')
+        return {k:Serialization.to_dict(v)  for k,v in queue__consumer_params_map.items()}
+
+    def get_pause_flag(self):
+        queue__pause_map = self.redis_db_frame.hgetall(RedisKeys.REDIS_KEY_PAUSE_FLAG)
+        return {k:int(v)  for k,v in queue__pause_map.items()}
+    
+    def get_queue_params_and_active_consumers(self):
+        queue__active_consumers_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
+        queue__consumer_params_map  = self.get_queue_params()
+        queue__pause_map = self.get_pause_flag()
+        queue_params_and_active_consumers = {}
+        for queue, consumer_params in  queue__consumer_params_map.items():
+            queue_params_and_active_consumers[queue] = {
+            'queue_params':consumer_params,
+            'active_consumers':queue__active_consumers_map.get(queue,[]),
+            'pause_flag':queue__pause_map.get(queue,-1),
+            }
+        return queue_params_and_active_consumers
+
+
+if __name__ == '__main__':
+    print(Serialization.to_json_str(QueueConusmerParamsGetter().get_queue_params_and_active_consumers()))

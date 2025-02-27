@@ -12,6 +12,17 @@
     <!-- Tabulator CSS -->
     <link href="https://cdn.bootcdn.net/ajax/libs/tabulator/5.5.0/css/tabulator.min.css" rel="stylesheet">
     <link href="https://cdn.bootcdn.net/ajax/libs/tabulator/5.5.0/css/tabulator_bootstrap3.min.css" rel="stylesheet">
+
+     <!-- jQuery -->
+     <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
+     <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script> -->
+     <!-- Bootstrap JS -->
+     <script src="http://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+     <!-- <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script> -->
+     <!-- Tabulator JS -->
+     <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script>
+     <!-- <script src="https://cdn.bootcdn.net/ajax/libs/tabulator/5.5.0/js/tabulator.min.js"></script> -->
+
     <style>
         .action-btn {
             margin: 2px;
@@ -40,12 +51,7 @@
         <div id="queue-table"></div>
     </div>
 
-    <!-- jQuery -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <!-- Tabulator JS -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/tabulator/5.5.0/js/tabulator.min.js"></script>
+   
     <script>
         // 创建表格实例
         var table = new Tabulator("#queue-table", {
@@ -91,7 +97,7 @@
                         return `
                             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 10px;">
                                 <span style="min-width: 50px; text-align: right; padding-right: 15px;">${cell.getValue() || ''}</span>
-                                <button class="btn btn-info btn-sm" onclick='showConsumerDetails(${JSON.stringify(consumers)}, "${row.queue_name}")'>
+                                <button class="btn btn-primary btn-sm" onclick='showConsumerDetails(${JSON.stringify(consumers)}, "${row.queue_name}")'>
                                     查看消费者详情
                                 </button>
                             </div>
@@ -239,68 +245,70 @@
 
         // 显示消费者详情的模态框
         function showConsumerDetails(consumers, queueName) {
-            // 如果已存在模态框，先移除
-            if ($("#consumerDetailsModal").length) {
-                $("#consumerDetailsModal").remove();
-            }
-
-            // 创建表格HTML
-            let tableRows = '';
-            consumers.forEach(consumer => {
-                tableRows += `
-                    <tr>
-                        <td>${consumer.computer_ip}</td>
-                        <td>${consumer.computer_name}</td>
-                        <td>${consumer.hearbeat_datetime_str}</td>
-                        <td>${consumer.process_id}</td>
-                        <td>${consumer.start_datetime_str}</td>
-                        <td>${consumer.code_filename}</td>
-                    </tr>
-                `;
-            });
-
-            const modalHtml = `
-                <div class="modal" id="consumerDetailsModal" tabindex="-1" role="dialog">
-                    <div class="modal-dialog" style="width: 80%;" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                <h4 class="modal-title">${queueName}队列的消费者详情信息</h4>
-                            </div>
-                            <div class="modal-body">
-                                <div class="table-responsive">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>计算机IP</th>
-                                                <th>计算机名称</th>
-                                                <th>最后心跳时间</th>
-                                                <th>进程ID</th>
-                                                <th>启动时间</th>
-                                                <th>函数位置</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${tableRows}
-                                        </tbody>
-                                    </table>
+            $.ajax({
+                url: '/running_consumer/hearbeat_info_by_queue_name',
+                data: { queue_name: queueName },
+                success: function(consumers) {
+                    let consumerRows = '';
+                    consumers.forEach(consumer => {
+                        consumerRows += `
+                            <tr>
+                                <td>${consumer.computer_ip}</td>
+                                <td>${consumer.computer_name}</td>
+                                <td>${consumer.hearbeat_datetime_str}</td>
+                                <td>${consumer.process_id}</td>
+                                <td>${consumer.start_datetime_str}</td>
+                                <td>${consumer.code_filename}</td>
+                            </tr>
+                        `;
+                    });
+                
+                    const modalHtml = `
+                        <div class="modal" id="consumerDetailsModal" tabindex="-1" role="dialog">
+                            <div class="modal-dialog" style="width: 80%;" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        <h4 class="modal-title">${queueName}队列的消费者详情信息</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>计算机IP</th>
+                                                        <th>计算机名称</th>
+                                                        <th>最后心跳时间</th>
+                                                        <th>进程ID</th>
+                                                        <th>启动时间</th>
+                                                        <th>代码文件名</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    ${consumerRows}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                            </div>
                         </div>
-                    </div>
-                </div>
-            `;
-
-            // 添加模态框到body
-            $("body").append(modalHtml);
-            
-            // 初始化并显示模态框
-            $("#consumerDetailsModal").modal({
-                backdrop: "static",
-                keyboard: false
+                    `;
+                
+                    // 移除已存在的模态框
+                    $('#consumerDetailsModal').remove();
+                    // 添加新的模态框到body
+                    $('body').append(modalHtml);
+                    // 显示模态框
+                    $('#consumerDetailsModal').modal('show');
+                },
+                error: function(xhr, status, error) {
+                    console.error('获取消费者详情失败:', error);
+                    alert('获取消费者详情失败');
+                }
             });
         }
 

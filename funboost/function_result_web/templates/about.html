@@ -33,9 +33,18 @@
 </head>
 <body>
     <div class="container">
+        <nav class="navbar navbar-default navbar-fixed-top" style="min-height: 40px;">
+            <div class="container-fluid">
+                <div class="navbar-header pull-right">
+                    <a href="{{url_for('logout')}}" class="btn btn-danger" style="margin: 4px 15px;">
+                        <i class="fa fa-sign-out"></i> 退出
+                    </a>
+                </div>
+            </div>
+        </nav>
         <h1>funboost web 说明</h1>
         <div class="info-block">
-            <h4>1. 函数结果和消费速率</h4>
+            <h4>1. 函数结果 和 消费速率</h4>
             <p>
                 数据是从 MongoDB 中获取的。<br>
                 用户需要设置 <span class="highlight">@boost</span> 的 <span class="highlight">function_result_status_persistance_conf</span>，
@@ -44,7 +53,7 @@
         </div>
         
         <div class="info-block">
-            <h4>2. 运行中消费者</h4>
+            <h4>2. 运行中消费者 和 队列操作</h4>
             <p>
                 数据是从 Redis 消费者心跳获取的。<br>
                 用户需要设置 <span class="highlight">@boost</span> 的 <span class="highlight">is_send_consumer_hearbeat_to_redis = True</span>，

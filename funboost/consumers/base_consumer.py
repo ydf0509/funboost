@@ -164,22 +164,25 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         filter_class = RedisFilter if consumer_params.task_filtering_expire_seconds == 0 else RedisImpermanencyFilter
         self._redis_filter = filter_class(self._redis_filter_key_name, consumer_params.task_filtering_expire_seconds)
 
-        self._unit_time_for_count = 10  # 每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。
-        self._execute_task_times_every_unit_time = 0  # 每单位时间执行了多少次任务。
-        self._execute_task_times_every_unit_time_fail =0  # 每单位时间执行了多少次任务失败。
         self._lock_for_count_execute_task_times_every_unit_time = Lock()
-        self._current_time_for_execute_task_times_every_unit_time = time.time()
-        self._consuming_function_cost_time_total_every_unit_time = 0
-        self._last_execute_task_time = time.time()  # 最近一次执行任务的时间。
-        self._last_10s_execute_count = 0
-        self._last_10s_execute_count_fail = 0
+        # self._unit_time_for_count = 10  # 每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。
+        # self._execute_task_times_every_unit_time = 0  # 每单位时间执行了多少次任务。
+        # self._execute_task_times_every_unit_time_fail =0  # 每单位时间执行了多少次任务失败。
+        # self._lock_for_count_execute_task_times_every_unit_time = Lock()
+        # self._current_time_for_execute_task_times_every_unit_time = time.time()
+        # self._consuming_function_cost_time_total_every_unit_time = 0
+        # self._last_execute_task_time = time.time()  # 最近一次执行任务的时间。
+        # self._last_10s_execute_count = 0
+        # self._last_10s_execute_count_fail = 0
+        #
+        # self._last_show_remaining_execution_time = 0
+        # self._show_remaining_execution_time_interval = 300
+        #
+        # self._msg_num_in_broker = 0
+        # self._last_timestamp_when_has_task_in_queue = 0
+        # self._last_timestamp_print_msg_num = 0
 
-        self._last_show_remaining_execution_time = 0
-        self._show_remaining_execution_time_interval = 300
-
-        self._msg_num_in_broker = 0
-        self._last_timestamp_when_has_task_in_queue = 0
-        self._last_timestamp_print_msg_num = 0
+        self.metric_calculation = MetricCalculation(self)
 
         self._result_persistence_helper: ResultPersistenceHelper
         self._check_broker_exclusive_config()
@@ -361,7 +364,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._distributed_consumer_statistics.run()
             self.logger.warning(f'启动了分布式环境 使用 redis 的键 hearbeat:{self._queue_name} 统计活跃消费者 ，当前消费者唯一标识为 {self.consumer_identification}')
 
-        self.keep_circulating(60, block=False, daemon=False)(self.check_heartbeat_and_message_count)()  # 间隔时间最好比self._unit_time_for_count小整数倍，不然日志不准。
+        self.keep_circulating(60, block=False, daemon=False)(self.check_heartbeat_and_message_count)()
         if self.consumer_params.is_support_remote_kill_task:
             kill_remote_task.RemoteTaskKiller(self.queue_name, None).start_cycle_kill_task()
             self.consumer_params.is_show_message_get_from_broker = True  # 方便用户看到从消息队列取出来的消息的task_id,然后使用task_id杀死运行中的消息。
@@ -680,31 +683,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                         p.execute()
 
             with self._lock_for_count_execute_task_times_every_unit_time:
-                self._execute_task_times_every_unit_time += 1
-                if current_function_result_status.success is False:
-                    self._execute_task_times_every_unit_time_fail += 1
-                self._consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
-                self._last_execute_task_time = time.time()
-                if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
-                    avarage_function_spend_time = round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)
-                    msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
-                          f'失败了{self._execute_task_times_every_unit_time_fail} 次,函数平均运行耗时 {avarage_function_spend_time} 秒。 '
-                    self._last_10s_execute_count = self._execute_task_times_every_unit_time
-                    self._last_10s_execute_count_fail = self._execute_task_times_every_unit_time_fail
-                    self.logger.info(msg)
-                    if time.time() - self._last_show_remaining_execution_time > self._show_remaining_execution_time_interval:
-                        self._msg_num_in_broker = self.publisher_of_same_queue.get_message_count()
-                        if self._msg_num_in_broker != -1:  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
-                            # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
-                            need_time = time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / (self._execute_task_times_every_unit_time / self._unit_time_for_count) /
-                                                                                self._distributed_consumer_statistics.active_consumer_num)
-                            msg += f''' 预计还需要 {need_time} 时间 才能执行完成 队列 {self.queue_name} 中的 {self._msg_num_in_broker} 个剩余任务'''
-                            self.logger.info(msg)
-                            self._last_show_remaining_execution_time = time.time()
-                    self._current_time_for_execute_task_times_every_unit_time = time.time()
-                    self._consuming_function_cost_time_total_every_unit_time = 0
-                    self._execute_task_times_every_unit_time = 0
-                    self._execute_task_times_every_unit_time_fail = 0
+                self.metric_calculation.cal(t_start_run_fun,current_function_result_status)
             self.user_custom_record_process_info_func(current_function_result_status)  # 两种方式都可以自定义,记录结果,建议继承方式,不使用boost中指定 user_custom_record_process_info_func
             if self.consumer_params.user_custom_record_process_info_func:
                 self.consumer_params.user_custom_record_process_info_func(current_function_result_status)
@@ -858,30 +837,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     await simple_run_in_executor(push_result)
 
             # 异步执行不存在线程并发，不需要加锁。
-            self._execute_task_times_every_unit_time += 1
-            if current_function_result_status.success is False:
-                self._execute_task_times_every_unit_time_fail += 1
-            self._consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
-            self._last_execute_task_time = time.time()
-             
-            if time.time() - self._current_time_for_execute_task_times_every_unit_time > self._unit_time_for_count:
-                avarage_function_spend_time = round(self._consuming_function_cost_time_total_every_unit_time / self._execute_task_times_every_unit_time, 4)
-                msg = f'{self._unit_time_for_count} 秒内执行了 {self._execute_task_times_every_unit_time} 次函数 [ {self.consuming_function.__name__} ] ,' \
-                      f'失败了{self._execute_task_times_every_unit_time_fail} 次,函数平均运行耗时 {avarage_function_spend_time} 秒。 '
-                self._last_10s_execute_count = self._execute_task_times_every_unit_time
-                self._last_10s_execute_count_fail = self._execute_task_times_every_unit_time_fail
-                self.logger.info(msg)
-                if self._msg_num_in_broker != -1 and time.time() - self._last_show_remaining_execution_time > self._show_remaining_execution_time_interval:  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
-                    # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
-                    need_time = time_util.seconds_to_hour_minute_second(self._msg_num_in_broker / (self._execute_task_times_every_unit_time / self._unit_time_for_count) /
-                                                                        self._distributed_consumer_statistics.active_consumer_num)
-                    msg += f''' 预计还需要 {need_time} 时间 才能执行完成 队列 {self.queue_name} 中的 {self._msg_num_in_broker} 个剩余任务'''
-                    self.logger.info(msg)
-                    self._last_show_remaining_execution_time = time.time()
-                self._current_time_for_execute_task_times_every_unit_time = time.time()
-                self._consuming_function_cost_time_total_every_unit_time = 0
-                self._execute_task_times_every_unit_time = 0
-                self._execute_task_times_every_unit_time_fail = 0
+            self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
 
             self.user_custom_record_process_info_func(current_function_result_status)  # 两种方式都可以自定义,记录结果.建议使用文档4.21.b的方式继承来重写
             await self.aio_user_custom_record_process_info_func(current_function_result_status)
@@ -968,14 +924,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         raise NotImplementedError
 
     def check_heartbeat_and_message_count(self):
-        self._msg_num_in_broker = self.publisher_of_same_queue.get_message_count()
-        if time.time() - self._last_timestamp_print_msg_num > 600:
-            if self._msg_num_in_broker != -1:
-                self.logger.info(f'队列 [{self._queue_name}] 中还有 [{self._msg_num_in_broker}] 个任务')
-            self._last_timestamp_print_msg_num = time.time()
-        if self._msg_num_in_broker != 0:
-            self._last_timestamp_when_has_task_in_queue = time.time()
-        return self._msg_num_in_broker
+        self.metric_calculation.msg_num_in_broker = self.publisher_of_same_queue.get_message_count()
+        if time.time() - self.metric_calculation.last_timestamp_print_msg_num > 600:
+            if self.metric_calculation.msg_num_in_broker != -1:
+                self.logger.info(f'队列 [{self._queue_name}] 中还有 [{self.metric_calculation.msg_num_in_broker}] 个任务')
+            self.metric_calculation.last_timestamp_print_msg_num = time.time()
+        if self.metric_calculation.msg_num_in_broker != 0:
+            self.metric_calculation.last_timestamp_when_has_task_in_queue = time.time()
+        return self.metric_calculation.msg_num_in_broker
 
     @abc.abstractmethod
     def _requeue(self, kw):
@@ -1041,9 +997,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         no_task_time = 0
         while 1:
             # noinspection PyBroadException
-            message_count = self._msg_num_in_broker
+            message_count = self.metric_calculation.msg_num_in_broker
             # print(message_count,self._last_execute_task_time,time.time() - self._last_execute_task_time,no_task_time)
-            if message_count == 0 and self._last_execute_task_time != 0 and (time.time() - self._last_execute_task_time) > minutes * 60:
+            if message_count == 0 and self.metric_calculation.last_execute_task_time != 0 and (time.time() - self.metric_calculation.last_execute_task_time) > minutes * 60:
                 no_task_time += 30
             else:
                 no_task_time = 0
@@ -1164,6 +1120,72 @@ def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typin
             pool.submit(consumer.wait_for_possible_has_finish_all_tasks(minutes))
 
 
+class MetricCalculation:
+    UNIT_TIME_FOR_COUNT = 10 # 这个不要随意改,需要其他地方配合,每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。
+
+    def __init__(self,conusmer:AbstractConsumer) -> None:
+        self.consumer = conusmer
+
+        self.unit_time_for_count = self.UNIT_TIME_FOR_COUNT  # 
+        self.execute_task_times_every_unit_time_temp = 0  # 每单位时间执行了多少次任务。
+        self.execute_task_times_every_unit_time_temp_fail =0  # 每单位时间执行了多少次任务失败。
+        self.current_time_for_execute_task_times_every_unit_time = time.time()
+        self.consuming_function_cost_time_total_every_unit_time = 0
+        self.last_execute_task_time = time.time()  # 最近一次执行任务的时间。
+        self.last_x_s_execute_count = 0
+        self.last_x_s_execute_count_fail = 0
+        self.last_show_remaining_execution_time = 0
+        self.show_remaining_execution_time_interval = 300
+        self.msg_num_in_broker = 0
+        self.last_timestamp_when_has_task_in_queue = 0
+        self.last_timestamp_print_msg_num = 0
+        self.avarage_function_spend_time = None
+        self.total_consume_count_from_start =0
+
+    def cal(self,t_start_run_fun:float,current_function_result_status:FunctionResultStatus):
+        self.execute_task_times_every_unit_time_temp += 1
+        self.total_consume_count_from_start  +=1
+        if current_function_result_status.success is False:
+            self.execute_task_times_every_unit_time_temp_fail += 1
+        self.consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
+        self.last_execute_task_time = time.time()
+        if time.time() - self.current_time_for_execute_task_times_every_unit_time > self.unit_time_for_count:
+            self.last_x_s_execute_count = self.execute_task_times_every_unit_time_temp
+            self.last_x_s_execute_count_fail = self.execute_task_times_every_unit_time_temp_fail
+            self.avarage_function_spend_time = round(self.consuming_function_cost_time_total_every_unit_time / self.last_x_s_execute_count, 4)
+            msg = f'{self.unit_time_for_count} 秒内执行了 {self.last_x_s_execute_count} 次函数 [ {self.consumer.consuming_function.__name__} ] ,' \
+                  f'失败了{self.last_x_s_execute_count_fail} 次,函数平均运行耗时 {self.avarage_function_spend_time} 秒。 '
+            self.consumer.logger.info(msg)
+            if time.time() - self.last_show_remaining_execution_time > self.show_remaining_execution_time_interval:
+                self.msg_num_in_broker = self.consumer.publisher_of_same_queue.get_message_count()
+                if self.msg_num_in_broker != -1:  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
+                    # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
+                    need_time = time_util.seconds_to_hour_minute_second(self.msg_num_in_broker / (self.execute_task_times_every_unit_time_temp / self.unit_time_for_count) /
+                                                                        self.consumer._distributed_consumer_statistics.active_consumer_num)
+                    msg += f''' 预计还需要 {need_time} 时间 才能执行完成 队列 {self.consumer.queue_name} 中的 {self.msg_num_in_broker} 个剩余任务'''
+                    self.consumer.logger.info(msg)
+                    self.last_show_remaining_execution_time = time.time()
+            self.current_time_for_execute_task_times_every_unit_time = time.time()
+            self.consuming_function_cost_time_total_every_unit_time = 0
+            self.execute_task_times_every_unit_time_temp = 0
+            self.execute_task_times_every_unit_time_temp_fail = 0
+
+    def get_report_hearbeat_info(self) ->dict:
+        return {
+            'unit_time_for_count':self.unit_time_for_count,
+            'last_x_s_execute_count':self.last_x_s_execute_count,
+            'last_x_s_execute_count_fail':self.last_x_s_execute_count_fail,
+            'last_execute_task_time':self.last_execute_task_time,
+            # 'last_show_remaining_execution_time':self.last_show_remaining_execution_time,
+            # 'msg_num_in_broker':self.msg_num_in_broker,
+            'current_time_for_execute_task_times_every_unit_time':self.current_time_for_execute_task_times_every_unit_time,
+            'last_timestamp_when_has_task_in_queue':self.last_timestamp_when_has_task_in_queue,
+            'avarage_function_spend_time':self.avarage_function_spend_time,
+            'total_consume_count_from_start':self.total_consume_count_from_start,
+
+        }
+
+
 class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
     """
     为了兼容模拟mq的中间件（例如redis，他没有实现amqp协议，redis的list结构和真mq差远了），获取一个队列有几个连接活跃消费者数量。
@@ -1225,9 +1247,7 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
                     p.srem(redis_key, result)
             self._consumer_identification_map['hearbeat_datetime_str'] = time_util.DatetimeConverter().datetime_str
             self._consumer_identification_map['hearbeat_timestamp'] = self.timestamp()
-            self._consumer_identification_map['last_10s_execute_count'] = self._consumer._last_10s_execute_count
-            self._consumer_identification_map['last_10s_execute_count_fail'] = self._consumer._last_10s_execute_count_fail
-            self._consumer_identification_map['current_time_for_execute_task_times_every_unit_time'] = self._consumer._current_time_for_execute_task_times_every_unit_time
+            self._consumer_identification_map.update(self._consumer.metric_calculation.get_report_hearbeat_info())
             value = Serialization.to_json_str(self._consumer_identification_map, )
             p.sadd(redis_key, value)
             p.execute()

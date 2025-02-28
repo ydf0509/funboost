@@ -259,7 +259,8 @@
                                 <td>${consumer.process_id}</td>
                                 <td>${consumer.start_datetime_str}</td>
                                 <td>${consumer.code_filename}</td>,
-                                <td>${consumer.last_10s_execute_count}</td>
+                                <td>${consumer.last_x_s_execute_count}</td>
+                                <td>${consumer.last_x_s_execute_count_fail}</td>
                             </tr>
                         `;
                     });
@@ -284,6 +285,7 @@
                                                         <th>启动时间</th>
                                                         <th>代码文件名</th>
                                                         <th>近10秒<br>运行完成<br>消息个数</th>
+                                                        <th>近10秒<br>运行失败<br>消息个数</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>

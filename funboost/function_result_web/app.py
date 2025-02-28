@@ -161,25 +161,27 @@ def serve_template(template):
 
 @app.route('/running_consumer/hearbeat_info_by_queue_name')
 def hearbeat_info_by_queue_name():
-    if request.args.get('queue_name')!='所有':
-        return jsonify(ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_queue_name(request.args.get('queue_name')))
-    else:
+    if request.args.get('queue_name') in ('所有',None):
         info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
         ret_list = []
         for queue_name,dic in info_map.items():
             ret_list.extend(dic)
         return jsonify(ret_list)
+    else:
+        return jsonify(ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_queue_name(request.args.get('queue_name')))
+    
+        
 
 @app.route('/running_consumer/hearbeat_info_by_ip')
 def hearbeat_info_by_ip():
-    if request.args.get('ip')!='所有':
-        return jsonify(ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_ip(request.args.get('ip')))
-    else:
+    if request.args.get('ip') in ('所有',None):
         info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_ip()
         ret_list = []
         for queue_name,dic in info_map.items():
             ret_list.extend(dic)
         return jsonify(ret_list)
+    else:
+        return jsonify(ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_ip(request.args.get('ip')))
 
 
 @app.route('/running_consumer/hearbeat_info_partion_by_queue_name')

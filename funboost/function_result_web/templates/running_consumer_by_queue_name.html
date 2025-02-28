@@ -111,6 +111,9 @@
             });
         });
 
+        $(document).ready(function (){
+            query()
+        });
 
         function query() {
             $.ajax({
@@ -136,7 +139,9 @@
                             {title: "<br><br>代码文件", field: "code_filename", width: 300},
                             // {title: "<br><br>consumer_id", field: "consumer_id"},
                             {title: "<br><br>consumer_uuid", field: "consumer_uuid"},
-                            {title:"近10秒<br>运行完成<br>消息个数",field:"last_10s_execute_count", formatter:"html","width":100}
+                            {title:"近10秒<br>运行完成<br>消息个数",field:"last_x_s_execute_count", formatter:"html","width":100},
+                            {title:"近10秒<br>运行失败<br>消息个数",field:"last_x_s_execute_count_fail", formatter:"html","width":100}
+                            
                         ],
                         pagination: true,
                         paginationSize: 100,

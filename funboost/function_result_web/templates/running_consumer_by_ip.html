@@ -141,8 +141,12 @@
                             // {title: "<br><br>consumer_id", field: "consumer_id"},
                             {title: "<br><br>consumer_uuid", field: "consumer_uuid"},
                             {title:"近10秒<br>运行完成<br>消息个数",field:"last_x_s_execute_count", formatter:"html","width":100},
-                            {title:"近10秒<br>运行失败<br>消息个数",field:"last_x_s_execute_count_fail", formatter:"html","width":100}
-                             ],
+                            {title:"近10秒<br>运行失败<br>消息个数",field:"last_x_s_execute_count_fail", formatter:"html","width":100},
+                            {title:"累计<br>运行完成<br>消息个数",field:"total_consume_count_from_start", formatter:"html","width":100},
+                            {title:"累计<br>运行失败<br>消息个数",field:"total_consume_count_from_start_fail", formatter:"html","width":100}
+                             
+                            
+                        ],
                         pagination: true,
                         paginationSize: 100,
                         locale: true,

@@ -1141,12 +1141,14 @@ class MetricCalculation:
         self.last_timestamp_print_msg_num = 0
         self.avarage_function_spend_time = None
         self.total_consume_count_from_start =0
+        self.total_consume_count_from_start_fail =0
 
     def cal(self,t_start_run_fun:float,current_function_result_status:FunctionResultStatus):
         self.execute_task_times_every_unit_time_temp += 1
         self.total_consume_count_from_start  +=1
         if current_function_result_status.success is False:
             self.execute_task_times_every_unit_time_temp_fail += 1
+            self.total_consume_count_from_start_fail +=1
         self.consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
         self.last_execute_task_time = time.time()
         if time.time() - self.current_time_for_execute_task_times_every_unit_time > self.unit_time_for_count:
@@ -1182,6 +1184,7 @@ class MetricCalculation:
             'last_timestamp_when_has_task_in_queue':self.last_timestamp_when_has_task_in_queue,
             'avarage_function_spend_time':self.avarage_function_spend_time,
             'total_consume_count_from_start':self.total_consume_count_from_start,
+            'total_consume_count_from_start_fail':self.total_consume_count_from_start_fail
 
         }
 

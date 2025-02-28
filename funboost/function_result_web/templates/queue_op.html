@@ -261,6 +261,8 @@
                                 <td>${consumer.code_filename}</td>,
                                 <td>${consumer.last_x_s_execute_count}</td>
                                 <td>${consumer.last_x_s_execute_count_fail}</td>
+                                <td>${consumer.total_consume_count_from_start}</td>
+                                <td>${consumer.total_consume_count_from_start_fail}</td>
                             </tr>
                         `;
                     });
@@ -286,6 +288,8 @@
                                                         <th>代码文件名</th>
                                                         <th>近10秒<br>运行完成<br>消息个数</th>
                                                         <th>近10秒<br>运行失败<br>消息个数</th>
+                                                        <th>累计<br>运行完成<br>消息个数</th>
+                                                        <th>累计<br>运行失败<br>消息个数</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>

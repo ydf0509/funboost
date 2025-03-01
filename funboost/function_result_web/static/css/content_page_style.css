@@ -14,3 +14,26 @@ max-height: 600px !important;  /* 设置下拉列表的最大高度 */
 .select2-container--default .select2-results > .select2-results__options {
 max-height: 600px !important;  /* 确保覆盖默认样式 */
 }
+
+#result-table .tabulator-footer {
+    text-align: right !important;
+}
+#result-table .tabulator-footer .tabulator-paginator {
+    float: right !important;
+    display: flex;
+    justify-content: flex-end;
+}
+#result-table .tabulator-footer .tabulator-page-size {
+    float: right !important;
+}
+#result-table .tabulator-footer .tabulator-pages {
+    float: right !important;
+}
+/* 确保表格容器可以横向滚动 */
+#result-table {
+    overflow-x: auto;
+    max-width: 100%;
+}
+.tabulator {
+    min-width: 1500px;
+}

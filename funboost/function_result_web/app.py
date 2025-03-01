@@ -217,7 +217,7 @@ def get_queue_params_and_active_consumers():
 @app.route('/queue/message_count/<broker_kind>/<queue_name>')
 def get_message_count(broker_kind,queue_name):
     publisher = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name=queue_name, broker_kind=broker_kind, publish_msg_log_use_full_msg=True))
-    return jsonify({'count':publisher.get_message_count()})
+    return jsonify({'count':publisher.get_message_count(),'success':True})
 
 
 @app.route('/queue/clear/<broker_kind>/<queue_name>',methods=['POST'])

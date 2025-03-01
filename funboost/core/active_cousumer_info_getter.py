@@ -1,4 +1,5 @@
 import json
+import time
 import typing
 
 from pydantic import main
@@ -102,17 +103,37 @@ class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
     def get_pause_flag(self):
         queue__pause_map = self.redis_db_frame.hgetall(RedisKeys.REDIS_KEY_PAUSE_FLAG)
         return {k:int(v)  for k,v in queue__pause_map.items()}
+
+    def get_msg_num(self):
+        queue__msg_count_info_map = self.redis_db_frame.hgetall(RedisKeys.QUEUE__MSG_COUNT_MAP)
+        queue__msg_count_dict = {}
+        for queue_name,info_json in queue__msg_count_info_map.items():
+            info_dict = json.loads(info_json)
+            if info_dict['report_ts'] > time.time() - 15 and info_dict['last_get_msg_num_ts'] > time.time() - 1200:
+                queue__msg_count_dict[queue_name] = info_dict['msg_num_in_broker']
+        return queue__msg_count_dict
     
     def get_queue_params_and_active_consumers(self):
         queue__active_consumers_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
         queue__consumer_params_map  = self.get_queue_params()
         queue__pause_map = self.get_pause_flag()
+        queue__msg_count_dict = self.get_msg_num()
         queue_params_and_active_consumers = {}
+
         for queue, consumer_params in  queue__consumer_params_map.items():
+            active_consumers = queue__active_consumers_map.get(queue, [])
+            all_consumers_last_x_s_execute_count = 0
+            all_consumers_last_x_s_execute_count_fail =0
+            for c in active_consumers:
+                all_consumers_last_x_s_execute_count += c['last_x_s_execute_count']
+                all_consumers_last_x_s_execute_count_fail += c['last_x_s_execute_count_fail']
             queue_params_and_active_consumers[queue] = {
             'queue_params':consumer_params,
-            'active_consumers':queue__active_consumers_map.get(queue,[]),
+            'active_consumers':active_consumers,
             'pause_flag':queue__pause_map.get(queue,-1),
+            'msg_num_in_broker':queue__msg_count_dict.get(queue,None),
+                'all_consumers_last_x_s_execute_count':all_consumers_last_x_s_execute_count,
+                'all_consumers_last_x_s_execute_count_fail':all_consumers_last_x_s_execute_count_fail,
             }
         return queue_params_and_active_consumers
 

@@ -925,6 +925,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def check_heartbeat_and_message_count(self):
         self.metric_calculation.msg_num_in_broker = self.publisher_of_same_queue.get_message_count()
+        self.metric_calculation.last_get_msg_num_ts = time.time()
         if time.time() - self.metric_calculation.last_timestamp_print_msg_num > 600:
             if self.metric_calculation.msg_num_in_broker != -1:
                 self.logger.info(f'队列 [{self._queue_name}] 中还有 [{self.metric_calculation.msg_num_in_broker}] 个任务')
@@ -1137,6 +1138,7 @@ class MetricCalculation:
         self.last_show_remaining_execution_time = 0
         self.show_remaining_execution_time_interval = 300
         self.msg_num_in_broker = 0
+        self.last_get_msg_num_ts = 0
         self.last_timestamp_when_has_task_in_queue = 0
         self.last_timestamp_print_msg_num = 0
         self.avarage_function_spend_time = None
@@ -1160,6 +1162,7 @@ class MetricCalculation:
             self.consumer.logger.info(msg)
             if time.time() - self.last_show_remaining_execution_time > self.show_remaining_execution_time_interval:
                 self.msg_num_in_broker = self.consumer.publisher_of_same_queue.get_message_count()
+                self.last_get_msg_num_ts = time.time()
                 if self.msg_num_in_broker != -1:  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
                     # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
                     need_time = time_util.seconds_to_hour_minute_second(self.msg_num_in_broker / (self.execute_task_times_every_unit_time_temp / self.unit_time_for_count) /
@@ -1255,6 +1258,14 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
             p.sadd(redis_key, value)
             p.execute()
 
+
+    def _send_msg_num(self):
+        dic = {'msg_num_in_broker':self._consumer.metric_calculation.msg_num_in_broker,
+               'last_get_msg_num_ts':self._consumer.metric_calculation.last_get_msg_num_ts,
+               'report_ts':time.time(),
+               }
+        self.redis_db_frame.hset(RedisKeys.QUEUE__MSG_COUNT_MAP, self._consumer.queue_name, json.dumps(dic))
+
     def send_heartbeat(self):
         # 根据队列名心跳的，值是字符串，方便值作为其他redis的键名
 
@@ -1271,6 +1282,7 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
         self._send_heartbeat_with_dict_value(self._server__consumer_identification_map_key_name)
         self._show_active_consumer_num()
         self._get_stop_and_pause_flag_from_redis()
+        self._send_msg_num()
 
     def _show_active_consumer_num(self):
         self.active_consumer_num = self.redis_db_frame.scard(self._redis_key_name) or 1

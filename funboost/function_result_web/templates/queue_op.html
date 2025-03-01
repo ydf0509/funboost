@@ -77,20 +77,22 @@
                 }
             },
             columns: [
-                { title: "队列名字", field: "queue_name", sorter: "string", width: 250 },
-                { title: "broker类型", field: "broker_kind", sorter: "string", width: 150 },
-                { title: "消息数量", field: "msg_count", sorter: "number", width: 200,
+                { title: "<br>队列名字", field: "queue_name", sorter: "string", width: 250 },
+                { title: "broker<br>类型", field: "broker_kind", sorter: "string", width: 100 },
+                { title: "近10秒<br>完成", field: "all_consumers_last_x_s_execute_count", sorter: "number", width: 100 },
+                { title: "近10秒<br>失败", field: "all_consumers_last_x_s_execute_count_fail", sorter: "int", width: 100 },
+                { title: "<br>消息数量", field: "msg_count", sorter: "number", width: 170,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
                         return `
                             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 30px;">
-                                <span id="msg-count-${row.queue_name}" style="min-width: 120px; text-align: right; padding-right: 25px;">${cell.getValue() || ''}</span>
+                                <span id="msg-count-${row.queue_name}" style="min-width: 70px; text-align: right; padding-right: 25px;">${cell.getValue() === null ? '' : cell.getValue()}</span>
                                 <button class="btn btn-primary btn-sm" onclick="getMessageCount('${row.queue_name}')">获取</button>
                             </div>
                         `;
                     }
                 },
-                { title: "消费者数量", field: "consumer_count", sorter: "number", width: 200,
+                { title: "<br>消费者数量", field: "consumer_count", sorter: "number", width: 200,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
                         var consumers = row.active_consumers;
@@ -105,16 +107,16 @@
                     }
                 },
                 { 
-                    title: "暂停消费状态", 
+                    title: "暂停消<br>费状态",
                     field: "pause_flag",
-                    width: 150,
+                    width: 100,
                     formatter: function(cell) {
                         return cell.getValue()===1 ? "已暂停" : "";
                     }
                 },
                 {
-                    title: "操作",
-                    width: 500,
+                    title: "<br>操作",
+                    width: 400,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
                         return `
@@ -131,7 +133,9 @@
                 return Object.entries(response).map(([queue_name, data]) => ({
                     queue_name: queue_name,
                     broker_kind: data.queue_params.broker_kind,
-                    msg_count: '', // 初始化为空字符串
+                    all_consumers_last_x_s_execute_count: data.all_consumers_last_x_s_execute_count,
+                    all_consumers_last_x_s_execute_count_fail: data.all_consumers_last_x_s_execute_count_fail,
+                    msg_count: data.msg_num_in_broker, // 初始化为空字符串
                     consumer_count: data.active_consumers.length,
                     active_consumers: data.active_consumers,
                     queue_params: data.queue_params,
@@ -196,10 +200,14 @@
             const broker_kind = row.getData().broker_kind;
             // 获取消息数量的API调用
             $.get(`/queue/message_count/${broker_kind}/${queueName}`, function(response) {
-                // 更新表格中的消息数量
-                row.update({msg_count: response.count});
-                // 直接更新显示的数字
-                document.getElementById(`msg-count-${queueName}`).textContent = response.count;
+                if (response.success) {
+                    // 更新表格中的消息数量
+                    row.update({msg_count: response.count});
+                    // 直接更新显示的数字
+                    alert(`获取 ${queueName} 队列 消息数量成功`);
+                    document.getElementById(`msg-count-${queueName}`).textContent = response.count;
+                    
+                }
             });
         }
 
@@ -212,7 +220,7 @@
             const broker_kind = row.getData().broker_kind;
             if (confirm(`确定要清空队列 ${queueName} 的所有消息吗？`)) {
                 $.post(`/queue/clear/${broker_kind}/${queueName}`, function(response) {
-                    alert("清空队列成功");
+                    alert(`清空 ${queueName} 队列成功`);
                     // table.replaceData();
                     getMessageCount(queueName); // 自动获取最新的消息数量
                 });

@@ -43,6 +43,7 @@
 
     <style>
 
+
     </style>
 </head>
 
@@ -130,7 +131,7 @@
                         data: result,
                         layout: "fitColumns",
                         columns: [
-                        {title: "<br><br>队列名称", field: "queue_name"},
+                        {title: "<br><br>队列名称", field: "queue_name","width":200},
                             {title: "<br><br>消费函数", field: "consuming_function"},
                             {title: "<br><br>主机名", field: "computer_name"},
                             {title: "<br><br>IP地址", field: "computer_ip"},
@@ -165,6 +166,8 @@
                             }
                         }
                     });
+
+<!--                    $("#result-table").css("width", "150%");-->
 
                     /* result 例如 [
   {

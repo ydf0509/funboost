@@ -133,7 +133,7 @@
     <div class="sidebar">
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link active" href="#" data-target="/tpl/fun_result_table.html">
+                <a class="nav-link " href="#" data-target="/tpl/fun_result_table.html">
                     <i class="fa fa-table"></i><span>函数结果表</span>
                 </a>
             </li>
@@ -152,8 +152,8 @@
                     <i class="fa fa-list"></i><span>运行中消费者(by queue)</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#" data-target="/tpl/queue_op.html">
+            <li class="nav-item ">
+                <a class="nav-link active" href="#" data-target="/tpl/queue_op.html">
                     <i class="fa fa-cogs"></i><span>队列操作</span>
                 </a>
             </li>
@@ -198,7 +198,7 @@
 
         $(document).ready(function () {
             // 初始加载 Home 页面
-            loadPage('/tpl/fun_result_table.html');
+            loadPage('/tpl/queue_op.html');
 
             // 导航栏点击事件
             $('.sidebar .nav-link').click(function (e) {

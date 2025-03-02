@@ -92,7 +92,7 @@
                         `;
                     }
                 },
-                { title: "<br>消费者数量", field: "consumer_count", sorter: "number", width: 200,
+                { title: "<br>consumer数量", field: "consumer_count", sorter: "number", width: 200,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
                         var consumers = row.active_consumers;
@@ -111,7 +111,7 @@
                     field: "pause_flag",
                     width: 100,
                     formatter: function(cell) {
-                        return cell.getValue()===1 ? "已暂停" : "";
+                        return cell.getValue()===1 ? '<span style="color: red;">已暂停</span>' : "";
                     }
                 },
                 {

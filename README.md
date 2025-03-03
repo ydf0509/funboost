@@ -26,7 +26,7 @@ funboost的功能是全面性重量级，用户能想得到的功能99%全都有
 
 python函数加速器，框架包罗万象，一统编程思维，兼容50% python编程业务场景，适用范围广。
 python万能分布式函数调度框架，支持5种并发模式，30+种消息队列中间件(或任务队列框架)，
-30种任务控制功能。给任意python函数赋能。 
+30种任务控制功能。给任意python函数赋能。
 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。
 
 框架只需要学习@boost这一个装饰器的入参就可以，所有用法几乎和1.3例子一摸一样，非常简化简单。
@@ -408,7 +408,9 @@ if __name__ == "__main__":
 
 <a href="https://imgse.com/i/pkFkCUe"><img src="https://s21.ax1x.com/2024/04/29/pkFkCUe.png" alt="pkFkCUe.png" border="0" /></a>
 
-<a href="https://imgse.com/i/pkE6IYR"><img src="https://s21.ax1x.com/2024/05/07/pkE6IYR.png" alt="pkE6IYR.png" border="0" /></a>
+[![pEGDim8.png](https://s21.ax1x.com/2025/03/03/pEGDim8.png)](https://imgse.com/i/pEGDim8)
+[![pEGD96P.png](https://s21.ax1x.com/2025/03/03/pEGD96P.png)](https://imgse.com/i/pEGD96P)
+[![pEGDCOf.png](https://s21.ax1x.com/2025/03/03/pEGDCOf.png)](https://imgse.com/i/pEGDCOf)
 
 ## 1.4  python分布式函数执行为什么重要？
 

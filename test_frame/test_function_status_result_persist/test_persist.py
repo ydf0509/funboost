@@ -5,8 +5,8 @@ import time
 import random
 
 class MyBoosterParams(BoosterParams):
-    # function_result_status_persistance_conf:FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
-    #     is_save_status=True, is_save_result=True, expire_seconds=7 * 24 * 3600)
+    function_result_status_persistance_conf:FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
+        is_save_status=True, is_save_result=True, expire_seconds=7 * 24 * 3600)
     is_send_consumer_hearbeat_to_redis:bool = True
 
 

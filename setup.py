@@ -80,7 +80,7 @@ setup(
     install_requires=[
         'nb_log>=13.2',
         'nb_libs>=1.8',
-        'nb_time>=2.1',
+        'nb_time>=2.3',
         "pymongo>=4.6.3",  # 3.5.1  -> 4.0.2
         'AMQPStorm==2.10.6',
         'rabbitpy==2.0.1',

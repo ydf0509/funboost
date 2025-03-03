@@ -1135,36 +1135,40 @@ class MetricCalculation:
         self.last_execute_task_time = time.time()  # 最近一次执行任务的时间。
         self.last_x_s_execute_count = 0
         self.last_x_s_execute_count_fail = 0
+        self.last_x_s_avarage_function_spend_time = None
         self.last_show_remaining_execution_time = 0
         self.show_remaining_execution_time_interval = 300
         self.msg_num_in_broker = 0
         self.last_get_msg_num_ts = 0
         self.last_timestamp_when_has_task_in_queue = 0
         self.last_timestamp_print_msg_num = 0
-        self.avarage_function_spend_time = None
+
         self.total_consume_count_from_start =0
         self.total_consume_count_from_start_fail =0
+        self.total_cost_time_from_start = 0  # 函数运行累计花费时间
 
     def cal(self,t_start_run_fun:float,current_function_result_status:FunctionResultStatus):
+        self.last_execute_task_time = time.time()
+        current_msg_cost_time = time.time() - t_start_run_fun
         self.execute_task_times_every_unit_time_temp += 1
         self.total_consume_count_from_start  +=1
+        self.total_cost_time_from_start += current_msg_cost_time
         if current_function_result_status.success is False:
             self.execute_task_times_every_unit_time_temp_fail += 1
             self.total_consume_count_from_start_fail +=1
-        self.consuming_function_cost_time_total_every_unit_time += time.time() - t_start_run_fun
-        self.last_execute_task_time = time.time()
+        self.consuming_function_cost_time_total_every_unit_time += current_msg_cost_time
+        
         if time.time() - self.current_time_for_execute_task_times_every_unit_time > self.unit_time_for_count:
             self.last_x_s_execute_count = self.execute_task_times_every_unit_time_temp
             self.last_x_s_execute_count_fail = self.execute_task_times_every_unit_time_temp_fail
-            self.avarage_function_spend_time = round(self.consuming_function_cost_time_total_every_unit_time / self.last_x_s_execute_count, 4)
+            self.last_x_s_avarage_function_spend_time = round(self.consuming_function_cost_time_total_every_unit_time / self.last_x_s_execute_count, 3)
             msg = f'{self.unit_time_for_count} 秒内执行了 {self.last_x_s_execute_count} 次函数 [ {self.consumer.consuming_function.__name__} ] ,' \
-                  f'失败了{self.last_x_s_execute_count_fail} 次,函数平均运行耗时 {self.avarage_function_spend_time} 秒。 '
+                  f'失败了{self.last_x_s_execute_count_fail} 次,函数平均运行耗时 {self.last_x_s_avarage_function_spend_time} 秒。 '
             self.consumer.logger.info(msg)
             if time.time() - self.last_show_remaining_execution_time > self.show_remaining_execution_time_interval:
                 self.msg_num_in_broker = self.consumer.publisher_of_same_queue.get_message_count()
                 self.last_get_msg_num_ts = time.time()
                 if self.msg_num_in_broker != -1:  # 有的中间件无法统计或没实现统计队列剩余数量的，统一返回的是-1，不显示这句话。
-                    # msg += f''' ，预计还需要 {time_util.seconds_to_hour_minute_second(self._msg_num_in_broker * avarage_function_spend_time / active_consumer_num)} 时间 才能执行完成 {self._msg_num_in_broker}个剩余的任务'''
                     need_time = time_util.seconds_to_hour_minute_second(self.msg_num_in_broker / (self.execute_task_times_every_unit_time_temp / self.unit_time_for_count) /
                                                                         self.consumer._distributed_consumer_statistics.active_consumer_num)
                     msg += f''' 预计还需要 {need_time} 时间 才能执行完成 队列 {self.consumer.queue_name} 中的 {self.msg_num_in_broker} 个剩余任务'''
@@ -1181,14 +1185,16 @@ class MetricCalculation:
             'last_x_s_execute_count':self.last_x_s_execute_count,
             'last_x_s_execute_count_fail':self.last_x_s_execute_count_fail,
             'last_execute_task_time':self.last_execute_task_time,
+            'last_x_s_avarage_function_spend_time':self.last_x_s_avarage_function_spend_time,
             # 'last_show_remaining_execution_time':self.last_show_remaining_execution_time,
-            # 'msg_num_in_broker':self.msg_num_in_broker,
+            'msg_num_in_broker':self.msg_num_in_broker,
             'current_time_for_execute_task_times_every_unit_time':self.current_time_for_execute_task_times_every_unit_time,
             'last_timestamp_when_has_task_in_queue':self.last_timestamp_when_has_task_in_queue,
-            'avarage_function_spend_time':self.avarage_function_spend_time,
             'total_consume_count_from_start':self.total_consume_count_from_start,
-            'total_consume_count_from_start_fail':self.total_consume_count_from_start_fail
-
+            'total_consume_count_from_start_fail':self.total_consume_count_from_start_fail,
+            'total_cost_time_from_start':self.total_cost_time_from_start,
+            'consuming_function_cost_time_total_every_unit_time':self.consuming_function_cost_time_total_every_unit_time,
+            'avarage_function_spend_time_from_start':round(self.total_cost_time_from_start / self.total_consume_count_from_start,3) if self.total_consume_count_from_start else None,
         }
 
 

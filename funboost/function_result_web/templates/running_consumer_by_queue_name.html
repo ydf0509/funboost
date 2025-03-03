@@ -132,7 +132,7 @@
                          layout: "fitDataTable",  // 改为 fitDataTable
         responsiveLayout: false, // 禁用响应式布局
                         columns: [
-                        {title: "<br><br>队列名称", field: "queue_name","width":200},
+                        {title: "<br><br>队列名称", field: "queue_name"},
                             {title: "<br><br>消费函数", field: "consuming_function"},
                             {title: "<br><br>主机名", field: "computer_name"},
                             {title: "<br><br>IP地址", field: "computer_ip"},
@@ -142,8 +142,12 @@
                             
                             {title:"近10秒<br>运行完成<br>消息个数",field:"last_x_s_execute_count", formatter:"html","width":100},
                             {title:"近10秒<br>运行失败<br>消息个数",field:"last_x_s_execute_count_fail", formatter:"html","width":100},
+                            {title:"近10秒<br>函数运行<br>平均耗时",field:"last_x_s_avarage_function_spend_time", formatter:"html","width":100},
+                            
                             {title:"累计<br>运行完成<br>消息个数",field:"total_consume_count_from_start", formatter:"html","width":100},
                             {title:"累计<br>运行失败<br>消息个数",field:"total_consume_count_from_start_fail", formatter:"html","width":100},
+                            {title:"累计<br>函数运行<br>平均耗时",field:"avarage_function_spend_time_from_start", formatter:"html","width":100},
+                            
                             {title: "<br><br>代码文件", field: "code_filename"},
                             // {title: "<br><br>consumer_id", field: "consumer_id"},
                             {title: "<br><br>consumer_uuid", field: "consumer_uuid"},

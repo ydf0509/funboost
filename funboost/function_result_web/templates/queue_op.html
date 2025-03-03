@@ -77,10 +77,14 @@
                 }
             },
             columns: [
-                { title: "<br>队列名字", field: "queue_name", sorter: "string", width: 250 },
+                { title: "<br>队列名字", field: "queue_name", sorter: "string"  },
                 { title: "broker<br>类型", field: "broker_kind", sorter: "string", width: 100 },
                 { title: "近10秒<br>完成", field: "all_consumers_last_x_s_execute_count", sorter: "number", width: 100 },
-                { title: "近10秒<br>失败", field: "all_consumers_last_x_s_execute_count_fail", sorter: "int", width: 100 },
+                { title: "近10秒<br>失败", field: "all_consumers_last_x_s_execute_count_fail", sorter: "number", width: 100 },
+
+                { title: "近10秒<br>平均耗时", field: "all_consumers_last_x_s_avarage_function_spend_time", sorter: "number", width: 100 },
+                { title: "累计<br>平均耗时", field: "all_consumers_avarage_function_spend_time_from_start", sorter: "number", width: 100 },
+
                 { title: "<br>消息数量", field: "msg_count", sorter: "number", width: 170,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
@@ -139,7 +143,9 @@
                     consumer_count: data.active_consumers.length,
                     active_consumers: data.active_consumers,
                     queue_params: data.queue_params,
-                    pause_flag: data.pause_flag 
+                    pause_flag: data.pause_flag ,
+                    all_consumers_last_x_s_avarage_function_spend_time:data.all_consumers_last_x_s_avarage_function_spend_time,
+                    all_consumers_avarage_function_spend_time_from_start:data.all_consumers_avarage_function_spend_time_from_start
                 }));
             },
         });
@@ -269,15 +275,17 @@
                                 <td>${consumer.code_filename}</td>,
                                 <td>${consumer.last_x_s_execute_count}</td>
                                 <td>${consumer.last_x_s_execute_count_fail}</td>
+                                <td>${consumer.last_x_s_avarage_function_spend_time}</td>
                                 <td>${consumer.total_consume_count_from_start}</td>
                                 <td>${consumer.total_consume_count_from_start_fail}</td>
+                                <td>${consumer.avarage_function_spend_time_from_start}</td>
                             </tr>
                         `;
                     });
                 
                     const modalHtml = `
                         <div class="modal" id="consumerDetailsModal" tabindex="-1" role="dialog">
-                            <div class="modal-dialog" style="width: 80%;" role="document">
+                            <div class="modal-dialog" style="width: 90%;" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -296,8 +304,10 @@
                                                         <th>代码文件名</th>
                                                         <th>近10秒<br>运行完成<br>消息个数</th>
                                                         <th>近10秒<br>运行失败<br>消息个数</th>
+                                                        <th>近10秒<br>函数运行<br>平均耗时</th>
                                                         <th>累计<br>运行完成<br>消息个数</th>
                                                         <th>累计<br>运行失败<br>消息个数</th>
+                                                        <th>累计<br>函数运行<br>平均耗时</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>

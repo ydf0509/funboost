@@ -112,6 +112,16 @@ class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
             if info_dict['report_ts'] > time.time() - 15 and info_dict['last_get_msg_num_ts'] > time.time() - 1200:
                 queue__msg_count_dict[queue_name] = info_dict['msg_num_in_broker']
         return queue__msg_count_dict
+
+    @staticmethod
+    def _sum_filed_from_active_consumers(active_consumers:typing.List[dict],filed:str):
+        s = 0
+        for c in active_consumers:
+            # print(c)
+            if c[filed]:
+                # print(c[filed])
+                s+=c[filed]
+        return s
     
     def get_queue_params_and_active_consumers(self):
         queue__active_consumers_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
@@ -121,19 +131,29 @@ class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
         queue_params_and_active_consumers = {}
 
         for queue, consumer_params in  queue__consumer_params_map.items():
+            
             active_consumers = queue__active_consumers_map.get(queue, [])
-            all_consumers_last_x_s_execute_count = 0
-            all_consumers_last_x_s_execute_count_fail =0
-            for c in active_consumers:
-                all_consumers_last_x_s_execute_count += c['last_x_s_execute_count']
-                all_consumers_last_x_s_execute_count_fail += c['last_x_s_execute_count_fail']
+            # print(queue,active_consumers)
+            all_consumers_last_x_s_execute_count = self._sum_filed_from_active_consumers(active_consumers,'last_x_s_execute_count')
+            all_consumers_last_x_s_execute_count_fail = self._sum_filed_from_active_consumers(active_consumers, 'last_x_s_execute_count_fail')
+            all_consumers_consuming_function_cost_time_total_every_unit_time = self._sum_filed_from_active_consumers(active_consumers, 'consuming_function_cost_time_total_every_unit_time')
+            all_consumers_last_x_s_avarage_function_spend_time = round( all_consumers_consuming_function_cost_time_total_every_unit_time / all_consumers_last_x_s_execute_count,3) if all_consumers_last_x_s_execute_count else None
+            
+            all_consumers_total_consume_count_from_start = self._sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start')
+            all_consumers_total_cost_time_from_start =self._sum_filed_from_active_consumers(active_consumers, 'total_cost_time_from_start')
+            all_consumers_avarage_function_spend_time_from_start = round(all_consumers_total_cost_time_from_start / all_consumers_total_consume_count_from_start,3) if all_consumers_total_consume_count_from_start else None
+
             queue_params_and_active_consumers[queue] = {
-            'queue_params':consumer_params,
-            'active_consumers':active_consumers,
-            'pause_flag':queue__pause_map.get(queue,-1),
-            'msg_num_in_broker':queue__msg_count_dict.get(queue,None),
+                'queue_params':consumer_params,
+                'active_consumers':active_consumers,
+                'pause_flag':queue__pause_map.get(queue,-1),
+                'msg_num_in_broker':queue__msg_count_dict.get(queue,None),
                 'all_consumers_last_x_s_execute_count':all_consumers_last_x_s_execute_count,
                 'all_consumers_last_x_s_execute_count_fail':all_consumers_last_x_s_execute_count_fail,
+                'all_consumers_last_x_s_avarage_function_spend_time':all_consumers_last_x_s_avarage_function_spend_time,
+                'all_consumers_avarage_function_spend_time_from_start':all_consumers_avarage_function_spend_time_from_start,
+                'all_consumers_total_consume_count_from_start':self._sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start'),
+                'all_consumers_total_consume_count_from_start_fail':self._sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start_fail'),
             }
         return queue_params_and_active_consumers
 

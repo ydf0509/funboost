@@ -21,7 +21,7 @@ def f(x):
 @boost(MyBoosterParams(queue_name='queue_test_g02t',broker_kind=BrokerEnum.REDIS,qps=0.5,
 max_retry_times=0,))
 def f2(x):
-    time.sleep(5)
+    time.sleep(2)
     print(f'hello: {x}')
     if random.random() > 0.5:
         raise ValueError('f2 error')
@@ -30,7 +30,7 @@ def f2(x):
 @boost(MyBoosterParams(queue_name='queue_test_g03t',broker_kind=BrokerEnum.REDIS,qps=0.5,
 max_retry_times=0,))
 async def aio_f3(x):
-    await asyncio.sleep(5)
+    await asyncio.sleep(3)
     print(f'f3aa: {x}')
     if random.random() > 0.5:
         raise ValueError('f3 error')

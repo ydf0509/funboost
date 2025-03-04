@@ -1131,7 +1131,7 @@ class MetricCalculation:
         self.execute_task_times_every_unit_time_temp = 0  # 每单位时间执行了多少次任务。
         self.execute_task_times_every_unit_time_temp_fail =0  # 每单位时间执行了多少次任务失败。
         self.current_time_for_execute_task_times_every_unit_time = time.time()
-        self.consuming_function_cost_time_total_every_unit_time = 0
+        self.consuming_function_cost_time_total_every_unit_time_tmp = 0
         self.last_execute_task_time = time.time()  # 最近一次执行任务的时间。
         self.last_x_s_execute_count = 0
         self.last_x_s_execute_count_fail = 0
@@ -1146,6 +1146,7 @@ class MetricCalculation:
         self.total_consume_count_from_start =0
         self.total_consume_count_from_start_fail =0
         self.total_cost_time_from_start = 0  # 函数运行累计花费时间
+        self.last_x_s_total_cost_time = None
 
     def cal(self,t_start_run_fun:float,current_function_result_status:FunctionResultStatus):
         self.last_execute_task_time = time.time()
@@ -1156,12 +1157,13 @@ class MetricCalculation:
         if current_function_result_status.success is False:
             self.execute_task_times_every_unit_time_temp_fail += 1
             self.total_consume_count_from_start_fail +=1
-        self.consuming_function_cost_time_total_every_unit_time += current_msg_cost_time
+        self.consuming_function_cost_time_total_every_unit_time_tmp += current_msg_cost_time
         
         if time.time() - self.current_time_for_execute_task_times_every_unit_time > self.unit_time_for_count:
             self.last_x_s_execute_count = self.execute_task_times_every_unit_time_temp
             self.last_x_s_execute_count_fail = self.execute_task_times_every_unit_time_temp_fail
-            self.last_x_s_avarage_function_spend_time = round(self.consuming_function_cost_time_total_every_unit_time / self.last_x_s_execute_count, 3)
+            self.last_x_s_total_cost_time = self.consuming_function_cost_time_total_every_unit_time_tmp
+            self.last_x_s_avarage_function_spend_time = round(self.last_x_s_total_cost_time / self.last_x_s_execute_count, 3)
             msg = f'{self.unit_time_for_count} 秒内执行了 {self.last_x_s_execute_count} 次函数 [ {self.consumer.consuming_function.__name__} ] ,' \
                   f'失败了{self.last_x_s_execute_count_fail} 次,函数平均运行耗时 {self.last_x_s_avarage_function_spend_time} 秒。 '
             self.consumer.logger.info(msg)
@@ -1175,7 +1177,7 @@ class MetricCalculation:
                     self.consumer.logger.info(msg)
                     self.last_show_remaining_execution_time = time.time()
             self.current_time_for_execute_task_times_every_unit_time = time.time()
-            self.consuming_function_cost_time_total_every_unit_time = 0
+            self.consuming_function_cost_time_total_every_unit_time_tmp = 0
             self.execute_task_times_every_unit_time_temp = 0
             self.execute_task_times_every_unit_time_temp_fail = 0
 
@@ -1193,7 +1195,7 @@ class MetricCalculation:
             'total_consume_count_from_start':self.total_consume_count_from_start,
             'total_consume_count_from_start_fail':self.total_consume_count_from_start_fail,
             'total_cost_time_from_start':self.total_cost_time_from_start,
-            'consuming_function_cost_time_total_every_unit_time':self.consuming_function_cost_time_total_every_unit_time,
+            'last_x_s_total_cost_time':self.last_x_s_total_cost_time,
             'avarage_function_spend_time_from_start':round(self.total_cost_time_from_start / self.total_consume_count_from_start,3) if self.total_consume_count_from_start else None,
         }
 

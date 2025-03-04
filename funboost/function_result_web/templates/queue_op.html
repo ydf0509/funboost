@@ -57,10 +57,11 @@
         var table = new Tabulator("#queue-table", {
             theme: "bootstrap3",
             ajaxURL: "/queue/params_and_active_consumers",
-            layout: "fitColumns",
-            responsiveLayout: "collapse",
+            layout: "fitDataTable",
+            responsiveLayout: false,
             pagination: true,
             paginationSize: 1000,
+            height: "auto",
             locale: true,
             langs: {
                 "zh-cn": {
@@ -77,15 +78,15 @@
                 }
             },
             columns: [
-                { title: "<br>队列名字", field: "queue_name", sorter: "string"  },
-                { title: "broker<br>类型", field: "broker_kind", sorter: "string", width: 100 },
-                { title: "近10秒<br>完成", field: "all_consumers_last_x_s_execute_count", sorter: "number", width: 100 },
-                { title: "近10秒<br>失败", field: "all_consumers_last_x_s_execute_count_fail", sorter: "number", width: 100 },
+                { title: "<br><br>队列名字", field: "queue_name", sorter: "string", headerSort: true, headerHozAlign: "center", hozAlign: "left", minWidth: 200, headerWordWrap: true },
+                { title: "<br>broker<br>类型", field: "broker_kind", sorter: "string"  },
+                { title: "<br>近10秒<br>完成", field: "all_consumers_last_x_s_execute_count", sorter: "number", width: 100 },
+                { title: "<br>近10秒<br>失败", field: "all_consumers_last_x_s_execute_count_fail", sorter: "number", width: 100 },
 
-                { title: "近10秒<br>平均耗时", field: "all_consumers_last_x_s_avarage_function_spend_time", sorter: "number", width: 100 },
-                { title: "累计<br>平均耗时", field: "all_consumers_avarage_function_spend_time_from_start", sorter: "number", width: 100 },
+                { title: "近10秒<br>函数运行<br>平均耗时", field: "all_consumers_last_x_s_avarage_function_spend_time", sorter: "number", width: 100 },
+                { title: "累计<br>函数运行<br>平均耗时", field: "all_consumers_avarage_function_spend_time_from_start", sorter: "number", width: 100 },
 
-                { title: "<br>消息数量", field: "msg_count", sorter: "number", width: 170,
+                { title: "<br><br>消息数量", field: "msg_count", sorter: "number", width: 170,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
                         return `
@@ -96,7 +97,7 @@
                         `;
                     }
                 },
-                { title: "<br>consumer数量", field: "consumer_count", sorter: "number", width: 200,
+                { title: "<br><br>consumer数量", field: "consumer_count", sorter: "number", width: 200,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
                         var consumers = row.active_consumers;
@@ -111,7 +112,7 @@
                     }
                 },
                 { 
-                    title: "暂停消<br>费状态",
+                    title: "暂停<br>消费<br>状态",
                     field: "pause_flag",
                     width: 100,
                     formatter: function(cell) {
@@ -119,7 +120,7 @@
                     }
                 },
                 {
-                    title: "<br>操作",
+                    title: "<br><br>操作",
                     width: 400,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();

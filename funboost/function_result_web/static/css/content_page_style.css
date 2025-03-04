@@ -35,5 +35,5 @@ max-height: 600px !important;  /* 确保覆盖默认样式 */
     max-width: 100%;
 }
 .tabulator {
-    min-width: 1500px;
+    /* min-width: 1500px; */
 }

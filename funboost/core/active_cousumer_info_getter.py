@@ -136,8 +136,8 @@ class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
             # print(queue,active_consumers)
             all_consumers_last_x_s_execute_count = self._sum_filed_from_active_consumers(active_consumers,'last_x_s_execute_count')
             all_consumers_last_x_s_execute_count_fail = self._sum_filed_from_active_consumers(active_consumers, 'last_x_s_execute_count_fail')
-            all_consumers_consuming_function_cost_time_total_every_unit_time = self._sum_filed_from_active_consumers(active_consumers, 'consuming_function_cost_time_total_every_unit_time')
-            all_consumers_last_x_s_avarage_function_spend_time = round( all_consumers_consuming_function_cost_time_total_every_unit_time / all_consumers_last_x_s_execute_count,3) if all_consumers_last_x_s_execute_count else None
+            all_consumers_last_x_s_total_cost_time = self._sum_filed_from_active_consumers(active_consumers, 'last_x_s_total_cost_time')
+            all_consumers_last_x_s_avarage_function_spend_time = round( all_consumers_last_x_s_total_cost_time / all_consumers_last_x_s_execute_count,3) if all_consumers_last_x_s_execute_count else None
             
             all_consumers_total_consume_count_from_start = self._sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start')
             all_consumers_total_cost_time_from_start =self._sum_filed_from_active_consumers(active_consumers, 'total_cost_time_from_start')

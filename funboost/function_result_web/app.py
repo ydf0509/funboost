@@ -242,7 +242,7 @@ if __name__ == '__main__':
     # with app.test_request_context():
     #     print(url_for('query_cols_view'))
 
-    app.run(debug=True, threaded=True, host='0.0.0.0', port=27018)
+    app.run(debug=False, threaded=True, host='0.0.0.0', port=27018)
 
     '''
     linux 是export , win是 set

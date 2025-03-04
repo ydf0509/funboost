@@ -36,6 +36,7 @@ python万能分布式函数调度框架，支持5种并发模式，30+种消息�
 但是funboost完全不会这样,加上或去掉@boost装饰器,对你的项目影响为0,用户照常使用,
 所以用户可以对任意项目,任意时候,引入使用funboost或者去掉使用funboost,代码组织形式不需要发生变化.
 
+通过funboost web 管理系统，支持全面 查看 监控 管理 funboost的任务消费。
 </pre>
 
 ### 框架评价
@@ -401,16 +402,30 @@ if __name__ == "__main__":
 """
 ```
 
-运行截图:
+控制台运行截图:
 
 <a href="https://imgse.com/i/pkFkP4H"><img src="https://s21.ax1x.com/2024/04/29/pkFkP4H.png" alt="pkFkP4H.png" border="0" /></a>
 
 
 <a href="https://imgse.com/i/pkFkCUe"><img src="https://s21.ax1x.com/2024/04/29/pkFkCUe.png" alt="pkFkCUe.png" border="0" /></a>
 
-[![pEGDim8.png](https://s21.ax1x.com/2025/03/03/pEGDim8.png)](https://imgse.com/i/pEGDim8)
-[![pEGD96P.png](https://s21.ax1x.com/2025/03/03/pEGD96P.png)](https://imgse.com/i/pEGD96P)
-[![pEGDCOf.png](https://s21.ax1x.com/2025/03/03/pEGDCOf.png)](https://imgse.com/i/pEGDCOf)
+
+funboost web 截图：
+
+函数消费结果：可查看和搜索函数实时消费状态和结果
+[![pEJCffK.png](https://s21.ax1x.com/2025/03/04/pEJCffK.png)](https://imgse.com/i/pEJCffK)
+
+运行中消费者 by ip： 根据ip搜索有哪些消费者
+[![pEJCRFx.png](https://s21.ax1x.com/2025/03/04/pEJCRFx.png)](https://imgse.com/i/pEJCRFx)
+
+
+队列操作：查看和操作队列
+[![pEJC6m9.png](https://s21.ax1x.com/2025/03/04/pEJC6m9.png)](https://imgse.com/i/pEJC6m9)
+
+队列操作，查看消费者详情：查看队列的所有消费者详情
+[![pEJCgT1.png](https://s21.ax1x.com/2025/03/04/pEJCgT1.png)](https://imgse.com/i/pEJCgT1)
+
+
 
 ## 1.4  python分布式函数执行为什么重要？
 

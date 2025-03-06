@@ -1,6 +1,7 @@
 """
-flxed_thread_pool.py 固定大小的线程池, 最简单的实现线程池方式,任何人都可以写得出来.弊端是代码不会自动结束,因为线程池的每个线程 while 1是非守护线程,不能自动判断代码是否需要结束.
-如果有的人的代码是长期运行不需要结束的,可以用这种线程池
+flxed_thread_pool.py 固定大小的非智能线程池, 最简单的粗暴实现线程池方式,任何人都可以写得出来.
+弊端是代码不会自动结束,因为线程池的每个线程 while 1是非守护线程,不能自动判断代码是否需要结束.
+如果有的人的代码是长期运行不需要结束的,可以用这种线程池。
 """
 
 import threading
@@ -12,7 +13,7 @@ from funboost.core.loggers import FunboostFileLoggerMixin
 
 
 class FixedThreadPool(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
-    def __init__(self, max_workers: int = None):
+    def __init__(self, max_workers: int = 8):
         self._max_workers = max_workers
         self._work_queue = Queue(maxsize=10)
         self._start_thrads()

@@ -21,7 +21,7 @@ from funboost.core.loggers import FunboostFileLoggerMixin, LoggerLevelSetterMixi
 
 class FlexibleThreadPool(FunboostFileLoggerMixin, LoggerLevelSetterMixin, FunboostBaseConcurrentPool):
     KEEP_ALIVE_TIME = 10
-    MIN_WORKERS = 2
+    MIN_WORKERS = 1
 
     def __init__(self, max_workers: int = None,work_queue_maxsize=10):
         self.work_queue = queue.Queue(work_queue_maxsize)

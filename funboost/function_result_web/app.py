@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/9/18 0018 14:46
+import threading
+
 import sys
-print(sys.path)
+
 
 import os
-print("PYTHONPATH:", os.environ.get('PYTHONPATH'))
+# print("PYTHONPATH:", os.environ.get('PYTHONPATH'))
 
 
 import datetime
@@ -236,6 +238,14 @@ def resume_consume(queue_name):
     RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name,'0')
     return jsonify({'success':True})
 
+def start_funboost_web_manager(host='0.0.0.0', port=27018,block=False):
+    print('start_funboost_web_manager , sys.path :', sys.path)
+    def _start_funboost_web_manager():
+        app.run(debug=False, threaded=True, host=host, port=port)
+    if block is  True:
+        _start_funboost_web_manager()
+    else:
+        threading.Thread(target=_start_funboost_web_manager).start()
 
 if __name__ == '__main__':
     # app.jinja_env.auto_reload = True

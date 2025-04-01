@@ -1317,3 +1317,5 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
             self._consumer._pause_flag = 1
         else:
             self._consumer._pause_flag = 0
+  
+      

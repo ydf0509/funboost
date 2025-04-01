@@ -4,7 +4,7 @@ print(sys.path)
 from funboost import boost, BrokerEnum
 from funboost.timing_job.timing_push import ApsJobAdder
 
-
+a=rrr
 # 1. 定义任务函数
 @boost('queue_test_add_numbers', broker_kind=BrokerEnum.REDIS)
 def add_numbers(x, y):

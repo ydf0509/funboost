@@ -5,8 +5,9 @@ from funboost.utils.time_util import DatetimeConverter
 from funboost.utils.redis_manager import RedisMixin
 # import nb_log
 from funboost.core.loggers import FunboostFileLoggerMixin
+from funboost.core.current_task import FctContextThread
 
-class ThreadKillAble(threading.Thread):
+class ThreadKillAble(FctContextThread):
     task_id = None
     killed = False
     event_kill = threading.Event()

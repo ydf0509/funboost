@@ -1,8 +1,9 @@
 import asyncio
 
-from funboost import boost, FunctionResultStatusPersistanceConfig, BoosterParams,BrokerEnum,ctrl_c_recv,ConcurrentModeEnum
+from funboost import boost, FunctionResultStatusPersistanceConfig, BoosterParams,BrokerEnum,ctrl_c_recv,ConcurrentModeEnum,start_funboost_web_manager
 import time
 import random
+
 
 class MyBoosterParams(BoosterParams):
     function_result_status_persistance_conf:FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
@@ -37,12 +38,14 @@ async def aio_f3(x):
     return x + 1
 
 if __name__ == '__main__':
+    start_funboost_web_manager(port=27018)  # 也可以在python代码中启动web,启动 funboost web manager funboost队列管理界面
+
     f.multi_process_consume(3)
     f2.multi_process_consume(4)
     f.consume()
     f2.consume()
     aio_f3.consume()
-    for i in range(0, 1000000):
+    for i in range(0, 1000):
         f.push(i)
         f2.push(i)
         aio_f3.push(i)

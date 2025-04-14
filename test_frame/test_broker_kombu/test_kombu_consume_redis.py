@@ -1,7 +1,7 @@
 import time
 
 from funboost import BrokerEnum, boost,FunctionResultStatusPersistanceConfig
-
+import kombu
 
 @boost('test_kombu2b', broker_kind=BrokerEnum.KOMBU, qps=0.1,
        function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True),

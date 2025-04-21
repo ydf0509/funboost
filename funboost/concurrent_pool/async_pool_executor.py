@@ -61,6 +61,7 @@ class AsyncPoolExecutorLtPy310(FunboostFileLoggerMixin,FunboostBaseConcurrentPoo
         """
         self._size = size
         self.loop = loop or asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
         self._sem = asyncio.Semaphore(self._size, loop=self.loop)
         self._queue = asyncio.Queue(maxsize=size, loop=self.loop)
         self._lock = threading.Lock()

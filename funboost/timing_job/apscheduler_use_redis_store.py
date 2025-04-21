@@ -47,7 +47,7 @@ class FunboostBackgroundSchedulerProcessJobsWithinRedisLock(FunboostBackgroundSc
 jobstores = {
     "default": RedisJobStore(db=BrokerConnConfig.REDIS_DB, host=BrokerConnConfig.REDIS_HOST,
                              port=BrokerConnConfig.REDIS_PORT, password=BrokerConnConfig.REDIS_PASSWORD,
-                             username=BrokerConnConfig.REDIS_USERNAME, jobs_key='funboost.apscheduler.jobs')
+                             username=BrokerConnConfig.REDIS_USERNAME, jobs_key='funboost.apscheduler.jobs',run_times_key="funboost.apscheduler.run_times")
 }
 
 funboost_background_scheduler_redis_store = FunboostBackgroundSchedulerProcessJobsWithinRedisLock(timezone=FunboostCommonConfig.TIMEZONE, daemon=False, jobstores=jobstores)

@@ -5,7 +5,7 @@ print(sys.path)
 import os
 
 print(os.getenv('path'))
-from auto_run_on_remote import run_current_script_on_remote
+# from auto_run_on_remote import run_current_script_on_remote
 # run_current_script_on_remote()
 import json
 import os
@@ -24,7 +24,9 @@ pool = ThreadPoolExecutorShrinkAble(10)
 
 # @boost('test_queue66', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=5, log_level=10, is_print_detail_exception=False, is_show_message_get_from_broker=False,
 #            is_using_distributed_frequency_control=True)
-@boost(BoosterParams(queue_name='test_queue70ac', do_task_filtering=True, qps=5, log_level=10, broker_exclusive_config={'a': 1},
+@boost(BoosterParams(queue_name='test_queue70ac',
+ do_task_filtering=True, qps=5, log_level=10, broker_exclusive_config={'a': 1},
+ broker_kind=BrokerEnum.REDIS,
                      ))
 def f(x, y):
     # time.sleep(100)
@@ -36,7 +38,7 @@ pool2 = ProcessPoolExecutor(4)
 
 
 
-@boost(BoosterParams(queue_name='test_queue77h6j', log_level=10, broker_kind=BrokerEnum.RABBITMQ,
+@boost(BoosterParams(queue_name='test_queue77h6j', log_level=10, broker_kind=BrokerEnum.REDIS_ACK_ABLE,
        create_logger_file=True, is_show_message_get_from_broker=True, concurrent_mode=ConcurrentModeEnum.THREADING,
        concurrent_num=50, qps=20, is_print_detail_exception=False, is_push_to_dlx_queue_when_retry_max_times=True,
        retry_interval=10,
@@ -67,7 +69,7 @@ if __name__ == '__main__':
     # f.clear()
     # f2.clear()
     from nb_log import handlers
-    nb_log.get_logger()
+    nb_log.get_logger(None)
     
 
     # nb_log.LogManager(f2.consumer.logger.name).remove_handler_by_handler_class(nb_log.handlers.ColorHandler)

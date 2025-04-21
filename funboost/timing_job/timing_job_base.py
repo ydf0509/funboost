@@ -117,6 +117,8 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
         args_list = list(args)
         args_list.insert(0, func.queue_name)
         args = tuple(args_list)
+        if name is None:
+            name = f'push_fun_params_to_broker_for_queue_{func.queue_name}'
         return self.add_job(push_fun_params_to_broker, trigger, args, kwargs, id, name,
                             misfire_grace_time, coalesce, max_instances,
                             next_run_time, jobstore, executor,

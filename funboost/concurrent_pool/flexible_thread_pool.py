@@ -59,6 +59,7 @@ def run_sync_or_async_fun000(func, *args, **kwargs):
     fun_is_asyncio = inspect.iscoroutinefunction(func)
     if fun_is_asyncio:
         loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         try:
             return loop.run_until_complete(func(*args, **kwargs))
         finally:

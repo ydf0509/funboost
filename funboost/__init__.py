@@ -13,7 +13,7 @@ set_frame_config这个模块的 use_config_form_funboost_config_module() 是核�
 这段注释说明和使用的用户无关,只和框架开发人员有关.
 '''
 
-__version__ = "48.6"
+__version__ = "48.7"
 
 from funboost.set_frame_config import show_frame_config
 
@@ -26,7 +26,7 @@ from funboost.core.func_params_model import (BoosterParams, BoosterParamsComplet
                                              PriorityConsumingControlConfig, PublisherParams, BoosterParamsComplete)
 from funboost.funboost_config_deafult import FunboostCommonConfig, BrokerConnConfig
 
-from funboost.core.fabric_deploy_helper import fabric_deploy, kill_all_remote_tasks
+# from funboost.core.fabric_deploy_helper import fabric_deploy, kill_all_remote_tasks # fabric2还没适配python3.12以上版本，不在这里导入，否则高版本python报错。
 from funboost.utils.paramiko_util import ParamikoFolderUploader
 
 from funboost.consumers.base_consumer import (wait_for_possible_has_finish_all_tasks_by_conusmer_list,

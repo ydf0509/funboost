@@ -15,9 +15,12 @@ url = 'http://mini.eastday.com/assets/v1/js/search_word.js'
 # rl = 'https://www.google-analytics.com/analytics.js'
 
 loop = asyncio.new_event_loop()
-ss = aiohttp.ClientSession(loop=loop, )
 
-# ss_main_thread = aiohttp.ClientSession()
+asyncio.set_event_loop(loop)
+# ss = aiohttp.ClientSession(loop=loop, )  # asyncio.set_event_loop(loop) 和  ss = aiohttp.ClientSession(loop=loop, ) 亲自传递loop 这两行二选一
+
+# loop=None
+ss = aiohttp.ClientSession(loop=loop)
 
 @boost('test_async_queue2', concurrent_mode=ConcurrentModeEnum.ASYNC, broker_kind=BrokerEnum.REDIS, log_level=10,
        concurrent_num=500,
@@ -31,10 +34,10 @@ async def async_f(x):
     # print(x,55555555555)
     # await asyncio.sleep(1,)
     # print(x,66666666666)
-    ss = aiohttp.ClientSession( )
+    # ss = aiohttp.ClientSession( )
     async with ss.request('get', url=url) as resp:  # 如果是这样请求，boost装饰器必须指定specify_async_loop，
         text = await resp.text()
-        # print(x, resp.url, text[:10])
+        print(x, resp.url, text[:10])
     print(x)
     return x
 

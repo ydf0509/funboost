@@ -25,7 +25,7 @@ class ApsJobAdder:
 
     queue__redis_aps_map = {}
 
-    def __init__(self, booster: Booster, job_store_kind: str = 'memory'):
+    def __init__(self, booster: Booster, job_store_kind: str = 'memory',is_auto_start=True,is_auto_paused=False):
         """
         Initialize the ApsJobAdder.
 
@@ -35,6 +35,12 @@ class ApsJobAdder:
         """
         self.booster = booster
         self.job_store_kind = job_store_kind
+        if getattr(self.aps_obj, 'has_started_flag', False) is False:
+            if is_auto_start:
+                self.aps_obj.has_started_flag = True
+                self.aps_obj.start(paused=is_auto_paused)
+
+
 
     @classmethod
     def get_funboost_redis_apscheduler(cls, queue_name):
@@ -75,9 +81,9 @@ class ApsJobAdder:
         funboost的ApsJobAdder对象.add_push_job入参去掉了函数，因为类的实例化时候会把函数传进来，不需要再麻烦用户一次了。
         """
 
-        if not getattr(self.aps_obj, 'has_started_flag', False):
-            self.aps_obj.has_started_flag = True
-            self.aps_obj.start(paused=False)
+        # if not getattr(self.aps_obj, 'has_started_flag', False):
+        #     self.aps_obj.has_started_flag = True
+        #     self.aps_obj.start(paused=False)
         return self.aps_obj.add_push_job(self.booster, trigger, args, kwargs, id, name,
                                          misfire_grace_time, coalesce, max_instances,
                                          next_run_time, jobstore, executor,

@@ -21,7 +21,7 @@ function_result_web0000/
 test_frame/my/
 redis_queue_web/
 test_frame/test_broker_rabbitmq/distributed_frame_config.py
-dist/
+/dist/
 *.egg-info/
 not_up_git/
 distributed_frame_config.py

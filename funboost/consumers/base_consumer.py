@@ -165,6 +165,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._redis_filter = filter_class(self._redis_filter_key_name, consumer_params.task_filtering_expire_seconds)
 
         self._lock_for_count_execute_task_times_every_unit_time = Lock()
+        self._async_lock_for_count_execute_task_times_every_unit_time = asyncio.Lock()
         # self._unit_time_for_count = 10  # 每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。
         # self._execute_task_times_every_unit_time = 0  # 每单位时间执行了多少次任务。
         # self._execute_task_times_every_unit_time_fail =0  # 每单位时间执行了多少次任务失败。
@@ -836,8 +837,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 if (current_function_result_status.success is False and current_retry_times == max_retry_times) or current_function_result_status.success is True:
                     await simple_run_in_executor(push_result)
 
-            # 异步执行不存在线程并发，不需要加锁。
-            self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
+            async with self._async_lock_for_count_execute_task_times_every_unit_time:
+                self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
 
             self.user_custom_record_process_info_func(current_function_result_status)  # 两种方式都可以自定义,记录结果.建议使用文档4.21.b的方式继承来重写
             await self.aio_user_custom_record_process_info_func(current_function_result_status)
@@ -1175,7 +1176,7 @@ class MetricCalculation:
                                                                         self.consumer._distributed_consumer_statistics.active_consumer_num)
                     msg += f''' 预计还需要 {need_time} 时间 才能执行完成 队列 {self.consumer.queue_name} 中的 {self.msg_num_in_broker} 个剩余任务'''
                     self.consumer.logger.info(msg)
-                    self.last_show_remaining_execution_time = time.time()
+                self.last_show_remaining_execution_time = time.time()
             self.current_time_for_execute_task_times_every_unit_time = time.time()
             self.consuming_function_cost_time_total_every_unit_time_tmp = 0
             self.execute_task_times_every_unit_time_temp = 0

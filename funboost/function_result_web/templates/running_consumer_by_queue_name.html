@@ -87,7 +87,7 @@
                     var html = '<option value="">请选择队列名字...</option>';
                     for (var item of result) {
                         html += '<option value="' + item.collection_name + '">' +
-                            item.collection_name + ' (' + item.count + ')</option>';
+                            item.collection_name + '&nbsp;&nbsp;&nbsp;&nbsp;(consumer_count:' + item.count + ')</option>';
                     }
                     $("#col_name_search").html(html);
 
@@ -95,7 +95,7 @@
                     $("#col_name_search").select2({
                         placeholder: "请输入队列名称搜索...",
                         allowClear: true,
-                        width: '300px'
+                        width: '500px'
                     });
 
                     // 监听选择变化

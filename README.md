@@ -415,17 +415,21 @@ funboost web manager 截图：
 函数消费结果：可查看和搜索函数实时消费状态和结果
 [![pEJCffK.png](https://s21.ax1x.com/2025/03/04/pEJCffK.png)](https://imgse.com/i/pEJCffK)
 
+消费速度图：可查看实时和历史消费速度
+[![pEJCWY6.png](https://s21.ax1x.com/2025/03/04/pEJCWY6.png)](https://imgse.com/i/pEJCWY6)
+
 运行中消费者 by ip： 根据ip搜索有哪些消费者
 [![pEJCRFx.png](https://s21.ax1x.com/2025/03/04/pEJCRFx.png)](https://imgse.com/i/pEJCRFx)
 
 
-队列操作：查看和操作队列
+队列操作：查看和操作队列，包括 清空清空 暂停消费 恢复消费 调整qps和并发
 [![pEJC6m9.png](https://s21.ax1x.com/2025/03/04/pEJC6m9.png)](https://imgse.com/i/pEJC6m9)
 
 队列操作，查看消费者详情：查看队列的所有消费者详情
 [![pEJCgT1.png](https://s21.ax1x.com/2025/03/04/pEJCgT1.png)](https://imgse.com/i/pEJCgT1)
 
-
+rpc调用：
+[![pETq8hj.png](https://s21.ax1x.com/2025/04/28/pETq8hj.png)](https://imgse.com/i/pETq8hj)
 
 ## 1.4  python分布式函数执行为什么重要？
 

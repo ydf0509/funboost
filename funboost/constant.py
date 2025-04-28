@@ -113,3 +113,4 @@ class RedisKeys:
     REDIS_KEY_PAUSE_FLAG  = 'funboost_pause_flag' 
     REDIS_KEY_STOP_FLAG = 'funboost_stop_flag'
     QUEUE__MSG_COUNT_MAP = 'funboost_queue__msg_count_map'
+    FUNBOOST_QUEUE__CONSUMER_PARAMS= 'funboost_queue__consumer_parmas'

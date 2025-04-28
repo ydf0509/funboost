@@ -18,6 +18,7 @@ def _check_pass_params():
 
 def main():
     _check_pass_params()
+    
 
     fire.Fire(BoosterFire, )
 
@@ -31,4 +32,5 @@ python -m funboost  --project_root_path=/codes/funboost   --booster_dirs_str=tes
 python -m funboost  --project_root_path=/codes/funboost   --booster_dirs_str=test_frame/test_funboost_cli/test_find_boosters --max_depth=2  push test_find_queue1 --x=1 --y=2
 
 
+python -m funboost  --project_root_path=/codes/funboost  start_web
 '''

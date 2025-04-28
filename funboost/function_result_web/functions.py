@@ -6,9 +6,16 @@ import json
 from pprint import pprint
 import time
 import copy
+import traceback
 from funboost import nb_print
+from funboost.constant import RedisKeys
+from funboost.core.booster import BoostersManager
+from funboost.core.func_params_model import PriorityConsumingControlConfig, PublisherParams
+from funboost.core.msg_result_getter import AsyncResult
+from funboost.core.serialization import Serialization
 from funboost.utils import time_util, decorators, LoggerMixin
 from funboost.utils.mongo_util import MongoMixin
+from funboost.utils.redis_manager import RedisMixin
 
 # from test_frame.my_patch_frame_config import do_patch_frame_config
 #
@@ -144,6 +151,46 @@ class Statistic(LoggerMixin):
                                                  t2.strftime('%Y-%m-%d %H:%M:%S'))
                 self.result['recent_60_seconds']['count_arr'].append(count)
 
+def rpc_call(queue_name, msg_body, need_result, timeout):
+  
+    status_and_result = None
+    task_id = None
+    try:
+        boost_params_json = RedisMixin().redis_db_frame.hget(RedisKeys.FUNBOOST_QUEUE__CONSUMER_PARAMS,queue_name)
+        boost_params_dict = Serialization.to_dict(boost_params_json)
+        broker_kind = boost_params_dict['broker_kind']
+        publisher = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name=queue_name,
+                                                                            broker_kind=broker_kind, 
+                                                                            publish_msg_log_use_full_msg=True))
+    
+        if need_result:
+            # if booster.boost_params.is_using_rpc_mode is False:
+            #     raise ValueError(f' need_result 为true,{booster.queue_name} 队列消费者 需要@boost设置支持rpc模式')
+            
+            async_result =  publisher.publish(msg_body,priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True))
+            async_result.set_timeout(timeout)
+            status_and_result = async_result.status_and_result
+            # print(status_and_result)
+            task_id = async_result.task_id
+        else:
+            async_result =publisher.publish(msg_body)
+            task_id = async_result.task_id
+        return dict(succ=True, msg=f'{queue_name} 队列,消息发布成功', 
+                            status_and_result=status_and_result,task_id=task_id)
+    except Exception as e:
+        return dict(succ=False, msg=f'{queue_name} 队列,消息发布失败 {type(e)} {e} {traceback.format_exc()}',
+                               status_and_result=status_and_result,task_id=task_id)
+    
+
+def get_result_by_task_id(task_id,timeout):
+    async_result = AsyncResult(task_id)
+    async_result.set_timeout(timeout)
+    status_and_result = async_result.status_and_result
+    return dict(succ=True, msg=f'task_id:{task_id} 获取结果成功', 
+                            status_and_result=status_and_result,task_id=task_id)
+        
+    
+     
 
 if __name__ == '__main__':
     # print(get_cols('4'))
@@ -152,6 +199,13 @@ if __name__ == '__main__':
     # nb_print(get_speed_last_minute('queue_test54'))
 
     # nb_print(get_speed('queue_test56', '2019-09-18 16:03:29', '2019-09-23 16:03:29'))
-    stat = Statistic('queue_test_f01t')
-    stat.build_result()
-    nb_print(stat.result)
+    # stat = Statistic('queue_test_f01t')
+    # stat.build_result()
+    # nb_print(stat.result)
+    
+    # res = rpc_call('queue_test_g02t',{'x':1,'y':2},True,60)
+    
+    res = get_result_by_task_id('3232',60)
+    print(res)
+    
+    

@@ -12,6 +12,9 @@ import os
 
 import datetime
 import json
+import traceback
+
+from funboost.core.func_params_model import PriorityConsumingControlConfig
 
 """
 pip install Flask flask_bootstrap  flask_wtf  wtforms flask_login       
@@ -26,6 +29,7 @@ from flask_login import login_user, logout_user, login_required, LoginManager, U
 import nb_log
 from funboost import nb_print,ActiveCousumerProcessInfoGetter,BoostersManager,PublisherParams,RedisMixin
 from funboost.function_result_web.functions import get_cols, query_result, get_speed, Statistic
+from funboost.function_result_web import functions as app_functions
 from funboost.core.active_cousumer_info_getter import QueueConusmerParamsGetter
 from funboost.constant import RedisKeys
 
@@ -119,7 +123,8 @@ def logout():
 @app.route('/')
 @login_required
 def index():
-    return render_template('index.html')
+    page = request.args.get('page')
+    return render_template('index.html', page=page)
 
 
 @app.route('/query_cols')
@@ -238,6 +243,39 @@ def resume_consume(queue_name):
     RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name,'0')
     return jsonify({'success':True})
 
+@app.route('/queue/get_msg_num',methods=['GET'])
+def get_msg_num():
+    return jsonify(QueueConusmerParamsGetter().get_msg_num(ignore_report_ts=True))
+        
+@app.route('/rpc/rpc_call',methods=['POST'])
+def rpc_call():
+    """
+    class MsgItem(BaseModel):
+        queue_name: str  # 队列名
+        msg_body: dict  # 消息体,就是boost函数的入参字典,例如 {"x":1,"y":2}
+        need_result: bool = False  # 发布消息后,是否需要返回结果
+        timeout: int = 60  # 等待结果返回的最大等待时间.
+
+
+    class PublishResponse(BaseModel):
+        succ: bool
+        msg: str
+        status_and_result: typing.Optional[dict] = None  # 消费函数的消费状态和结果.
+        task_id:str
+    """
+    
+    msg_item = request.get_json()
+    return jsonify(app_functions.rpc_call(**msg_item))
+    
+@app.route('/rpc/get_result_by_task_id',methods=['GET'])
+def get_result_by_task_id():
+    res = app_functions.get_result_by_task_id(task_id=request.args.get('task_id'),
+                                                          timeout=request.args.get('timeout') or 60)
+    if res['status_and_result'] is None:
+        return jsonify({'succ':False,'msg':'task_id不存在或者超时或者结果已经过期'})
+    return jsonify(res)
+   
+
 def start_funboost_web_manager(host='0.0.0.0', port=27018,block=False):
     print('start_funboost_web_manager , sys.path :', sys.path)
     def _start_funboost_web_manager():
@@ -246,7 +284,9 @@ def start_funboost_web_manager(host='0.0.0.0', port=27018,block=False):
         _start_funboost_web_manager()
     else:
         threading.Thread(target=_start_funboost_web_manager).start()
-
+        
+        
+        
 if __name__ == '__main__':
     # app.jinja_env.auto_reload = True
     # with app.test_request_context():

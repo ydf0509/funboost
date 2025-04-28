@@ -104,12 +104,12 @@ class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
         queue__pause_map = self.redis_db_frame.hgetall(RedisKeys.REDIS_KEY_PAUSE_FLAG)
         return {k:int(v)  for k,v in queue__pause_map.items()}
 
-    def get_msg_num(self):
+    def get_msg_num(self,ignore_report_ts=False):
         queue__msg_count_info_map = self.redis_db_frame.hgetall(RedisKeys.QUEUE__MSG_COUNT_MAP)
         queue__msg_count_dict = {}
         for queue_name,info_json in queue__msg_count_info_map.items():
             info_dict = json.loads(info_json)
-            if info_dict['report_ts'] > time.time() - 15 and info_dict['last_get_msg_num_ts'] > time.time() - 1200:
+            if ignore_report_ts or (info_dict['report_ts'] > time.time() - 15 and info_dict['last_get_msg_num_ts'] > time.time() - 1200):
                 queue__msg_count_dict[queue_name] = info_dict['msg_num_in_broker']
         return queue__msg_count_dict
 
@@ -127,7 +127,7 @@ class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
         queue__active_consumers_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
         queue__consumer_params_map  = self.get_queue_params()
         queue__pause_map = self.get_pause_flag()
-        queue__msg_count_dict = self.get_msg_num()
+        queue__msg_count_dict = self.get_msg_num(ignore_report_ts=True)
         queue_params_and_active_consumers = {}
 
         for queue, consumer_params in  queue__consumer_params_map.items():

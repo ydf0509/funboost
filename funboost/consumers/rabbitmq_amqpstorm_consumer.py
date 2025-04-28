@@ -42,5 +42,5 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
 
     def _requeue(self, kw):
         # amqpstorm.Message.delivery_tag
-        print(kw['amqpstorm_message'].delivery_tag)
+        # print(kw['amqpstorm_message'].delivery_tag)
         kw['amqpstorm_message'].nack(requeue=True)

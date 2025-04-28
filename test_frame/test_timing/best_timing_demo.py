@@ -59,7 +59,8 @@ if __name__ == '__main__':
         trigger='interval',
         seconds=5,
         args=(4, 6),
-        replace_existing=True
+        replace_existing=True,
+        id='interval_job1',
     )
 
     # 方式3：使用cron表达式定时执行

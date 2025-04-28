@@ -307,7 +307,7 @@ class BoostersManager:
         跨不同的项目，发布消息。例如proj1中定义有fun1消费函数，但proj2无法直接到日proj1的函数，无法直接 fun1.push 来发布消息
         可以使用这个方法，获取一个publisher。
 
-        publisher = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name='proj1_queue', broker_kind=BrokerEnum.SQLITE_QUEUE))
+        publisher = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name='proj1_queue', broker_kind=publisher_params.broker_kind))
         publisher.publish({'x': aaa})
         """
         pid = os.getpid()

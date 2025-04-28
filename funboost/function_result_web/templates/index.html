@@ -133,33 +133,43 @@
     <div class="sidebar">
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link " href="#" data-target="/tpl/fun_result_table.html">
+                <a class="nav-link " href="/?page=fun_result_table" data-target="/tpl/fun_result_table.html">
                     <i class="fa fa-table"></i><span>函数结果表</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" data-target="/tpl/conusme_speed.html">
+                <a class="nav-link" href="/?page=conusme_speed" data-target="/tpl/conusme_speed.html">
                     <i class="fa fa-tachometer"></i><span>消费速率图</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" data-target="/tpl/running_consumer_by_ip.html">
+                <a class="nav-link" href="/?page=running_consumer_by_ip" data-target="/tpl/running_consumer_by_ip.html">
                     <i class="fa fa-server"></i><span>运行中消费者(by ip)</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" data-target="/tpl/running_consumer_by_queue_name.html">
+                <a class="nav-link" href="/?page=running_consumer_by_queue_name" data-target="/tpl/running_consumer_by_queue_name.html">
                     <i class="fa fa-list"></i><span>运行中消费者(by queue)</span>
                 </a>
             </li>
             <li class="nav-item ">
-                <a class="nav-link active" href="#" data-target="/tpl/queue_op.html">
+                <a class="nav-link active" href="/?page=queue_op" data-target="/tpl/queue_op.html">
                     <i class="fa fa-cogs"></i><span>队列操作</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" data-target="/tpl/about.html">
+                <a class="nav-link" href="/?page=rpc_call" data-target="/tpl/rpc_call.html">
+                    <i class="fa fa-cogs"></i><span>rpc调用</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/?page=about" data-target="/tpl/about.html">
                     <i class="fa fa-info-circle"></i><span>说明</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/logout">
+                    <i class="fa fa-sign-out"></i><span>退出登录</span>
                 </a>
             </li>
         </ul>
@@ -197,12 +207,27 @@
     });
 
         $(document).ready(function () {
-            // 初始加载 Home 页面
-            loadPage('/tpl/queue_op.html');
+            // 检查URL参数是否指定了页面
+            var urlParams = new URLSearchParams(window.location.search);
+            var pageName = urlParams.get('page');
+            
+            // 初始加载页面
+            if (pageName) {
+                // 根据URL参数加载页面
+                loadPage('/tpl/' + pageName + '.html');
+                // 设置对应导航为active
+                $('.sidebar .nav-link').removeClass('active');
+                $('.sidebar .nav-link[href="/?page=' + pageName + '"]').addClass('active');
+            } else {
+                // 默认加载队列操作页面
+                loadPage('/tpl/queue_op.html');
+            }
 
             // 导航栏点击事件
             $('.sidebar .nav-link').click(function (e) {
-                e.preventDefault();
+                // 不阻止默认行为，允许页面跳转
+                // e.preventDefault();
+                
                 // 移除所有导航项的 active 类
                 $('.sidebar .nav-link').removeClass('active');
                 // 为当前点击的导航项添加 active 类

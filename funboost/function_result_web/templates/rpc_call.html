@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pytho万能分布式函数调度框架</title>
+    <link href="{{ url_for('static',filename='css_cdn/twitter-bootstrap/3.3.7/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet"
+        href="{{ url_for('static',filename='css_cdn/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/jquery.mCustomScrollbar.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/custom.css') }}">
+
+    <!-- 在其他 link 标签后添加 -->
+    <link href="{{ url_for('static',filename='css_cdn/select2/4.0.13/css/select2.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='css/content_page_style.css') }}" rel="stylesheet">
+
+
+    <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
+    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.0/jquery.min.js"></script> -->
+    <!-- 在其他 script 标签后添加 -->
+    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/select2/4.0.13/js/select2.min.js"></script> -->
+    <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
+
+
+    <script src="{{ url_for('static',filename='js/moment-with-locales.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/bootstrap-datetimepicker.min.js') }}"></script>
+    <!-- <script src="https://cdn.bootcss.com/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script> -->
+    <!-- <script type="text/javascript" src="https://cdn.bootcss.com/echarts/3.3.0/echarts.js"></script> -->
+    <script type="text/javascript" src="{{ url_for('static',filename='js/echarts.min.js') }}"></script>
+
+    <script src="{{ url_for('static',filename='assets/js/jquery.mCustomScrollbar.concat.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='assets/js/custom.js') }}"></script>
+
+        
+    <!-- 添加 Tabulator 样式和脚本 -->
+    <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator_bootstrap3.min.css') }}" rel="stylesheet">
+    <script type="text/javascript" src="{{ url_for('static',filename='js_cdn/tabulator-tables@5.5.0/dist/js/tabulator.min.js') }}"></script>
+
+    <style>
+
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid" style="margin-top: 5px;">
+        <!-- 添加发布消息和RPC结果区域 -->
+        <div class="row" style="margin-top: 20px;">
+            <div class="col-md-6">
+                <h1 style="margin-bottom: 20px;color: red;">发送rpc请求:</h1>
+                <div class="form-group">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                     
+                        <label for="col_name_search" style="margin-right: 5px; white-space: nowrap;">队列名字:</label>
+                        <select class="form-control" id="col_name_search" style="width: 500px;">
+                            <option value="">请选择队列名字...</option>
+                        </select>
+                    </div>
+                    <textarea class="form-control" id="message_content" rows="15" placeholder="请输入消息体JSON格式，如：{&quot;x&quot;:1,&quot;y&quot;:2}"></textarea>
+                </div>
+                <div class="form-inline" style="margin-bottom: 15px;">
+                    <div class="checkbox" style="margin-right: 20px;">
+                        <label>
+                            <input type="checkbox" id="need_result" checked> 需要返回结果
+                        </label>
+                    </div>
+                    <div class="form-group" style="margin-right: 20px;">
+                        <label for="timeout" style="margin-right: 5px;">超时时间(秒)：</label>
+                        <input type="number" class="form-control" id="timeout" value="60" style="width: 80px;">
+                    </div>
+                    <button type="button" class="btn btn-primary" id="send_btn">发送RPC请求</button>
+                </div>
+                <div class="alert alert-info" id="status_display" style="margin-top: 10px;">
+                    准备发送RPC请求，请选择队列名称并输入消息内容
+                </div>
+
+                <h1 style="margin-bottom: 20px;margin-top: 70px;color: red;">获取task_id结果:</h1>
+                <div class="form-group">
+                    <div style="display: flex; align-items: center;">
+                        <label for="task_id" style="margin-right: 5px; white-space: nowrap;">task_id:</label>
+                        <input type="text" class="form-control" id="task_id" style="width: 500px; margin-right: 15px;">
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="margin-right: 20px; display: flex; align-items: center;">
+                        <label for="task_timeout" style="margin-right: 5px; white-space: nowrap;">超时时间(秒):</label>
+                        <input type="number" class="form-control" id="task_timeout" value="30" style="width: 80px;">
+                    </div>
+                    <button type="button" class="btn btn-primary" id="get_result_btn">获取结果</button>
+                </div>
+                <div class="alert alert-info" id="task_status_display" style="margin-top: 10px;">
+                    准备获取结果，请输入task_id
+                </div>
+                    
+
+            </div>
+
+
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="rpc_result">RPC结果：</label>
+                    <textarea class="form-control" id="rpc_result" rows="40" readonly></textarea>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="result-table" style="margin-top: 20px;"></div>
+    </div>
+
+    
+
+
+
+
+
+
+    <script>
+
+        // 在现有的变量声明后添加
+        var allQueues = [];  // 存储所有队列数据
+        var currentColName;
+
+        // 页面加载完成后立即获取所有队列
+        $(document).ready(function () {
+            $.ajax({
+                url: "{{ url_for('get_msg_num')}}",
+                data: {},
+                async: true,
+                success: function (result) {
+                    var html = '<option value="">请选择队列名字...</option>';
+                    for (var queueName in result) {
+                        var msgCount = result[queueName];
+                        html += '<option value="' + queueName + '">' +
+                            queueName + '&nbsp;&nbsp;&nbsp;&nbsp;(msg_count:' + msgCount + ')</option>';
+                    }
+                    $("#col_name_search").html(html);
+
+                    // 初始化选择框的搜索功能
+                    $("#col_name_search").select2({
+                        placeholder: "请输入队列名称搜索...",
+                        allowClear: true,
+                        width: '500px',
+                        minimumResultsForSearch: 0
+                    });
+
+                    // 监听选择变化
+                    $("#col_name_search").on('change', function () {
+                        var selectedQueue = $(this).val();
+                        console.log("Selected queue:", selectedQueue);
+                        currentColName = selectedQueue;
+                        // if(selectedQueue) {
+                        //     queryResult(selectedQueue, 0, true);
+                        // }
+                    });
+                }
+            });
+        });
+
+        // 添加发送RPC请求的功能
+        $(document).ready(function() {
+            // 已有的队列加载代码...
+            
+            // 发送RPC请求按钮点击事件
+            $("#send_btn").click(function() {
+                var queueName = $("#col_name_search").val();
+                var messageContent = $("#message_content").val();
+                
+                if (!queueName) {
+                    alert("请先选择队列名称");
+                    return;
+                }
+                
+                if (!messageContent) {
+                    alert("请输入消息内容");
+                    return;
+                }
+                
+                try {
+                    // 尝试解析JSON，确保内容有效
+                    JSON.parse(messageContent);
+                } catch (e) {
+                    alert("消息内容必须是有效的JSON格式");
+                    return;
+                }
+                
+                // 更新状态显示
+                $("#status_display").removeClass("alert-info alert-success alert-danger").addClass("alert-warning");
+                $("#status_display").text("正在发送RPC请求，请稍候...");
+                
+                // 清空结果框
+                $("#rpc_result").val("");
+                
+                // 发送RPC请求
+                $.ajax({
+                    url: "{{ url_for('rpc_call') }}",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        queue_name: queueName,
+                        msg_body: JSON.parse(messageContent),
+                        need_result: $("#need_result").is(":checked"),
+                        timeout: parseInt($("#timeout").val())
+                    }),
+                    success: function(result) {
+                       
+                        console.log(result)
+
+                        $("#rpc_result").val(JSON.stringify(result, null, 2));
+                        
+                        // 更新状态显示
+                        if (result.succ) {
+                            $("#status_display").removeClass("alert-warning alert-danger").addClass("alert-success");
+                            $("#status_display").text("RPC请求成功: " + result.msg);
+                        } else {
+                            $("#status_display").removeClass("alert-warning alert-success").addClass("alert-danger");
+                            $("#status_display").text("RPC请求失败: " + result.msg);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        $("#rpc_result").val("请求失败: " + error);
+                        
+                        // 更新状态显示
+                        $("#status_display").removeClass("alert-warning alert-success").addClass("alert-danger");
+                        $("#status_display").text("RPC请求发送失败: " + error);
+                    }
+                });
+            });
+        });
+
+        // 添加获取结果功能
+        $(document).ready(function() {
+            // 获取结果按钮点击事件
+            $("#get_result_btn").click(function() {
+                var taskId = $("#task_id").val();
+                
+                if (!taskId) {
+                    alert("请先输入task_id");
+                    return;
+                }
+                
+                // 更新状态显示
+                $("#task_status_display").removeClass("alert-info alert-success alert-danger").addClass("alert-warning");
+                $("#task_status_display").text("正在获取结果，请稍候...");
+                
+                // 清空结果框
+                $("#rpc_result").val("");
+                
+                // 获取结果
+                $.ajax({
+                    url: "{{ url_for('get_result_by_task_id') }}",
+                    type: "GET",
+                    data: {
+                        task_id: taskId,
+                        timeout: parseInt($("#task_timeout").val())
+                    },
+                    success: function(result) {
+                        console.log(result);
+                        $("#rpc_result").val(JSON.stringify(result, null, 2));
+                        
+                        // 更新状态显示
+                        if (result.succ) {
+                            $("#task_status_display").removeClass("alert-warning alert-danger").addClass("alert-success");
+                            $("#task_status_display").text("获取结果成功");
+                        } else {
+                            $("#task_status_display").removeClass("alert-warning alert-success").addClass("alert-danger");
+                            $("#task_status_display").text("获取结果失败: " + result.msg);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        $("#rpc_result").val("请求失败: " + error);
+                        
+                        // 更新状态显示
+                        $("#task_status_display").removeClass("alert-warning alert-success").addClass("alert-danger");
+                        $("#task_status_display").text("获取结果失败: " + error);
+                    }
+                });
+            });
+        });
+
+            
+
+
+
+
+
+
+
+
+    </script>
+</body>
+
+</html>

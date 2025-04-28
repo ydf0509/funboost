@@ -52,6 +52,7 @@ class AsyncResult(RedisMixin):
     @property
     def status_and_result(self):
         if not self._has_pop:
+            # print(f'{self.task_id} 正在等待结果')
             redis_value = self.redis_db_filter_and_rpc_result.blpop(self.task_id, self.timeout)
             self._has_pop = True
             if redis_value is not None:

@@ -30,6 +30,7 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
         rp.channel_wrapper_by_ampqstormbaic.qos(self.consumer_params.concurrent_num)
         rp.channel_wrapper_by_ampqstormbaic.consume(callback=callback, queue=self.queue_name, no_ack=self.consumer_params.broker_exclusive_config['no_ack'],
                                                     )
+        self._rp=rp
         rp.channel.start_consuming(auto_decode=True)
 
     def _confirm_consume(self, kw):
@@ -44,3 +45,7 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
         # amqpstorm.Message.delivery_tag
         # print(kw['amqpstorm_message'].delivery_tag)
         kw['amqpstorm_message'].nack(requeue=True)
+        # kw['amqpstorm_message'].reject(requeue=True)
+        # kw['amqpstorm_message'].ack()
+        # self.publisher_of_same_queue.publish(kw['body'])
+

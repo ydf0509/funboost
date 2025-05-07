@@ -194,7 +194,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.consumer_params.broker_exclusive_config = broker_exclusive_config_merge
 
         self._stop_flag = None
-        self._pause_flag = None  # 暂停消费标志，从reids读取
+        self._pause_flag = threading.Event()  # 暂停消费标志，从reids读取
         self._last_show_pause_log_time = 0
         # self._redis_key_stop_flag = f'funboost_stop_flag'
         # self._redis_key_pause_flag = RedisKeys.REDIS_KEY_PAUSE_FLAG
@@ -456,15 +456,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         return msg
 
     def _submit_task(self, kw):
-        while 1:  # 这一块的代码为支持暂停消费。
-            # print(self._pause_flag)
-            if self._pause_flag == 1:
-                time.sleep(5)
-                if time.time() - self._last_show_pause_log_time > 60:
-                    self.logger.warning(f'已设置 {self.queue_name} 队列中的任务为暂停消费')
-                    self._last_show_pause_log_time = time.time()
-            else:
-                break
+
         kw['body'] = self.convert_msg_before_run(kw['body'])
         self._print_message_get_from_broker(kw['body'])
         if self._judge_is_daylight():
@@ -528,6 +520,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._frequency_control(self.consumer_params.qps / active_num, self._msg_schedule_time_intercal * active_num)
         else:
             self._frequency_control(self.consumer_params.qps, self._msg_schedule_time_intercal)
+
+        while 1:  # 这一块的代码为支持暂停消费。
+            # print(self._pause_flag)
+            if self._pause_flag.is_set():
+                if time.time() - self._last_show_pause_log_time > 60:
+                    self.logger.warning(f'已设置 {self.queue_name} 队列中的任务为暂停消费')
+                    self._last_show_pause_log_time = time.time()
+                time.sleep(5)
+            else:
+                break
 
     def __delete_eta_countdown(self, msg_body: dict):
         self.__dict_pop(msg_body.get('extra', {}), 'eta')
@@ -1315,8 +1317,8 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
 
         pause_flag = self.redis_db_frame.hget(RedisKeys.REDIS_KEY_PAUSE_FLAG,self._consumer.queue_name)
         if pause_flag is not None and int(pause_flag) == 1:
-            self._consumer._pause_flag = 1
+            self._consumer._pause_flag.set()
         else:
-            self._consumer._pause_flag = 0
+            self._consumer._pause_flag.clear()
   
       

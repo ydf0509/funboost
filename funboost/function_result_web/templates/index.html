@@ -168,7 +168,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/logout">
+                <a class="nav-link" href="javascript:void(0)" id="logoutBtn">
                     <i class="fa fa-sign-out"></i><span>退出登录</span>
                 </a>
             </li>
@@ -185,6 +185,25 @@
     </div>
 
     
+
+    <!-- 添加退出确认模态框 -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel">
+      <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="logoutModalLabel">确认退出</h4>
+          </div>
+          <div class="modal-body">
+            确定要退出登录吗？
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" id="confirmLogout">确认退出</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script>
             $(document).ready(function () {
@@ -251,6 +270,16 @@
                     }
                 });
             }
+
+            // 退出登录确认
+            $('#logoutBtn').click(function(e) {
+                e.preventDefault();
+                $('#logoutModal').modal('show');
+            });
+            
+            $('#confirmLogout').click(function() {
+                window.location.href = '/logout';
+            });
         });
     </script>
 </body>

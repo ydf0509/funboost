@@ -1,6 +1,3 @@
-
-
-
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -125,8 +122,12 @@
                     width: 400,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
+                        const btnId = 'showParamsBtn_' + Math.random().toString(36).substr(2, 9);
+                        setTimeout(() => {
+                            document.getElementById(btnId)?.addEventListener('click', () => showParams(row.queue_params));
+                        }, 0);
                         return `
-                            <button class="btn btn-info btn-sm action-btn" onclick='showParams(${JSON.stringify(row.queue_params)})'>查看消费者配置</button>
+                            <button id="${btnId}" class="btn btn-info btn-sm action-btn">查看消费者配置</button>
                             <button class="btn btn-danger btn-sm action-btn" onclick="clearQueue('${row.queue_name}')">清空队列消息</button>
                             <button class="btn btn-warning btn-sm action-btn" onclick="pauseConsume('${row.queue_name}')">暂停消费</button>
                             <button class="btn btn-success btn-sm action-btn" onclick="resumeConsume('${row.queue_name}')">恢复消费</button>

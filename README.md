@@ -18,6 +18,8 @@
 pip install funboost ,python全功能分布式函数调度框架。  demo用法例子见文档1.3
 
 funboost的功能是全面性重量级，用户能想得到的功能99%全都有;funboost的使用方式是轻量级，只有@boost一行代码需要写。
+funboost的神奇之处在于它同时拥有"轻量级使用方式"和"重量级功能集"，完全颠覆了"功能强大=使用复杂"的传统思维。
+它证明了一个框架可以既功能丰富又极其易用，这是对传统Python框架设计的一次巧妙超越。
 
 只需要一行@boost代码即可分布式执行python一切任意函数，99%用过funboost的pythoner 感受是 方便 快速 强大。
 支持python所有类型的并发模式,消息队列方面支持全球一切知名消息队列中间件和模拟的实现消息队列，
@@ -25,7 +27,11 @@ funboost的功能是全面性重量级，用户能想得到的功能99%全都有
 也支持huey dramatiq rq等任务队列框架作为funboost的broker。 
 
 python函数加速器，框架包罗万象，一统编程思维，兼容50% python编程业务场景，适用范围广。
-python万能分布式函数调度框架，支持5种并发模式，30+种消息队列中间件(或任务队列框架)，
+python万能分布式函数调度框架，支持5种并发模式，30+种消息队列中间件
+(不仅支持几乎所有你能想到的消息队列中间件，还支持本地磁盘队列、数据库队列 (SQLAlchemy, Peewee)、
+内存队列、甚至是 HTTP 请求、WebSocket 等作为任务队列，甚至是将 Celery、Dramatiq、Huey 等其他框架整体作为其 Broker。
+funboost源码高扩展性的设计，造成“万物皆可为Broker”,并不是有30种传统意义上的经典消息队列，
+因为世界上总共都没有30种知名的经典消息队列)，
 30种任务控制功能。给任意python函数赋能。
 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。
 
@@ -118,7 +124,7 @@ pip install funboost --upgrade
 
 ## 1.2 框架功能介绍
 
-分布式函数调度框架，支持5种并发模式，20+种消息中间件，30种任务控制功能。<br>
+分布式函数调度框架，支持5种并发模式，30+种消息中间件，30种任务控制功能。<br>
 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。
 
 有了这个框架，用户再也无需亲自手写操作进程、线程、协程的并发的代码了。
@@ -345,6 +351,9 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
      funboost支持命令行操作：
          使用fire实现的命令行，见文档第12章
 
+     可视化查看和操作：
+         funboost web manager 可以查看和管理队列和消费运行情况。
+
 </pre>
 
 
@@ -428,8 +437,9 @@ funboost web manager 截图：
 队列操作，查看消费者详情：查看队列的所有消费者详情
 [![pEJCgT1.png](https://s21.ax1x.com/2025/03/04/pEJCgT1.png)](https://imgse.com/i/pEJCgT1)
 
-rpc调用：
-[![pETq8hj.png](https://s21.ax1x.com/2025/04/28/pETq8hj.png)](https://imgse.com/i/pETq8hj)
+rpc调用：在网页上对30种消息队列发布消息并获取消息的函数执行结；根据taskid获取结果。
+<!-- [![pETq8hj.png](https://s21.ax1x.com/2025/04/28/pETq8hj.png)](https://imgse.com/i/pETq8hj) -->
+[![pE7y8oT.png](https://s21.ax1x.com/2025/04/29/pE7y8oT.png)](https://imgse.com/i/pE7y8oT)
 
 ## 1.4  python分布式函数执行为什么重要？
 

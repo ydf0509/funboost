@@ -167,7 +167,7 @@ def rpc_call(queue_name, msg_body, need_result, timeout):
             # if booster.boost_params.is_using_rpc_mode is False:
             #     raise ValueError(f' need_result 为true,{booster.queue_name} 队列消费者 需要@boost设置支持rpc模式')
             
-            async_result =  publisher.publish(msg_body,priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True))
+            async_result: AsyncResult =  publisher.publish(msg_body,priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True))
             async_result.set_timeout(timeout)
             status_and_result = async_result.status_and_result
             # print(status_and_result)
@@ -175,6 +175,9 @@ def rpc_call(queue_name, msg_body, need_result, timeout):
         else:
             async_result =publisher.publish(msg_body)
             task_id = async_result.task_id
+        if status_and_result['success'] is False:
+            return dict(succ=False, msg=f'{queue_name} 队列,消息发布成功,但是函数执行失败', 
+                            status_and_result=status_and_result,task_id=task_id)
         return dict(succ=True, msg=f'{queue_name} 队列,消息发布成功', 
                             status_and_result=status_and_result,task_id=task_id)
     except Exception as e:
@@ -186,6 +189,12 @@ def get_result_by_task_id(task_id,timeout):
     async_result = AsyncResult(task_id)
     async_result.set_timeout(timeout)
     status_and_result = async_result.status_and_result
+    if status_and_result is None:
+        return dict(succ=False, msg=f'{task_id} 不存在 或 超时 或 结果已过期', 
+                        status_and_result=status_and_result,task_id=task_id)
+    if status_and_result['success'] is False:
+        return dict(succ=False, msg=f'{task_id} 执行失败', 
+                        status_and_result=status_and_result,task_id=task_id)
     return dict(succ=True, msg=f'task_id:{task_id} 获取结果成功', 
                             status_and_result=status_and_result,task_id=task_id)
         

@@ -709,7 +709,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         fct_context = FctContext(function_params=function_only_params,
                                  full_msg=kw['body'],
                                  function_result_status=function_result_status,
-                                 logger=self.logger, )
+                                 logger=self.logger, queue_name=self.queue_name,)
 
         try:
             function_run = self.consuming_function
@@ -717,6 +717,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 fct_context.asyncio_use_thread_concurrent_mode = True
                 function_run = sync_or_async_fun_deco(function_run)
             else:
+                pass
                 fct_context.asynco_use_thread_concurrent_mode = False
             fct.set_fct_context(fct_context)
             function_timeout = self._get_priority_conf(kw, 'function_timeout')
@@ -868,7 +869,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         fct_context = FctContext(function_params=function_only_params,
                                  full_msg=kw['body'],
                                  function_result_status=function_result_status,
-                                 logger=self.logger, )
+                                 logger=self.logger,queue_name=self.queue_name,)
         fct.set_fct_context(fct_context)
         try:
             corotinue_obj = self.consuming_function(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params))

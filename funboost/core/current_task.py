@@ -1,4 +1,5 @@
 import abc
+import typing
 import contextvars
 from dataclasses import dataclass
 import logging
@@ -6,6 +7,8 @@ import threading
 import asyncio
 
 from funboost.core.function_result_status_saver import FunctionResultStatus
+
+
 
 """ 用法例子 
     '''
@@ -60,7 +63,9 @@ class FctContext:
     full_msg: dict
     function_result_status: FunctionResultStatus
     logger: logging.Logger
+    queue_name: str
     asyncio_use_thread_concurrent_mode: bool = False
+    
 
 # class FctContext:
 #     """
@@ -107,6 +112,11 @@ class _BaseCurrentTask(metaclass=abc.ABCMeta):
     @property
     def logger(self) -> logging.Logger:
         return self.get_fct_context().logger
+    
+    @property
+    def queue_name(self) -> str:
+        return self.get_fct_context().queue_name
+    
 
     def __str__(self):
         return f'<{self.__class__.__name__} [{self.function_result_status.get_status_dict()}]>'
@@ -184,6 +194,13 @@ class _FctProxy:
     @property
     def logger(self) -> logging.Logger:
         return self.fct_context.logger
+    
+    @property
+    def queue_name(self) -> str:
+        return self.fct_context.queue_name
+    
+
+
 
     def __str__(self):
         return f'<{self.__class__.__name__} [{self.function_result_status.get_status_dict()}]>'

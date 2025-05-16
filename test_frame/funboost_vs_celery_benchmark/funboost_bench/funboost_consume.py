@@ -5,7 +5,6 @@ import logging
 @boost(BoosterParams(queue_name='test_queue_funboost01', 
                      broker_kind=BrokerEnum.REDIS,log_level=logging.INFO,
                      concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,
-                     broker_exclusive_config={'pull_msg_batch_size':1000}
                      )
                      )
 def print_number(i):

@@ -26,5 +26,5 @@ if __name__ == '__main__':
 
     # step1.consume()  # 可以连续启动两个消费者，sonusme是启动独立线程里面while 1调度的，所以可以连续运行多个启动消费。
     # step2.consume()
-    BoostersManager.consume_all() # 这种方式节约总的内存,但无法利用多核cpu
+    # BoostersManager.consume_all() # 这种方式节约总的内存,但无法利用多核cpu
     # BoostersManager.m_consume_all(2)  # 这种方式总的内存使用高,但充分利用多核cpu

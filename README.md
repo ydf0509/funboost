@@ -77,9 +77,41 @@ funboost的旧框架名字是function_scheduling_distributed_framework , 关系�
 ### 1.0.1 [分布式函数调度框架文档地址 ](https://funboost.readthedocs.io/zh-cn/latest/index.html)
 [查看分布式函数调度框架文档 https://funboost.readthedocs.io/zh-cn/latest/index.html](https://funboost.readthedocs.io/zh-cn/latest/index.html)
 
+文档很长，大部分都是讲原理和对比各种框架。但是用户只需要学习1.3这1个例子就能掌握了。因为其他例子只是 @boost的 BoosterParams 里面的控制入参换了一下。
 
- 
-[funboost依赖的nb_log日志文档 https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2](https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2)
+用户只需要专门看 BoosterParams 里面的每个入参的注释就能掌握框架了，因为funboost只有@boost一行代码需要你写。
+
+funboost 框架和一般的框架不一样，因为只有一行代码需要掌握，绝对不是要求用户先精通框架本身才能自由发挥。
+
+#### [1.python万能分布式函数调度框架简funboost简介](https://funboost.readthedocs.io/zh-cn/latest/articles/c1.html)
+#### [2. funboost对比celery框架](https://funboost.readthedocs.io/zh-cn/latest/articles/c2.html)
+
+#### [3.funboost框架详细介绍](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html)
+
+#### [4.funboost使用框架的各种代码示例](https://funboost.readthedocs.io/zh-cn/latest/articles/c4.html)
+
+#### [4b.funboost使用框架的各种代码示例(高级进阶)](https://funboost.readthedocs.io/zh-cn/latest/articles/c4b.html)
+
+#### [5.funboost框架运行时截图](https://funboost.readthedocs.io/zh-cn/latest/articles/c5.html)
+
+#### [6.funboost常见问题回答](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html)
+
+#### [7.funboost更新记录](https://funboost.readthedocs.io/zh-cn/latest/articles/c7.html)
+
+#### [8.funboost是万能函数调度框架，当然可以爬虫,自由编程 降维打击 框架奴役](https://funboost.readthedocs.io/zh-cn/latest/articles/c8.html)
+
+#### [9.轻松远程服务器部署运行函数](https://funboost.readthedocs.io/zh-cn/latest/articles/c9.html#)
+
+#### [10.python3.6-3.12 安装/使用funboost出错问题反馈](https://funboost.readthedocs.io/zh-cn/latest/articles/c10.html)
+
+#### [11.funboost 使用某些中间件或三方任务队列框架作为broker的例子(包括celery框架)。](https://funboost.readthedocs.io/zh-cn/latest/articles/c11.html)
+
+#### [12.funboost 控制台支持命令行](https://funboost.readthedocs.io/zh-cn/latest/articles/c12.html)
+
+#### [13.启动 funboost web manager,查看消费结果和队列管理](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html)
+
+
+#### [funboost依赖的nb_log日志文档 https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2](https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2)
 
 ```
 文档很长，但归根结底只需要学习 1.3 里面的这1个例子就行，主要是修改下@boost的各种参数，
@@ -419,7 +451,53 @@ if __name__ == "__main__":
 <a href="https://imgse.com/i/pkFkCUe"><img src="https://s21.ax1x.com/2024/04/29/pkFkCUe.png" alt="pkFkCUe.png" border="0" /></a>
 
 
-funboost web manager 截图：
+
+## 1.3.2 funboost丝滑连续启动多个函数消费
+
+```python
+
+"""
+此代码
+1.演示支持多个函数消费队列的无阻塞启动（consume不会阻塞主线程）
+2.演示支持在一个消费函数内部向任意队列发布新任务，实现多级任务链
+代码结构清晰，扩展性极强
+"""
+from funboost import boost, BrokerEnum,BoosterParams,ctrl_c_recv,ConcurrentModeEnum
+import time
+
+class MyBoosterParams(BoosterParams):  # 自定义的参数类，继承BoosterParams，用于减少每个消费函数装饰器的重复相同入参个数
+    broker_kind: str = BrokerEnum.MEMORY_QUEUE
+    max_retry_times: int = 3
+    concurrent_mode: str = ConcurrentModeEnum.THREADING 
+
+    
+@boost(MyBoosterParams(queue_name='s1_queue', qps=1, ))
+def step1(a:int,b:int):
+    print(f'a={a},b={b}')
+    time.sleep(0.7)
+    for j in range(10):
+        step2.push(c=a+b +j,d=a*b +j,e=a-b +j ) # step1消费函数里面，也可以继续向其他任意队列发布消息。
+    return a+b
+
+
+@boost(MyBoosterParams(queue_name='s2_queue', qps=3, ))
+def step2(c:int,d:int,e:int):
+    time.sleep(3)
+    print(f'c={c},d={d},e={e}')
+    return c* d * e
+
+
+if __name__ == '__main__':
+    for i in range(100):
+        step1.push(i,i*2) # 向 step1函数的队列发送消息。
+    step1.consume() # 调用.consume是非阻塞的启动消费，是在单独的子线程中循环拉取消息的。 
+    # 有的人还担心阻塞而手动使用 threading.Thread(target=step1.consume).start() 来启动消费，这是完全多此一举的错误写法。
+    step2.consume() # 所以可以连续无阻塞丝滑的启动多个函数消费。
+    ctrl_c_recv()
+
+```
+
+## funboost web manager 截图：
 
 函数消费结果：可查看和搜索函数实时消费状态和结果
 [![pEJCffK.png](https://s21.ax1x.com/2025/03/04/pEJCffK.png)](https://imgse.com/i/pEJCffK)

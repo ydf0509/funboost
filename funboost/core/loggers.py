@@ -53,3 +53,4 @@ if __name__ == '__main__':
     logger1 = get_funboost_file_logger('name1')
     logger1.info('啦啦啦啦啦啦啦')
     logger1.error('错错错')
+    

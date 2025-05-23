@@ -6,7 +6,8 @@ from funboost import boost, BrokerEnum,ConcurrentModeEnum,BoosterParams,Booster,
 
 from logging_tree import printout
 
-@BoosterParams(queue_name='queue_test_step1b', qps=0.5, broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_mode=ConcurrentModeEnum.THREADING)
+@BoosterParams(queue_name='queue_test_step1b', qps=0.5, broker_kind=BrokerEnum.REDIS_ACK_ABLE, 
+               concurrent_mode=ConcurrentModeEnum.THREADING)
 def step1(x):
     print(f'x 的值是 {x}')
     time.sleep(10)

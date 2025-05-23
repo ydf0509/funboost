@@ -2,7 +2,7 @@
 import subprocess
 import os
 import time
-
+from pathlib import Path
 # os.environ["path"] = r'C:\Program Files\Git\mingw64\libexec\git-core'
 def getstatusoutput(cmd):
     try:
@@ -27,7 +27,9 @@ def do_cmd(cmd_strx):
     return retx
 
 
-def push(path = '../.'):
+def push():
+    path = Path(__file__).parent.parent
+    print(f'path: {path}')
     t0 = time.time()
 
     do_cmd('git pull')

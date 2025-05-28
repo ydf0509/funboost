@@ -192,7 +192,8 @@ class BoosterParams(BaseJsonAbleModel):
     is_auto_start_consuming_message: bool = False  # 是否在定义后就自动启动消费，无需用户手动写 .consume() 来启动消息消费。
 
     consuming_function: typing.Optional[typing.Callable] = None  # 消费函数,在@boost时候不用指定,因为装饰器知道下面的函数.
-    consuming_function_raw: typing.Optional[typing.Callable] = None
+    consuming_function_raw: typing.Optional[typing.Callable] = None  # 不需要传递，自动生成
+    consuming_function_name: str = '' # 不需要传递，自动生成
 
     
 
@@ -222,6 +223,7 @@ class BoosterParams(BaseJsonAbleModel):
 
     @root_validator(skip_on_failure=True)
     def check_values(cls, values: dict):
+       
 
         # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
         # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
@@ -234,7 +236,8 @@ class BoosterParams(BaseJsonAbleModel):
 
         if values['concurrent_mode'] not in ConcurrentModeEnum.__dict__.values():
             raise ValueError('设置的并发模式不正确')
-        if values['broker_kind'] in [BrokerEnum.REDIS_ACK_ABLE, BrokerEnum.REDIS_STREAM, BrokerEnum.REDIS_PRIORITY, BrokerEnum.RedisBrpopLpush]:
+        if values['broker_kind'] in [BrokerEnum.REDIS_ACK_ABLE, BrokerEnum.REDIS_STREAM, BrokerEnum.REDIS_PRIORITY, 
+                                     BrokerEnum.RedisBrpopLpush,BrokerEnum.REDIS,BrokerEnum.REDIS_PUBSUB]:
             values['is_send_consumer_hearbeat_to_redis'] = True  # 需要心跳进程来辅助判断消息是否属于掉线或关闭的进程，需要重回队列
         # if not set(values.keys()).issubset(set(BoosterParams.__fields__.keys())):
         #     raise ValueError(f'{cls.__name__} 的字段包含了父类 BoosterParams 不存在的字段')

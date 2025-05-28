@@ -52,7 +52,7 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, FunboostFileLoggerMixin):
                 "start_timestamp": 1640604084.0780013
             }, ...............]
         """
-        redis_key = f'funboost_hearbeat_queue__dict:{queue_name}'
+        redis_key = RedisKeys.gen_funboost_hearbeat_queue__dict_key_by_queue_name(queue_name)
         return self._get_all_hearbeat_info_by_redis_key_name(redis_key)
 
     def get_all_hearbeat_info_by_ip(self, ip=None) -> typing.List[typing.Dict]:
@@ -61,15 +61,38 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, FunboostFileLoggerMixin):
         返回结果的格式和上面的 get_all_hearbeat_dict_by_queue_name 方法相同。
         """
         ip = ip or nb_log_config_default.computer_ip
-        redis_key = f'funboost_hearbeat_server__dict:{ip}'
+        redis_key = RedisKeys.gen_funboost_hearbeat_server__dict_key_by_ip(ip)
         return self._get_all_hearbeat_info_by_redis_key_name(redis_key)
 
-    def _get_all_hearbeat_info_partition_by_redis_key_prefix(self, redis_key_prefix):
-        keys = self.redis_db_frame.scan(0, f'{redis_key_prefix}*', count=10000)[1]
+    # def _get_all_hearbeat_info_partition_by_redis_key_prefix(self, redis_key_prefix):
+    #     keys = self.redis_db_frame.scan(0, f'{redis_key_prefix}*', count=10000)[1]
+    #     infos_map = {}
+    #     for key in keys:
+    #         infos = self.redis_db_frame.smembers(key)
+    #         dict_key = key.replace(redis_key_prefix, '')
+    #         infos_map[dict_key] = []
+    #         for info_str in infos:
+    #             info_dict = json.loads(info_str)
+    #             if self.timestamp() - info_dict['hearbeat_timestamp'] < 15:
+    #                 infos_map[dict_key].append(info_dict)
+    #                 if self.timestamp() - info_dict['current_time_for_execute_task_times_every_unit_time'] > 30:
+    #                     info_dict['last_x_s_execute_count'] = 0
+    #                     info_dict['last_x_s_execute_count_fail'] = 0
+    #     return infos_map
+
+    def get_all_queue_names(self):
+        return self.redis_db_frame.smembers(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES)
+    
+    def get_all_ips(self):
+        return self.redis_db_frame.smembers(RedisKeys.FUNBOOST_ALL_IPS)
+    
+    def _get_all_hearbeat_info_partition_by_redis_keys(self, keys):
+        
+        # keys = [f'{redis_key_prefix}{queue_name}' for queue_name in queue_names]
         infos_map = {}
         for key in keys:
             infos = self.redis_db_frame.smembers(key)
-            dict_key = key.replace(redis_key_prefix, '')
+            dict_key = key.replace(RedisKeys.FUNBOOST_HEARTBEAT_QUEUE__DICT_PREFIX, '').replace(RedisKeys.FUNBOOST_HEARTBEAT_SERVER__DICT_PREFIX, '')
             infos_map[dict_key] = []
             for info_str in infos:
                 info_dict = json.loads(info_str)
@@ -82,13 +105,15 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, FunboostFileLoggerMixin):
 
     def get_all_hearbeat_info_partition_by_queue_name(self) -> typing.Dict[typing.AnyStr, typing.List[typing.Dict]]:
         """获取所有队列对应的活跃消费者进程信息，按队列名划分,不需要传入队列名，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对"""
-        infos_map = self._get_all_hearbeat_info_partition_by_redis_key_prefix('funboost_hearbeat_queue__dict:')
+        queue_names = self.get_all_queue_names()
+        infos_map = self._get_all_hearbeat_info_partition_by_redis_keys([RedisKeys.gen_funboost_hearbeat_queue__dict_key_by_queue_name(queue_name) for queue_name in queue_names])
         self.logger.info(f'获取所有队列对应的活跃消费者进程信息，按队列名划分，结果是 {json.dumps(infos_map, indent=4)}')
         return infos_map
 
     def get_all_hearbeat_info_partition_by_ip(self) -> typing.Dict[typing.AnyStr, typing.List[typing.Dict]]:
         """获取所有机器ip对应的活跃消费者进程信息，按机器ip划分,不需要传入机器ip，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对 """
-        infos_map = self._get_all_hearbeat_info_partition_by_redis_key_prefix('funboost_hearbeat_server__dict:')
+        ips = self.get_all_ips()
+        infos_map = self._get_all_hearbeat_info_partition_by_redis_keys([RedisKeys.gen_funboost_hearbeat_server__dict_key_by_ip(ip) for ip in ips])
         self.logger.info(f'获取所有机器ip对应的活跃消费者进程信息，按机器ip划分，结果是 {json.dumps(infos_map, indent=4)}')
         return infos_map
 
@@ -123,8 +148,19 @@ class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
                 s+=c[filed]
         return s
     
+    def get_queues_history_run_count(self,):
+        return self.redis_db_frame.hgetall(RedisKeys.FUNBOOST_QUEUE__RUN_COUNT_MAP)
+    
+    def get_queues_history_run_fail_count(self,):
+        return self.redis_db_frame.hgetall(RedisKeys.FUNBOOST_QUEUE__RUN_FAIL_COUNT_MAP)
+    
     def get_queue_params_and_active_consumers(self):
         queue__active_consumers_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
+
+        queue_name_list = list(queue__active_consumers_map.keys())
+        queue__history_run_count_map = self.get_queues_history_run_count()
+        queue__history_run_fail_count_map = self.get_queues_history_run_fail_count()
+
         queue__consumer_params_map  = self.get_queue_params()
         queue__pause_map = self.get_pause_flag()
         queue__msg_count_dict = self.get_msg_num(ignore_report_ts=True)
@@ -148,6 +184,10 @@ class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
                 'active_consumers':active_consumers,
                 'pause_flag':queue__pause_map.get(queue,-1),
                 'msg_num_in_broker':queue__msg_count_dict.get(queue,None),
+                
+                'history_run_count':queue__history_run_count_map.get(queue,None),
+                'history_run_fail_count':queue__history_run_fail_count_map.get(queue,None),
+
                 'all_consumers_last_x_s_execute_count':all_consumers_last_x_s_execute_count,
                 'all_consumers_last_x_s_execute_count_fail':all_consumers_last_x_s_execute_count_fail,
                 'all_consumers_last_x_s_avarage_function_spend_time':all_consumers_last_x_s_avarage_function_spend_time,

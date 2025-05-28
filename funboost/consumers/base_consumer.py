@@ -243,12 +243,27 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # print(self.publisher_params)
         if is_main_process:
             self.logger.info(f'{self.queue_name} consumer 的消费者配置:\n {self.consumer_params.json_str_value()}')
+
         atexit.register(self.join_shedual_task_thread)
+
+        self._save_consumer_params()
 
         if self.consumer_params.is_auto_start_consuming_message:
             _ = self.publisher_of_same_queue
             self.start_consuming_message()
 
+    def _save_consumer_params(self):
+        """
+        保存队列的消费者参数，以便在web界面查看。
+        :return:
+        """
+        if self.consumer_params.is_send_consumer_hearbeat_to_redis:
+            RedisMixin().redis_db_frame.sadd(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES,self.queue_name)
+            RedisMixin().redis_db_frame.hmset(RedisKeys.FUNBOOST_QUEUE__CONSUMER_PARAMS,
+                                    {self.queue_name: self.consumer_params.json_str_value()})
+            RedisMixin().redis_db_frame.sadd(RedisKeys.FUNBOOST_ALL_IPS,nb_log_config_default.computer_ip)
+        
+    
     def _build_logger(self):
         logger_prefix = self.consumer_params.logger_prefix
         if logger_prefix != '':
@@ -1180,6 +1195,10 @@ class MetricCalculation:
                     msg += f''' 预计还需要 {need_time} 时间 才能执行完成 队列 {self.consumer.queue_name} 中的 {self.msg_num_in_broker} 个剩余任务'''
                     self.consumer.logger.info(msg)
                 self.last_show_remaining_execution_time = time.time()
+            if self.consumer.consumer_params.is_send_consumer_hearbeat_to_redis is True:
+                RedisMixin().redis_db_frame.hincrby(RedisKeys.FUNBOOST_QUEUE__RUN_COUNT_MAP,self.consumer.queue_name,self.execute_task_times_every_unit_time_temp)
+                RedisMixin().redis_db_frame.hincrby(RedisKeys.FUNBOOST_QUEUE__RUN_FAIL_COUNT_MAP,self.consumer.queue_name,self.execute_task_times_every_unit_time_temp_fail)
+
             self.current_time_for_execute_task_times_every_unit_time = time.time()
             self.consuming_function_cost_time_total_every_unit_time_tmp = 0
             self.execute_task_times_every_unit_time_temp = 0
@@ -1236,21 +1255,12 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
         self.active_consumer_num = 1
         self._last_show_consumer_num_timestamp = 0
 
-        self._queue__consumer_identification_map_key_name = f'funboost_hearbeat_queue__dict:{self._queue_name}'
-        self._server__consumer_identification_map_key_name = f'funboost_hearbeat_server__dict:{nb_log_config_default.computer_ip}'
+        self._queue__consumer_identification_map_key_name = RedisKeys.gen_funboost_hearbeat_queue__dict_key_by_queue_name(self._queue_name)
+        self._server__consumer_identification_map_key_name = RedisKeys.gen_funboost_hearbeat_server__dict_key_by_ip(nb_log_config_default.computer_ip)
 
     def run(self):
-        self._send_consumer_params()
         self.send_heartbeat()
         self._consumer.keep_circulating(self.SEND_HEARTBEAT_INTERVAL, block=False, daemon=False)(self.send_heartbeat)()
-
-    def _send_consumer_params(self):
-        """
-        保存队列的消费者参数，以便在web界面查看。
-        :return:
-        """
-        self.redis_db_frame.hmset('funboost_queue__consumer_parmas',{self._consumer.queue_name: self._consumer.consumer_params.json_str_value()})
-
 
     def _send_heartbeat_with_dict_value(self, redis_key, ):
         # 发送当前消费者进程心跳的，值是字典，按一个机器或者一个队列运行了哪些进程。

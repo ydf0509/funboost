@@ -32,19 +32,29 @@
             width: 500px;
             display: inline-block;
         }
+        /* .frozen-column-background { background-color: #FFFFFF !important; } */ /* 移除或注释掉这里 */
+        .tabulator-cell {
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+            padding-top: 10px !important;
+            border: 1px solid #555 !important; 
+            background-color: #000000; /* 移除 !important */
+            color: #FFFFFF; /* 移除 !important */
+        }
     </style>
 </head>
 <body>
     <div class="container-fluid" style="margin-top: 5px;">
-        <div class="search-container">
-            <div class="input-group">
-                <input type="text" id="searchInput" class="form-control" placeholder="输入队列名称进行过滤...">
+        <div class="search-container" style="display: flex; align-items: center; margin-bottom: 10px;">
+            <div class="input-group" style="width: 400px;">
+                <input type="text" id="searchInput" class="form-control" placeholder="输入队列名称进行过滤..." style="width: 100%;">
                 <span class="input-group-btn">
                     <button class="btn btn-default" type="button" onclick="clearSearch()">
                         <i class="glyphicon glyphicon-remove"></i>
                     </button>
                 </span>
             </div>
+            <button id="refresh-all-msg-counts" class="btn btn-info" style="margin-left: 30px;">更新所有队列的消息数量</button>
         </div>
         <div id="queue-table"></div>
     </div>
@@ -55,12 +65,27 @@
         var table = new Tabulator("#queue-table", {
             theme: "bootstrap3",
             ajaxURL: "/queue/params_and_active_consumers",
-            layout: "fitDataTable",
+            layout: "fitDataFill",
             responsiveLayout: false,
             pagination: true,
             paginationSize: 1000,
             height: "auto",
             locale: true,
+            rowFormatter: function(row) {
+                var data = row.getData();
+                var cell = row.getCell("queue_name"); 
+
+                if (cell && cell.getElement()) { 
+                    var element = cell.getElement();
+                    if (data.consumer_count > 0) {
+                        element.style.backgroundColor = "#4CAF50"; // 恢复绿色背景
+                        element.style.color = "white";
+                    } else {
+                        element.style.backgroundColor = "#F44336"; // 恢复红色背景
+                        element.style.color = "white";
+                    }
+                }
+            },
             langs: {
                 "zh-cn": {
                     "pagination": {
@@ -76,20 +101,26 @@
                 }
             },
             columns: [
-                { title: "<br><br>队列名字", field: "queue_name", sorter: "string", headerSort: true, headerHozAlign: "center", hozAlign: "left", minWidth: 200, headerWordWrap: true },
+                { title: "<br><br>队列名字", field: "queue_name", sorter: "string", headerSort: true, headerHozAlign: "center", hozAlign: "left", minWidth: 200, headerWordWrap: true, frozen: true },
+                
                 { title: "<br>broker<br>类型", field: "broker_kind", sorter: "string"  },
+                { title: "<br>消费<br>函数", field: "consuming_function_name", sorter: "string"  },
+                { title: "<br>历史运<br>行次数", field: "history_run_count", sorter: "number", width: 150 },
+                { title: "<br>历史运<br>行失败<br>次数", field: "history_run_fail_count", sorter: "number", width: 150 },
                 { title: "<br>近10秒<br>完成", field: "all_consumers_last_x_s_execute_count", sorter: "number", width: 100 },
                 { title: "<br>近10秒<br>失败", field: "all_consumers_last_x_s_execute_count_fail", sorter: "number", width: 100 },
 
                 { title: "近10秒<br>函数运行<br>平均耗时", field: "all_consumers_last_x_s_avarage_function_spend_time", sorter: "number", width: 100 },
                 { title: "累计<br>函数运行<br>平均耗时", field: "all_consumers_avarage_function_spend_time_from_start", sorter: "number", width: 100 },
 
-                { title: "<br><br>消息数量", field: "msg_count", sorter: "number", width: 170,
+                { title: "<br><br>消息数量", field: "msg_count", sorter: "number", width: 250,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
+                        const initialCount = cell.getValue() === null ? '' : cell.getValue();
+                        const initialCountStr = initialCount === '' ? '0' : String(initialCount); // Ensure '0' for empty initial
                         return `
-                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 30px;">
-                                <span id="msg-count-${row.queue_name}" style="min-width: 70px; text-align: right; padding-right: 25px;">${cell.getValue() === null ? '' : cell.getValue()}</span>
+                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 10px;">
+                                <span id="msg-count-${row.queue_name}" data-last-count="${initialCountStr}" style="min-width: 70px; text-align: right; padding-right: 25px;">${initialCount}</span>
                                 <button class="btn btn-primary btn-sm" onclick="getMessageCount('${row.queue_name}')">获取</button>
                             </div>
                         `;
@@ -119,7 +150,7 @@
                 },
                 {
                     title: "<br><br>操作",
-                    width: 400,
+                    width: 500,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
                         const btnId = 'showParamsBtn_' + Math.random().toString(36).substr(2, 9);
@@ -139,7 +170,11 @@
                 // 转换API响应为表格数据
                 return Object.entries(response).map(([queue_name, data]) => ({
                     queue_name: queue_name,
+                    
                     broker_kind: data.queue_params.broker_kind,
+                    consuming_function_name: data.queue_params.consuming_function_name,
+                    history_run_count: data.history_run_count,
+                    history_run_fail_count: data.history_run_fail_count,
                     all_consumers_last_x_s_execute_count: data.all_consumers_last_x_s_execute_count,
                     all_consumers_last_x_s_execute_count_fail: data.all_consumers_last_x_s_execute_count_fail,
                     msg_count: data.msg_num_in_broker, // 初始化为空字符串
@@ -207,16 +242,43 @@
                 return;
             }
             const broker_kind = row.getData().broker_kind;
+            
+            let countSpan = document.getElementById(`msg-count-${queueName}`);
+            let previous_count_str = countSpan.getAttribute('data-last-count') || '0';
+            let previous_count = parseInt(previous_count_str);
+            if (isNaN(previous_count)) previous_count = 0; // Fallback
+
+            countSpan.innerHTML = '正在获取...'; // Add a loading indicator
+
             // 获取消息数量的API调用
             $.get(`/queue/message_count/${broker_kind}/${queueName}`, function(response) {
                 if (response.success) {
-                    // 更新表格中的消息数量
-                    row.update({msg_count: response.count});
-                    // 直接更新显示的数字
-                    alert(`获取 ${queueName} 队列 消息数量成功`);
-                    document.getElementById(`msg-count-${queueName}`).textContent = response.count;
-                    
+                    const new_count = parseInt(response.count);
+                    if (isNaN(new_count)) {
+                        countSpan.innerHTML = 'get_msg_num_error';
+                        countSpan.setAttribute('data-last-count', '0'); // Reset last count on error
+                        return;
+                    } 
+
+                    const difference = new_count - previous_count;
+                    let diff_display_html = '';
+                    if (countSpan.getAttribute('data-last-count') !== '0' || previous_count_str !== '') { // Only show diff if not initial load or previous was not error
+                        if (difference > 0) {
+                            diff_display_html = ` <span style="color: red;">↑ +${difference}</span>`;
+                        } else if (difference < 0) {
+                            diff_display_html = ` <span style="color: green;">↓ ${difference}</span>`;
+                        }
+                    }
+
+                    countSpan.innerHTML = `${new_count}${diff_display_html}`;
+                    countSpan.setAttribute('data-last-count', new_count.toString());
+                } else {
+                    countSpan.innerHTML = 'get_msg_num_error';
+                    countSpan.setAttribute('data-last-count', '0'); // Reset last count on error
                 }
+            }).fail(function() {
+                countSpan.innerHTML = 'get_msg_num_error';
+                countSpan.setAttribute('data-last-count', '0'); // Reset last count on error
             });
         }
 
@@ -272,8 +334,9 @@
                             <tr>
                                 <td>${consumer.computer_ip}</td>
                                 <td>${consumer.computer_name}</td>
-                                <td>${consumer.hearbeat_datetime_str}</td>
                                 <td>${consumer.process_id}</td>
+                                <td>${consumer.hearbeat_datetime_str}</td>
+                                
                                 <td>${consumer.start_datetime_str}</td>
                                 
                                 <td>${consumer.last_x_s_execute_count}</td>
@@ -283,6 +346,7 @@
                                 <td>${consumer.total_consume_count_from_start_fail}</td>
                                 <td>${consumer.avarage_function_spend_time_from_start}</td>
                                 <td>${consumer.code_filename}</td>,
+                                <td>${consumer.consumer_uuid}</td>
                             </tr>
                         `;
                     });
@@ -302,8 +366,9 @@
                                                     <tr>
                                                         <th>计算机IP</th>
                                                         <th>计算机名称</th>
-                                                        <th>最后心跳时间</th>
                                                         <th>进程ID</th>
+                                                        <th>最后心跳时间</th>
+                                                        
                                                         <th>启动时间</th>
                                                         
                                                         <th>近10秒<br>运行完成<br>消息个数</th>
@@ -313,6 +378,7 @@
                                                         <th>累计<br>运行失败<br>消息个数</th>
                                                         <th>累计<br>函数运行<br>平均耗时</th>
                                                         <th>代码文件名</th>
+                                                        <th>消费者UUID</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -342,6 +408,13 @@
                 }
             });
         }
+
+        document.getElementById("refresh-all-msg-counts").onclick = function() {
+            table.getRows().forEach(row => {
+                const queueName = row.getData().queue_name;
+                getMessageCount(queueName);
+            });
+        };
 
         // 定时刷新表格数据
         // setInterval(function() {

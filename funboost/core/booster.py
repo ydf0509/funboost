@@ -100,6 +100,7 @@ class Booster:
             consuming_function = args[0]
             self.boost_params.consuming_function = consuming_function
             self.boost_params.consuming_function_raw = consuming_function
+            self.boost_params.consuming_function_name = consuming_function.__name__
             # print(consuming_function)
             # print(ClsHelper.get_method_kind(consuming_function))
             # print(inspect.getsourcelines(consuming_function))

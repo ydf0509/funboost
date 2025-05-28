@@ -108,9 +108,23 @@ class ConstStrForClassMethod:
     OBJ_INIT_PARAMS = 'obj_init_params'
     CLS_MODULE = 'cls_module'
     CLS_FILE = 'cls_file'
-
 class RedisKeys:
     REDIS_KEY_PAUSE_FLAG  = 'funboost_pause_flag' 
     REDIS_KEY_STOP_FLAG = 'funboost_stop_flag'
     QUEUE__MSG_COUNT_MAP = 'funboost_queue__msg_count_map'
     FUNBOOST_QUEUE__CONSUMER_PARAMS= 'funboost_queue__consumer_parmas'
+    FUNBOOST_QUEUE__RUN_COUNT_MAP = 'funboost_queue__run_count_map'
+    FUNBOOST_QUEUE__RUN_FAIL_COUNT_MAP = 'funboost_queue__run_fail_count_map'
+    FUNBOOST_ALL_QUEUE_NAMES = 'funboost_all_queue_names'
+    FUNBOOST_ALL_IPS = 'funboost_all_ips'
+
+    FUNBOOST_HEARTBEAT_QUEUE__DICT_PREFIX = 'funboost_hearbeat_queue__dict:'
+    FUNBOOST_HEARTBEAT_SERVER__DICT_PREFIX = 'funboost_hearbeat_server__dict:'
+
+    @staticmethod
+    def gen_funboost_hearbeat_queue__dict_key_by_queue_name(queue_name):
+        return f'{RedisKeys.FUNBOOST_HEARTBEAT_QUEUE__DICT_PREFIX}{queue_name}'
+
+    @staticmethod
+    def gen_funboost_hearbeat_server__dict_key_by_ip(ip):
+        return f'{RedisKeys.FUNBOOST_HEARTBEAT_SERVER__DICT_PREFIX}{ip}'

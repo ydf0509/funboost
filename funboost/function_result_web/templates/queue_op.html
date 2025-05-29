@@ -20,6 +20,7 @@
      <!-- Tabulator JS -->
      <script type="text/javascript" src="{{ url_for('static',filename='js_cdn/tabulator-tables@5.5.0/dist/js/tabulator.min.js') }}"></script>
      <!-- <script src="https://cdn.bootcdn.net/ajax/libs/tabulator/5.5.0/js/tabulator.min.js"></script> -->
+     <script src="{{ url_for('static',filename='js_cdn/chart.js') }}"></script>
 
     <style>
         .action-btn {
@@ -41,6 +42,11 @@
             background-color: #000000; /* 移除 !important */
             color: #FFFFFF; /* 移除 !important */
         }
+        /* 新增: 自定义超大模态框样式 */
+        .modal-xl-custom {
+            width: 80%; /* 宽度占屏幕的80% */
+            max-width: 1400px; /* 最大宽度限制 */
+        }
     </style>
 </head>
 <body>
@@ -55,8 +61,48 @@
                 </span>
             </div>
             <button id="refresh-all-msg-counts" class="btn btn-info" style="margin-left: 30px;">更新所有队列的消息数量</button>
+            <button id="toggle-auto-refresh" class="btn btn-success" style="margin-left: 10px;">启动自动刷新</button>
+            <button id="show-explanation-btn" class="btn btn-default" style="margin-left: 10px;">说明</button>
         </div>
         <div id="queue-table"></div>
+    </div>
+
+    <!-- Chart Modal -->
+    <div class="modal fade" id="chartModal" tabindex="-1" role="dialog" aria-labelledby="chartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-xl-custom" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="chartModalLabel">队列数据曲线图: <span id="chartQueueName"></span></h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <canvas id="queueDataChart"></canvas>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Explanation Modal -->
+    <div class="modal fade" id="explanationModal" tabindex="-1" role="dialog" aria-labelledby="explanationModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="explanationModalLabel">说明</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <ul id="explanation-text">
+                        {# Content will be added by JavaScript #}
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
     </div>
 
    
@@ -101,7 +147,31 @@
                 }
             },
             columns: [
-                { title: "<br><br>队列名字", field: "queue_name", sorter: "string", headerSort: true, headerHozAlign: "center", hozAlign: "left", minWidth: 200, headerWordWrap: true, frozen: true },
+                {
+                    title: "<br><br>队列名字",
+                    field: "queue_name",
+                    sorter: "string",
+                    headerSort: true,
+                    headerHozAlign: "center",
+                    hozAlign: "left",
+                    minWidth: 320, // 增加宽度以容纳按钮
+                    headerWordWrap: true,
+                    frozen: true,
+                    formatter: function(cell, formatterParams, onRendered) {
+                        const queueName = cell.getValue();
+                        // 根据 isAutoRefreshing 状态动态设置按钮的显示样式
+                        const buttonDisplay = isAutoRefreshing ? 'inline-block' : 'none'; 
+                        return `<div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>${queueName}</span>
+                                    <button class="btn btn-xs btn-info view-chart-btn"
+                                            data-queue-name="${queueName}"
+                                            style="margin-left: 10px; display: ${buttonDisplay};"
+                                            onclick="showQueueChart('${queueName}')">
+                                        <i class="glyphicon glyphicon-stats"></i> 查看曲线图
+                                    </button>
+                                </div>`;
+                    }
+                },
                 
                 { title: "<br>broker<br>类型", field: "broker_kind", sorter: "string"  },
                 { title: "<br>消费<br>函数", field: "consuming_function_name", sorter: "string"  },
@@ -168,7 +238,7 @@
             ],
             ajaxResponse: function(url, params, response) {
                 // 转换API响应为表格数据
-                return Object.entries(response).map(([queue_name, data]) => ({
+                const tableData = Object.entries(response).map(([queue_name, data]) => ({
                     queue_name: queue_name,
                     
                     broker_kind: data.queue_params.broker_kind,
@@ -177,7 +247,7 @@
                     history_run_fail_count: data.history_run_fail_count,
                     all_consumers_last_x_s_execute_count: data.all_consumers_last_x_s_execute_count,
                     all_consumers_last_x_s_execute_count_fail: data.all_consumers_last_x_s_execute_count_fail,
-                    msg_count: data.msg_num_in_broker, // 初始化为空字符串
+                    msg_count: data.msg_num_in_broker, 
                     consumer_count: data.active_consumers.length,
                     active_consumers: data.active_consumers,
                     queue_params: data.queue_params,
@@ -185,6 +255,18 @@
                     all_consumers_last_x_s_avarage_function_spend_time:data.all_consumers_last_x_s_avarage_function_spend_time,
                     all_consumers_avarage_function_spend_time_from_start:data.all_consumers_avarage_function_spend_time_from_start
                 }));
+
+                const processedTableDataForHistory = tableData.map(item => {
+                    // 确保 msg_count 用于历史记录时是数字
+                    const numericMsgCount = parseFloat(item.msg_count);
+                    return {
+                        ...item,
+                        msg_count_numeric: isNaN(numericMsgCount) ? 0 : numericMsgCount 
+                    };
+                });
+                updateHistoricalData(processedTableDataForHistory);
+
+                return tableData;
             },
         });
 
@@ -416,10 +498,245 @@
             });
         };
 
-        // 定时刷新表格数据
-        // setInterval(function() {
-        //     table.refreshData();
-        // }, 5000);
+        // --- BEGIN NEW SCRIPT LOGIC ---
+        let isAutoRefreshing = false;
+        let autoRefreshIntervalId = null;
+        const AUTO_REFRESH_INTERVAL = 10000; // 10 秒
+        let historicalData = {}; // 结构: { queueName: [{timestamp: Date.now(), history_run_count: val, ...}, ...], ... }
+        const MAX_DATA_AGE_MS = 60 * 60 * 1000; // 1 小时
+        
+        // 定义需要记录并展示在图表中的列字段及其显示名称
+        const CHARTABLE_FIELDS_MAP = {
+            "history_run_count": "历史运行次数",
+            "history_run_fail_count": "历史运行失败次数",
+            "all_consumers_last_x_s_execute_count": "近10秒完成",
+            "all_consumers_last_x_s_execute_count_fail": "近10秒失败",
+            "all_consumers_last_x_s_avarage_function_spend_time": "近10秒函数运行平均耗时",
+            "all_consumers_avarage_function_spend_time_from_start": "累计函数运行平均耗时",
+            "msg_count_numeric": "消息数量" // 注意：这是我们将在ajaxResponse中处理得到的数值型消息数量
+        };
+        let chartInstance = null; // 用于存储Chart.js的实例
+        let activeChartQueueName = null; // 新增：跟踪当前活动图表的队列名称
+
+        // 新增：预定义的颜色数组，用于图表线条 (更新后的高区分度颜色)
+        const PREDEFINED_COLORS = [
+            '#E60012', // 鲜红 (Red)
+            '#005AC8', // 鲜蓝 (Blue)
+            '#00A600', // 鲜绿 (Green)
+            '#FF9900', // 亮橙 (Orange)
+            '#8B28B7', // 紫色 (Purple)
+            '#9A6324', // 棕色 (Brown)
+            '#5E8C78', // 暗青色 (Teal)
+            '#F58231', // 亮橙红 (Vermilion)
+            '#42D4F4', // 天蓝色 (Cyan)
+            '#BF6131', // 锈红色 (Rust)
+            '#3CB44B', // 另一种绿色 (Lime Green)
+            '#4363D8', // 另一种蓝色 (Indigo)
+            '#F032E6', // 品红色 (Magenta)
+            '#BCF60C', // 黄绿色 (Chartreuse)
+            '#FABEBE', // 浅粉色 (Light Pink)
+            '#AAFFC3', // 浅绿色 (Mint Green)
+            '#E6BEFF', // 浅紫色 (Lavender)
+            '#FFFAC8'  // 浅黄色 (Cream)
+        ];
+
+        function updateHistoricalData(newDataFromTable) {
+            const now = Date.now();
+            newDataFromTable.forEach(item => {
+                const queueName = item.queue_name;
+                if (!historicalData[queueName]) {
+                    historicalData[queueName] = [];
+                }
+
+                let dataPoint = { timestamp: now };
+                Object.keys(CHARTABLE_FIELDS_MAP).forEach(fieldKey => {
+                    dataPoint[fieldKey] = item[fieldKey]; // item已经包含了转换后的msg_count_numeric
+                });
+                historicalData[queueName].push(dataPoint);
+
+                // 清理超过1小时的旧数据
+                historicalData[queueName] = historicalData[queueName].filter(dp => (now - dp.timestamp) <= MAX_DATA_AGE_MS);
+            });
+            updateActiveChartIfVisible(); // 在历史数据更新后，尝试更新活动图表
+        }
+
+        function refreshTableData() {
+            console.log("Auto-refresh: refreshing table data...");
+            table.replaceData() // replaceData会重新调用ajaxURL，进而触发ajaxResponse中的updateHistoricalData
+                .then(() => {
+                    console.log("Auto-refresh: table data refreshed successfully.");
+                })
+                .catch(error => {
+                    console.error("Auto-refresh: error refreshing table data:", error);
+                    // 可以考虑在这里停止自动刷新或通知用户
+                });
+        }
+
+        function toggleAutoRefresh() {
+            const button = document.getElementById("toggle-auto-refresh");
+            // const chartButtons = document.querySelectorAll(".view-chart-btn"); // 不再直接通过此方式控制显隐
+
+            if (isAutoRefreshing) { // 如果正在刷新，则停止
+                clearInterval(autoRefreshIntervalId);
+                isAutoRefreshing = false;
+                button.textContent = "启动自动刷新";
+                button.classList.remove("btn-danger");
+                button.classList.add("btn-success");
+                // chartButtons.forEach(btn => btn.style.display = 'none'); // Formatter将处理
+                console.log("Auto-refresh stopped.");
+                if (table) {
+                    table.redraw(true); // 强制表格重绘，formatter会根据isAutoRefreshing=false隐藏按钮
+                }
+            } else { // 如果未刷新，则启动
+                isAutoRefreshing = true;
+                button.textContent = "暂停自动刷新";
+                button.classList.remove("btn-success");
+                button.classList.add("btn-danger");
+                // chartButtons.forEach(btn => btn.style.display = 'inline-block'); // Formatter将处理
+                
+                refreshTableData(); // 立即执行一次刷新, 这会调用replaceData, 触发重绘, formatter会显示按钮
+                autoRefreshIntervalId = setInterval(refreshTableData, AUTO_REFRESH_INTERVAL);
+                console.log("Auto-refresh started. Interval ID:", autoRefreshIntervalId);
+            }
+        }
+
+        document.getElementById("toggle-auto-refresh").addEventListener("click", toggleAutoRefresh);
+
+        // 这个函数由表格中每行的"查看图表"按钮调用
+        function showQueueChart(queueName) {
+            const dataForChart = historicalData[queueName] || [];
+            document.getElementById("chartQueueName").textContent = queueName; // 设置模态框标题中的队列名
+            activeChartQueueName = queueName; // 设置当前活动的图表队列名
+
+            if (chartInstance) {
+                chartInstance.destroy(); // 销毁已存在的图表实例，避免重复渲染
+            }
+            
+            const chartCanvas = document.getElementById('queueDataChart');
+            const ctx = chartCanvas.getContext('2d');
+
+            if (dataForChart.length === 0) {
+                // alert("队列 " + queueName + " 暂无历史数据可供展示。请等待自动刷新收集更多数据。");
+                // 可以在canvas上绘制提示信息
+                ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height); // 清空画布
+                ctx.font = "16px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("队列 " + queueName + " 暂无历史数据，请等待数据收集。", chartCanvas.width / 2, chartCanvas.height / 2);
+                $('#chartModal').modal('show');
+                return;
+            }
+
+            const labels = dataForChart.map(dp => new Date(dp.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+            
+            const datasets = Object.keys(CHARTABLE_FIELDS_MAP).map((fieldKey, index) => {
+                const displayName = CHARTABLE_FIELDS_MAP[fieldKey];
+                
+                // 设置默认显示或隐藏
+                const isDefaultVisible = fieldKey === 'all_consumers_last_x_s_execute_count' || fieldKey === 'all_consumers_last_x_s_execute_count_fail';
+
+                return {
+                    label: displayName,
+                    data: dataForChart.map(dp => dp[fieldKey] === undefined || dp[fieldKey] === null ? NaN : dp[fieldKey]), // 处理可能存在的undefined或null
+                    fill: false,
+                    borderColor: PREDEFINED_COLORS[index % PREDEFINED_COLORS.length], // 使用预定义颜色
+                    backgroundColor: PREDEFINED_COLORS[index % PREDEFINED_COLORS.length] + '33', // 面积图或点的背景颜色（带透明度）
+                    tension: 0.1,
+                    pointRadius: 3, // 点的大小
+                    pointHoverRadius: 5, // 鼠标悬浮时点的大小
+                    borderWidth: 2, // 线条宽度
+                    hidden: !isDefaultVisible // 控制默认是否隐藏
+                };
+            });
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // 允许图表填充模态框主体
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '时间'
+                            }
+                        },
+                        y: {
+                            beginAtZero: false, // Y轴不一定从0开始，根据数据自适应
+                            title: {
+                                display: true,
+                                text: '数值'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: `队列 [${queueName}] 各项指标变化趋势`
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    interaction: { // 增强交互性
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+            $('#chartModal').modal('show'); // 显示模态框
+        }
+
+        // 新增：模态框关闭时的处理
+        $('#chartModal').on('hidden.bs.modal', function () {
+            if (chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
+            activeChartQueueName = null; // 清除活动图表队列名
+            console.log("Chart modal closed and instance destroyed.");
+        });
+
+        // 新增：如果图表可见，则用最新数据更新它
+        function updateActiveChartIfVisible() {
+            if (activeChartQueueName && chartInstance && historicalData[activeChartQueueName]) {
+                const dataForChart = historicalData[activeChartQueueName];
+                if (dataForChart.length > 0) {
+                    const newLabels = dataForChart.map(dp => new Date(dp.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+                    
+                    chartInstance.data.labels = newLabels;
+                    Object.keys(CHARTABLE_FIELDS_MAP).forEach((fieldKey, index) => {
+                        if (chartInstance.data.datasets[index]) { 
+                             chartInstance.data.datasets[index].data = dataForChart.map(dp => dp[fieldKey] === undefined || dp[fieldKey] === null ? NaN : dp[fieldKey]);
+                        }
+                    });
+                    chartInstance.update(); // 更新图表
+                    console.log(`Chart for ${activeChartQueueName} updated dynamically.`);
+                }
+            }
+        }
+
+        // 新增：显示说明模态框的函数
+        function showExplanationModal() {
+            const explanationTextHtml = `
+                <li>消息队列的各项指标数据是 funboost 消费者每隔10秒周期上报到 redis 的，所以不是毫秒级实时，而是10秒级实时。</li>
+                <li>"更新所有队列消息数量"按钮和表格"消息数量"列的获取按钮，是实时查询 broker 的消息数量，不是基于消费者上报到 redis 的数据。（因为有的队列可能没有启动相应的消费者，也就没有上报方）</li>
+                <li>点击"启动自动刷新"按钮后，会每隔10秒更新表格的数据，并在前端内存中维护近1小时内的各种指标数据；同时，"消息队列"这一列的每行会出现"查看曲线图"按钮，点击后弹出的曲线图会动态显示内存中保存的指标数据变化趋势。</li>
+            `;
+            document.getElementById('explanation-text').innerHTML = explanationTextHtml;
+            $('#explanationModal').modal('show');
+        }
+
+        // 绑定说明按钮的点击事件
+        document.getElementById('show-explanation-btn').addEventListener('click', showExplanationModal);
     </script>
 </body>
 </html>

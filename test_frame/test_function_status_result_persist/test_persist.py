@@ -31,7 +31,7 @@ def f2(x,y):
     return x + y
 
 @boost(MyBoosterParams(queue_name='queue_test_g03t',broker_kind=BrokerEnum.REDIS,qps=0.5,
-max_retry_times=0,concurrent_mode=ConcurrentModeEnum.ASYNC))
+max_retry_times=1,concurrent_mode=ConcurrentModeEnum.ASYNC))
 async def aio_f3(x):
     await asyncio.sleep(3)
     print(f'f3aa: {x}')

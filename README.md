@@ -29,8 +29,8 @@ funboost的神奇之处在于它同时拥有"轻量级使用方式"和"重量级
 python函数加速器，框架包罗万象，一统编程思维，兼容50% python编程业务场景，适用范围广。
 python万能分布式函数调度框架，支持5种并发模式，30+种消息队列中间件
 (不仅支持几乎所有你能想到的消息队列中间件，还支持本地磁盘队列、数据库队列 (SQLAlchemy, Peewee)、
-内存队列、甚至是 HTTP 请求、WebSocket 等作为任务队列，甚至是将 Celery、Dramatiq、Huey 等其他框架整体作为其 Broker。
-funboost源码高扩展性的设计，造成“万物皆可为Broker”,并不是有30种传统意义上的经典消息队列，
+内存队列、甚至是 HTTP 请求、WebSocket 等作为任务队列，甚至是将 Celery、Dramatiq、Huey 等其他框架整体作为其
+Broker。funboost源码高扩展性的设计，造成“万物皆可为Broker”,并不是有30种传统意义上的经典消息队列，
 因为世界上总共都没有30种知名的经典消息队列)，
 30种任务控制功能。给任意python函数赋能。
 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。
@@ -510,14 +510,20 @@ if __name__ == '__main__':
 
 
 队列操作：查看和操作队列，包括 清空清空 暂停消费 恢复消费 调整qps和并发
-[![pEJC6m9.png](https://s21.ax1x.com/2025/03/04/pEJC6m9.png)](https://imgse.com/i/pEJC6m9)
+<!-- [![pEJC6m9.png](https://s21.ax1x.com/2025/03/04/pEJC6m9.png)](https://imgse.com/i/pEJC6m9) -->
+[![pVSOJcq.png](https://s21.ax1x.com/2025/05/27/pVSOJcq.png)](https://imgse.com/i/pVSOJcq)
 
 队列操作，查看消费者详情：查看队列的所有消费者详情
 [![pEJCgT1.png](https://s21.ax1x.com/2025/03/04/pEJCgT1.png)](https://imgse.com/i/pEJCgT1)
 
+队列操作:查看消费曲线图，查看各种消费指标。
+[![pVpr7sP.png](https://s21.ax1x.com/2025/05/29/pVpr7sP.png)](https://imgse.com/i/pVpr7sP)
+
 rpc调用：在网页上对30种消息队列发布消息并获取消息的函数执行结；根据taskid获取结果。
 <!-- [![pETq8hj.png](https://s21.ax1x.com/2025/04/28/pETq8hj.png)](https://imgse.com/i/pETq8hj) -->
 [![pE7y8oT.png](https://s21.ax1x.com/2025/04/29/pE7y8oT.png)](https://imgse.com/i/pE7y8oT)
+
+
 
 ## 1.4  python分布式函数执行为什么重要？
 

@@ -32,23 +32,36 @@ class RedisFilter(RedisMixin, FunboostFileLoggerMixin):
         self._redis_key_name = redis_key_name
         self._redis_filter_task_expire_seconds = redis_filter_task_expire_seconds
 
+        # @staticmethod
+        # def _get_ordered_str(value):
+        #     """对json的键值对在redis中进行过滤，需要先把键值对排序，否则过滤会不准确如 {"a":1,"b":2} 和 {"b":2,"a":1}"""
+        #     value = Serialization.to_dict(value)
+        #     ordered_dict = OrderedDict()
+        #     for k in sorted(value):
+        #         ordered_dict[k] = value[k]
+        #     return json.dumps(ordered_dict)
+    
     @staticmethod
-    def _get_ordered_str(value):
+    def generate_filter_str(value: typing.Union[str, dict],  filter_str: typing.Optional[str] = None):
         """对json的键值对在redis中进行过滤，需要先把键值对排序，否则过滤会不准确如 {"a":1,"b":2} 和 {"b":2,"a":1}"""
+        if filter_str: # 如果用户单独指定了过滤字符串，就使用使用户指定的过滤字符串，否则使用排序后的键值对字符串
+            return filter_str
         value = Serialization.to_dict(value)
         ordered_dict = OrderedDict()
         for k in sorted(value):
             ordered_dict[k] = value[k]
+        # print(ordered_dict,filter_str)
         return json.dumps(ordered_dict)
 
-    def add_a_value(self, value: typing.Union[str, dict]):
-        self.redis_db_filter_and_rpc_result.sadd(self._redis_key_name, self._get_ordered_str(value))
 
-    def manual_delete_a_value(self, value: typing.Union[str, dict]):
-        self.redis_db_filter_and_rpc_result.srem(self._redis_key_name, self._get_ordered_str(value))
+    def add_a_value(self, value: typing.Union[str, dict], filter_str: typing.Optional[str] = None):
+        self.redis_db_filter_and_rpc_result.sadd(self._redis_key_name, self.generate_filter_str(value, filter_str))
 
-    def check_value_exists(self, value):
-        return self.redis_db_filter_and_rpc_result.sismember(self._redis_key_name, self._get_ordered_str(value))
+    def manual_delete_a_value(self, value: typing.Union[str, dict], filter_str: typing.Optional[str] = None):
+        self.redis_db_filter_and_rpc_result.srem(self._redis_key_name, self.generate_filter_str(value, filter_str))
+
+    def check_value_exists(self, value, filter_str: typing.Optional[str] = None):
+        return self.redis_db_filter_and_rpc_result.sismember(self._redis_key_name, self.generate_filter_str(value, filter_str))
 
     def delete_expire_filter_task_cycle(self):
         pass
@@ -61,15 +74,17 @@ class RedisImpermanencyFilter(RedisFilter):
     如果是30分钟内发布过这个任务，则不执行1 + 2，现在把这个逻辑集成到框架，一般用于接口缓存。
     """
 
-    def add_a_value(self, value: typing.Union[str, dict]):
-        self.redis_db_filter_and_rpc_result.zadd(self._redis_key_name, {self._get_ordered_str(value):time.time()})
+    def add_a_value(self, value: typing.Union[str, dict], filter_str: typing.Optional[str] = None):
+        self.redis_db_filter_and_rpc_result.zadd(self._redis_key_name, {self.generate_filter_str(value, filter_str):time.time()})
 
-    def manual_delete_a_value(self, value: typing.Union[str, dict]):
-        self.redis_db_filter_and_rpc_result.zrem(self._redis_key_name, self._get_ordered_str(value))
+    def manual_delete_a_value(self, value: typing.Union[str, dict], filter_str: typing.Optional[str] = None):
+        self.redis_db_filter_and_rpc_result.zrem(self._redis_key_name, self.generate_filter_str(value, filter_str))
 
-    def check_value_exists(self, value):
-        # print(self.redis_db_filter_and_rpc_result.zrank(self._redis_key_name, self._get_ordered_str(value)))
-        return False if self.redis_db_filter_and_rpc_result.zrank(self._redis_key_name, self._get_ordered_str(value)) is None else True
+    def check_value_exists(self, value, filter_str: typing.Optional[str] = None):
+        # print(self.redis_db_filter_and_rpc_result.zrank(self._redis_key_name, self.generate_filter_str(value, filter_str)))
+        is_exists = False if self.redis_db_filter_and_rpc_result.zscore(self._redis_key_name, self.generate_filter_str(value, filter_str)) is None else True
+        # print(is_exists,value,filter_str,self.generate_filter_str(value, filter_str))
+        return is_exists   
 
     @decorators.keep_circulating(60, block=False)
     def delete_expire_filter_task_cycle000(self):
@@ -111,16 +126,16 @@ class RedisImpermanencyFilterUsingRedisKey(RedisFilter):
         """
         return f'{self._redis_key_name}:{value.replace(":", "：")}'  # 任务是json，带有：会形成很多树，换成中文冒号。
 
-    def add_a_value(self, value: typing.Union[str, dict]):
-        redis_key = self.__add_dir_prefix(self._get_ordered_str(value))
+    def add_a_value(self, value: typing.Union[str, dict], filter_str: typing.Optional[str] = None):
+        redis_key = self.__add_dir_prefix(self.generate_filter_str(value, filter_str))
         self.redis_db_filter_and_rpc_result.set(redis_key, 1)
         self.redis_db_filter_and_rpc_result.expire(redis_key, self._redis_filter_task_expire_seconds)
 
-    def manual_delete_a_value(self, value: typing.Union[str, dict]):
-        self.redis_db_filter_and_rpc_result.delete(self.__add_dir_prefix(self._get_ordered_str(value)))
+    def manual_delete_a_value(self, value: typing.Union[str, dict], filter_str: typing.Optional[str] = None):
+        self.redis_db_filter_and_rpc_result.delete(self.__add_dir_prefix(self.generate_filter_str(value, filter_str)))
 
-    def check_value_exists(self, value):
-        return True if self.redis_db_filter_and_rpc_result.exists(self.__add_dir_prefix(self._get_ordered_str(value))) else True
+    def check_value_exists(self, value, filter_str: typing.Optional[str] = None):
+        return True if self.redis_db_filter_and_rpc_result.exists(self.__add_dir_prefix(self.generate_filter_str(value, filter_str))) else True
 
     def delete_expire_filter_task_cycle(self):
         """
@@ -131,16 +146,17 @@ class RedisImpermanencyFilterUsingRedisKey(RedisFilter):
 
 
 if __name__ == '__main__':
-    # filter = RedisFilter('filter_set:abcdefgh', 120)
-    params_filter = RedisImpermanencyFilter('filter_zset:abcdef', 120)
+    # params_filter = RedisFilter('filter_set:abcdefgh2', 120)
+    params_filter = RedisImpermanencyFilter('filter_zset:abcdef2', 120)
     # params_filter = RedisImpermanencyFilterUsingRedisKey('filter_dir', 300)
     for i in range(10):
-        params_filter.add_a_value({'x': i, 'y': i * 2})
+        # params_filter.add_a_value({'x': i, 'y': i * 2},str(i))
+        params_filter.add_a_value({'x': i, 'y': i * 2},None)
 
-    params_filter.manual_delete_a_value({'a': 1, 'b': 2})
-    print(params_filter.check_value_exists({'a': 1, 'b': 2}))
-    params_filter.delete_expire_filter_task_cycle()
-    params_filter.add_a_value({'a': 1, 'b': 5})
-    print(params_filter.check_value_exists({'a': 1, 'b': 2}))
-    time.sleep(130)
-    print(params_filter.check_value_exists({'a': 1, 'b': 2}))
+    # params_filter.manual_delete_a_value({'a': 1, 'b': 2})
+    print(params_filter.check_value_exists({'x': 1, 'y': 2}))
+    # params_filter.delete_expire_filter_task_cycle()
+    # params_filter.add_a_value({'a': 1, 'b': 5})
+    # print(params_filter.check_value_exists({'a': 1, 'b': 2}))
+    # time.sleep(130)
+    # print(params_filter.check_value_exists({'a': 1, 'b': 2}))

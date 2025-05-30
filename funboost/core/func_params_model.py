@@ -308,6 +308,15 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
     misfire_grace_time: typing.Union[int, None] = None
 
     other_extra_params: dict = None  # 其他参数, 例如消息优先级 , priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': priorityxx})，
+    
+    """filter_str:
+    用户指定过滤字符串， 例如函数入参是 def fun(userid,username,sex，user_description),
+    默认是所有入参一起组成json来过滤，但其实只把userid的值来过滤就好了。所以如果需要精准的按照什么过滤，用户来灵活指定一个字符串就好了
+    
+    用法见文档4.35 
+    f3.publish(msg={'a':i,'b':i*2},priority_control_config=PriorityConsumingControlConfig(filter_str=str(i)))
+    """
+    filter_str :typing.Optional[str] = None 
 
     @root_validator(skip_on_failure=True)
     def cehck_values(cls, values: dict):

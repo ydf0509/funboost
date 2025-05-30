@@ -480,9 +480,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             return
         function_only_params = delete_keys_and_return_new_dict(kw['body'], )
         if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
-                function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
+                function_only_params,self._get_priority_conf(kw, 'filter_str')):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
             self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
-            self._confirm_consume(kw)
+            self._confirm_consume(kw) # 不运行就必须确认消费，否则会发不能确认消费，导致消息队列中间件认为消息没有被消费。
             return
         publish_time = get_publish_time(kw['body'])
         msg_expire_senconds_priority = self._get_priority_conf(kw, 'msg_expire_senconds')
@@ -678,7 +678,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             current_function_result_status.run_status = RunStatus.finish
             self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
             if self._get_priority_conf(kw, 'do_task_filtering'):
-                self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
+                self._redis_filter.add_a_value(function_only_params,self._get_priority_conf(kw, 'filter_str'))  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
             if current_function_result_status.success is False and current_retry_times == max_retry_times:
                 log_msg = f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} '
                 if self.consumer_params.is_push_to_dlx_queue_when_retry_max_times:
@@ -832,7 +832,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             await simple_run_in_executor(self._result_persistence_helper.save_function_result_to_mongo, current_function_result_status)
             if self._get_priority_conf(kw, 'do_task_filtering'):
                 # self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
-                await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params)
+                await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params,self._get_priority_conf(kw, 'filter_str'))
             if current_function_result_status.success is False and current_retry_times == max_retry_times:
                 log_msg = f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} '
                 if self.consumer_params.is_push_to_dlx_queue_when_retry_max_times:

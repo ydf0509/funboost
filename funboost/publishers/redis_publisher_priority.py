@@ -14,7 +14,7 @@ class RedisPriorityPublisher(FlushRedisQueueMixin,AbstractPublisher, RedisMixin,
 
     def custom_init(self):
         queue_list = [self._queue_name]
-        x_max_priority = self.publisher_params.broker_exclusive_config['x-max-priority']
+        x_max_priority = self.publisher_params.broker_exclusive_config.get('x-max-priority')
         if x_max_priority:
             for i in range(1, x_max_priority + 1):
                 queue_list.append(f'{self.queue_name}:{i}')
@@ -28,7 +28,7 @@ class RedisPriorityPublisher(FlushRedisQueueMixin,AbstractPublisher, RedisMixin,
         :return:
         """
         priority = self._get_from_other_extra_params('priroty', msg)
-        x_max_priority = self.publisher_params.broker_exclusive_config['x-max-priority']
+        x_max_priority = self.publisher_params.broker_exclusive_config('x-max-priority')
         queue_name = self.queue_name
         if x_max_priority and priority:
             priority = min(priority, x_max_priority)  # 防止有傻瓜发布消息的优先级priroty比最大支持的优先级还高。

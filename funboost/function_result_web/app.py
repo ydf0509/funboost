@@ -221,10 +221,7 @@ def hearbeat_info_partion_by_ip():
 def get_queue_params_and_active_consumers():
     return jsonify(QueueConusmerParamsGetter().get_queue_params_and_active_consumers())
 
-@app.route('/queue/message_count/<broker_kind>/<queue_name>')
-def get_message_count(broker_kind,queue_name):
-    publisher = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name=queue_name, broker_kind=broker_kind, publish_msg_log_use_full_msg=True))
-    return jsonify({'count':publisher.get_message_count(),'success':True})
+
 
 
 @app.route('/queue/clear/<broker_kind>/<queue_name>',methods=['POST'])
@@ -243,9 +240,27 @@ def resume_consume(queue_name):
     RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name,'0')
     return jsonify({'success':True})
 
-@app.route('/queue/get_msg_num',methods=['GET'])
-def get_msg_num():
+@app.route('/queue/get_msg_num_all_queues',methods=['GET'])
+def get_msg_num_all_queues():
+    """这个是通过消费者周期每隔10秒上报到redis的，性能好。不需要实时获取每个消息队列，直接从redis读取所有队列的消息数量"""
     return jsonify(QueueConusmerParamsGetter().get_msg_num(ignore_report_ts=True))
+
+@app.route('/queue/message_count/<broker_kind>/<queue_name>')
+def get_message_count(broker_kind,queue_name):
+    """这个是实时获取每个消息队列的消息数量，性能差，但是可以实时获取每个消息队列的消息数量"""
+    queue_params = QueueConusmerParamsGetter().get_queue_params()
+    for queue_namex,params in queue_params.items():
+        if params['broker_kind'] == broker_kind and queue_namex == queue_name:
+            publisher = BoostersManager.get_cross_project_publisher(
+                PublisherParams(queue_name=queue_name, 
+                                 broker_kind=broker_kind,
+                                 broker_exclusive_config=params['broker_exclusive_config'],
+                                 publish_msg_log_use_full_msg=True))
+            return jsonify({'count':publisher.get_message_count(),'success':True})
+    return jsonify({'success':False,'msg':f'队列{queue_name}不存在'})
+
+    publisher = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name=queue_name, broker_kind=broker_kind, publish_msg_log_use_full_msg=True))
+    return jsonify({'count':publisher.get_message_count(),'success':True})
         
 @app.route('/rpc/rpc_call',methods=['POST'])
 def rpc_call():

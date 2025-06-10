@@ -135,7 +135,7 @@
         // 页面加载完成后立即获取所有队列
         $(document).ready(function () {
             $.ajax({
-                url: "{{ url_for('get_msg_num')}}",
+                url: "{{ url_for('get_msg_num_all_queues')}}",
                 data: {},
                 async: true,
                 success: function (result) {

@@ -47,6 +47,19 @@ def f4(x):
         raise ValueError('f4 error')
     return x + 1
 
+
+@boost(MyBoosterParams(
+        queue_name='queue_test_g05t',
+        broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM,qps=10,
+        broker_exclusive_config={'x-max-priority':5},
+        ))
+def f5(x):
+    time.sleep(1)
+    print(f'f5: {x}')
+    if random.random() > 0.9:
+        raise ValueError('f5 error')
+    return x + 1
+
 if __name__ == '__main__':
     start_funboost_web_manager(port=27018)  # 也可以在python代码中启动web,启动 funboost web manager funboost队列管理界面
 
@@ -56,7 +69,8 @@ if __name__ == '__main__':
     my_consuming_function.consume()
     f2.multi_process_consume(2)
     aio_f3.consume()
-    # f4.consume()
+    f4.consume()
+    f5.consume()
     # for i in range(0, 1000):
     #     f.push(i)
     #     f2.push(i,i*2)

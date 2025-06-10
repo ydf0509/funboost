@@ -59,7 +59,7 @@ class ThreadPoolExecutorForAps(BasePoolExecutor):
         ThreadPoolExecutor constructor
     """
 
-    def __init__(self, max_workers=10, pool_kwargs=None):
+    def __init__(self, max_workers=100, pool_kwargs=None):
         pool = ThreadPoolExecutorShrinkAble(int(max_workers), )
         super().__init__(pool)
 

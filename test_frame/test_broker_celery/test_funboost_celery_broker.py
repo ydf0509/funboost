@@ -1,10 +1,7 @@
 import time
-import celery.result
-import requests
-
 from funboost import boost, BrokerEnum
 from funboost.assist.celery_helper import CeleryHelper
-import kombu
+
 
 @boost('tets_queue31a5', broker_kind=BrokerEnum.CELERY, concurrent_num=10,is_print_detail_exception=False,)
 def fa(x, y):
@@ -16,7 +13,7 @@ def fa(x, y):
 
 
 @boost('tets_funboost_celery_queue31b', broker_kind=BrokerEnum.CELERY, concurrent_num=10,
-       broker_exclusive_config={'celery_app_config':
+       broker_exclusive_config={'celery_task_config':
                                     {'task_default_rate_limit': '2/s', }}
        )
 def fb(a, b):
@@ -29,12 +26,12 @@ if __name__ == '__main__':
     fa.consume()
     fb.consume()
 
-    for i in range(10):
+    for i in range(1000):
         r = fa.push(i, i + 1)  # type: celery.result.AsyncResult
         # print(type(r), r)
         # print(r.get())
         fb.delay(i, i * 2)
-
+    CeleryHelper.start_flower()
     CeleryHelper.realy_start_celery_worker()
 
 '''

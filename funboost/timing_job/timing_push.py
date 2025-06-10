@@ -76,9 +76,23 @@ class ApsJobAdder:
                      next_run_time=undefined, jobstore='default', executor='default',
                      replace_existing=False, **trigger_args, ):
         """
-        这里的入参都是和apscheduler的add_job的入参一样的，funboost作者没有创造新的入参。
+        1. 这里的入参都是和apscheduler的add_job的入参一样的，funboost作者没有创造新的入参。
         但是官方apscheduler的入参第一个入参是函数，
         funboost的ApsJobAdder对象.add_push_job入参去掉了函数，因为类的实例化时候会把函数传进来，不需要再麻烦用户一次了。
+        
+
+        2. add_push_job目的是 定时运行 消费函数.push方法发布消息到消费队列， 而不是 定时直接运行 消费函数自身。
+
+        相当于 aps_obj.add_job(消费函数.push, trigger, args, kwargs, id, name, .....)
+        那为什么 不直接使用 aps_obj.add_job(消费函数.push, trigger, args, kwargs, id, name, .....) 呢？因为 消费函数.push是实例方法，
+        如果redis作为 jobstore， 消费函数.push 会报错，因为 消费函数.push 是实例方法，不能被序列化。只有普通函数和静态方法才能被序列化。
+        所以开发了一个 add_push_job方法， 里面再去用 add_job， 使用 push_fun_params_to_broker 这个普通函数作为 add_job 的第一个入参，
+        这个普通函数里面再去调用 消费函数.push 方法， 相当于是曲线救国避免 aps_obj.add_job(消费函数.push 不可序列化问题。
+
+
+        3. 用户也可以自己定义一个普通函数my_push，你这个普通函数my_push 里面去调用消费函数.push方法；然后使用 aps_obj.add_job 使用你自己定义的这个my_push作为第一个入参。
+        这种方式更容易你去理解，和apscheduler 官方库的原生写法一模一样。 但是不如 add_push_job 方便，因为 需要你亲自给每个消费函数分别定义一个普通函数my_push。
+
         """
 
         # if not getattr(self.aps_obj, 'has_started_flag', False):
@@ -118,14 +132,16 @@ if __name__ == '__main__':
     ApsJobAdder(sum_two_numbers, job_store_kind='redis').add_push_job(
         trigger='date',
         run_date='2025-01-17 23:25:40',
-        args=(7, 8)
+        args=(7, 8),
+        id='date_job1'
     )
 
     # 方式2：固定间隔执行
     ApsJobAdder(sum_two_numbers, job_store_kind='memory').add_push_job(
         trigger='interval',
         seconds=5,
-        args=(4, 6)
+        args=(4, 6),
+        id='interval_job1'
     )
 
     # 方式3：使用cron表达式定时执行

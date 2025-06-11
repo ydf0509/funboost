@@ -1,3 +1,5 @@
+print('asdsadsdsd')
+
 from funboost.function_result_web.app import app
 
 

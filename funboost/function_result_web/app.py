@@ -295,6 +295,7 @@ def start_funboost_web_manager(host='0.0.0.0', port=27018,block=False):
     print('start_funboost_web_manager , sys.path :', sys.path)
     def _start_funboost_web_manager():
         app.run(debug=False, threaded=True, host=host, port=port)
+    QueueConusmerParamsGetter().cycle_get_queue_params_and_active_consumers_and_report()
     if block is  True:
         _start_funboost_web_manager()
     else:
@@ -306,7 +307,7 @@ if __name__ == '__main__':
     # app.jinja_env.auto_reload = True
     # with app.test_request_context():
     #     print(url_for('query_cols_view'))
-
+    QueueConusmerParamsGetter().cycle_get_queue_params_and_active_consumers_and_report(daemon=True)
     app.run(debug=False, threaded=True, host='0.0.0.0', port=27018)
 
     

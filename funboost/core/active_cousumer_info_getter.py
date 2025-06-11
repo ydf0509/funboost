@@ -1,6 +1,8 @@
 import json
+import threading
 import time
 import typing
+import uuid
 
 from pydantic import main
 
@@ -107,7 +109,7 @@ class ActiveCousumerProcessInfoGetter(RedisMixin, FunboostFileLoggerMixin):
         """获取所有队列对应的活跃消费者进程信息，按队列名划分,不需要传入队列名，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对"""
         queue_names = self.get_all_queue_names()
         infos_map = self._get_all_hearbeat_info_partition_by_redis_keys([RedisKeys.gen_funboost_hearbeat_queue__dict_key_by_queue_name(queue_name) for queue_name in queue_names])
-        self.logger.info(f'获取所有队列对应的活跃消费者进程信息，按队列名划分，结果是 {json.dumps(infos_map, indent=4)}')
+        # self.logger.info(f'获取所有队列对应的活跃消费者进程信息，按队列名划分，结果是 {json.dumps(infos_map, indent=4)}')
         return infos_map
 
     def get_all_hearbeat_info_partition_by_ip(self) -> typing.Dict[typing.AnyStr, typing.List[typing.Dict]]:
@@ -157,7 +159,7 @@ class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
     def get_queue_params_and_active_consumers(self):
         queue__active_consumers_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
 
-        queue_name_list = list(queue__active_consumers_map.keys())
+        # queue_name_list = list(queue__active_consumers_map.keys())
         queue__history_run_count_map = self.get_queues_history_run_count()
         queue__history_run_fail_count_map = self.get_queues_history_run_fail_count()
 
@@ -196,7 +198,43 @@ class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
                 'all_consumers_total_consume_count_from_start_fail':self._sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start_fail'),
             }
         return queue_params_and_active_consumers
+    
+    def cycle_get_queue_params_and_active_consumers_and_report(self,daemon=False):
+        time_interval = 10
+        report_uuid = str(uuid.uuid4()) 
+        def _inner():
+            while True:
+                t_start = time.time()
+                # 这个函数确保只有一个地方在上报数据，避免重复上报
+                report_ts = self.timestamp()
+                redis_report_uuid_ts_str = self.redis_db_frame.get(RedisKeys.FUNBOOST_LAST_GET_QUEUE_PARAMS_AND_ACTIVE_CONSUMERS_AND_REPORT__UUID_TS, )
+                if redis_report_uuid_ts_str:
+                    redis_report_uuid_ts = Serialization.to_dict(redis_report_uuid_ts_str)
+                    if redis_report_uuid_ts['report_uuid'] != report_uuid and redis_report_uuid_ts['report_ts'] > report_ts - time_interval - 10 :
+                        continue
+                self.redis_db_frame.set(RedisKeys.FUNBOOST_LAST_GET_QUEUE_PARAMS_AND_ACTIVE_CONSUMERS_AND_REPORT__UUID_TS,
+                                        Serialization.to_json_str({'report_uuid':report_uuid, 'report_ts':report_ts}))
+                
+                queue_params_and_active_consumers = self.get_queue_params_and_active_consumers()
+                for queue,item in queue_params_and_active_consumers.items():
+                    if len(item['active_consumers']) == 0:
+                        continue
+                    queue_params_and_active_consumers_exlude = {k:v for k,v in item.items() if k not in ['queue_params','active_consumers']}
+                    
+                    queue_params_and_active_consumers_exlude['report_ts'] = report_ts
+                    self.redis_db_frame.zadd(RedisKeys.gen_funboost_queue_time_series_data_key_by_queue_name(queue),
+                                            {Serialization.to_json_str(queue_params_and_active_consumers_exlude):report_ts} )
+                    # 删除过期时序数据,只保留最近1天数据
+                    self.redis_db_frame.zremrangebyscore(
+                        RedisKeys.gen_funboost_queue_time_series_data_key_by_queue_name(queue),
+                        0, report_ts - 86400
+                    )
+                self.logger.info(f'上报时序数据耗时 {time.time() - t_start} 秒')
+
+                time.sleep(time_interval)
+        threading.Thread(target=_inner, daemon=daemon).start()
 
 
 if __name__ == '__main__':
-    print(Serialization.to_json_str(QueueConusmerParamsGetter().get_queue_params_and_active_consumers()))
+    # print(Serialization.to_json_str(QueueConusmerParamsGetter().get_queue_params_and_active_consumers()))
+    QueueConusmerParamsGetter().cycle_get_queue_params_and_active_consumers_and_report()

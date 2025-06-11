@@ -11,13 +11,13 @@ ApsJobAdder(f5,job_store_kind='redis').aps_obj.add_job(
     replace_existing=True)
 
 
-# for i in range(0, 10000):
-#     my_consuming_function.push(i)
-#     f2.push(i,i*2)
-#     aio_f3.push(i)
-#     f4.push(i)
-#     f5.publish({'x':i},priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': random.randint(0,5)}))
-#     time.sleep(0.01)
+for i in range(0, 10000):
+    my_consuming_function.push(i)
+    f2.push(i,i*2)
+    aio_f3.push(i)
+    f4.push(i)
+    f5.publish({'x':i},priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': random.randint(0,5)}))
+    time.sleep(0.01)
 
 
 

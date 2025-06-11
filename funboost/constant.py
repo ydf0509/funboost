@@ -121,6 +121,10 @@ class RedisKeys:
     FUNBOOST_HEARTBEAT_QUEUE__DICT_PREFIX = 'funboost_hearbeat_queue__dict:'
     FUNBOOST_HEARTBEAT_SERVER__DICT_PREFIX = 'funboost_hearbeat_server__dict:'
 
+    FUNBOOST_QUEUE_TIME_SERIES_DATA_PREFIX = 'funboost_queue_time_series_data:'
+
+    FUNBOOST_LAST_GET_QUEUE_PARAMS_AND_ACTIVE_CONSUMERS_AND_REPORT__UUID_TS = 'cycle_get_queue_params_and_active_consumers_and_report__uuid_ts'
+
     @staticmethod
     def gen_funboost_hearbeat_queue__dict_key_by_queue_name(queue_name):
         return f'{RedisKeys.FUNBOOST_HEARTBEAT_QUEUE__DICT_PREFIX}{queue_name}'
@@ -128,3 +132,7 @@ class RedisKeys:
     @staticmethod
     def gen_funboost_hearbeat_server__dict_key_by_ip(ip):
         return f'{RedisKeys.FUNBOOST_HEARTBEAT_SERVER__DICT_PREFIX}{ip}'
+    
+    @staticmethod
+    def gen_funboost_queue_time_series_data_key_by_queue_name(queue_name):
+        return f'{RedisKeys.FUNBOOST_QUEUE_TIME_SERIES_DATA_PREFIX}{queue_name}'

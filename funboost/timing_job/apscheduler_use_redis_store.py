@@ -20,10 +20,11 @@ class FunboostBackgroundSchedulerProcessJobsWithinRedisLock(FunboostBackgroundSc
     继承 Custom schedulers https://apscheduler.readthedocs.io/en/3.x/extending.html   可以重写 _create_lock
     """
 
-    process_jobs_redis_lock_key = f'funboost.BackgroundSchedulerProcessJobsWithinRedisLock'
+    process_jobs_redis_lock_key = None
 
     def set_process_jobs_redis_lock_key(self, lock_key):
         self.process_jobs_redis_lock_key = lock_key
+        return self
 
     # def  _create_lock(self):
     #     return RedisDistributedBlockLockContextManager(RedisMixin().redis_db_frame,self.process_jobs_redis_lock_key,) 这个类的写法不适合固定的单例，
@@ -40,6 +41,8 @@ class FunboostBackgroundSchedulerProcessJobsWithinRedisLock(FunboostBackgroundSc
     #     return 0.1
 
     def _process_jobs(self):
+        if self.process_jobs_redis_lock_key is None:
+            raise ValueError('process_jobs_redis_lock_key is not set')
         with RedisDistributedBlockLockContextManager(RedisMixin().redis_db_frame, self.process_jobs_redis_lock_key, ):
             return super()._process_jobs()
 
@@ -50,6 +53,10 @@ jobstores = {
                              username=BrokerConnConfig.REDIS_USERNAME, jobs_key='funboost.apscheduler.jobs',run_times_key="funboost.apscheduler.run_times")
 }
 
+"""
+建议不要亲自使用这个 funboost_background_scheduler_redis_store 对象，而是 ApsJobAdder来添加定时任务，自动多个apscheduler对象实例，
+尤其是redis作为jobstores时候，使用不同的jobstores，每个消费函数使用各自单独的jobs_key和 run_times_key
+"""
 funboost_background_scheduler_redis_store = FunboostBackgroundSchedulerProcessJobsWithinRedisLock(timezone=FunboostCommonConfig.TIMEZONE, daemon=False, jobstores=jobstores)
 
 

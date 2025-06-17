@@ -259,8 +259,20 @@ def get_message_count(broker_kind,queue_name):
             return jsonify({'count':publisher.get_message_count(),'success':True})
     return jsonify({'success':False,'msg':f'队列{queue_name}不存在'})
 
-    publisher = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name=queue_name, broker_kind=broker_kind, publish_msg_log_use_full_msg=True))
-    return jsonify({'count':publisher.get_message_count(),'success':True})
+@app.route('/queue/get_time_series_data/<queue_name>',methods=['GET'])
+def get_time_series_data_by_queue_name(queue_name,):
+    """_summary_
+
+    Args:
+        queue_name (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    
+    返回例如  [{'report_data': {'pause_flag': -1, 'msg_num_in_broker': 936748, 'history_run_count': '150180', 'history_run_fail_count': '46511', 'all_consumers_last_x_s_execute_count': 7, 'all_consumers_last_x_s_execute_count_fail': 0, 'all_consumers_last_x_s_avarage_function_spend_time': 3.441, 'all_consumers_avarage_function_spend_time_from_start': 4.598, 'all_consumers_total_consume_count_from_start': 1296, 'all_consumers_total_consume_count_from_start_fail': 314, 'report_ts': 1749617360.597841}, 'report_ts': 1749617360.597841}, {'report_data': {'pause_flag': -1, 'msg_num_in_broker': 936748, 'history_run_count': '150184', 'history_run_fail_count': '46514', 'all_consumers_last_x_s_execute_count': 7, 'all_consumers_last_x_s_execute_count_fail': 0, 'all_consumers_last_x_s_avarage_function_spend_time': 3.441, 'all_consumers_avarage_function_spend_time_from_start': 4.599, 'all_consumers_total_consume_count_from_start': 1299, 'all_consumers_total_consume_count_from_start_fail': 316, 'report_ts': 1749617370.628166}, 'report_ts': 1749617370.628166}] 
+    """
+    return jsonify(QueueConusmerParamsGetter().get_time_series_data_by_queue_name(
+        queue_name,request.args.get('start_ts'),request.args.get('end_ts')))
         
 @app.route('/rpc/rpc_call',methods=['POST'])
 def rpc_call():

@@ -219,11 +219,11 @@ class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
                 for queue,item in queue_params_and_active_consumers.items():
                     if len(item['active_consumers']) == 0:
                         continue
-                    queue_params_and_active_consumers_exlude = {k:v for k,v in item.items() if k not in ['queue_params','active_consumers']}
+                    report_data = {k:v for k,v in item.items() if k not in ['queue_params','active_consumers']}
                     
-                    queue_params_and_active_consumers_exlude['report_ts'] = report_ts
+                    report_data['report_ts'] = report_ts
                     self.redis_db_frame.zadd(RedisKeys.gen_funboost_queue_time_series_data_key_by_queue_name(queue),
-                                            {Serialization.to_json_str(queue_params_and_active_consumers_exlude):report_ts} )
+                                            {Serialization.to_json_str(report_data):report_ts} )
                     # 删除过期时序数据,只保留最近1天数据
                     self.redis_db_frame.zremrangebyscore(
                         RedisKeys.gen_funboost_queue_time_series_data_key_by_queue_name(queue),
@@ -234,7 +234,16 @@ class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
                 time.sleep(time_interval)
         threading.Thread(target=_inner, daemon=daemon).start()
 
+    def get_time_series_data_by_queue_name(self,queue_name,start_ts=None,end_ts=None):
+        res = self.redis_db_frame.zrangebyscore(
+            RedisKeys.gen_funboost_queue_time_series_data_key_by_queue_name(queue_name),
+            max(float(start_ts or 0),self.timestamp() - 86400) ,float(end_ts or -1),withscores=True)
+        # print(res)
+        return [{'report_data':Serialization.to_dict(item[0]),'report_ts':item[1]} for item in res]
 
 if __name__ == '__main__':
     # print(Serialization.to_json_str(QueueConusmerParamsGetter().get_queue_params_and_active_consumers()))
-    QueueConusmerParamsGetter().cycle_get_queue_params_and_active_consumers_and_report()
+    # QueueConusmerParamsGetter().cycle_get_queue_params_and_active_consumers_and_report()
+    print(QueueConusmerParamsGetter().get_time_series_data_by_queue_name('queue_test_g03t',1749617883,1749621483))
+    # print(QueueConusmerParamsGetter().get_time_series_data_by_queue_name('queue_test_g03t',))
+    

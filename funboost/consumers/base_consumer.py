@@ -398,14 +398,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if self.consumer_params.delay_task_apscheduler_jobstores_kind == 'redis':
             jobstores = {
                 "default": RedisJobStore(**redis_manager.get_redis_conn_kwargs(),
-                                         jobs_key=f'funboost.apscheduler.{self.queue_name}.jobs',
-                                         run_times_key=f'funboost.apscheduler.{self.queue_name}.run_times',
+                                         jobs_key=RedisKeys.gen_funboost_redis_apscheduler_jobs_key_by_queue_name(self.queue_name),
+                                         run_times_key=RedisKeys.gen_funboost_redis_apscheduler_run_times_key_by_queue_name(self.queue_name),
                                          )
             }
             self._delay_task_scheduler = FunboostBackgroundSchedulerProcessJobsWithinRedisLock(timezone=FunboostCommonConfig.TIMEZONE, daemon=False,
                                                        jobstores=jobstores  # push 方法的序列化带thredignn.lock
                                                        )
-            self._delay_task_scheduler.set_process_jobs_redis_lock_key(f'funboost.BackgroundSchedulerProcessJobsWithinRedisLock.{self.queue_name}')
+            self._delay_task_scheduler.set_process_jobs_redis_lock_key(
+                RedisKeys.gen_funboost_apscheduler_redis_lock_key_by_queue_name(self.queue_name))
         elif self.consumer_params.delay_task_apscheduler_jobstores_kind == 'memory':
             jobstores = {"default": MemoryJobStore()}
             self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=FunboostCommonConfig.TIMEZONE, daemon=False,

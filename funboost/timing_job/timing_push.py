@@ -6,7 +6,7 @@ from funboost.timing_job.timing_job_base import funboost_aps_scheduler, undefine
 from funboost.timing_job.apscheduler_use_redis_store import FunboostBackgroundSchedulerProcessJobsWithinRedisLock
 from funboost.funboost_config_deafult import FunboostCommonConfig
 from apscheduler.schedulers.base import BaseScheduler
-
+from funboost.constant import RedisKeys
 
 class ApsJobAdder:
     """
@@ -52,12 +52,13 @@ class ApsJobAdder:
         redis_jobstores = {
 
             "default": RedisJobStore(**redis_manager.get_redis_conn_kwargs(),
-                                     jobs_key=f'funboost.apscheduler.{queue_name}.jobs',
-                                     run_times_key=f'funboost.apscheduler.{queue_name}.run_times',
+                                    jobs_key=RedisKeys.gen_funboost_redis_apscheduler_jobs_key_by_queue_name(queue_name),
+                                    run_times_key=RedisKeys.gen_funboost_redis_apscheduler_run_times_key_by_queue_name(queue_name),
                                      )
         }
         redis_aps = FunboostBackgroundSchedulerProcessJobsWithinRedisLock(timezone=FunboostCommonConfig.TIMEZONE,
                                                                           daemon=False, jobstores=redis_jobstores)
+        redis_aps.set_process_jobs_redis_lock_key(RedisKeys.gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name))
         cls.queue__redis_aps_map[queue_name] = redis_aps
         return redis_aps
 
@@ -107,6 +108,7 @@ class ApsJobAdder:
 if __name__ == '__main__':
     """
     2025年后定时任务现在推荐使用 ApsJobAdder 写法 ，用户不需要亲自选择使用 apscheduler对象来添加定时任务
+    特别是使用redis作为jobstores时候，你可以看源码就知道了。
     """
     from funboost import boost, BrokerEnum, ctrl_c_recv, BoosterParams, ApsJobAdder
 

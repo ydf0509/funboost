@@ -1,9 +1,9 @@
 # coding= utf-8
-from calendar import c
+
 
 
 class BrokerEnum:
-    EMPTY = 'empty'  # 空的实现，需要搭配 boost入参的 consumer_override_cls 和 publisher_override_cls使用，或者被继承。
+    EMPTY = 'EMPTY'  # 空的实现，需要搭配 boost入参的 consumer_override_cls 和 publisher_override_cls使用，或者被继承。
 
     RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'  # 使用 amqpstorm 包操作rabbitmq  作为 分布式消息队列，支持消费确认.强烈推荐这个作为funboost中间件。
     RABBITMQ = RABBITMQ_AMQPSTORM
@@ -73,7 +73,7 @@ class BrokerEnum:
     PEEWEE = 'PEEWEE'  # peewee包操作mysql，使用表模拟消息队列
 
     CELERY = 'CELERY'  # funboost支持celery框架来发布和消费任务，由celery框架来调度执行任务，但是写法简单远远暴击用户亲自使用celery的麻烦程度，
-    # 用户永无无需关心和操作Celery对象实例,无需关心celery的task_routes和include配置,funboost来自动化设置这些celery配置。
+    # 用户永无无需关心和操作Celery对象实例,无需关心celery的task_routes和includes配置,funboost来自动化设置这些celery配置。
 
     DRAMATIQ = 'DRAMATIQ'  # funboost使用 dramatiq 框架作为消息队列，dramatiq类似celery也是任务队列框架。用户使用funboost api来操作dramatiq核心调度。
 
@@ -108,7 +108,10 @@ class ConstStrForClassMethod:
     OBJ_INIT_PARAMS = 'obj_init_params'
     CLS_MODULE = 'cls_module'
     CLS_FILE = 'cls_file'
+
+
 class RedisKeys:
+
     REDIS_KEY_PAUSE_FLAG  = 'funboost_pause_flag' 
     REDIS_KEY_STOP_FLAG = 'funboost_stop_flag'
     QUEUE__MSG_COUNT_MAP = 'funboost_queue__msg_count_map'
@@ -117,13 +120,16 @@ class RedisKeys:
     FUNBOOST_QUEUE__RUN_FAIL_COUNT_MAP = 'funboost_queue__run_fail_count_map'
     FUNBOOST_ALL_QUEUE_NAMES = 'funboost_all_queue_names'
     FUNBOOST_ALL_IPS = 'funboost_all_ips'
+    FUNBOOST_LAST_GET_QUEUE_PARAMS_AND_ACTIVE_CONSUMERS_AND_REPORT__UUID_TS = 'funboost_last_get_queue_params_and_active_consumers_and_report__uuid_ts'
+
 
     FUNBOOST_HEARTBEAT_QUEUE__DICT_PREFIX = 'funboost_hearbeat_queue__dict:'
     FUNBOOST_HEARTBEAT_SERVER__DICT_PREFIX = 'funboost_hearbeat_server__dict:'
 
-    FUNBOOST_QUEUE_TIME_SERIES_DATA_PREFIX = 'funboost_queue_time_series_data:'
 
-    FUNBOOST_LAST_GET_QUEUE_PARAMS_AND_ACTIVE_CONSUMERS_AND_REPORT__UUID_TS = 'cycle_get_queue_params_and_active_consumers_and_report__uuid_ts'
+    @staticmethod
+    def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name):
+        return f'funboost.BackgroundSchedulerProcessJobsWithinRedisLock:{queue_name}'
 
     @staticmethod
     def gen_funboost_hearbeat_queue__dict_key_by_queue_name(queue_name):
@@ -135,4 +141,14 @@ class RedisKeys:
     
     @staticmethod
     def gen_funboost_queue_time_series_data_key_by_queue_name(queue_name):
-        return f'{RedisKeys.FUNBOOST_QUEUE_TIME_SERIES_DATA_PREFIX}{queue_name}'
+        return f'funboost_queue_time_series_data:{queue_name}'
+    
+    @staticmethod
+    def gen_funboost_redis_apscheduler_jobs_key_by_queue_name(queue_name):
+        jobs_key=f'funboost.apscheduler.jobs:{queue_name}'
+        return jobs_key
+    
+    @staticmethod
+    def gen_funboost_redis_apscheduler_run_times_key_by_queue_name(queue_name):
+        run_times_key=f'funboost.apscheduler.run_times:{queue_name}'
+        return run_times_key

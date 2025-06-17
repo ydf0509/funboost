@@ -11,7 +11,7 @@ ApsJobAdder(f5,job_store_kind='redis').aps_obj.add_job(
     replace_existing=True)
 
 
-for i in range(0, 10000):
+for i in range(0, 1000):
     my_consuming_function.push(i)
     f2.push(i,i*2)
     aio_f3.push(i)

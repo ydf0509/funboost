@@ -165,7 +165,8 @@ def _auto_creat_config_file_to_project_root_path():
     #     return
     if '/lib/python' in sys.path[1] or r'\lib\python' in sys.path[1] or '.zip' in sys.path[1]:
         raise EnvironmentError(f'''如果是cmd 或者shell启动而不是pycharm 这种ide启动脚本，请先在会话窗口设置临时PYTHONPATH为你的项目路径，
-                               windwos 使用 set PYTHONNPATH=你的当前python项目根目录,
+                               windwos cmd 使用 set PYTHONNPATH=你的当前python项目根目录,
+                               windows powershell 使用 $env:PYTHONPATH=你的当前python项目根目录,
                                linux 使用 export PYTHONPATH=你的当前你python项目根目录,
                                PYTHONPATH 作用是python的基本常识，请百度一下。
                                需要在会话窗口命令行设置临时的环境变量，而不是修改linux配置文件的方式设置永久环境变量，每个python项目的PYTHONPATH都要不一样，不要在配置文件写死

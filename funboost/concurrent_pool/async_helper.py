@@ -9,6 +9,21 @@ async_executor_default = ThreadPoolExecutorShrinkAble(500)
 # async_executor_default = FlexibleThreadPool(50)  # 这个不支持future特性
 
 
+def get_or_create_event_loop():
+    try:
+        # Python 3.7+
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        # 没有正在运行的 loop
+        try:
+            # Python 3.6~3.9：get_event_loop 会自动创建
+            return asyncio.get_event_loop()
+        except RuntimeError:
+            # Python 3.10+：get_event_loop 不再自动创建
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            return loop
+        
 async def simple_run_in_executor(f, *args, async_executor: Executor = None, async_loop=None, **kwargs):
     """
     一个很强的函数，使任意同步同步函数f，转化成asyncio异步api语法，
@@ -31,11 +46,15 @@ async def simple_run_in_executor(f, *args, async_executor: Executor = None, asyn
     :param kwargs:f函数的关键字方式入参
     :return:
     """
-    loopx = async_loop or asyncio.get_event_loop()
+    loopx = async_loop or get_or_create_event_loop()
     async_executorx = async_executor or async_executor_default
     # print(id(loopx))
     result = await loopx.run_in_executor(async_executorx, partial(f, *args, **kwargs))
     return result
+
+
+
+
 
 
 if __name__ == '__main__':

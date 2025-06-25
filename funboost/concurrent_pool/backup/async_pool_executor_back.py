@@ -4,7 +4,9 @@ import threading
 import time
 import traceback
 from threading import Thread
-import nb_log  # noqa
+import nb_log
+
+from funboost.concurrent_pool.async_helper import get_or_create_event_loop  # noqa
 
 # if os.name == 'posix':
 #     import uvloop
@@ -215,7 +217,7 @@ class AsyncProducerConsumer:
             task.cancel()
 
     def start_run(self):
-        loop = asyncio.get_event_loop()
+        loop = get_or_create_event_loop()
         loop.run_until_complete(self.__run())
         # loop.close()
 

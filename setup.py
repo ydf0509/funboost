@@ -13,8 +13,7 @@ extra_brokers = ['confluent_kafka==1.7.0',
                  'huey==2.4.5',
                  'rq==1.15.0',
                  'kombu',
-                 'eventlet==0.33.3',
-                 'gevent==22.10.2',
+                
                  'elasticsearch',
                  'gnsq==1.0.1',
                  'psutil',
@@ -26,6 +25,8 @@ extra_brokers = ['confluent_kafka==1.7.0',
                  'zmq',
                  'pyzmq',
                  'kafka-python==2.0.2',
+                  'eventlet==0.33.3',
+                 'gevent==22.10.2',
                  ]
 
 extra_flask = ['flask', 'flask_bootstrap', 'flask_wtf', 'wtforms', 'flask_login']

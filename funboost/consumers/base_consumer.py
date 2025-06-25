@@ -58,7 +58,7 @@ from funboost.core.function_result_status_saver import ResultPersistenceHelper, 
 
 from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_publish_time, MsgGenerater
 
-from funboost.concurrent_pool.async_helper import simple_run_in_executor
+from funboost.concurrent_pool.async_helper import get_or_create_event_loop, simple_run_in_executor
 from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
 # noinspection PyUnresolvedReferences
 from funboost.concurrent_pool.bounded_threadpoolexcutor import \
@@ -163,7 +163,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._redis_filter_key_name = f'filter_zset:{consumer_params.queue_name}' if consumer_params.task_filtering_expire_seconds else f'filter_set:{consumer_params.queue_name}'
         filter_class = RedisFilter if consumer_params.task_filtering_expire_seconds == 0 else RedisImpermanencyFilter
         self._redis_filter = filter_class(self._redis_filter_key_name, consumer_params.task_filtering_expire_seconds)
-
+        self._redis_filter.delete_expire_filter_task_cycle()
+ 
+        if  self.consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC and self.consumer_params.specify_async_loop is None:
+            self.consumer_params.specify_async_loop= get_or_create_event_loop()
         self._lock_for_count_execute_task_times_every_unit_time = Lock()
         self._async_lock_for_count_execute_task_times_every_unit_time = asyncio.Lock()
         # self._unit_time_for_count = 10  # 每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。

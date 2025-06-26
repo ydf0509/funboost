@@ -168,7 +168,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if  self.consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC and self.consumer_params.specify_async_loop is None:
             self.consumer_params.specify_async_loop= get_or_create_event_loop()
         self._lock_for_count_execute_task_times_every_unit_time = Lock()
-        self._async_lock_for_count_execute_task_times_every_unit_time = asyncio.Lock()
+        if self.consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC:
+            self._async_lock_for_count_execute_task_times_every_unit_time = asyncio.Lock()
         # self._unit_time_for_count = 10  # 每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。
         # self._execute_task_times_every_unit_time = 0  # 每单位时间执行了多少次任务。
         # self._execute_task_times_every_unit_time_fail =0  # 每单位时间执行了多少次任务失败。

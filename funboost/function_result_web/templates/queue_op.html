@@ -179,9 +179,24 @@
                                 </div>`;
                     }
                 },
+                { title: "<br><br>consumer数量", field: "consumer_count", sorter: "number", width: 200,
+                formatter: function(cell) {
+                    const row = cell.getRow().getData();
+                    var consumers = row.active_consumers;
+                    return `
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 10px;">
+                            <span style="min-width: 50px; text-align: right; padding-right: 15px;">${cell.getValue() || ''}</span>
+                            <button class="btn btn-primary btn-sm" onclick='showConsumerDetails(${JSON.stringify(consumers)}, "${row.queue_name}")'>
+                                查看消费者详情
+                            </button>
+                        </div>
+                    `;
+                }
+            },
                 
                 { title: "<br>broker<br>类型", field: "broker_kind", sorter: "string"  },
                 { title: "<br>消费<br>函数", field: "consuming_function_name", sorter: "string"  },
+              
                 { title: "<br>历史运<br>行次数", field: "history_run_count", sorter: "number", width: 150 },
                 { title: "<br>历史运<br>行失败<br>次数", field: "history_run_fail_count", sorter: "number", width: 150 },
                 { title: "<br>近10秒<br>完成", field: "all_consumers_last_x_s_execute_count", sorter: "number", width: 100 },
@@ -203,20 +218,7 @@
                         `;
                     }
                 },
-                { title: "<br><br>consumer数量", field: "consumer_count", sorter: "number", width: 200,
-                    formatter: function(cell) {
-                        const row = cell.getRow().getData();
-                        var consumers = row.active_consumers;
-                        return `
-                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 10px;">
-                                <span style="min-width: 50px; text-align: right; padding-right: 15px;">${cell.getValue() || ''}</span>
-                                <button class="btn btn-primary btn-sm" onclick='showConsumerDetails(${JSON.stringify(consumers)}, "${row.queue_name}")'>
-                                    查看消费者详情
-                                </button>
-                            </div>
-                        `;
-                    }
-                },
+
                 { 
                     title: "暂停<br>消费<br>状态",
                     field: "pause_flag",

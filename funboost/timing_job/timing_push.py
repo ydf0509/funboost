@@ -120,7 +120,7 @@ if __name__ == '__main__':
         print(f'The sum of {x} and {y} is {result}')
 
     # 启动消费者
-    sum_two_numbers.consume()
+    # sum_two_numbers.consume()
 
     # 发布任务
     sum_two_numbers.push(3, 5)
@@ -157,4 +157,4 @@ if __name__ == '__main__':
         replace_existing=True,
         id='cron_job1')
 
-    ctrl_c_recv()
+    ctrl_c_recv() # 启动了守护线程的定时器，一定要阻止主线程退出。 你可以代码最末尾加这个 ctrl_c_recv() 或者加个 while 1:time.sleep(10)

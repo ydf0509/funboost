@@ -62,28 +62,27 @@ class AsyncPoolExecutorLtPy310(FunboostFileLoggerMixin,FunboostBaseConcurrentPoo
         self._size = size
         self.loop = loop or asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
-        self._sem = asyncio.Semaphore(self._size, loop=self.loop)
-        self._queue = asyncio.Queue(maxsize=size, loop=self.loop)
-        self._lock = threading.Lock()
-        t = Thread(target=self._start_loop_in_new_thread, daemon=True)
+        self._diff_init()
+        # self._lock = threading.Lock()
+        t = Thread(target=self._start_loop_in_new_thread, daemon=False)
         # t.setDaemon(True)  # 设置守护线程是为了有机会触发atexit，使程序自动结束，不用手动调用shutdown
         t.start()
-        self._can_be_closed_flag = False
-        atexit.register(self.shutdown)
+     
 
-        self._event = threading.Event()
-        # print(self._event.is_set())
-        self._event.set()
+    # def submit000(self, func, *args, **kwargs):
+    #     # 这个性能比下面的采用 run_coroutine_threadsafe + result返回快了3倍多。
+    #     with self._lock:
+    #         while 1:
+    #             if not self._queue.full():
+    #                 self.loop.call_soon_threadsafe(self._queue.put_nowait, (func, args, kwargs))
+    #                 break
+    #             else:
+    #                 time.sleep(0.01)
 
-    def submit000(self, func, *args, **kwargs):
-        # 这个性能比下面的采用 run_coroutine_threadsafe + result返回快了3倍多。
-        with self._lock:
-            while 1:
-                if not self._queue.full():
-                    self.loop.call_soon_threadsafe(self._queue.put_nowait, (func, args, kwargs))
-                    break
-                else:
-                    time.sleep(0.01)
+    def _diff_init(self):
+        self._sem = asyncio.Semaphore(self._size, loop=self.loop)
+        self._queue = asyncio.Queue(maxsize=self._size, loop=self.loop)
+
 
     def submit(self, func, *args, **kwargs):
         future = asyncio.run_coroutine_threadsafe(self._produce(func, *args, **kwargs), self.loop)  # 这个 run_coroutine_threadsafe 方法也有缺点，消耗的性能巨大。
@@ -114,51 +113,36 @@ class AsyncPoolExecutorLtPy310(FunboostFileLoggerMixin,FunboostBaseConcurrentPoo
         # self._loop.run_forever()
 
         # asyncio.set_event_loop(self.loop)
-        self.loop.run_until_complete(asyncio.wait([self._consume() for _ in range(self._size)], loop=self.loop))
-        self._can_be_closed_flag = True
+        # self.loop.run_until_complete(asyncio.wait([self._consume() for _ in range(self._size)], loop=self.loop))
+        # self._can_be_closed_flag = True
+        [self.loop.create_task(self._consume()) for _ in range(self._size)]
+        try:
+            self.loop.run_forever()
+        except Exception as e:
+            self.logger.warning(f'{e}')   # 如果多个线程使用一个loop，不能重复启动loop，否则会报错。
 
-    def shutdown(self):
-        if self.loop.is_running():  # 这个可能是atregster触发，也可能是用户手动调用，需要判断一下，不能关闭两次。
-            for i in range(self._size):
-                self.submit(f'stop{i}', )
-            while not self._can_be_closed_flag:
-                time.sleep(0.1)
-            self.loop.stop()
-            self.loop.close()
-            print('关闭循环')
+
+
+    # def shutdown(self):
+    #     if self.loop.is_running():  # 这个可能是atregster触发，也可能是用户手动调用，需要判断一下，不能关闭两次。
+    #         for i in range(self._size):
+    #             self.submit(f'stop{i}', )
+    #         while not self._can_be_closed_flag:
+    #             time.sleep(0.1)
+    #         self.loop.stop()
+    #         self.loop.close()
+    #         print('关闭循环')
 
 
 
 class AsyncPoolExecutorGtPy310(AsyncPoolExecutorLtPy310):
-    # noinspection PyMissingConstructor
-    def __init__(self, size, loop=None):
-        """
 
-        :param size: 同时并发运行的协程任务数量。
-        :param loop:
-        """
-        self._size = size
-        self.loop = loop or asyncio.new_event_loop()
-        self._sem = asyncio.Semaphore(self._size, )
-        self._queue = asyncio.Queue(maxsize=size, )
-        self._lock = threading.Lock()
-        t = Thread(target=self._start_loop_in_new_thread, daemon=True)
-        # t.setDaemon(True)  # 设置守护线程是为了有机会触发atexit，使程序自动结束，不用手动调用shutdown
-        t.start()
-        self._can_be_closed_flag = False
-        atexit.register(self.shutdown)
+    def _diff_init(self):
+        self._sem = asyncio.Semaphore(self._size, ) # python3.10后，很多类和方法都删除了loop传参
+        self._queue = asyncio.Queue(maxsize=self._size, )
 
-        self._event = threading.Event()
-        # print(self._event.is_set())
-        self._event.set()
 
-    def _start_loop_in_new_thread(self, ):
-        # self._loop.run_until_complete(self.__run())  # 这种也可以。
-        # self._loop.run_forever()
 
-        # asyncio.set_event_loop(self.loop)
-        self.loop.run_until_complete(asyncio.wait([self.loop.create_task(self._consume()) for _ in range(self._size)], ))
-        self._can_be_closed_flag = True
 
 
 AsyncPoolExecutor = AsyncPoolExecutorLtPy310 if sys.version_info.minor < 10 else AsyncPoolExecutorGtPy310

@@ -60,20 +60,31 @@ def f5(x):
         raise ValueError('f5 error')
     return x + 1
 
+@boost(MyBoosterParams(queue_name='queue_test_g06t',broker_kind=BrokerEnum.REDIS,qps=3,
+max_retry_times=1,concurrent_mode=ConcurrentModeEnum.ASYNC))
+async def aio_f6(x):
+    await asyncio.sleep(3)
+    print(f'aio_f6: {x}')
+    if random.random() > 0.5:
+        raise ValueError('aio_f6 error')
+    return x + 1
+
 if __name__ == '__main__':
     start_funboost_web_manager(port=27018)  # 也可以在python代码中启动web,启动 funboost web manager funboost队列管理界面
 
     f2.clear()
 
-    f2.multi_process_consume(4)
-    my_consuming_function.consume()
+    # f2.multi_process_consume(4)
+    # my_consuming_function.consume()
     aio_f3.consume()
-    f4.consume()
-    f5.consume()
+    # f4.consume()
+    # f5.consume()
+    aio_f6.consume()
     for i in range(0, 1000):
-        f.push(i)
+        my_consuming_function.push(i)
         f2.push(i,i*2)
         aio_f3.push(i)
+        aio_f6.push(i)
         time.sleep(1)
     ctrl_c_recv()
     

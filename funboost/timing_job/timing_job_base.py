@@ -131,13 +131,14 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
         #
         # threading.Thread(target=_block_exit,).start()  # 既不希望用BlockingScheduler阻塞主进程也不希望定时退出。
         # self._daemon = False
-        def _when_exit():
-            while 1:
-                # print('阻止退出')
-                time.sleep(100)
+        # def _when_exit():
+        #     while 1:
+        #         # print('阻止退出')
+        #         time.sleep(100)
 
-        if block_exit:
-            atexit.register(_when_exit)
+        # if block_exit:
+        #     atexit.register(_when_exit)
+        self._daemon = False   # 这里强制默认改成非守护线程。默认是守护线程，主线程退出会报错。
         super().start(paused=paused, )
         # _block_exit()   # python3.9 判断守护线程结束必须主线程在运行。你自己在你的运行代碼的最末尾加上 while 1： time.sleep(100)  ,来阻止主线程退出。
 

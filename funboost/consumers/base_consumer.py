@@ -165,8 +165,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._redis_filter = filter_class(self._redis_filter_key_name, consumer_params.task_filtering_expire_seconds)
         self._redis_filter.delete_expire_filter_task_cycle()
  
-        if  self.consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC and self.consumer_params.specify_async_loop is None:
-            self.consumer_params.specify_async_loop= get_or_create_event_loop()
+        # if  self.consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC and self.consumer_params.specify_async_loop is None:
+        #     self.consumer_params.specify_async_loop= get_or_create_event_loop()
         self._lock_for_count_execute_task_times_every_unit_time = Lock()
         if self.consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC:
             self._async_lock_for_count_execute_task_times_every_unit_time = asyncio.Lock()

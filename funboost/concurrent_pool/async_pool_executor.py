@@ -48,7 +48,7 @@ if sys.platform == "darwin":  # mac 上会出错
       import selectors
       selectors.DefaultSelector = selectors.PollSelector
 
-class AsyncPoolExecutorLtPy310(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
+class AsyncPoolExecutor(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
     """
     使api和线程池一样，最好的性能做法是submit也弄成 async def，生产和消费在同一个线程同一个loop一起运行，但会对调用链路的兼容性产生破坏，从而调用方式不兼容线程池。
     """
@@ -80,8 +80,12 @@ class AsyncPoolExecutorLtPy310(FunboostFileLoggerMixin,FunboostBaseConcurrentPoo
     #                 time.sleep(0.01)
 
     def _diff_init(self):
-        self._sem = asyncio.Semaphore(self._size, loop=self.loop)
-        self._queue = asyncio.Queue(maxsize=self._size, loop=self.loop)
+        if sys.version_info.minor < 10:
+            # self._sem = asyncio.Semaphore(self._size, loop=self.loop)
+            self._queue = asyncio.Queue(maxsize=self._size, loop=self.loop)
+        else:
+            # self._sem = asyncio.Semaphore(self._size) # python3.10后，很多类和方法都删除了loop传参
+            self._queue = asyncio.Queue(maxsize=self._size)
 
 
     def submit(self, func, *args, **kwargs):
@@ -101,7 +105,7 @@ class AsyncPoolExecutorLtPy310(FunboostFileLoggerMixin,FunboostBaseConcurrentPoo
             try:
                 await func(*args, **kwargs)
             except BaseException as e:
-                traceback.print_exc()
+                self.logger.exception(f'func:{func}, args:{args}, kwargs:{kwargs} exc_type:{type(e)}  traceback_exc:{traceback.format_exc()}')
             # self._queue.task_done()
 
     async def __run(self):
@@ -135,17 +139,11 @@ class AsyncPoolExecutorLtPy310(FunboostFileLoggerMixin,FunboostBaseConcurrentPoo
 
 
 
-class AsyncPoolExecutorGtPy310(AsyncPoolExecutorLtPy310):
-
-    def _diff_init(self):
-        self._sem = asyncio.Semaphore(self._size, ) # python3.10后，很多类和方法都删除了loop传参
-        self._queue = asyncio.Queue(maxsize=self._size, )
 
 
 
 
 
-AsyncPoolExecutor = AsyncPoolExecutorLtPy310 if sys.version_info.minor < 10 else AsyncPoolExecutorGtPy310
 
 
 

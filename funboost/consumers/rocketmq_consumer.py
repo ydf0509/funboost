@@ -22,12 +22,12 @@ class RocketmqConsumer(AbstractConsumer):
         except BaseException as e:
             # print(traceback.format_exc())
             raise ImportError(f'rocketmq包 只支持linux和mac {e}')
-        consumer = PushConsumer(self.GROUP_ID)
+        consumer = PushConsumer(f'{self.GROUP_ID}_{self._queue_name}')
         consumer.set_namesrv_addr(BrokerConnConfig.ROCKETMQ_NAMESRV_ADDR)
         consumer.set_thread_count(1)
         consumer.set_message_batch_max_size(self.consumer_params.concurrent_num)
 
-        self._publisher = RocketmqPublisher(publisher_params=PublisherParams(queue_name=self._queue_name))
+        self._publisher = RocketmqPublisher(publisher_params=PublisherParams(queue_name=self._queue_name,))
 
         def callback(rocketmq_msg):
             # self.logger.debug(f'从rocketmq的 [{self._queue_name}] 主题的queue_id {rocketmq_msg.queue_id} 中 取出的消息是：{rocketmq_msg.body}')

@@ -2,6 +2,9 @@
 from setuptools import setup, find_packages
 from funboost import __version__
 
+from logging_tree import printout
+printout()
+
 extra_brokers = ['confluent_kafka==1.7.0',
                  "pulsar-client==3.1.0; python_version>='3.7'",
                  'celery',

@@ -489,7 +489,7 @@ def step1(a:int,b:int):
 
 
 @boost(MyBoosterParams(queue_name='s2_queue', qps=3, 
-                      max_retry_times=5，# 可以在此覆盖MyBoosterParams中的默认值，例如为step2单独设置最大重试次数为5
+                      max_retry_times=5,# 可以在此覆盖MyBoosterParams中的默认值，例如为step2单独设置最大重试次数为5
 )) 
 def step2(c:int,d:int,e:int=666):
     time.sleep(3)

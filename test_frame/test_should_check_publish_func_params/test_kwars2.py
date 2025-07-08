@@ -14,5 +14,6 @@ if __name__ == "__main__":
     for i in range(10):
         task_fun.push(x=i, y=i * 2, x3=6, x4=8, x5={'k1': i, 'k2': i * 2, 'k3': i * 3})  # 发布者发布任务
         task_fun.publisher.send_msg(dict(x=i, y=i * 2, x3=6, x4=8, x5={'k1': i, 'k2': i * 2, 'k3': i * 3}))
+        task_fun.push(1,2,3)  # 发布者发布任务
     task_fun.consume()  # 消费者启动循环调度并发消费任务
     # task_fun.multi_process_consume(2)  # 消费者启动循环调度并发消费任务

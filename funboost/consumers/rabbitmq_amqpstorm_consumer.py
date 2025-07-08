@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:30
-import json
+
 import amqpstorm
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer

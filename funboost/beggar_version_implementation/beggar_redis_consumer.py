@@ -19,7 +19,9 @@ from concurrent.futures import ThreadPoolExecutor
 from funboost.funboost_config_deafult import BrokerConnConfig
 
 redis_db_frame = redis.Redis(host=BrokerConnConfig.REDIS_HOST, password=BrokerConnConfig.REDIS_PASSWORD,
-                             port=BrokerConnConfig.REDIS_PORT, db=BrokerConnConfig.REDIS_DB, decode_responses=True)
+                             port=BrokerConnConfig.REDIS_PORT, db=BrokerConnConfig.REDIS_DB,
+                             ssl=BrokerConnConfig.REDIS_USE_SSL,
+                             decode_responses=True)
 
 
 class BeggarRedisConsumer:

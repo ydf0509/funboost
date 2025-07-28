@@ -13,7 +13,7 @@ from funboost.utils import decorators
 
 def get_redis_conn_kwargs():
     return {'host': BrokerConnConfig.REDIS_HOST, 'port': BrokerConnConfig.REDIS_PORT,
-            'username': BrokerConnConfig.REDIS_USERNAME,
+            'username': BrokerConnConfig.REDIS_USERNAME,'ssl' : BrokerConnConfig.REDIS_SSL,
             'password': BrokerConnConfig.REDIS_PASSWORD, 'db': BrokerConnConfig.REDIS_DB}
 
 
@@ -26,11 +26,13 @@ def _get_redis_conn_kwargs_by_db(db):
 class RedisManager(object):
     _redis_db__conn_map = {}
 
-    def __init__(self, host='127.0.0.1', port=6379, db=0, username='', password=''):
-        self._key = (host, port, db, username, password,)
+    def __init__(self, host='127.0.0.1', port=6379, db=0, username='', password='',ssl=False):
+        self._key = (host, port, db, username, password,ssl)
         if self._key not in self.__class__._redis_db__conn_map:
             self.__class__._redis_db__conn_map[self._key] = redis5.Redis(host=host, port=port, db=db, username=username,
-                                                                         password=password, max_connections=1000, decode_responses=True)
+                                                                         password=password, max_connections=1000,
+                                                                         ssl=ssl,
+                                                                         decode_responses=True)
         self.redis = self.__class__._redis_db__conn_map[self._key]
 
     def get_redis(self) -> redis5.Redis:

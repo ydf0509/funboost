@@ -16,7 +16,7 @@ def ctrl_c_recv():
     apscheduler background 类型必须有主线程在运行，否则会很快结束。所以需要阻止主线程退出。
     在代码最最末尾加上 ctrl_c_recv() 就可以阻止主线程退出。
     
-    你也可以直接在你的启动脚本的最末尾加上：
+    你也可以不用ctrl_c_recv(),  直接在你的启动脚本文件的最末尾加上：
     while 1:
         time.sleep(100) 
     来达到阻止主线程退出的目的。

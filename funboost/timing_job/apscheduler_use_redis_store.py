@@ -1,5 +1,5 @@
 from apscheduler.jobstores.redis import RedisJobStore
-from funboost.utils.redis_manager import RedisMixin
+from funboost.utils.redis_manager import RedisMixin,get_redis_conn_kwargs
 
 from funboost.timing_job import FunboostBackgroundScheduler
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
@@ -41,6 +41,21 @@ class FunboostBackgroundSchedulerProcessJobsWithinRedisLock(FunboostBackgroundSc
     #     return 0.1
 
     def _process_jobs(self):
+        """
+        funboost 的做法是 在任务取出阶段就加锁，从根本上防止了重复执行。
+        这个很关键，防止多个apscheduler 实例同时扫描取出同一个定时任务，间接导致重复执行,
+        在apscheduler 3.xx版本这样写来防止多个apscheduler实例 重复执行定时任务的问题,简直是神操作.
+
+        _process_jobs 功能是扫描取出需要运行的定时任务,而不是直接运行定时任务
+        只要扫描取出任务不会取出相同的任务,就间接的决定了不可能重复执行相同的定时任务了.
+        
+
+        不要以为随便在你自己的消费函数加个redis分布式锁就不会重复执行任务了,redis分布式锁是解决相同代码块不会并发执行,而不是解决重复执行.
+        但funboost是神级别骚操作,把分布式锁加到_process_jobs里面,
+        _process_jobs是获取一个即将运行的定时任务,是扫描并删除这个即将运行的定时任务,
+        所以这里加分布式锁能间接解决不重复运行定时任务,一旦任务被取出，就会从 jobstore 中删除,其他实例就无法再取到这个任务了.
+
+        """
         if self.process_jobs_redis_lock_key is None:
             raise ValueError('process_jobs_redis_lock_key is not set')
         with RedisDistributedBlockLockContextManager(RedisMixin().redis_db_frame, self.process_jobs_redis_lock_key, ):
@@ -48,9 +63,8 @@ class FunboostBackgroundSchedulerProcessJobsWithinRedisLock(FunboostBackgroundSc
 
 
 jobstores = {
-    "default": RedisJobStore(db=BrokerConnConfig.REDIS_DB, host=BrokerConnConfig.REDIS_HOST,
-                             port=BrokerConnConfig.REDIS_PORT, password=BrokerConnConfig.REDIS_PASSWORD,
-                             username=BrokerConnConfig.REDIS_USERNAME, jobs_key='funboost.apscheduler.jobs',run_times_key="funboost.apscheduler.run_times")
+    "default": RedisJobStore(**get_redis_conn_kwargs(),
+                             jobs_key='funboost.apscheduler.jobs',run_times_key="funboost.apscheduler.run_times")
 }
 
 """

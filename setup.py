@@ -70,7 +70,7 @@ setup(
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: 3.13',
-        # 'Programming Language :: Python :: 3.14',
+        'Programming Language :: Python :: 3.14',
         # 'Programming Language :: Python :: 3.15',
         # 'Programming Language :: Python :: 3.16',
         # 'Programming Language :: Python :: 3.17',
@@ -82,7 +82,7 @@ setup(
         'Topic :: Software Development :: Libraries'
     ],
     install_requires=[
-        'nb_log>=13.2',
+        'nb_log>=13.7',
         'nb_libs>=1.9',
         'nb_time>=2.4',
         "pymongo>=4.6.3",  # 3.5.1  -> 4.0.2

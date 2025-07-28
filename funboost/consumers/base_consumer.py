@@ -437,6 +437,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _shedual_task(self):
         """
         每个子类必须实现这个的方法，完成如何从中间件取出消息，并将函数和运行参数添加到工作池。
+
+        funboost 的 _shedual_task 哲学是：“我不管你怎么从你的系统里拿到任务，我只要求你拿到任务后，
+        调用 self._submit_task(msg) 方法把它交给我处理就行。”
+
+        所以无论获取消息是 拉模式 还是推模式 还是轮询模式，无论是是单条获取 还是多条批量多条获取，
+        都能轻松扩展任意东西作为funboost的中间件。 
+
         :return:
         """
         raise NotImplementedError

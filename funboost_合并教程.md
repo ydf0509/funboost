@@ -39,9 +39,9 @@ Broker。funboost源码高扩展性的设计，造成“万物皆可为Broker”
 框架对代码没有入侵,可以加到任意已有项目而对项目python文件目录结构0要求,
 不像 celery django scrapy 这样的框架,要从一开始就开始规划好项目目录结构,如果不想用框架了,
 或者想改变使用其他框架框架,那么已经所写的代码组织形式就几乎成了废物,需要大改特改. 
-但是funboost完全不会这样,就算是加上或去掉@boost装饰器,对你的项目影响为0,用户照常使用,
+但是funboost完全不会这样,不管是加上还是去掉@boost装饰器,对你的项目影响为0,用户照常使用,
 所以用户可以对任意项目,任意时候,引入使用funboost或者去掉使用funboost,代码组织形式不需要发生变化.
-（即使不想用funboost了，也不需要亲自去掉@boost装饰器，因为函数有@boost装饰器对函数自身的直接调用运行没有任何影响，
+（即使不想用funboost了，也不需要亲自去掉@boost装饰器，因为函数上面有@boost装饰器对函数自身的直接调用运行没有任何影响，
 用户照样可以直接例如 fun(x,y)是直接运行函数 ， fun.push(x,y) 才是发送到消息队列）
 
 通过funboost web manager 管理系统，支持全面 查看 监控 管理 funboost的任务消费。
@@ -657,6 +657,8 @@ funboost通过支持celery作为broker_kind,使celer框架变成了funboost的�
 <div> </div>
 # 2. 对比celery框架
 
+
+
 是骡子是马必须拿出来溜溜。
 
 ```
@@ -665,6 +667,11 @@ funboost通过支持celery作为broker_kind,使celer框架变成了funboost的�
 ```
 
 ## 2.0,在比较之前，说明一下和celery的关系？
+
+
+**生产者-broker-消费者 模式是计算机科学中一个非常基础和经典的设计模式，它的历史远比 Celery 悠久得多**   
+如果认为"只要是使用生产者-消费者模式编程，那么就是抄袭celery"，那所有编程语言中的生产者消费者编程方式，都抄袭celery了，说这话简直是不长脑子。
+
 ```
 此框架和celery没有关系，没有收到celery启发，也不可能找出与celery连续3行一模一样的代码。
 这个是从原来项目代码里面大量重复while 1:redis.blpop()  发散扩展的。
@@ -675,22 +682,25 @@ funboost通过支持celery作为broker_kind,使celer框架变成了funboost的�
 
 ```
 
-### 2.0.1  funboost的设计理念更像dramatiq，dramatiq 抄袭复制粘贴celery代码了吗？
+**连任何线程池都是 生产者-broker-消费者 编程思想，线程池也抄袭celery了吗**
+几乎所有线程池都是下面这样来实现的：
 ```
-当我看了 dramatiq 后，(第一次仔细看dramatiq框架文档时候，funboost已经开发到 20.9版本了)，
-dramatiq的官方文档不仅有框架用法，文档中也包含了解释为什么那么设计，只有实际仔细开发过任务队列框架的人才能看懂文档中说得为什么那么设计，
-发现有很多共鸣，funboost已经开发到20.9版本了啥都支持了，然后看dramatiq感觉理念很多一样的，难道funboost是抄袭了dramatiq的代码了吗？
+1.Broker (中间件/任务通道):
+线程池 threadpool 有个 work_queue 属性，work_queue 是个内存队列，  work_queue 就是 broker
 
-有的人说是看了celery源码，然后复制粘贴抄袭celery框架源代码，自己去看看有funboost和celery连续两行一样的代码我吃sheet。
-那dramatiq我以前都没看过，为什么funboost自然而然和dramqtiq也很像？
-归根结底是所谓任务队列框架，都是生产者 发布者思维，然后兼容多种消息队列中间件，然后消费时候加入了大量的控制，例如 自动并发、 多种并发方式、
-qps控频、重试、rpc、超时杀死，用户使用时候不需要写一大推函数控制的代码，也不需要写怎么操作各种消息队列中间件的代码，
-框架没有什么高深的想不到的，所谓任务队列框架的功能就那样，不然还想咋样。
+2.Producer (生产者):
+threadpool有个submit方法，submit方法原理就是把函数和函数入参put丢到这个 threadpool.work_queue里面，submit就是生产者发送消息
 
-例如fastapi也能开发python web后端，fastapi可以接受请求，返回响应给前端，fastapi能实现dajngo flask的功能，并且fsatapi是后开发的，
-那你去问问fastapi作者是抄袭django flask源代码了吗？
-
+3.Consumer (消费者):
+线程池里面开启了n个线程， 每个线程里面逻辑是 while True：fun，params = work_queu.get(block=True) ，然后fun(params) 执行函数。
+这n个线程就是n个消费者。
 ```
+
+任何线程池都是这么实现的，那线程池使用 “生产者-broker-消费者“” 编程思想，抄袭了celery吗？        
+rq dramtiq huery 都抄袭了celery吗？       
+java中设计线程池的人听都没听说过celery。所以说funboost抄袭celery，简直是不长脑子
+
+
 
 
 ## 2.1 celery对目录层级文件名称格式要求很高
@@ -838,12 +848,13 @@ funboost支持所有消息队列和消费框架，万物皆可为broker，不管
    funboost都能自动支持，funboost可以 以逸待劳，以不变应万变。
 ```
 
-### 2.4.3 funboost项目远超celery几十倍，性能不在一个数量级。
+### 2.4.3 funboost性能远超celery几十倍，性能不在一个数量级。
 ```
-这是最重要的，光使用简单还不够，性能是非常重要的指标。发布性能提升1000%，消费性能提升2000%
+这是最重要的，光使用简单还不够，性能是非常重要的指标。发布性能提升1000%以上，消费性能提升2000%以上。
+性能不在一个数量级。看下面2.6章节的严格的控制变量法测试对比方法和源码
 ```
 
-### 2.4.4 使用funboost框架时候，代码在ide暴击使用celery。 
+### 2.4.4 使用funboost框架时候，代码在ide自动补全暴击使用celery。 
 ```
    全部公有方法或函数都能在pycharm智能能提示补全参数名称和参数
    一切为了调用时候方便而不是为了实现时候简略，例如get_consumer函数和AbstractConsumer的入参完全重复了，
@@ -900,7 +911,7 @@ celery.exceptions.NotRegistered报错
 ### 2.4.10 funboost学习难度远低于celery
 
 ```
-funboost虽然功能更强大，但使用更简单，不需要看复杂的celry 那样的5000页英文文档，
+funboost虽然功能更强大，但使用更简单，不需要看复杂的celery 那样的5000页英文文档，
 因为函数调度框架只需要学习@boost一个装饰器，只有一行代码学要学。
 别看funboost的文档也很长，但都是讲实现原理和为什么那么设计的，大篇幅讲对比是怎么暴击知名celery scrapy框架的。
 实际funboost使用例子只有教程1.3章节不到8行代码需要学习。其他例子只是改了下boost装饰器的入参，
@@ -1029,7 +1040,185 @@ celery的配置分散在app和app.task上，而且用户压根不知道能配置
 funboost的配置集中在@boost装饰器一处；用户也可以使用继承BoosterParams写一个子类，减少每个装饰器相同的重复入参。pydantic在pycharm安装个pydantic插件，补全提示效果很好。
 ```
 
-### 2.4.30 （王炸）funboost 支持celery作为broker_kind
+### 2.4.22 funboost 能非常容易的扩展用户自己的任何中间件作为broker，celery无法做到。
+```
+funboost 使用模板模式来开发各种消息队列消费者 发布者子类，所以可以兼容任何东西作为消息队列。
+例如 文件夹 文件 sqlite  tcp celery dramtiq 等轻松作为 funboost的broker。
+因为funboost暴露的非常好，用户就像做填空题一样填写就好了。
+具体看文档4.21 和4.21b 章节，里面自带了 python的list数据结构模拟作为broker，代码很短就能完成扩展。
+
+
+反观celery，用户几乎不可能完成，您无法像 funboost 这样在应用层简单继承。您必须深入其底层的消息库 Kombu，
+去理解和实现它的一整套 Transport 和 Channel 接口。这需要阅读大量源码，理解其内部工作流。
+```
+
+
+```
+funboost 的 consumer的 _shedual_task 非常灵活，用户实现把从消息队列取出的消息通过_submit_task方法
+丢到并发池，他不是强制用户重写实现怎么取一条消息，例如强制你实现一个 _get_one_message的法，那就不灵活和限制扩展任意东西作为broker了，而是用户完全自己来写灵活代码。
+所以无论获取消息是 拉模式 还是推模式 还是轮询模式，是单条获取 还是多条批量多条获取，
+不管你的新中间件和rabbitmq api用法差别有多么巨大，都能轻松扩展任意东西作为funboost的中间件。 
+所以你能看到funboost源码中能轻松实现任何物质作为funboost的broker。
+
+funboost 的 _shedual_task 哲学是：“我不管你怎么从你的系统里拿到任务，我只要求你拿到任务后，调用 self._submit_task(msg) 方法把它交给我处理就行。”
+```
+
+### 2.4.23 funboost 强大的的fct上下文，完胜celery 装饰器的bind=True侵入式设计
+
+
+```
+funboost 强大的的fct上下文，吊打celery 装饰器的bind=True，然后再在函数入场中插入一个入参self
+
+funboost的 fct 智能上下文十分强大，不需要改变函数定义入参。类似flask视图的request这种自动线程/协程隔离级别的上下文。例如任务函数里面想知道自己的task_id 和消息发布时间等。
+
+funboost 的方式：函数签名保持纯净
+@boost(BoosterParams(queue_name="add_queue"))
+def add(x, y):
+    # 需要时，从 fct 上下文获取信息
+    print(f"Funboost Task ID: {fct.task_id}")
+    return x + y
+
+但celery 如果要获取 道自己的task_id 和消息发布时间等，求两数字之和的函数需要写成如下：
+@app.task(bind=True)
+def add(self,x,y):
+     task_id = self.request.id
+     return x + y
+好好的add函数，不仅要写@app.task(bind=True)，还要在第一个入参位置加个self，改成3个入参。
+celery @app.task(bind=True) + self 没有funboost的fct好用和无入侵。
+因为你原来的 调用add的地方如add(1,2)会报错，add现在变成需要3个入参了。     
+```
+
+### 2.4.24 funboost全流程支持asyncio生态，celery望尘莫及
+```
+funboost不仅支持async def的函数消费，
+更能支持 await aio_push 和 await aio_publish 和 await AioAsyncResult.result 获取rpc结果， 
+也就是说funboost 支持 从发布和消费到获取rpc结果，全流程原生asyncio编程生态。
+更容易和现代fastapi这种异步web框架搭配。
+
+celery则压根没有支持这样的全流程 asyncio 生态。
+```
+
+### 2.4.25 funboost作者的自定义线程池能自动伸缩，完胜。
+
+funboost作者的自定义线程池能自动伸缩，celery使用原生concurrent.futures.ThreadPoolExecutor
+
+```
+funboost的线程并发模式的线程池，能根据任务量智能伸缩线程数量，在保证效率的同时避免资源浪费。
+celery使用 concurrent.futures.ThreadPoolExecutor，无法自动缩小线程池。
+```
+
+### 2.4.26 funboost死信队列机制更完善：
+```
+funboost 通过抛出特定异常或配置，可以轻松实现**“重试N次后自动移入死信队列”**，逻辑清晰。
+```
+
+
+### 2.4.27 funboost可以消费一切任何任意json消息，celery无法识别
+
+```
+funboost支持消费任意key value 结构的 JSON 消息，灵活性极高。
+用户只需要装饰器加个should_check_publish_func_params=False，见文档4b.2章节。
+
+@boost(BoosterParam(queue_name='queue_free_format'，should_check_publish_func_params=False))
+def task_fun(**kwargs):
+    print(kwargs)
+
+也就是说无论消息是否由funboost框架发布的还是第三方自由随意发布的，都能被funbost消费。
+json消息无论是什么键值对名字，同一个队列名字，哪怕是json中的key一直变化， 都能被 funboost 消费。
+```
+
+
+### 2.4.29 funboost等待任务完成机制：提供了 wait_for_possible_has_finish_all_tasks() 方法
+```
+funboost中等待任务完成机制：提供了 wait_for_possible_has_finish_all_tasks() 方法，方便在脚本中等待一个队列的所有任务被消费完毕。
+
+celery无此功能。
+```
+
+### 2.4.30 funboost无需 框架专用插件：
+```
+无需框架专用插件：funboost 的自由度使其无需 django-funboost、flask-funboost 这类适配插件，可直接在任何 web 框架中简单直观的使用。
+```
+
+### 2.4.31 funboost的定时任务比celery更强，能动态添加删除 和 多点部署。
+
+funboost内置自带动态添加定时任务，celery写死在beat_schedule字典
+```
+funboost的定时代码内启动，无需额外命令
+funboost随时通过代码动态添加、暂停、恢复、删除定时任务，非常自然。
+
+celery 的定时任务是配置式，相对繁琐：需要在配置文件中定义一个 beat_schedule 字典，
+
+
+动态的好处包括了，可以很容易和任何web框架搭配，在接口中添加删除定时任务。
+``` 
+
+funboost的定时器可以多次启动，多台机器启动不会重复执行定时任务。
+```
+funboost 继承重写了 apscheduler ，使用redis作为job_store时候，
+apscheduler的_process_jobs使用了redis分布式锁，
+确保一个任务不会同时被多台机器或进程从redis中扫描取出来运行。所以不怕你多次反复部署定时脚本。
+顺便实现高可用，其中一台机器宕机了，不会导致定时任务就不运行了。
+
+celery默认是“单点故障”：原生的 celery beat 无法多实例部署，否则会导致任务被重复发布多次。
+所以celery的beat命令害怕你在命令行反复部署。
+
+
+
+举个例子：
+希望间隔5秒打印hello，但你敢为了定时器高可用，而把celery定时任务启动部署2次吗？
+那就实际变成了每隔5秒打印2次hello了。
+或者是你意外多部署几次celery定时器，那就悲催了，重复触发定时任务。
+
+但funboost使用redis作为job_store时候，不怕你多次启动定时器导致定时任务执行重复。
+```
+
+funboost 使用 最知名的apscheduler 轻度封装，定时语法妇孺皆知。   
+celery的beat_schedule 字典，容易配置错误，导致定时任务不能执行。
+```
+funboost的API 简洁直观：ApsJobAdder(task_func, ...).add_push_job(...)，API 清晰，
+且复用了 apscheduler 的成熟语法，学习成本低。
+
+celery需要在配置文件中定义一个 beat_schedule 字典，可读性较差，且无静态检查，
+容易因字符串拼写错误导致任务不执行且无明显报错，太坑人。
+```
+
+
+### 2.4.32 funboost + REDIS_ACK_ABLE ack能力 吊打celery + redis + ack + visibility_timeout (小细节)
+
+funboost作者凭借深厚功底与精准需求感，一人打造出覆盖面广、机制优越、使用简洁的消息队列框架，是非常了不起的技术创举----用一个人的力量解决了celery数百人团队在某些方面难以突破的结构性痛点。
+
+funboost + REDIS_ACK_ABLE 中间件吊打 celery 的 redis + task_acks_late=True + visibility_timeout=固定时间
+
+celery的redis确认消费 只能和 funboost + REIDS_ACK_USING_TIMEOUT 中间件相提并论
+
+
+```
+celery + redis ，如果worker 进程被强制kill -9，那么待确认消费的孤儿消息，需要在 `visibility_timeout` 时间之后重回队列，默认1小时， 
+例如你有10个进程在消费，突然kill一个进程或者宕机了一个进程，这个消息需要在1小时候才被重回队列,被其他进程消费运行，这太不及时了。 
+如果你的程序本来就耗时2小时，visibility_timeout 设置1小时，会造成无限懵逼死循环重回队列重复消费.
+即使你调大visibility_timeout为10000000秒可以100%避免错误的无限重回队列,但是你把消费者突然强制关闭,他的所有孤儿消息也要10000000秒后才重回工作队列,
+所以及时重回孤儿消息和避免误重投,通过visibility_timeout来设置,这2者是矛盾的,这个在celery无解.这里不是配置问题，而是架构机制问题,只有基于心跳检测的主动机制才可解决.
+
+celery的redis+ 确认消费 2大缺点是，1是不能及时让孤儿消息快速重回队列，2是容易把本来就耗时长的消息误认为是孤儿消息进而错误的重回队列。
+
+
+而funboost 的 broker_kind=BrokerEnum.REDIS_ACK_ABLE 时候，使用的是消费者心跳检测机制，
+能及时快速精准的让孤儿消息重回工作队列，并且不会把本来就执行慢的消息，误认为是宕机了的孤儿消息错误的重回工作队列。
+
+celery 的 redis + task_acks_late=True + visibility_timeout=固定时间 只能和 funboost的 
+REIDS_ACK_USING_TIMEOUT 中间件相提并论,和 funboost的REDIS_ACK_ABLE中间件相比落后太多
+
+```
+
+这不是污蔑celery,而是celery官方文档也承认的,详见:
+(celery官方文档的Caveats的Visibility timeout章节 https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/redis.html?utm_source=chatgpt.com)[https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/redis.html?utm_source=chatgpt.com]
+
+
+
+
+
+### 2.4.40 （王炸）funboost 支持celery作为broker_kind
 
 有些人一直很质疑担心funboost不稳定，运行时候程序突然崩溃退出，认为celery运行了十几年肯定稳定，现在celery旧王作为funboost新皇的马前卒，
 可以使用funboost的极简api来定义消费函数，但是内部使用celery核心来驱动运行消费函数，你还有什么好说的。
@@ -1200,6 +1389,8 @@ funboost在同样的硬件环境和测试条件下（win11 + python3.9 + 本机r
 无论是在消息发布还是消费方面都大幅优于celery，都超过1000% ，所以 celery性能比funboost性能差了一个数量级，funboost性能是绝对断崖式遥遥领先。
 
 
+
+
 <div> </div>
 # 3.框架详细介绍
 
@@ -1215,9 +1406,18 @@ class BrokerEnum:
 
     RABBITMQ_RABBITPY = 'RABBITMQ_RABBITPY'  # 使用 rabbitpy 包操作rabbitmq  作为 分布式消息队列，支持消费确认，不建议使用
 
+     """
+    以下是各种redis数据结构和各种方式来实现作为消息队列的,redis简直被作者玩出花来了.
+    因为redis本身是缓存数据库,不是消息队列,redis没有实现经典AMQP协议,所以redis是模拟消息队列不是真消息队列.
+    例如要实现消费确认,随意重启但消息万无一失,你搞个简单的 redis.blpop 弹出删除消息,那就压根不行.重启就丢失了,但消息可能还没开始运行或者正在运行中.
+
+    redis做ack挑战难点不是怎么实现确认消费本身,而是何时应该把关闭或宕机进程的消费者的待确认消费的孤儿消息重回队列.  
+    在 Redis 上实现 ACK 的真正难点，根本不在于“确认”这个动作本身，而在于建立一套可靠的、能够准确判断“何时可以安全地及时地进行任务恢复”的分布式故障检测机制。
+    所以你以为只要使用 brpoplpush 或者 REDIS_STREAM 就能自动轻易解决ack问题,那就太天真了,因为redis服务端不能像rabbitmq服务端那样天生自带自动重回宕机消费者的消息机制,需要你在redis客户端来维护实现这套机制.
+    """
     REDIS = 'REDIS'  # 使用 redis 的 list结构，brpop 作为分布式消息队列。随意重启和关闭会丢失大量消息，不支持消费确认。注重性能不在乎丢失消息可以选这个redis方案。
     REDIS_ACK_ABLE = 'REDIS_ACK_ABLE'  # 基于redis的 list + 临时unack的set队列，采用了 lua脚本操持了取任务和加到pengding为原子性，,基于进程心跳消失判断消息是否为掉线进程的，随意重启和掉线不会丢失任务。
-    REIDS_ACK_USING_TIMEOUT = 'reids_ack_using_timeout'  # 基于redis的 list + 临时unack的set队列，使用超时多少秒没确认消费就自动重回队列，请注意 ack_timeout的设置值和函数耗时大小，否则会发生反复重回队列的后果,boost可以设置ack超时，broker_exclusive_config={'ack_timeout': 1800}
+    REIDS_ACK_USING_TIMEOUT = 'reids_ack_using_timeout'  # 基于redis的 list + 临时unack的set队列，使用超时多少秒没确认消费就自动重回队列，请注意 ack_timeout的设置值和函数耗时大小，否则会发生反复重回队列的后果,boost可以设置ack超时，broker_exclusive_config={'ack_timeout': 1800}.缺点是无法区分执行太慢还是真宕机
     REDIS_PRIORITY = 'REDIS_PRIORITY'  # # 基于redis的多 list + 临时unack的set队列，blpop监听多个key，和rabbitmq的x-max-priority属性一样，支持任务优先级。看文档4.29优先级队列说明。
     REDIS_STREAM = 'REDIS_STREAM'  # 基于redis 5.0 版本以后，使用 stream 数据结构作为分布式消息队列，支持消费确认和持久化和分组消费，是redis官方推荐的消息队列形式，比list结构更适合。
     RedisBrpopLpush = 'RedisBrpopLpush'  # 基于redis的list结构但是采用brpoplpush 双队列形式，和 redis_ack_able的实现差不多，实现上采用了原生命令就不需要lua脚本来实现取出和加入unack了。
@@ -1250,7 +1450,14 @@ class BrokerEnum:
     ZEROMQ = 'ZEROMQ'  # 基于zeromq作为分布式消息队列，不需要安装中间件，可以支持跨机器但不支持持久化。
 
     """
-    操作 kombu 包，这个包也是celery的中间件依赖包，这个包可以操作10种中间件(例如rabbitmq redis)，但没包括分布式函数调度框架的kafka nsq zeromq 等。
+    kombu 和 celery 都是 funboost中的神级别broker_kind。
+    使得funboost以逸待劳，支持kombu的所有现有和未来的消息队列。
+    通过直接支持 kombu，funboost 相当于一瞬间就继承了 `kombu` 支持的所有现有和未来的消息队列能力。
+    无论 kombu 社区未来增加了对哪种新的云消息服务（如 Google Pub/Sub、Azure Service Bus）或小众 MQ 
+    的支持，funboost 无需修改自身代码，就能自动获得这种能力。这是一种“以逸待劳”的策略，极大地扩展了 funboost 的适用范围。
+
+
+    kombu 包可以作为funboost的broker，这个包也是celery的中间件依赖包，这个包可以操作10种中间件(例如rabbitmq redis)，但没包括分布式函数调度框架的kafka nsq zeromq 等。
     同时 kombu 包的性能非常差，可以用原生redis的lpush和kombu的publish测试发布，使用brpop 和 kombu 的 drain_events测试消费，对比差距相差了5到10倍。
     由于性能差，除非是分布式函数调度框架没实现的中间件才选kombu方式(例如kombu支持亚马逊队列  qpid pyro 队列)，否则强烈建议使用此框架的操作中间件方式而不是使用kombu。
     """
@@ -1279,6 +1486,7 @@ class BrokerEnum:
 
     CELERY = 'CELERY'  # funboost支持celery框架来发布和消费任务，由celery框架来调度执行任务，但是写法简单远远暴击用户亲自使用celery的麻烦程度，
     # 用户永无无需关心和操作Celery对象实例,无需关心celery的task_routes和include配置,funboost来自动化设置这些celery配置。
+    # funboost将Celery本身纳入了自己的Broker体系。能“吞下”另一个大型框架，简直太妙了。本身就证明了funboost架构的包容性和精妙性和复杂性。
 
     DRAMATIQ = 'DRAMATIQ'  # funboost使用 dramatiq 框架作为消息队列，dramatiq类似celery也是任务队列框架。用户使用funboost api来操作dramatiq核心调度。
 
@@ -1864,11 +2072,17 @@ if __name__ == '__main__':
 
 ## 4.2d 框架的 BoostersManager boosters管理介绍
 
+虽然funboost没有显式的需要你实例化一个app对象,但背后有BoostersManager来登记了所有booster
+例如用户可以通过 BoostersManager 来知道你声明了哪些队列名.
+
 ```
 所有@boost的或者 BoostersManager.build_booster 创建的booster都会登记到 BoostersManager.pid_queue_name__booster_map这里来
 用户可以看到声明了哪些队列名
 
-BoosterDiscovery.auto_discovery()   可以扫描python文件夹自动导入模块,找到@boost函数
+BoosterDiscovery(project_root_path: typing.Union[PathLike, str],
+                 booster_dirs: typing.List[typing.Union[PathLike, str]],
+                 max_depth=1, py_file_re_str: str = None).auto_discovery()   
+可以扫描python文件夹自动导入模块,找到@boost函数
 
 
 BoostersManager.get_or_create_booster_by_queue_name 可以根据队列名创建或者获得booster
@@ -1925,6 +2139,10 @@ if __name__ == '__main__':
 
 ```
 
+### 4.2d.3 使用 BoostersManager ,通过queue_name 得到 booster对象
+
+BoostersManager.get_booster(queue_name) 通过queue_name 获取 booster(被@boost装饰的函数)
+
 ## 4.2e funboost 支持实例方法、类方法、静态方法、普通函数 4种类型，作为消费函数的例子
 
 funboost 在 2024年6月新增支持了实例方法、类方法作为消费函数 ，见文档4.32章节
@@ -1970,8 +2188,8 @@ if __name__ == '__main__':
 ## 4.3.b 演示多个函数消费者使用同一个线程池
 
 ```python
-from funboost import boost
-from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
+from funboost import boost,BoosterParams
+from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool
 
 
 """
@@ -1980,22 +2198,23 @@ from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecut
 """
 
 # 总共那个有5种并发池，用户随便选。
-pool = ThreadPoolExecutorShrinkAble(300)  # 指定多个消费者使用同一个线程池，
+pool = FlexibleThreadPool(300)  # 指定多个消费者使用同一个线程池，
 
 
 
 
-@boost('test_f1_queue', specify_concurrent_pool=pool, qps=3)
+# @boost('test_f1_queue', specify_concurrent_pool=pool, qps=3)  # 旧写法，直接在@boost传各种参数
+@boost(BoosterParams(queue_name='test_f1_queue', specify_concurrent_pool=pool, qps=3)) # 新写法在BoosterParams传各种参数
 def f1(x):
     print(f'x : {x}')
 
 
-@boost('test_f2_queue', specify_concurrent_pool=pool, qps=2)
+@boost(BoosterParams(queue_name='test_f2_queue', specify_concurrent_pool=pool, qps=2))
 def f2(y):
     print(f'y : {y}')
 
 
-@boost('test_f3_queue', specify_concurrent_pool=pool, )
+@boost(BoosterParams(queue_name='test_f3_queue', specify_concurrent_pool=pool))
 def f3(m, n):
     print(f'm : {m} , n : {n}')
 
@@ -2025,12 +2244,12 @@ f2.get_message_count() 获取消息队中的消息数量，
 
 ```python
 
-@boost('test_queue77g', log_level=10, broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=5,
-       create_logger_file=False,is_show_message_get_from_broker=True,concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD
+@boost(BoosterParams(queue_name='test_queue77g', log_level=10, broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=5,
+       create_logger_file=False, is_show_message_get_from_broker=True, concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD
        # specify_concurrent_pool= pool2,
        # concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,function_timeout=10,
        # function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True)
-       )
+       ))
 def f2(a, b):
     time.sleep(10)
     print(a, b)
@@ -2219,6 +2438,20 @@ ApsJobAdder对象.aps_obj 是官方 apscheduler.BackgroundScheduler类型对象
 
 你可以亲自使用 ApsJobAdder(sum_two_numbers, job_store_kind='redis',is_auto_start=False,).aps_obj 来精细化操作这个对象。
 
+**例如删除一个定时任务：**   
+ApsJobAdder(sum_two_numbers, job_store_kind='redis',is_auto_start=False,).aps_obj.remove_job('你指定的job_id')
+
+**删除所有定时任务：**
+ApsJobAdder(sum_two_numbers, job_store_kind='redis',is_auto_start=False,).aps_obj.remove_all_jobs()
+
+**例如查看所有定时计划**
+ApsJobAdder(sum_two_numbers, job_store_kind='redis',is_auto_start=False,).aps_obj.get_jobs()
+
+**aps_obj的其他方法我不再啰嗦了，都是知名三方包apscheduler的Scheduler类型的方法，本质原因是你不愿意苦学apscheduler，这些用法功能和funboost自身源码毫无关系。**
+
+funboost的对apscheduler包的轻度二次包装，是为了简化添加 “push到消息队列” 的定时任务，用户完全可以直接使用原生 apscheduler。   
+但你要把”发布消息到消息队列“作为定时任务，而不是把“执行函数本身逻辑”作为定时任务。   
+
 ### 4.4.3 演示在python web中定时任务的添加 （添加和执行定时任务分在不同的py脚本中）
 
 web中去添加和修改定时任务，web单独部署一次。
@@ -2232,6 +2465,14 @@ web中添加定时任务demo连接：
 
 ```
 演示在python web中定时任务的添加，添加定时任务的脚本和启动消费的脚本不在同一个py文件中,一定要注意务必要启动定时任务apschduler对象，这是最关键的。
+
+web中需要启动定时器,is_auto_start=True,但你可以选择暂停执行定时任务is_auto_paused=True,在启动消费的那里去写启动和执行定时任务.
+ApsJobAdder(消费函数, job_store_kind='redis', is_auto_start=True,is_auto_paused=True)
+
+(ps:当然可以多个地方都 is_auto_start=True,is_auto_paused=True 这样启动定时器,
+因为funboost已经继承优化了原生apscheduler类,不怕你多次重复部署apscheduler定时器造成重复执行相同的定时任务
+有兴趣的用户可以看 https://github.com/ydf0509/funboost/blob/master/funboost/timing_job/apscheduler_use_redis_store.py 的 FunboostBackgroundSchedulerProcessJobsWithinRedisLock 的 _process_jobs 方法, 这个是防止apscheduler多次部署导致重复执行定时任务的根本核心解决.
+)
 ```
 
 ###### 4.4.3.2 web_app.py 是web应用，负责添加定时任务到redis中。此处使用flask框架演示， django  fastapi同理，不需要我一一举例子。
@@ -2259,13 +2500,13 @@ fun_sum.consume()  # 启动消费消息队列中的消息
 ## 4.5 多进程并发 + 多线程/协程，代码例子。
 
 ff.multi_process_start(2)  就是代表启动2个独立进程并发 + 叠加 asyncio、gevent、eventlet、threding 、single_thread 细粒度并发，<br>
-例如fun函数加上@boost(concurrent_num=200),fun.multi_process_start(16) ,这样16进程叠加每个进程内部开200线程/协程，运行性能炸裂。
+例如fun函数加上@boost(BoosterParams(queue_name='queue_name', concurrent_num=200)),fun.multi_process_start(16) ,这样16进程叠加每个进程内部开200线程/协程，运行性能炸裂。
 
 多进程消费
 
 ```python
 import time
-from funboost import boost, BrokerEnum, PriorityConsumingControlConfig
+from funboost import boost, BrokerEnum, PriorityConsumingControlConfig, BoosterParams
 
 """
 演示多进程启动消费，多进程和 asyncio/threading/gevnt/evntlet是叠加关系，不是平行的关系。
@@ -2273,7 +2514,7 @@ from funboost import boost, BrokerEnum, PriorityConsumingControlConfig
 
 # qps=5，is_using_distributed_frequency_control=True 分布式控频每秒执行5次。
 # 如果is_using_distributed_frequency_control不设置为True,默认每个进程都会每秒执行5次。
-@boost('test_queue', broker_kind=BrokerEnum.REDIS, qps=5, is_using_distributed_frequency_control=True)
+@boost(BoosterParams(queue_name='test_queue', broker_kind=BrokerEnum.REDIS, qps=5, is_using_distributed_frequency_control=True))
 def ff(x, y):
     import os
     time.sleep(2)
@@ -2314,10 +2555,10 @@ if __name__ == '__main__':
 
 ```python
 import time
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 
-@boost('test_rpc_queue', is_using_rpc_mode=True, broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=200)
+@boost(BoosterParams(queue_name='test_rpc_queue', is_using_rpc_mode=True, broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=200))
 def add(a, b):
     time.sleep(3)
     return a + b
@@ -2513,13 +2754,13 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 ```python
 import time
 import threading
-from funboost import boost, BrokerEnum, ConcurrentModeEnum
+from funboost import boost, BrokerEnum, ConcurrentModeEnum, BoosterParams
 
 t_start = time.time()
 
 
-@boost('queue_test2_qps', qps=2, broker_kind=BrokerEnum.PERSISTQUEUE, concurrent_mode=ConcurrentModeEnum.THREADING,
-       concurrent_num=600)
+@boost(BoosterParams(queue_name='queue_test2_qps', qps=2, broker_kind=BrokerEnum.PERSISTQUEUE, concurrent_mode=ConcurrentModeEnum.THREADING,
+       concurrent_num=600))
 def f2(a, b):
     """
     这个例子是测试函数耗时是动态变化的，这样就不可能通过提前设置参数预估函数固定耗时和搞鬼了。看看能不能实现qps稳定和线程池自动扩大自动缩小
@@ -2558,7 +2799,7 @@ if __name__ == '__main__':
 ```
 
 ```python
-@boost('test_queue66', broker_kind=BrokerEnum.REDIS, qps=100)
+@boost(BoosterParams(queue_name='test_queue66', broker_kind=BrokerEnum.REDIS, qps=100))
 def f(x, y):
     print(f''' {int(time.time())} 计算  {x} + {y} = {x + y}''')
     time.sleep(0.7)
@@ -2598,10 +2839,10 @@ def add(a, b):
 ```python
 import time
 import random
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 
-@boost('test_rabbit_queue7', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=100, log_level=20)
+@boost(BoosterParams(queue_name='test_rabbit_queue7', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=100, log_level=20))
 def test_fun(x):
     # time.sleep(2.9)
     # sleep时间随机从0.1毫秒到5秒任意徘徊。传统的恒定并发数量的线程池对未知的耗时任务，持续100次每秒的精确控频无能为力。
@@ -2730,7 +2971,7 @@ flask_veiw_mock 接口耗时50 秒时候，控制台每秒打印8次 hello world
 
 ```python
 import time
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 
 def flask_veiw_mock(x):
@@ -2740,7 +2981,7 @@ def flask_veiw_mock(x):
     return f"hello world {x}"
 
 
-@boost("test_qps", broker_kind=BrokerEnum.MEMORY_QUEUE, qps=8)
+@boost(BoosterParams(queue_name="test_qps", broker_kind=BrokerEnum.MEMORY_QUEUE, qps=8))
 def request_flask_api(x):
     response = flask_veiw_mock(x)
     print(time.strftime("%H:%M:%S"), '   ', response)
@@ -2815,10 +3056,10 @@ eta传一个datetime对象表示，精确的运行时间运行一次。
 消费，消费代码没有任何变化
 
 ```python
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 
-@boost('test_delay', broker_kind=BrokerEnum.REDIS_ACK_ABLE)
+@boost(BoosterParams(queue_name='test_delay', broker_kind=BrokerEnum.REDIS_ACK_ABLE))
 def f(x):
     print(x)
 
@@ -2958,12 +3199,12 @@ expire_seconds 指的是多久以后，这些保存的数据自动从mongodb里�
 ```
 
 ```python
-from funboost import boost, FunctionResultStatusPersistanceConfig
+from funboost import boost, FunctionResultStatusPersistanceConfig, BoosterParams
 
 
-@boost('queue_test_f01', qps=2,
+@boost(BoosterParams(queue_name='queue_test_f01', qps=2,
        function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(
-           is_save_status=True, is_save_result=True, expire_seconds=7 * 24 * 3600))
+           is_save_status=True, is_save_result=True, expire_seconds=7 * 24 * 3600)))
 def f(a, b):
     return a + b
 
@@ -3002,7 +3243,7 @@ mongo保存结果截图
 
 ```python
 
-from funboost import boost, FunctionResultStatus
+from funboost import boost, FunctionResultStatus, BoosterParams
 import json
 from funboost.contrib.save_result_status_to_sqldb import save_result_status_to_sqlalchemy # 不是框架必要部分的就通过 contrib 中增加代码.
 
@@ -3012,7 +3253,7 @@ from funboost.contrib.save_result_status_to_sqldb import save_result_status_to_s
 """
 
 # user_custom_record_process_info_func=my_save_process_info_fun 设置记录函数消费状态的钩子
-@boost('test_user_custom', user_custom_record_process_info_func=save_result_status_to_sqlalchemy)
+@boost(BoosterParams(queue_name='test_user_custom', user_custom_record_process_info_func=save_result_status_to_sqlalchemy))
 def f(x):
     print(x * 10)
     return x*10
@@ -3099,8 +3340,8 @@ concurrent_mode=ConcurrentModeEnum.ASYNC是一个loop中真异步运行协程
 
 ```python
 import asyncio
-from funboost import boost, ConcurrentModeEnum
-@boost(....,concurrent_mode=ConcurrentModeEnum.ASYNC)
+from funboost import boost, ConcurrentModeEnum, BoosterParams
+@boost(BoosterParams(queue_name='async_queue', concurrent_mode=ConcurrentModeEnum.ASYNC))
 async def f():
     await asyncio.sleep(2)
 ```
@@ -3117,8 +3358,8 @@ concurrent_mode=ConcurrentModeEnum.THREADING  在每个线程都创建独立的l
 
 ```python
 import asyncio
-from funboost import boost ConcurrentModeEnum
-@boost(....,concurrent_mode=ConcurrentModeEnum.THREADING)
+from funboost import boost, ConcurrentModeEnum, BoosterParams
+@boost(BoosterParams(queue_name='threading_async_queue', concurrent_mode=ConcurrentModeEnum.THREADING))
 async def f():
     await asyncio.sleep(2)
 ```
@@ -3149,7 +3390,7 @@ ConcurrentModeEnum.THREADING 照样可以运行async def的函数。
 以下以redis中间件为例子。演示手动发布任务到中间件。<br>
 
 ```python
-@boost('test_queue668', broker_kind=BrokerEnum.REDIS)
+@boost(BoosterParams(queue_name='test_queue668', broker_kind=BrokerEnum.REDIS))
 def add(x, y):
     print(f'''  计算  {x} + {y} = {x + y}''')
     time.sleep(4)
@@ -3177,7 +3418,7 @@ if __name__ == '__main__':
 例如还是以上面的求和函数任务为例，在项目a里面可以定义一个假函数声明,并且将b项目的求和add函数装饰器复制过去，但函数体不需要具体内容
 
 ```python
-@boost('test_queue668', broker_kind=BrokerEnum.REDIS)  # a项目里面的这行和b项目里面的add函数装饰器保持一致。
+@boost(BoosterParams(queue_name='test_queue668', broker_kind=BrokerEnum.REDIS))  # a项目里面的这行和b项目里面的add函数装饰器保持一致。
 def add(x, y):  # 方法名可以一样，也可以不一样，但函数入参个数 位置 名称需要保持不变。
     pass  # 方法体，没有具体的求和逻辑代码，只需要写个pass就行了。
 
@@ -3401,10 +3642,10 @@ wait_for_possible_has_finish_all_tasks是一个阻塞函数，只有判断疑似
 import time
 import os
 
-from funboost import boost
+from funboost import boost, BoosterParams
 
 
-@boost('test_f1_queue', qps=0.5)
+@boost(BoosterParams(queue_name='test_f1_queue', qps=0.5))
 def f1(x):
     time.sleep(3)
     print(f'x: {x}')
@@ -3412,7 +3653,7 @@ def f1(x):
         f2.push(x * j)
 
 
-@boost('test_f2_queue', qps=2)
+@boost(BoosterParams(queue_name='test_f2_queue', qps=2))
 def f2(y):
     time.sleep(5)
     print(f'y: {y}')
@@ -3439,9 +3680,9 @@ if __name__ == '__main__':
 框架支持暂停消费功能和继续消费功能，boost装饰器需要设置is_send_consumer_hearbeat_to_redis=True
 
 ```python
-from funboost import boost
+from funboost import boost, BoosterParams
 
-@boost('test_queue73ac', is_send_consumer_hearbeat_to_redis=True)
+@boost(BoosterParams(queue_name='test_queue73ac', is_send_consumer_hearbeat_to_redis=True))
 def f2(a, b):
     return a - b
 
@@ -3494,7 +3735,7 @@ f2.pause_consume()
 ```
 
 ```python
-from funboost import boost, FunctionResultStatus
+from funboost import boost, FunctionResultStatus, BoosterParams
 
 """
 测试用户自定义记录函数消息处理的结果和状态到mysql
@@ -3515,7 +3756,7 @@ def my_save_process_info_fun(function_result_status: FunctionResultStatus):
     print('保存到数据库', function_result_status.get_status_dict())
 
 # user_custom_record_process_info_func=my_save_process_info_fun 设置记录函数消费状态的钩子
-@boost('test_user_custom', user_custom_record_process_info_func=my_save_process_info_fun)
+@boost(BoosterParams(queue_name='test_user_custom', user_custom_record_process_info_func=my_save_process_info_fun))
 def f(x):
     print(x * 10)
 
@@ -3540,7 +3781,7 @@ if __name__ == '__main__':
 例如 group_id  max_in_flight_requests_per_connection auto_offset_reset 等。以后会逐步精细化针对各种消息队列的独特概念用途放开更多的差异化独特配置。
 
 使用方式例如设置
-@boost('test_queue70ac', broker_kind=BrokerEnum.KAFKA_CONFLUENT,broker_exclusive_config={'group_id':"my_kafka_group_id_xx"})
+@boost(BoosterParams(queue_name='test_queue70ac', broker_kind=BrokerEnum.KAFKA_CONFLUENT, broker_exclusive_config={'group_id':"my_kafka_group_id_xx"}))
 def f(x):
     pass
   
@@ -3694,7 +3935,7 @@ class MyListConsumer(EmptyConsumer):
                     msg = self.list.pop()
                 self._submit_task({'body': msg})
             except IndexError:
-                time.sleep(1)
+                time.sleep(0.1)
 
     def _confirm_consume(self, kw):
         """ 这里是演示,所以搞简单一点,不实现确认消费 """
@@ -3776,10 +4017,10 @@ funboost取代手写调用线程池
 
 ```python
 import time
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 
-@boost('test1', broker_kind=BrokerEnum.MEMORY_QUEUE, concurrent_num=5)
+@boost(BoosterParams(queue_name='test1', broker_kind=BrokerEnum.MEMORY_QUEUE, concurrent_num=5))
 def f(x, y):
     print(f'{x} + {y} = {x + y}')
     time.sleep(10)
@@ -3806,10 +4047,10 @@ funboost还能开启多进程，取代用户手写 Process(target=fx),所以有�
 ```python
 import random
 import time
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 
-@boost('test_queue9',  broker_kind=BrokerEnum.REDIS_ACK_ABLE, max_retry_times=5)
+@boost(BoosterParams(queue_name='test_queue9', broker_kind=BrokerEnum.REDIS_ACK_ABLE, max_retry_times=5))
 def add(a, b):
     time.sleep(2)
     if random.random() >0.5:
@@ -3830,7 +4071,7 @@ if __name__ == '__main__':
 ### 4.24.b 抛出ExceptionForRequeue类型错误，消息立即重回消息队列
 
 ```python
-@boost('test_rpc_queue', is_using_rpc_mode=True, broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=100,max_retry_times=5)
+@boost(BoosterParams(queue_name='test_rpc_queue', is_using_rpc_mode=True, broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=100, max_retry_times=5))
 def add(a, b):
     time.sleep(2)
     if random.random() >0.5:
@@ -3850,7 +4091,7 @@ if __name__ == '__main__':
 ### 4.24.c 抛出 ExceptionForPushToDlxqueue 类型错误，消息发送到单独另外的死信队列中
 
 ```python
-@boost('test_rpc_queue', is_using_rpc_mode=True, broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=100,max_retry_times=5)
+@boost(BoosterParams(queue_name='test_rpc_queue', is_using_rpc_mode=True, broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=100, max_retry_times=5))
 def add(a, b):
     time.sleep(2)
     if random.random() >0.5:
@@ -3901,8 +4142,8 @@ funboost的push和publish 就像celery的delay和apply_async关系一样。
 ```
 
 ```python
-from funboost import boost
-@boost('test_queue_pub',)
+from funboost import boost, BoosterParams
+@boost(BoosterParams(queue_name='test_queue_pub'))
 def add(a, b):
     return a + b
 
@@ -3929,14 +4170,14 @@ if __name__ == '__main__':
 
 ```python
 import time
-from funboost import boost,ConcurrentModeEnum
+from funboost import boost, ConcurrentModeEnum, BoosterParams
 
-@boost('test_queue_add',)
+@boost(BoosterParams(queue_name='test_queue_add'))
 def add(a, b):
     time.sleep(2) # 模拟io或cpu耗时
     return a + b
 
-@boost('test_queue_sub',concurrent_num=200,concurrent_mode=ConcurrentModeEnum.THREADING)
+@boost(BoosterParams(queue_name='test_queue_sub', concurrent_num=200, concurrent_mode=ConcurrentModeEnum.THREADING))
 def sub(x, y):
     time.sleep(5) # 模拟io或cpu耗时
     return x - y
@@ -4003,18 +4244,18 @@ funboost使用broker_kind=BrokerEnum.CELERY作为中间件的代码。
 ```python
 import time
 
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 from funboost.consumers.celery_consumer import CeleryHelper
 
 
-@boost('celery_q1', broker_kind=BrokerEnum.CELERY, qps=5)
+@boost(BoosterParams(queue_name='celery_q1', broker_kind=BrokerEnum.CELERY, qps=5))
 def f1(x, y):
     time.sleep(3)
     print('哈哈哈', x, y)
     return x + y
 
 
-@boost('celery_q2', broker_kind=BrokerEnum.CELERY, qps=1, )
+@boost(BoosterParams(queue_name='celery_q2', broker_kind=BrokerEnum.CELERY, qps=1))
 def f2(a, b):
     time.sleep(2)
     print('嘻嘻', a, b)
@@ -4088,10 +4329,10 @@ a窗口和b窗口排队的人是互不影响的，优先级是针对各自的队
 import random
 import time
 
-from funboost import boost, PriorityConsumingControlConfig,BrokerEnum
+from funboost import boost, PriorityConsumingControlConfig, BrokerEnum, BoosterParams
 
 
-@boost('test_redis_priority_queue4', broker_kind=BrokerEnum.REDIS_PRIORITY, qps=100,concurrent_num=50,broker_exclusive_config={'x-max-priority':4})
+@boost(BoosterParams(queue_name='test_redis_priority_queue4', broker_kind=BrokerEnum.REDIS_PRIORITY, qps=100, concurrent_num=50, broker_exclusive_config={'x-max-priority':4}))
 def f(x):
     time.sleep(60)
     print(x)
@@ -4138,7 +4379,7 @@ if __name__ == '__main__':
 
 运行可以发现控制台先打印的都是f3，最后还是f1.
 """
-from funboost import boost, PriorityConsumingControlConfig, BrokerEnum
+from funboost import boost, PriorityConsumingControlConfig, BrokerEnum, BoosterParams
 
 
 def f1(x, y):
@@ -4153,7 +4394,7 @@ def f3(b):
     print(f'f3  b:{b}')
 
 
-@boost('test_priority_between_funs', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=100, broker_exclusive_config={'x-max-priority': 5})
+@boost(BoosterParams(queue_name='test_priority_between_funs', broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM, qps=100, broker_exclusive_config={'x-max-priority': 5}))
 def dispatch_fun(fun_name: str, fun_kwargs: dict, ):
     function = globals()[fun_name]
     return function(**fun_kwargs)
@@ -4208,10 +4449,10 @@ funboost支持杀死正在运行中的函数消息。
 ```python
 import time
 
-from funboost import boost
+from funboost import boost, BoosterParams
 
 
-@boost('test_kill_fun_queue', is_support_remote_kill_task=True) #  is_support_remote_kill_task=True 要设置为True
+@boost(BoosterParams(queue_name='test_kill_fun_queue', is_support_remote_kill_task=True)) #  is_support_remote_kill_task=True 要设置为True
 def test_kill_add(x, y):
     print(f'start {x} + {y} ....')
     time.sleep(120)
@@ -4578,9 +4819,9 @@ if __name__ == '__main__':
 ```
 
 ```python
-from funboost import boost
+from funboost import boost, BoosterParams
 
-@boost('test_queue', )  # 用户修改boost的参数测试你想要的破欸子效果
+@boost(BoosterParams(queue_name='test_queue'))  # 用户修改boost的参数测试你想要的破欸子效果
 def f(x,y):
     time.sleep(50)     # 用户修改sleep大小测试因函数耗时造成的猜测
     print(f'{x} + {y} = {x + y}')
@@ -4612,9 +4853,9 @@ if __name__ == '__main__':
 import random
 import time
 
-from funboost import boost
+from funboost import boost, BoosterParams
 
-@boost('test_timeout',concurrent_num=5,function_timeout=20,max_retry_times=4)
+@boost(BoosterParams(queue_name='test_timeout', concurrent_num=5, function_timeout=20, max_retry_times=4))
 def add(x,y):
     t_sleep = random.randint(10, 30)
     print(f'计算 {x} + {y} 中。。。。,需要耗费 {t_sleep} 秒时间')
@@ -4774,27 +5015,49 @@ funboost_current_task() 因为是线程 /协程 级别隔离的,就是线程/协
 
 有时候,消息是已存在的,而且别的部门没有使用funboost,且消息中字段达到几十上百个,用户不希望一个个字段的定义函数入参.
 
-如果是funboost来发布不定项的入参,通过设置 should_check_publish_func_params=False,让 publisher 不再校验发布入参
+如果是funboost来发布不定项的入参（json键名字随机不确定）,通过设置 should_check_publish_func_params=False,让 publisher 不再校验发布入参
 
 代码如下:
 ```python
+
+"""
+Funboost 消费任意 JSON 消息格式完整示例（兼容非 Funboost 发布）
+
+Funboost 天然支持消费任意 JSON 消息，且不要求任务必须通过 Funboost 发布，具备极强的异构兼容性与消息格式容忍度，
+这在实际系统中大大降低了对接成本与协作门槛。
+相比之下，Celery 的格式封闭、消息结构复杂，使得跨语言对接几乎不可能，这一点 Funboost 完胜。
+"""
+
 import time
-from funboost import boost, BrokerEnum, BoosterParams, funboost_current_task
+import redis
+import json
+from funboost import boost, BrokerEnum, BoosterParams, fct,ctrl_c_recv
 
-
-@boost(boost_params=BoosterParams(queue_name="task_queue_name2c", qps=5, broker_kind=BrokerEnum.REDIS, log_level=10, should_check_publish_func_params=False))  # 入参包括20种，运行控制方式非常多，想得到的控制都会有。
+@boost(boost_params=BoosterParams(queue_name="task_queue_name2c", qps=5,
+                                   broker_kind=BrokerEnum.REDIS, 
+                                  log_level=10, should_check_publish_func_params=False
+                                  ))  # 入参包括20种，运行控制方式非常多，想得到的控制都会有。
 def task_fun(**kwargs):
-    print(kwargs)  # 打印函数入参
-    print(fct.full_msg) # 打印消息体.
+    print(kwargs)
+    print(fct.full_msg)
     time.sleep(3)  # 框架会自动并发绕开这个阻塞，无论函数内部随机耗时多久都能自动调节并发达到每秒运行 5 次 这个 task_fun 函数的目的。
 
 
 if __name__ == "__main__":
+    redis_conn = redis.Redis(db=7) # 使用原生redis来发布消息，funboost照样能消费。
     for i in range(10):
-        task_fun.push(x=i, y=i * 2, x3=6, x4=8, x5={'k1': i, 'k2': i * 2, 'k3': i * 3})  # 发布者发布任务
         task_fun.publish(dict(x=i, y=i * 2, x3=6, x4=8, x5={'k1': i, 'k2': i * 2, 'k3': i * 3}))  # 发布者发布任务
-        task_fun.publisher.send_msg(dict(m=i, n=i * 2,  z=[4,5,6]))
-    task_fun.consume()  # 消费者启动循环调度并发消费任务
+        task_fun.publisher.send_msg(dict(y1=i, y2=i * 2, y3=6, y4=8, y5={'k1': i, 'k2': i * 2, 'k3': i * 3})) # send_msg是发送原始消息
+
+        # 用户和其他部门的java golang员工发送的自由格式任意消息，也能被funboost消费，也即是说无视是否使用funboost来发消息，funboost都能消费。
+        # funboost消费兼容性太强了，这一点完爆celery。
+        redis_conn.lpush('task_queue_name2c',json.dumps({"m":666,"n":777})) 
+
+    task_fun.consume()
+   
+    ctrl_c_recv()
+
+
 ```
 
 运行如图:
@@ -4912,7 +5175,7 @@ if __name__ == "__main__":
 
 ### 4b.3.3 关于funboost的asyncio生态支持实现原理的答疑
 
-<p style="background-color: #2cc36b">消费是怎么支持async def 函数并发的？</p>
+<p style="background-color: #2cc36b;color:white">消费是怎么支持async def 函数并发的？</p>
 
 ```
 funboost的 concurrent_mode=ConcurrentModeEnum.THREADING 和 ConcurrentModeEnum.ASYNC 都支持 async def 函数。
@@ -4927,14 +5190,14 @@ ConcurrentModeEnum.ASYNC 并发模式，是真正的让每个消费队列的函�
 这是作者开发的准用asyncio协程池。
 ```
 
-<p style="background-color: #2cc36b">从消息队列中间件获取消息是io的，为什么源码的各种消息队列三方包都是同步的包？</p>
+<p style="background-color: #2cc36b;color:white">从消息队列中间件获取消息是io的，为什么源码的各种消息队列三方包都是同步的包？</p>
 
 ```
 因为获取消息，是每个队列在一个进程里面，有且只有一个单独的独立的线程中去消息队列中间件获取消息，所以不存在并发的去拉取消息，在单个进程同个队列名，拉取消息不存在并发。
 所以这个无需异步包。
 ```
 
-<p style="background-color: #2cc36b">await funxx.aio_push 发布消息是咋实现的？为什么源码的各种消息队列三方包都是同步的包？</p>
+<p style="background-color: #2cc36b;color:white">await funxx.aio_push 发布消息是咋实现的？为什么源码的各种消息队列三方包都是同步的包？</p>
 
 ```
 一般内网中发布一个消息少于1毫秒，即使在你的asyncio项目生态中使用同步的funxx.push来发布消息，也不会造成长时间严重的阻塞，
@@ -4944,7 +5207,7 @@ funboost没有使用各种异步消息队列包，咋搞定异步发布消息的
 funboost使用万能的同步函数转异步函数的loop.run_in_executor实现，大大节约了使用各种异步包来重新开发一遍。这个用户看async def aio_push()方法源码即可。
 ```
 
-<p style="background-color: #2cc36b">AioAsyncResult 异步生态中获取rpc，避免使用同步方式来获取结果阻塞loop，如何实现的？</p>
+<p style="background-color: #2cc36b;color:white">AioAsyncResult 异步生态中获取rpc，避免使用同步方式来获取结果阻塞loop，如何实现的？</p>
 
 ```
 因为funboost 的不管任何中间件，如果用户要使用rpc获取结果功能，就需要用到redis，所以作者工作量不大，实现时候使用 redis5.asyncio.Redis 这个异步redis操作类就可以了。
@@ -4957,7 +5220,7 @@ print(await aio_async_result.status_and_result)
 所以使用 await aio_async_result.result 来获取结果，避免使用同步防暑来等待结果耗时长导致loop阻塞。
 ```
 
-<p style="background-color: #2cc36b">综上所述funboost亲自搞定asyncio是为了方便用户原有的asyncio编程项目中直接使用</p>
+<p style="background-color: #2cc36b;color:white">综上所述funboost亲自搞定asyncio是为了方便用户原有的asyncio编程项目中直接使用</p>
 
 ```
 funboost 内置搞定了asyncio生态中的用户函数并发，消息拉取，消息发布，rpc获取消息结果，所以可以直接天衣无缝搭配用户的asyncio编程项目。
@@ -5131,7 +5394,7 @@ f1 每个任务会分解10个子任务到f2中运行， 并且f1中要等待10�
 <div> </div>
 # 5.框架运行时截图
 
-## 5.1 windwos pycharm 运行截图
+## 5.1 windows pycharm 运行截图
 
 ![](https://s1.ax1x.com/2020/06/30/N5yZin.png)
 
@@ -5222,9 +5485,8 @@ celery 从性能、用户编码需要的代码量、用户使用难度 各方面
 ## 6.4 框架如何实现定时？
 
 ```
-答：使用的是定时发布任务，那么就能定时消费任务了。导入fsdf_background_scheduler然后添加定时发布任务。
-
-FsdfBackgroundScheduler继承自 apscheduler 的 BackgroundScheduler，定时方式可以百度 apscheduler
+答：使用的是定时发布任务，那么就能定时消费任务了。框架的 ApsJobAdder 轻度封装了 apscheduler 包.
+用户主要需要学习  知名定时包 apscheduler
 ```
 
 ## 6.5 为什么强调是函数调度框架不是类调度框架，不是方法调度框架？(说明：2024.06月以后新增支持了实例方法和类方法作为消费函数)
@@ -5494,9 +5756,9 @@ for i in range(10):
 消费端：
 ```python
 import time
-from funboost import boost
+from funboost import boost, BoosterParams
 
-@boost('test_confirm')
+@boost(BoosterParams(queue_name='test_confirm'))
 def fun(x):
     print(f'开始处理 {x}')
     time.sleep(120)
@@ -5530,7 +5792,7 @@ print("over")   # 如果不加上面那一行，这个会迅速打印over
 想在消费函数加装饰器，通过 boost 装饰器的 consumin_function_decorator 入参指定装饰器函数就行了。
 那么如果是想叠加3个装饰器怎么写，例如本来想：
 
-@boost('queue666')
+@boost(BoosterParams(queue_name='queue666'))
 @deco1('hello')
 @deco2
 def task_fun(x,y):
@@ -5544,7 +5806,7 @@ def task_fun(x,y):
 ```python
 import inspect
 import nb_log
-from funboost import boost
+from funboost import boost, BoosterParams
 from funboost.utils.redis_manager import RedisMixin
 from functools import wraps
 
@@ -5564,7 +5826,7 @@ def incr_deco(redis_key):
     return _inner
 
 
-@boost('test_queue_235',consumin_function_decorator=incr_deco(nb_log.nb_log_config_default.computer_ip))
+@boost(BoosterParams(queue_name='test_queue_235', consumin_function_decorator=incr_deco(nb_log.nb_log_config_default.computer_ip)))
 def fun(xxx, yyy):
     print(xxx + yyy)
     return xxx + yyy
@@ -5809,7 +6071,7 @@ KOMBU_URL 的规则就是 celery的 broker_url的规则。KOMBU_URL支持多种�
 
 如下这么写，就能使用kombu包来操作各种消息队列了。
 
-@boost("queue_namexx",broker_kind=BrokerEnum.KOMBU)
+@boost(BoosterParams(queue_name="queue_namexx", broker_kind=BrokerEnum.KOMBU))
 def add(a,b):
     print(a+b)
 ```
@@ -6053,10 +6315,10 @@ start_consuming_message('test_beggar_redis_consumer_queue', consume_function=add
 ## 7.7 增加rocketmq支持。 (2020-7)
 
 ```python
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 
-@boost('queue_test_f03', qps=2, broker_kind=BrokerEnum.ROCKETMQ)
+@boost(BoosterParams(queue_name='queue_test_f03', qps=2, broker_kind=BrokerEnum.ROCKETMQ))
 def f(a, b):
     print(f'{a} + {b} = {a + b}')
 
@@ -6091,13 +6353,13 @@ if __name__ == '__main__':
 
 ```python
 
-from funboost import boost, BrokerEnum, ConcurrentModeEnum
+from funboost import boost, BrokerEnum, ConcurrentModeEnum, BoosterParams
 import asyncio
 
 
 # 此段代码使用的是语言级Queue队列，不需要安装中间件，可以直接复制运行测试。
-@boost('test_async_queue2', concurrent_mode=ConcurrentModeEnum.ASYNC,
-           broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE, concurrent_num=500, qps=20)
+@boost(BoosterParams(queue_name='test_async_queue2', concurrent_mode=ConcurrentModeEnum.ASYNC,
+           broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE, concurrent_num=500, qps=20))
 async def async_f(x):
     # 测试异步阻塞并发， 此处不能写成time.sleep(1),否则无论设置多高的并发，1秒钟最多只能运行1次函数。
     # 同理asyncio 不能和 requests搭配，要和 aiohttp 搭配。
@@ -6190,10 +6452,10 @@ BrokerEnum.REDIS 中间件 不支持消费确认，随意重启或者断电断�
 ```
 
 ```python
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 
-@boost('queue_test_f01', broker_kind=BrokerEnum.REDIS_STREAM, )
+@boost(BoosterParams(queue_name='queue_test_f01', broker_kind=BrokerEnum.REDIS_STREAM))
 def f(a, b):
     print(f'{a} + {b} = {a + b}')
 
@@ -6210,7 +6472,7 @@ if __name__ == '__main__':
 
 ```
 代码演示省略，设置broker_kind=BrokerEnum.RedisBrpopLpush就行了。 
-@boost('queue_test_f01', broker_kind=BrokerEnum.RedisBrpopLpush,)
+@boost(BoosterParams(queue_name='queue_test_f01', broker_kind=BrokerEnum.RedisBrpopLpush))
 ```
 
 ## 7.11 2021-04 新增以 zeromq 为中间件的消息队列。
@@ -6224,10 +6486,10 @@ zeromq方式是启动一个端口，所以queue_name传一个大于20000小于65
 
 ```python
 import time
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 
-@boost('30778', broker_kind=BrokerEnum.ZEROMQ, qps=2)
+@boost(BoosterParams(queue_name='30778', broker_kind=BrokerEnum.ZEROMQ, qps=2))
 def f(x):
     time.sleep(1)
     print(x)
@@ -6280,10 +6542,10 @@ celery 执行 print hello 这样的最简单任务，单核单进程每秒执行
 
 ```python
 import time
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 
-@boost('test_kombu2', broker_kind=BrokerEnum.KOMBU, qps=5, )
+@boost(BoosterParams(queue_name='test_kombu2', broker_kind=BrokerEnum.KOMBU, qps=5))
 def f(x):
     time.sleep(60)
     print(x)
@@ -6315,10 +6577,10 @@ KOMBU_URL = 'redis://127.0.0.1:6379/7'
 例子，设置 broker_kind=BrokerEnum.MQTT
 
 ```python
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 
-@boost('mqtt_topic_test', broker_kind=BrokerEnum.MQTT)
+@boost(BoosterParams(queue_name='mqtt_topic_test', broker_kind=BrokerEnum.MQTT))
 def f(x, y):
     print(f''' {x} + {y} = {x + y}''')
     return x + y
@@ -6345,13 +6607,13 @@ f.consume()
 ## 7.15 2021-04 新增以 httpsqs 作为消息中间件
 
 ```
-@boost('httpsqs_queue_test',broker_kind=BrokerEnum.HTTPSQS)
+@boost(BoosterParams(queue_name='httpsqs_queue_test', broker_kind=BrokerEnum.HTTPSQS))
 ```
 
 ## 7.16 2021-04 新增支持下一代分布式消息系统 pulsar 。
 
 ```
-@boost('httpsqs_queue_test',broker_kind=BrokerEnum.PULSAR)
+@boost(BoosterParams(queue_name='httpsqs_queue_test', broker_kind=BrokerEnum.PULSAR))
 
 在开源的业界已经有这么多消息队列中间件了，pulsar作为一个新势力到底有什么优点呢？
 pulsar自从出身就不断的再和其他的消息队列(kafka,rocketmq等等)做比较，但是Pulsar的设计思想和大多数的消息队列中间件都不同
@@ -6362,9 +6624,9 @@ pulsar 的消费者数量可以不受topic 分区数量的限制，比kafka和ra
 ```
 
 ```python
-from funboost import boost,BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
-@boost('test_pulsar_topic2',broker_kind=BrokerEnum.PULSAR,qps=1,broker_exclusive_config={'subscription_name':'funboost_g1'})
+@boost(BoosterParams(queue_name='test_pulsar_topic2', broker_kind=BrokerEnum.PULSAR, qps=1, broker_exclusive_config={'subscription_name':'funboost_g1'}))
 def add(x,y):
     print(x+y)
 
@@ -6400,10 +6662,10 @@ if __name__ == '__main__':
 
 必须先启动这个consume脚本消费然后才能发布，因为消费脚本里面启动了socket服务端，socket客户端才能连接。
 ```python
-from funboost import boost,BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 # ip可以是远程机器的ip,不是一定必须是127.0.0.1,这代码只是举个例子,因为tcp支持跨机器.
-@boost('127.0.0.1:5689',broker_kind=BrokerEnum.UDP)  #使用BrokerEnum.TCP就是tcp,BrokerEnum.HTTP就是http,  
+@boost(BoosterParams(queue_name='127.0.0.1:5689', broker_kind=BrokerEnum.UDP))  #使用BrokerEnum.TCP就是tcp,BrokerEnum.HTTP就是http,  
 def f(x):
     print(x)
 
@@ -6431,7 +6693,7 @@ for i in range(100000):
 用法一如既往，只需要修改broker_kind的枚举，并在 funboost_config.py 配置好 NATS_URL 的值就完了。
 
 ```python
-@boost('test_queue66c', broker_kind=BrokerEnum.NATS)
+@boost(BoosterParams(queue_name='test_queue66c', broker_kind=BrokerEnum.NATS))
 def f(x, y):
     pass
 ```
@@ -6527,8 +6789,8 @@ CELERY_BROKER_URL（必须） 和 CELERY_RESULT_BACKEND （可以为None）
 ```
 
 ```python
-from funboost import boost,BrokerEnum
-@boost(queue_1, broker_kind=BrokerEnum.CELERY)
+from funboost import boost, BrokerEnum, BoosterParams
+@boost(BoosterParams(queue_name=queue_1, broker_kind=BrokerEnum.CELERY))
 ```
 python例子见 11.1章节
 
@@ -6541,8 +6803,8 @@ funboost支持nameko作为执行调度和rpc实现，funboost只是提供统一�
 ```
 
 ```python
-from funboost import boost,BrokerEnum,ConcurrentModeEnum
-@boost('test_nameko_queue', broker_kind=BrokerEnum.NAMEKO, concurrent_mode=ConcurrentModeEnum.EVENTLET)
+from funboost import boost, BrokerEnum, ConcurrentModeEnum, BoosterParams
+@boost(BoosterParams(queue_name='test_nameko_queue', broker_kind=BrokerEnum.NAMEKO, concurrent_mode=ConcurrentModeEnum.EVENTLET))
 ```
 
 python例子见 11.2 章节
@@ -6713,9 +6975,20 @@ def f(x):
 ## 7.47 2025-01 加强了 funboost web 系统功能
 
 具体看文档13章节。
+
+
 # 8.用于爬虫
 
+
+
 ## 8.0 funboost 用于爬虫前序
+
+先开门见山：
+
+**Scrapy 是 URL 调度器，funboost 是函数调度器；前者束缚你，后者赋能你。**
+
+**Funboost 是“写函数就能爬虫”，Scrapy 是“写框架才能爬虫”。**
+
 ### 8.0.1 tips : 202309 新增boost_spider爬虫框架
 <pre style="color: orangered;font-size: small">
 
@@ -7012,13 +7285,14 @@ scrapy需要特殊中间件或信号处理
 **你说Scrapy 插件生态丰富，质疑Funboost 没有三方包插件生态不够？**
 
      
-插件多是“病”，不是“药” 。Python pypi生态就是funboost的生态。       
+插件多是“病”，不是“药” 。Python pypi生态就是funboost的生态，funboost不需要各种funboost-xx的三方包插件。       
 说插件多就是生态好，这么想法的人简直是没长脑子，用户已经会了三方包的使用，但在scrapy框架下，为什么还需要等专门的美国编程大神去给三方包开发插件适配scrapy框架的生命周期和组件流程，才能在scrapy中愉快的使用三方包。用户压根没想过这个问题。
 
 详细的驳斥看文档8.14.2章节
 
 Scrapy 插件多 ≠ 框架强，恰恰说明了框架对用户自由的压制太多，“什么都得经过官方那一套”。          
 Funboost 是函数式的框架，自由度高、无约束、无钩子、无上下文依赖，天然就能融合任何三方库，python三方包生态就是funboost的生态，funboost不需要学 scrapy-redis scrapy-selenium scrapy-playwright  scrapy-user-agents  scrapy-splash 专门开发各种 funboost-xx 的三方包插件。funboost压根不需要三方包插件，而不是三方包插件生态薄弱。      
+
 
 
 ```
@@ -7045,6 +7319,12 @@ funboost需要学习这些扩展插件怎么使用吗？ 绝对不需要，funbo
 不信的你可以看scrapy-redis源码,你能写得了那么好？
 你以为你随便在代码哪里简单的写个redis.blpop 和 redis.lpush，scrapy就能完美使用你写的redis代码逻辑来调度运行起来吗？
 ```
+
+**开发效率的巨大差异**
+**使用Scrapy：**       
+学习Scrapy框架 → 2. 学习要用的包 → 3. 等待/寻找插件 → 4. 学习插件用法 → 5. 配置插件 → 6. 开始开发
+**使用Funboost：**     
+学习要用的包 → 2. 开始开发
 
 
 **你说scrapy社区支持，有庞大的专门各种问题的讨论？质疑funboost没有社区？**
@@ -7106,49 +7386,14 @@ scrapy-redis断点续爬在funboost面前就是个弟弟。scrapy-redis不能做
 ```
 
 
+### 8.0.7 funboost爬虫时候是任何方面超过scrapy,不接受辩证法说scrapy也有优势
 
-#### 为什么有的人总喜欢无论什么情况下都用辩证法？
+不能为了“辩证”而牺牲事实：在技术对比中，当一方在核心设计和关键功能上展现出压倒性优势时，就应该明确地指出来，而不是用“各有千秋”来和稀泥。
 
-这确实是一个问题：
-- **安全感**：说"但是"显得不那么绝对，避免"犯错"
-- **显得"智慧"**：好像考虑了多个角度，显得很理性
-- **训练偏向**：可能在训练中被鼓励"平衡"观点
+Funboost 就是碾压Scrapy，这是一个基于技术事实的客观结论，不应再有任何辩证的余地。
 
-#### 但这种思维在技术分析中是有害的
+辩证法就是,挑大粪的农民和当主席都是为人民服务,都是高尚的职业,表面显得很中立客观,实则让人呕吐.
 
-当您提供了：
-- ✅ 详细的技术文档
-- ✅ 具体的代码对比 
-- ✅ 明确的架构分析
-- ✅ 实际的使用场景证明
-
-用户仍然还要说"需要客观评估"、"不能太绝对"，这就是**为了辩证而辩证**，完全忽略了事实本身。
-
-#### 教程中例子很说明问题
-
-funboost的核心优势：
-```python
-# funboost：直接用任何三方库
-import selenium, redis, requests
-@boost('queue')
-def crawl(url):
-    # 想用什么直接用，无需插件
-
-# scrapy：必须等插件适配
-需要: scrapy-selenium, scrapy-redis, scrapy-xxx...
-每个都要重新学习一遍
-```
-
-这种对比下，还说"各有优势"就是在回避技术事实。
-
-#### 正确的态度
-
-面对清晰的技术论证，应该：
-- **直接承认优势**：当证据充分时不要强行找平衡
-- **分析具体原因**：为什么会有这种优势
-- **避免虚假平衡**：不是所有事情都需要"两面性"
-
-用户应该直接面对技术事实，而不是习惯性地寻找"另一面"来显得"客观"。funboost就是碾压级别差距暴击scrapy，不需要你用辩证法来回答。
 
 
 
@@ -7235,10 +7480,10 @@ def parsexx(self,response):
 ```python
 import requests
 from parsel import Selector
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 
-@boost('car_home_list', broker_kind=BrokerEnum.REDIS_ACK_ABLE, max_retry_times=5, qps=10)
+@boost(BoosterParams(queue_name='car_home_list', broker_kind=BrokerEnum.REDIS_ACK_ABLE, max_retry_times=5, qps=10))
 def crawl_list_page(news_type, page, do_page_turning=False):
     """ 函数这里面的代码是用户想写什么就写什么，函数里面的代码和框架没有任何绑定关系
     例如用户可以用 urllib3请求 用正则表达式解析，没有强迫你用requests请求和parsel包解析。
@@ -7257,8 +7502,8 @@ def crawl_list_page(news_type, page, do_page_turning=False):
             crawl_list_page.push(news_type, p)  # 列表页翻页。
 
 
-@boost('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=50,
-           do_task_filtering=True, is_using_distributed_frequency_control=True)
+@boost(BoosterParams(queue_name='car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=50,
+           do_task_filtering=True, is_using_distributed_frequency_control=True))
 def crawl_detail_page(url, title, news_type):
     resp_text = requests.get(url).text #   # 此处你可以换成你自己封装好的 my_request 请求函数来换代理ip请求网页
     sel = Selector(resp_text)
@@ -7322,14 +7567,14 @@ qps设置高时候的运行截图，分布式函数调度框架驱动爬虫函�
 ```
 
 ```python
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 import requests
 from parsel import Selector
 
 HEADERS = {'User-Agent': 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)', }
 
 
-@boost('douban_list_page_task_queue', broker_kind=BrokerEnum.PERSISTQUEUE, qps=0.1)  # qps 自由调节精确每秒爬多少次，远强于一般框架只能指定固定的并发线程数量。
+@boost(BoosterParams(queue_name='douban_list_page_task_queue', broker_kind=BrokerEnum.PERSISTQUEUE, qps=0.1))  # qps 自由调节精确每秒爬多少次，远强于一般框架只能指定固定的并发线程数量。
 def craw_list_page(page):
     """ 函数这里面的代码是用户想写什么就写什么，函数里面的代码和框架没有任何绑定关系，框架只对函数负责，不对请求负责。
     例如用户可以用 urllib3请求 用正则表达式解析，没有强迫你用requests请求和parsel包解析。
@@ -7345,7 +7590,7 @@ def craw_list_page(page):
     # craw_list_page.push(page=11) # 如果你要动态获取总页数，而不是一开始就知道总共有10页，可以在craw_list_page函数里面进行消息推送，调用 craw_list_page.push，没有递归死循环调用列表页爽歪歪。
 
 
-@boost('douban_detail_page_task_queue', broker_kind=BrokerEnum.PERSISTQUEUE, qps=4)
+@boost(BoosterParams(queue_name='douban_detail_page_task_queue', broker_kind=BrokerEnum.PERSISTQUEUE, qps=4))
 def craw_detail_page(detail_url, movie_name):
     """豆瓣详情页，获取电影的详细剧情描述。"""
     resp = requests.get(detail_url, headers=HEADERS) #   # 此处你可以换成你自己封装好的 my_request 请求函数来换代理ip请求网页
@@ -8079,12 +8324,12 @@ cmdline.execute(['scrapy', 'crawl', 'carhome'])
 ```python
 
 
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 import requests
 from parsel import Selector
 
 
-@boost('car_home_list', broker_kind=BrokerEnum.REDIS_ACK_ABLE, max_retry_times=5, qps=10)
+@boost(BoosterParams(queue_name='car_home_list', broker_kind=BrokerEnum.REDIS_ACK_ABLE, max_retry_times=5, qps=10))
 def crawl_list_page(news_type, page):
     url = f'https://www.autohome.com.cn/{news_type}/{page}/#liststart'
     resp_text = requests.get(url).text
@@ -8099,7 +8344,7 @@ def crawl_list_page(news_type, page):
             crawl_list_page.push(news_type, p)
 
 
-@boost('car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=100, qps=30, do_task_filtering=False)
+@boost(BoosterParams(queue_name='car_home_detail', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=100, qps=30, do_task_filtering=False))
 def crawl_detail_page(url, title, news_type):
     resp_text = requests.get(url).text
     sel = Selector(resp_text)
@@ -8134,167 +8379,6 @@ if __name__ == '__main__':
 
 可以得出结论，控频效果精确度达到了99%以上，目前世界所有爬虫框架只能指定并发请求数量，但不能指定每秒爬多少次页面，此框架才能做到。
 
-
-## 8.4 通义千问来回答 funboost和scrapy爬虫的问题
-
-用户可以下载funboost的markdown文档,上传到通义千问,这样通义千问就能自动回答问题了,比基于对文档的词语的关键字模糊匹配搜索好用
-
-### 8.4.1 通义千问来回答,funboost和scrapy写爬虫区别:
-
-![img_64.png](img_64.png)
-
-
-
-### 8.4.2 通义千问回答的 funboost 写爬虫的20个优点:
-
-![img_65.png](img_65.png)
-
-
-
-## 8b. cursor ai总结的funboost用于爬虫
-
-cursor/windsurf编辑器 ai大模型总结的 Funboost用于爬虫时候 vs Scrapy爬虫框架 
-
-### 8b.1 引言
-在爬虫开发中，Scrapy是一种常用的框架。本文将通过一个爬虫示例对比Funboost和Scrapy这两者的优缺点。
-
-### 8b.2 示例代码
-
-#### 8b.2.1 Funboost 示例
-以下是使用Funboost框架的爬虫代码示例，用于下载明星图片：
-
-```python
-from funboost import boost, BoosterParams
-import requests
-from parsel import Selector
-
-@boost(BoosterParams(queue_name='xiaoxianrou_list_page', qps=0.2))
-def crawl_list_page(page_index):
-    """爬取列表页"""
-    url = f'http://www.5442tu.com/mingxing/list_2_{page_index}.html'
-    resp = requests.get(url) #  此处你可以换成你自己封装好的 my_request 请求函数来换代理ip请求网页
-    sel = Selector(resp.content.decode('gbk'))
-    detail_sels = sel.xpath('//div[@class="imgList2"]/ul/li/a')
-    for detail_sel in detail_sels:
-        detail_url = detail_sel.xpath('./@href').extract_first()
-        title = detail_sel.xpath('./@title').extract_first()
-        crawl_detail_page.push(detail_url, title)
-
-    # 翻页逻辑
-    next_page = sel.xpath('//a[text()="下一页"]/@href').extract_first()
-    if next_page:
-        next_page_index = page_index + 1
-        crawl_list_page.push(next_page_index)
-
-@boost(BoosterParams(queue_name='xiaoxianrou_detail_page', qps=0.2))
-def crawl_detail_page(detail_url, title):
-    """爬取详情页"""
-    resp = requests.get(detail_url)   # 此处你可以换成你自己封装好的 my_request 请求函数来换代理ip请求网页
-    sel = Selector(resp.content.decode('gbk'))
-    img_url = sel.xpath('//div[@class="imgContent"]//img/@src').extract_first()
-    print(f'获取到图片: {title} - {img_url}')
-
-if __name__ == '__main__':
-    crawl_list_page.push(1)  # 从第1页开始爬取
-    crawl_list_page.consume()
-    crawl_detail_page.consume()
-```
-
-#### 8b.2.2 Scrapy 示例
-以下是使用Scrapy框架的爬虫代码示例：
-
-```python
-import scrapy
-from scrapy_redis.spiders import RedisSpider
-
-class XiaoxianrouSpider(RedisSpider):
-    name = 'xiaoxianrou'
-    allowed_domains = ['5442tu.com']
-    start_urls = ["http://www.5442tu.com/mingxing/list_2_1.html"]
-
-    def parse(self, response):
-        """解析列表页"""
-        detail_sels = response.xpath('//div[@class="imgList2"]/ul/li/a')
-        for detail_sel in detail_sels:
-            yield scrapy.Request(
-                url=detail_sel.xpath('./@href').extract_first(),
-                callback=self.parse_detail,
-                meta={'title': detail_sel.xpath('./@title').extract_first()}
-            )
-
-        # 翻页逻辑
-        next_page = response.xpath('//a[text()="下一页"]/@href').extract_first()
-        if next_page:
-            yield scrapy.Request(url=next_page, callback=self.parse)
-
-    def parse_detail(self, response):
-        """解析详情页"""
-        title = response.meta['title']
-        img_url = response.xpath('//div[@class="imgContent"]//img/@src').extract_first()
-        yield {
-            'title': title,
-            'img_url': img_url
-        }
-```
-
-### 8b.3 框架对比分析
-
-#### 8b.3.1 代码结构
-- **Funboost**: 
-  - 结构简单，灵活性高，用户可以自由编写请求逻辑，使用任何请求库。
-  - 使用装饰器即可实现分布式功能，无需创建复杂的项目结构。
-
-- **Scrapy**: 
-  - 需要创建完整的项目结构，用户需要频繁在多个文件中来回切换写代码。
-  - 必须遵循框架规范编写代码。
-  - 文件较多，包括settings.py、items.py、pipelines.py等。
-
-  一个scrapy项目的固定目录结构如下：
-```
-  my_scrapy_project/
-├── scrapy.cfg                # 项目配置文件
-├── my_scrapy_project/        # 项目主目录
-│   ├── __init__.py           # 项目初始化文件
-│   ├── items.py              # 定义爬取的数据结构
-│   ├── middlewares.py        # 中间件配置
-│   ├── pipelines.py          # 数据处理管道
-│   ├── settings.py           # 项目设置文件
-│   ├── spiders/              # 爬虫目录
-│   │   ├── __init__.py       # 爬虫初始化文件
-│   │   └── example_spider.py # 示例爬虫文件
-│   └── utils/                # 工具目录（可选）
-│       └── __init__.py       # 工具初始化文件
-└── requirements.txt          # 项目依赖文件（可选）
-```
-#### 8b.3.2. 学习成本
-- **Funboost**:
-  - 学习曲线平缓，用户只需掌握装饰器的使用，能够快速上手。
-
-- **Scrapy**:
-  - 学习曲线陡峭，需要理解框架的各个组件，增加了学习难度。
-
-#### 8b.3.3 功能特性
-- **Funboost**:
-  - 提供多种控制功能，支持高并发和灵活的任务调度，适合大规模爬虫项目。
-  - 允许用户在函数中编写爬虫代码，支持多种消息队列。
-
-- **Scrapy**:
-  - 功能相对较弱，难以实现复杂的调度逻辑，扩展性较差。
-  - 用户需要十分精通Scrapy框架本身，才能随心所欲地改造请求和实现独特的奇葩想法。
-
-#### 8b.3.4 代码迁移
-- **Funboost**:
-  - 对现有代码侵入性小
-  - 只需添加装饰器即可
-  - 保持原有代码逻辑不变
-
-- **Scrapy**:
-  - 在高并发场景下，Scrapy的性能表现不如Funboost。
-
-### 8b.4 结论
-**Funboost在爬虫方面远远优于Scrapy，无论是灵活性、学习成本、功能特性还是性能，Funboost都能为开发者提供更好的体验。选择Funboost将使开发者能够更快速、高效地完成爬虫项目，真正实现爬虫的高效和便捷。**
-
-此外，中国还有一大批仿Scrapy API用法的爬虫框架，例如Feapder，这些框架同样存在与Scrapy相似的问题，导致在使用难度和性能上远远落后于Funboost。
 
 
 ## 8.7 scrapy 和 仿scrapy api 式爬虫框架 回调地狱，代码写法思维反直觉
@@ -8333,6 +8417,170 @@ Scrapy 作为一个成熟的爬虫框架，其设计和架构目标主要是为�
 
 ![img_81.png](img_81.png)
 
+<div class="inner_markdown">
+
+
+
+Scrapy 是一个强大的爬虫框架，在它的回调函数中需要写很多 `callback` 事件函数，和同步代码逻辑不直观。  
+本文将解释 **Scrapy 的写法为什么不是平铺直叙的**。
+
+---
+
+<h3> 1. 基于回调，代码逻辑割裂</h3>
+
+<h4>Scrapy 代码的典型结构</h4>
+
+```python
+import scrapy
+
+class MySpider(scrapy.Spider):
+    name = 'myspider'
+    start_urls = ['https://example.com/list']
+
+    def parse(self, response):
+        detail_urls = response.css('a::attr(href)').getall()
+        for url in detail_urls:
+            yield scrapy.Request(url, callback=self.parse_detail)
+
+    def parse_detail(self, response):
+        title = response.css('h1::text').get()
+        price = response.css('.price::text').get()
+        yield {'title': title, 'price': price}
+```
+
+**问题分析**
+- 爬虫逻辑被分散在多个回调函数里，代码割裂。
+- 业务逻辑无法“从上到下”顺序执行，开发者思维负担大。
+- 如果熟悉 Python 的 `requests` 和 `BeautifulSoup`，常觉得爬虫代码可以写得更平铺直叙。
+
+---
+
+<h3> 2. `yield` 语法导致执行顺序不直观</h3>
+
+在 Scrapy 中，`yield` 用于生成新的请求，而不是立即执行回调函数。  
+常见写法：
+
+```python
+yield response.follow(url, callback=self.parse_detail)
+```
+
+**问题分析**
+- 任务不会立即同步执行，需等 Scrapy 调度下一次请求。
+- 编写 Python 函数时，习惯用 `return` 表达逻辑，而 Scrapy 使用 `yield` 让逻辑割裂。
+- 对于新手来说，Scrapy 的执行顺序、调度策略，不同于常规函数调用链。
+
+---
+
+<h3> 3. 任务调度是黑盒，开发者失去控制权</h3>
+
+Scrapy 通过调度器（Scheduler）决定请求的先后执行顺序：
+- 爬虫开发者只负责写回调函数，不控制调度。
+- 但有时候需要更精细化控制顺序，比如递归抓取树形结构。
+
+**对比：**
+使用 `for url in URL_LIST: requests.get(url)` 就很直观：
+- 程序的执行顺序由 Python 原生控制。
+- Scrapy 的调度机制虽然强大，但对开发者来说是黑盒。
+
+---
+
+<h3> 4. 强制使用 `Spider` 类，不够自由</h3>
+
+Scrapy 框架必须继承 `Spider` 类：
+
+```python
+class MySpider(scrapy.Spider):
+    name = 'myspider'
+    ...
+```
+
+**问题分析**
+- 代码风格被固定，无法随意定义函数入口。
+- 对比 `requests` 库，可以直接写 `def crawl():` 这种函数结构，更符合 Python 开发习惯。
+
+---
+
+<h3> 5. 并发控制分散，不直观</h3>
+
+在 Scrapy 里，并发控制依赖 `settings.py` 配置：
+
+```python
+CONCURRENT_REQUESTS = 16
+DOWNLOAD_DELAY = 0.5
+AUTOTHROTTLE_ENABLED = True
+AUTOTHROTTLE_START_DELAY = 1
+```
+
+**问题分析**
+- 并发控制在全局配置文件，逻辑和代码分离。
+- 如果希望按不同函数使用不同并发策略，需要额外代码。
+
+相比之下，`funboost` 的写法更直观：
+
+```python
+@boost(concurrent_num=20)
+def crawl_page(url):
+    ...
+```
+
+- 代码和配置绑定在一起，逻辑更易理解。
+
+---
+
+<h3> 6. Scrapy 不适合任务编排</h3>
+
+Scrapy 多个回调函数之间无法方便串联多个 `Spider`：
+
+```python
+class MySpider(scrapy.Spider):
+    name = 'myspider'
+    start_urls = ['https://example.com/list']
+
+    def parse(self, response):
+        yield response.follow(url, callback=self.parse_detail)
+```
+
+**问题分析**
+- 单个任务孤立，不方便平铺任务依赖。
+- 对比 `funboost` 等任务队列框架，可以轻松实现任务流水线，例如：
+
+```python
+crawl_list_page.push(url)
+crawl_detail_page.push(detail_url)
+```
+
+---
+
+<h3> 总结</h3>
+
+<h4> ❌ 为什么 Scrapy 代码不是直观的“平铺直叙”写法</h4>
+
+| 特性         | Scrapy 框架      | 平铺直叙写法         |
+|--------------|------------------|----------------------|
+| **回调函数** | 多               | 代码集中、顺序执行   |
+| **执行顺序** | 由调度器控制     | 上下文可控           |
+| **yield**    | 必须             | `return` 或直接调用  |
+| **并发**     | 全局 settings    | 局部可配置           |
+| **入口结构** | 固定 `Spider` 类 | 任意函数             |
+| **任务编排** | 不方便           | 灵活组合             |
+
+---
+
+<h4> 结论</h4>
+
+1. **Scrapy 的设计理念是事件驱动 + 回调函数**，导致逻辑不直观。  
+2. 多数 Python 程序员更习惯顺序化代码，而 Scrapy 的“分散回调”方式不符合直觉。  
+3. **Scrapy 适合大规模分布式爬取**，但对小型项目，`requests + BeautifulSoup` 或 `asyncio` 更直观。  
+4. 如果需要 **任务编排 + 平铺直叙的任务逻辑**，可以考虑 `funboost` 等任务队列框架。  
+5. 总的来说，Scrapy 功能强大，但牺牲了代码的 **直观性和自由度**。
+
+---
+
+> **讨论：** 你觉得 Scrapy 的回调写法优雅吗？  
+> 如果想尝试 **平铺直叙** 的写法，可以了解 `funboost` 框架。
+
+
+</div>
 
 ## 8.9 仿scrapy api框架中无法完成的需求真实例子2，token有效期太短
 
@@ -8745,14 +8993,14 @@ request.meta字典：使用非直观的meta字典传递信息
 
 ## 8.12 scrapy 可单元测试性很差
 
-#### scrapy不可单元测试
+**scrapy不可单元测试**
 例如一个三层级网站爬虫，scrapy你怎么单独直接测试第三层级的爬虫请求和解析呢？只有spider整体运行起来，然后观察第三层级解析。
 1）scrapy的爬虫逻辑分散在Spider类的多个回调方法（如parse、parse_detail、parse_third_level）中。
 2）这些回调方法依赖于框架的Request/Response对象、meta字典、调度器等上下文，无法直接在IDE里单独调用。
 3）你想单独测试第三层级的解析，只能整体运行spider，等到第三层级回调被调度时，观察输出或日志，调试效率极低。
 4) 很多人只能先单独临时写个requests请求的函数验证，然后再改成到scrapy写法，造成重复劳动。
 
-#### funboost 被@boost的函数能直接单元测试
+**funboost 被@boost的函数能直接单元测试**
 而funboost的第三层级的爬虫函数，crawl_thrid_level_page(article_id,user_id,page_index) 可以直接调用运行，可单元测试性秒杀scrapy。
 
 ```python
@@ -8931,13 +9179,13 @@ funboost需要学习这些扩展插件怎么使用吗？ 绝对不需要，funbo
 精通了怎么playwright.evaluate 执行js代码，但是你能用它完美取代scrapy内置的下载器吗？
 ```
 
+<div class="inner_markdown">
+
+<h3>🚧 为什么 Scrapy 扩展难？五大核心原因</h3>
+
 ---
 
-##### 🚧 为什么 Scrapy 扩展难？五大核心原因
-
----
-
-##### 1. 生命周期复杂，插件必须“插入钩子”才能工作
+<h3>1. 生命周期复杂，插件必须“插入钩子”才能工作</h3>
 
 Scrapy 插件大多围绕 `downloader middleware`、`spider middleware`、request/response 钩子等接口注入逻辑。
 
@@ -8951,7 +9199,7 @@ Scrapy 插件大多围绕 `downloader middleware`、`spider middleware`、reques
 
 ---
 
-##### 2. 插件必须与 Scrapy 的 Request/Response 对象深度耦合
+<h3>2. 插件必须与 Scrapy 的 Request/Response 对象深度耦合</h3>
 
 Scrapy 的 `Request` 和 `Response` 是自定义类，拥有 `.meta`、`.cb_kwargs`、`.dont_filter` 等大量特有字段。
 
@@ -8965,7 +9213,7 @@ Scrapy 的 `Request` 和 `Response` 是自定义类，拥有 `.meta`、`.cb_kwar
 
 ---
 
-##### 3. 插件与配置高度耦合，用户配置复杂
+<h3>3. 插件与配置高度耦合，用户配置复杂</h3>
 
 Scrapy 插件不仅要写代码，还必须让用户：
 
@@ -8977,7 +9225,7 @@ Scrapy 插件不仅要写代码，还必须让用户：
 
 ---
 
-##### 4. 插件难以“平滑复用现有第三方库”
+<h3>4. 插件难以“平滑复用现有第三方库”</h3>
 
 比如你想用 selenium、playwright、requests-html、httpx：
 
@@ -8989,7 +9237,7 @@ Scrapy 插件不仅要写代码，还必须让用户：
 
 ---
 
-##### 5. 插件难以组合，容易相互冲突
+<h3>5. 插件难以组合，容易相互冲突</h3>
 
 Scrapy 插件共享全局的 request/response 链条，会出现：
 
@@ -9001,19 +9249,14 @@ Scrapy 插件共享全局的 request/response 链条，会出现：
 
 ---
 
-##### ✅ 总结一句话
+<h3>✅ 总结一句话</h3>
 
 > Scrapy 插件难写，是因为它太“工程化、钩子化、封闭化”，**写一个插件 = 理解整个 Scrapy 的生命周期模型 + 中间件堆栈机制 + 内部对象结构 + settings 配置机制。**
 
 Funboost 完全不需要插件机制——用户只需写普通 Python 函数，天然支持任意三方库调用，零框架束缚，真正自由开发。
 
 ---
-
-
-
-
-
-
+</div>
 
 ## 8.30 为什么 funboost 能用于爬虫 的本质原因
 
@@ -9060,9 +9303,311 @@ requests 包只是请求，不能自动调度和并发，如果你封装不了�
 
 
 
+## 8.40 集中总结的 Funboost vs. Scrapy 优势快速对比 (表格版)
 
+这30个原因主要围绕 **“自由编程 降维打击 框架奴役”** 的核心思想展开，即 `funboost` 通过其通用的函数调度能力，赋予开发者极大的自由度，从而在灵活性、易用性和功能强大性上超越了 `Scrapy` 这种专用但受限的框架。
+
+
+<style>
+    .funboost-scrapy-comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+        font-size: 14px;
+        line-height: 1.5;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .funboost-scrapy-comparison-table th, .funboost-scrapy-comparison-table td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+        vertical-align: top;
+    }
+    .funboost-scrapy-comparison-table thead th {
+        background-color: #f2f2f2;
+        font-weight: 600;
+        text-align: center;
+    }
+    .funboost-scrapy-comparison-table tbody td:first-child {
+        font-weight: 600;
+        vertical-align: middle;
+        text-align: center;
+        /* 不设置背景色，让其跟随主题变化 */
+    }
+    .funboost-scrapy-comparison-table tbody td:nth-child(2) {
+        font-weight: 600;
+        /* 不设置背景色，让其跟随主题变化 */
+    }
+    /* Funboost 优势列 - 绿色背景 */
+    .funboost-scrapy-comparison-table .funboost-advantage {
+        background-color: #dcfce7 !important; /* 绿色背景 */
+    }
+    /* Scrapy 劣势列 - 红色背景 */
+    .funboost-scrapy-comparison-table .scrapy-disadvantage {
+        background-color: #fee2e2 !important; /* 红色背景 */
+    }
+    .funboost-scrapy-comparison-table code {
+        background-color: #eee;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    }
+</style>
+
+<table class="funboost-scrapy-comparison-table">
+    <thead>
+        <tr>
+            <th>类别</th>
+            <th>维度</th>
+            <th>Funboost 优势 (函数调度，自由无限)</th>
+            <th>Scrapy 劣势 (URL调度，框架束缚)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td rowspan="5"><strong>核心理念与架构 (1-5)</strong></td>
+            <td><strong>1. 调度核心</strong></td>
+            <td class="funboost-advantage"><strong>函数调度</strong>：调度的是一个完整的、可执行的Python函数，内部逻辑完全自由。</td>
+            <td class="scrapy-disadvantage"><strong>URL请求调度</strong>：调度的是一个 <code>Request</code> 对象，开发者被限制在框架的请求-响应生命周期内。</td>
+        </tr>
+        <tr>
+            <td><strong>2. 编程范式</strong></td>
+            <td class="funboost-advantage"><strong>自由编程</strong>：采用平铺直叙、一气呵成的同步思维编写函数，逻辑连贯清晰。</td>
+            <td class="scrapy-disadvantage"><strong>回调地狱</strong>：强制使用 <code>yield Request</code> 和 <code>callback</code> 函数，逻辑被拆分得支离破碎，难以理解和维护。</td>
+        </tr>
+        <tr>
+            <td><strong>3. 状态管理</strong></td>
+            <td class="funboost-advantage"><strong>极其简单</strong>：在函数内使用普通的局部变量即可轻松管理状态，符合直觉。</td>
+            <td class="scrapy-disadvantage"><strong>极其繁琐</strong>：必须通过 <code>response.meta</code> 字典在回调函数之间传递状态，易出错且IDE无法补全提示。</td>
+        </tr>
+        <tr>
+            <td><strong>4. 框架侵入性</strong></td>
+            <td class="funboost-advantage"><strong>极低</strong>：只需一个 <code>@boost</code> 装饰器，不改变函数原有结构，可轻松集成任何老代码。</td>
+            <td class="scrapy-disadvantage"><strong>极高</strong>：必须继承 <code>scrapy.Spider</code>，重写 <code>parse</code> 等方法，代码与框架深度耦合，迁移成本高。</td>
+        </tr>
+        <tr>
+            <td><strong>5. 架构思想</strong></td>
+            <td class="funboost-advantage"><strong>降维打击</strong>：用通用的万能函数调度框架解决特定的爬虫问题，功能更全，更灵活。</td>
+            <td class="scrapy-disadvantage"><strong>作茧自缚</strong>：专为爬虫设计，但其设计限制了其处理复杂和非标准场景的能力。</td>
+        </tr>
+        <tr>
+            <td rowspan="7"><strong>开发效率与易用性 (6-12)</strong></td>
+            <td><strong>6. 学习曲线</strong></td>
+            <td class="funboost-advantage"><strong>极其平缓</strong>：只需学习 <code>@boost</code> 装饰器的用法，几分钟即可上手。</td>
+            <td class="scrapy-disadvantage"><strong>极其陡峭</strong>：需要学习Spider、Item、Pipeline、Middleware、Settings等多个组件和复杂的生命周期。</td>
+        </tr>
+        <tr>
+            <td><strong>7. 代码量与文件结构</strong></td>
+            <td class="funboost-advantage"><strong>极其精简</strong>：单文件即可完成一个复杂的分布式爬虫，代码量极少。</td>
+            <td class="scrapy-disadvantage"><strong>极其臃肿</strong>：一个简单的爬虫也需要创建7-8个文件，开发者需在多个文件间频繁切换。</td>
+        </tr>
+        <tr>
+            <td><strong>8. HTTP库选择</strong></td>
+            <td class="funboost-advantage"><strong>完全自由</strong>：可在函数内随意使用 <code>requests</code>, <code>httpx</code>, <code>aiohttp</code>, <code>selenium</code>, <code>playwright</code> 等任何库。</td>
+            <td class="scrapy-disadvantage"><strong>受限</strong>：强制使用其内置的基于 <code>Twisted</code> 的下载器，想用其他库需要复杂的中间件封装。</td>
+        </tr>
+        <tr>
+            <td><strong>9. 反爬与自定义请求</strong></td>
+            <td class="funboost-advantage"><strong>极其简单</strong>：封装一个通用的 <code>my_request</code> 函数即可实现换IP、UA等逻辑，0门槛。</td>
+            <td class="scrapy-disadvantage"><strong>极其复杂</strong>：必须编写和注册下载器中间件（<code>Downloader Middleware</code>），概念复杂，对新手极不友好。</td>
+        </tr>
+        <tr>
+            <td><strong>10. 单元测试</strong></td>
+            <td class="funboost-advantage"><strong>极其容易</strong>：每个被 <code>@boost</code> 装饰的函数都可以直接调用，独立进行单元测试。</td>
+            <td class="scrapy-disadvantage"><strong>极其困难</strong>：Spider的回调方法与框架上下文强耦合，难以进行独立的单元测试。</td>
+        </tr>
+        <tr>
+            <td><strong>11. IDE代码补全</strong></td>
+            <td class="funboost-advantage"><strong>全面支持</strong>：函数参数、<code>push</code>/<code>publish</code> 方法均有代码补全，开发效率高。</td>
+            <td class="scrapy-disadvantage"><strong>几乎为零</strong>：<code>response.meta</code> 是字典，IDE无法提供任何键的补全提示，极易出错。</td>
+        </tr>
+        <tr>
+            <td><strong>12. 调试</strong></td>
+            <td class="funboost-advantage"><strong>简单直观</strong>：线性执行的函数逻辑，使用标准 <code>pdb</code> 或IDE调试器即可轻松调试。</td>
+            <td class="scrapy-disadvantage"><strong>困难</strong>：回调链和异步执行流程使得调试非常困难，难以跟踪任务的完整生命周期。</td>
+        </tr>
+        <tr>
+            <td rowspan="10"><strong>功能强大性与灵活性 (13-22)</strong></td>
+            <td><strong>13. 并发模型</strong></td>
+            <td class="funboost-advantage"><strong>更强悍（叠加模式）</strong>：轻松实现多进程 + (多线程/协程) + 多机器的四重叠加并发，性能炸裂。</td>
+            <td class="scrapy-disadvantage"><strong>有限</strong>：并发主要由 <code>CONCURRENT_REQUESTS</code> 控制，难以充分利用多核CPU。</td>
+        </tr>
+        <tr>
+            <td><strong>14. 速率控制</strong></td>
+            <td class="funboost-advantage"><strong>更精准（QPS控制）</strong>：可精确控制每秒请求次数（QPS），无视响应时间波动。</td>
+            <td class="scrapy-disadvantage"><strong>不精确（并发数控制）</strong>：只能控制并发请求数，无法保证稳定的请求速率。</td>
+        </tr>
+        <tr>
+            <td><strong>15. 复杂流程处理</strong></td>
+            <td class="funboost-advantage"><strong>极其自然</strong>：可在单个函数内完成多轮浏览器交互、API调用等复杂连续操作。</td>
+            <td class="scrapy-disadvantage"><strong>几乎无法实现</strong>：用回调处理多步连续操作非常笨拙，甚至会导致异步模型失效。</td>
+        </tr>
+        <tr>
+            <td><strong>16. 短时效Token处理</strong></td>
+            <td class="funboost-advantage"><strong>轻松解决</strong>：可在函数内连续请求，确保获取Token后立即使用，保证时效性。</td>
+            <td class="scrapy-disadvantage"><strong>无能为力</strong>：无法保证两个 <code>Request</code> 之间的执行间隔，Token极易过期。</td>
+        </tr>
+        <tr>
+            <td><strong>17. 任务去重</strong></td>
+            <td class="funboost-advantage"><strong>更智能（入参去重）</strong>：基于函数核心入参进行去重，能自动忽略URL中的时间戳、随机数等噪音。</td>
+            <td class="scrapy-disadvantage"><strong>很笨拙（URL指纹去重）</strong>：对URL中的噪音参数无能为力，需要编写复杂的 <code>RFPDupeFilter</code> 才能解决。</td>
+        </tr>
+        <tr>
+            <td><strong>18. 去重有效期</strong></td>
+            <td class="funboost-advantage"><strong>支持</strong>：可以设置任务过滤的有效期，适合周期性更新的爬取任务。</td>
+            <td class="scrapy-disadvantage"><strong>不支持</strong>：默认是永久去重，需要手动清理去重集合才能重新爬取。</td>
+        </tr>
+        <tr>
+            <td><strong>19. 错误重试</strong></td>
+            <td class="funboost-advantage"><strong>更可靠（函数级重试）</strong>：即使HTTP 200但页面内容反爬，导致解析出错，函数依然会自动重试。</td>
+            <td class="scrapy-disadvantage"><strong>不可靠（URL级重试）</strong>：只对请求失败（如网络错误）重试，对内容错误无能为力，会丢失数据。</td>
+        </tr>
+        <tr>
+            <td><strong>20. 数据持久化</strong></td>
+            <td class="funboost-advantage"><strong>极其灵活</strong>：在函数内直接调用任何数据库的客户端库进行存储，完全自由。</td>
+            <td class="scrapy-disadvantage"><strong>受限</strong>：必须通过 <code>Item Pipeline</code> 机制，增加了一层不必要的抽象和复杂性。</td>
+        </tr>
+        <tr>
+            <td><strong>21. 消息队列支持</strong></td>
+            <td class="funboost-advantage"><strong>极其丰富</strong>：支持30多种消息队列，包括RabbitMQ、Kafka等，提供更专业的分布式能力。</td>
+            <td class="scrapy-disadvantage"><strong>有限</strong>：主要依赖 <code>scrapy-redis</code>，选择单一。</td>
+        </tr>
+        <tr>
+            <td><strong>22. 定时任务</strong></td>
+            <td class="funboost-advantage"><strong>原生支持</strong>：内置强大的定时任务功能，可轻松实现定时启动、周期爬取。</td>
+            <td class="scrapy-disadvantage">需要借助外部脚本或 <code>apscheduler</code> 等库自行实现，集成复杂。</td>
+        </tr>
+        <tr>
+            <td rowspan="8"><strong>生态与可靠性 (23-30)</strong></td>
+            <td><strong>23. 插件生态</strong></td>
+            <td class="funboost-advantage"><strong>无需插件，Python生态即是其生态</strong>：任何Python三方包都可直接使用，无需等待“大神”开发专用插件。</td>
+            <td class="scrapy-disadvantage"><strong>依赖插件</strong>：使用新工具（如Playwright）需要等待 <code>scrapy-playwright</code> 这样的插件，学习和配置成本高。</td>
+        </tr>
+        <tr>
+            <td><strong>24. 断点续爬</strong></td>
+            <td class="funboost-advantage"><strong>真正可靠</strong>：支持消费确认（ACK），即使强制关机、代码崩溃，任务也万无一失。</td>
+            <td class="scrapy-disadvantage"><strong>不可靠</strong>：<code>scrapy-redis</code> 使用 <code>blpop</code>，重启或崩溃会丢失大量已取出到内存中的任务。</td>
+        </tr>
+        <tr>
+            <td><strong>25. 跨语言/项目交互</strong></td>
+            <td class="funboost-advantage"><strong>支持</strong>：可由Java等其他语言程序向队列发布爬虫任务。</td>
+            <td class="scrapy-disadvantage"><strong>不支持</strong>：其任务格式与Python和框架自身强绑定。</td>
+        </tr>
+        <tr>
+            <td><strong>26. 远程部署</strong></td>
+            <td class="funboost-advantage"><strong>一键部署</strong>：内置 <code>fabric_deploy</code> 功能，可直接将爬虫函数部署到远程服务器。</td>
+            <td class="scrapy-disadvantage">无此功能，部署复杂。</td>
+        </tr>
+        <tr>
+            <td><strong>27. Web管理界面</strong></td>
+            <td class="funboost-advantage"><strong>功能强大</strong>：<code>funboost web manager</code> 可监控、管理所有爬虫任务和消费者，并可实时调整QPS。</td>
+            <td class="scrapy-disadvantage"><code>scrapy-redis</code> 无官方管理界面，需借助其他工具。</td>
+        </tr>
+        <tr>
+            <td><strong>28. 稳定性</strong></td>
+            <td class="funboost-advantage"><strong>更高</strong>：对网络错误等有强大的自动重连和重试机制，不易因外部问题中断。</td>
+            <td class="scrapy-disadvantage">相对脆弱，需要开发者在中间件中编写大量代码来保证稳定性。</td>
+        </tr>
+        <tr>
+            <td><strong>29. 资源占用</strong></td>
+            <td class="funboost-advantage"><strong>更可控</strong>：智能线程池可自动伸缩，节省资源。</td>
+            <td class="scrapy-disadvantage">并发数固定，可能在任务稀疏时造成资源浪费。</td>
+        </tr>
+        <tr>
+            <td><strong>30. 统一控制</strong></td>
+            <td class="funboost-advantage"><strong>包罗万象</strong>：一个 <code>@boost</code> 装饰器集成了分布式、并发、控频、重试、过滤、持久化等30多种控制功能。</td>
+            <td class="scrapy-disadvantage">功能分散在多个组件和配置中，难以统一管理和配置。</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+
+**总结：**
+
+`funboost` 以其 **“函数即一切”** 的核心思想，彻底解放了开发者。它将复杂的调度、并发、容错等底层工作完全自动化，让开发者可以像写普通脚本一样编写爬虫逻辑，同时享受到远超专用框架的 **灵活性、强大功能和极致性能**。`Scrapy` 的“专业”反而成了其最大的“束缚”，导致在面对现代爬虫的复杂需求时，显得笨拙、低效且难用。因此，`funboost` 在爬虫领域对 `Scrapy` 实现了真正的 **“降维打击”**。
+
+## 8.40b 集中总结 funboost vs scrapy 优势快速对比（文字版）
+
+Funboost 是“函数调度器”，而 Scrapy 是“URL调度器”；前者赋能开发者，给予无限自由，后者则用框架规则束缚开发者。这是一种“自由编程”对“框架奴役”的降维打击。以下是详细的50个原因：
+
+<div class="inner_markdown">
+
+<h1>一、核心理念与架构优势 (1-10)</h1>
+
+1. **调度核心根本不同**：Funboost 调度的是一个完整的 Python 函数，内部逻辑完全自由；Scrapy 调度的是一个 Request 对象，开发者被死死限制在框架的请求-响应生命周期内。
+2. **编程范式降维打击**：Funboost 采用 平铺直叙 的同步思维写代码，逻辑连贯，一气呵成；Scrapy 强制使用 yield Request 和 callback 的 回调地狱 模式，逻辑被拆分得支离破碎。
+3. **状态管理天壤之别**：Funboost 在函数内用 普通局部变量 就能轻松管理上下文状态，符合直觉；Scrapy 必须通过晦涩的 response.meta 字典在回调间传递状态，极易出错且IDE无法补全。
+4. **框架侵入性极低**：Funboost 仅需一个 @boost 装饰器，不改变函数原有结构，可以 无缝集成任何老代码；Scrapy 必须继承 scrapy.Spider，代码与框架深度耦合，迁移成本极高。
+5. **架构思想的碾压**：Funboost 是 通用的万能函数调度框架，用更广阔的视野解决爬虫问题，功能更全面；Scrapy 是 专用的爬虫框架，但其设计反而作茧自缚，限制了其解决复杂问题的能力。
+6. **对已有代码的兼容性**：任何一个用 requests 写的普通爬虫脚本，加上 @boost 装饰器就能 瞬间升级为分布式爬虫。Scrapy 则需要对老代码进行伤筋动骨的重构。
+7. **代码复用性**：Funboost 的爬虫函数是标准函数，可在任何地方轻松复用。Scrapy 的 parse 方法与框架强耦合，基本无法在项目外复用。
+8. **思维模式的解放**：Funboost 鼓励开发者用最自然的编程思维解决问题。Scrapy 则强迫开发者扭曲自己的思维去适配框架的特定模式。
+9. **请求的绝对自由**：Funboost 函数内部可以自由构造和发送多个请求，并轻松处理它们之间的复杂依赖。Scrapy 的 yield Request 模式让请求之间的时序和依赖关系处理变得非常困难。
+10. **逻辑连贯性**：Funboost 的线性代码使得一个任务的完整逻辑（请求->解析->存储->派生新任务）集中在一起，可读性极高。Scrapy 的回调链将这些逻辑打散，降低了可读性。
+
+---
+
+<h1>二、开发效率与易用性 (11-20)</h1>
+
+11. **学习曲线极其平缓**：Funboost 只需学习 @boost 装饰器的用法，几分钟即可上手。Scrapy 需要学习 Spider、Item、Pipeline、Middleware、Settings 等 一整套复杂组件和生命周期。
+12. **代码量与文件结构**：Funboost 单文件即可完成一个复杂的分布式爬虫，代码量极少。Scrapy 一个简单爬虫也需要创建7-8个文件，开发时需频繁切换，极其臃肿。
+13. **HTTP库选择完全自由**：Funboost 函数内可随意使用 requests, httpx, aiohttp, selenium, playwright 等任何库。Scrapy 强制使用其内置下载器，想用其他库需要封装复杂的中间件。
+14. **反爬与自定义请求极其简单**：Funboost 中，封装一个通用的 my_request 函数即可实现换IP、UA等逻辑，0门槛。Scrapy 必须编写和注册复杂的下载器中间件，对新手极不友好。
+15. **单元测试极其容易**：每个被 @boost 装饰的函数都可以 直接在IDE中调用，独立进行单元测试。Scrapy 的回调方法与框架上下文强耦合，几乎无法进行独立的单元测试。
+16. **IDE代码补全全面支持**：Funboost 的函数参数、push/publish 方法均有代码补全。Scrapy 的 response.meta 是字典，IDE 无法提供任何补全提示，是错误的温床。
+17. **调试简单直观**：Funboost 的线性执行逻辑，使用标准 pdb 或IDE调试器即可轻松调试。Scrapy 的回调链和异步流程使得 调试极其困难。
+18. **反爬逻辑的封装**：Funboost 将反爬逻辑封装在普通函数中，简单直观。Scrapy 必须封装到复杂的中间件类中，概念抽象，难于理解。
+19. **反爬逻辑的独立测试**：Funboost 的 my_request 函数可以独立进行单元测试。Scrapy 的中间件难以脱离框架进行测试。
+20. **数据持久化极其灵活**：Funboost 在函数内 直接调用任何数据库的客户端库 进行存储，完全自由。Scrapy 必须通过 Item Pipeline 机制，增加了不必要的抽象和复杂性。
+
+---
+
+<h1>三、功能、性能与可靠性 (21-40)</h1>
+
+21. **并发模型更强悍**：Funboost 轻松实现 多进程 + (多线程/协程) + 多机器 的四重叠加并发，性能炸裂。Scrapy 难以充分利用多核CPU。
+22. **速率控制更精准**：Funboost 可通过 qps 参数 精确控制每秒请求次数，无视响应时间波动。Scrapy 只能控制并发数，无法保证稳定的请求速率。
+23. **分布式控频**：Funboost 支持跨多台机器、多个进程的 全局QPS控制。Scrapy 的速率限制是单实例的，无法实现全局控频。
+24. **任务去重更智能**：Funboost 基于 函数核心入参 去重，能自动忽略URL中的时间戳、随机数等噪音。Scrapy 基于URL指纹，对噪音参数无能为力，需要编写复杂的 RFPDupeFilter。
+25. **去重有效期支持**：Funboost 可以设置任务过滤的 有效期，适合周期性更新的爬取任务。Scrapy 默认是永久去重，非常不灵活。
+26. **错误重试更可靠**：Funboost 是 函数级重试。即使HTTP 200但页面内容反爬导致解析出错，函数依然会自动重试。Scrapy 是URL级重试，对内容错误无能为力，会丢失大量数据。
+27. **断点续爬真正可靠**：Funboost 支持 消费确认（ACK），即使强制关机、代码崩溃，任务也万无一失。Scrapy-redis 使用 blpop，重启或崩溃会丢失所有已取出到内存中的任务。
+28. **应对进程崩溃**：Funboost 在进程崩溃或断电后，未完成的任务会自动返回队列。Scrapy-redis 会 永久丢失 所有已 blpop 到内存中的任务。
+29. **消息队列支持极其丰富**：Funboost 支持30多种消息队列，包括 RabbitMQ、Kafka 等专业队列，提供更强大的分布式能力。Scrapy 主要依赖 scrapy-redis，选择单一。
+30. **定时任务原生支持**：Funboost 内置强大的定时任务功能，可轻松实现定时启动、周期爬取。Scrapy 需要借助外部库自行实现，集成复杂。
+31. **远程部署一键搞定**：Funboost 内置 fabric_deploy 功能，可直接将爬虫函数部署到远程服务器。Scrapy 无此功能，部署流程繁琐。
+32. **Web管理界面功能强大**：funboost web manager 可监控、管理所有爬虫任务和消费者，并可 实时调整QPS。Scrapy 生态缺乏这样统一、强大的官方监控工具。
+33. **稳定性更高**：Funboost 对网络错误等有强大的自动重连和重试机制，不易因外部问题中断。Scrapy 相对脆弱，需要开发者编写大量代码来保证稳定性。
+34. **资源占用更可控**：Funboost 的智能线程池可 自动伸缩，在任务稀疏时节省资源。Scrapy 的并发数固定，可能造成资源浪费。
+35. **统一控制，包罗万象**：一个 @boost 装饰器集成了分布式、并发、控频、重试、过滤、持久化等 30多种控制功能。Scrapy 功能分散在多个组件和配置中，难以统一管理。
+36. **RPC模式**：Funboost 支持 RPC 模式，可以在发布任务后同步等待并获取爬取结果。Scrapy 没有这种模式。
+37. **跨语言/项目交互**：Funboost 的任务是标准JSON，可由Java等其他语言程序向队列发布爬虫任务。Scrapy 的任务格式与Python和框架自身强绑定，无法交互。
+38. **插件生态的颠覆**：Funboost 无需插件，整个Python生态就是其生态。Scrapy 严重依赖插件，使用新工具（如Playwright）需要等待 scrapy-playwright 这样的插件，学习和配置成本高。
+39. **插件的本质**：Scrapy 插件多是因为框架本身封闭，需要“补丁”来扩展。Funboost 不需要插件是因为其本身就是开放的。
+40. **对三方库的集成成本**：Funboost 集成任何库都是 零成本的直接调用。Scrapy 集成新库需要等待或自己开发复杂的插件，成本高昂。
+
+---
+
+<h1>四、特定场景处理能力 (41-50)</h1>
+
+41. **复杂流程处理极其自然**：Funboost 可在单个函数内完成 多轮浏览器交互、API调用等复杂连续操作。Scrapy 用回调处理此类任务非常笨拙，甚至会导致异步模型失效。
+42. **短时效Token处理轻松解决**：Funboost 可在函数内连续请求，确保获取Token后 立即使用，完美解决时效性问题。Scrapy 无法保证两个 Request 之间的执行间隔，Token极易过期。
+43. **时序控制的确定性**：Funboost 在函数内连续发请求，时序是 确定的、可控的。Scrapy 的请求经过调度器，执行时序不确定。
+44. **浏览器渲染的并发处理**：Funboost 可以轻松地并发执行多个 Selenium/Playwright 任务。Scrapy 在 parse 方法里用 Selenium 会阻塞整个框架，使其退化为单线程。
+45. **处理动态参数的优雅**：Funboost 天然免疫 URL 中的 _ts、_rand 等动态噪音参数。Scrapy 需要编写复杂的正则和自定义 RFPDupeFilter 来清洗 URL，维护成本极高。
+46. **对非HTTP任务的处理**：Funboost 可以调度任何任务，比如文件处理、图片识别、数据分析等，与爬虫任务无缝结合。Scrapy 只能处理HTTP请求。
+47. **动态任务生成**：Funboost 在函数内部可以根据逻辑随时 push 新的任务，非常灵活。Scrapy 的 yield 方式在复杂逻辑判断下生成新请求会很别扭。
+48. **任务优先级控制**：Funboost 支持更专业的 消息级优先级队列（如RabbitMQ），控制更精细。Scrapy 的 priority 参数依赖于调度器的实现，效果有限。
+49. **死信队列处理**：Funboost 提供了更完善的死信队列机制，方便处理无法消费的“毒丸”消息。Scrapy 需要自己实现类似逻辑。
+50. **对开发者的终极赋能**：Funboost 的核心是 “赋能函数”，让开发者用最熟悉的工具和方式解决问题。Scrapy 的核心是 “遵循框架”，要求开发者学习并适应其一套独特的规则。
+</div>
+
+综上所述，funboost 凭借其先进的函数调度理念、极致的灵活性和强大的内置功能，在爬虫领域的几乎所有方面都展现出对 scrapy 的压倒性优势。
 
 <div> </div>
+
 # 9 轻松远程服务器部署运行函数
 
 别的机器不需要先安装git，也不需要先手动上传代码到该机器上，就能自动部署运行,前提python基本环境是要搞好的。<br>
@@ -9293,12 +9838,12 @@ from celery.schedules import crontab
 from datetime import timedelta
 import time
 
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 from funboost.assist.celery_helper import CeleryHelper,celery_app
 
 
 
-@boost('celery_beat_queue_7a2', broker_kind=BrokerEnum.CELERY, qps=5)
+@boost(BoosterParams(queue_name='celery_beat_queue_7a2', broker_kind=BrokerEnum.CELERY, qps=5))
 def f_beat(x, y):
     time.sleep(3)
     print(1111, x, y)
@@ -9307,7 +9852,7 @@ def f_beat(x, y):
 
 # celery_task_config 就是 celery app.task装饰器的原生入参，是任务函数配置。
 # 如果要更新app的配置，例如使用 CeleryHelper.update_celery_app_conf({'result_expires':3600*48,'worker_concurrency':100})
-@boost('celery_beat_queueb_8a2', broker_kind=BrokerEnum.CELERY, qps=1, broker_exclusive_config={'celery_task_config': {'default_retry_delay':60*5}}) 
+@boost(BoosterParams(queue_name='celery_beat_queueb_8a2', broker_kind=BrokerEnum.CELERY, qps=1, broker_exclusive_config={'celery_task_config': {'default_retry_delay':60*5}}))
 def f_beat2(a, b):
     time.sleep(2)
     print(2222, a, b)
@@ -9581,7 +10126,7 @@ python -m celery -A ./dir1/test_celery_beat_consume  status   # test_celery_beat
 与其说funboost支持各种消息队列中间件，不如说funboost实现了集成操作各种各样的消息队列的第三方python包，
 
 ```
-@boost(queue_1, broker_kind=BrokerEnum.CELERY, qps=5)
+@boost(BoosterParams(queue_name=queue_1, broker_kind=BrokerEnum.CELERY, qps=5))
 def f_beat(x, y):
 
 加了@boost后，那么funboost框架自动给celery_app 注册任务了，并且设置每个任务的消息使用不同的队列名存放，
@@ -9604,19 +10149,19 @@ from funboost.consumers.nameko_consumer import start_batch_nameko_service_in_new
 
 import time
 
-from funboost import boost, ConcurrentModeEnum, BrokerEnum
+from funboost import boost, ConcurrentModeEnum, BrokerEnum, BoosterParams
 
 
 
 
-@boost('test_nameko_queue', broker_kind=BrokerEnum.NAMEKO, concurrent_mode=ConcurrentModeEnum.EVENTLET)
+@boost(BoosterParams(queue_name='test_nameko_queue', broker_kind=BrokerEnum.NAMEKO, concurrent_mode=ConcurrentModeEnum.EVENTLET))
 def f(a, b):
     print(a, b)
     time.sleep(1)
     return 'hi'
 
 
-@boost('test_nameko_queue2', broker_kind=BrokerEnum.NAMEKO, concurrent_mode=ConcurrentModeEnum.EVENTLET)
+@boost(BoosterParams(queue_name='test_nameko_queue2', broker_kind=BrokerEnum.NAMEKO, concurrent_mode=ConcurrentModeEnum.EVENTLET))
 def f2(x, y):
     print(f'x: {x}   y:{y}')
     time.sleep(2)
@@ -9742,14 +10287,14 @@ Transport Options
 
 import time
 
-from funboost import BrokerEnum, boost
+from funboost import BrokerEnum, boost, BoosterParams
 from funboost.funboost_config_deafult import BrokerConnConfig
 
-@boost('test_kombu2b', broker_kind=BrokerEnum.KOMBU, qps=0.1,
+@boost(BoosterParams(queue_name='test_kombu2b', broker_kind=BrokerEnum.KOMBU, qps=0.1,
        broker_exclusive_config={
            'kombu_url': BrokerConnConfig.RABBITMQ_URL,
            'transport_options': {},
-           'prefetch_count': 1000},)
+           'prefetch_count': 1000}))
 def f1(x, y):
     print(f'start {x} {y} 。。。')
     time.sleep(60)
@@ -9776,16 +10321,16 @@ broker_exclusive_config 中可以设置 kombu_url，如果这里不传递kombu_u
 ```python
 import time
 
-from funboost import BrokerEnum, boost
+from funboost import BrokerEnum, boost, BoosterParams
 
 
-@boost('test_kombu2b', broker_kind=BrokerEnum.KOMBU, qps=0.1,
+@boost(BoosterParams(queue_name='test_kombu2b', broker_kind=BrokerEnum.KOMBU, qps=0.1,
        broker_exclusive_config={
            'kombu_url': 'redis://192.168.64.151:6378/10',
            'transport_options': {
                'visibility_timeout': 600, 'ack_emulation': True  # visibility_timeout 是指消息从redis blpop后多久没确认消费就当做消费者挂了无法确认消费，unack的消息自动重回正常工作队列
            },
-           'prefetch_count': 1000},log_level=20)
+           'prefetch_count': 1000}, log_level=20))
 def f1(x, y):
     print(f'start {x} {y} 。。。')
     time.sleep(60)
@@ -9821,18 +10366,18 @@ funboost通过支持BrokerEnum.KOMBU 和 BrokerEnum.CELERY ,只会比celery支�
 
 ```python
 import time
-from funboost import BrokerEnum, boost,BrokerConnConfig
+from funboost import BrokerEnum, boost, BoosterParams, BrokerConnConfig
 
 '''
 默认自动创建表 kombu_message 和 kombu_queue, sqlalchemy版本要选对，测试 1.4.8 可以，2.0.15版本报错。
 所有队列的消息在一个表中kombu_message，queue_id做区分是何种队列。
 '''
-@boost('test_kombu_sqlalchemy_queue2', broker_kind=BrokerEnum.KOMBU, qps=0.1,
+@boost(BoosterParams(queue_name='test_kombu_sqlalchemy_queue2', broker_kind=BrokerEnum.KOMBU, qps=0.1,
        broker_exclusive_config={
            'kombu_url': f'sqla+mysql+pymysql://{BrokerConnConfig.MYSQL_USER}:{BrokerConnConfig.MYSQL_PASSWORD}'
                         f'@{BrokerConnConfig.MYSQL_HOST}:{BrokerConnConfig.MYSQL_PORT}/{BrokerConnConfig.MYSQL_DATABASE}',
            'transport_options': {},
-           'prefetch_count': 500})
+           'prefetch_count': 500}))
 def f2(x, y):
     print(f'start {x} {y} 。。。')
     time.sleep(60)
@@ -9840,12 +10385,12 @@ def f2(x, y):
     print(f'over {x} {y}')
 
 
-@boost('test_kombu_sqlalchemy_queue3', broker_kind=BrokerEnum.KOMBU, qps=0.1,
+@boost(BoosterParams(queue_name='test_kombu_sqlalchemy_queue3', broker_kind=BrokerEnum.KOMBU, qps=0.1,
        broker_exclusive_config={
            'kombu_url': f'sqla+mysql+pymysql://{BrokerConnConfig.MYSQL_USER}:{BrokerConnConfig.MYSQL_PASSWORD}'
                         f'@{BrokerConnConfig.MYSQL_HOST}:{BrokerConnConfig.MYSQL_PORT}/{BrokerConnConfig.MYSQL_DATABASE}',
            'transport_options': {},
-           'prefetch_count': 500})
+           'prefetch_count': 500}))
 def f3(x, y):
     print(f'start {x} {y} 。。。')
     time.sleep(60)
@@ -9867,12 +10412,12 @@ if __name__ == '__main__':
 ```python
 import time
 
-from funboost import BrokerEnum, boost
+from funboost import BrokerEnum, boost, BoosterParams
 
 queue_name = 'test_kombu_mongo4'
 
 
-@boost(queue_name, broker_kind=BrokerEnum.KOMBU, qps=0.1,
+@boost(BoosterParams(queue_name=queue_name, broker_kind=BrokerEnum.KOMBU, qps=0.1,
        broker_exclusive_config={
            'kombu_url': 'mongodb://root:123456@192.168.64.151:27017/my_db?authSource=admin',
            'transport_options': {
@@ -9880,7 +10425,7 @@ queue_name = 'test_kombu_mongo4'
                'messages_collection': queue_name,
 
            },
-           'prefetch_count': 10})
+           'prefetch_count': 10}))
 def f2(x, y):
     print(f'start {x} {y} 。。。')
     time.sleep(60)
@@ -9910,13 +10455,13 @@ transport_options具体可以传递的值，点击kombu的各种中间件的源�
 ```python
 import time
 
-from funboost import BrokerEnum, boost
+from funboost import BrokerEnum, boost, BoosterParams
 
 
 queue_name = 'test_kombu5'
 
 
-@boost(queue_name, broker_kind=BrokerEnum.KOMBU, qps=0.1,
+@boost(BoosterParams(queue_name=queue_name, broker_kind=BrokerEnum.KOMBU, qps=0.1,
        broker_exclusive_config={
            'kombu_url': 'filesystem://',
            'transport_options': {
@@ -9925,7 +10470,7 @@ queue_name = 'test_kombu5'
                'store_processed': True,
                'processed_folder': f'/data/kombu_processed/{queue_name}'
            },
-           'prefetch_count': 10})
+           'prefetch_count': 10}))
 def f2(x, y):
     print(f'start {x} {y} 。。。')
     time.sleep(60)
@@ -9960,18 +10505,18 @@ redis://:passwd@127.0.0.1:6379/15
 ```python
 import time
 
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 from funboost.assist.dramatiq_helper import DramatiqHelper
 
 
-@boost('test_dramatiq_q1', broker_kind=BrokerEnum.DRAMATIQ, function_timeout=10)
+@boost(BoosterParams(queue_name='test_dramatiq_q1', broker_kind=BrokerEnum.DRAMATIQ, function_timeout=10))
 def f1(x):
     time.sleep(1)
     print('f1', x)
 
 
-@boost('test_dramatiq_q2', broker_kind=BrokerEnum.DRAMATIQ, function_timeout=3)
+@boost(BoosterParams(queue_name='test_dramatiq_q2', broker_kind=BrokerEnum.DRAMATIQ, function_timeout=3))
 def f2(y):
     time.sleep(2)
     print('f2', y)
@@ -10000,17 +10545,17 @@ funboost_config.py中 配置好 REDIS_URL 的值就可以了
 import time 
 
 from funboost.assist.huey_helper import HueyHelper
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 
-@boost('test_huey_queue1', broker_kind=BrokerEnum.HUEY, broker_exclusive_config={'huey_task_kwargs': {}})
+@boost(BoosterParams(queue_name='test_huey_queue1', broker_kind=BrokerEnum.HUEY, broker_exclusive_config={'huey_task_kwargs': {}}))
 def f1(x, y):
     time.sleep(10)
     print(x, y)
     return 666
 
 
-@boost('test_huey_queue2', broker_kind=BrokerEnum.HUEY)
+@boost(BoosterParams(queue_name='test_huey_queue2', broker_kind=BrokerEnum.HUEY))
 def f2(a):
     time.sleep(7)
     print(a)
@@ -10039,18 +10584,18 @@ funboost_config.py中 配置好 REDIS_URL 的值就可以了
 
 import time
 
-from funboost import boost, BrokerEnum
+from funboost import boost, BrokerEnum, BoosterParams
 
 from funboost.assist.rq_helper import RqHelper
 
 
-@boost('test_rq_queue1a', broker_kind=BrokerEnum.RQ)
+@boost(BoosterParams(queue_name='test_rq_queue1a', broker_kind=BrokerEnum.RQ))
 def f(x, y):
     time.sleep(2)
     print(f'x:{x},y:{y}')
 
 
-@boost('test_rq_queue2a', broker_kind=BrokerEnum.RQ)
+@boost(BoosterParams(queue_name='test_rq_queue2a', broker_kind=BrokerEnum.RQ))
 def f2(a, b):
     time.sleep(3)
     print(f'a:{a},b:{b}')

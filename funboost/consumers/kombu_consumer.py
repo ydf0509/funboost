@@ -17,55 +17,6 @@ from kombu.transport.redis import Empty
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.funboost_config_deafult import BrokerConnConfig
 
-def patch_kombu_redis000():
-    # 这个也可以，代码长了一点。
-    """
-    给kombu的redis 模式打猴子补丁
-    kombu有bug，redis中间件 unnacked 中的任务即使客户端掉线了或者突然关闭脚本中正在运行的任务，也永远不会被重新消费。
-    这个很容易验证那个测试，把消费函数写成sleep 100秒，启动20秒后把脚本关掉，取出来的任务在 unacked 队列中那个永远不会被确认消费，也不会被重新消费。
-    """
-
-    # noinspection PyUnusedLocal
-    def monkey_get(self, callback, timeout=None):
-        self._in_protected_read = True
-        try:
-            for channel in self._channels:
-                if channel.active_queues:  # BRPOP mode?
-                    if channel.qos.can_consume():
-                        self._register_BRPOP(channel)
-                if channel.active_fanout_queues:  # LISTEN mode?
-                    self._register_LISTEN(channel)
-
-            events = self.poller.poll(timeout)
-            if events:
-                for fileno, event in events:
-                    ret = None
-                    # noinspection PyBroadException,PyUnusedLocal
-                    try:
-                        ret = self.handle_event(fileno, event)  # 主要是这行改了加了try，不然会raise empty 导致self.maybe_restore_messages()没执行
-                    except BaseException as e:
-                        pass
-                        # print(traceback.format_exc())
-                        # print(e)
-                    if ret:
-                        return
-            # - no new data, so try to restore messages.
-            # - reset active redis commands.
-            self.maybe_restore_messages()
-            raise Empty()
-            # raise Exception('kombu.five.Empty')
-        finally:
-            self._in_protected_read = False
-            # print(self.after_read)
-            while self.after_read:
-                try:
-                    fun = self.after_read.pop()
-                except KeyError:
-                    break
-                else:
-                    fun()
-
-    redis.MultiChannelPoller.get = monkey_get
 
 
 has_patch_kombu_redis = False
@@ -211,7 +162,6 @@ Transport Options
                 self.conn.drain_events()
 
     def _confirm_consume(self, kw):
-        pass  # redis没有确认消费的功能。
         kw['message'].ack()
 
     def _requeue(self, kw):

@@ -5,7 +5,7 @@ from nb_log import LogManager
 
 
 
-from funboost import boost, BrokerEnum, BoosterParams
+from funboost import boost, BrokerEnum, BoosterParams,ctrl_c_recv
 
 from test_frame.my_config import BoosterParamsMy
 
@@ -23,6 +23,10 @@ if __name__ == "__main__":
     task_fun.consume()  # 消费者启动循环调度并发消费任务
     for i in range(10):
         task_fun.push(i, y=i * 2)  # 发布者发布任务
-
+    # ctrl_c_recv()
+    #或者
+    while 1:
+        time.sleep(100)
+      
 
 

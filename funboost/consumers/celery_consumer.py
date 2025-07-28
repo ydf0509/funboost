@@ -197,6 +197,7 @@ class CeleryConsumer(AbstractConsumer):
             time.sleep(100)
 
     def _confirm_consume(self, kw):
+        """完全由celery框架接管控制消费和ack确认消费，不需要funboost自己的代码来执行"""
         pass
 
     def _requeue(self, kw):

@@ -1,18 +1,4 @@
-
-
-# 1.python万能分布式函数调度框架简funboost简介
-
-[//]: # (Stargazers:)
-
-[//]: # ()
-[//]: # ([![Stargazers repo roster for @ydf0509/funboost]&#40;https://reporoster.com/stars/ydf0509/funboost&#41;]&#40;https://github.com/ydf0509/funboost/stargazers&#41;)
-
-[//]: # ()
-[//]: # (Forkers:)
-
-[//]: # ()
-[//]: # ([![Forkers repo roster for @ydf0509/funboost]&#40;https://reporoster.com/forks/ydf0509/funboost&#41;]&#40;https://github.com/ydf0509/funboost/network/members&#41;)
-
+# boost1.python万能分布式函数调度框架简funboost简介
 
 <pre style="color: greenyellow;background-color: #0c1119; font-size: medium;">
 pip install funboost ,python全功能分布式函数调度框架。  demo用法例子见文档1.3
@@ -69,14 +55,13 @@ funboost只有一个@boost装饰器，@boost入参能自动补全，更重要的
 因为funboost非常注重代码补全提示，所以不存在上面celery的那些复杂高难度缺点。
 ```
 
-
 funboost的旧框架名字是function_scheduling_distributed_framework , 关系和兼容性见1.0.3介绍。
 旧框架地址： [https://github.com/ydf0509/distributed_framework](https://github.com/ydf0509/distributed_framework)
-
 
 ## 1.0 github地址和文档地址
 
 ### 1.0.1 [分布式函数调度框架文档地址 ](https://funboost.readthedocs.io/zh-cn/latest/index.html)
+
 [查看分布式函数调度框架文档 https://funboost.readthedocs.io/zh-cn/latest/index.html](https://funboost.readthedocs.io/zh-cn/latest/index.html)
 
 文档很长，大部分都是讲原理和对比各种框架。但是用户只需要学习1.3这1个例子就能掌握了。因为其他例子只是 @boost的 BoosterParams 里面的控制入参换了一下。
@@ -86,6 +71,7 @@ funboost的旧框架名字是function_scheduling_distributed_framework , 关系�
 funboost 框架和一般的框架不一样，因为只有一行代码需要掌握，绝对不是要求用户先精通框架本身才能自由发挥。
 
 #### [1.python万能分布式函数调度框架简funboost简介](https://funboost.readthedocs.io/zh-cn/latest/articles/c1.html)
+
 #### [2. funboost对比celery框架](https://funboost.readthedocs.io/zh-cn/latest/articles/c2.html)
 
 #### [3.funboost框架详细介绍](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html)
@@ -112,7 +98,6 @@ funboost 框架和一般的框架不一样，因为只有一行代码需要掌�
 
 #### [13.启动 funboost web manager,查看消费结果和队列管理](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html)
 
-
 #### [funboost依赖的nb_log日志文档 https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2](https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2)
 
 ```
@@ -128,14 +113,8 @@ funboost 框架和一般的框架不一样，因为只有一行代码需要掌�
 ```
 
 ### 1.0.2 [分布式函数调度框架github地址](https://github.com/ydf0509/funboost)
+
 [查看分布式函数调度框架github项目](https://github.com/ydf0509/funboost)
-
-[//]: # (### 1.0.3 [分布式函数调度框架qq群]&#40;https://qm.qq.com/cgi-bin/qm/qr?k=unA_o_L3sv5yushJzYGUTAwSzZ7GhUhq&jump_from=webapi&#41;)
-
-[//]: # (现在新建一个qq群 189603256)
-
-[//]:# ([点击加入 python万能分布式函数调度框架qq群]&#40;https://qm.qq.com/cgi-bin/qm/qr?k=unA_o_L3sv5yushJzYGUTAwSzZ7GhUhq&jump_from=webapi&#41;)
-
 
 ### 1.0.3 funboost 框架 和 function_scheduling_distributed_framework 框架 关系说明
 
@@ -143,10 +122,7 @@ funboost 框架和一般的框架不一样，因为只有一行代码需要掌�
 funboost 是 function_scheduling_distributed_framework的包名更新版本
 ```
 
-
-
-<span style="font-size:15px">旧框架地址：<span><a href="https://github.com/ydf0509/distributed_framework" style="font-size: 15px">function_scheduling_distributed_framework框架地址链接</a>
-
+`<span style="font-size:15px">`旧框架地址：`<span><a href="https://github.com/ydf0509/distributed_framework" style="font-size: 15px">`function_scheduling_distributed_framework框架地址链接 `</a>`
 
 ## 1.1 安装方式
 
@@ -158,38 +134,25 @@ pip install funboost --upgrade
 
 ## 1.2 框架功能介绍
 
-分布式函数调度框架，支持5种并发模式，30+种消息中间件，30种任务控制功能。<br>
+分布式函数调度框架，支持5种并发模式，30+种消息中间件，30种任务控制功能。`<br>`
 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。
 
 有了这个框架，用户再也无需亲自手写操作进程、线程、协程的并发的代码了。
 
 有了这个框架，用户再也无需亲自手写操作redis rabbitmq socket kafka celery nameko了。
 
-[//]: # ([![sgV2xP.png]&#40;https://z3.ax1x.com/2021/01/19/sgV2xP.png&#41;]&#40;https://imgtu.com/i/sgV2xP&#41;)
-
-[//]: # ()
-[//]: # ([img-46.png]&#40;https://postimg.cc/hfW0VhCX&#41;)
-
 funboost示图：
-<a href="https://imgse.com/i/pkFFghj"><img src="https://s21.ax1x.com/2024/04/29/pkFFghj.png" alt="pkFFghj.png" border="0" /></a>
-
-[//]: # ([![img-46.png]&#40;https://i.postimg.cc/tC7mQxWN/img-46.png&#41;]&#40;https://postimg.cc/hfW0VhCX&#41;)
-
-[//]: # (就是最普通的生产者消费者流程图)
-
-[//]: # (![]&#40;https://i.niupic.com/images/2023/12/18/dVaP.png&#41;)
+`<a href="https://imgse.com/i/pkFFghj"><img src="https://s21.ax1x.com/2024/04/29/pkFFghj.png" alt="pkFFghj.png" border="0" />``</a>`
 
 也就是这种非常普通的流程图,一样的意思
 
-<a href="https://imgse.com/i/pkFFcNQ"><img src="https://s21.ax1x.com/2024/04/29/pkFFcNQ.png" alt="pkFFcNQ.png" border="0" /></a>
+`<a href="https://imgse.com/i/pkFFcNQ"><img src="https://s21.ax1x.com/2024/04/29/pkFFcNQ.png" alt="pkFFcNQ.png" border="0" />``</a>`
 
 ### 1.2.1 框架支持5种并发模式
 
-<div   style=" font-size: xx-large; font-family: 黑体,serif; "> threading  <span style="font-size: medium">(使用的是可变线程池，可以智能自动缩小和扩大线程数量,也可以运行async def的函数) </span> </div> 
-
+<div   style=" font-size: xx-large; font-family: 黑体,serif; "> threading  <span style="font-size: medium">(使用的是可变线程池，可以智能自动缩小和扩大线程数量,也可以运行async def的函数) </span> </div>
 
 <div   style=" font-size: xx-large; font-family: 黑体,serif; "> gevent </div>
-
 
 <div   style="font-size: xx-large; font-family: 黑体,serif; "> eventlet </div>
 
@@ -212,6 +175,7 @@ funboost示图：
 以下两种方式，都是10线程加python内存queue方式运行f函数，有了此框架，用户无需代码手写手动操作线程 协程 asyncio 进程 来并发。
 
 1)手动开启线程池方式
+
 ```python
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -231,6 +195,7 @@ if __name__ == '__main__':
 ```
 
 2)funboost 使用内存队列,设置10线程并发
+
 ```python
 import time
 from funboost import BoosterParams, BrokerEnum
@@ -249,17 +214,15 @@ if __name__ == '__main__':
 
 ```
 
-
 ### 1.2.2 框架支持30种中间件或三方框架
 
 框架支持 rabbitmq redis python自带的queue.Queue  sqlite sqlachemy kafka pulsar mongodb 直接socket celery  nameko 等作为消息中间件。
 
 同时此框架也支持操作 kombu 库作为中间件,所以此框架能够支持的中间件类型只会比celery更多。
 
-框架支持的中间件种类大全和选型见文档3.1章节的介绍:   
+框架支持的中间件种类大全和选型见文档3.1章节的介绍:
 
-[3.1 各种中间件选择的场景和优势](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html#id2) 
-
+[3.1 各种中间件选择的场景和优势](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html#id2)
 
 ### 1.2.3 框架对任务支持30种控制功能。
 
@@ -281,6 +244,7 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
 </pre>
 
 20种控制功能包括：
+
 <pre style="color: #A0A000">
      分布式：
         支持数十种最负盛名的消息中间件.(除了常规mq，还包括用不同形式的如 数据库 磁盘文件 redis等来模拟消息队列)
@@ -288,16 +252,16 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
      并发：
         支持threading gevent eventlet asyncio 单线程 5种并发模式 叠加 多进程。
         多进程不是和前面四种模式平行的，是叠加的，例如可以是 多进程 + 协程，多进程 + 多线程。
-     
+   
      控频限流：
         例如十分精确的指定1秒钟运行30次函数或者0.02次函数（无论函数需要随机运行多久时间，都能精确控制到指定的消费频率；
-       
+   
      分布式控频限流：
         例如一个脚本反复启动多次或者多台机器多个容器在运行，如果要严格控制总的qps，能够支持分布式控频限流。
-      
+  
      任务持久化：
         消息队列中间件天然支持
-     
+   
      断点接续运行：
         无惧反复重启代码，造成任务丢失。消息队列的持久化 + 消费确认机制 做到不丢失一个消息
         (此框架很重视消息的万无一失，就是执行函数的机器支持在任何时候随时肆无忌惮反复粗暴拉电闸断电，或者强制硬关机，
@@ -308,64 +272,64 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
         分布式函数调度框架的消费确认机制，保证函数运行完了才确认消费，正在运行突然强制关闭进程不会丢失一个消息，
         下次启动还会消费或者被别的机器消费。
         此框架的消息万无一失特性，不仅支持rabbbitmq因为原生支持，也支持redis，框架对redis的实现机制是因为客户端加了一层保障)。
-     
+   
      定时：
         可以按时间间隔、按指定时间执行一次、按指定时间执行多次，使用的是apscheduler包的方式。
-     
+   
      延时任务：
          例如规定任务发布后，延迟60秒执行，或者规定18点执行。这个概念和定时任务有一些不同。
-              
+    
      指定时间不运行：
         例如，有些任务你不想在白天运行，可以只在晚上的时间段运行
-     
+   
      消费确认：
         这是最为重要的一项功能之一，有了这才能肆无忌惮的任性反复重启代码也不会丢失一个任务。
         （常规的手写 redis.lpush + redis.blpop,然后并发的运行取出来的消息，随意关闭重启代码瞬间会丢失大量任务，
         那种有限的 断点接续 完全不可靠，根本不敢随意重启代码）
-     
+   
      立即重试指定次数：
         当函数运行出错，会立即重试指定的次数，达到最大次重试数后就确认消费了
-     
+   
      重新入队：
         在消费函数内部主动抛出一个特定类型的异常ExceptionForRequeue后，消息重新返回消息队列
-     
+   
      超时杀死：
         例如在函数运行时间超过10秒时候，将此运行中的函数kill
-     
+   
      计算消费次数速度：
         实时计算单个进程1分钟的消费次数，在日志中显示；当开启函数状态持久化后可在web页面查看消费次数
-     
+   
      预估消费时间：
         根据前1分钟的消费次数，按照队列剩余的消息数量来估算剩余的所需时间
-     
+   
      函数运行日志记录：
         使用自己设计开发的 控制台五彩日志（根据日志严重级别显示成五种颜色；使用了可跳转点击日志模板）
         + 多进程安全切片的文件日志 + 可选的kafka elastic日志
-                   
+         
      任务过滤：
         例如求和的add函数，已经计算了1 + 2,再次发布1 + 2的任务到消息中间件，可以让框架跳过执行此任务。
         任务过滤的原理是使用的是函数入参判断是否是已近执行过来进行过滤。
-     
+   
      任务过滤有效期缓存：
         例如查询深圳明天的天气，可以设置任务过滤缓存30分钟，30分钟内查询过深圳的天气，则不再查询。
         30分钟以外无论是否查询过深圳明天的天气，则执行查询。
-        
+  
      任务过期丢弃：
         例如消息是15秒之前发布的，可以让框架丢弃此消息不执行，防止消息堆积,
         在消息可靠性要求不高但实时性要求高的高并发互联网接口中使用
-                
+      
      函数状态和结果持久化：
         可以分别选择函数状态和函数结果持久化到mongodb，使用的是短时间内的离散mongo任务自动聚合成批量
         任务后批量插入，尽可能的减少了插入次数
-                      
+            
      消费状态实时可视化：
         在页面上按时间倒序实时刷新函数消费状态，包括是否成功 出错的异常类型和异常提示 
         重试运行次数 执行函数的机器名字+进程id+python脚本名字 函数入参 函数结果 函数运行消耗时间等
-                     
+           
      消费次数和速度生成统计表可视化：
         生成echarts统计图，主要是统计最近60秒每秒的消费次数、最近60分钟每分钟的消费次数
         最近24小时每小时的消费次数、最近10天每天的消费次数
-                                
+                      
      rpc：
         生产端（或叫发布端）获取消费结果。各个发布端对消费结果进行不同步骤的后续处理更灵活，而不是让消费端对消息的处理一干到底。
 
@@ -381,7 +345,7 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
 
      远程杀死(取消)任务：
          支持在发布端杀死正在运行的消息，发送杀死命令时候对还未取出的消息则放弃运行消息。
-    
+  
      funboost支持命令行操作：
          使用fire实现的命令行，见文档第12章
 
@@ -390,15 +354,14 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
 
 </pre>
 
-
 关于稳定性和性能，一句话概括就是直面百万c端用户（包括app和小程序）， 已经连续超过三个季度稳定高效运行无事故，从没有出现过假死、崩溃、内存泄漏等问题。 windows和linux行为100%一致，不会像celery一样，相同代码前提下，很多功能在win上不能运行或出错。
-
 
 ## 1.3 框架使用例子
 
 使用之前先学习 PYTHONPATH的概念  [https://github.com/ydf0509/pythonpathdemo](https://github.com/ydf0509/pythonpathdemo)
 
 win cmd和linux 运行时候，设置 PYTHONPATH 为项目根目录，是为了自动生成或读取到项目根目录下的 funboost_config.py文件作为配置。
+
 ```
 以下这只是简单求和例子，实际情况换成任意函数里面写任意逻辑，框架可没有规定只能用于 求和函数 的自动调度并发。
 而是根据实际情况函数的参数个数、函数的内部逻辑功能，全部都由用户自定义，函数里面想写什么就写什么，想干什么就干什么，极端自由。
@@ -407,6 +370,8 @@ win cmd和linux 运行时候，设置 PYTHONPATH 为项目根目录，是为了�
 
 有一点要说明的是框架的消息中间件的ip 端口 密码 等配置是在你第一次运行代码时候，在你当前项目的根目录下生成的 funboost_config.py 按需设置。
 ```
+
+### 1.3.1 funboost最简单例子
 
 ```python
 import time
@@ -447,14 +412,11 @@ if __name__ == "__main__":
 
 控制台运行截图:
 
-<a href="https://imgse.com/i/pkFkP4H"><img src="https://s21.ax1x.com/2024/04/29/pkFkP4H.png" alt="pkFkP4H.png" border="0" /></a>
+`<a href="https://imgse.com/i/pkFkP4H"><img src="https://s21.ax1x.com/2024/04/29/pkFkP4H.png" alt="pkFkP4H.png" border="0" />``</a>`
 
+`<a href="https://imgse.com/i/pkFkCUe"><img src="https://s21.ax1x.com/2024/04/29/pkFkCUe.png" alt="pkFkCUe.png" border="0" />``</a>`
 
-<a href="https://imgse.com/i/pkFkCUe"><img src="https://s21.ax1x.com/2024/04/29/pkFkCUe.png" alt="pkFkCUe.png" border="0" /></a>
-
-
-
-## 1.3.2 funboost集中演示一个功能更多的综合例子
+### 1.3.2 funboost集中演示一个功能更多的综合例子
 
 ```python
 
@@ -475,7 +437,7 @@ class MyBoosterParams(BoosterParams):  # 自定义的参数类，继承BoosterPa
     max_retry_times: int = 3
     concurrent_mode: str = ConcurrentModeEnum.THREADING 
 
-    
+  
 @boost(MyBoosterParams(queue_name='s1_queue', qps=1, 
                     #    do_task_filtering=True, # 可开启任务过滤，防止重复入参消费。
                        is_using_rpc_mode=True, # 开启rpc模式，支持rpc获取结果
@@ -512,8 +474,8 @@ if __name__ == '__main__':
     for i in range(100):
         step1.push(i,i*2) # 向 step1函数的队列发送消息,入参和手动调用函数那样很相似。
         step1.publish ({'a':i,'b':i*2},task_id=f'task_{i}') # publish 第一个入参是字典，比push能传递更多funboost的辅助参数，类似celery的apply_async和delay的关系。一个简单，一个复杂但强大。
-    
-    
+  
+  
 
     """
     1.funboost 使用 ApsJobAdder.add_push_job来添加定时任务，不是add_job。
@@ -523,7 +485,10 @@ if __name__ == '__main__':
 
     下面是三种方式添加定时任务，这些定时方式都是知名apscheduler包的定时方式，和funboost没关系。
     """
-    # 方式1：指定日期执行一次
+
+   # ApsJobAdder 类可以多次重复实例化,内部对每一个消费函数使用一个单独的apscheduler对象,避免扫描与当前关心的消费函数不相干的redis jobstore中的定时任务
+
+   # 方式1：指定日期执行一次
     ApsJobAdder(step2, 
                job_store_kind='redis', # 使用reids作为 apscheduler的 jobstrores
                is_auto_start=True,   # 添加任务，并同时顺便启动了定时器 执行了apscheduler对象.start()
@@ -554,10 +519,29 @@ if __name__ == '__main__':
         kwargs={"c": 50, "d": 60,"e":70},
         replace_existing=True,
         id='cron_job1')
-    
+  
     ctrl_c_recv()  # 用于阻塞代码，阻止主线程退出，使主线程永久运行。  相当于 你在代码最末尾，加了个 while 1:time.sleep(10)，使主线程永不结束。apscheduler background定时器守护线程需要这样保持定时器不退出。
 
+```
 
+### 1.3.3  funboost的 @BoosterParams(...)  和 @boost(BoosterParams(...)) 等效
+
+通常代码例子是:
+
+```python
+@boost(BoosterParams(queue_name="task_queue_consume_any_msg"))
+def task_fun(a: int, b: int):
+    print(f'a:{a},b:{b}')
+    return a + b
+```
+
+但如果你追求极致简化,也可以写成如下,不要@boost,直接@BoosterParams
+
+```python
+@BoosterParams(queue_name="task_queue_consume_any_msg")
+def task_fun(a: int, b: int):
+    print(f'a:{a},b:{b}')
+    return a + b
 ```
 
 ## funboost web manager 截图：
@@ -571,9 +555,10 @@ if __name__ == '__main__':
 运行中消费者 by ip： 根据ip搜索有哪些消费者
 [![pEJCRFx.png](https://s21.ax1x.com/2025/03/04/pEJCRFx.png)](https://imgse.com/i/pEJCRFx)
 
-
 队列操作：查看和操作队列，包括 清空清空 暂停消费 恢复消费 调整qps和并发
+
 <!-- [![pEJC6m9.png](https://s21.ax1x.com/2025/03/04/pEJC6m9.png)](https://imgse.com/i/pEJC6m9) -->
+
 [![pVSOJcq.png](https://s21.ax1x.com/2025/05/27/pVSOJcq.png)](https://imgse.com/i/pVSOJcq)
 
 队列操作，查看消费者详情：查看队列的所有消费者详情
@@ -583,10 +568,10 @@ if __name__ == '__main__':
 [![pVpr7sP.png](https://s21.ax1x.com/2025/05/29/pVpr7sP.png)](https://imgse.com/i/pVpr7sP)
 
 rpc调用：在网页上对30种消息队列发布消息并获取消息的函数执行结；根据taskid获取结果。
+
 <!-- [![pETq8hj.png](https://s21.ax1x.com/2025/04/28/pETq8hj.png)](https://imgse.com/i/pETq8hj) -->
+
 [![pE7y8oT.png](https://s21.ax1x.com/2025/04/29/pE7y8oT.png)](https://imgse.com/i/pE7y8oT)
-
-
 
 ## 1.4  python分布式函数执行为什么重要？
 
@@ -605,7 +590,7 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
  那么就不光是需要跨进程执行任务了，例如跨pvm解释器启动脚本共享任务(即使是同一个机器，把python xx.py连续启动多次)、
  跨docker容器、跨物理机共享任务。只有让python跑在更多进程的cpu核心 跑在更多的docker容器 跑在更多的物理机上，
  python才能获得与其他语言只需要一台机器就实现的执行速度。分布式函数调度框架来驱动函数执行针对这些不同的场景，
- 用户代码不需要做任何变化。
+ 用代码不需要做任何变化。
  
 所以比其他语言来说，python是更需要分布式函数调度框架来执行任务。
   
@@ -623,6 +608,7 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 ```
 
 ## 1.6 funboost支持支持celery框架整体作为funboost的broker (2023.4新增)
+
 ```
 见11.1章节代码例子，celery框架整体作为funboost的broker，funboost的发布和消费将只作为极简api，
 核心的消费调度和发布和定时功能，都是由celery框架来完成，funboost框架的发布和调度代码不实际起作用。
@@ -643,15 +629,23 @@ funboost通过支持celery作为broker_kind,使celer框架变成了funboost的�
 
 [查看分布式函数调度框架完整文档](https://funboost.readthedocs.io/)
 
-
-
-
-
-
-
-
-
-
 ![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)
 
 <div> </div>
+
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #

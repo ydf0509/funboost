@@ -14,9 +14,15 @@ class HTTPPublisher(AbstractPublisher, ):
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
         self._http = PoolManager(10)
+        self._ip = self.publisher_params.broker_exclusive_config['host']
+        self._port = self.publisher_params.broker_exclusive_config['port']
+        self._ip_port_str = f'{self._ip}:{self._port}'
+        if self._port is None:
+            raise ValueError('please specify port')
+
 
     def concrete_realization_of_publish(self, msg):
-        url = self.queue_name + '/queue'
+        url = self._ip_port_str + '/queue'
         self._http.request('post', url, fields={'msg': msg})
 
     def clear(self):

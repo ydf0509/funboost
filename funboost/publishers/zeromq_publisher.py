@@ -10,9 +10,13 @@ class ZeroMqPublisher(AbstractPublisher):
     zeromq 中间件的发布者，zeromq基于socket代码，不会持久化，且不需要安装软件。
     """
     def custom_init(self):
+        self._port = self.publisher_params.broker_exclusive_config['port']
+        if self._port is None:
+            raise ValueError('please specify port')
+
         context = ZmqImporter().zmq.Context()
         socket = context.socket(ZmqImporter().zmq.REQ)
-        socket.connect(f"tcp://localhost:{int(self._queue_name)}")
+        socket.connect(f"tcp://localhost:{int(self._port)}")
         self.socket =socket
         self.logger.warning('框架使用 zeromq 中间件方式，必须先启动消费者(消费者会顺便启动broker) ,只有启动了服务端才能发布任务')
 

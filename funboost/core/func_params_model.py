@@ -159,10 +159,18 @@ class BoosterParams(BaseJsonAbleModel):
     consumin_function_decorator: typing.Optional[typing.Callable] = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
     function_timeout: typing.Union[int, float,None] = None  # 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。 谨慎使用,非必要别去设置超时时间,设置后性能会降低(因为需要把用户函数包装到另一个线单独的程中去运行),而且突然强制超时杀死运行中函数,可能会造成死锁.(例如用户函数在获得线程锁后突然杀死函数,别的线程再也无法获得锁了)
 
-    log_level: int = logging.DEBUG  # 消费者和发布者的日志级别,建议设置DEBUG级别,不然无法知道正在运行什么消息
+    """
+    log_level:
+        logger_name 对应的 日志级别
+        消费者和发布者的日志级别,建议设置DEBUG级别,不然无法知道正在运行什么消息.
+        这个是funboost每个队列的单独命名空间的日志级别,丝毫不会影响改变用户其他日志以及root命名空间的日志级别,所以DEBUG级别就好,
+        用户不要压根不懂什么是python logger 的name,还去手痒调高级别. 
+        不懂python日志命名空间的小白去看nb_log文档,或者直接问 ai大模型 python logger name的作用是什么.
+    """
+    log_level: int = logging.DEBUG # 不需要改这个级别,请看上面原因
     logger_prefix: str = ''  # 日志名字前缀,可以设置前缀
     create_logger_file: bool = True  # 发布者和消费者是否创建文件文件日志,为False则只打印控制台不写文件.
-    logger_name: str = ''  # 队列消费者发布者的日志命名空间.
+    logger_name: typing.Union[str, None] = ''  # 队列消费者发布者的日志命名空间.
     log_filename: typing.Union[str, None] = None  # 消费者发布者的文件日志名字.如果为None,则自动使用 funboost.队列 名字作为文件日志名字.  日志文件夹是在nb_log_config.py的 LOG_PATH中决定的.
     is_show_message_get_from_broker: bool = False  # 运行时候,是否记录从消息队列获取出来的消息内容
     is_print_detail_exception: bool = True  # 消费函数出错时候,是否打印详细的报错堆栈,为False则只打印简略的报错信息不包含堆栈.

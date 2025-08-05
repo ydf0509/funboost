@@ -67,31 +67,38 @@ class ZeroMqConsumer(AbstractConsumer):
     zeromq 中间件的消费者，zeromq基于socket代码，不会持久化，且不需要安装软件。
     """
 
-    def start_broker_queue_name_as_port(self):
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'port': None}
+
+    def custom_init(self):
+        self._port = self.consumer_params.broker_exclusive_config['port']
+        if self._port is None:
+            raise ValueError('please specify port')
+
+    def _start_broker_port(self):
         # threading.Thread(target=self._start_broker).start()
         # noinspection PyBroadException
         try:
-            if not (10000 < int(self._queue_name) < 65535):
-                raise ValueError("，请设置queue的名字是一个 10000到65535的之间的一个端口数字")
+            if not (10000 < int(self._port) < 65535):
+                raise ValueError("请设置port是一个 10000到65535的之间的一个端口数字")
         except BaseException:
-            self.logger.critical(f" zeromq 模式以 queue 的民资作为tcp 端口，请设置queue的名字是一个 10000 到 65535 之间的一个端口数字")
+            self.logger.critical(f" 请设置port是一个 10000到65535的之间的一个端口数字")
             # noinspection PyProtectedMember
             os._exit(444)
-        if check_port_is_used('127.0.0.1', int(self._queue_name)):
-            self.logger.debug(f"""{int(self._queue_name)} router端口已经启动(或占用) """)
+        if check_port_is_used('127.0.0.1', int(self._port)):
+            self.logger.debug(f"""{int(self._port)} router端口已经启动(或占用) """)
             return
-        if check_port_is_used('127.0.0.1', int(self._queue_name) + 1):
-            self.logger.debug(f"""{int(self._queue_name) + 1} dealer 端口已经启动(或占用) """)
+        if check_port_is_used('127.0.0.1', int(self._port) + 1):
+            self.logger.debug(f"""{int(self._port) + 1} dealer 端口已经启动(或占用) """)
             return
-        multiprocessing.Process(target=start_broker, args=(int(self._queue_name), int(self._queue_name) + 1)).start()
+        multiprocessing.Process(target=start_broker, args=(int(self._port), int(self._port) + 1)).start()
 
     # noinspection DuplicatedCode
     def _shedual_task(self):
-        self.start_broker_queue_name_as_port()
+        self._start_broker_port()
         context = ZmqImporter().zmq.Context()
         # noinspection PyUnresolvedReferences
         zsocket = context.socket(ZmqImporter().zmq.REP)
-        zsocket.connect(f"tcp://localhost:{int(self._queue_name) + 1}")
+        zsocket.connect(f"tcp://localhost:{int(self._port) + 1}")
 
         while True:
             message = zsocket.recv()

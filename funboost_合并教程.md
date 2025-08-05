@@ -1,18 +1,4 @@
-
-
-# 1.python万能分布式函数调度框架简funboost简介
-
-[//]: # (Stargazers:)
-
-[//]: # ()
-[//]: # ([![Stargazers repo roster for @ydf0509/funboost]&#40;https://reporoster.com/stars/ydf0509/funboost&#41;]&#40;https://github.com/ydf0509/funboost/stargazers&#41;)
-
-[//]: # ()
-[//]: # (Forkers:)
-
-[//]: # ()
-[//]: # ([![Forkers repo roster for @ydf0509/funboost]&#40;https://reporoster.com/forks/ydf0509/funboost&#41;]&#40;https://github.com/ydf0509/funboost/network/members&#41;)
-
+# boost1.python万能分布式函数调度框架简funboost简介
 
 <pre style="color: greenyellow;background-color: #0c1119; font-size: medium;">
 pip install funboost ,python全功能分布式函数调度框架。  demo用法例子见文档1.3
@@ -69,14 +55,13 @@ funboost只有一个@boost装饰器，@boost入参能自动补全，更重要的
 因为funboost非常注重代码补全提示，所以不存在上面celery的那些复杂高难度缺点。
 ```
 
-
 funboost的旧框架名字是function_scheduling_distributed_framework , 关系和兼容性见1.0.3介绍。
 旧框架地址： [https://github.com/ydf0509/distributed_framework](https://github.com/ydf0509/distributed_framework)
-
 
 ## 1.0 github地址和文档地址
 
 ### 1.0.1 [分布式函数调度框架文档地址 ](https://funboost.readthedocs.io/zh-cn/latest/index.html)
+
 [查看分布式函数调度框架文档 https://funboost.readthedocs.io/zh-cn/latest/index.html](https://funboost.readthedocs.io/zh-cn/latest/index.html)
 
 文档很长，大部分都是讲原理和对比各种框架。但是用户只需要学习1.3这1个例子就能掌握了。因为其他例子只是 @boost的 BoosterParams 里面的控制入参换了一下。
@@ -86,6 +71,7 @@ funboost的旧框架名字是function_scheduling_distributed_framework , 关系�
 funboost 框架和一般的框架不一样，因为只有一行代码需要掌握，绝对不是要求用户先精通框架本身才能自由发挥。
 
 #### [1.python万能分布式函数调度框架简funboost简介](https://funboost.readthedocs.io/zh-cn/latest/articles/c1.html)
+
 #### [2. funboost对比celery框架](https://funboost.readthedocs.io/zh-cn/latest/articles/c2.html)
 
 #### [3.funboost框架详细介绍](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html)
@@ -112,7 +98,6 @@ funboost 框架和一般的框架不一样，因为只有一行代码需要掌�
 
 #### [13.启动 funboost web manager,查看消费结果和队列管理](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html)
 
-
 #### [funboost依赖的nb_log日志文档 https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2](https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2)
 
 ```
@@ -128,14 +113,8 @@ funboost 框架和一般的框架不一样，因为只有一行代码需要掌�
 ```
 
 ### 1.0.2 [分布式函数调度框架github地址](https://github.com/ydf0509/funboost)
+
 [查看分布式函数调度框架github项目](https://github.com/ydf0509/funboost)
-
-[//]: # (### 1.0.3 [分布式函数调度框架qq群]&#40;https://qm.qq.com/cgi-bin/qm/qr?k=unA_o_L3sv5yushJzYGUTAwSzZ7GhUhq&jump_from=webapi&#41;)
-
-[//]: # (现在新建一个qq群 189603256)
-
-[//]:# ([点击加入 python万能分布式函数调度框架qq群]&#40;https://qm.qq.com/cgi-bin/qm/qr?k=unA_o_L3sv5yushJzYGUTAwSzZ7GhUhq&jump_from=webapi&#41;)
-
 
 ### 1.0.3 funboost 框架 和 function_scheduling_distributed_framework 框架 关系说明
 
@@ -143,10 +122,7 @@ funboost 框架和一般的框架不一样，因为只有一行代码需要掌�
 funboost 是 function_scheduling_distributed_framework的包名更新版本
 ```
 
-
-
-<span style="font-size:15px">旧框架地址：<span><a href="https://github.com/ydf0509/distributed_framework" style="font-size: 15px">function_scheduling_distributed_framework框架地址链接</a>
-
+`<span style="font-size:15px">`旧框架地址：`<span><a href="https://github.com/ydf0509/distributed_framework" style="font-size: 15px">`function_scheduling_distributed_framework框架地址链接 `</a>`
 
 ## 1.1 安装方式
 
@@ -158,38 +134,25 @@ pip install funboost --upgrade
 
 ## 1.2 框架功能介绍
 
-分布式函数调度框架，支持5种并发模式，30+种消息中间件，30种任务控制功能。<br>
+分布式函数调度框架，支持5种并发模式，30+种消息中间件，30种任务控制功能。`<br>`
 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。
 
 有了这个框架，用户再也无需亲自手写操作进程、线程、协程的并发的代码了。
 
 有了这个框架，用户再也无需亲自手写操作redis rabbitmq socket kafka celery nameko了。
 
-[//]: # ([![sgV2xP.png]&#40;https://z3.ax1x.com/2021/01/19/sgV2xP.png&#41;]&#40;https://imgtu.com/i/sgV2xP&#41;)
-
-[//]: # ()
-[//]: # ([img-46.png]&#40;https://postimg.cc/hfW0VhCX&#41;)
-
 funboost示图：
-<a href="https://imgse.com/i/pkFFghj"><img src="https://s21.ax1x.com/2024/04/29/pkFFghj.png" alt="pkFFghj.png" border="0" /></a>
-
-[//]: # ([![img-46.png]&#40;https://i.postimg.cc/tC7mQxWN/img-46.png&#41;]&#40;https://postimg.cc/hfW0VhCX&#41;)
-
-[//]: # (就是最普通的生产者消费者流程图)
-
-[//]: # (![]&#40;https://i.niupic.com/images/2023/12/18/dVaP.png&#41;)
+`<a href="https://imgse.com/i/pkFFghj"><img src="https://s21.ax1x.com/2024/04/29/pkFFghj.png" alt="pkFFghj.png" border="0" />``</a>`
 
 也就是这种非常普通的流程图,一样的意思
 
-<a href="https://imgse.com/i/pkFFcNQ"><img src="https://s21.ax1x.com/2024/04/29/pkFFcNQ.png" alt="pkFFcNQ.png" border="0" /></a>
+`<a href="https://imgse.com/i/pkFFcNQ"><img src="https://s21.ax1x.com/2024/04/29/pkFFcNQ.png" alt="pkFFcNQ.png" border="0" />``</a>`
 
 ### 1.2.1 框架支持5种并发模式
 
-<div   style=" font-size: xx-large; font-family: 黑体,serif; "> threading  <span style="font-size: medium">(使用的是可变线程池，可以智能自动缩小和扩大线程数量,也可以运行async def的函数) </span> </div> 
-
+<div   style=" font-size: xx-large; font-family: 黑体,serif; "> threading  <span style="font-size: medium">(使用的是可变线程池，可以智能自动缩小和扩大线程数量,也可以运行async def的函数) </span> </div>
 
 <div   style=" font-size: xx-large; font-family: 黑体,serif; "> gevent </div>
-
 
 <div   style="font-size: xx-large; font-family: 黑体,serif; "> eventlet </div>
 
@@ -212,6 +175,7 @@ funboost示图：
 以下两种方式，都是10线程加python内存queue方式运行f函数，有了此框架，用户无需代码手写手动操作线程 协程 asyncio 进程 来并发。
 
 1)手动开启线程池方式
+
 ```python
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -231,6 +195,7 @@ if __name__ == '__main__':
 ```
 
 2)funboost 使用内存队列,设置10线程并发
+
 ```python
 import time
 from funboost import BoosterParams, BrokerEnum
@@ -249,17 +214,15 @@ if __name__ == '__main__':
 
 ```
 
-
 ### 1.2.2 框架支持30种中间件或三方框架
 
 框架支持 rabbitmq redis python自带的queue.Queue  sqlite sqlachemy kafka pulsar mongodb 直接socket celery  nameko 等作为消息中间件。
 
 同时此框架也支持操作 kombu 库作为中间件,所以此框架能够支持的中间件类型只会比celery更多。
 
-框架支持的中间件种类大全和选型见文档3.1章节的介绍:   
+框架支持的中间件种类大全和选型见文档3.1章节的介绍:
 
-[3.1 各种中间件选择的场景和优势](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html#id2) 
-
+[3.1 各种中间件选择的场景和优势](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html#id2)
 
 ### 1.2.3 框架对任务支持30种控制功能。
 
@@ -281,6 +244,7 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
 </pre>
 
 20种控制功能包括：
+
 <pre style="color: #A0A000">
      分布式：
         支持数十种最负盛名的消息中间件.(除了常规mq，还包括用不同形式的如 数据库 磁盘文件 redis等来模拟消息队列)
@@ -288,16 +252,16 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
      并发：
         支持threading gevent eventlet asyncio 单线程 5种并发模式 叠加 多进程。
         多进程不是和前面四种模式平行的，是叠加的，例如可以是 多进程 + 协程，多进程 + 多线程。
-     
+   
      控频限流：
         例如十分精确的指定1秒钟运行30次函数或者0.02次函数（无论函数需要随机运行多久时间，都能精确控制到指定的消费频率；
-       
+   
      分布式控频限流：
         例如一个脚本反复启动多次或者多台机器多个容器在运行，如果要严格控制总的qps，能够支持分布式控频限流。
-      
+  
      任务持久化：
         消息队列中间件天然支持
-     
+   
      断点接续运行：
         无惧反复重启代码，造成任务丢失。消息队列的持久化 + 消费确认机制 做到不丢失一个消息
         (此框架很重视消息的万无一失，就是执行函数的机器支持在任何时候随时肆无忌惮反复粗暴拉电闸断电，或者强制硬关机，
@@ -308,64 +272,64 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
         分布式函数调度框架的消费确认机制，保证函数运行完了才确认消费，正在运行突然强制关闭进程不会丢失一个消息，
         下次启动还会消费或者被别的机器消费。
         此框架的消息万无一失特性，不仅支持rabbbitmq因为原生支持，也支持redis，框架对redis的实现机制是因为客户端加了一层保障)。
-     
+   
      定时：
         可以按时间间隔、按指定时间执行一次、按指定时间执行多次，使用的是apscheduler包的方式。
-     
+   
      延时任务：
          例如规定任务发布后，延迟60秒执行，或者规定18点执行。这个概念和定时任务有一些不同。
-              
+    
      指定时间不运行：
         例如，有些任务你不想在白天运行，可以只在晚上的时间段运行
-     
+   
      消费确认：
         这是最为重要的一项功能之一，有了这才能肆无忌惮的任性反复重启代码也不会丢失一个任务。
         （常规的手写 redis.lpush + redis.blpop,然后并发的运行取出来的消息，随意关闭重启代码瞬间会丢失大量任务，
         那种有限的 断点接续 完全不可靠，根本不敢随意重启代码）
-     
+   
      立即重试指定次数：
         当函数运行出错，会立即重试指定的次数，达到最大次重试数后就确认消费了
-     
+   
      重新入队：
         在消费函数内部主动抛出一个特定类型的异常ExceptionForRequeue后，消息重新返回消息队列
-     
+   
      超时杀死：
         例如在函数运行时间超过10秒时候，将此运行中的函数kill
-     
+   
      计算消费次数速度：
         实时计算单个进程1分钟的消费次数，在日志中显示；当开启函数状态持久化后可在web页面查看消费次数
-     
+   
      预估消费时间：
         根据前1分钟的消费次数，按照队列剩余的消息数量来估算剩余的所需时间
-     
+   
      函数运行日志记录：
         使用自己设计开发的 控制台五彩日志（根据日志严重级别显示成五种颜色；使用了可跳转点击日志模板）
         + 多进程安全切片的文件日志 + 可选的kafka elastic日志
-                   
+         
      任务过滤：
         例如求和的add函数，已经计算了1 + 2,再次发布1 + 2的任务到消息中间件，可以让框架跳过执行此任务。
         任务过滤的原理是使用的是函数入参判断是否是已近执行过来进行过滤。
-     
+   
      任务过滤有效期缓存：
         例如查询深圳明天的天气，可以设置任务过滤缓存30分钟，30分钟内查询过深圳的天气，则不再查询。
         30分钟以外无论是否查询过深圳明天的天气，则执行查询。
-        
+  
      任务过期丢弃：
         例如消息是15秒之前发布的，可以让框架丢弃此消息不执行，防止消息堆积,
         在消息可靠性要求不高但实时性要求高的高并发互联网接口中使用
-                
+      
      函数状态和结果持久化：
         可以分别选择函数状态和函数结果持久化到mongodb，使用的是短时间内的离散mongo任务自动聚合成批量
         任务后批量插入，尽可能的减少了插入次数
-                      
+            
      消费状态实时可视化：
         在页面上按时间倒序实时刷新函数消费状态，包括是否成功 出错的异常类型和异常提示 
         重试运行次数 执行函数的机器名字+进程id+python脚本名字 函数入参 函数结果 函数运行消耗时间等
-                     
+           
      消费次数和速度生成统计表可视化：
         生成echarts统计图，主要是统计最近60秒每秒的消费次数、最近60分钟每分钟的消费次数
         最近24小时每小时的消费次数、最近10天每天的消费次数
-                                
+                      
      rpc：
         生产端（或叫发布端）获取消费结果。各个发布端对消费结果进行不同步骤的后续处理更灵活，而不是让消费端对消息的处理一干到底。
 
@@ -381,7 +345,7 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
 
      远程杀死(取消)任务：
          支持在发布端杀死正在运行的消息，发送杀死命令时候对还未取出的消息则放弃运行消息。
-    
+  
      funboost支持命令行操作：
          使用fire实现的命令行，见文档第12章
 
@@ -390,15 +354,14 @@ python通用分布式函数调度框架。适用场景范围广泛， 框架非�
 
 </pre>
 
-
 关于稳定性和性能，一句话概括就是直面百万c端用户（包括app和小程序）， 已经连续超过三个季度稳定高效运行无事故，从没有出现过假死、崩溃、内存泄漏等问题。 windows和linux行为100%一致，不会像celery一样，相同代码前提下，很多功能在win上不能运行或出错。
-
 
 ## 1.3 框架使用例子
 
 使用之前先学习 PYTHONPATH的概念  [https://github.com/ydf0509/pythonpathdemo](https://github.com/ydf0509/pythonpathdemo)
 
 win cmd和linux 运行时候，设置 PYTHONPATH 为项目根目录，是为了自动生成或读取到项目根目录下的 funboost_config.py文件作为配置。
+
 ```
 以下这只是简单求和例子，实际情况换成任意函数里面写任意逻辑，框架可没有规定只能用于 求和函数 的自动调度并发。
 而是根据实际情况函数的参数个数、函数的内部逻辑功能，全部都由用户自定义，函数里面想写什么就写什么，想干什么就干什么，极端自由。
@@ -407,6 +370,8 @@ win cmd和linux 运行时候，设置 PYTHONPATH 为项目根目录，是为了�
 
 有一点要说明的是框架的消息中间件的ip 端口 密码 等配置是在你第一次运行代码时候，在你当前项目的根目录下生成的 funboost_config.py 按需设置。
 ```
+
+### 1.3.1 funboost最简单例子
 
 ```python
 import time
@@ -447,14 +412,11 @@ if __name__ == "__main__":
 
 控制台运行截图:
 
-<a href="https://imgse.com/i/pkFkP4H"><img src="https://s21.ax1x.com/2024/04/29/pkFkP4H.png" alt="pkFkP4H.png" border="0" /></a>
+`<a href="https://imgse.com/i/pkFkP4H"><img src="https://s21.ax1x.com/2024/04/29/pkFkP4H.png" alt="pkFkP4H.png" border="0" />``</a>`
 
+`<a href="https://imgse.com/i/pkFkCUe"><img src="https://s21.ax1x.com/2024/04/29/pkFkCUe.png" alt="pkFkCUe.png" border="0" />``</a>`
 
-<a href="https://imgse.com/i/pkFkCUe"><img src="https://s21.ax1x.com/2024/04/29/pkFkCUe.png" alt="pkFkCUe.png" border="0" /></a>
-
-
-
-## 1.3.2 funboost集中演示一个功能更多的综合例子
+### 1.3.2 funboost集中演示一个功能更多的综合例子
 
 ```python
 
@@ -475,7 +437,7 @@ class MyBoosterParams(BoosterParams):  # 自定义的参数类，继承BoosterPa
     max_retry_times: int = 3
     concurrent_mode: str = ConcurrentModeEnum.THREADING 
 
-    
+  
 @boost(MyBoosterParams(queue_name='s1_queue', qps=1, 
                     #    do_task_filtering=True, # 可开启任务过滤，防止重复入参消费。
                        is_using_rpc_mode=True, # 开启rpc模式，支持rpc获取结果
@@ -512,8 +474,8 @@ if __name__ == '__main__':
     for i in range(100):
         step1.push(i,i*2) # 向 step1函数的队列发送消息,入参和手动调用函数那样很相似。
         step1.publish ({'a':i,'b':i*2},task_id=f'task_{i}') # publish 第一个入参是字典，比push能传递更多funboost的辅助参数，类似celery的apply_async和delay的关系。一个简单，一个复杂但强大。
-    
-    
+  
+  
 
     """
     1.funboost 使用 ApsJobAdder.add_push_job来添加定时任务，不是add_job。
@@ -523,7 +485,10 @@ if __name__ == '__main__':
 
     下面是三种方式添加定时任务，这些定时方式都是知名apscheduler包的定时方式，和funboost没关系。
     """
-    # 方式1：指定日期执行一次
+
+   # ApsJobAdder 类可以多次重复实例化,内部对每一个消费函数使用一个单独的apscheduler对象,避免扫描与当前关心的消费函数不相干的redis jobstore中的定时任务
+
+   # 方式1：指定日期执行一次
     ApsJobAdder(step2, 
                job_store_kind='redis', # 使用reids作为 apscheduler的 jobstrores
                is_auto_start=True,   # 添加任务，并同时顺便启动了定时器 执行了apscheduler对象.start()
@@ -554,10 +519,29 @@ if __name__ == '__main__':
         kwargs={"c": 50, "d": 60,"e":70},
         replace_existing=True,
         id='cron_job1')
-    
+  
     ctrl_c_recv()  # 用于阻塞代码，阻止主线程退出，使主线程永久运行。  相当于 你在代码最末尾，加了个 while 1:time.sleep(10)，使主线程永不结束。apscheduler background定时器守护线程需要这样保持定时器不退出。
 
+```
 
+### 1.3.3  funboost的 @BoosterParams(...)  和 @boost(BoosterParams(...)) 等效
+
+通常代码例子是:
+
+```python
+@boost(BoosterParams(queue_name="task_queue_consume_any_msg"))
+def task_fun(a: int, b: int):
+    print(f'a:{a},b:{b}')
+    return a + b
+```
+
+但如果你追求极致简化,也可以写成如下,不要@boost,直接@BoosterParams
+
+```python
+@BoosterParams(queue_name="task_queue_consume_any_msg")
+def task_fun(a: int, b: int):
+    print(f'a:{a},b:{b}')
+    return a + b
 ```
 
 ## funboost web manager 截图：
@@ -571,9 +555,10 @@ if __name__ == '__main__':
 运行中消费者 by ip： 根据ip搜索有哪些消费者
 [![pEJCRFx.png](https://s21.ax1x.com/2025/03/04/pEJCRFx.png)](https://imgse.com/i/pEJCRFx)
 
-
 队列操作：查看和操作队列，包括 清空清空 暂停消费 恢复消费 调整qps和并发
+
 <!-- [![pEJC6m9.png](https://s21.ax1x.com/2025/03/04/pEJC6m9.png)](https://imgse.com/i/pEJC6m9) -->
+
 [![pVSOJcq.png](https://s21.ax1x.com/2025/05/27/pVSOJcq.png)](https://imgse.com/i/pVSOJcq)
 
 队列操作，查看消费者详情：查看队列的所有消费者详情
@@ -583,10 +568,10 @@ if __name__ == '__main__':
 [![pVpr7sP.png](https://s21.ax1x.com/2025/05/29/pVpr7sP.png)](https://imgse.com/i/pVpr7sP)
 
 rpc调用：在网页上对30种消息队列发布消息并获取消息的函数执行结；根据taskid获取结果。
+
 <!-- [![pETq8hj.png](https://s21.ax1x.com/2025/04/28/pETq8hj.png)](https://imgse.com/i/pETq8hj) -->
+
 [![pE7y8oT.png](https://s21.ax1x.com/2025/04/29/pE7y8oT.png)](https://imgse.com/i/pE7y8oT)
-
-
 
 ## 1.4  python分布式函数执行为什么重要？
 
@@ -605,7 +590,7 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
  那么就不光是需要跨进程执行任务了，例如跨pvm解释器启动脚本共享任务(即使是同一个机器，把python xx.py连续启动多次)、
  跨docker容器、跨物理机共享任务。只有让python跑在更多进程的cpu核心 跑在更多的docker容器 跑在更多的物理机上，
  python才能获得与其他语言只需要一台机器就实现的执行速度。分布式函数调度框架来驱动函数执行针对这些不同的场景，
- 用户代码不需要做任何变化。
+ 用代码不需要做任何变化。
  
 所以比其他语言来说，python是更需要分布式函数调度框架来执行任务。
   
@@ -623,6 +608,7 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 ```
 
 ## 1.6 funboost支持支持celery框架整体作为funboost的broker (2023.4新增)
+
 ```
 见11.1章节代码例子，celery框架整体作为funboost的broker，funboost的发布和消费将只作为极简api，
 核心的消费调度和发布和定时功能，都是由celery框架来完成，funboost框架的发布和调度代码不实际起作用。
@@ -643,21 +629,28 @@ funboost通过支持celery作为broker_kind,使celer框架变成了funboost的�
 
 [查看分布式函数调度框架完整文档](https://funboost.readthedocs.io/)
 
-
-
-
-
-
-
-
-
-
 ![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)
 
 <div> </div>
+
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+[//]: #
+
 # 2. 对比celery框架
-
-
 
 是骡子是马必须拿出来溜溜。
 
@@ -668,8 +661,7 @@ funboost通过支持celery作为broker_kind,使celer框架变成了funboost的�
 
 ## 2.0,在比较之前，说明一下和celery的关系？
 
-
-**生产者-broker-消费者 模式是计算机科学中一个非常基础和经典的设计模式，它的历史远比 Celery 悠久得多**   
+**生产者-broker-消费者 模式是计算机科学中一个非常基础和经典的设计模式，它的历史远比 Celery 悠久得多**
 如果认为"只要是使用生产者-消费者模式编程，那么就是抄袭celery"，那所有编程语言中的生产者消费者编程方式，都抄袭celery了，说这话简直是不长脑子。
 
 ```
@@ -684,6 +676,7 @@ funboost通过支持celery作为broker_kind,使celer框架变成了funboost的�
 
 **连任何线程池都是 生产者-broker-消费者 编程思想，线程池也抄袭celery了吗**
 几乎所有线程池都是下面这样来实现的：
+
 ```
 1.Broker (中间件/任务通道):
 线程池 threadpool 有个 work_queue 属性，work_queue 是个内存队列，  work_queue 就是 broker
@@ -696,12 +689,9 @@ threadpool有个submit方法，submit方法原理就是把函数和函数入参p
 这n个线程就是n个消费者。
 ```
 
-任何线程池都是这么实现的，那线程池使用 “生产者-broker-消费者“” 编程思想，抄袭了celery吗？        
-rq dramtiq huery 都抄袭了celery吗？       
+任何线程池都是这么实现的，那线程池使用 “生产者-broker-消费者“” 编程思想，抄袭了celery吗？
+rq dramtiq huery 都抄袭了celery吗？
 java中设计线程池的人听都没听说过celery。所以说funboost抄袭celery，简直是不长脑子
-
-
-
 
 ## 2.1 celery对目录层级文件名称格式要求很高
 
@@ -711,6 +701,7 @@ celery对目录层级文件名称格式要求太高，只适合规划新的项�
 
 所以网上的celery博客教程虽然很多，但是并不能学会使用，因为要运行起来需要以下6个方面都掌握好，博客文字很难表达清楚或者没有写全面以下6个方面。
 celery消费任务不执行或者报错NotRegistered，与很多方面有关系，如果要别人排错，至少要发以下6方面的截图，
+
 ```
 1) 整个项目目录结构,celery的目录结构和任务函数位置，有很大影响
    
@@ -726,6 +717,7 @@ celery消费任务不执行或者报错NotRegistered，与很多方面有关系�
    (如果不精通这个demo的，使用cmd命令行启动时候，用户必须cd切换到当前python项目的根目录，
    如果精通主动自己设置PYTHONPATH和精通此demo，可以在任何目录下启动celery命令行或者不使用celery命令行而是调用app.work_main()启动消费
 ```
+
 在不规范的文件夹路径下，使用celery难度很高，一般教程都没教。
 [项目文件夹目录格式不规范下的celery使用演示](https://github.com/ydf0509/celery_demo)
 
@@ -754,7 +746,6 @@ celery才需要从配置中写好 include imports  autodiscover_tasks，从而�
 此框架的装饰器不存在需要一个类似Celery app实例的东西，不会有这个变量将大大减少编程难度，消费函数写在任意深层级不规则文件下都行。
 ```
 
-
 例如董伟明的 celery 教程例子的项目目录结构，然后很多练习者需要小心翼翼模仿文件夹层级和py文件名字。
 
 ![img_4.png](img_4.png)
@@ -764,11 +755,7 @@ celery才需要从配置中写好 include imports  autodiscover_tasks，从而�
 这种情况下的celery如何正确使用。
 ```
 
-
-
-
 ![img.png](img.png)
-
 
 ## 2.2 性能远远超过celery10倍以上（使用初中的严格控制变量法）
 
@@ -779,7 +766,6 @@ celery才需要从配置中写好 include imports  autodiscover_tasks，从而�
 funboost比celery的发布性能超过10倍，消费性能超过20倍。
 
 性能跑分代码在下面 2.6 章节
-
 
 ## 2.3 celery的重要方法全部无法ide自动补全提示
 
@@ -827,7 +813,9 @@ funboost比celery的发布性能超过10倍，消费性能超过20倍。
 ## 2.4 比celery强的方面的优势大全
 
 ### 2.4.1 funboost对win linux mac 都支持
+
 2.4.1 funboost对win linux mac 都支持，celery 4 以后官方放弃对windwos的支持和测试。
+
 ```
    celer4 以后官方放弃对windwos的支持和测试，例如celery的默认多进程模式在windwos启动瞬间就会报错，
    虽然生产一般是linux，但开发机器一般是windwos,
@@ -849,12 +837,14 @@ funboost支持所有消息队列和消费框架，万物皆可为broker，不管
 ```
 
 ### 2.4.3 funboost性能远超celery几十倍，性能不在一个数量级。
+
 ```
 这是最重要的，光使用简单还不够，性能是非常重要的指标。发布性能提升1000%以上，消费性能提升2000%以上。
 性能不在一个数量级。看下面2.6章节的严格的控制变量法测试对比方法和源码
 ```
 
-### 2.4.4 使用funboost框架时候，代码在ide自动补全暴击使用celery。 
+### 2.4.4 使用funboost框架时候，代码在ide自动补全暴击使用celery。
+
 ```
    全部公有方法或函数都能在pycharm智能能提示补全参数名称和参数
    一切为了调用时候方便而不是为了实现时候简略，例如get_consumer函数和AbstractConsumer的入参完全重复了，
@@ -865,11 +855,14 @@ funboost支持所有消息队列和消费框架，万物皆可为broker，不管
 ```
 
 ### 2.4.5 funboost 无需使用难记复杂的命令行启动消费。
+
 ```
    不使用命令行启动，在cmd打那么长的一串命令，容易打错字母。并且让用户不知道如何正确的使用celery命令，不友好。
     此框架是直接python xx.py 就启动了。
 ```
+
 ### 2.4.6 框架不依赖任何固定的目录结构，无结构100%自由。
+
 ```
    框架不依赖任何固定的目录结构，无结构100%自由，想把使用框架写在哪里就写在哪里，写在10层级的深层文件夹下都可以。
    脚本可以四处移动改名。celery想要做到这样，要做额外的处理。
@@ -877,11 +870,13 @@ funboost支持所有消息队列和消费框架，万物皆可为broker，不管
 ```
 
 ### 2.4.7 funboost框架比celery更简单10倍
+
 ```
 使用此funoost框架比celery更简单10倍，如例子所示。使用此框架代码绝对比使用celery少几十行。
 ```
 
 ### 2.4.8 funboost的消息格式比celery更容易自己构造
+
 ```
 由于funboost消息中间件里面没有存放其他与python 和项目配置有关的信息，这是真正的跨语言的函数调度框架。
 java人员也可以直接使用java的redis类rabbitmq类，发送json参数到中间件，由python消费。
@@ -890,9 +885,9 @@ celery里面的那种参数，高达几十项，和项目配置混合了，java�
 
 ### 2.4.9 celery目录结构限制严格，不规范目录结果层级使用难度高。
 
-celery目录结构限制严格，不规范目录结果层级使用难度高。见这个项目：      
-演示复杂深层路径，完全不按照一般套路的目录格式的celery使用  
-https://github.com/ydf0509/celery_demo  
+celery目录结构限制严格，不规范目录结果层级使用难度高。见这个项目：
+演示复杂深层路径，完全不按照一般套路的目录格式的celery使用
+https://github.com/ydf0509/celery_demo
 
 ```
 celery目录结构限制严格，不规范目录结果层级使用难度高。 celery有1个中心化的celery app实例，函数注册成任务，
@@ -919,7 +914,9 @@ funboost虽然功能更强大，但使用更简单，不需要看复杂的celery
 ```
 
 ### 2.4.11 funboost原生支持 asyncio ，支持async def 函数
+
 funboost原生支持 asyncio 原始函数，不用用户额外处理 asyncio loop相关麻烦的问题。
+
 ```
 此框架原生支持 asyncio 原始函数，不用用户额外处理 asyncio loop相关麻烦的问题。celery不支持async定义的函数，
 celery不能把@app.task 加到一个async def 的函数上面。
@@ -930,6 +927,7 @@ asyncio 并发模式是真的在一个线程中一个loop中多协程并发运�
 ```
 
 ### 2.4.12 funboost比celery对函数的辅助运行控制方式更多
+
 ```
 此框架比celery对函数的辅助运行控制方式更多，支持celery的所有如 并发 控频 超时杀死 重试 消息过期
 确认消费 等一切所有功能，同时包括了celery没有支持的功能，例如原生对函数入参的任务过滤 ,分布式qps全局控频。
@@ -947,28 +945,34 @@ is_using_distributed_frequency_contro=True 则分布式全局控频
 ```
 
 ### 2.4.14 funboost自带内置一键启动多进程，celery无法。
+
 ```
  funboost框架比celery更简单开启 多进程 + 线程或协程。celery的多进程和多线程是互斥的并发模式，funboost框架是叠加的。
 很多任务都是需要 多进程并发利用多核 + 细粒度的线程/协程绕过io 叠加并发 ，才能使运行速度更快，消耗cpu大 消耗io也大的场景太多了。
 ```
+
 ### 2.4.15 funboost 限速控频精准度远高于celery
+
 ```
 此框架精确控频率精确度达到99.9%，celery控频相当不准确，最多到达60%左右，两框架同样是做简单的加法然后sleep0.7秒，都设置500并发100qps。
 测试对比代码见qps测试章节,欢迎亲自测试证明。很容易测试，消费函数里面打印下时间和hello，然后启动消费，搜索控制台，看qps是否准确。
 ```
 
 ### 2.4.16 funboost日志的颜色和格式，远超celery。
+
 ```
 funboost日志的颜色和格式，远超celery。此框架的日志使用nb_log,日志在windwos远超celery，在linux也超过celery很多。
 ```
 
 ### 2.4.17  funboost内置支持python代码级别的一键远程linux机器消费部署
+
 ```
 funboost支持python代码级别的远程linux机器消费部署,可以方便的部署到测试环境的其他机器测试。
 funboost 支持 task_fun.fabric_deploy 一键部署到远程linux机器
 ```
 
 ### 2.4.18 funboost 直接支持类/实例方法作为消费函数，celery只支持静态方法/函数
+
 ```
 funboost 直接支持 类的实例方法和类方法作为消费函数，celery只能支持 普通函数和静态方法作为消费函数，funboost更为方便。
 ```
@@ -1022,6 +1026,7 @@ task_routes = {
 ```
 
 **funnboost不强制你懂amqp路由协议**
+
 ```
 项目中真正利用到rabbitmq这种复杂路由系统的celery python用户不到1%，大部分用户只是想简单用个队列而已，but咋就那么难。
 你用celery，celery作者就会告诉你，你连交换机都不懂，你还想用消息队列？
@@ -1034,6 +1039,7 @@ funboost就是为了99%场景来设计api，而不是为1%场景搞得99%用户�
 ```
 
 ### 2.4.21 funboost的配置方式吊打celery
+
 ```
 celery的配置分散在app和app.task上，而且用户压根不知道能配置什么，因为代码无法在ide补全。
 
@@ -1041,6 +1047,9 @@ funboost的配置集中在@boost装饰器一处；用户也可以使用继承Boo
 ```
 
 ### 2.4.22 funboost 能非常容易的扩展用户自己的任何中间件作为broker，celery无法做到。
+
+funboost 的 consumer的 _shedual_task 非常灵活,所以可以轻松接入万物作为broker.
+
 ```
 funboost 使用模板模式来开发各种消息队列消费者 发布者子类，所以可以兼容任何东西作为消息队列。
 例如 文件夹 文件 sqlite  tcp celery dramtiq 等轻松作为 funboost的broker。
@@ -1051,7 +1060,6 @@ funboost 使用模板模式来开发各种消息队列消费者 发布者子类�
 反观celery，用户几乎不可能完成，您无法像 funboost 这样在应用层简单继承。您必须深入其底层的消息库 Kombu，
 去理解和实现它的一整套 Transport 和 Channel 接口。这需要阅读大量源码，理解其内部工作流。
 ```
-
 
 ```
 funboost 的 consumer的 _shedual_task 非常灵活，用户实现把从消息队列取出的消息通过_submit_task方法
@@ -1064,7 +1072,6 @@ funboost 的 _shedual_task 哲学是：“我不管你怎么从你的系统里�
 ```
 
 ### 2.4.23 funboost 强大的的fct上下文，完胜celery 装饰器的bind=True侵入式设计
-
 
 ```
 funboost 强大的的fct上下文，吊打celery 装饰器的bind=True，然后再在函数入场中插入一个入参self
@@ -1085,10 +1092,11 @@ def add(self,x,y):
      return x + y
 好好的add函数，不仅要写@app.task(bind=True)，还要在第一个入参位置加个self，改成3个入参。
 celery @app.task(bind=True) + self 没有funboost的fct好用和无入侵。
-因为你原来的 调用add的地方如add(1,2)会报错，add现在变成需要3个入参了。     
+因为你原来的 调用add的地方如add(1,2)会报错，add现在变成需要3个入参了。   
 ```
 
 ### 2.4.24 funboost全流程支持asyncio生态，celery望尘莫及
+
 ```
 funboost不仅支持async def的函数消费，
 更能支持 await aio_push 和 await aio_publish 和 await AioAsyncResult.result 获取rpc结果， 
@@ -1108,10 +1116,10 @@ celery使用 concurrent.futures.ThreadPoolExecutor，无法自动缩小线程池
 ```
 
 ### 2.4.26 funboost死信队列机制更完善：
+
 ```
 funboost 通过抛出特定异常或配置，可以轻松实现**“重试N次后自动移入死信队列”**，逻辑清晰。
 ```
-
 
 ### 2.4.27 funboost可以消费一切任何任意json消息，celery无法识别
 
@@ -1128,14 +1136,29 @@ json消息无论是什么键值对名字，同一个队列名字，哪怕是json
 ```
 
 
+
+###  2.4.28 更强力灵活的,funboost 可以消费一切任意不规范格式的消息(包括json), celery完全不可行.
+
+见文档 4b.2c 章节: funboost 支持消费一切任意不规范格式的消息,不是json也能消费.
+
+```
+即使消息队列中的消息不是从funboost发布的,也不是json,而是一个任意内容的字符串,funboost也能消费.
+
+用户自定义自己的Consumer类,继承重写_user_convert_msg_before_run 把消息格式清洗转化成字典或者json字符串, 
+在boost装饰器 设置 consumer_override_cls=这个自定义Consumer类,即可.
+
+celery 无法消费任意字符串消息,funboost 能轻松做得到消费任意字符串消息.
+```
+
 ### 2.4.29 funboost等待任务完成机制：提供了 wait_for_possible_has_finish_all_tasks() 方法
+
 ```
 funboost中等待任务完成机制：提供了 wait_for_possible_has_finish_all_tasks() 方法，方便在脚本中等待一个队列的所有任务被消费完毕。
 
 celery无此功能。
 ```
 
-### 2.4.30 funboost无需 框架专用插件：
+### 2.4.30 funboost无需 框架专用插件
 ```
 无需框架专用插件：funboost 的自由度使其无需 django-funboost、flask-funboost 这类适配插件，可直接在任何 web 框架中简单直观的使用。
 ```
@@ -1143,6 +1166,7 @@ celery无此功能。
 ### 2.4.31 funboost的定时任务比celery更强，能动态添加删除 和 多点部署。
 
 funboost内置自带动态添加定时任务，celery写死在beat_schedule字典
+
 ```
 funboost的定时代码内启动，无需额外命令
 funboost随时通过代码动态添加、暂停、恢复、删除定时任务，非常自然。
@@ -1151,9 +1175,10 @@ celery 的定时任务是配置式，相对繁琐：需要在配置文件中定�
 
 
 动态的好处包括了，可以很容易和任何web框架搭配，在接口中添加删除定时任务。
-``` 
+```
 
 funboost的定时器可以多次启动，多台机器启动不会重复执行定时任务。
+
 ```
 funboost 继承重写了 apscheduler ，使用redis作为job_store时候，
 apscheduler的_process_jobs使用了redis分布式锁，
@@ -1173,8 +1198,9 @@ celery默认是“单点故障”：原生的 celery beat 无法多实例部署�
 但funboost使用redis作为job_store时候，不怕你多次启动定时器导致定时任务执行重复。
 ```
 
-funboost 使用 最知名的apscheduler 轻度封装，定时语法妇孺皆知。   
+funboost 使用 最知名的apscheduler 轻度封装，定时语法妇孺皆知。
 celery的beat_schedule 字典，容易配置错误，导致定时任务不能执行。
+
 ```
 funboost的API 简洁直观：ApsJobAdder(task_func, ...).add_push_job(...)，API 清晰，
 且复用了 apscheduler 的成熟语法，学习成本低。
@@ -1183,7 +1209,6 @@ celery需要在配置文件中定义一个 beat_schedule 字典，可读性较�
 容易因字符串拼写错误导致任务不执行且无明显报错，太坑人。
 ```
 
-
 ### 2.4.32 funboost + REDIS_ACK_ABLE ack能力 吊打celery + redis + ack + visibility_timeout (小细节)
 
 funboost作者凭借深厚功底与精准需求感，一人打造出覆盖面广、机制优越、使用简洁的消息队列框架，是非常了不起的技术创举----用一个人的力量解决了celery数百人团队在某些方面难以突破的结构性痛点。
@@ -1191,7 +1216,6 @@ funboost作者凭借深厚功底与精准需求感，一人打造出覆盖面广
 funboost + REDIS_ACK_ABLE 中间件吊打 celery 的 redis + task_acks_late=True + visibility_timeout=固定时间
 
 celery的redis确认消费 只能和 funboost + REIDS_ACK_USING_TIMEOUT 中间件相提并论
-
 
 ```
 celery + redis ，如果worker 进程被强制kill -9，那么待确认消费的孤儿消息，需要在 `visibility_timeout` 时间之后重回队列，默认1小时， 
@@ -1214,10 +1238,6 @@ REIDS_ACK_USING_TIMEOUT 中间件相提并论,和 funboost的REDIS_ACK_ABLE中�
 这不是污蔑celery,而是celery官方文档也承认的,详见:
 (celery官方文档的Caveats的Visibility timeout章节 https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/redis.html?utm_source=chatgpt.com)[https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/redis.html?utm_source=chatgpt.com]
 
-
-
-
-
 ### 2.4.40 （王炸）funboost 支持celery作为broker_kind
 
 有些人一直很质疑担心funboost不稳定，运行时候程序突然崩溃退出，认为celery运行了十几年肯定稳定，现在celery旧王作为funboost新皇的马前卒，
@@ -1235,89 +1255,83 @@ funboost支持clery作为broker_kind,@boost('celery_q1', broker_kind=BrokerEnum.
 通过 @boost(broker_kind=BrokerEnum.CELERY) 就可以让celery变成funboost子集，celery有的funboost都有，celery没的，funboost也有。
 ```
 
+## 2.4b 讨Celery檄：Funboost十胜定乾坤，函数王朝开天命
 
-
-## 2.4b 讨Celery檄：Funboost十胜定乾坤，函数王朝开天命  
-
-**夫任务调度之道，贵在通达！队列纵横之术，胜在易用！**  
-昔Celery恃RabbitMQ Redis之威，窃踞调度王座十数载，然其架构臃肿如裹足老象，兼容性似残破牢笼！今观其势：**弃Windows如敝履，控频精度若醉汉；困目录结构作茧，性能吞吐成笑谈**——开发者叩首于五千页文档，匍匐于晦涩命令行，此诚天下苦秦久矣！  
-今有Funboost，承函数调度天命，执`@boost`神器，以**性能裂苍穹之威，兼容纳百川之量**，革旧弊，立新规，伐无道！十胜锋芒所指，Celery十败如山崩！  
+**夫任务调度之道，贵在通达！队列纵横之术，胜在易用！**
+昔Celery恃RabbitMQ Redis之威，窃踞调度王座十数载，然其架构臃肿如裹足老象，兼容性似残破牢笼！今观其势：**弃Windows如敝履，控频精度若醉汉；困目录结构作茧，性能吞吐成笑谈**——开发者叩首于五千页文档，匍匐于晦涩命令行，此诚天下苦秦久矣！
+今有Funboost，承函数调度天命，执 `@boost`神器，以**性能裂苍穹之威，兼容纳百川之量**，革旧弊，立新规，伐无道！十胜锋芒所指，Celery十败如山崩！
 
 ---
 
-#### 十胜十败·定鼎九州  
-**一胜曰：疆域之胜**  
-Celery弃Windows疆土，多进程启动即崩，开发寸步难行，此谓**金瓯残缺失半壁**！  
-Funboost跨三界称尊，进程线程协程任选，开发生产皆驰骋，此谓**寰宇纵横掌天门**！  
+#### 十胜十败·定鼎九州
 
-**二胜曰：器量之胜**  
-Celery闭中间件之门，Kafka/MQTT皆拒，新潮队列成陌路，此谓**夜郎闭户终自绝**！  
-Funboost纳廿四路诸侯，内建队列立乾坤，更兼**兼容Celery全系器**，此谓**海纳百川容星汉**！  
+**一胜曰：疆域之胜**
+Celery弃Windows疆土，多进程启动即崩，开发寸步难行，此谓**金瓯残缺失半壁**！
+Funboost跨三界称尊，进程线程协程任选，开发生产皆驰骋，此谓**寰宇纵横掌天门**！
 
-**三胜曰：神速之胜**  
-Celery吞吐若老牛破车，性能瓶颈成痼疾，此谓**老牛破车困泥潭**！  
-Funboost疾如雷霆裂空，**发布快1000%惊鬼神，消费疾2000%贯九霄**，此谓**追风逐电荡八荒**！  
+**二胜曰：器量之胜**
+Celery闭中间件之门，Kafka/MQTT皆拒，新潮队列成陌路，此谓**夜郎闭户终自绝**！
+Funboost纳廿四路诸侯，内建队列立乾坤，更兼**兼容Celery全系器**，此谓**海纳百川容星汉**！
 
-**四胜曰：明道之胜**  
-Celery动态元编程蔽日，参数传递如盲人摸象，此谓**雾锁重楼失北斗**！  
-Funboost智能补全烛幽冥，类型声明破迷障，IDE红线斩谬误，此谓**日月当空照坦途**！  
+**三胜曰：神速之胜**
+Celery吞吐若老牛破车，性能瓶颈成痼疾，此谓**老牛破车困泥潭**！
+Funboost疾如雷霆裂空，**发布快1000%惊鬼神，消费疾2000%贯九霄**，此谓**追风逐电荡八荒**！
 
-**五胜曰：简政之胜**  
-Celery命令行如天书符咒，路径错漏频生，此谓**蜀道悬梯困苍生**！  
-Funboost执**python xx.py**开太平，老幼皆宜无障碍，此谓**大道至简定江山**！  
+**四胜曰：明道之胜**
+Celery动态元编程蔽日，参数传递如盲人摸象，此谓**雾锁重楼失北斗**！
+Funboost智能补全烛幽冥，类型声明破迷障，IDE红线斩谬误，此谓**日月当空照坦途**！
 
-**六胜曰：自由之胜**  
-Celery目录囚笼锁蛟龙，imports镣铐缚云翼，此谓**金丝雀困雕花笼"**！  
-Funboost十层深阁任穿梭，脚本四海可为家，此谓**鲲鹏振翅九万里**！  
+**五胜曰：简政之胜**
+Celery命令行如天书符咒，路径错漏频生，此谓**蜀道悬梯困苍生**！
+Funboost执**python xx.py**开太平，老幼皆宜无障碍，此谓**大道至简定江山**！
 
-**七胜曰：包容之胜**  
-Celery消息混杂Python痕，跨语言协作成天堑，此谓**孤岛闭门终自绝**！  
-Funboost**纯净JSON通万邦**，Python/Java共交响，此谓**丝绸新路连寰宇**！  
+**六胜曰：自由之胜**
+Celery目录囚笼锁蛟龙，imports镣铐缚云翼，此谓**金丝雀困雕花笼"**！
+Funboost十层深阁任穿梭，脚本四海可为家，此谓**鲲鹏振翅九万里**！
 
-**八胜曰：天时之胜**  
-Celery拒async浪潮于门外，协程革命空嗟叹，此谓**刻舟求剑失沧海**！  
-Funboost纳asyncio入经脉，**异步同步皆如意**，此谓**弄潮敢缚蛟龙归**！  
+**七胜曰：包容之胜**
+Celery消息混杂Python痕，跨语言协作成天堑，此谓**孤岛闭门终自绝**！
+Funboost**纯净JSON通万邦**，Python/Java共交响，此谓**丝绸新路连寰宇**！
 
-**九胜曰：王道之胜**  
-Celery控频单机尚粗疏，分布式更成镜花月，此谓**谓乌合之众溃荒原**！  
-Funboost执**令牌桶算法掌乾坤**，分布式控频**精度99.9%镇山河**，此谓**虎符一出千军肃**！  
+**八胜曰：天时之胜**
+Celery拒async浪潮于门外，协程革命空嗟叹，此谓**刻舟求剑失沧海**！
+Funboost纳asyncio入经脉，**异步同步皆如意**，此谓**弄潮敢缚蛟龙归**！
 
-**十胜曰：革新之胜**  
-Celery拒类方法于高墙，面向对象成虚妄，此谓**孤芳自赏终取祸**！  
-Funboost纳**万物入调度**，实例方法皆可Boost，此谓**开宗立派写新章**！  
+**九胜曰：王道之胜**
+Celery控频单机尚粗疏，分布式更成镜花月，此谓**谓乌合之众溃荒原**！
+Funboost执**令牌桶算法掌乾坤**，分布式控频**精度99.9%镇山河**，此谓**虎符一出千军肃**！
+
+**十胜曰：革新之胜**
+Celery拒类方法于高墙，面向对象成虚妄，此谓**孤芳自赏终取祸**！
+Funboost纳**万物入调度**，实例方法皆可Boost，此谓**开宗立派写新章**！
 
 ---
 
 #### 弑王绝刃·乾坤倒转：
-**更备诛神兵符：**    
-Funboost竟容Celery为子集！`@boost(broker_kind=BrokerEnum.CELERY)`一出,     
-旧王纵有疑心，亦成新朝马前卒！此谓**乾坤倒转收降将**，古今未闻之奇策！  
 
+**更备诛神兵符：**
+Funboost竟容Celery为子集！`@boost(broker_kind=BrokerEnum.CELERY)`一出,
+旧王纵有疑心，亦成新朝马前卒！此谓**乾坤倒转收降将**，古今未闻之奇策！
 
-**今Funboost携十胜之威：**  
-东收Redis为粮仓，西纳RabbitMQ作辕门；  
-南降Kafka为前哨，北抚ZeroMq成轻骑！ 
-**三军并发：**  
-多进程裂地，多线程碎空，协程织天网！  
+**今Funboost携十胜之威：**
+东收Redis为粮仓，西纳RabbitMQ作辕门；
+南降Kafka为前哨，北抚ZeroMq成轻骑！
+**三军并发：**
+多进程裂地，多线程碎空，协程织天网！
 
-**开发者当顺天命：**  
-破Celery之枷锁，入函数调度新纪元！  
-何须啃五千页腐简？不必忍性能之憋屈！  
-此乃**任务调度之工业革命，函数王朝之开国大典**！  
+**开发者当顺天命：**破Celery之枷锁，入函数调度新纪元！何须啃五千页腐简？不必忍性能之憋屈！此乃**任务调度之工业革命，函数王朝之开国大典**！
 
-> **剑指苍穹宣言：**  
-> "旧王Celery骸骨已寒，新皇Funboost旭日灼天！  
-> 以@boost为传国玉玺，以分布式为定鼎九器——  
-> **万物皆可调度，四海终归一统！**"  
+> **剑指苍穹宣言：**
+> "旧王Celery骸骨已寒，新皇Funboost旭日灼天！
+> 以@boost为传国玉玺，以分布式为定鼎九器——
+> **万物皆可调度，四海终归一统！**"
 
-**Funboost太祖·敕令四海:**    
-**天命昭昭，神器更易**    
-**顺之者昌，逆之者绝**   
-**天命元年·布告寰宇**    
+**Funboost太祖·敕令四海:**
+**天命昭昭，神器更易**
+**顺之者昌，逆之者绝**
+**天命元年·布告寰宇**
 
 ---
-
-
 
 ## 2.5 funboost能支持celery整体框架作为broker_kind
 
@@ -1326,7 +1340,6 @@ funboost能自动化配置celery和使用celery的核心调度功能,funboost的
 实现了funboost的极简api写代码 + celery的核心调度引擎来运行你的函数 。有的小白觉得funboost api简单，但又不愿意花时间亲自验证测试稳定性和性能，导致内心很犹豫疑虑，现在这种方式结合了两者的优点：funboost提供简洁直观的API接口让开发变得轻松，而celery提供稳定可靠的底层调度引擎。相当于用简单的方式获得了强大的功能，这是很多开发者梦寐以求的组合。
 
 见文档4.28章节 ,funboost 支持celery框架整体作为funboost的broker (2023.4新增)
-
 
 ```
 funboost的api来操作celery，完爆用户亲自操作celery框架。
@@ -1365,7 +1378,6 @@ https://github.com/ydf0509/funboost/tree/master/test_frame/funboost_vs_celery_be
 
 funboost 和 celery5
 
-
 ### 2.6.2 funboost vs celery 发布性能对比
 
 funboost: 发布10万条消息耗时9秒，每隔0.08秒发布1000条，平均每秒发布11000条
@@ -1388,10 +1400,8 @@ funboost在同样的硬件环境和测试条件下（win11 + python3.9 + 本机r
 
 无论是在消息发布还是消费方面都大幅优于celery，都超过1000% ，所以 celery性能比funboost性能差了一个数量级，funboost性能是绝对断崖式遥遥领先。
 
-
-
-
 <div> </div>
+
 # 3.框架详细介绍
 
 
@@ -1579,7 +1589,15 @@ class BoosterParams(BaseJsonAbleModel):
     consumin_function_decorator: typing.Optional[typing.Callable] = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
     function_timeout: typing.Union[int, float,None] = None  # 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。 谨慎使用,非必要别去设置超时时间,设置后性能会降低(因为需要把用户函数包装到另一个线单独的程中去运行),而且突然强制超时杀死运行中函数,可能会造成死锁.(例如用户函数在获得线程锁后突然杀死函数,别的线程再也无法获得锁了)
 
-    log_level: int = logging.DEBUG  # 消费者和发布者的日志级别,建议设置DEBUG级别,不然无法知道正在运行什么消息
+    """
+    log_level:
+        logger_name 对应的 日志级别
+        消费者和发布者的日志级别,建议设置DEBUG级别,不然无法知道正在运行什么消息.
+        这个是funboost每个队列的单独命名空间的日志级别,不会影响改变用户其他日志以及root命名空间的日志级别,所以DEBUG级别就好,
+        用户不要不懂什么是python logger 的name,还去手痒调高级别. 
+        不懂python日志命名空间的小白去看nb_log文档,或者直接问ai python logger name的作用是什么.
+    """
+    log_level: int = logging.DEBUG  
     logger_prefix: str = ''  # 日志名字前缀,可以设置前缀
     create_logger_file: bool = True  # 发布者和消费者是否创建文件文件日志,为False则只打印控制台不写文件.
     logger_name: str = ''  # 队列消费者发布者的日志命名空间.
@@ -2088,7 +2106,7 @@ BoosterDiscovery(project_root_path: typing.Union[PathLike, str],
 BoostersManager.get_or_create_booster_by_queue_name 可以根据队列名创建或者获得booster
 ```
 
-## 4.2d.2 使用 BoostersManager 一次性启动所有队列消费,
+### 4.2d.2 使用 BoostersManager 一次性启动所有队列消费,
 
 (无需亲自 fun1.consume()  fun2.consume() fun100.consume())
 
@@ -2271,6 +2289,10 @@ if __name__ == '__main__':
 
 ## 4.4 演示funboost定时运行例子
 
+ApsJobAdder(消费函数, job_store_kind='redis').add_push_job(....) 来添加定时任务.
+
+ApsJobAdder实例化时候,会默认自动启动定时器,用户可以设置实例化时候是否 顺便 is_auto_paused 暂停执行  定时任务.
+
 定时运行消费演示，定时方式入参用法可以百度 apscheduler 定时包。
 
 定时的语法和入参与本框架无关系，不是本框架发明的定时语法，具体的需要刻苦学习 最知名的 apscheduler 定时包 ,所有对定时使用或报错感到疑惑的都是因为用户不愿意刻苦学习 apscheduler 官方文档造成的，
@@ -2366,8 +2388,9 @@ if __name__ == '__main__':
     show_msg.push('hello world')
   
     # 使用ApsJobAdder添加定时任务， 里面的定时语法，和apscheduler是一样的，用户需要自己熟悉知名框架apscheduler的add_job定时入参
+    # ApsJobAdder 类可以多次重复实例化,内部对每一个消费函数使用一个单独的apscheduler对象,避免扫描与当前关心的消费函数不相干的redis jobstore中的定时任务
 
-    # 方式1：指定日期执行一次
+    # 方式1：指定日期执行一次, 
     # ApsJobAdder(sum_two_numbers, job_store_kind='redis').aps_obj.start(paused=False)
     ApsJobAdder(sum_two_numbers, job_store_kind='redis').add_push_job(
         trigger='date',
@@ -2455,9 +2478,12 @@ funboost的对apscheduler包的轻度二次包装，是为了简化添加 “pus
 ### 4.4.3 演示在python web中定时任务的添加 （添加和执行定时任务分在不同的py脚本中）
 
 web中去添加和修改定时任务，web单独部署一次。
-funboost后台异步任务单独部署一次。
+funboost后台异步任务单独部署一次,建议定时器需要随着消费一起启动。
 
-**在web接口代码中添加定时任务计划，但不执行定时任务**
+
+**在web接口代码中添加定时任务计划，但可以不执行定时任务,设置is_auto_paused=True**
+
+**在启动消费的脚本中,要明确启动定时器,ApsJobAdder(fun_sum,job_store_kind='redis',) ,ApsJobAdder类默认就是  is_auto_start=True is_auto_paused=False** 
 
 web中添加定时任务demo连接：
 
@@ -3989,6 +4015,9 @@ if __name__ == '__main__':
 
 ```
 
+
+**在文档4b.2c章节,也演示了通过指定 consumer_override_cls 来消费任意格式的消息,用户可以和4.21章节一起阅读**
+
 ## 4.23 演示funboost框架是如何代替用户手写调用线程池的
 
 为什么框架介绍中说有了funboost，再也无需用户手动操作线程和线程池ThradPoolExecutor以及multiprossing.Process()了。
@@ -4792,6 +4821,34 @@ if __name__ == '__main__':
     ctrl_c_recv()
 ```
 
+## 4.35 演示 funboost 使用 tcp/udp/http 作为broker
+
+**这再次印证了在funboost中万物皆可为broker**
+
+```
+funboost 使用 tcp/udp/http 作为broker 的好处是不需要安装任何消息队列服务,
+使用操作系统自带的 socket 实现跨机器消息通信, 用于不需要高可靠但需要跨机器通信的场景.
+```
+
+```python
+from funboost import boost, BrokerEnum, BoosterParams
+
+
+@boost(BoosterParams(
+    queue_name='test_http_queue', broker_kind=BrokerEnum.UDP, # BrokerEnum.UDP就是设置udp socket作为broker
+    broker_exclusive_config={'host': '127.0.0.1', 'port': 7102}, # 需要在broker_exclusive_config中设置socket的 ip和端口
+))
+def f(x):
+    print(x)
+
+
+if __name__ == '__main__':
+    f.consume() # 启动消费.从socket 获取消息消费
+    for i in range(2000):
+        f.push(i) # 给ip 端口发消息
+```
+
+
 ## 4.100 使用funboost时候对框架的疑问和猜测，使用控制变量法
 
 就是要把自己的疑问和猜测，使用控制变量法精简成一个 time.sleep() print('hello')的demo。
@@ -4893,7 +4950,6 @@ if __name__ == '__main__':
 [//]: #
 [//]: #
 [//]: #
-
 # 4b.使用框架的各种代码示例(高级进阶)
 
 ## 4b.1 日志模板中自动显示task_id
@@ -5002,22 +5058,28 @@ logging.setLoggerClass(TaskIdLogger)  # 越早运行越好，这样就不需要�
 
 ```
 
-
 ### 4b.1.4 能在消费函数的整个链路里面的调用的任意函数获取task_id的原理
 
-fct = funboost_current_task()
-
-funboost_current_task() 因为是线程 /协程 级别隔离的,就是线程/协程上下文.
 
 
+fct 因为是线程 /协程 级别隔离的,就是线程/协程上下文.
 
-## 4b.2  支持消费函数定义入参 **kwargs ,用于消费任意json消息
+## 4b.2  支持消费函数定义入参 **kwargs ,用于消费包含随机不确定keys(或者keys固定但是key太多了)的json消息
 
-有时候,消息是已存在的,而且别的部门没有使用funboost,且消息中字段达到几十上百个,用户不希望一个个字段的定义函数入参.
+```
+例如消息是json格式,但是消息一会儿是 {"a":1,"b":2},一会是 {"c":3,"d":4,"e":5}, 如果要消费这个消息,消费函数不能固定写死成 def task_fun(a,b):
+那么可以定义成 def task_fun(**kwargs):
+```
+
+有时候,消息是已存在的,而且别的部门没有使用funboost,且消息中字段达到几十上百个,用户不希望一个个字段的来定义消费函数入参.
+
 
 如果是funboost来发布不定项的入参（json键名字随机不确定）,通过设置 should_check_publish_func_params=False,让 publisher 不再校验发布入参
 
+
+#### 方式一: 使用 **kwargs 方式 消费随机keys (或者json的keys太多不想逐个定义消费函数入参的情况)
 代码如下:
+
 ```python
 
 """
@@ -5070,6 +5132,142 @@ if __name__ == "__main__":
 这样task_fun 支持消息任意消息,只要消息是json就行了.
 
 
+
+#### 方式二: 使用 下面的 4b.2c 中章节的 强力灵活的 _user_convert_msg_before_run 方式,来消费随机keys或者keys太多的json
+
+```
+假如已存在的消息json是 {"a":1,"b":2,"c":3,""d":4,"e":5  ..........} ,有100多个keys.
+
+如果funboost正常能消费情况下,需要
+@boost(BoosterParams(....))
+def task_fun(a,b,c,d,e .......): # 消费函数入参需要定义100多个,这太恐怖了.
+```
+
+方式一: 上面的消费函数入参定义成 `**kwargs` 来解决问题   
+方式二: 可以使用下面代码方式,将json重新放到一个函数入参中,函数只需要定义一个入参:  
+```python
+class MyTooManyKeysJsonConvetConsumer(AbstractConsumer):
+    def _user_convert_msg_before_run(self, msg)
+        return {"my_msg":json.loads(msg)} # 这是核心关键,把整个很长的json放到一个my_msg字段中.
+
+@BoosterParams(...,consumer_override_cls=MyTooManyKeysJsonConvetConsumer) # 指定你的自定义类
+def task_fun(my_msg):  # 函数只定义一个入参,例如 my_msg
+    print(my_msg) # 会打印出   {"a":1,"b":2,"c":3,""d":4,"e":5  ..........}
+```
+
+**核心说明:**
+```
+如果 task_fun(**{"a":1,"b":2,"c":3,""d":4,"e":5  ..........}) 来调用 task_fun(my_msg)的函数,
+肯定会报错,函数名和个数都不正确,肯定报错,
+
+所以使用 _user_convert_msg_before_run 把 这个超长的json放到 my_msg中,相当于是把消息清洗转化成了
+{"my_msg":{"a":1,"b":2,"c":3,""d":4,"e":5  ..........}}
+
+此时使用 task_fun(**{"my_msg":{"a":1,"b":2,"c":3,""d":4,"e":5  ..........}}) , 那就完全ok,
+因为转化后的json消息一级keys只有一个 my_msg字段,task_fun(**{"my_msg":$任意东西}) 完全符合python语法.
+```
+
+
+## 4b.2c 更强力灵活的,funboost支持消费地球上一切任意格式的不规范消息(非json格式也能消费)
+
+`funboost` 默认要求消息是JSON格式，因为内部需要通过 `task_fun(**json.loads(json_str))` 的方式来调用消费函数。
+
+```
+即使消息队列中的消息不是从funboost发布的,也不是json,而是一个任意不规范内容的字符串,funboost也能消费.
+
+celery 无法消费任意格式消息,funboost 能轻松做得到.
+```
+
+**实现方式是:**
+
+- 继承并自定义 Consumer 类 (实际上也可以不继承,因为是mixin混入生成新类,继承是为了更好的ide中代码补全基类方法和属性)
+- **重写 `_user_convert_msg_before_run` 方法**
+- **使用 `consumer_override_cls` 参数**
+
+关于 `consumer_override_cls` 参数,用户可以看文档4.21章节详细介绍
+
+
+### 4b.2c.1 例如funboost消费消息队列中已存在的消息 'a=1,b=2' 这种.
+
+
+例如需求如下:
+```
+消费函数是  def task_fun(a: int, b: int)      
+但消息队列中消息是 'a=1,b=2' , 用户在函数运行前自定义转化消息格式,转换成字典或者json字符串.    
+因为funboost中实际需要使用 task_fun(**{"a":1,"b":2}) 来调用消费函数.
+```
+
+
+demo代码例子如下:
+```python
+
+"""
+此代码演示 funboost 强大的 消息格式兼容能力, 能消费一切任意队列中已存在的不规范格式的消息(消息格式不是json也能消费),
+无论你是否使用funboost来发布消息,无视你的消息是不是json格式,funboost一样能消费.
+通过用户自定义 _user_convert_msg_before_run 清洗转化消息成字典或者json字符串,funboost就能消费任意消息.
+这是个小奇葩需求,但是funboost在消费任意消息的简单程度这方面能吊打celery
+"""
+
+import typing
+import redis
+from funboost import BrokerEnum, BoosterParams, AbstractConsumer
+
+
+class MyAnyMsgConvetConsumer(AbstractConsumer):
+    def _user_convert_msg_before_run(self, msg) -> typing.Union[dict,str]:
+        # 'a=1,b=2' 例如从这个字符串,提取出键值对,返回字典,以适配funboost消费
+        new_msg_dict = {}
+        msg_split_list = msg.split(',')
+        for item in msg_split_list:
+            key, value = item.split('=')
+            new_msg_dict[key] = int(value)
+        self.logger.debug(f'原来消息是:{msg},转换成的新消息是:{new_msg_dict}')  # 例如 实际会打印 原来消息是:a=3,b=4,转换成的新消息是:{'a': 3, 'b': 4}
+        return new_msg_dict
+
+
+@BoosterParams(queue_name="task_queue_consume_any_msg", broker_kind=BrokerEnum.REDIS,
+               consumer_override_cls=MyAnyMsgConvetConsumer  # 这行是关键,MyAnyMsgConvetConsumer类自定义了_user_convert_msg_before_run,这个方法里面,用户可以自由发挥清洗转化消息
+               )
+def task_fun(a: int, b: int):
+    print(f'a:{a},b:{b}')
+    return a + b
+
+
+if __name__ == "__main__":
+    redis_conn = redis.Redis(db=7)  # 使用原生redis来发布消息，funboost照样能消费。
+
+    redis_conn.lpush('task_queue_consume_any_msg', 'a=1,b=2')  # 模拟别的部门员工,手动发送了funboost框架无法识别的消息格式,原本funboost需要消息是json,但别的部门直接发字符串到消息队列中了.,
+    task_fun.publisher.send_msg('a=3,b=4')  # 使用send_msg 而非push和publish方法,是故意发送不规范消息, 就是发送原始消息到消息队列里面,funboost不会去处理添加任何辅助字段发到消息队列里面,例如task_id 发布时间这些东西.
+
+    task_fun.consume()  # funboost 现在可以消费消息队列里面的不规范消息了,因为用户在_user_convert_msg_before_run清洗了消息
+
+```
+
+
+### 4b.2c.2 例如,funboost消费队列中已存在的 "1000123"(假设是纯粹的用户id) 这种非json消息
+
+`funboost` 默认要求消息是JSON格式，因为内部需要通过 `task_fun(**json.loads(json_str))` 的方式来调用消费函数。但如果消息队列中已存在大量非JSON的简单字符串消息（例如，仅包含一个用户ID），`funboost` 同样可以轻松消费。
+
+**场景**：
+
+
+处理方式和 4b.2c.1 章节一样,用户可以自定义 _user_convert_msg_before_run 来清洗转化消息成字典或者json字符串,funboost就能消费这些消息.
+```python
+
+
+class MyUserIDMsgConvetConsumer(AbstractConsumer):
+    def _user_convert_msg_before_run(self, msg)
+        return {"user_id":int(msg)}
+
+@BoosterParams(...,consumer_override_cls=MyUserIDMsgConvetConsumer) # 指定你的自定义类
+def task_fun(user_id):
+    pass
+```
+
+这个例子清晰地展示了如何通过一小段定制代码，让 `funboost` 具备消费任意格式消息的能力，这在集成遗留系统或与第三方跨部门系统对接时尤其有用。
+
+
+
 ## 4b.3 funboost + 全asyncio 编程生态演示
 
 funboost 对 asyncio 编程生态的直接性支持远超 celery.
@@ -5078,10 +5276,8 @@ funboost 对 asyncio 编程生态的直接性支持远超 celery.
 
 为了与asyncio编程生态更搭配,新介绍 aio_push/aio_publish 和 AioAsyncResult 这些方法和类型.
 
-此代码例子在 : 
+此代码例子在 :
 [https://github.com/ydf0509/funboost/tree/master/test_frame/full_asyncio_demo](https://github.com/ydf0509/funboost/tree/master/test_frame/full_asyncio_demo)
-
-
 
 ### 4b.3.1 funboost 天然支持 async def 的消费函数,和支持 aio_push 来异步发布消息.
 
@@ -5123,7 +5319,6 @@ if __name__ == '__main__':
     aio_long_time_fun.consume() # 启动消费,funboost 能直接性支持async def 的函数作为消费函数,这点上的方便性完爆celery对asycn def的支持.
     long_time_fun.consume()  # 启动消费
 ```
-
 
 ### 4b.3.2 演示fastapi 中aio_push来发布消息,和 AioAsyncResult asyncio方式 等待获取结果.
 
@@ -5167,11 +5362,11 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 ```
+
 ```
 运行web服务,浏览器中输入 http://127.0.0.1:8000/url1/name_xxx1
 就能请求接口并发布消息,并获得消费结果.
 ```
-
 
 ### 4b.3.3 关于funboost的asyncio生态支持实现原理的答疑
 
@@ -5225,7 +5420,6 @@ print(await aio_async_result.status_and_result)
 ```
 funboost 内置搞定了asyncio生态中的用户函数并发，消息拉取，消息发布，rpc获取消息结果，所以可以直接天衣无缝搭配用户的asyncio编程项目。
 ```
-
 
 ### 4b.3.4 劝退python小白使用funboost + asyncio 来编程，除非是专业python大神
 
@@ -5299,7 +5493,6 @@ threading的API简单是因为它将复杂性下放给了操作系统，而async
 
 因为 FastAPI完全隐藏了事件循环管理 ，是在主线程中运行 loop和协程，基本上只在主线程中去运行loop和协程对象，管理和运行起来简单多得多。
 
-
 funboost 是在很多个子线程中运行不同的loop ，难度比主线程中管理大多了；
 
 这种线程与协程混合使用的场景确实是asyncio最复杂的应用场景之一，即使有经验的Python开发者也容易在此栽跟头和无法理解。
@@ -5330,13 +5523,12 @@ funboost的消费函数在工作线程中运行，有自己的loop
 就是想劝退小白使用asyncio + funboost 编程。
 
 ## 4b.4 等待n个任务完成后，再做下一步操作
- 
+
 之前在 4.17文档章节： 判断函数运行完所有任务，再执行后续操作，使用 wait_for_possible_has_finish_all_tasks来判断函数的消息队列是否已经运行完了。
 
 但是有的人在问怎么实现n个任务完成后，再下一步操作。
 
 这没有单独的语法方法，就是借助了rpc等待结果会阻塞的特性。
-
 
 直接上代码：
 
@@ -5382,16 +5574,8 @@ f1 每个任务会分解10个子任务到f2中运行， 并且f1中要等待10�
 
 
 
+`<div>` `</div>`
 
-
-
-
-
-
-
-
-
-<div> </div>
 # 5.框架运行时截图
 
 ## 5.1 windows pycharm 运行截图
@@ -6658,35 +6842,9 @@ if __name__ == '__main__':
 
 ## 7.19 2021-09 新增 socket udp/tcp/http 消息队列，不需要安装消息中间件软件。
 
-消费脚本，test_udp_consumer.py
 
-必须先启动这个consume脚本消费然后才能发布，因为消费脚本里面启动了socket服务端，socket客户端才能连接。
-```python
-from funboost import boost, BrokerEnum, BoosterParams
+好处是不需要安装消息队列服务,就可以跨机器通信,详见4.35章节
 
-# ip可以是远程机器的ip,不是一定必须是127.0.0.1,这代码只是举个例子,因为tcp支持跨机器.
-@boost(BoosterParams(queue_name='127.0.0.1:5689', broker_kind=BrokerEnum.UDP))  #使用BrokerEnum.TCP就是tcp,BrokerEnum.HTTP就是http,  
-def f(x):
-    print(x)
-
-
-if __name__ == '__main__':
-    f.consume()
-    f.push('hello')
-```
-
-发布脚本,test_udp_publisher.py
-
-启动这个脚本之前必须先启动上面的消费脚本启动sockert服务端。
-```python
-import time
-from test_udp_consumer import f
-
-for i in range(100000):
-    time.sleep(2)
-    f.push(i)
-
-```
 
 ## 7.20 2021-09 新增 支持 nats 高性能消息队列
 
@@ -6972,9 +7130,11 @@ def f(x):
 ![](https://visitor-badge.glitch.me/badge?page_id=distributed_framework)
 <div> </div>
 
-## 7.47 2025-01 加强了 funboost web 系统功能
+## 7.47 2025-01 加强了 funboost web manager 功能
 
 具体看文档13章节。
+
+
 
 
 # 8.用于爬虫
@@ -7017,6 +7177,20 @@ scrapy写爬虫仪式感代码文件太多，是为了吃个鸡蛋，要先盖�
 
 funboost 暴击 scrapy api框架，本质是 自由编程 降维打击 框架奴役。
 
+
+**scrapy的时代正在成为过去式**
+scrapy的设计哲学诞生于一个需要“框架来定义一切”的时代,这在今天看来，反而成了一种束缚。
+
+**funboost代表了更现代、更高效的开发范式：**
+<pre style="color: #00ff00;background-color:black ;font-size: large;">
+funboost 相信开发者的能力，只提供最强大的调度核心，将业务逻辑的自由完全交还给用户。
+它的学习成本极低，但能力上限极高，无论是写一个几行代码的临时爬虫，还是构建一个需要数百台机器的庞大采集系统，它都能轻松胜任。
+它更可靠、更灵活、更符合Pythonic的编程直觉。
+</pre>
+
+<pre style="color: red; background-color:black ;font-size: medium;">
+funboost 让你可以专注于“解决问题”，而 Scrapy 却常常让你把时间花在“解决框架本身的问题”上。作为追求效率和优雅的工程师，选择 funboost 是一个显而易见的决定。
+</pre>
 
 #### funboost 太省时间
 👉 Scrapy: "请继承我的Spider类，重写parse方法，配置settings，注册中间件，添加Pipeline..."
@@ -7284,8 +7458,9 @@ scrapy需要特殊中间件或信号处理
 
 **你说Scrapy 插件生态丰富，质疑Funboost 没有三方包插件生态不够？**
 
+`funboost` 不需要任何插件,是无招胜有招.
      
-插件多是“病”，不是“药” 。Python pypi生态就是funboost的生态，funboost不需要各种funboost-xx的三方包插件。       
+scrapy插件多是“病”，不是“药” 。Python pypi生态就是funboost的生态，funboost不需要各种funboost-xx的三方包插件。       
 说插件多就是生态好，这么想法的人简直是没长脑子，用户已经会了三方包的使用，但在scrapy框架下，为什么还需要等专门的美国编程大神去给三方包开发插件适配scrapy框架的生命周期和组件流程，才能在scrapy中愉快的使用三方包。用户压根没想过这个问题。
 
 详细的驳斥看文档8.14.2章节
@@ -7395,8 +7570,27 @@ Funboost 就是碾压Scrapy，这是一个基于技术事实的客观结论，�
 辩证法就是,挑大粪的农民和当主席都是为人民服务,都是高尚的职业,表面显得很中立客观,实则让人呕吐.
 
 
+### 8.0.8 国内爬虫框架突破很小,不是有意抄袭巧合,而是情不自禁模仿scrapy api
 
 
+**feapder/PSpider/spiderman/Tinepeas** 等几乎所有国产爬虫框架是 “**大脑思维被束缚导致情不自禁的模仿 Scrapy API**
+
+不能说这些是有意抄袭,而是一种更深层次的、由行业先驱 Scrapy 塑造的“**思维范式牢笼** 影响了国产框架作者.
+
+
+**Scrapy 及其模仿者 (feapder, pyspider, 等) 的范式：`URL/Request 调度器`**
+
+这些框架的底层思维是：**爬虫 = 调度一系列的 `Request` 对象**。它们的整个架构都围绕`Request` 和 `Response` 构建。你必须：  
+1.  **定义一个 `Spider` 类**。   
+2.  在 `start_requests` 或 `start_urls` 中放入初始请求。    
+3.  在 `parse` 方法中，通过 `yield Request(url, callback=parse_xxx)` 来“产出”新的请求。   
+4.  框架负责将这些 `Request` 对象入队、出队、发送、接收 `Response`，并根据 `callback` 参数调用对应的解析方法。   
+
+**Scrapy 太成功了**：它定义了“爬虫框架”这个词，以至于后来者在构思时，大脑里首先浮现的就是 Scrapy 的样子。
+
+国产爬虫框架很难使用,用户使用框架难以自由发挥,主要原因不是框架抄袭,而是框架作者脑袋思维被束缚禁锢了,导致了情不自禁模仿scrapy的api
+
+**结论**：feapder Tinepeas 等框架“情不自禁”地模仿 `yield Request`，因为国产爬虫框架的思想还停留在“Scrapy 是如何调度请求的”这个层面，而没有跳出思考“我们真正需要调度的是什么”。它们复制了 Scrapy 的“形”（回调、中间件、管道），却未能突破其“神”（对开发者自由的限制）。
 
 ## 8.1 演示获取汽车之家资讯的 新闻 导购 和 评测 3个板块 的 文章。
 
@@ -8991,17 +9185,17 @@ request.meta字典：使用非直观的meta字典传递信息
 
 那些说 funboost 不是专用爬虫框架，从而就得出结论是肯定在反爬虫方面不如scrapy方便，绝对是谬论。真实情况是scrapy源码从来都没有内置自带自动反爬虫功能；scrapy中因为框架的写法约束死板，实现这些反而难度更高而不是更简单。
 
-## 8.12 scrapy 可单元测试性很差
+## 8.12 scrapy 可直接运行测试验证性很差
 
-**scrapy不可单元测试**
-例如一个三层级网站爬虫，scrapy你怎么单独直接测试第三层级的爬虫请求和解析呢？只有spider整体运行起来，然后观察第三层级解析。
-1）scrapy的爬虫逻辑分散在Spider类的多个回调方法（如parse、parse_detail、parse_third_level）中。
-2）这些回调方法依赖于框架的Request/Response对象、meta字典、调度器等上下文，无法直接在IDE里单独调用。
-3）你想单独测试第三层级的解析，只能整体运行spider，等到第三层级回调被调度时，观察输出或日志，调试效率极低。
-4) 很多人只能先单独临时写个requests请求的函数验证，然后再改成到scrapy写法，造成重复劳动。
+**scrapy不可直接测试运行深层级爬虫**
+一个三层级网站爬虫,例如列表页->详情页->评论页，scrapy你怎么单独直接验证第三层级的爬虫请求和解析呢？只有spider整体运行起来，然后观察第三层级解析。 (这样第三层级爬虫会要等很久,并且被不相干的第一二层级爬虫输出干扰)  
+1）scrapy的爬虫逻辑分散在Spider类的多个回调方法（如parse、parse_detail、parse_third_level）中。   
+2）这些回调方法依赖于框架的Request/Response对象、meta字典、调度器等上下文，无法直接在IDE里单独调用。  
+3）你想单独测试第三层级的解析，只能整体运行spider，等到第三层级回调被调度时，观察输出或日志，调试效率极低。  
+4) 很多人只能先单独临时写个requests请求的函数验证，然后再改成到scrapy写法，造成重复劳动。   
 
-**funboost 被@boost的函数能直接单元测试**
-而funboost的第三层级的爬虫函数，crawl_thrid_level_page(article_id,user_id,page_index) 可以直接调用运行，可单元测试性秒杀scrapy。
+**funboost 被@boost的函数能直接调用运行测试**
+而funboost的第三层级的爬虫函数，crawl_thrid_level_page(article_id,user_id,page_index) 可以直接调用运行，可直接测试性秒杀scrapy。
 
 ```python
 @boost(BoosterParams(queue_name='third_level_queue'))

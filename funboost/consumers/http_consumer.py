@@ -10,20 +10,25 @@ import json
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.core.lazy_impoter import AioHttpImporter
 
+
 class HTTPConsumer(AbstractConsumer, ):
     """
     http 实现消息队列，不支持持久化，但不需要安装软件。
     """
-
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'host': '127.0.0.1', 'port': None}
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        try:
-            self._ip, self._port = self.queue_name.split(':')
-            self._port = int(self._port)
-        except BaseException as e:
-            self.logger.critical(f'http作为消息队列时候,队列名字必须设置为 例如 192.168.1.101:8200  这种,  ip:port')
-            raise e
+        # try:
+        #     self._ip, self._port = self.queue_name.split(':')
+        #     self._port = int(self._port)
+        # except BaseException as e:
+        #     self.logger.critical(f'http作为消息队列时候,队列名字必须设置为 例如 192.168.1.101:8200  这种,  ip:port')
+        #     raise e
+        self._ip = self.consumer_params.broker_exclusive_config['host']
+        self._port = self.consumer_params.broker_exclusive_config['port']
+        if self._port is None:
+            raise ValueError('please specify port')
 
     # noinspection DuplicatedCode
     def _shedual_task(self):

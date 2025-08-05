@@ -10,19 +10,21 @@ class UDPPublisher(AbstractPublisher, ):
     使用udp作为中间件,不支持持久化，支持分布式
     """
 
-    BUFSIZE = 10240
-
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        """ udp为消息队列中间件 时候 queue_name 要设置为例如  127.0.0.1:5689"""
+        self._bufsize = self.publisher_params.broker_exclusive_config['bufsize']
         self.__udp_client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        ip__port_str = self.queue_name.split(':')
-        self.__ip_port = (ip__port_str[0], int(ip__port_str[1]))
+        self._ip = self.publisher_params.broker_exclusive_config['host']
+        self._port = self.publisher_params.broker_exclusive_config['port']
+        self.__ip_port = (self._ip, self._port)
+        if self._port is None:
+            raise ValueError('please specify port')
         self.__udp_client.connect(self.__ip_port)
 
+    # noinspection PyAttributeOutsideInit
     def concrete_realization_of_publish(self, msg):
         self.__udp_client.send(msg.encode('utf-8'), )
-        self.__udp_client.recv(self.BUFSIZE)
+        self.__udp_client.recv(self._bufsize)
 
     def clear(self):
         pass  # udp没有保存消息

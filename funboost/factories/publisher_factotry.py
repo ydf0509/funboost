@@ -31,7 +31,7 @@ def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher:
     broker_kind = publisher_params.broker_kind
     regist_to_funboost(broker_kind)  # 动态注册中间件到框架是为了延迟导入，用户没安装不需要的第三方包不报错。
     if broker_kind not in broker_kind__publsiher_consumer_type_map:
-        raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {broker_kind} ')
+        raise ValueError(f'设置的中间件种类不正确,你设置的值是 {broker_kind} ')
     publisher_cls = broker_kind__publsiher_consumer_type_map[broker_kind][0]
     if not publisher_params.publisher_override_cls:
         return publisher_cls(publisher_params)

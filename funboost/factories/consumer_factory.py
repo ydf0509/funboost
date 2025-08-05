@@ -19,7 +19,7 @@ def get_consumer(boost_params: BoosterParams) -> AbstractConsumer:
     regist_to_funboost(boost_params.broker_kind)  # 动态注册中间件到框架是为了延迟导入，用户没安装不需要的第三方包不报错。
 
     if boost_params.broker_kind not in broker_kind__publsiher_consumer_type_map:
-        raise ValueError(f'设置的中间件种类数字不正确,你设置的值是 {boost_params.broker_kind} ')
+        raise ValueError(f'设置的中间件种类不正确,你设置的值是 {boost_params.broker_kind} ')
     consumer_cls = broker_kind__publsiher_consumer_type_map[boost_params.broker_kind][1]
     if not boost_params.consumer_override_cls:
         return consumer_cls(boost_params)

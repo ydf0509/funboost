@@ -448,10 +448,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         raise NotImplementedError
 
-    def convert_msg_before_run(self, msg: typing.Union[str, dict]) -> dict:
+    def _convert_msg_before_run(self, msg: typing.Union[str, dict]) -> dict:
         """
         转换消息,消息没有使用funboost来发送,并且没有extra相关字段时候
-        用户也可以按照4.21文档,继承任意Consumer类,并实现这个方法 convert_msg_before_run,先转换不规范的消息.
+        用户也可以按照4.21文档,继承任意Consumer类,并实现方法 _user_convert_msg_before_run,先转换不规范的消息.
         """
         """ 一般消息至少包含这样
         {
@@ -469,6 +469,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         extra_params = {'task_id': task_id, 'publish_time': round(time.time(), 4),
                         'publish_time_format': time.strftime('%Y-%m-%d %H:%M:%S')}
         """
+        msg = self._user_convert_msg_before_run(msg)
         msg = Serialization.to_dict(msg)
         # 以下是清洗补全字段.
         if 'extra' not in msg:
@@ -481,10 +482,17 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if 'publish_time_format':
             extra['publish_time_format'] = MsgGenerater.generate_publish_time_format()
         return msg
+    
+    def _user_convert_msg_before_run(self, msg: typing.Union[str, dict]) -> dict:
+        """
+        用户也可以提前清洗数据
+        """
+        # print(msg)
+        return msg
 
     def _submit_task(self, kw):
 
-        kw['body'] = self.convert_msg_before_run(kw['body'])
+        kw['body'] = self._convert_msg_before_run(kw['body'])
         self._print_message_get_from_broker(kw['body'])
         if self._judge_is_daylight():
             self._requeue(kw)

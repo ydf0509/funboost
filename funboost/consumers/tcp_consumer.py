@@ -13,16 +13,18 @@ class TCPConsumer(AbstractConsumer, ):
     socket 实现消息队列，不支持持久化，但不需要安装软件。
     """
 
-
-    BUFSIZE = 10240
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'host': '127.0.0.1', 'port': None, 'bufsize': 10240}
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        ip__port_str = self.queue_name.split(':')
-        ip_port = (ip__port_str[0], int(ip__port_str[1]))
-        self._ip_port_raw = ip_port
-        self._ip_port = ('', ip_port[1])
+        # ip__port_str = self.queue_name.split(':')
+        # ip_port = (ip__port_str[0], int(ip__port_str[1]))
+        # self._ip_port_raw = ip_port
+        # self._ip_port = ('', ip_port[1])
         # ip_port = ('', 9999)
+        self._ip_port = (self.consumer_params.broker_exclusive_config['host'],
+                         self.consumer_params.broker_exclusive_config['port'])
+        self.bufsize = self.consumer_params.broker_exclusive_config['bufsize']
 
     # noinspection DuplicatedCode
     def _shedual_task(self):
@@ -33,12 +35,12 @@ class TCPConsumer(AbstractConsumer, ):
         self._server = server
         while True:
             tcp_cli_sock, addr = self._server.accept()
-            Thread(target=self.__handle_conn, args=(tcp_cli_sock,)).start() # 服务端多线程，可以同时处理多个tcp长链接客户端发来的消息。
+            Thread(target=self.__handle_conn, args=(tcp_cli_sock,)).start()  # 服务端多线程，可以同时处理多个tcp长链接客户端发来的消息。
 
     def __handle_conn(self, tcp_cli_sock):
         try:
             while True:
-                data = tcp_cli_sock.recv(self.BUFSIZE)
+                data = tcp_cli_sock.recv(self.bufsize)
                 # print('server收到的数据', data)
                 if not data:
                     break
@@ -56,4 +58,3 @@ class TCPConsumer(AbstractConsumer, ):
 
     def _requeue(self, kw):
         pass
-

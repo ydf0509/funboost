@@ -10,24 +10,26 @@ class TCPPublisher(AbstractPublisher, ):
     使用tcp作为中间件,不支持持久化，支持分布式
     """
 
-    BUFSIZE = 10240
-
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        """ tcp为消息队列中间件 时候 queue_name 要设置为例如  127.0.0.1:5689"""
-        pass
+        self._bufsize = self.publisher_params.broker_exclusive_config['bufsize']
 
     # noinspection PyAttributeOutsideInit
     def concrete_realization_of_publish(self, msg):
         if not hasattr(self, '_tcp_cli_sock'):
-            ip__port_str = self.queue_name.split(':')
-            ip_port = (ip__port_str[0], int(ip__port_str[1]))
+            # ip__port_str = self.queue_name.split(':')
+            # ip_port = (ip__port_str[0], int(ip__port_str[1]))
+            self._ip = self.publisher_params.broker_exclusive_config['host']
+            self._port = self.publisher_params.broker_exclusive_config['port']
+            self.__ip_port = (self._ip, self._port)
+            if self._port is None:
+                raise ValueError('please specify port')
             tcp_cli_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            tcp_cli_sock.connect(ip_port)
+            tcp_cli_sock.connect(self.__ip_port)
             self._tcp_cli_sock = tcp_cli_sock
 
         self._tcp_cli_sock.send(msg.encode())
-        self._tcp_cli_sock.recv(self.BUFSIZE)
+        self._tcp_cli_sock.recv(self._bufsize)
 
     def clear(self):
         pass  # udp没有保存消息

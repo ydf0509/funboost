@@ -19,7 +19,7 @@ class Serialization:
         return orjson.loads(strx)
     
     @staticmethod
-    def find_can_not_json_serializable_keys(dic:dict)->list[str]:
+    def find_can_not_json_serializable_keys(dic:dict)->typing.List[str]:
         can_not_json_serializable_keys = []
         dic = Serialization.to_dict(dic)
         for k,v in dic.items():

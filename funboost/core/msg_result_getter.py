@@ -133,7 +133,7 @@ class AsyncResult(RedisMixin):
         return _judge_rpc_function_result_status_obj(self.status_and_result_obj,raise_exception)
     
     @classmethod
-    def batch_wait_rpc_data_or_raise(cls,r_list:list['AsyncResult'],raise_exception:bool=True)->list[FunctionResultStatus]:
+    def batch_wait_rpc_data_or_raise(cls,r_list:typing.List['AsyncResult'],raise_exception:bool=True)->typing.List[FunctionResultStatus]:
         return [ _judge_rpc_function_result_status_obj(r.status_and_result_obj,raise_exception) 
                 for r in r_list]
 
@@ -236,7 +236,7 @@ if __name__ == '__main__':
         return _judge_rpc_function_result_status_obj(await self.status_and_result_obj,raise_exception)
 
     @classmethod
-    async def batch_wait_rpc_data_or_raise(cls,r_list:list['AioAsyncResult'],raise_exception:bool=True)->list[FunctionResultStatus]:
+    async def batch_wait_rpc_data_or_raise(cls,r_list:typing.List['AioAsyncResult'],raise_exception:bool=True)->typing.List[FunctionResultStatus]:
         return [ _judge_rpc_function_result_status_obj(await r.status_and_result_obj,raise_exception) 
                 for r in r_list]
     

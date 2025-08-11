@@ -109,8 +109,8 @@ class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
             flogger.warning(f'你设置的过期时间为 {value} ,设置的时间过长。 ')
         return value
 
-    @root_validator(skip_on_failure=True,allow_reuse=True)
-    def cehck_values(cls, values: dict):
+    @root_validator(skip_on_failure=True)
+    def check_values(cls, values: dict):
         if not values['is_save_status'] and values['is_save_result']:
             raise ValueError(f'你设置的是不保存函数运行状态但保存函数运行结果。不允许你这么设置')
         return values
@@ -229,7 +229,7 @@ class BoosterParams(BaseJsonAbleModel):
 
 
 
-    @root_validator(skip_on_failure=True)
+    @root_validator(skip_on_failure=True, )
     def check_values(cls, values: dict):
        
 
@@ -315,7 +315,7 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
     eta: typing.Union[datetime.datetime, str,None] = None  # 时间对象， 或 %Y-%m-%d %H:%M:%S 字符串。
     misfire_grace_time: typing.Union[int, None] = None
 
-    other_extra_params: dict = None  # 其他参数, 例如消息优先级 , priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': priorityxx})，
+    other_extra_params: typing.Optional[dict] = None  # 其他参数, 例如消息优先级 , priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': priorityxx})，
     
     """filter_str:
     用户指定过滤字符串， 例如函数入参是 def fun(userid,username,sex，user_description),
@@ -326,7 +326,7 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
     """
     filter_str :typing.Optional[str] = None 
 
-    can_not_json_serializable_keys:list[str] = None
+    can_not_json_serializable_keys: typing.List[str] = None
 
     @root_validator(skip_on_failure=True)
     def cehck_values(cls, values: dict):
@@ -366,4 +366,4 @@ if __name__ == '__main__':
     # print(PriorityConsumingControlConfig().get_str_dict())
 
     print(BoosterParams(queue_name='3213', specify_concurrent_pool=FlexibleThreadPool(100)).json_pre())
-    print(PublisherParams.schema_json())
+    # print(PublisherParams.schema_json())  # 注释掉，因为 PublisherParams 包含 Callable 类型字段，无法生成 JSON Schema

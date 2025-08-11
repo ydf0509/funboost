@@ -4877,6 +4877,72 @@ if __name__ == '__main__':
         f.push(i) # 给ip 端口发消息
 ```
 
+## 4.36 演示`funboost`入参可以是自定义类型(不可json序列化的类型)(2025-07新增支持)
+
+以前作者不愿意支持消费函数入参是自定义类型,2025-07 之后支持了.
+
+就是现在消费函数的入参可以是 字符串 数字 列表 字典 以外的自定义类型,    
+def func1(a:MyClass,b:str,c:MyPydanticModel)  现在可以.
+
+原理:
+```
+消息整体还是一个json,但是对于不可序列化的那些入参字段key对应的value,
+会用pickle序列化成字符串(非bytes)替代.
+str(pickle.dumps(obj_x))
+
+
+当运行函数之前,会对不可json序列化的那些入参的value,使用
+pickle.loads(ast.literal_eval(para_pickle_str)) 转成对象
+```
+
+
+```python
+"""
+此demo演示funboost新增支持了pickle序列化,
+当用户的消费函数入参不是基本类型,而是自定义类型时候,funboost能自动识别,并将相关字段使用pickle序列化成字符串.
+当消费函数运行时,funboost能自动将 不可json序列化的那些字段的pickle字符串反序列化成对象,并赋值给消费函数入参.
+"""
+
+from pydantic import BaseModel
+from funboost import (boost, BoosterParams, BrokerEnum, ctrl_c_recv, fct)
+
+
+class MyClass:
+    def __init__(self,x,y):
+        self.x = x
+        self.y = y
+
+    def change(self,n):
+        self.x +=n
+        self.y +=n
+    def __str__(self):
+        return f'<MyClass(x={self.x},y={self.y})>'
+
+class MyPydanticModel(BaseModel):
+    str1:str
+    num1:int
+
+@boost(BoosterParams(queue_name='queue_pickle',concurrent_num=10,is_using_rpc_mode=True,
+                     broker_kind=BrokerEnum.REDIS_ACK_ABLE))
+def func1(a:MyClass,b:str,c:MyPydanticModel):
+    # print(fct.full_msg) # 可以查看原始消息
+    print(f'a:{a}')
+    print(f'b:{b}')
+    print(f'c:{c}')
+    print(f'a.x:{a.x},a.y:{a.y}')
+
+
+if __name__ == '__main__':
+
+    obj1 = MyClass(1,2)
+    func1.push(obj1,'hello',MyPydanticModel(str1='hello',num1=1)) # 入参包括自定义类型和pydantic模型
+
+    obj1.change(10)
+    func1.push(obj1,'hello',MyPydanticModel(str1='world',num1=100)) # 入参包括自定义类型和pydantic模型
+
+    func1.consume()
+    ctrl_c_recv()
+```
 
 ## 4.100 使用funboost时候对框架的疑问和猜测，使用控制变量法
 
@@ -5683,7 +5749,7 @@ f1 每个任务会分解10个子任务到f2中运行， 并且f1中要等待10�
 此文件演示一个非常经典的canvas编排:
     1.从url下载视频,并保存到本地 (download_video)
     2.根据第1步下载的视频文件,转码视频,并发转换成3个分辨率的视频文件 (transform_video)
-    3.根据第2步转码的视频文件,更新数据库,并且发送微信通知 (send_finish_msg)
+    3.根据第2步转码的视频文件列表,更新数据库,并且发送微信通知 (send_finish_msg)
 
 
         
@@ -5715,7 +5781,6 @@ import os
 import sys
 import time
 
-os.environ['path'] = os.path.dirname(sys.executable) + os.pathsep + os.environ['PATH']
 
 from funboost import (boost, BoosterParams, BrokerEnum, ctrl_c_recv,
                       ConcurrentModeEnum, AsyncResult,FunctionResultStatus,
@@ -7382,7 +7447,12 @@ def f(x):
 
 具体看文档13章节。
 
+## 7.48 2025-07 消费函数的入参类型可以是自定义类型对象(不可json序列化的类型)
 
+以前作者不愿意支持消费函数入参是自定义类型,2025-07 之后支持了,不愿意支持的原因可以看文档第6章.
+
+就是现在消费函数的入参可以是 字符串 数字 列表 字典 以外的自定义类型,    
+def func1(a:MyClass,b:str,c:MyPydanticModel)  现在可以.
 
 
 # 8.用于爬虫

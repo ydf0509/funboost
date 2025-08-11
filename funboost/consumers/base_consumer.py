@@ -37,7 +37,7 @@ from funboost.core.current_task import funboost_current_task, FctContext
 from funboost.core.loggers import develop_logger
 
 from funboost.core.func_params_model import BoosterParams, PublisherParams, BaseJsonAbleModel
-from funboost.core.serialization import Serialization
+from funboost.core.serialization import PickleHelper, Serialization
 from funboost.core.task_id_logger import TaskIdLogger
 from funboost.constant import FunctionKind
 
@@ -643,8 +643,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     async def aio_user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus):  # 这个可以继承
         pass
 
-    def _convert_real_function_only_params_by_conusuming_function_kind(self, function_only_params: dict):
+    def _convert_real_function_only_params_by_conusuming_function_kind(self, function_only_params: dict,extra_params:dict):
         """对于实例方法和classmethod 方法， 从消息队列的消息恢复第一个入参， self 和 cls"""
+        can_not_json_serializable_keys = extra_params.get('can_not_json_serializable_keys',[])
         if self.consumer_params.consuming_function_kind in [FunctionKind.CLASS_METHOD, FunctionKind.INSTANCE_METHOD]:
             real_function_only_params = copy.copy(function_only_params)
             method_first_param_name = None
@@ -666,8 +667,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 obj = method_cls(**method_first_param_value[ConstStrForClassMethod.OBJ_INIT_PARAMS])
                 real_function_only_params[method_first_param_name] = obj
             # print(real_function_only_params)
+            if can_not_json_serializable_keys:
+                for key in can_not_json_serializable_keys:
+                    real_function_only_params[key] = PickleHelper.to_obj(real_function_only_params[key])
             return real_function_only_params
         else:
+            if can_not_json_serializable_keys:
+                for key in can_not_json_serializable_keys:
+                    function_only_params[key] = PickleHelper.to_obj(function_only_params[key])
             return function_only_params
 
     # noinspection PyProtectedMember
@@ -766,7 +773,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     self.logger.warning(f'取消运行 {task_id} {function_only_params}')
                     return function_result_status
                 function_run = kill_remote_task.kill_fun_deco(task_id)(function_run)  # 用杀死装饰器包装起来在另一个线程运行函数,以便等待远程杀死。
-            function_result_status.result = function_run(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params))
+            function_result_status.result = function_run(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params,kw['body']['extra']))
             # if asyncio.iscoroutine(function_result_status.result):
             #     log_msg = f'''异步的协程消费函数必须使用 async 并发模式并发,请设置消费函数 {self.consuming_function.__name__} 的concurrent_mode 为 ConcurrentModeEnum.ASYNC 或 4'''
             #     # self.logger.critical(msg=f'{log_msg} \n')
@@ -910,7 +917,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                  logger=self.logger,queue_name=self.queue_name,)
         fct.set_fct_context(fct_context)
         try:
-            corotinue_obj = self.consuming_function(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params))
+            corotinue_obj = self.consuming_function(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params,kw['body']['extra']))
             if not asyncio.iscoroutine(corotinue_obj):
                 log_msg = f'''当前设置的并发模式为 async 并发模式，但消费函数不是异步协程函数，请不要把消费函数 {self.consuming_function.__name__} 的 concurrent_mode 设置错误'''
                 # self.logger.critical(msg=f'{log_msg} \n')

@@ -10,6 +10,7 @@ import atexit
 import json
 import logging
 import multiprocessing
+from re import S
 import sys
 import threading
 import time
@@ -26,7 +27,7 @@ from funboost.core.loggers import develop_logger
 # from nb_log import LoggerLevelSetterMixin, LoggerMixin
 from funboost.core.loggers import LoggerLevelSetterMixin, FunboostFileLoggerMixin, get_logger
 from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
-from funboost.core.serialization import Serialization
+from funboost.core.serialization import PickleHelper, Serialization
 from funboost.core.task_id_logger import TaskIdLogger
 from funboost.utils import decorators
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
@@ -212,7 +213,20 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         msg = copy.deepcopy(msg)  # 字典是可变对象,不要改变影响用户自身的传参字典. 用户可能继续使用这个传参字典.
         msg, msg_function_kw, extra_params, task_id = self._convert_msg(msg, task_id, priority_control_config)
         t_start = time.time()
-        msg_json = Serialization.to_json_str(msg)
+
+        can_not_json_serializable_keys = Serialization.find_can_not_json_serializable_keys(msg)
+        if can_not_json_serializable_keys:
+            pass
+            self.logger.warning(f'msg 中包含不能序列化的键: {can_not_json_serializable_keys}')
+            # raise ValueError(f'msg 中包含不能序列化的键: {can_not_json_serializable_keys}')
+            new_msg = copy.deepcopy(Serialization.to_dict(msg))
+            for key in can_not_json_serializable_keys:
+                new_msg[key] = PickleHelper.to_str(new_msg[key])
+            new_msg['extra']['can_not_json_serializable_keys'] = can_not_json_serializable_keys
+            msg_json = Serialization.to_json_str(new_msg)
+        else:
+            msg_json = Serialization.to_json_str(msg)
+        # print(msg_json)
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
             self.concrete_realization_of_publish)(msg_json)
 

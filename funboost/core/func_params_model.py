@@ -326,6 +326,8 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
     """
     filter_str :typing.Optional[str] = None 
 
+    can_not_json_serializable_keys:list[str] = None
+
     @root_validator(skip_on_failure=True)
     def cehck_values(cls, values: dict):
         if values['countdown'] and values['eta']:

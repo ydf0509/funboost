@@ -12,13 +12,29 @@ from funboost.utils.redis_manager import RedisMixin
 from funboost.utils.redis_manager import AioRedisMixin
 from funboost.core.serialization import Serialization
 
+from funboost.core.function_result_status_saver import FunctionResultStatus
+
 class HasNotAsyncResult(Exception):
     pass
 
 
 NO_RESULT = 'no_result'
 
-
+def _judge_rpc_function_result_status_obj(status_and_result_obj:FunctionResultStatus,raise_exception:bool):
+    if status_and_result_obj is None:
+        raise FunboostWaitRpcResultTimeout(f'等待 {status_and_result_obj.task_id} rpc结果超过了指定时间')
+    if status_and_result_obj.success is True:
+        return status_and_result_obj
+    else:
+        raw_erorr = status_and_result_obj.exception
+        if status_and_result_obj.exception_type == 'FunboostRpcResultError':
+            raw_erorr = json.loads(status_and_result_obj.exception_msg) # 使canvas链式报错json显示更美观
+        error_msg_dict = {'task_id':status_and_result_obj.task_id,'raw_error':raw_erorr}
+        if raise_exception:
+            raise FunboostRpcResultError(json.dumps(error_msg_dict,indent=4,ensure_ascii=False))
+        else:
+            status_and_result_obj.rpc_chain_error_msg_dict = error_msg_dict
+            return status_and_result_obj
 class AsyncResult(RedisMixin):
     default_callback_run_executor = FlexibleThreadPoolMinWorkers0(200,work_queue_maxsize=50)
 
@@ -63,6 +79,14 @@ class AsyncResult(RedisMixin):
                 return self._status_and_result
             return None
         return self._status_and_result
+    
+    @property
+    def status_and_result_obj(self) -> FunctionResultStatus:
+        """这个是为了比字典有更好的ide代码补全效果"""
+        if self.status_and_result is not None:
+            return FunctionResultStatus.parse_status_and_result_to_obj(self.status_and_result)
+    
+    rpc_data =status_and_result_obj
 
     def get(self):
         # print(self.status_and_result)
@@ -104,6 +128,14 @@ class AsyncResult(RedisMixin):
             async_result.set_callback(show_result) # 使用回调函数在线程池中并发的运行函数结果
         '''
         self.callback_run_executor.submit(self._run_callback_func, callback_func)
+    
+    def wait_rpc_data_or_raise(self,raise_exception:bool=True)->FunctionResultStatus:
+        return _judge_rpc_function_result_status_obj(self.status_and_result_obj,raise_exception)
+    
+    @classmethod
+    def batch_wait_rpc_data_or_raise(cls,r_list:list['AsyncResult'],raise_exception:bool=True)->list[FunctionResultStatus]:
+        return [ _judge_rpc_function_result_status_obj(r.status_and_result_obj,raise_exception) 
+                for r in r_list]
 
 
 class AioAsyncResult(AioRedisMixin):
@@ -169,6 +201,14 @@ if __name__ == '__main__':
             return None
         return self._status_and_result
 
+    @property
+    async def status_and_result_obj(self) -> FunctionResultStatus:
+        """这个是为了比字典有更好的ide代码补全效果"""
+        sr = await self.status_and_result
+        if sr is not None:
+            return FunctionResultStatus.parse_status_and_result_to_obj(sr)
+
+    rpc_data =status_and_result_obj
     async def get(self):
         # print(self.status_and_result)
         if (await self.status_and_result) is not None:
@@ -191,6 +231,16 @@ if __name__ == '__main__':
 
     async def set_callback(self, aio_callback_func: typing.Callable):
         asyncio.create_task(self._run_callback_func(callback_func=aio_callback_func))
+
+    async def wait_rpc_data_or_raise(self,raise_exception:bool=True)->FunctionResultStatus:
+        return _judge_rpc_function_result_status_obj(await self.status_and_result_obj,raise_exception)
+
+    @classmethod
+    async def batch_wait_rpc_data_or_raise(cls,r_list:list['AioAsyncResult'],raise_exception:bool=True)->list[FunctionResultStatus]:
+        return [ _judge_rpc_function_result_status_obj(await r.status_and_result_obj,raise_exception) 
+                for r in r_list]
+    
+
 
 
 class ResultFromMongo(MongoMixin):

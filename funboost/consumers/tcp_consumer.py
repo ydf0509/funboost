@@ -28,7 +28,7 @@ class TCPConsumer(AbstractConsumer, ):
 
     # noinspection DuplicatedCode
     def _shedual_task(self):
-        """ tcp为消息队列中间件 时候 queue_name 要设置为例如  127.0.0.1:5689"""
+      
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # tcp协议
         server.bind(self._ip_port)
         server.listen(128)

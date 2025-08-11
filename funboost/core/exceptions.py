@@ -11,6 +11,11 @@ class ExceptionForRetry(FunboostException):
 class ExceptionForRequeue(FunboostException):
     """框架检测到此错误，重新放回当前队列中"""
 
+class FunboostWaitRpcResultTimeout(FunboostException):
+    """等待rpc结果超过了指定时间"""
+
+class FunboostRpcResultError(FunboostException):
+    """rpc结果是错误状态"""
 
 class ExceptionForPushToDlxqueue(FunboostException):
     """框架检测到ExceptionForPushToDlxqueue错误，发布到死信队列"""
@@ -40,3 +45,5 @@ def f(x):
 
     def __str__(self):
         return self.new_version_change_hint
+
+

@@ -1,6 +1,9 @@
 import typing
 
 import orjson
+import pickle
+import ast
+
 class Serialization:
     @staticmethod
     def to_json_str(dic:typing.Union[dict,str]):
@@ -14,3 +17,16 @@ class Serialization:
         if isinstance(strx,dict):
             return strx
         return orjson.loads(strx)
+
+
+class PickleHelper:
+    @staticmethod
+    def to_str(obj_x):
+        return str(pickle.dumps(obj_x))
+    
+    @staticmethod
+    def to_obj(str_x):
+        return pickle.loads(ast.literal_eval(str_x))
+    
+
+    

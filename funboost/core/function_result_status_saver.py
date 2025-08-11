@@ -51,6 +51,9 @@ class FunctionResultStatus():
         self.result = None
         self.run_times = 0
         self.exception = None
+        self.exception_type = None
+        self.exception_msg = None
+        self.rpc_chain_error_msg_dict:dict  = None
         self.time_start = time.time()
         self.time_cost = None
         self.time_end = None
@@ -61,6 +64,15 @@ class FunctionResultStatus():
         self._has_to_dlx_queue = False
         self._has_kill_task = False
         self.rpc_result_expire_seconds = None
+
+    @classmethod
+    def parse_status_and_result_to_obj(cls,status_dict:dict):
+        obj = cls(status_dict['queue_name'],status_dict['function'],status_dict['msg_dict'])
+        for k,v in status_dict.items():
+            # if k.startswith('_'):
+            #     continue
+            setattr(obj,k,v)
+        return obj
 
     def get_status_dict(self, without_datetime_obj=False):
         self.time_end = time.time()
@@ -101,6 +113,9 @@ class FunctionResultStatus():
 
     def __str__(self):
         return f'''{self.__class__}   {Serialization.to_json_str(self.get_status_dict())}'''
+
+    def to_pretty_json_str(self):
+        return json.dumps(self.get_status_dict(),indent=4,ensure_ascii=False)
 
 
 class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):

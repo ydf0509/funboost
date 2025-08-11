@@ -821,6 +821,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.logger.error(msg=log_msg, exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
             # traceback.print_exc()
             function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
+            function_result_status.exception_msg = str(e)
+            function_result_status.exception_type = e.__class__.__name__
+
             function_result_status.result = FunctionResultStatus.FUNC_RUN_ERROR
         return function_result_status
 
@@ -954,6 +957,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # self.error_file_logger.error(msg=f'{log_msg} \n', exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
             self.logger.error(msg=log_msg, exc_info=self._get_priority_conf(kw, 'is_print_detail_exception'))
             function_result_status.exception = f'{e.__class__.__name__}    {str(e)}'
+            function_result_status.exception_msg = str(e)
+            function_result_status.exception_type = e.__class__.__name__
             function_result_status.result = FunctionResultStatus.FUNC_RUN_ERROR
         return function_result_status
 

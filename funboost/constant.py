@@ -3,6 +3,25 @@
 
 
 class BrokerEnum:
+    """
+    在funboost中万物皆可为消息队列broker,funboost内置了所有 知名的正经经典消息队列作为broker,
+    也支持了基于 内存 各种数据库 文件系统 tcp/udp/http这些socket 模拟作为broker.
+    funboost也内置支持了各种python三方包和消费框架作为broker,例如 sqlachemy kombu celery rq dramtiq huey nameko 等等
+
+    用户也可以按照文档4.21章节,轻松扩展任何物质概念作为funboost的broker.
+    """
+    
+    # funboost框架能轻松兼容消息队列各种工作模式, 拉模式/推模式/轮询模式，单条获取 批量获取
+    """
+    funboost 的 consumer的 _shedual_task 非常灵活，用户实现把从消息队列取出的消息通过_submit_task方法
+    丢到并发池，他不是强制用户重写实现怎么取一条消息，例如强制你实现一个 _get_one_message的法，
+    那就不灵活和限制扩展任意东西作为broker了，而是用户完全自己来写灵活代码。
+    所以无论获取消息是 拉模式 还是推模式 还是轮询模式，是单条获取 还是多条批量获取，
+    不管你的新中间件和rabbitmq api用法差别有多么巨大，都能轻松扩展任意东西作为funboost的中间件。 
+    所以你能看到funboost源码中能轻松实现任物质概念作为funboost的broker。
+    """
+
+
     EMPTY = 'EMPTY'  # 空的实现，需要搭配 boost入参的 consumer_override_cls 和 publisher_override_cls使用，或者被继承。
 
     RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'  # 使用 amqpstorm 包操作rabbitmq  作为 分布式消息队列，支持消费确认.强烈推荐这个作为funboost中间件。

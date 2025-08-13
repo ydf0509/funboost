@@ -1,4 +1,4 @@
-# boost1.python万能分布式函数调度框架简funboost简介
+# 1.python万能分布式函数调度框架简funboost简介
 
 <pre style="color: greenyellow;background-color: #0c1119; font-size: medium;">
 pip install funboost ,python全功能分布式函数调度框架。  demo用法例子见文档1.3
@@ -1237,6 +1237,44 @@ REIDS_ACK_USING_TIMEOUT 中间件相提并论,和 funboost的REDIS_ACK_ABLE中�
 
 这不是污蔑celery,而是celery官方文档也承认的,详见:
 (celery官方文档的Caveats的Visibility timeout章节 https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/redis.html?utm_source=chatgpt.com)[https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/redis.html?utm_source=chatgpt.com]
+
+
+### 2.4.33 funboost: 通过继承 BoosterParams 实现显式配置（清晰度爆表）
+
+funboost 支持通过继承 `BoosterParams` 封装公共配置。用户可以定义一个具名配置类，然后在多个 `@boost` 调用中复用，示例：
+
+```python
+class MyBoosterParams(BoosterParams):
+    is_using_rpc_mode: bool = True
+    broker_kind: str = BrokerEnum.REDIS_ACK_ABLE
+    max_retry_times: int = 0
+
+@boost(MyBoosterParams(queue_name='q1', ...))
+def task(...):
+    ...
+```
+
+优点：
+- **符合直觉**：使用类继承和面向对象配置，易学易用。
+- **可读性强**：配置集中在具名类中，便于维护与审阅。
+- **IDE 友好**：Pydantic 提供类型提示与补全，提升开发体验。
+- **避免误用**：统一的类式配置避免了因参数名混淆导致的沉默失效问题。
+
+相比之下，Celery 的配置方式更易出错：全局配置在 `app.conf`（例如 `task_acks_late`），而函数级在 `@app.task`（例如 `acks_late`），两者同义但命名不一致。这种命名不统一导致用户常常把全局参数写到装饰器里，或把装饰器参数写到全局里——代码不会崩溃，但配置不起作用，排查难度极高。极易误导人,并且误导 AI严重幻觉 瞎几把 乱生成错误代码。
+
+
+**Celery 全局配置 vs 函数级参数 — 配置命名混乱示例(随便列举几个)**
+
+| 配置目的          | **全局配置（`app.conf`）**                               | **函数级配置（`@app.task`）**             | **常见错误写法**                                  | **结果**       |
+| ------------- | -------------------------------------------------- | ---------------------------------- | ------------------------------------------- | ------------ |
+| 执行完才确认（防止丢任务） | `task_acks_late = True`                            | `acks_late=True`                   | `@app.task(task_acks_late=True)`            | 无效，任务会立即 ack |
+| 任务失败/超时是否确认   | `task_acks_on_failure_or_timeout = False`          | `acks_on_failure_or_timeout=False` | `app.conf.acks_on_failure_or_timeout=False` | 无效，任务失败也会被确认 |
+| 限速（每秒执行数）     | `task_annotations = {'*': {'rate_limit': '10/s'}}` | `rate_limit='10/s'`                | `app.conf.rate_limit='10/s'`                | 无效，不限速       |
+| 最大重试次数        | `task_default_max_retries = 3`                     | `max_retries=3`                    | `@app.task(task_default_max_retries=3)`     | 无效，重试次数不会生效  |
+
+
+
+
 
 ### 2.4.40 （王炸）funboost 支持celery作为broker_kind
 
@@ -4877,7 +4915,7 @@ if __name__ == '__main__':
         f.push(i) # 给ip 端口发消息
 ```
 
-## 4.36 演示`funboost`入参可以是自定义类型(不可json序列化的类型)(2025-07新增支持)
+## 4.36 演示`funboost`入参可以是自定义类型(不可json序列化的类型的入参,自动使用pickle)(2025-07新增支持)
 
 以前作者不愿意支持消费函数入参是自定义类型,2025-07 之后支持了.
 
@@ -4894,6 +4932,8 @@ str(pickle.dumps(obj_x))
 当运行函数之前,会对不可json序列化的那些入参的value,使用
 pickle.loads(ast.literal_eval(para_pickle_str)) 转成对象
 ```
+
+
 
 
 ```python
@@ -4956,6 +4996,20 @@ if __name__ == '__main__':
     ctrl_c_recv()
 
 ```
+<pre class="warn">
+之前文档中反复说了@boost消费函数入参只能是基本类型,那些地方的文档还没改过来,
+但是现在以这个4.36章节的说明为准,2025-07月以后已经支持消费函数入参是自定义类型了.
+
+但是非必要,用户把消费函数入参还是设计成基本类型更好,json序列化后看得更清楚,消息体积也小.
+因为 pickle 序列化也不是万能的,例如threading.Lock socket对象 等等都不能pickle序列化
+(用户可以问ai python中哪些类型不可pickle序列化),
+只要一个对象的属性链路上,某个属性是这些类型就不能pickle序列化,这些是python pickle基本常识和经验,不能违反突破本质原理.
+
+pickle序列化不稳固,如果 a 是 Myclass 类型对象,消息发布后你又把 Myclass 类名改了,或者把类移到到了另一个模块,
+或者模块改名了，那么pickle反序列化就会失败,所以应该尽量使用简单基本类型作为 funboost 消费函数的入参。
+funboost是支持pickle序列化,但不是鼓励你 消费函数入参设计成传参自定义类型对象,导致自动使用pickle序列化.
+</pre>
+
 
 ## 4.100 使用funboost时候对框架的疑问和猜测，使用控制变量法
 
@@ -5001,7 +5055,7 @@ if __name__ == '__main__':
 
 ### 4.100.b 举个例子，验证测试框架的超时杀死 function_timeout参数的作用
 
-```textmate
+```
 有的人老是问超时杀死是不是杀死进程，杀死python脚本。
 
 问的太不用大脑了，默认的 task_fun.consume() 是单进程多线程启动的，如果是杀进程和脚本，那部署脚本相当于自杀结束了，这可能吗？
@@ -10130,6 +10184,54 @@ Funboost 是“函数调度器”，而 Scrapy 是“URL调度器”；前者赋
 </div>
 
 综上所述，funboost 凭借其先进的函数调度理念、极致的灵活性和强大的内置功能，在爬虫领域的几乎所有方面都展现出对 scrapy 的压倒性优势。
+
+
+
+## 8.41 Funboost vs. Scrapy 爬虫能力全方位对比（百分制评分）
+
+这个评分系统基于以下原则：
+*   **100分**：代表在该维度上表现卓越，几乎没有缺点，完全符合现代开发实践和直觉。
+*   **70-90分**：表现良好，但在某些方面存在一些限制或需要额外的学习成本。
+*   **40-60分**：表现平庸或存在明显缺陷，需要开发者通过复杂的变通方法来弥补。
+*   **低于40分**：在该维度上存在根本性的设计缺陷或严重不足。
+
+**客观的百分制评分,包含了爬虫领域所有的重要方面比较**
+
+| 类别 | 维度 | Funboost (函数调度器) | Scrapy (URL调度器) | 评分依据与简评 |
+| :--- | :--- | :--- | :--- | :--- |
+| **核心理念与架构** | **1. 编程范式与直觉性** | **100** | **50** | **Funboost**: 线性、平铺直叙的函数式编程，符合Python直觉。<br>**Scrapy**: 回调地狱，逻辑碎片化，反直觉。 |
+| | **2. 框架侵入性与自由度** | **100** | **40** | **Funboost**: 零侵入，`@boost`装饰器即插即用，可使用任何库。<br>**Scrapy**: 强耦合，必须继承`Spider`，限制HTTP库选择。 |
+| | **3. 架构灵活性** | **95** | **60** | **Funboost**: 万能函数调度，轻松应对任何任务类型（HTTP, 浏览器, API, 文件处理）。<br>**Scrapy**: 专为URL请求设计，处理非HTTP任务非常笨拙。 |
+| **开发效率与易用性** | **4. 学习曲线** | **95** | **50** | **Funboost**: 只需学习一个`@boost`装饰器。<br>**Scrapy**: 需掌握Spider, Middleware, Pipeline, Settings等一整套复杂概念。 |
+| | **5. 代码量与项目结构** | **100** | **40** | **Funboost**: 极其精简，单文件即可完成复杂爬虫。<br>**Scrapy**: 极其臃肿，项目结构固定且文件繁多。 |
+| | **6. 调试与单元测试** | **100** | **30** | **Funboost**: 函数可直接调用，调试和测试极其简单。<br>**Scrapy**: 回调方法与框架强耦合，几乎无法独立测试和调试。 |
+| | **7. IDE支持 (代码补全)** | **95** | **40** | **Funboost**: 全面支持函数参数和框架方法补全。<br>**Scrapy**: `response.meta`是黑盒，IDE无法提供任何帮助，极易出错。 |
+| **性能与并发模型** | **8. 真实并发能力** | **100** | **70** | **Funboost**: 多进程+多线程/协程，真正利用多核，并发模型清晰。<br>**Scrapy**: 基于单线程事件循环，难以充分利用多核CPU。 |
+| | **9. 速率控制 (QPS)** | **100** | **50** | **Funboost**: 精准QPS控制，无视响应时间波动。<br>**Scrapy**: 只能控制并发数，无法保证稳定请求速率。 |
+| | **10. 浏览器自动化并发** | **100** | **20** | **Funboost**: 通过工作池实现真正的并行浏览器操作。<br>**Scrapy**: 阻塞事件循环，使框架退化为单线程，性能灾难。 |
+| **功能与可靠性** | **11. 断点续爬可靠性** | **100** | **60** | **Funboost**: 消费确认(ACK)机制，任务万无一失。<br>**Scrapy**: `scrapy-redis`的`blpop`机制在重启或崩溃时会丢失大量任务。 |
+| | **12. 任务去重能力** | **100** | **50** | **Funboost**: 基于核心入参去重，天然免疫URL噪音。<br>**Scrapy**: 基于URL指纹，处理噪音参数需编写复杂`DupeFilter`。 |
+| | **13. 错误重试机制** | **95** | **70** | **Funboost**: 函数级重试，即使HTTP 200但内容错误也能重试。<br>**Scrapy**: URL级重试，对内容错误无能为力，会丢失数据。 |
+| | **14. 消息队列支持** | **100** | **60** | **Funboost**: 支持30+种专业消息队列，选择极其丰富。<br>**Scrapy**: 主要依赖`scrapy-redis`，选择单一。 |
+| **特定场景处理能力** | **15. 复杂交互流程** | **100** | **30** | **Funboost**: 在单个函数内轻松实现多步、状态依赖的交互。<br>**Scrapy**: 回调链使其难以处理复杂时序和状态依赖。 |
+| | **16. 短时效Token处理** | **100** | **20** | **Funboost**: 函数内连续请求，确保Token不过期。<br>**Scrapy**: 无法保证请求间隔，Token极易失效。 |
+| | **17. 反爬策略实现** | **95** | **65** | **Funboost**: 封装普通Python函数例如my_request，简单直观。<br>**Scrapy**: 需编写复杂的下载器中间件，学习成本高。 |
+| **生态与扩展性** | **18. 第三方库集成** | **100** | **50** | **Funboost**: **无需插件**，直接调用任何Python库。<br>**Scrapy**: **严重依赖插件**，使用新工具需等待或开发复杂插件 <br> **scrapy-selenium** 插件在面对复杂多步骤交互输入点击再解析页面需求上,难度高弊端大,力不从心。 |
+| | **19. Web管理与监控** | **90** | **40** | **Funboost**: 自带功能强大的Web Manager，可监控、管理和实时调参。<br**Scrapy**: 缺乏官方统一的强大监控工具。 |
+| | **20. 跨语言/项目交互** | **90** | **20** | **Funboost**: 标准JSON任务，可由其他语言发布。<br>**Scrapy**: 任务格式与框架强绑定，几乎无法跨语言交互。 |
+| **总分 (加权平均)** | | <span style="font-size: 1.2em; font-weight: bold; color: green;">97.5</span> | <span style="font-size: 1.2em; font-weight: bold; color: red;">45.5</span> | |
+
+---
+
+**总结分析:**
+
+从上表可以清晰地看出，`funboost` 在爬虫这个funboost`不务正业`的领域,几乎所有关键维度上都展现出对 `Scrapy` 专业爬虫框架的**压倒性优势**。
+
+*   **Funboost (得分: 97.5)**：它代表了一种更现代、更灵活、更符合 Python 开发者直觉的编程范式。它将复杂的分布式调度问题彻底封装，把**完全的自由**还给了开发者。无论是开发效率、性能、可靠性，还是处理复杂场景的能力，`funboost` 都表现得近乎完美。它的核心优势在于其**通用性**——通过调度函数这一简单而强大的抽象，它能够“降维打击”像 Scrapy 这样被特定领域（URL请求）所束缚的框架。
+
+*   **Scrapy (得分: 45.5)**：作为一个历史悠久的框架，Scrapy 在其设计的时代背景下是优秀的。然而，其**强耦合、反直觉的回调机制、脆弱的可靠性模型**以及**对阻塞任务的无力**，使其在面对当今复杂多变的爬虫需求时显得力不从心。它的“专业性”反而成为了其最大的“枷锁”，导致在许多关键评分项上表现不佳。
+
+**最终结论**：对于追求开发效率、代码可维护性、系统可靠性和极致性能的现代爬虫开发者而言，选择 `funboost` 是一个显而易见的、更优的决定。它不仅是一个更强大的工具，更是一种能解放生产力的先进思想。
 
 <div> </div>
 

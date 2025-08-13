@@ -146,7 +146,7 @@ if __name__ == '__main__':
         id='interval_job1'
     )
 
-    # 方式3：使用cron表达式定时执行
+    # 方式3：使用cron表达式定时执行,周期运行
     ApsJobAdder(sum_two_numbers, job_store_kind='redis').add_push_job(
         trigger='cron',
         day_of_week='*',
@@ -156,5 +156,7 @@ if __name__ == '__main__':
         kwargs={"x": 50, "y": 60},
         replace_existing=True,
         id='cron_job1')
+    
+
 
     ctrl_c_recv() # 启动了守护线程的定时器，一定要阻止主线程退出。 你可以代码最末尾加这个 ctrl_c_recv() 或者加个 while 1:time.sleep(10)

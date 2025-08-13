@@ -326,8 +326,7 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
     """
     filter_str :typing.Optional[str] = None 
 
-    can_not_json_serializable_keys: typing.List[str] = None
-
+    can_not_json_serializable_keys: typing.List[str] = None # 不能json序列化的入参名字，反序列化时候需要使用pickle来反序列化这些字段(这个是自动生成的，用户不需要手动指定此入参。)
     @root_validator(skip_on_failure=True)
     def cehck_values(cls, values: dict):
         if values['countdown'] and values['eta']:

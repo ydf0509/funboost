@@ -1,4 +1,4 @@
-# boost1.python万能分布式函数调度框架简funboost简介
+# 1.python万能分布式函数调度框架简funboost简介
 
 <pre style="color: greenyellow;background-color: #0c1119; font-size: medium;">
 pip install funboost ,python全功能分布式函数调度框架。  demo用法例子见文档1.3

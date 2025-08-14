@@ -6,6 +6,7 @@ import threading
 import time
 import traceback
 from threading import Thread
+import traceback
 
 from funboost.concurrent_pool.base_pool_type import FunboostBaseConcurrentPool
 from funboost.core.loggers import FunboostFileLoggerMixin
@@ -53,14 +54,17 @@ class AsyncPoolExecutor(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
     使api和线程池一样，最好的性能做法是submit也弄成 async def，生产和消费在同一个线程同一个loop一起运行，但会对调用链路的兼容性产生破坏，从而调用方式不兼容线程池。
     """
 
-    def __init__(self, size, loop=None):
+    def __init__(self, size, specify_async_loop=None,
+                 is_auto_start_specify_async_loop_in_child_thread=True):
         """
 
         :param size: 同时并发运行的协程任务数量。
-        :param loop:
+        :param specify_loop: 可以指定loop,异步三方包的连接池发请求不能使用不同的loop去使用连接池.
         """
         self._size = size
-        self.loop = loop or asyncio.new_event_loop()
+        self._specify_async_loop = specify_async_loop
+        self._is_auto_start_specify_async_loop_in_child_thread = is_auto_start_specify_async_loop_in_child_thread
+        self.loop = specify_async_loop or asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
         self._diff_init()
         # self._lock = threading.Lock()
@@ -120,11 +124,16 @@ class AsyncPoolExecutor(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
         # self.loop.run_until_complete(asyncio.wait([self._consume() for _ in range(self._size)], loop=self.loop))
         # self._can_be_closed_flag = True
         [self.loop.create_task(self._consume()) for _ in range(self._size)]
-        try:
+        if self._specify_async_loop is None:
             self.loop.run_forever()
-        except Exception as e:
-            self.logger.warning(f'{e}')   # 如果多个线程使用一个loop，不能重复启动loop，否则会报错。
-
+        else:
+            if self._is_auto_start_specify_async_loop_in_child_thread:
+                try:
+                    self.loop.run_forever() #如果是指定的loop不能多次启动一个loop.
+                except Exception as e:
+                    self.logger.warning(f'{e} {traceback.format_exc()}')   # 如果多个线程使用一个loop，不能重复启动loop，否则会报错。
+            else:
+                pass # 用户需要自己在自己的业务代码中去手动启动loop.run_forever() 
 
 
     # def shutdown(self):
@@ -136,14 +145,6 @@ class AsyncPoolExecutor(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
     #         self.loop.stop()
     #         self.loop.close()
     #         print('关闭循环')
-
-
-
-
-
-
-
-
 
 
 

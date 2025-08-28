@@ -57,7 +57,7 @@ class BaseJsonAbleModel(BaseModel):
 
     def json_str_value(self):
         try:
-            return json.dumps(self.get_str_dict(), ensure_ascii=False, )
+            return json.dumps(dict(self.get_str_dict()), ensure_ascii=False, )
         except TypeError as e:
             return str(self.get_str_dict())
 
@@ -136,8 +136,8 @@ class BoosterParams(BaseJsonAbleModel):
     specify_concurrent_pool: typing.Optional[FunboostBaseConcurrentPool] = None  # 使用指定的线程池/携程池，可以多个消费者共使用一个线程池,节约线程.不为None时候。threads_num失效
     
     specify_async_loop: typing.Optional[asyncio.AbstractEventLoop] = None  # 指定的async的loop循环，设置并发模式为async才能起作用。 有些包例如aiohttp,发送请求和httpclient的实例化不能处在两个不同的loop中,可以传过来.
-    is_auto_start_specify_async_loop_in_child_thread: bool = True  # 是否在子线程中自动启动指定的async的loop循环，设置并发模式为async才能起作用。如果是False,用户自己在自己的代码中去手动启动自己的loop.run_forever() 
-
+    is_auto_start_specify_async_loop_in_child_thread: bool = True  # 是否自动在funboost asyncio并发池的子线程中自动启动指定的async的loop循环，设置并发模式为async才能起作用。如果是False,用户自己在自己的代码中去手动启动自己的loop.run_forever() 
+    
     """qps:
     强悍的控制功能,指定1秒内的函数执行次数，例如可以是小数0.01代表每100秒执行一次，也可以是50代表1秒执行50次.为None则不控频。 设置qps时候,不需要指定并发数量,funboost的能够自适应智能动态调节并发池大小."""
     qps: typing.Union[float, int, None] = None
@@ -188,7 +188,8 @@ class BoosterParams(BaseJsonAbleModel):
     user_custom_record_process_info_func: typing.Optional[typing.Callable] = None  # 提供一个用户自定义的保存消息处理记录到某个地方例如mysql数据库的函数，函数仅仅接受一个入参，入参类型是 FunctionResultStatus，用户可以打印参数
 
     is_using_rpc_mode: bool = False  # 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。
-    rpc_result_expire_seconds: int = 600  # 保存rpc结果的过期时间.
+    rpc_result_expire_seconds: int = 1800  # redis保存rpc结果的过期时间.
+    rpc_timeout:int = 1800 # rpc模式下，等待rpc结果返回的超时时间
 
     delay_task_apscheduler_jobstores_kind :Literal[ 'redis', 'memory'] = 'redis'  # 延时任务的aspcheduler对象使用哪种jobstores ，可以为 redis memory 两种作为jobstore
 
@@ -356,7 +357,7 @@ class PublisherParams(BaseJsonAbleModel):
     # func_params_is_pydantic_model: bool = False  # funboost 兼容支持 函数娼还是 pydantic model类型，funboost在发布之前和取出来时候自己转化。
     publish_msg_log_use_full_msg: bool = False # 发布到消息队列的消息内容的日志，是否显示消息的完整体，还是只显示函数入参。
     consuming_function_kind: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参.
-
+    rpc_timeout: int = 1800 # rpc模式下，等待rpc结果返回的超时时间
 
 if __name__ == '__main__':
     from funboost.concurrent_pool import FlexibleThreadPool

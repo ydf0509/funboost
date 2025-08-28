@@ -8,7 +8,7 @@ import threading
 from functools import partial
 
 import celery
-
+from celery.app.task import Task
 import nb_log
 from funboost.funboost_config_deafult import BrokerConnConfig,FunboostCommonConfig
 from funboost import  ConcurrentModeEnum

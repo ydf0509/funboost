@@ -60,45 +60,65 @@ funboost的旧框架名字是function_scheduling_distributed_framework , 关系�
 
 ## 1.0 github地址和文档地址
 
-### 1.0.1 [分布式函数调度框架文档地址 ](https://funboost.readthedocs.io/zh-cn/latest/index.html)
+### 1.0.1 分布式函数调度框架文档地址 
 
 [查看分布式函数调度框架文档 https://funboost.readthedocs.io/zh-cn/latest/index.html](https://funboost.readthedocs.io/zh-cn/latest/index.html)
 
-文档很长，大部分都是讲原理和对比各种框架。但是用户只需要学习1.3这1个例子就能掌握了。因为其他例子只是 @boost的 BoosterParams 里面的控制入参换了一下。
+文档很长，大部分都是讲原理和对比各种框架,不仅仅 `how` to use,更多的是 `What` & `Why`。
+但是用户只需要学习1.3这1个例子就能掌握了。因为其他例子只是 @boost的 BoosterParams 里面的控制入参换了一下。
+
 
 用户只需要专门看 BoosterParams 里面的每个入参的注释就能掌握框架了，因为funboost只有@boost一行代码需要你写。
 
 funboost 框架和一般的框架不一样，因为只有一行代码需要掌握，绝对不是要求用户先精通框架本身才能自由发挥。
 
-#### [1.python万能分布式函数调度框架简funboost简介](https://funboost.readthedocs.io/zh-cn/latest/articles/c1.html)
 
-#### [2. funboost对比celery框架](https://funboost.readthedocs.io/zh-cn/latest/articles/c2.html)
+[**1.python万能分布式函数调度框架简funboost简介**](https://funboost.readthedocs.io/zh-cn/latest/articles/c1.html)
 
-#### [3.funboost框架详细介绍](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html)
+##### 2. funboost对比celery框架
+[**2.funboost对比celery框架**](https://funboost.readthedocs.io/zh-cn/latest/articles/c2.html)
+[2.funboost对比celery框架](https://funboost.readthedocs.io/zh-cn/latest/articles/c2.html)
+[**3.funboost框架详细介绍**](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html)
+##### 3.funboost框架详细介绍
+[**4.funboost使用框架的各种代码示例**](https://funboost.readthedocs.io/zh-cn/latest/articles/c4.html)
+[3.funboost框架详细介绍](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html)
+[**4b.funboost使用框架的各种代码示例(高级进阶)**](https://funboost.readthedocs.io/zh-cn/latest/articles/c4b.html)
+##### 4.funboost使用框架的各种代码示例
+[4.funboost使用框架的各种代码示例](https://funboost.readthedocs.io/zh-cn/latest/articles/c4.html)
+[**5.funboost框架运行时截图**](https://funboost.readthedocs.io/zh-cn/latest/articles/c5.html)
+##### 4b.funboost使用框架的各种代码示例(高级进阶)
+[4b.funboost使用框架的各种代码示例(高级进阶)](https://funboost.readthedocs.io/zh-cn/latest/articles/c4b.html)
+[**6.funboost常见问题回答**](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html)
+##### 5.funboost框架运行时截图
+[5.funboost框架运行时截图](https://funboost.readthedocs.io/zh-cn/latest/articles/c5.html)
+[**7.funboost更新记录**](https://funboost.readthedocs.io/zh-cn/latest/articles/c7.html)
+##### 6.funboost常见问题回答
+[6.funboost常见问题回答](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html)
+[**8.funboost是万能函数调度框架，当然可以爬虫,自由编程 降维打击 框架奴役**](https://funboost.readthedocs.io/zh-cn/latest/articles/c8.html)
+##### 7.funboost更新记录
+[7.funboost更新记录](https://funboost.readthedocs.io/zh-cn/latest/articles/c7.html)
+[**9.轻松远程服务器部署运行函数**](https://funboost.readthedocs.io/zh-cn/latest/articles/c9.html#)
+##### 8.funboost是万能函数调度框架，当然可以爬虫,自由编程 降维打击 框架奴役
+[8.funboost是万能函数调度框架，当然可以爬虫,自由编程 降维打击 框架奴役](https://funboost.readthedocs.io/zh-cn/latest/articles/c8.html)
+[**10.python3.6-3.12 安装/使用funboost出错问题反馈**](https://funboost.readthedocs.io/zh-cn/latest/articles/c10.html)
+##### 9.轻松远程服务器部署运行函数
+[9.轻松远程服务器部署运行函数](https://funboost.readthedocs.io/zh-cn/latest/articles/c9.html#)
+[**11.funboost 使用某些中间件或三方任务队列框架作为broker的例子(包括celery框架)。**](https://funboost.readthedocs.io/zh-cn/latest/articles/c11.html)
+##### 10.python3.6-3.12 安装/使用funboost出错问题反馈
+[10.python3.6-3.12 安装/使用funboost出错问题反馈](https://funboost.readthedocs.io/zh-cn/latest/articles/c10.html)
+[**12.funboost 控制台支持命令行**](https://funboost.readthedocs.io/zh-cn/latest/articles/c12.html)
+##### 11.funboost 使用某些中间件或三方任务队列框架作为broker的例子(包括celery框架)。
+[11.funboost 使用某些中间件或三方任务队列框架作为broker的例子(包括celery框架)。](https://funboost.readthedocs.io/zh-cn/latest/articles/c11.html)
+[**13.启动 funboost web manager,查看消费结果和队列管理**](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html)
+##### 12.funboost 控制台支持命令行
+[12.funboost 控制台支持命令行](https://funboost.readthedocs.io/zh-cn/latest/articles/c12.html)
 
-#### [4.funboost使用框架的各种代码示例](https://funboost.readthedocs.io/zh-cn/latest/articles/c4.html)
+##### 13.启动 funboost web manager,查看消费结果和队列管理
+[13.启动 funboost web manager,查看消费结果和队列管理](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html)
 
-#### [4b.funboost使用框架的各种代码示例(高级进阶)](https://funboost.readthedocs.io/zh-cn/latest/articles/c4b.html)
 
-#### [5.funboost框架运行时截图](https://funboost.readthedocs.io/zh-cn/latest/articles/c5.html)
-
-#### [6.funboost常见问题回答](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html)
-
-#### [7.funboost更新记录](https://funboost.readthedocs.io/zh-cn/latest/articles/c7.html)
-
-#### [8.funboost是万能函数调度框架，当然可以爬虫,自由编程 降维打击 框架奴役](https://funboost.readthedocs.io/zh-cn/latest/articles/c8.html)
-
-#### [9.轻松远程服务器部署运行函数](https://funboost.readthedocs.io/zh-cn/latest/articles/c9.html#)
-
-#### [10.python3.6-3.12 安装/使用funboost出错问题反馈](https://funboost.readthedocs.io/zh-cn/latest/articles/c10.html)
-
-#### [11.funboost 使用某些中间件或三方任务队列框架作为broker的例子(包括celery框架)。](https://funboost.readthedocs.io/zh-cn/latest/articles/c11.html)
-
-#### [12.funboost 控制台支持命令行](https://funboost.readthedocs.io/zh-cn/latest/articles/c12.html)
-
-#### [13.启动 funboost web manager,查看消费结果和队列管理](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html)
-
-#### [funboost依赖的nb_log日志文档 https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2](https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2)
+#### funboost依赖的nb_log日志文档 
+[funboost依赖的nb_log日志文档 https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2](https://nb-log-doc.readthedocs.io/zh_CN/latest/articles/c9.html#id2)
 
 ```
 文档很长，但归根结底只需要学习 1.3 里面的这1个例子就行，主要是修改下@boost的各种参数，
@@ -112,7 +132,7 @@ funboost 框架和一般的框架不一样，因为只有一行代码需要掌�
 很多新手需要小心翼翼模仿网上说的项目目录结构，以为不按照那么规划目录和命名就玩不起来，本身说明celery很坑。
 ```
 
-### 1.0.2 [分布式函数调度框架github地址](https://github.com/ydf0509/funboost)
+### 1.0.2 分布式函数调度框架github地址
 
 [查看分布式函数调度框架github项目](https://github.com/ydf0509/funboost)
 
@@ -367,8 +387,14 @@ win cmd和linux 运行时候，设置 PYTHONPATH 为项目根目录，是为了�
 而是根据实际情况函数的参数个数、函数的内部逻辑功能，全部都由用户自定义，函数里面想写什么就写什么，想干什么就干什么，极端自由。
 也就是框架很容易学和使用，把下面的task_fun函数的入参和内部逻辑换成你自己想写的函数功能就可以了，框架只需要学习boost这一个函数的参数就行。
 测试使用的时候函数里面加上sleep模拟阻塞，从而更好的了解框架的并发和各种控制功能。
+```
 
-有一点要说明的是框架的消息中间件的ip 端口 密码 等配置是在你第一次运行代码时候，在你当前项目的根目录下生成的 funboost_config.py 按需设置。
+```
+有一点要说明的是框架的消息中间件的ip 端口 密码 等配置是在你第一次运行代码时候，在你当前项目的根目录下生成的 funboost_config.py 按需设置 (默认放在项目根目录是为了方便利用项目的 PYTHONPATH。当然，只要 PYTHONPATH 设置正确，
+该配置文件可以放在磁盘的任意文件夹里面。用户可以看教程 6.18.3 问答章节)。
+
+funboost_config.py 里面仅仅是配置 中间件连接,例如ip 端口这些简单的配置, 只需要第一次配置正确即可,
+后续的开发中基本无需再次修改此文件。 因为所有消费函数任务控制功能都是在 BoosterParams 中传参。
 ```
 
 ### 1.3.1 funboost最简单例子
@@ -564,7 +590,9 @@ def task_fun(a: int, b: int):
 队列操作，查看消费者详情：查看队列的所有消费者详情
 [![pEJCgT1.png](https://s21.ax1x.com/2025/03/04/pEJCgT1.png)](https://imgse.com/i/pEJCgT1)
 
+
 队列操作:查看消费曲线图，查看各种消费指标。
+包括 历史运行次数  历史运行失败次数  近10秒完成  近10秒失败  近10秒函数运行平均耗时  累计函数运行平均耗时  剩余消息数量
 [![pVpr7sP.png](https://s21.ax1x.com/2025/05/29/pVpr7sP.png)](https://imgse.com/i/pVpr7sP)
 
 rpc调用：在网页上对30种消息队列发布消息并获取消息的函数执行结；根据taskid获取结果。

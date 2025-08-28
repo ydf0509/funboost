@@ -2,6 +2,9 @@
 # @Author  : ydf
 # @Time    : 2021/4/18 0008 13:32
 
+"""
+    这个可以实现kafka topic单分区,但funboost 200线程消费消息,并且随意强制重启消费进程,不丢失消息
+"""
 
 import json
 import threading
@@ -28,7 +31,7 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
     可以让消费函数内部 sleep 60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group frame_group 来证实自动确认消费和手动确认消费的区别。
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group_id': 'funboost_confluent_kafka', 'auto_offset_reset': 'earliest'}
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group_id': 'funboost_kafka', 'auto_offset_reset': 'earliest','num_partitions':10,'replication_factor':1,}
 
     def custom_init(self):
         self._lock_for_operate_offset_dict = threading.Lock()
@@ -37,7 +40,9 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
 
         try:
             admin_client = KafkaPythonImporter().KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
-            admin_client.create_topics([KafkaPythonImporter().NewTopic(self._queue_name, 10, 1)])
+            admin_client.create_topics([KafkaPythonImporter().NewTopic(self._queue_name,
+                                                                       self.consumer_params.broker_exclusive_config['num_partitions'],
+                                                                       self.consumer_params.broker_exclusive_config['replication_factor'])])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
         except KafkaPythonImporter().TopicAlreadyExistsError:
             pass

@@ -45,7 +45,9 @@ class ApsJobAdder:
     @classmethod
     def get_funboost_redis_apscheduler(cls, queue_name):
         """ 
-        每个队列名字的定时任务用不同的redis jobstore的 jobs_key 和 run_times_key，防止互相干扰和取出不属于自己的任务
+        每个队列名字的定时任务有自己单独的 aspchedule r定时器,
+        每隔定时器用不同的redis jobstore的 jobs_key 和 run_times_key，防止互相干扰和取出不属于自己的任务.
+        如果所有函数使用同一个定时器和一个jobs_key ,当用户只想运行f1定时任务,如果用户把f2删了,或者不需要运行f2定时任务,那就报错或者不方便.
         """
         if queue_name in cls.queue__redis_aps_map:
             return cls.queue__redis_aps_map[queue_name]

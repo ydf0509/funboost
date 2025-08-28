@@ -30,6 +30,12 @@ extra_brokers = ['confluent_kafka==1.7.0',
                  'kafka-python==2.0.2',
                   'eventlet==0.33.3',
                  'gevent==22.10.2',
+
+                  'mysql-replication==1.0.9',
+
+                    'grpcio==1.60.0',
+                    'grpcio-tools==1.60.0',
+                    'protobuf==4.25.1',
                  ]
 
 extra_flask = ['flask', 'flask_bootstrap', 'flask_wtf', 'wtforms', 'flask_login']

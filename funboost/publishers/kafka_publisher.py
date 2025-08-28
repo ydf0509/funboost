@@ -20,7 +20,9 @@ class KafkaPublisher(AbstractPublisher, ):
         self._producer = KafkaPythonImporter().KafkaProducer(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
         self._admin_client = KafkaPythonImporter().KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
         try:
-            self._admin_client.create_topics([KafkaPythonImporter().NewTopic(self._queue_name, 10, 2)])
+            self._admin_client.create_topics([KafkaPythonImporter().NewTopic(self._queue_name,
+                                                                             self.publisher_params.broker_exclusive_config['num_partitions'],
+                                                                             self.publisher_params.broker_exclusive_config['replication_factor'])])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
         except KafkaPythonImporter().TopicAlreadyExistsError:
             pass

@@ -1,8 +1,9 @@
 import time
-from funboost import boost, BrokerEnum, PriorityConsumingControlConfig,FunctionResultStatusPersistanceConfig
 from auto_run_on_remote import run_current_script_on_remote
 
-# run_current_script_on_remote()
+run_current_script_on_remote()
+from funboost import boost, BrokerEnum, PriorityConsumingControlConfig,FunctionResultStatusPersistanceConfig,BoosterParams
+
 """
 演示多进程启动消费，多进程和 asyncio/threading/gevnt/evntlet是叠加关系，不是平行的关系。
 """
@@ -10,7 +11,9 @@ from auto_run_on_remote import run_current_script_on_remote
 
 # qps=5，is_using_distributed_frequency_control=True 分布式控频每秒执行5次。
 # 如果is_using_distributed_frequency_control不设置为True,默认每个进程都会每秒执行5次。
-@boost('test_queue_s23', qps=40, broker_kind=BrokerEnum.REDIS,function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True))
+@boost(BoosterParams(queue_name='test_queue_s23', qps=1, broker_kind=BrokerEnum.REDIS,
+
+       ))
 def ff(x, y):
     import os
     time.sleep(2)
@@ -32,7 +35,7 @@ if __name__ == '__main__':
     # ff.multi_process_consume(3)
     for i in range(1000):
         ff.push(i, y=0)
-    ff.multi_process_start(3)  # 启动两个进程，和上面的run_consumer_with_multi_process等效,现在新增这个multi_process_start方法。
+    ff.multi_process_consume(3)  # 启动两个进程，和上面的run_consumer_with_multi_process等效,现在新增这个multi_process_start方法。
     # IdeAutoCompleteHelper(ff).multi_process_start(3)  # IdeAutoCompleteHelper 可以补全提示，但现在装饰器加了类型注释，ff. 已近可以在pycharm下补全了。
 
     time.sleep(100000)

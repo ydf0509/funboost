@@ -17,5 +17,5 @@ def cost_long_time_fun(x):
 
 if __name__ == '__main__':
     cost_long_time_fun.push(666)
-    # cost_long_time_fun.consume()
-    cost_long_time_fun.multi_process_consume(4)
+    cost_long_time_fun.consume()
+    # cost_long_time_fun.multi_process_consume(4)

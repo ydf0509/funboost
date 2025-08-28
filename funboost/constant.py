@@ -101,6 +101,8 @@ class BrokerEnum:
 
     HTTP = 'HTTP'  # 基于http实现的，发布使用的urllib3，消费服务端使用的aiohttp.server实现的，支持分布式但不支持持久化，好处是不需要安装消息队列中间件软件。
 
+    GRPC = 'GRPC' # 使用知名grpc作为broker,可以使用 sync_call 方法同步获取grpc的结果, 简单程度暴击用户手写原生的 grpc客户端 服务端
+
     NATS = 'NATS'  # 高性能中间件nats,中间件服务端性能很好,。
 
     TXT_FILE = 'TXT_FILE'  # 磁盘txt文件作为消息队列，支持单机持久化，不支持多机分布式。不建议这个，用sqlite。
@@ -118,6 +120,27 @@ class BrokerEnum:
     RQ = 'RQ'  # rq任务队列框架作为funboost调度核心
 
     NAMEKO = 'NAMEKO'  # funboost支持python微服务框架nameko，用户无需掌握nameko api语法，就玩转python nameko微服务
+
+    
+    """
+    MYSQL_CDC 是 funboost 中 神奇 的 与众不同的 broker 中间件
+    mysql binlog cdc 自动作为消息,用户无需手动发布消息,只需要写处理binlog内容的逻辑, 
+    一行代码就能轻量级实现 mysql2mysql mysql2kafka mysql2rabbitmq 等等.
+    这个是与其他中间件不同,不需要手工发布消息, 任何对数据库的 insert update delete 会自动作为 funboost 的消息.
+    几乎是轻量级平替 canal  flinkcdc 的作用.
+    
+    以此类推, 日志文件也能扩展作为broker,只要另外一个程序写入了文件日志,就能触发funboost消费,
+    然后自己在函数逻辑把消息发到kafka,(虽然是已经有大名鼎鼎elk,这只是举个场景例子,说明funboost broker的灵活性)
+
+    日志文件、文件系统变更（inotify）、甚至是硬件传感器的信号，按照4.21章节文档，都可以被封装成一个 funboost 的 Broker。
+
+    充分说明 funboost 有能力化身为 通用的、事件驱动的函数调度平台,而非仅仅是celery这种传统的消息驱动.
+    """
+    """
+    funboost 有能力消费canal发到kafka的binlog消息,也能不依赖canal,自己捕获cdc数据
+    """
+    MYSQL_CDC = 'MYSQL_CDC'
+
 
 
 class ConcurrentModeEnum:

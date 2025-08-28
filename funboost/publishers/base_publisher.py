@@ -214,9 +214,10 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         msg, msg_function_kw, extra_params, task_id = self._convert_msg(msg, task_id, priority_control_config)
         t_start = time.time()
 
-        can_not_json_serializable_keys = Serialization.find_can_not_json_serializable_keys(msg)
-        if can_not_json_serializable_keys:
-            pass
+        try:
+            msg_json = Serialization.to_json_str(msg)
+        except Exception as e:
+            can_not_json_serializable_keys = Serialization.find_can_not_json_serializable_keys(msg)
             self.logger.warning(f'msg 中包含不能序列化的键: {can_not_json_serializable_keys}')
             # raise ValueError(f'msg 中包含不能序列化的键: {can_not_json_serializable_keys}')
             new_msg = copy.deepcopy(Serialization.to_dict(msg))
@@ -224,8 +225,6 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 new_msg[key] = PickleHelper.to_str(new_msg[key])
             new_msg['extra']['can_not_json_serializable_keys'] = can_not_json_serializable_keys
             msg_json = Serialization.to_json_str(new_msg)
-        else:
-            msg_json = Serialization.to_json_str(msg)
         # print(msg_json)
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
             self.concrete_realization_of_publish)(msg_json)
@@ -239,7 +238,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self.logger.info(
                     f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 队列中')
                 self._init_count()
-        return AsyncResult(task_id)
+        return AsyncResult(task_id,timeout=self.publisher_params.rpc_timeout)
 
     def send_msg(self, msg: typing.Union[dict, str]):
         """直接发送任意消息内容到消息队列,不生成辅助参数,无视函数入参名字,不校验入参个数和键名"""

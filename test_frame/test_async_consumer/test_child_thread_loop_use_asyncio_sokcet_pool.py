@@ -36,7 +36,7 @@ RuntimeError: Timeout context manager should be used inside a task
 
 """
 
-from funboost import boost, BrokerEnum,ConcurrentModeEnum,ctrl_c_recv
+from funboost import boost, BrokerEnum, ConcurrentModeEnum, ctrl_c_recv, BoosterParams
 import asyncio
 import aiohttp
 import time
@@ -44,15 +44,15 @@ import time
 url = 'http://mini.eastday.com/assets/v1/js/search_word.js'
 
 loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
-ss = aiohttp.ClientSession(loop=loop)
+asyncio.set_event_loop(loop) # 这是重点
+ss = aiohttp.ClientSession(loop=loop) # 这是重点,ss和主线程的loop绑定了.
 
 
-@boost('test_async_queue1', concurrent_mode=ConcurrentModeEnum.ASYNC, broker_kind=BrokerEnum.REDIS,
+@boost(BoosterParams(queue_name='test_async_queue1', concurrent_mode=ConcurrentModeEnum.ASYNC, broker_kind=BrokerEnum.REDIS,
         log_level=10,concurrent_num=3,
-       # specify_async_loop=loop, # specify_async_loop传参是核心灵魂代码,不传这个还要使用主loop绑定的连接池就会报错.
+       specify_async_loop=loop, # specify_async_loop传参是核心灵魂代码,不传这个还要使用主loop绑定的连接池就会报错.
        is_auto_start_specify_async_loop_in_child_thread=False,
-       )
+       ))
 async def async_f1(x):
     """
     这个函数是自动被funboost在一个单独的子线程中的loop运行的,loop会并发运行很多协程来执行async_f1的逻辑
@@ -60,8 +60,8 @@ async def async_f1(x):
     假设如果是在主线程中去运行的,你怎么可能连续丝滑启动多个函数消费 f1.consume()  f2.consume()  f3.consume() ? 用脑子想想就知道不是主线程去调用异步函数的.
     """
 
-    # 如果是这样使用主线程loop的连接池发请求，boost装饰器必须指定 specify_async_loop，
-    # 如果你不使用ss连接池,而是 sync with aiohttp.request('GET', 'https://httpbin.org/get') as resp: 那就不需要指定 specify_async_loop
+    # 如果是async with ss.request('get', url=url)使用主线程loop的连接池发请求，boost装饰器必须指定 specify_async_loop，
+    # 如果你不使用ss连接池,而是 async with aiohttp.request('GET', 'https://httpbin.org/get') as resp: 那就不需要指定 specify_async_loop
     async with ss.request('get', url=url) as resp:
         text = await resp.text()
         print('async_f1', x, resp.url, text[:10])
@@ -69,15 +69,15 @@ async def async_f1(x):
     return x
 
 
-@boost('test_async_queue2', concurrent_mode=ConcurrentModeEnum.ASYNC, broker_kind=BrokerEnum.REDIS,
+@boost(BoosterParams(queue_name='test_async_queue2', concurrent_mode=ConcurrentModeEnum.ASYNC, broker_kind=BrokerEnum.REDIS,
         log_level=10,concurrent_num=3,
-       # specify_async_loop=loop, # specify_async_loop传参是核心灵魂代码,不传这个还要使用主loop绑定的连接池就会报错.
+       # specify_async_loop=loop, # specify_async_loop传参是核心灵魂代码,连接池不传这个还要使用主loop绑定的连接池就会报错.
        is_auto_start_specify_async_loop_in_child_thread=False,
-       )
+       ))
 async def async_f2(x):
-    # 如果是这样使用主线程loop的连接池发请求，boost装饰器必须指定 specify_async_loop，
-    # 如果你不使用ss连接池,而是 sync with aiohttp.request('GET', 'https://httpbin.org/get') as resp: 那就不需要指定 specify_async_loop
-    async with ss.request('get', url=url) as resp:
+    # 如果是async with ss.request('get', url=url)使用主线程loop的连接池发请求，boost装饰器必须指定 specify_async_loop，
+    # 如果你不使用ss连接池,而是 async with aiohttp.request('GET', 'https://httpbin.org/get') as resp: 那就不需要指定 specify_async_loop
+    async with aiohttp.request('get', url=url) as resp:
         text = await resp.text()
         print('async_f2', x, resp.url, text[:10])
     await asyncio.sleep(5)
@@ -105,6 +105,6 @@ if __name__ == '__main__':
   
     # time.sleep(5) 加这个是测试主线程的loop和子线程loop谁先启动,造成的影响,如果子线程的specify_async_loop先启动,主线程下面的 loop.run_forever() 会报错已启动 RuntimeError: This event loop is already running
     main_tasks = [loop.create_task(do_req(i)) for i in range(20)]
-    loop.run_forever()
+    loop.run_forever()  # 如果你除了要在funboost运行异步函数,也要在自己脚本调用,那么装饰器配置  is_auto_start_specify_async_loop_in_child_thread=False,,自己手动 启动loop.run_forever()
 
     ctrl_c_recv()

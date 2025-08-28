@@ -142,6 +142,7 @@ class Booster:
 
     def _safe_push(self, *func_args, **func_kwargs) -> AsyncResult:
         """ 多进程安全的,在fork多进程(非spawn多进程)情况下,有的包多进程不能共用一个连接,例如kafka"""
+        # print( self.__dict__)
         consumer = BoostersManager.get_or_create_booster_by_queue_name(self.queue_name).consumer
         return consumer.publisher_of_same_queue.push(*func_args, **func_kwargs)
 
@@ -155,14 +156,14 @@ class Booster:
         """asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
         但为了更好的防止网络波动(例如发布消息到外网的消息队列耗时达到10毫秒),可以使用aio_push"""
         async_result = await simple_run_in_executor(self.push, *func_args, **func_kwargs)
-        return AioAsyncResult(async_result.task_id, )
+        return AioAsyncResult(async_result.task_id,timeout=async_result.timeout )
 
     async def aio_publish(self, msg: typing.Union[str, dict], task_id=None,
                           priority_control_config: PriorityConsumingControlConfig = None) -> AioAsyncResult:
         """asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
         但为了更好的防止网络波动(例如发布消息到外网的消息队列耗时达到10毫秒),可以使用aio_push"""
         async_result = await simple_run_in_executor(self.publish, msg, task_id, priority_control_config)
-        return AioAsyncResult(async_result.task_id, )
+        return AioAsyncResult(async_result.task_id, timeout=async_result.timeout)
 
     # noinspection PyMethodMayBeStatic
     def multi_process_consume(self, process_num=1):
@@ -207,6 +208,23 @@ class Booster:
         from funboost.core.fabric_deploy_helper import fabric_deploy
         fabric_deploy(self, **params)
 
+    def __getstate__(self):
+        state = {}
+        state['queue_name'] = self.boost_params.queue_name
+        return state
+
+    def __setstate__(self, state):
+        """非常高级的骚操作,支持booster对象pickle序列化和反序列化,设计非常巧妙，堪称神来之笔
+        这样当使用redis作为apscheduler的 jobstores时候,aps_obj.add_job(booster.push,...) 可以正常工作,
+        使不报错 booster对象无法pickle序列化.
+
+        这个反序列化,没有执着于对 socket threding.Lock 怎么反序列化,而是偷换概念，绕过难题,基于标识的代理反序列化
+        """
+        _booster = BoostersManager.get_or_create_booster_by_queue_name(state['queue_name'])
+        self.__dict__.update(_booster.__dict__)
+
+
+
 
 boost = Booster  # @boost 后消费函数.  不能自动补全方法就用 Booster就可以。 2024版本的 pycharm抽风了，@boost的消费函数不能自动补全提示 .consume  .push 这些方法。
 task_deco = boost  # 两个装饰器名字都可以。task_deco是原来名字，兼容一下。
@@ -214,8 +232,13 @@ task_deco = boost  # 两个装饰器名字都可以。task_deco是原来名字�
 
 class BoostersManager:
     """
+    这个BoostersManager类是后来加的不是一开始就规划了的.
+
     消费函数生成Booster对象时候,会自动调用BoostersManager.regist_booster方法,把队列名和入参信息保存到pid_queue_name__booster_map字典中.
     使用这个类,可以创建booster对象,达到无需使用装饰器的目的.
+
+    如果你想一次性启动所有函数消费,不想 f1.consume()  f2.consume() f3.consume() 一个个的启动.
+    可以  BoostersManager.consume_all_queues()
     """
 
     # pid_queue_name__booster_map字典存放 {(进程id,queue_name):Booster对象}

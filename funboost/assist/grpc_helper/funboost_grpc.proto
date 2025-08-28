@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package funboost_grpc;
+
+// 定义服务
+service FunboostBrokerService {
+  // 简单的问候方法
+  rpc Call (FunboostGrpcRequest) returns (FunboostGrpcResponse);
+}
+
+// 请求消息
+message FunboostGrpcRequest {
+  string json_req = 1;
+  string call_type = 2;
+}
+
+// 响应消息
+message FunboostGrpcResponse {
+  string json_resp = 1;
+}

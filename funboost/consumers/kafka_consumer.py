@@ -22,7 +22,7 @@ class KafkaConsumer(AbstractConsumer):
     可以让消费函数内部 sleep60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group funboost 来证实自动确认消费和手动确认消费的区别。
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group_id': 'funboost_kafka', 'auto_offset_reset': 'earliest'}
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group_id': 'funboost_kafka', 'auto_offset_reset': 'earliest','num_partitions':10,'replication_factor':1,}
     # not_all_brokers_general_settings配置 ，支持独立的中间件配置参数是 group_id 和 auto_offset_reset
     """
     auto_offset_reset 介绍
@@ -35,7 +35,9 @@ class KafkaConsumer(AbstractConsumer):
     def _shedual_task(self):
         try:
             admin_client = KafkaPythonImporter().KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
-            admin_client.create_topics([KafkaPythonImporter().NewTopic(self._queue_name, 10, 1)])
+            admin_client.create_topics([KafkaPythonImporter().NewTopic(self._queue_name,
+                                                                       self.consumer_params.broker_exclusive_config['num_partitions'],
+                                                                       self.consumer_params.broker_exclusive_config['replication_factor'])])
             # admin_client.create_partitions({self._queue_name: NewPartitions(total_count=16)})
         except KafkaPythonImporter().TopicAlreadyExistsError:
             pass

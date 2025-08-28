@@ -106,7 +106,7 @@ def register_custom_broker(broker_kind, publisher_class: typing.Type[AbstractPub
 
 def regist_to_funboost(broker_kind: str):
     """
-    延迟导入是因为funboost没有pip自动安装这些三方包，防止一启动就报错。
+    不直接定义在broker_kind__publsiher_consumer_type_map, 延迟导入是因为funboost没有pip自动安装这些三方包，防止一启动就报错。
     这样当用户需要使用某些三方包中间件作为消息队列时候，按照import报错信息，用户自己去pip安装好。或者 pip install funboost[all] 一次性安装所有中间件。
     建议按照 https://github.com/ydf0509/funboost/blob/master/setup.py 中的 extra_brokers 和 install_requires 里面的版本号来安装三方包版本.
     """
@@ -175,6 +175,15 @@ def regist_to_funboost(broker_kind: str):
         from funboost.consumers.nsq_consumer import NsqConsumer
         register_custom_broker(broker_kind, NsqPublisher, NsqConsumer)
 
+    if broker_kind == BrokerEnum.GRPC:
+        from funboost.consumers.grpc_consumer import GrpcConsumer
+        from funboost.publishers.grpc_publisher import GrpcPublisher
+        register_custom_broker(broker_kind, GrpcPublisher, GrpcConsumer)
+
+    if broker_kind == BrokerEnum.MYSQL_CDC:
+        from funboost.consumers.mysql_cdc_consumer import MysqlCdcConsumer
+        from funboost.publishers.mysql_cdc_publisher import MysqlCdcPublisher
+        register_custom_broker(broker_kind, MysqlCdcPublisher, MysqlCdcConsumer)
 
 if __name__ == '__main__':
     import sys

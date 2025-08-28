@@ -4,6 +4,7 @@ import time
 import typing
 import json
 
+from funboost.core.exceptions import FunboostWaitRpcResultTimeout, FunboostRpcResultError, HasNotAsyncResult
 from funboost.utils.mongo_util import MongoMixin
 
 from funboost.concurrent_pool import CustomThreadPoolExecutor
@@ -14,15 +15,14 @@ from funboost.core.serialization import Serialization
 
 from funboost.core.function_result_status_saver import FunctionResultStatus
 
-class HasNotAsyncResult(Exception):
-    pass
+
 
 
 NO_RESULT = 'no_result'
 
 def _judge_rpc_function_result_status_obj(status_and_result_obj:FunctionResultStatus,raise_exception:bool):
     if status_and_result_obj is None:
-        raise FunboostWaitRpcResultTimeout(f'等待 {status_and_result_obj.task_id} rpc结果超过了指定时间')
+        raise FunboostWaitRpcResultTimeout(f'wait rpc data timeout for task_id:{status_and_result_obj.task_id}')
     if status_and_result_obj.success is True:
         return status_and_result_obj
     else:
@@ -35,6 +35,7 @@ def _judge_rpc_function_result_status_obj(status_and_result_obj:FunctionResultSt
         else:
             status_and_result_obj.rpc_chain_error_msg_dict = error_msg_dict
             return status_and_result_obj
+
 class AsyncResult(RedisMixin):
     default_callback_run_executor = FlexibleThreadPoolMinWorkers0(200,work_queue_maxsize=50)
 
@@ -51,14 +52,14 @@ class AsyncResult(RedisMixin):
         """
         self._callback_run_executor = thread_pool_executor
 
-    def __init__(self, task_id, timeout=120):
+    def __init__(self, task_id, timeout=1800):
         self.task_id = task_id
         self.timeout = timeout
         self._has_pop = False
         self._status_and_result = None
         self._callback_run_executor = None
 
-    def set_timeout(self, timeout=60):
+    def set_timeout(self, timeout=1800):
         self.timeout = timeout
         return self
 
@@ -172,13 +173,13 @@ if __name__ == '__main__':
 
     '''
 
-    def __init__(self, task_id, timeout=120):
+    def __init__(self, task_id, timeout=1800):
         self.task_id = task_id
         self.timeout = timeout
         self._has_pop = False
         self._status_and_result = None
 
-    def set_timeout(self, timeout=60):
+    def set_timeout(self, timeout=1800):
         self.timeout = timeout
         return self
 

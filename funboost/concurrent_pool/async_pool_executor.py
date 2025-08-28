@@ -94,7 +94,7 @@ class AsyncPoolExecutor(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
 
     def submit(self, func, *args, **kwargs):
         future = asyncio.run_coroutine_threadsafe(self._produce(func, *args, **kwargs), self.loop)  # 这个 run_coroutine_threadsafe 方法也有缺点，消耗的性能巨大。
-        future.result()  # 阻止过快放入，放入超过队列大小后，使submit阻塞。
+        future.result()  # 阻止过快放入，放入超过队列大小后，使submit阻塞。 背压是为了防止 迅速掏空消息队列几千万消息到内存.
 
     async def _produce(self, func, *args, **kwargs):
         await self._queue.put((func, args, kwargs))
@@ -123,7 +123,12 @@ class AsyncPoolExecutor(FunboostFileLoggerMixin,FunboostBaseConcurrentPool):
         # asyncio.set_event_loop(self.loop)
         # self.loop.run_until_complete(asyncio.wait([self._consume() for _ in range(self._size)], loop=self.loop))
         # self._can_be_closed_flag = True
-        [self.loop.create_task(self._consume()) for _ in range(self._size)]
+        if self._specify_async_loop is None:
+            for _ in range(self._size):
+                self.loop.create_task(self._consume())
+        else:
+            for _ in range(self._size):
+                asyncio.run_coroutine_threadsafe(self._consume(),self.loop) # 这是 asyncio 专门提供的用于从其他线程向事件循环安全提交任务的函数。
         if self._specify_async_loop is None:
             self.loop.run_forever()
         else:

@@ -17,6 +17,9 @@ class FunboostWaitRpcResultTimeout(FunboostException):
 class FunboostRpcResultError(FunboostException):
     """rpc结果是错误状态"""
 
+class HasNotAsyncResult(FunboostException):
+    pass
+
 class ExceptionForPushToDlxqueue(FunboostException):
     """框架检测到ExceptionForPushToDlxqueue错误，发布到死信队列"""
 

@@ -1411,7 +1411,7 @@ def task(...):
 
 
 
-### 3.4.34 funboost可以是事件驱动平台,远超celery传统消息队列能力
+### 2.4.34 funboost可以是事件驱动平台,远超celery传统消息队列能力
 
 ```
 日志文件、文件系统变更（inotify）、甚至是硬件传感器的信号，按照4.21章节文档，
@@ -1430,6 +1430,22 @@ MYSQL_CDC broker 是这一点的最佳证明，但绝不是终点。正如您的
 因此，funboost 不仅仅是 Celery 的一个更快、更易用的替代品，它在设计哲学上提供了一种更广阔、更灵活的编程范式，使其有能力解决远超传统任务队列范畴的、更广泛的事件驱动自动化问题。
 ```
 
+### 2.4.35 funboost可以作为万能发布者对几十种消息队列发布原始消息内容,celery会对消息转换添油加醋
+
+见 4.13b章节.    
+**4.13b 彩蛋!!不使用funboost的消费功能,funboost作为各种消息队列的万能发布者**
+
+**第一性原理**:funboost可以不依赖消定义费函数生成发布者,并使用`send_msg`方法对几十种消息队列发布原始消息内容.
+
+这就是使用4.13章节的跨项目发布消息功能的原理，但用的是 `send_msg`,而不是`push`和`publish`方法,   
+`send_msg`方法可以发送原始消息，不会给消息加上任何额外字段，比如`taskid`，`publish_time`等字段。
+
+用户无需亲自手写导入几十种三方包,关心几十种消息队列怎么差异化实现来发布消息.   
+
+通过 `.send_msg()` 方法，`funboost` 可以发送不带任何框架私有协议的“干净”消息。这意味着您的 `Python` 服务可以轻松地与使用 `Java`、`Go` 等其他语言编写的服务进行通信，打破了 `Celery` 等框架造成的生态孤岛。 
+
+`celery`不能像`funboost`这样独立使用发布功能,而且`celery`会对用户的消息进行大幅度转化,无法发送给非`celery`体系的部门来使用    
+可以说，`funboost` 它在设计思想上已经领先了一个层级，真正践行了 **“赋能开发者，而非奴役开发者”** 的现代框架理念。
 
 ### 2.4.40 （王炸）funboost 支持celery作为broker_kind
 
@@ -3830,6 +3846,42 @@ if __name__ == '__main__':
 
 
 ```
+
+## 4.13b 彩蛋!!不使用funboost的消费功能,funboost作为各种消息队列的万能发布者
+
+**第一性原理**:funboost可以不依赖消定义费函数生成发布者,并使用`send_msg`方法对几十种消息队列发布原始消息内容.
+
+这就是使用4.13章节的跨项目发布消息功能的原理，但用的是 `send_msg`,而不是`push`和`publish`方法,   
+`send_msg`方法可以发送原始消息，不会给消息加上任何额外字段，比如`taskid`，`publish_time`等字段。
+
+用户无需亲自手写导入几十种三方包,关心几十种消息队列怎么差异化实现来发布消息.
+
+```python
+from funboost import BoostersManager,PublisherParams,BrokerEnum
+
+
+if __name__ == '__main__':
+    # 演示把消息发到redis
+    pb_redis = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name='redis_queue1',broker_kind=BrokerEnum.REDIS))
+    pb_redis.send_msg('my_msg1_str') # 可以发布任何字符串
+
+    # 演示把消息发到kafka
+    pb_kafka = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name='topic1', broker_kind=BrokerEnum.KAFKA,broker_exclusive_config={'num_partitions':10,'replication_factor':1}))
+    pb_kafka.send_msg({'k1':111}) # 发布字典会自动转json,但不会添油加醋学push方法加额外字段
+
+    # 演示把消息发到 rabbitmq
+    pb_rabbitmq = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name='rabbitmq_q2',broker_kind=BrokerEnum.RABBITMQ))
+    pb_rabbitmq.send_msg('{"k2":"wolrd"}')
+```
+
+这意味着开发者 **无需再关心**：
+*   应该导入 `pika`、`kafka-python` 还是 `redis-py`？
+*   RabbitMQ 的 `channel.basic_publish` 和 Kafka 的 `producer.send` 有什么不同？
+*   各种客户端库的连接、认证和异常处理细节是怎样的？
+
+`funboost` 将这一切复杂性都封装了起来，提供了一个极其简洁和统一的接口。
+
+`celery`不能像`funboost`这样独立使用发布功能,而且`celery`会对用户的消息进行大幅度转化,无法发送给非`celery`体系的部门来使用
 
 ## 4.14 获取消费进程信息的方法(用于排查查看正在运行的消费者)
 
@@ -6291,7 +6343,7 @@ if __name__ == '__main__':
 
 ## 5.1b 新增running状态显示截图(2024-03)：
 
-![函数状态3.png](%BA%AF%CA%FD%D7%B4%CC%AC3.png)
+
 
 
 ## 5.2 linux 运行率截图
@@ -7566,6 +7618,80 @@ RedisBrpopLpush
 这些在 BrokerEnum 源码注释中 以及 教程文档中反复说了无数次,用户太懒了不看
 ```
 
+
+## 6.29 利用ai大模型来更好的掌握funboost的最佳方式是什么?
+
+现在是ai时代,谁不用ai就太落伍吃亏了. 
+
+但是使用 ai 大模型也有技巧.
+
+**第一性原理:使用google ai studio网页版+上传markdown+免费+1000k上下文+全文一次性阅读,幻觉率几乎没有**
+
+### 6.29.1  强烈推荐选择 gemini 2.5pro 大模型
+
+`gemini 2.5pro`大模型有1000k上下文, 并且可以在 `google ai studio` 免费无限使用
+
+funboost的教程需要300k上下文,funboost的框架源码也需要300k上下文,  
+`funboost_合并教程_源码.md` 这个文件需要大约600k上下文 ,全球只有 `gemini 2.5pro` 能胜任阅读这个文档.
+
+[https://aistudio.google.com/app/prompts](https://aistudio.google.com/app/prompts)
+
+
+`claude`写代码牛,是修改代码调用工具链强大,但是上下文只有200k,并且不免费,所以pass.
+`gpt5` token上下文太短,也pass
+
+国产大模型都不推荐,国产的上下文更短,而且阅读推理能力亲测很差,不推荐使用.别看这个那个开个发布会吹牛吊打美国`ai`,
+`funboost`知识, 就是ai大模型的试金石. 国产ai目前不行,国产ai大模型只是刻意训练`leetcode`题目,
+然后在`hugging face` 刷ai评分排行榜,涉及到超长文档的陌生知识的推理,瞬间就露馅了,
+做`leetcode`题目是很短的孤立的上下文,没有涉及到大范围知识的推理,和真实的日常需求脱轨了,有谁整天写leeetcode算法。
+`funboost`框架包罗万象,几乎包含了`python`所有知识 + 所有消息队列中间件 + 设计模式 ,需要极强的`跨领域的综合推理能力`,而不是在单一、封闭问题（如算法题）上的表现。 `gemini-2.5pro` 经过实测,在`funboost`的文档推理上 是真正的遥遥领先,
+用`leetcode`刷ai排行榜评分的国产ai大模型,无法胜任阅读 `funboost`知识文档.
+
+
+### 6.29.2 强烈推荐在网页上传funboost文档提问,不要使用gemini-cli 和 gemini-code-assit 和cursor阅读本地文档
+
+**这是我实践得出来的经验,在网页提问markdown文档比gemini-cli阅读本地文件好**
+
+推荐在 `google ai studio` 网页提问,而不是安装`gemini`插件,让gemini在ide或者命令行中去阅读funboost的文档。
+
+[https://aistudio.google.com/app/prompts](https://aistudio.google.com/app/prompts)
+
+
+这似乎听起来反智,但实际上在网页上传文档并提问 `funboost` 问题,完爆 `gemini-cli` 和 `gemini-code-assit `阅读本机文件.
+
+因为网页上是可以一次性阅读 40000 行 markdown 并推理,如果你在本地阅读,大模型工具调用链阅读文件,会每1次阅读最高2000行,  
+然后自动分多次阅读,这太浪费生命时间了,并且分多次阅读会触发使用大模型太频繁,导致自动切换到 `gemini-2.5flash`这个差劲大模型了。
+
+`gemini-cli` 不擅长阅读本机超长文件,其实可以理解的,不然用户随便在一个有1000个文件的目录中,对gemini
+说一句 `你阅读分析文件夹下所有文件`, `gemini-cli` 如果老老实实的执行,那`google`公司会亏得裤衩都没了,
+你随便一个不到10个字的命令,就烧掉几百万token,相当于浪费了google 公司 50人民币的gpu推理成本,
+所以`google`分2000行慢慢阅读文档,超频后就降智切换flash模型,甚至拒绝回答,来保护自己的算力不被滥用.
+如果多次切割成2000行分批阅读，就是**管中窥豹**，对于理解像 `funboost` 这样逻辑连贯、前后关联的复杂框架是灾难性的。
+
+实测,在`google ai studio` 的网页中,效果非常非常好,因为它是一次性阅读全文,不会每2000行来分批次慢慢阅读,   
+不管是对教内容程,还是对源码内容,`gemini-2.5pro`都推理的非常准确。
+
+有的人太懒惰了,不愿意吃苦阅读  `funboost` 的 `readthedocs` 教程,或者不清楚 `funboost` 实现的背后细节原理且不愿意分析框架源码,那么 把 `funboost_合并教程_源码.md` 这个文档上传到 `google ai studio` 并各种提问，就非常合适。
+ai真的是生产力，人工需要阅读几天几夜的教程和框架源码，`gemini 2.5pro` 仅需不到1分钟就能分析的很准确。
+
+### 6.29.3 一定要上传markdown文档再提问
+不要直接在ai大模型的网页或者app提问`funboost`知识
+直接在网页提问,除了最简单的demo,写稍微深入一点的, 幻觉率太高了,所有ai几乎100%会意淫瞎造 `funboost` 
+不存在的 入参 /类 /函数.  甚至有的国产水货大模型,连最基础简单`funboost` demo都会幻觉乱写。
+
+**要想让 AI 成为您学习 funboost 的得力助手，而不是一个满嘴跑火车的“猪队友”，最佳实践就是：打开 Google AI Studio 网站，将 funboost_合并教程_源码.md 文件上传，然后开始向一个已经“吃透”了 funboost 所有官方资料的 Gemini 2.5 Pro 专家提问。**
+
+### 6.29.4 funboost 的 markdown文档地址说明
+
+`funboost` 文档是托管在 `readthedocs` 网站,原始教程是分为了多个`markdown`文件
+
+在`github`中有合并的`markdown`,分为2个文件.  
+一个是 `funboost_合并教程.md` , 这个是把 教程markdown文件合并成1个文件,方便一次性丢给`ai`,免得要多次上传。        
+另一个是 `funboost_合并教程_源码.md` ,  这个是包含了所有教程 + 所有 `funboost` 框架源码 ,更推荐把这个markdown丢给 ai ,反正`gemini` 1000k上下文无敌且免费,不用担心花自己`token`和`money`。   
+
+[https://github.com/ydf0509/funboost](https://github.com/ydf0509/funboost)
+
+![1756373743657](image/c6/1756373743657.png)
 
 
 

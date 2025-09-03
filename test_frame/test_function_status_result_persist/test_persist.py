@@ -74,11 +74,11 @@ if __name__ == '__main__':
 
     f2.clear()
 
-    # f2.multi_process_consume(4)
-    # my_consuming_function.consume()
+    f2.multi_process_consume(4)
+    my_consuming_function.consume()
     aio_f3.consume()
-    # f4.consume()
-    # f5.consume()
+    f4.consume()
+    f5.consume()
     aio_f6.consume()
     for i in range(0, 1000):
         my_consuming_function.push(i)

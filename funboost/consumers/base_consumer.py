@@ -840,8 +840,33 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     # noinspection PyProtectedMember
     async def _async_run(self, kw: dict, ):
-        # """虽然和上面有点大面积重复相似，这个是为了asyncio模式的，asyncio模式真的和普通同步模式的代码思维和形式区别太大，
-        # 框架实现兼容async的消费函数很麻烦复杂，连并发池都要单独写"""
+        """
+        虽然 async def _async_run 和上面的 def _run 有点大面积结构重复相似，这个是为了asyncio模式的，
+        asyncio模式真的和普通同步模式的代码思维和形式区别太大，
+        框架实现兼容async的消费函数很麻烦复杂，连并发池都要单独写
+
+        _run 和 _async_run 无法合并成一个方法：
+        因为在一个函数体内部，您无法根据条件来决定是否使用 await。
+
+        Python 语法不允许这样做：
+        # 伪代码，这是无效的
+        def _unified_run(self, kw, is_async):
+            # ...
+            if is_async:
+                await asyncio.sleep(1) # 'await' outside async function 经典报错
+            else:
+                time.sleep(1)
+
+        不能在同步函数里面去写 await,只要一个函数里出现了 await，这个函数就必须被声明为 async def
+
+
+
+        funboost 这个代价算小了,为了支持异步的全流程生态包括发布/消费/获取rpc结果,对asyncio的累计专门投入代码不到500行.
+        如果是celery 改造适配asyncio,起码要增加10倍以上的代码量,改5000行代码都搞不定支持真asyncio并发.
+        我说的是支持兼容真asyncio并发,而不是每个线程内部搞个临时loop,然后临时loop.run_until_complete(用户async函数) 这种伪asyncio并发,
+        真asyncio并发,是单个loop里面运行无数协程,
+        伪asyncio并发是在每个线程启动一个临时的loop,每个loop仅仅运行一个协程,然后等待这个协程结束,这完全违背了 asyncio 的核心初心理念,这种比多线程性能本身还差.
+        """
         try:
             t_start_run_fun = time.time()
             max_retry_times = self._get_priority_conf(kw, 'max_retry_times')

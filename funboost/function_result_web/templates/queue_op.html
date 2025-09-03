@@ -47,6 +47,48 @@
             width: 80%; /* 宽度占屏幕的80% */
             max-width: 1400px; /* 最大宽度限制 */
         }
+        /* 新增: 开关切换样式 */
+        .toggle-switch-container {
+            display: flex;
+            align-items: center;
+            margin-left: 30px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px; /* 宽度调整 */
+            height: 24px; /* 高度调整 */
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; /* 滑块大小 */
+            width: 18px;  /* 滑块大小 */
+            left: 3px;    /* 滑块位置 */
+            bottom: 3px;  /* 滑块位置 */
+            background-color: white;
+            transition: .4s;
+        }
+        input:checked + .slider { background-color: #4CAF50; }
+        input:focus + .slider { box-shadow: 0 0 1px #4CAF50; }
+        input:checked + .slider:before { transform: translateX(26px); }
+        .slider.round { border-radius: 24px; }
+        .slider.round:before { border-radius: 50%; }
     </style>
 </head>
 <body>
@@ -59,6 +101,14 @@
                         <i class="glyphicon glyphicon-remove"></i>
                     </button>
                 </span>
+            </div>
+            <!-- 美化后的复选框 -->
+            <div class="toggle-switch-container">
+                <label class="switch">
+                    <input type="checkbox" id="showActiveQueuesOnly" onchange="toggleActiveQueuesFilter()">
+                    <span class="slider round"></span>
+                </label>
+                <span style="margin-left: 8px; cursor: pointer;" onclick="document.getElementById('showActiveQueuesOnly').click();">正在消费的队列</span>
             </div>
             <button id="refresh-all-msg-counts" class="btn btn-info" style="margin-left: 30px;">更新所有队列的消息数量</button>
             <button id="toggle-auto-refresh" class="btn btn-success" style="margin-left: 10px;">启动自动刷新</button>
@@ -76,12 +126,28 @@
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 </div>
                 <div class="modal-body">
-                    <!-- 新增：时间范围筛选控件 -->
-                    <div style="margin-bottom: 10px; display: flex; align-items: center;">
-                        <label style="margin-right:5px;">起始时间：</label>
-                        <input type="datetime-local" id="chartStartTime" style="margin-right: 10px;">
-                        <label style="margin-right:5px;">结束时间：</label>
-                        <input type="datetime-local" id="chartEndTime" style="margin-right: 10px;">
+                    <!-- 新增：时间范围筛选控件和采样点数选择 -->
+                    <div style="margin-bottom: 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center;">
+                            <label style="margin-right:5px;">起始时间：</label>
+                            <input type="datetime-local" id="chartStartTime" style="margin-right: 10px;">
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <label style="margin-right:5px;">结束时间：</label>
+                            <input type="datetime-local" id="chartEndTime" style="margin-right: 10px;">
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <label style="margin-right:5px;">采样点数：</label>
+                            <select id="curveSamplesCount" class="form-control" style="width: 100px; margin-right: 10px;" title="推荐使用360-720个采样点以获得最佳显示效果">
+                                <option value="60">60 (粗略)</option>
+                                <option value="120">120 (简单)</option>
+                                <option value="180">180 (清晰)</option>
+                                <option value="360" selected>360 (推荐)</option>
+                                <option value="720">720 (精细)</option>
+                                <option value="1440">1440 (超精细)</option>
+                                <option value="8640">8640 (极精细)</option>
+                            </select>
+                        </div>
                         <button class="btn btn-primary btn-sm" onclick="reloadQueueChartWithTimeRange()">查询</button>
                     </div>
                     <canvas id="queueDataChart" style="height:600px;max-height:600px;"></canvas>
@@ -115,6 +181,14 @@
 
    
     <script>
+        // 检查Chart.js是否正确加载
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js未正确加载！请检查文件路径。');
+            alert('Chart.js库未正确加载，图表功能可能无法正常使用。');
+        } else {
+            console.log('Chart.js已正确加载，版本:', Chart.version);
+        }
+
         // 创建表格实例
         var table = new Tabulator("#queue-table", {
             theme: "bootstrap3",
@@ -269,15 +343,32 @@
             },
         });
 
+        function updateTableFilters() {
+            const searchValue = document.getElementById("searchInput").value;
+            const showActiveOnly = document.getElementById('showActiveQueuesOnly').checked;
+
+            const filters = [];
+
+            if (searchValue) {
+                filters.push({field: "queue_name", type: "like", value: searchValue});
+            }
+
+            if (showActiveOnly) {
+                filters.push({field: "consumer_count", type: ">", value: 0});
+            }
+
+            table.setFilter(filters);
+        }
+
         // 搜索功能实现
         document.getElementById("searchInput").addEventListener("keyup", function() {
-            table.setFilter("queue_name", "like", this.value);
+            updateTableFilters();
         });
 
         // 清除搜索
         function clearSearch() {
             document.getElementById("searchInput").value = "";
-            table.clearFilter();
+            updateTableFilters();
         }
 
         // 显示参数的模态框
@@ -581,11 +672,12 @@
             document.getElementById("chartEndTime").removeAttribute('max');
             document.getElementById("chartEndTime").setAttribute('min', minStart);
             endTimeUserChanged = false; // 重置
-            loadQueueChartData(queueName, Math.floor(start.getTime() / 1000), Math.floor(now.getTime() / 1000));
+            loadQueueChartData(queueName, Math.floor(start.getTime() / 1000), Math.floor(now.getTime() / 1000), 360);
         }
         function reloadQueueChartWithTimeRange() {
             const start = document.getElementById("chartStartTime").value;
             const end = document.getElementById("chartEndTime").value;
+            const curveSamplesCount = document.getElementById("curveSamplesCount").value;
             let start_ts = start ? (new Date(start).getTime() / 1000) : null;
             let end_ts = end ? (new Date(end).getTime() / 1000) : null;
             if (endTimeUserChanged) {
@@ -593,9 +685,9 @@
             } else {
                 console.log('结束时间为默认值:', end);
             }
-            loadQueueChartData(currentChartQueueName, start_ts, end_ts);
+            loadQueueChartData(currentChartQueueName, start_ts, end_ts, curveSamplesCount);
         }
-        function loadQueueChartData(queueName, start_ts, end_ts) {
+        function loadQueueChartData(queueName, start_ts, end_ts, curveSamplesCount) {
             if (chartInstance) chartInstance.destroy();
             const chartCanvas = document.getElementById('queueDataChart');
             const ctx = chartCanvas.getContext('2d');
@@ -607,22 +699,62 @@
             let params = [];
             if (start_ts) params.push(`start_ts=${start_ts}`);
             if (end_ts) params.push(`end_ts=${end_ts}`);
+            if (curveSamplesCount) params.push(`curve_samples_count=${curveSamplesCount}`);
             if (params.length > 0) url += '?' + params.join('&');
             $.get(url, function(response) {
+                console.log('AJAX请求成功，返回数据:', response);
+                console.log('数据类型:', typeof response, '数据长度:', response ? response.length : 'undefined');
+                
                 if (!response || response.length === 0) {
+                    console.log('数据为空，显示暂无数据');
                     ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
                     ctx.fillText("暂无历史数据", chartCanvas.width / 2, chartCanvas.height / 2);
                     $('#chartModal').modal('show');
                     return;
                 }
+                
+                console.log('开始处理', response.length, '个数据点');
                 // 横坐标用本地时间字符串显示
                 const labels = response.map(dp => {
                     const d = new Date(dp.report_ts * 1000);
                     return d.toLocaleString('zh-CN', { hour12: false });
                 });
+                console.log('时间标签生成完成，数量:', labels.length);
+                console.log('开始生成数据集，字段映射:', CHARTABLE_FIELDS_MAP);
+                
+                // 在函数作用域中定义dataPointCount，确保在Chart配置中可以访问
+                const dataPointCount = response.length;
+                console.log('数据点数量:', dataPointCount);
+                
                 const datasets = Object.keys(CHARTABLE_FIELDS_MAP).map((fieldKey, index) => {
                     const displayName = CHARTABLE_FIELDS_MAP[fieldKey];
                     const isDefaultVisible = fieldKey === 'all_consumers_last_x_s_execute_count' || fieldKey === 'all_consumers_last_x_s_execute_count_fail';
+                    
+                                    // 根据数据点数量动态调整配置 - 优化平滑度
+                let pointRadius, tension, borderWidth;
+                
+                if (dataPointCount > 2000) {
+                    // 超大量数据点：隐藏点，高张力，细线条
+                    pointRadius = 0;
+                    tension = 0.7;
+                    borderWidth = 1.2;
+                } else if (dataPointCount > 800) {
+                    // 大量数据点：隐藏点，较高张力，较细线条
+                    pointRadius = 0;
+                    tension = 0.65;
+                    borderWidth = 1.5;
+                } else if (dataPointCount > 300) {
+                    // 中等数据点：小点，中高张力 - 针对360等常用采样点数优化
+                    pointRadius = 0.3;
+                    tension = 0.6;
+                    borderWidth = 1.8;
+                } else {
+                    // 少量数据点：正常配置，增加平滑度
+                    pointRadius = 1;
+                    tension = 0.5;
+                    borderWidth = 2;
+                }
+                    
                     return {
                         label: displayName,
                         data: response.map(dp => {
@@ -633,41 +765,109 @@
                         fill: false,
                         borderColor: PREDEFINED_COLORS[index % PREDEFINED_COLORS.length],
                         backgroundColor: PREDEFINED_COLORS[index % PREDEFINED_COLORS.length] + '33',
-                        tension: 0.4,
-                        pointRadius: 1,
-                        pointHoverRadius: 3,
-                        borderWidth: 2,
-                        hidden: !isDefaultVisible
+                        tension: tension,
+                        pointRadius: pointRadius,
+                        pointHoverRadius: Math.max(3, pointRadius + 2),
+                        borderWidth: borderWidth,
+                        hidden: !isDefaultVisible,
+                        cubicInterpolationMode: 'monotone', // 单调插值，更平滑
+                        spanGaps: true, // 跨越空值
+                        segment: {
+                            borderColor: ctx => dataPointCount > 300 ? 
+                                (ctx.p0.parsed.y == null || ctx.p1.parsed.y == null ? 'transparent' : undefined) : undefined
+                        } // 优化大数据量时的线段渲染
                     };
                 });
-                chartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: { labels, datasets },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            x: {
-                                title: { display: true, text: '时间' },
-                                ticks: {
-                                    autoSkip: true,
-                                    maxTicksLimit: 20
+                console.log('数据集生成完成，数量:', datasets.length);
+                console.log('开始创建Chart实例...');
+                try {
+                    chartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: { labels, datasets },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            // 性能优化设置
+                            animation: {
+                                duration: dataPointCount > 800 ? 0 : 1000, // 数据点多时禁用动画
+                                easing: 'easeInOutQuart' // 使用更平滑的缓动函数
+                            },
+                            // 启用数据集动画以获得更平滑的效果
+                            datasets: {
+                                line: {
+                                    pointHoverBackgroundColor: 'rgba(255,255,255,0.8)',
+                                    pointHoverBorderColor: 'rgba(220,220,220,1)',
+                                    pointHoverBorderWidth: 2
                                 }
                             },
-                            y: { beginAtZero: false, title: { display: true, text: '数值' } }
-                        },
-                        plugins: {
-                            legend: { position: 'top' },
-                            title: { display: true, text: `队列 [${queueName}] 各项指标变化趋势` },
-                            tooltip: { mode: 'index', intersect: false }
-                        },
-                        interaction: { mode: 'nearest', axis: 'x', intersect: false }
-                    }
-                });
+                            scales: {
+                                x: {
+                                    title: { display: true, text: '时间' },
+                                    ticks: {
+                                        autoSkip: true,
+                                        maxTicksLimit: Math.min(20, Math.max(10, Math.floor(dataPointCount / 50))) // 根据数据点数量动态调整
+                                    }
+                                },
+                                y: { 
+                                    beginAtZero: false, 
+                                    title: { display: true, text: '数值' },
+                                    // 为大量数据点添加性能优化
+                                    ticks: {
+                                        maxTicksLimit: 10
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: { position: 'top' },
+                                title: { 
+                                    display: true, 
+                                    text: `队列 [${queueName}] 各项指标变化趋势 (${dataPointCount}个数据点)` 
+                                },
+                                tooltip: { 
+                                    mode: 'index', 
+                                    intersect: false
+                                }
+                            },
+                            interaction: { 
+                                mode: 'nearest', 
+                                axis: 'x', 
+                                intersect: false
+                            },
+                            // 大量数据点时的额外优化
+                            elements: {
+                                line: {
+                                    borderJoinStyle: 'round', // 更平滑的线条连接
+                                    borderCapStyle: 'round',  // 圆形端点
+                                    fill: false
+                                },
+                                point: {
+                                    hoverRadius: dataPointCount > 800 ? 2 : 4, // 根据数据量调整悬停半径
+                                    hitRadius: dataPointCount > 800 ? 3 : 6    // 根据数据量调整点击半径
+                                }
+                            },
+                            // 针对大数据量的优化配置
+                            parsing: dataPointCount > 1000 ? {
+                                xAxisKey: false, // 禁用x轴解析以提高性能
+                                yAxisKey: false  // 禁用y轴解析以提高性能
+                            } : undefined
+                        }
+                    });
+                    console.log('Chart created successfully with', dataPointCount, 'data points');
+                } catch (error) {
+                    console.error('Error creating chart:', error);
+                    ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+                    ctx.fillText("图表创建失败: " + error.message, chartCanvas.width / 2, chartCanvas.height / 2);
+                }
                 $('#chartModal').modal('show');
-            }).fail(function() {
+            }).fail(function(xhr, status, error) {
+                console.error('AJAX请求失败:', {
+                    status: status,
+                    error: error,
+                    responseText: xhr.responseText,
+                    url: url
+                });
                 ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
-                ctx.fillText("获取数据失败", chartCanvas.width / 2, chartCanvas.height / 2);
+                ctx.fillText("获取数据失败: " + error, chartCanvas.width / 2, chartCanvas.height / 2);
                 $('#chartModal').modal('show');
             });
         }
@@ -694,6 +894,17 @@
 
         // 绑定说明按钮的点击事件
         document.getElementById('show-explanation-btn').addEventListener('click', showExplanationModal);
+
+        // 新增：处理复选框状态变化的函数
+        function toggleActiveQueuesFilter() {
+            updateTableFilters();
+        }
+
+        // 初始化时设置默认过滤条件
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTableFilters();
+        });
+
     </script>
 </body>
 </html>
@@ -703,7 +914,6 @@
  队列名字  broker_kind  消息数量  consumer数量 消费者参数   是否暂停消费状态     操作(这一列都是按钮)
                                                                             获取消息数量、清空队列消息、 暂停消费 、恢复消费
                                                                         
-          
                                                                             
      接口   /queue/params_and_active_consumers 返回的是如下字典,字典中的key是队列名字，
      value是一个字典，字典中有两个key，一个是active_consumers，一个是 queue_params ，
@@ -848,5 +1058,3 @@
         }
     }
 }
-
--->

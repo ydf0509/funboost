@@ -205,12 +205,13 @@ class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
         def _inner():
             while True:
                 t_start = time.time()
-                # 这个函数确保只有一个地方在上报数据，避免重复上报
+                # 这个函数确保只有一个地方在上报数据，避免重复采集上报
                 report_ts = self.timestamp()
                 redis_report_uuid_ts_str = self.redis_db_frame.get(RedisKeys.FUNBOOST_LAST_GET_QUEUE_PARAMS_AND_ACTIVE_CONSUMERS_AND_REPORT__UUID_TS, )
                 if redis_report_uuid_ts_str:
                     redis_report_uuid_ts = Serialization.to_dict(redis_report_uuid_ts_str)
                     if redis_report_uuid_ts['report_uuid'] != report_uuid and redis_report_uuid_ts['report_ts'] > report_ts - time_interval - 10 :
+                        time.sleep(5) # 防止cpu空转
                         continue
                 self.redis_db_frame.set(RedisKeys.FUNBOOST_LAST_GET_QUEUE_PARAMS_AND_ACTIVE_CONSUMERS_AND_REPORT__UUID_TS,
                                         Serialization.to_json_str({'report_uuid':report_uuid, 'report_ts':report_ts}))
@@ -229,17 +230,38 @@ class QueueConusmerParamsGetter(RedisMixin, FunboostFileLoggerMixin):
                         RedisKeys.gen_funboost_queue_time_series_data_key_by_queue_name(queue),
                         0, report_ts - 86400
                     )
-                self.logger.info(f'上报时序数据耗时 {time.time() - t_start} 秒')
+                self.logger.info(f'采集上报时序数据耗时 {time.time() - t_start} 秒')
 
                 time.sleep(time_interval)
         threading.Thread(target=_inner, daemon=daemon).start()
 
-    def get_time_series_data_by_queue_name(self,queue_name,start_ts=None,end_ts=None):
+    def get_time_series_data_by_queue_name(self,queue_name,start_ts=None,end_ts=None,curve_samples_count=None):
         res = self.redis_db_frame.zrangebyscore(
             RedisKeys.gen_funboost_queue_time_series_data_key_by_queue_name(queue_name),
             max(float(start_ts or 0),self.timestamp() - 86400) ,float(end_ts or -1),withscores=True)
         # print(res)
-        return [{'report_data':Serialization.to_dict(item[0]),'report_ts':item[1]} for item in res]
+        series_data_all= [{'report_data':Serialization.to_dict(item[0]),'report_ts':item[1]} for item in res]
+        if curve_samples_count is None:
+            return series_data_all
+        
+        # 曲线采样数量
+        total_count = len(series_data_all)
+        if total_count <= curve_samples_count:
+            # 如果原始数据量小于等于需要的样本数，直接返回全部数据
+            return series_data_all
+        
+        # 计算采样步长
+        step = total_count / curve_samples_count
+        sampled_data = []
+        
+        # 按照步长进行采样
+        for i in range(curve_samples_count):
+            index = int(i * step)
+            if index < total_count:
+                sampled_data.append(series_data_all[index])
+        
+        return sampled_data
+        
 
 if __name__ == '__main__':
     # print(Serialization.to_json_str(QueueConusmerParamsGetter().get_queue_params_and_active_consumers()))

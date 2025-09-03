@@ -271,8 +271,27 @@ def get_time_series_data_by_queue_name(queue_name,):
     
     返回例如  [{'report_data': {'pause_flag': -1, 'msg_num_in_broker': 936748, 'history_run_count': '150180', 'history_run_fail_count': '46511', 'all_consumers_last_x_s_execute_count': 7, 'all_consumers_last_x_s_execute_count_fail': 0, 'all_consumers_last_x_s_avarage_function_spend_time': 3.441, 'all_consumers_avarage_function_spend_time_from_start': 4.598, 'all_consumers_total_consume_count_from_start': 1296, 'all_consumers_total_consume_count_from_start_fail': 314, 'report_ts': 1749617360.597841}, 'report_ts': 1749617360.597841}, {'report_data': {'pause_flag': -1, 'msg_num_in_broker': 936748, 'history_run_count': '150184', 'history_run_fail_count': '46514', 'all_consumers_last_x_s_execute_count': 7, 'all_consumers_last_x_s_execute_count_fail': 0, 'all_consumers_last_x_s_avarage_function_spend_time': 3.441, 'all_consumers_avarage_function_spend_time_from_start': 4.599, 'all_consumers_total_consume_count_from_start': 1299, 'all_consumers_total_consume_count_from_start_fail': 316, 'report_ts': 1749617370.628166}, 'report_ts': 1749617370.628166}] 
     """
+    # 获取前端传递的参数
+    start_ts = request.args.get('start_ts')
+    end_ts = request.args.get('end_ts')
+    curve_samples_count = request.args.get('curve_samples_count')
+    
+    # 如果前端指定了采样点数，使用前端的值
+    if curve_samples_count:
+        try:
+            curve_samples_count = int(curve_samples_count)
+            # 验证值是否在允许的范围内
+            allowed_values = [60, 120, 180, 360, 720, 1440,8640]
+            if curve_samples_count not in allowed_values:
+                curve_samples_count = 360  # 默认值
+        except (ValueError, TypeError):
+            curve_samples_count = 360  # 默认值
+    else:
+        # 如果前端没有指定，使用默认值
+        curve_samples_count = 360
+        
     return jsonify(QueueConusmerParamsGetter().get_time_series_data_by_queue_name(
-        queue_name,request.args.get('start_ts'),request.args.get('end_ts')))
+        queue_name, start_ts, end_ts, curve_samples_count))
         
 @app.route('/rpc/rpc_call',methods=['POST'])
 def rpc_call():

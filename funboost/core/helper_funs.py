@@ -3,7 +3,7 @@ import pytz
 import time
 import uuid
 import datetime
-from funboost.core.funboost_time import FunboostTime
+from funboost.core.funboost_time import FunboostTime, get_now_time_str_by_tz
 
 
 def get_publish_time(paramsx: dict):
@@ -12,6 +12,14 @@ def get_publish_time(paramsx: dict):
     :return:
     """
     return paramsx.get('extra', {}).get('publish_time', None)
+
+
+def get_publish_time_format(paramsx: dict):
+    """
+    :param paramsx:
+    :return:
+    """
+    return paramsx.get('extra', {}).get('publish_time_format', None)
 
 
 def delete_keys_and_return_new_dict(dictx: dict, keys: list = None):
@@ -49,13 +57,18 @@ class MsgGenerater:
     def generate_publish_time() -> float:
         return round(time.time(),4)
 
+    # @staticmethod  # 性能不好
+    # def generate_publish_time_format() -> str:
+    #     return FunboostTime().get_str()
+    
     @staticmethod
     def generate_publish_time_format() -> str:
-        return FunboostTime().get_str()
+        return get_now_time_str_by_tz()
 
     @classmethod
     def generate_pulish_time_and_task_id(cls,queue_name:str,task_id=None):
-        extra_params = {'task_id': task_id or cls.generate_task_id(queue_name), 'publish_time': cls.generate_publish_time(),
+        extra_params = {'task_id': task_id or cls.generate_task_id(queue_name), 
+                        'publish_time': cls.generate_publish_time(),
                         'publish_time_format': cls.generate_publish_time_format()}
         return extra_params
 

@@ -1,120 +1,151 @@
 # 1.python万能分布式函数调度框架简funboost简介  
 
-<pre style="color: greenyellow;background-color: #0c1119; font-size: medium;">  
-pip install funboost ,python全功能分布式函数调度框架。  demo用法例子见文档1.3  
+## 1.0 funboost 框架说明介绍
 
-funboost的功能是全面性重量级，用户能想得到的功能99%全都有;funboost的使用方式是轻量级，只有@boost一行代码需要写。  
-funboost的神奇之处在于它同时拥有"轻量级使用方式"和"重量级功能集"，完全颠覆了"功能强大=使用复杂"的传统思维。  
-它证明了一个框架可以既功能丰富又极其易用，这是对传统Python框架设计的一次巧妙超越。  
+`funboost`是一个 神奇 万能 简单 强大 自由 的 `python`框架,它的作用是给用户任意项目的任意函数赋能.
 
-只需要一行@boost代码即可分布式执行python一切任意函数，99%用过funboost的pythoner 感受是 方便 快速 强大。  
-支持python所有类型的并发模式,消息队列方面支持全球一切知名消息队列中间件和模拟的实现消息队列，  
-同时funboost支持celery整个框架作为核心来发布和消费消息，使用funboost的极简api方式来自动化配置和利用celery调度,  
-也支持huey dramatiq rq等任务队列框架作为funboost的broker。   
-
-python函数加速器，框架包罗万象，一统编程思维，兼容50% python编程业务场景，适用范围广。  
-python万能分布式函数调度框架，支持5种并发模式，30+种消息队列中间件  
-(不仅支持几乎所有你能想到的消息队列中间件，还支持本地磁盘队列、数据库队列 (SQLAlchemy, Peewee)、  
-内存队列、甚至是 HTTP 请求、WebSocket 等作为任务队列，甚至是将 Celery、Dramatiq、Huey 等其他框架整体作为其  
-Broker。funboost源码高扩展性的设计，造成“万物皆可为Broker”,并不是有30种传统意义上的经典消息队列，  
-因为世界上总共都没有30种知名的经典消息队列)，  
-30种任务控制功能。给任意python函数赋能。  
-用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。  
-
-框架只需要学习@boost这一个装饰器的入参就可以，所有用法几乎和1.3例子一摸一样，非常简化简单。  
-框架对代码没有入侵,可以加到任意已有项目而对项目python文件目录结构0要求,  
-不像 celery django scrapy 这样的框架,要从一开始就开始规划好项目目录结构,如果不想用框架了,  
-或者想改变使用其他框架框架,那么已经所写的代码组织形式就几乎成了废物,需要大改特改.   
-但是funboost完全不会这样,不管是加上还是去掉@boost装饰器,对你的项目影响为0,用户照常使用,  
-所以用户可以对任意项目,任意时候,引入使用funboost或者去掉使用funboost,代码组织形式不需要发生变化.  
-（即使不想用funboost了，也不需要亲自去掉@boost装饰器，因为函数上面有@boost装饰器对函数自身的直接调用运行没有任何影响，  
-用户照样可以直接例如 fun(x,y)是直接运行函数 ， fun.push(x,y) 才是发送到消息队列）  
-
-通过funboost web manager 管理系统，支持全面 查看 监控 管理 funboost的任务消费。  
-</pre>  
-
-### 框架评价  
+### 1.0.0 funboost 框架安装方式  
 
 ```  
-95%的用户在初步使用后，都表示赞不绝口、相见恨晚、两眼放光。认为funboost框架使用简单但功能强大和丰富。  
+pip install funboost --upgrade  
 
-第一次听说此框架的，100%用户会质疑框架性能不行，功能少，表示学习celery的教程文档上的所有功能  
-已近非常费劲头疼折磨，各种报错不知道如何解决。  
-一般python用户听到一个新的python框架，脚都软了，学习类似django celery scrapy意味着要学习  
-几个月文档才只能掌握框架的一小部分用法了，  
-尤其是celery这种框架，代码在pycharm完全不能自动补全提示，用户连@task装饰的函数有什么方法，  
-每个方法有什么入参都不知道，配置文件能写哪些配置都不知道，如果不按照博客上的celery目录结构写celery任务  
-，连celery命令行运行起来都要反复猜测尝试。  
-正因为如此用户从心理已近十分惧怕学习一种叫python框架的东西了，用户顶多愿意学习一个python包或者模块，  
-学习一个框架会非常害怕觉得难度高且耗时，所以非常反感尝试新的框架。  
-用过的99%都说funboost比celery简单方便太多,看都不看的人第一秒就是开始质疑重复造轮子.  
-
-funboost只有一个@boost装饰器，@boost入参能自动补全，更重要的是被@boost装饰的函数，  
-有哪些方法，每个方法入参是什么都能自动补全。funboost的中间件配置文件自当生成在用户当前项目根目录，  
-用户无需到处找文档，能配置什么东西，框架功能怎么配置。  
-因为funboost非常注重代码补全提示，所以不存在上面celery的那些复杂高难度缺点。  
+或 pip install funboost[all]  一次性安装所有小众三方中间件  
 ```  
 
-funboost的旧框架名字是function_scheduling_distributed_framework , 关系和兼容性见1.0.3介绍。  
+###  1.0.1 funboost 功能作用
+
+`funboost` 是一个万能分布式函数调度框架,是用于给用户任意新旧项目的任何函数赋能.\
+用户的函数只要加上 `@boost` 装饰器,就能轻松实现分布式函数调度.\
+自动支持 40种 消息队列 + 30种任务控制功能 + `python`中所有的并发执行方式\
+
+
+`funboost`的功能是全面性重量级，用户能想得到的功能99%全都有;`funboost`的使用方式是轻量级，只有`@boost`一行代码需要写。    
+`funboost`的神奇之处在于它同时拥有"轻量级使用方式"和"重量级功能集"，完全颠覆了"功能强大=使用复杂"的传统思维。   
+它证明了一个框架可以既功能丰富又极其易用，这是对传统Python框架设计的一次巧妙超越。   
+只需要一行`@boost`代码即可分布式执行`python`一切任意函数，99%用过`funboost`的`pythoner` 感受是 方便 高速 强大 自由。    
+
+#### funboost与celery的理念区别 
+**共同点:**
+`Celery` 是一个基于分布式消息队列的 异步任务队列/任务调度框架，用于在后台并发执行耗时任务、定时任务和分布式任务处理。
+说得更归根结底就是 `生产者 + broker + 消费者` 普通的编程思想.        
+如果你想一句话简单粗暴的概括`funboost`的作用,也可以套用`celery`的这个功能简介,但是区别也很大.  
+
+**区别:**
+`celery`是`围绕celery框架组织代码,属于重型奴役框架`,你围绕`celery`项目结构和`celery app`实例,去新增定义`@app.task`函数, app才是一等公民,task函数是二等公民  
+`funboost`是`函数增强器,属于轻型自由框架`,你可以对任意项目任意位置的新旧函数加上`@boost`装饰器,是给你函数赋能插上强大翅膀,用户函数自身就是一等公民   
+
+2个框架最显而易见明显差别就是 `funboost` 无需 `@app.boost` 而是直接`@boost`,这个小区别,造成影响深远的框架用法和理念区别.   
+`funboost`任务控制功能更多,支持broker中间件种类更多,并发方式更多,发布性能超越celery 22倍,消费性能超越 celery 40倍,但使用更简单.  
+
+
+#### **funboost 支持的并发模式:**      
+`funboost`支持python所有类型的并发模式,支持 `threading` `asyncio` `gevent` `eventlet` `单线程` 并发模式,同时支持 `多进程` 叠加这些细粒度并发模式.
+
+#### **funboost 支持的消息队列中间件:**     
+得益于强大的设计,在 `funboost` 中 万物可为`broker`,不仅仅支持了 所有的传统正经消息队列例如 `rabbitmq` `kafka` `nsq`等,\
+`funboost`还将各种 `tcp` `grpc` `http`等作为任务队列，\  
+`funboost` 将各种数据库作为`broker`,包括`redis` `sqlalchemy` `peewee` 作为 `broker`\   
+`funboost` 将文件系统作为 `broker`,包括 `sqlite` 和 文件夹 作为 `broker`   \
+并且`funboost` 将 `mysql cdc` 这种`mysql binlog`变化捕获作为`broker`,使得`funboost`可以是事件驱动的,远超`celery`的理念.\
+`funboost` 还轻松内置了将各种三方消费框架作为`broker`,例如直接将 `celery` `dramatiq` `huey` `rq` `nameko` 作为`broker`,使用这些框架的核心来执行用户的函数\
+
+#### **funboost的适用场景:**    
+`funboost`是python函数加速器，框架包罗万象，一统编程思维，兼容50% `python`编程业务场景，适用范围广,任何新老项目都能用到。\n  
+`funboost` 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。  
+
+
+#### **funboost 学习难吗?**   
+框架只需要学习`@boost`这一个装饰器的入参就可以，所有用法几乎和1.3例子一摸一样，非常简化简单。  
+框架对代码没有入侵,可以加到任意已有项目而对项目python文件目录结构0要求,   
+不像`celery` `django` `scrapy` 这样的框架,要从一开始就开始规划好项目目录结构,如果不想用框架了,   
+或者想改变使用其他框架框架,那么已经所写的代码组织形式就几乎成了废物,需要大改特改.    
+但是`funboost`完全不会这样,不管是加上还是去掉`@boost`装饰器,对你的项目影响为0,用户照常使用,   
+所以用户可以对任意项目,任意时候,引入使用`funboost`或者删除使用`funboost`,代码组织形式不需要发生变化.   
+
+即使不想用`funboost`了，也不需要亲自去掉`@boost`装饰器，因为函数上面有`@boost`装饰器对函数自身的直接调用运行没有任何影响，  
+用户照样可以直接例如 `fun(x,y)`是直接运行函数 ， `fun.push(x,y)` 才是发送到消息队列 
+
+#### **funboost支持可视化查看和管理消费情况:**    
+通过`funboost web manager` 管理系统，支持全面 查看 监控 管理 `funboost`的任务消费。  
+
+#### **funboost的性能超过`celery`一个数量级,不是一个档次上:**    
+`funboost`发布性能是`celery`的22倍,`funboost`消费性能是`celery`的40倍! 控制变量法对比方式,见文档2.6章节
+
+
+#### **funboost框架评价:**       
+95%的用户在初步使用后，都表示赞不绝口、相见恨晚、两眼放光。认为`funboost`框架使用简单但功能强大和丰富,\
+最重要的是用户使用`funboost`后自己是极端自由的,不像使用其他框架,导致用户编程思维需要发生翻天覆地变化,一切要围绕框架来编程,
+`funboost`对用户代码编程思维 入侵是0.  
+
+#### **funboost旧框架地址:**       
+`funboost`的旧框架名字是`function_scheduling_distributed_framework` , 关系和兼容性见1.0.3介绍。  
 旧框架地址： [https://github.com/ydf0509/distributed_framework](https://github.com/ydf0509/distributed_framework)  
 
-## 1.0 github地址和文档地址  
+## 1.1 github地址和文档地址  
 
-### 1.0.1 分布式函数调度框架文档地址   
+### 1.1.1 分布式函数调度框架文档地址   
 
 [查看分布式函数调度框架文档 https://funboost.readthedocs.io/zh-cn/latest/index.html](https://funboost.readthedocs.io/zh-cn/latest/index.html)  
 
 文档很长，大部分都是讲原理和对比各种框架,不仅仅 `how` to use,更多的是 `What` & `Why`。  
 但是用户只需要学习1.3这1个例子就能掌握了。因为其他例子只是 @boost的 BoosterParams 里面的控制入参换了一下。  
 
+用户只需要专门看 BoosterParams 里面的每个入参的注释就能掌握框架了，因为funboost只有@boost一行代码需要你写。   
+funboost 框架和一般的框架不一样，因为只有一行代码需要掌握，绝对不是要求用户先精通框架本身才能自由发挥。    
 
-用户只需要专门看 BoosterParams 里面的每个入参的注释就能掌握框架了，因为funboost只有@boost一行代码需要你写。  
+只要用过 `funboost` 的用户,都评价比 `celery` 的用法简单几百倍.
 
-funboost 框架和一般的框架不一样，因为只有一行代码需要掌握，绝对不是要求用户先精通框架本身才能自由发挥。  
+用户可以看文档`6.50`章节,怎么正确的用`ai`大模型掌握`funboost`的用法
 
-
+##### 1.python万能分布式函数调度框架简funboost简介
 [**1.python万能分布式函数调度框架简funboost简介**](https://funboost.readthedocs.io/zh-cn/latest/articles/c1.html)  
 
 ##### 2. funboost对比celery框架  
 [**2.funboost对比celery框架**](https://funboost.readthedocs.io/zh-cn/latest/articles/c2.html)  
-[2.funboost对比celery框架](https://funboost.readthedocs.io/zh-cn/latest/articles/c2.html)  
-[**3.funboost框架详细介绍**](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html)  
+
+  
 ##### 3.funboost框架详细介绍  
+[**3.funboost框架详细介绍**](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html)
+
+##### 4.funboost使用框架的各种代码示例
 [**4.funboost使用框架的各种代码示例**](https://funboost.readthedocs.io/zh-cn/latest/articles/c4.html)  
-[3.funboost框架详细介绍](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html)  
-[**4b.funboost使用框架的各种代码示例(高级进阶)**](https://funboost.readthedocs.io/zh-cn/latest/articles/c4b.html)  
-##### 4.funboost使用框架的各种代码示例  
-[4.funboost使用框架的各种代码示例](https://funboost.readthedocs.io/zh-cn/latest/articles/c4.html)  
-[**5.funboost框架运行时截图**](https://funboost.readthedocs.io/zh-cn/latest/articles/c5.html)  
+
 ##### 4b.funboost使用框架的各种代码示例(高级进阶)  
-[4b.funboost使用框架的各种代码示例(高级进阶)](https://funboost.readthedocs.io/zh-cn/latest/articles/c4b.html)  
-[**6.funboost常见问题回答**](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html)  
+[**4b.funboost使用框架的各种代码示例(高级进阶)**](https://funboost.readthedocs.io/zh-cn/latest/articles/c4b.html)  
+
+
 ##### 5.funboost框架运行时截图  
-[5.funboost框架运行时截图](https://funboost.readthedocs.io/zh-cn/latest/articles/c5.html)  
-[**7.funboost更新记录**](https://funboost.readthedocs.io/zh-cn/latest/articles/c7.html)  
+[**5.funboost框架运行时截图**](https://funboost.readthedocs.io/zh-cn/latest/articles/c5.html) 
+
+
 ##### 6.funboost常见问题回答  
-[6.funboost常见问题回答](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html)  
-[**8.funboost是万能函数调度框架，当然可以爬虫,自由编程 降维打击 框架奴役**](https://funboost.readthedocs.io/zh-cn/latest/articles/c8.html)  
-##### 7.funboost更新记录  
-[7.funboost更新记录](https://funboost.readthedocs.io/zh-cn/latest/articles/c7.html)  
-[**9.轻松远程服务器部署运行函数**](https://funboost.readthedocs.io/zh-cn/latest/articles/c9.html#)  
+[**6.funboost常见问题回答**](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html)  
+
+##### 7.funboost更新记录
+[**7.funboost更新记录**](https://funboost.readthedocs.io/zh-cn/latest/articles/c7.html)  
+
+
 ##### 8.funboost是万能函数调度框架，当然可以爬虫,自由编程 降维打击 框架奴役  
-[8.funboost是万能函数调度框架，当然可以爬虫,自由编程 降维打击 框架奴役](https://funboost.readthedocs.io/zh-cn/latest/articles/c8.html)  
-[**10.python3.6-3.12 安装/使用funboost出错问题反馈**](https://funboost.readthedocs.io/zh-cn/latest/articles/c10.html)  
+[**8.funboost是万能函数调度框架，当然可以爬虫,自由编程 降维打击 框架奴役**](https://funboost.readthedocs.io/zh-cn/latest/articles/c8.html)  
+
+ 
 ##### 9.轻松远程服务器部署运行函数  
-[9.轻松远程服务器部署运行函数](https://funboost.readthedocs.io/zh-cn/latest/articles/c9.html#)  
-[**11.funboost 使用某些中间件或三方任务队列框架作为broker的例子(包括celery框架)。**](https://funboost.readthedocs.io/zh-cn/latest/articles/c11.html)  
+[**9.轻松远程服务器部署运行函数**](https://funboost.readthedocs.io/zh-cn/latest/articles/c9.html)  
+9.轻松远程服务器部署运行函数](https://funboost.readthedocs.io/zh-cn/latest/articles/c9.html#)  
+
+
 ##### 10.python3.6-3.12 安装/使用funboost出错问题反馈  
-[10.python3.6-3.12 安装/使用funboost出错问题反馈](https://funboost.readthedocs.io/zh-cn/latest/articles/c10.html)  
-[**12.funboost 控制台支持命令行**](https://funboost.readthedocs.io/zh-cn/latest/articles/c12.html)  
+[**10.python3.6-3.12 安装/使用funboost出错问题反馈**](https://funboost.readthedocs.io/zh-cn/latest/articles/c10.html)  
+
 ##### 11.funboost 使用某些中间件或三方任务队列框架作为broker的例子(包括celery框架)。  
-[11.funboost 使用某些中间件或三方任务队列框架作为broker的例子(包括celery框架)。](https://funboost.readthedocs.io/zh-cn/latest/articles/c11.html)  
-[**13.启动 funboost web manager,查看消费结果和队列管理**](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html)  
+[**11.funboost 使用某些中间件或三方任务队列框架作为broker的例子(包括celery框架)**](https://funboost.readthedocs.io/zh-cn/latest/articles/c11.html)  
+
+
 ##### 12.funboost 控制台支持命令行  
-[12.funboost 控制台支持命令行](https://funboost.readthedocs.io/zh-cn/latest/articles/c12.html)  
+[**12.funboost 控制台支持命令行**](https://funboost.readthedocs.io/zh-cn/latest/articles/c12.html)  
 
 ##### 13.启动 funboost web manager,查看消费结果和队列管理  
-[13.启动 funboost web manager,查看消费结果和队列管理](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html)  
+[**13.启动 funboost web manager,查看消费结果和队列管理**](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html)  
 
 
 #### funboost依赖的nb_log日志文档   
@@ -124,42 +155,20 @@ funboost 框架和一般的框架不一样，因为只有一行代码需要掌�
 文档很长，但归根结底只需要学习 1.3 里面的这1个例子就行，主要是修改下@boost的各种参数，  
 通过不同的入参，实践测试下各种控制功能。  
 其中文档第四章列举了所有用法举例，  
-
-对比 celery 有20种改善，其中之一是无依赖文件夹层级和文件夹名字 文件名字。  
-首先能把  https://github.com/ydf0509/celery_demo  
-这个例子的已经写好的不规则目录层级和文件名字的函数用celery框架玩起来，才能说是了解celery，  
-否则如果项目文件夹层级和文件名字不规矩，后期再用celery，会把celery新手折磨得想死，  
-很多新手需要小心翼翼模仿网上说的项目目录结构，以为不按照那么规划目录和命名就玩不起来，本身说明celery很坑。  
 ```  
 
-### 1.0.2 分布式函数调度框架github地址  
+### 1.1.2 分布式函数调度框架github地址  
 
 [查看分布式函数调度框架github项目](https://github.com/ydf0509/funboost)  
 
-### 1.0.3 funboost 框架 和 function_scheduling_distributed_framework 框架 关系说明  
 
-```  
-funboost 是 function_scheduling_distributed_framework的包名更新版本  
-```  
-
-`<span style="font-size:15px">`旧框架地址：`<span><a href="https://github.com/ydf0509/distributed_framework" style="font-size: 15px">`function_scheduling_distributed_framework框架地址链接 `</a>`  
-
-## 1.1 安装方式  
-
-```  
-pip install funboost --upgrade  
-
-或pip install funboost[all]  一次性安装所有小众三方中间件  
-```  
 
 ## 1.2 框架功能介绍  
 
-分布式函数调度框架，支持5种并发模式，30+种消息中间件，30种任务控制功能。`<br>`  
-用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。  
 
-有了这个框架，用户再也无需亲自手写操作进程、线程、协程的并发的代码了。  
-
-有了这个框架，用户再也无需亲自手写操作redis rabbitmq socket kafka celery nameko了。  
+有了这个框架，用户再也无需亲自手写操作进程、线程、协程的并发的代码了。   
+有了这个框架，用户再也无需亲自手写操作`redis` `rabbitmq` `socket` `kafka` `celery` `nameko`了。  
+有了这个框架,用户再也无法亲自写各种任务控制功能了,`funboost`的任务控制功能应有尽有  
 
 funboost示图：  
 `<a href="https://imgse.com/i/pkFFghj"><img src="https://s21.ax1x.com/2024/04/29/pkFFghj.png" alt="pkFFghj.png" border="0" />``</a>`  
@@ -168,29 +177,7 @@ funboost示图：
 
 `<a href="https://imgse.com/i/pkFFcNQ"><img src="https://s21.ax1x.com/2024/04/29/pkFFcNQ.png" alt="pkFFcNQ.png" border="0" />``</a>`  
 
-### 1.2.1 框架支持5种并发模式  
-
-<div   style=" font-size: xx-large; font-family: 黑体,serif; "> threading  <span style="font-size: medium">(使用的是可变线程池，可以智能自动缩小和扩大线程数量,也可以运行async def的函数) </span> </div>  
-
-<div   style=" font-size: xx-large; font-family: 黑体,serif; "> gevent </div>  
-
-<div   style="font-size: xx-large; font-family: 黑体,serif; "> eventlet </div>  
-
-<div   style="font-size: xx-large; font-family: 黑体,serif; "> asyncio <span style="font-size: medium">(框架可以直接支持async 定义的携程函数作为任务,celery不支持) </span> </div>  
-
-<div   style=" font-size: xx-large; font-family: 黑体,serif; "> single_thread </div>  
-
-<br>  
-<div style=" font-size: 18px; font-family: 黑体,serif; ">除此之外，直接内置方便的支持 多进程multiprocess 叠加 以上5种并发，多进程和以上细粒度并发是叠加的而不是平行的二选一关系。</div>  
-<br><br>  
-
-```  
-总结一下那就是此框架可以适应所有编程场景，无论是io密集 cpu密集 还是cpu io双密集场景，框架能非常简便的应对任意场景。  
-框架的 单线程  多线程  gevent eventlet  asyncio 多进程  这些并发模型，囊括了目前python界所有的并发方式。  
-框架能自动实现 单线程  ，多线程， gevent ， eventlet ，asyncio ，多进程 并发 ，  
-多进程 + 单线程 ，多进程 + 多线程，多进程 + gevent,  多进程 + eventlet  ，多进程 + asyncio 的组合并发  
-这么多并发方式能够满足任意编程场景。  
-```  
+### 1.2.1 funboost 可以取代 线程池的例子
 
 以下两种方式，都是10线程加python内存queue方式运行f函数，有了此框架，用户无需代码手写手动操作线程 协程 asyncio 进程 来并发。  
 
@@ -214,7 +201,7 @@ if __name__ == '__main__':
 
 ```  
 
-2)funboost 使用内存队列,设置10线程并发  
+2)`funboost` 使用内存队列,设置10线程并发  
 
 ```python  
 import time  
@@ -234,36 +221,8 @@ if __name__ == '__main__':
 
 ```  
 
-### 1.2.2 框架支持30种中间件或三方框架  
 
-框架支持 rabbitmq redis python自带的queue.Queue  sqlite sqlachemy kafka pulsar mongodb 直接socket celery  nameko 等作为消息中间件。  
-
-同时此框架也支持操作 kombu 库作为中间件,所以此框架能够支持的中间件类型只会比celery更多。  
-
-框架支持的中间件种类大全和选型见文档3.1章节的介绍:  
-
-[3.1 各种中间件选择的场景和优势](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html#id2)  
-
-### 1.2.3 框架对任务支持30种控制功能。  
-
-<pre>  
-
-python通用分布式函数调度框架。适用场景范围广泛， 框架非常适合io密集型(框架支持对函数自动使用 thread gevent eventlet asyncio 并发)  
-框架非常适合cpu密集型(框架能够在线程 协程基础上 叠加 多进程 multi_process 并发 ，不仅能够多进程执行任务还能多机器执行任务)。  
-不管是函数需要消耗时io还是消耗cpu，用此框架都很合适，因为任务都是在中间件里面，可以自动分布式分发执行。 此框架是函数的辅助控制倍增器。  
-
-框架不适合的场景是 函数极其简单，例如函数只是一行简单的 print hello，函数只需要非常小的cpu和耗时，运行一次函数只消耗了几十hz或者几纳秒，  
-此时那就采用直接调用函数就好了，因为框架施加了很多控制功能，当框架的运行逻辑耗时耗cpu 远大于函数本身 时候，使用框架反而会使函数执行变慢。  
-
-（python框架从全局概念上影响程序的代码组织和运行，包和模块是局部的只影响1个代码文件的几行。）  
-
-可以一行代码分布式并发调度起一切任何老代码的旧函数和新项目的新函数，并提供数十种函数控制功能。  
-
-还是不懂框架能做什么是什么，就必须先去了解下celery rq。如果连celery rq类似这种的用途概念听都没听说， 那就不可能知道框架的概念和功能用途。  
-
-</pre>  
-
-20种控制功能包括：  
+### 1.2.2 funboost支持丰富的任务控制功能
 
 <pre style="color: #A0A000">  
      分布式：  
@@ -385,12 +344,14 @@ win cmd和linux 运行时候，设置 PYTHONPATH 为项目根目录，是为了�
 ```  
 以下这只是简单求和例子，实际情况换成任意函数里面写任意逻辑，框架可没有规定只能用于 求和函数 的自动调度并发。  
 而是根据实际情况函数的参数个数、函数的内部逻辑功能，全部都由用户自定义，函数里面想写什么就写什么，想干什么就干什么，极端自由。  
-也就是框架很容易学和使用，把下面的task_fun函数的入参和内部逻辑换成你自己想写的函数功能就可以了，框架只需要学习boost这一个函数的参数就行。  
+也就是框架很容易学和使用，把下面的task_fun函数的入参和内部逻辑换成你自己想写的函数功能就可以了，
+框架只需要学习boost这一个函数的参数就行。  
 测试使用的时候函数里面加上sleep模拟阻塞，从而更好的了解框架的并发和各种控制功能。  
 ```  
 
 ```  
-有一点要说明的是框架的消息中间件的ip 端口 密码 等配置是在你第一次运行代码时候，在你当前项目的根目录下生成的 funboost_config.py 按需设置 (默认放在项目根目录是为了方便利用项目的 PYTHONPATH。当然，只要 PYTHONPATH 设置正确，  
+有一点要说明的是框架的消息中间件的ip 端口 密码 等配置是在你第一次运行代码时候，在你当前项目的根目录下
+生成的 funboost_config.py 按需设置 (默认放在项目根目录是为了方便利用项目的 PYTHONPATH。当然，只要 PYTHONPATH 设置正确，  
 该配置文件可以放在磁盘的任意文件夹里面。用户可以看教程 6.18.3 问答章节)。  
 
 funboost_config.py 里面仅仅是配置 中间件连接,例如ip 端口这些简单的配置, 只需要第一次配置正确即可,  
@@ -418,29 +379,27 @@ if __name__ == "__main__":
 
 <pre style="background-color: #BA2121;color: yellow">tips: sqlite作为消息队列,如果linux或mac运行报错read-only文件夹权限,需修改SQLLITE_QUEUES_PATH 就好啦,见文档10.3 </pre>  
 
-```text  
-"""  
+**代码说明:**
 对于消费函数，框架内部会生成发布者(生产者)和消费者。  
-1.推送。 task_fun.push(1,y=2) 会把 {"x":1,"y":2} (消息也自动包含一些其他辅助信息) 发送到中间件的 task_queue_name1 队列中。  
-2.消费。 task_fun.consume() 开始自动从中间件拉取消息，并发的调度运行函数，task_fun(**{"x":1,"y":2}),每秒运行5次  
-整个过程只有这两步，清晰明了，其他的控制方式需要看 boost 的中文入参解释，全都参数都很有用。  
-
+1.推送。 `task_fun.push(1,y=2)` 会把 `{"x":1,"y":2}` (消息也自动包含一些其他辅助信息) 发送到中间件的 `task_queue_name1` 队列中。   
+2.消费。 `task_fun.consume()` 开始自动从中间件拉取消息，并发的调度运行函数，`task_fun(**{"x":1,"y":2})`,每秒运行5次   
+整个过程只有这两步，清晰明了，其他的控制方式需要看 boost 的中文入参解释，全都参数都很有用。   
 
 这个是单个脚本实现了发布和消费，一般都是分离成两个文件的，任务发布和任务消费无需在同一个进程的解释器内部，  
 因为是使用了中间件解耦消息和持久化消息，不要被例子误导成了，以为发布和消费必须放在同一个脚本里面  
 
-
 框架使用方式基本上只需要练习这一个例子就行了，其他举得例子只是改了下broker_kind和其他参数而已，  
 而且装饰器的入参已近解释得非常详细了，框架浓缩到了一个装饰器，并没有用户需要从框架里面要继承什么组合什么的复杂写法。  
-用户可以修改此函数的sleep大小和@boost的数十种入参来学习 验证 测试框架的功能。  
-"""  
-```  
+用户可以修改此函数的`sleep`大小和`@boost`的数十种入参来学习 验证 测试框架的功能。  
+  
 
 控制台运行截图:  
+发布:
+![pkFkP4H.png](https://s21.ax1x.com/2024/04/29/pkFkP4H.png)
 
-`<a href="https://imgse.com/i/pkFkP4H"><img src="https://s21.ax1x.com/2024/04/29/pkFkP4H.png" alt="pkFkP4H.png" border="0" />``</a>`  
+消费:
+![pkFkCUe.png](https://s21.ax1x.com/2024/04/29/pkFkCUe.png)
 
-`<a href="https://imgse.com/i/pkFkCUe"><img src="https://s21.ax1x.com/2024/04/29/pkFkCUe.png" alt="pkFkCUe.png" border="0" />``</a>`  
 
 ### 1.3.2 funboost集中演示一个功能更多的综合例子  
 
@@ -550,20 +509,17 @@ if __name__ == '__main__':
 
 ```  
 
-funboost 上面用法小结:  
-```  
-funboost 鼓励一种“反框架”的思维。它告诉你：“你才是主角，我只是你的赋能工具。” 你的函数是独立的、可复用的、可独立运行,独立测试的。  
-@boost 只是一个可以随时加上或拿掉的“增强插件”。这种设计让你永远不会被框架“绑架”，保持了代码的纯粹性和长久的生命力。  
+**funboost 上面代码用法小结**:   
+`funboost` 鼓励一种`“反框架”`的思维。它告诉你：“你才是主角，我只是你的赋能工具。” 你的函数是独立的、可复用的、可独立运行,独立测试的。  
+`@boost` 只是一个可以随时加上或拿掉的“增强插件”。这种设计让你永远不会被框架“绑架”，保持了代码的纯粹性和长久的生命力。  
 
-并且即使你不想用funboost来赋能你的函数,也不需要去掉@boost装饰器,   
-因为 消费函数.push(1,2) 和 消费函数.publish({"x":1, "y":2}) 才是发布到消息队列,  
-你直接调用 消费函数(1,2) 是不会发布到消息队列的,是直接原始的调用函数本身。  
-```  
-
-```  
-“放荡不羁”的 funboost，是以最少的规则，释放了开发者最大的创造力。 它相信优秀的程序员能够自己管理好业务逻辑，  
+并且即使你不想用`funboost来`赋能你的函数,也不需要去掉`@boost`装饰器,   
+因为 `消费函数.push(1,2)` 和 `消费函数.publish({"x":1, "y":2})` 才是发布到消息队列,  
+你直接调用 `消费函数(1,2)` 是不会发布到消息队列的,是直接原始的调用函数本身。  
+ 
+“放荡不羁”的 `funboost`，是以最少的规则，释放了开发者最大的创造力。 它相信优秀的程序员能够自己管理好业务逻辑，  
 而框架的职责是赋能你的函数,扫清所有工程化障碍，让你自由驰骋。  
-```  
+
 
 
 ### 1.3.3  funboost的 @BoosterParams(...)  和 @boost(BoosterParams(...)) 等效  
@@ -650,6 +606,8 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 如果连只有一个重要函数的框架都学不会，那就学不会学习得了更复杂的其他框架了，大部分框架都很复杂比学习一个包难很多。  
 大部分框架，都要深入使用里面的很多个类，还需要继承组合一顿。  
 ```  
+
+用户也可以按照 文档6.50的方式,使用ai来掌握`funboost`
 
 ## 1.6 funboost支持支持celery框架整体作为funboost的broker (2023.4新增)  
 
@@ -902,13 +860,13 @@ celery才需要从配置中写好 include imports  autodiscover_tasks，从而�
 
 ![img.png](img.png)  
 
-## 2.2 性能远远超过celery10倍以上（使用初中的严格控制变量法）  
+## 2.2 性能远远超过celery20倍以上（使用初中的严格控制变量法）  
 
 对比方式使用初中生都知道的严格控制变量法科学精神  
 
 任意并发模式，任意中间件类型，发布和消费性能远远超过celery。  
 
-funboost比celery的发布性能超过10倍，消费性能超过20倍。  
+funboost比celery的发布性能超过20倍，消费性能超过40倍。  
 
 性能跑分代码在下面 2.6 章节  
 
@@ -984,8 +942,8 @@ funboost支持所有消息队列和消费框架，万物皆可为broker，不管
 ### 2.4.3 funboost性能远超celery几十倍，性能不在一个数量级。  
 
 ```  
-这是最重要的，光使用简单还不够，性能是非常重要的指标。发布性能提升1000%以上，消费性能提升2000%以上。  
-性能不在一个数量级。看下面2.6章节的严格的控制变量法测试对比方法和源码  
+这是最重要的，光使用简单还不够，性能是非常重要的指标。发布性能提升2000%以上，消费性能提升4000%以上。  
+性能不在一个数量级。看下面2.6章节的严格的控制变量法测试对比方法和源码 ,欢迎直接运行性能对比测试源码来打脸. 
 ```  
 
 ### 2.4.4 使用funboost框架时候，代码在ide自动补全暴击使用celery。  
@@ -1587,43 +1545,163 @@ boost装饰器只需要指定 broker_kind=BrokerEnum.CELERY
 用户不信的可以直接运行里面的代码  
 
 对比源代码在：  
-https://github.com/ydf0509/funboost/tree/master/test_frame/funboost_vs_celery_benchmark  
+[https://github.com/ydf0509/funboost/tree/master/test_frame/funboost_vs_celery_benchmark](https://github.com/ydf0509/funboost/tree/master/test_frame/funboost_vs_celery_benchmark)  
 
-**funboost vs celery 性能对比测试结论**  
+**`funboost` vs `celery` 性能对比测试结论**
 
-### 2.6.1 funboost vs celery 控制变量法说明  
+### 2.6.1 `funboost` vs `celery` 控制变量法说明
 
-使用经典的控制变量法测试  
+使用经典的控制变量法测试
 
-共同点是：  
+共同点是：
 
-在win11 + python3.9 +  本机redis 中间件 + amd r7 5800h cpu 环境下测试 + 选择单线程并发模式 + 相同逻辑消费函数  
+在win11 + python3.9 +  本机redis 中间件 + amd r7 5800h cpu 环境下测试 + 选择单线程并发模式 + 相同逻辑消费函数
 
-区别点是：  
+区别点是：
 
-funboost 和 celery5  
+`funboost` 和 `celery 5.xx`
 
-### 2.6.2 funboost vs celery 发布性能对比  
 
-funboost: 发布10万条消息耗时9秒，每隔0.08秒发布1000条，平均每秒发布11000条  
+### 2.6.2 `funboost` vs `celery` 发布性能对比
 
-celery: 发布10万条消息耗时110秒，每隔1.1秒发布1000条，平均每秒发布900条  
+`funboost`:  发布10万条消息耗时5秒，每隔0.05秒发布1000条,平均每秒发布20000条         
 
-对比结果: funboost发布性能约为celery的12倍  
+`celery`: 发布10万条消息耗时110秒，每隔1.1秒发布1000条，平均每秒发布900条
 
-### 2.6.3 funboost vs celery 消费性能对比  
+对比结果: `funboost`发布性能约为`celery`的22倍
 
-funboost: 平均每隔0.15秒消费1000条消息，每秒消费约7000条  
+### 2.6.3 `funboost` vs `celery` 消费性能对比
 
-celery: 平均每隔3.6秒消费1000条消息，每秒消费约300条  
+`funboost`: 平均每隔0.08秒消费1000条消息，每秒消费约12000条
 
-对比结果: funboost消费性能约为celery的23倍  
+`celery`: 平均每隔3.6秒消费1000条消息，每秒消费约300条
 
-### 2.6.4 funboost vs celery 总体性能对比  
+对比结果: `funboost`消费性能约为`celery`的40倍
 
-funboost在同样的硬件环境和测试条件下（win11 + python3.9 + 本机redis中间件 + AMD R7 5800H CPU + 单线程并发模式 + 相同消费函数），  
+### 2.6.4 `funboost` vs `celery` 总体性能对比
 
-无论是在消息发布还是消费方面都大幅优于celery，都超过1000% ，所以 celery性能比funboost性能差了一个数量级，funboost性能是绝对断崖式遥遥领先。  
+`funboost`在同样的硬件环境和测试条件下（win11 + python3.9 + 本机redis中间件 + AMD R7 5800H CPU + 单线程并发模式 + 相同消费函数），\
+无论是在消息发布还是消费方面都大幅优于`celery`，`funboost`是`celery`的发布性能是`22`倍，`funboost` 消费性能是`celery`的`40`倍 ，\
+所以`funboost`性能不是比`celery`高百分之多少这种级别,而是高了一个数量级，`funboost`性能是毫无争议的绝对的遥遥领先。
+
+
+### 2.6.7 funboost VScelery benchmark对比源代码直接贴出来
+
+用户也可以在`github`上直接下载运行测试代码:
+[https://github.com/ydf0509/funboost/tree/master/test_frame/funboost_vs_celery_benchmark](https://github.com/ydf0509/funboost/tree/master/test_frame/funboost_vs_celery_benchmark)  
+
+用户可以看到除了环境一模一样,2个框架配置参数也是一模一样,不同的只有使用哪个框架,使用了绝对的控制变量法.
+
+#### 2.6.7.1 celery的跑分源码
+
+**celery发布性能测试源码:** `test_frame/funboost_vs_celery_benchmark/celery_bench/celery_push.py`
+```python
+
+from celery_consume import print_number
+import nb_log
+import datetime
+
+if __name__ == '__main__':
+    print(f'当前时间: {datetime.datetime.now()}')
+
+    for i in range(100000):
+        if i % 1000 == 0:
+            print(f'当前时间: {datetime.datetime.now()} {i}')
+        print_number.delay(i)
+    print(f'当前时间: {datetime.datetime.now()}')
+```
+
+**celery消费性能测试源码:** `test_frame/funboost_vs_celery_benchmark/celery_bench/celery_consume.py`
+```python
+from celery import Celery
+import datetime
+# 创建Celery实例，设置broker和backend
+app = Celery('namexx', 
+             broker='redis://localhost:6379/0',
+)
+
+# 定义一个简单的打印任务
+@app.task(name='print_number',queue='test_queue_celery02')
+def print_number(i):
+    if  i % 1000 == 0:
+        print(f"{datetime.datetime.now()} 当前数字是: {i}")
+    return i  # 返回结果方便查看任务执行状态
+
+if __name__ == '__main__':
+    # 直接在Python中启动worker，不使用命令行
+    # 使用--pool=solo参数确保使用单线程模式
+    app.worker_main(['worker', '--loglevel=info', '--pool=solo','--queues=test_queue_celery02'])
+```
+
+
+#### 2.6.7.2 funboost的跑分源码
+
+**funboost发布性能测试源码:** `test_frame/funboost_vs_celery_benchmark/funboost_bench/funboost_push.py`
+```python
+
+
+from funboost_consume import print_number
+import datetime
+
+if __name__ == '__main__':
+    for i in range(100000):
+        if i % 1000 == 0:
+            print(f'当前时间: {datetime.datetime.now()} {i}')
+        print_number.push(i)
+```
+
+**funboost消费性能测试源码:** `test_frame/funboost_vs_celery_benchmark/funboost_bench/funboost_consume.py`
+```python
+from funboost import boost, BrokerEnum,BoosterParams,ConcurrentModeEnum
+import datetime
+import logging
+
+@boost(BoosterParams(queue_name='test_queue_funboost01', 
+                     broker_kind=BrokerEnum.REDIS,log_level=logging.INFO,
+                     concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,
+                     )
+                     )
+def print_number(i):
+    if  i % 1000 == 0:
+        print(f"{datetime.datetime.now()} 当前数字是: {i}")
+    return i  # 返回结果方便查看任务执行状态
+
+
+if __name__ == '__main__':
+    print_number.consume()
+```
+
+![img_82.png](img_82.png)
+
+### 2.6.8 驳斥小白说 celery 在单核机器(或单进程)每分钟可以执行100万个消息
+
+有些python小白,以讹传讹,自己从来不愿意花5分钟时间写个简单demo测试,就在csdn博客瞎写 `celery` 在单核机器(或单进程)每分钟可以执行`100万`个消息.  
+
+这种博客实在是太扯淡了,这种智商还出来写博客误导别人,真是害人不浅,这个估算和`celery`的实际运行差了2个数量级,2个数量级是什么概念?  那是差了100倍左右,你说你估算错误差个70%还好说,你估算错误差10000%,简直是信口开河.
+
+即使用户的消费函数是个空的函数,并且用户`celery`项目和`redis`服务都是在同一台机器通过127.0.0.1连接,每秒钟也突破不了400次运行.
+```python
+@app.task
+def task_fun():  # 空函数,即使这样每秒钟也突破不了400次运行.
+    pass
+```
+#### 什么情况下celery单核机器上能达到每分钟执行100万个消息?
+
+你去找 因特尔 造一个单核能持续稳定睿频 1000GHz 的cpu,然后你把电脑带去南极洲冰天雪地里面,     
+并且带上100吨零下150度的液氮持续加注到cpu上散热,    
+这样运行你的`celery`项目才能达到每分钟执行100万个消息. 
+
+
+
+
+
+
+
+
+
+
+
+
 
 <div> </div>  
 
@@ -1946,9 +2024,126 @@ class BoosterParams(BaseJsonAbleModel):
 funboost/beggar_version_implementation/beggar_redis_consumer.py  
 ```  
 
+### 3.3.1 funboost_config.py 配置文件内容
+ `funboost_config.py` 配置文件主要是配置各种消息队列的连接信息账号 密码 地址等,任务控制功能则是在 `BoostParams` 中传参.
+
+ `funboost_config.py` 默认内容如下:
+ ```python
+ # -*- coding: utf-8 -*-
+import logging
+from pathlib import Path
+import pytz
+from funboost.constant import BrokerEnum, ConcurrentModeEnum
+from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig
+from funboost.utils.simple_data_class import DataClassBase
+from nb_log import nb_log_config_default
+
+'''
+funboost_config.py 文件是第一次运行框架自动生成到你的项目根目录的，不需要用由户手动创建。
+此文件里面可以写任意python代码。例如 中间件 帐号 密码自己完全可以从apola配置中心获取或者从环境变量获取。
+'''
+
+'''
+你项目根目录下自动生成的 funboost_config.py 文件中修改配置，会被自动读取到。
+用户不要动修改框架的源码 funboost/funboost_config_deafult.py 中的代码，此模块的变量会自动被 funboost_config.py 覆盖。
+funboost/funboost_config_deafult.py配置覆盖逻辑可看funboost/set_frame_config.py中的代码.
+
+框架使用文档是 https://funboost.readthedocs.io/zh_CN/latest/
+'''
 
 
-## 3.3.2 funboost 重要公有方法大全介绍  
+class BrokerConnConfig(DataClassBase):
+    """
+    中间件连接配置
+    此文件按需修改，例如你使用redis中间件作为消息队列，可以不用管rabbitmq mongodb kafka啥的配置。
+    但有3个功能例外，如果你需要使用rpc模式或者分布式控频或者任务过滤功能，无论设置使用何种消息队列中间件都需要把redis连接配置好，
+    如果@boost装饰器设置is_using_rpc_mode为True或者 is_using_distributed_frequency_control为True或do_task_filtering=True则需要把redis连接配置好，默认是False不强迫用户安装redis。
+    """
+
+    MONGO_CONNECT_URL = f'mongodb://127.0.0.1:27017'  # 如果有密码连接 'mongodb://myUserAdmin:8mwTdy1klnSYepNo@192.168.199.202:27016/'   authSource 指定鉴权db，MONGO_CONNECT_URL = 'mongodb://root:123456@192.168.64.151:27017?authSource=admin'
+
+    RABBITMQ_USER = 'rabbitmq_user'
+    RABBITMQ_PASS = 'rabbitmq_pass'
+    RABBITMQ_HOST = '127.0.0.1'
+    RABBITMQ_PORT = 5672
+    RABBITMQ_VIRTUAL_HOST = ''  # my_host # 这个是rabbitmq的虚拟子host用户自己创建的，如果你想直接用rabbitmq的根host而不是使用虚拟子host，这里写 空字符串 即可。
+    RABBITMQ_URL = f'amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VIRTUAL_HOST}'
+
+    REDIS_HOST = '127.0.0.1'
+    REDIS_USERNAME = ''
+    REDIS_PASSWORD = ''
+    REDIS_PORT = 6379
+    REDIS_DB = 7  # redis消息队列所在db，请不要在这个db放太多其他键值对，以及方便你自己可视化查看你的redis db，框架里面有的功能会scan扫描unacked的键名，使用单独的db。
+    REDIS_DB_FILTER_AND_RPC_RESULT = 8  # 如果函数做任务参数过滤 或者使用rpc获取结果，使用这个db，因为这个db的键值对多，和redis消息队列db分开
+    REDIS_SSL = False # 是否使用ssl加密,默认是False
+    REDIS_URL = f'{"rediss" if REDIS_SSL else "redis"}://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+
+    NSQD_TCP_ADDRESSES = ['127.0.0.1:4150']
+    NSQD_HTTP_CLIENT_HOST = '127.0.0.1'
+    NSQD_HTTP_CLIENT_PORT = 4151
+
+    KAFKA_BOOTSTRAP_SERVERS = ['127.0.0.1:9092']
+    KFFKA_SASL_CONFIG = {
+        "bootstrap_servers": KAFKA_BOOTSTRAP_SERVERS,
+        "sasl_plain_username": "",
+        "sasl_plain_password": "",
+        "sasl_mechanism": "SCRAM-SHA-256",
+        "security_protocol": "SASL_PLAINTEXT",
+    }
+
+    SQLACHEMY_ENGINE_URL = 'sqlite:////sqlachemy_queues/queues.db'
+
+    # 如果broker_kind 使用 peewee 中间件模式会使用mysql配置
+    MYSQL_HOST = '127.0.0.1'
+    MYSQL_PORT = 3306
+    MYSQL_USER = 'root'
+    MYSQL_PASSWORD = '123456'
+    MYSQL_DATABASE = 'testdb6'
+
+    # persist_quque中间件时候采用本机sqlite的方式，数据库文件生成的位置,如果linux账号在根目录没权限建文件夹，可以换文件夹。
+    SQLLITE_QUEUES_PATH = '/sqllite_queues'
+
+    TXT_FILE_PATH = Path(__file__).parent / 'txt_queues'  # 不建议使用这个txt模拟消息队列中间件，本地持久化优先选择 PERSIST_QUQUE 中间件。
+
+    ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
+
+    MQTT_HOST = '127.0.0.1'
+    MQTT_TCP_PORT = 1883
+
+    HTTPSQS_HOST = '127.0.0.1'
+    HTTPSQS_PORT = 1218
+    HTTPSQS_AUTH = '123456'
+
+    NATS_URL = 'nats://192.168.6.134:4222'
+
+    KOMBU_URL = 'redis://127.0.0.1:6379/9'  # 这个就是celery依赖包kombu使用的消息队列格式，所以funboost支持一切celery支持的消息队列种类。
+    # KOMBU_URL =  'sqla+sqlite:////dssf_kombu_sqlite.sqlite'  # 4个//// 代表磁盘根目录下生成一个文件。推荐绝对路径。3个///是相对路径。
+
+    CELERY_BROKER_URL = 'redis://127.0.0.1:6379/12'  # 使用celery作为中间件。funboost新增支持celery框架来运行函数,url内容就是celery的broker形式.
+    CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/13'  # celery结果存放，可以为None
+
+    DRAMATIQ_URL = RABBITMQ_URL
+
+    PULSAR_URL = 'pulsar://192.168.70.128:6650'
+
+
+class FunboostCommonConfig(DataClassBase):
+    # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
+    # NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 11  # 7是简短的不可跳转，5是可点击跳转的，11是可显示ip 进程 线程的模板,也可以亲自设置日志模板不传递数字。
+    NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = logging.Formatter(
+        f'%(asctime)s-({nb_log_config_default.computer_ip},{nb_log_config_default.computer_name})-[p%(process)d_t%(thread)d] - %(name)s - "%(filename)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(task_id)s - %(message)s',
+        "%Y-%m-%d %H:%M:%S",)   # 这个是带task_id的日志模板,日志可以显示task_id,方便用户串联起来排查某一个任务消息的所有日志.
+
+    TIMEZONE = 'Asia/Shanghai'  # 时区
+
+    # 以下配置是修改funboost的一些命名空间和启动时候的日志级别,新手不熟练就别去屏蔽日志了
+    SHOW_HOW_FUNBOOST_CONFIG_SETTINGS = True  # 如果你单纯想屏蔽 "分布式函数调度框架会自动导入funboost_config模块当第一次运行脚本时候，函数调度框架会在你的python当前项目的根目录下 ...... "  这句话,
+    FUNBOOST_PROMPT_LOG_LEVEL = logging.DEBUG  # funboost启动时候的相关提示语,用户可以设置这个命名空间的日志级别来调整
+    KEEPALIVETIMETHREAD_LOG_LEVEL = logging.DEBUG  # funboost的作者发明的可缩小自适应线程池,用户对可变线程池的线程创建和销毁线程完全无兴趣,可以提高日志级别.
+
+ ```
+
+### 3.3.2 funboost 重要公有方法大全介绍  
 
 仔细看以下代码注释，函数的功能  
 ```python  
@@ -1998,7 +2193,7 @@ multi_process_consume(n) ，启动多个进程，每个进程内部叠加多线�
 
 
 
-## 3.3.3 boost装饰器 的 concurrent_num 和 qps 之间的关系。  
+### 3.3.3 boost装饰器 的 concurrent_num 和 qps 之间的关系。  
 
 ```  
  concurrent_num:并发数量。  
@@ -2122,12 +2317,12 @@ REDIS_ACK_ABLE 、 REDIS_STREAM、 RedisBrpopLpush BrokerKind 这三种都是实
 
 ```  
 源码实现思路基本90%遵守了oop的6个设计原则，很容易扩展中间件。  
-1、单一职责原则——SRP  
-2、开闭原则——OCP  
-3、里式替换原则——LSP  
-4、依赖倒置原则——DIP  
-5、接口隔离原则——ISP  
-6、迪米特原则——LOD  
+1、单一职责原则——SRP   
+2、开闭原则——OCP   
+3、里式替换原则——LSP   
+4、依赖倒置原则——DIP   
+5、接口隔离原则——ISP   
+6、迪米特原则——LOD   
 
 最主要是大量使用了模板模式、工厂模式、策略模式、鸭子类。  
 可以仿照源码中实现中间件的例子，只需要继承发布者、消费者基类后实现几个抽象方法即可添加新的中间件。  
@@ -8727,22 +8922,87 @@ class Booster:
 
 **Funboost 是“写函数就能爬虫”，Scrapy 是“写框架才能爬虫”。**  
 
-### 8.0.1 tips : 202309 新增boost_spider爬虫框架  
-<pre style="color: orangered;font-size: small">  
+### funboost scrapy 两种框架写爬虫代码方式代码明显对比
 
+#### funboost框架是自由框架的证据:                   
+```python
+@boost(BoosterParams(queue_name='flexible_queue'))
+def my_task(url):
+    """
+    在这个函数里，你可以：
+    - 使用任何HTTP库 (requests, httpx, aiohttp...)
+    - 访问任何数据库 (MySQL, MongoDB, Redis...)
+    - 调用任何API (REST, GraphQL, gRPC...)
+    - 使用任何框架 (Django ORM, SQLAlchemy...)
+    - 执行任何逻辑 (AI推理, 图像处理, 数据分析...)
+    
+    没有任何限制，没有任何束缚！
+    """
+    # 完全自由选择HTTP库
+    if need_js:
+        from playwright import sync_api
+        response = get_with_playwright(url)
+    elif need_async:
+        response = await aiohttp.get(url)
+    else:
+        response = requests.get(url)
+    
+    # 完全自由选择数据库
+    if use_mongo:
+        mongo_client.insert(data)
+    elif use_mysql:
+        mysql_conn.execute(sql)
+    else:
+        redis_client.set(key, value)
+```
+
+<pre class="warn">
+funboost 是自由框架,不仅体现在,用户函数内部可以随意写任何逻辑,   
+也体现在 funboost 对用户代码无入侵,没有强迫你像 celery  scrapy django 那样规定死死的目录结构和文件名字,  
+也体现在可以加到任何新老项目的任意新旧函数上面.
+</pre>
+
+#### scrapy是框架奴役的证据:   
+```shell
+# Scrapy的"奴役"表现
+"""
+项目结构被强制规定：
+myproject/
+    scrapy.cfg
+    myproject/
+        __init__.py
+        items.py      # 被迫定义Item
+        pipelines.py  # 被迫使用Pipeline
+        settings.py   # 复杂配置
+        middlewares.py # 复杂中间件
+        spiders/
+            __init__.py
+            quotes_spider.py # 里面必须 yield Request(url=url_xx,callback=xx_parse)
+"""
+```
+
+### 8.0.1 tips : 202309 新增boost_spider爬虫框架  
 
 pip install boost_spider  
 
-boost_spider基于funboost,新增了一个RequestClient类(更适合爬虫的请求类,能自定义扩展代理请求方法),  
-和 更方便的保存到各种数据库.  
+`boost_spider` 基于 `funboost`的爬虫方便程度增强包,新增了爬虫更方便的3个贡献类,\
+新增了一个 `RequestClient` 类 (更适合爬虫的请求类,能一键常规基础反爬,自动请求重试,自动换user agent,自动轮流切换各种ip代理商和代理ip,cookies会话保持), \
+和 `SpiderResponse` 请求响应类 (自带xpath,css,re方法,方便parse解析网页源码), \
+和 更方便保存字典到各种数据库 的 `DatasetSink` 类(仅需一行代码就把任何字典入库).  
 
-</pre>  
+有了这三位一体的爬虫增强方便类, `scrapy`的爬虫框架 "专业"这个优势在 `funboost` 面前荡然无存.
+
+用户可以看8.31章节的介绍, `boost_spider` 和 `funboost`的关系.
+
 
 boost_spider地址:   
 [https://github.com/ydf0509/boost_spider](https://github.com/ydf0509/boost_spider)  
 
 使用boost_spider的代码例子:   
 [https://github.com/ydf0509/boost_spider/blob/main/tests/car_home_spider.py](https://github.com/ydf0509/boost_spider/blob/main/tests/car_home_spider.py)  
+
+
+
 
 ### 8.0.2 funboost 降维打击仿scrapy api爬虫框架  
 你本来只想用Scrapy爬个网页，结果遇见了Funboost  
@@ -9379,6 +9639,11 @@ if __name__ == '__main__':
     craw_list_page.consume()  
     craw_detail_page.consume()  
 ```  
+
+<pre class="warn">
+在使用 funboost 写爬虫时候,函数里面不要写try except 捕获异常,因为框架会自动捕获任何请求异常 /解析异常/ 操作数据库异常
+,并自动重试.   如果你写了try 却不抛出异常, 框架就无法自动给你重试.
+</pre>
 
 ### 8.2.2 funboost 对比网上的 scrapy 爬取 douban代码  
 
@@ -11075,19 +11340,28 @@ requests 包只是请求，不能自动调度和并发，如果你封装不了�
 这再次印证了为什么构建像Funboost这样的框架是一项复杂的系统工程，而不仅仅是"写几个函数"那么简单。它需要深厚的软件设计功底。而Funboost正是将这份深厚的功力凝聚其中，为开发者提供了一个简洁而强大的万能开发利器（万能就一定能包含爬虫）。  
 
 
-## 8.31 `boost_spider`  (powered by `funboost`) 专业爬虫框架介绍  
+## 8.31 `boost_spider`  (powered by `funboost`) 专业爬虫工具库介绍  
 
 **安装:**  
 pip install boost_spider  
 
-`boost_spider` : **用户自由无束缚的分布式光速python爬虫函数执行框架,写法和性能远远暴击仿scrapy api式框架**  
+`boost_spider` : **用户自由无束缚的分布式光速python爬虫函数执行框架,写法自由度和性能远远暴击仿scrapy api式框架**  
 
-`boost_spider` 的代码源码很少很轻量级,因为他是由 `funboost` 驱动.  
+`boost_spider` 的代码源码很少很轻量级,因为他是由 `funboost` 驱动,`boost_spider`不是一个 funboost 插件,funboost 不需要插件,     
+`boost_spider` 里面仅仅是一个包含了对爬虫更方便的三个贡献类而已,因为爬虫框架最最重要 最难封装的 调度和并发 全部是 `funboost` 驱动的
+
+`boost_spider` 里面有三个贡献类,分别是 `RequestClient` 类, `SpiderResponse` 类, `DatasetSink` 类, \
+`RequestClient` 类:爬虫更方便的请求类(自带常规反爬,一键自动请求重试,自动换user agent,自动轮流切换各种ip代理商和代理ip,cookies会话保持), \
+`SpiderResponse` 类:爬虫更方便的响应类(自带xpath,css,re方法,方便parse解析网页源码) \
+`DatasetSink` 类:爬虫更方便的写入数据库类(支持各种数据库一行代码把一个python字典写入数据库) \
+
+有了这三位一体的爬虫增强方便类, `scrapy`的专业爬虫框架这个优势在 `funboost` 面前荡然无存.
 
 `boost_spider` 是基于`funboost`,仅仅是增加了对爬虫更方便的请求类和爬虫结果快捷写入数据库的类,所以用户不需要重新学习 `boost_spider` 框架怎么用,因为整体并发调度流程全部是`funboost`驱动.  
 因为发送请求和数据入库都是面向过程方式,局部一行代码调用的,傻瓜都知道怎么调用.  
 
 有人质疑`funboost`不是专用爬虫框架,只是个强力的万能发动机引擎,在爬虫领域不是开箱即用的整车,那 `boost_spider` 就是你眼中的整车.  
+
 
 
 
@@ -11100,12 +11374,356 @@ pip install boost_spider
 
 ### 8.31.2 `boost_spider` 的 `SpiderResponse`  类介绍  
 
-之前有人一直羡慕scrapy的 `response` 对象能直接 之前有人一直羡慕scrapy的 `response.xpath()` 觉得那很神奇,能节约一行把html源码转成xpath对象.   
-这个微不足道的的小细节用户自己很容易实现啊,不知道为什么有人会觉得这很难,或者节约一行转换代码感觉很神奇.  
+之前有人一直羡慕scrapy的 `response` 对象能直接 `response.xpath()` 觉得那很神奇,能节约一行把html源码转成xpath对象.   
+这个微不足道的的小细节用户自己很容易实现啊,不知道为什么有人会觉得这很难很神奇很魔幻,或者觉得每次临时多写一行转换代码很麻烦.
 
 `RequestClient` 类的request返回的是 `SpiderResponse`对象,而不是 `requests` 的`Response`对象,  
 所以 `resp = RequestCleint().request()` 然后可以直接写  `resp.xpath()` ,不用你来加一行代码来转了.  
 `SpiderResponse` 对象除了 有`text`属性,还有 `xpath`方法,`css`方法,`re`方法 ,方便你parse解析网页源码.  
+
+
+### 8.31.2b **boost_spider/http/request_client.py 中的 RequestClient 和 SpiderResponse 源码如下:**
+```python
+# coding=utf-8
+"""
+改版包装requests的Session类，主要使用的是代理模式
+1、支持一键设多种代理ip
+2、支持3种类型的cookie添加
+3、支持长会话，保持cookie状态, ss = RequestClient() , 一直用这个ss对象就可以自动保持cookie了
+4、支持一键设置requests请求重试次数，确保请求成功，默认重试一次。
+5、记录下当天的请求到文件，方便统计，同时开放了日志级别设置参数，用于禁止日志。
+6、从使用requests修改为使用RequstClient门槛很低，三方包的request方法和此类的request方法入参和返回完全100%保持了一致。
+7、支持代理自动切换。需要将proxy_name设置为一个列表，指定多个代理的名字。
+8、支持继承 RequestClient 来增加使用各种代理的请求方法，新增加代理商后，将请求方法名字加到 PROXYNAME__REQUEST_METHED_MAP 中。
+"""
+import json
+import logging
+import typing
+from enum import Enum
+from functools import lru_cache
+from pathlib import Path
+
+import nb_log
+import copy
+import time
+from typing import Union
+import requests
+from requests.cookies import RequestsCookieJar
+import urllib3.exceptions
+
+from boost_spider.http.user_agent import rand_get_useragent
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+from parsel import Selector
+import re
+
+
+class HttpStatusError(Exception):
+    def __init__(self, http_status_code):
+        super().__init__(f'请求返回的状态码不是200，是{http_status_code}')
+
+
+request_logger = nb_log.get_logger('RequestClient', log_level_int=logging.DEBUG)
+
+
+class SpiderResponse(requests.Response):  # 继承主要是方便代码补全提示，
+    # noinspection PyMissingConstructor
+
+    re_pattern_map = {}  # type: typing.Dict[str,re.Pattern]
+
+    def __init__(self, resp: requests.Response):
+        self.__dict__.update(resp.__dict__)  # 使 SpiderResponse 类具备requests.Response的所有属性
+
+    @property
+    @lru_cache()
+    def selector(self) -> Selector:
+        return Selector(self.text)
+
+    @property
+    @lru_cache()
+    def resp_dict(self) -> typing.Dict:
+        return json.loads(self.text)
+
+    @property
+    @lru_cache()
+    def text(self) -> str:
+        return super().text
+
+    def re_search(self, pattern, flags=0):
+        key = f'{pattern} {flags}'
+        if key not in self.re_pattern_map:
+            pa_obj = re.compile(pattern=pattern, flags=flags)
+            self.re_pattern_map[key] = pa_obj
+        return self.re_pattern_map[key].search(self.text)
+
+    def re_findall(self, pattern, flags=0):
+        # return re.findall(pattern, self.text, flags)
+        key = f'{pattern} {flags}'
+        if key not in self.re_pattern_map:
+            pa_obj = re.compile(pattern=pattern, flags=flags)
+            self.re_pattern_map[key] = pa_obj
+        return self.re_pattern_map[key].findall(self.text)
+
+    def xpath(self, query):
+        return self.selector.xpath(query)
+
+    def css(self, query):
+        return self.selector.css(query)
+
+
+# noinspection PyBroadException
+class RequestClient:
+    logger = request_logger
+
+    def __init__(self, proxy_name_list=None,
+                 ua=None, default_use_pc_ua=True, is_change_ua_every_request=False,
+                 timeout: Union[tuple, float] = (30, 40),
+                 verify=False, allow_redirects=True, is_close_session=True,
+                 request_retry_times=2,
+                 using_platfrom=''):
+        """
+        :param proxy_name_list: 轮流使用代理服务商名字，可设置为 None,'noproxy', 'kuai', 'abuyun', 'crawlera',为None不使用代理
+        :param ua:  useragent，如果不设置就随机分配一个欺骗的
+        :param is_change_ua_every_request: 为每次请求设置新的useragent
+        :param timeout: 超时设置
+        :param verify:  是否校验服务器证书
+        :param allow_redirects
+        :param is_close_session: 是否在请求后关闭会话，连续型的请求需要cookie保持的，请设置为False，并且一直使用RequestClient实例化后的对象
+        :param logger_level:日志级别，10 20 30 40 50
+        """
+        if proxy_name_list is None:
+            proxy_name_list = ['noproxy']
+        if not isinstance(proxy_name_list, list):
+            proxy_name_list = [proxy_name_list]
+        if not set(proxy_name_list).issubset(set(self.PROXYNAME__REQUEST_METHED_MAP.keys())):
+            raise Exception('设置的代理名称错误')
+        self._proxy_name_list = proxy_name_list
+        default_ua = (
+            'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36' if default_use_pc_ua else
+            'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Mobile Safari/537.36')
+        self._ua = ua if ua else default_ua
+        self._default_use_pc_ua = default_use_pc_ua
+        self._is_change_ua_every_request = is_change_ua_every_request
+        self._timeout = timeout
+        self._verify = verify
+        self._allow_redirects = allow_redirects
+        self._is_close_session = is_close_session
+        self.ss = requests.Session()
+        self._max_request_retry_times = request_retry_times
+        self._using_platfrom = using_platfrom
+
+    def __add_ua_to_headers(self, headers):
+        # noinspection PyDictCreation
+        if not headers:
+            headers = dict()
+            headers['user-agent'] = self._ua
+        else:
+            if 'user-agent' not in headers and 'User-Agent' not in headers:
+                headers['user-agent'] = self._ua
+        if self._is_change_ua_every_request:
+            if self._default_use_pc_ua:
+                headers['user-agent'] = rand_get_useragent('chrome')
+            else:
+                headers['user-agent'] = rand_get_useragent('mobile')
+        headers.update({'Accept-Language': 'zh-CN,zh;q=0.8'})
+        return headers
+
+    def get_cookie_jar(self):
+        """返回cookiejar"""
+        return self.ss.cookies
+
+    def get_cookie_dict(self):
+        """返回cookie字典"""
+        return self.ss.cookies.get_dict()
+
+    def get_cookie_str(self):
+        """返回cookie字典"""
+        cookie_str = ''
+        for cookie_item in self.get_cookie_dict().items():
+            cookie_str += cookie_item[0] + '=' + cookie_item[1] + ';'
+        return cookie_str[:-1]
+
+    def add_cookies(self, cookies: Union[str, dict, RequestsCookieJar]):
+        """
+        :param cookies: 浏览器复制的cookie字符串或字典类型或者CookieJar类型
+        :return:
+        """
+        cookies_dict = dict()
+        if not isinstance(cookies, (str, dict, RequestsCookieJar)):
+            raise TypeError('传入的cookie类型错误')
+        if isinstance(cookies, str):
+            cookie_pairs = cookies.split('; ')
+            for cookie_pair in cookie_pairs:
+                k, v = cookie_pair.split('=', maxsplit=1)
+                cookies_dict[k] = v
+        if isinstance(cookies, (dict, RequestsCookieJar)):
+            cookies_dict = cookies
+        self.ss.cookies = requests.sessions.merge_cookies(self.ss.cookies, cookies_dict)
+
+    def request(self, method: str, url: str, verify: bool = None,
+                timeout: Union[int, float, tuple] = None, headers: dict = None,
+                cookies: dict = None, **kwargs) -> typing.Optional[SpiderResponse]:
+        """
+        使用指定名字的代理请求,从_proxy_name读取,当请求出错时候轮流使用各种代理ip。
+        :param method:
+        :param url:
+        :param verify:
+        :param timeout:
+        :param headers:
+        :param cookies:
+        :param kwargs:
+        :param kwargs :可接受一切requests.request方法中的参数
+        :return:
+        """
+        # self.logger.debug(locals())
+        key_word_args = copy.copy(locals())
+        key_word_args['headers'] = self.__add_ua_to_headers(headers)
+        # key_word_args.pop('self')
+        key_word_args.pop('kwargs')
+        key_word_args.update(kwargs)
+        if 'allow_redirects' not in key_word_args:
+            key_word_args['allow_redirects'] = self._allow_redirects
+
+        resp = None
+        # self.logger.debug('starting {} this url -->  '.format(method) + url)
+        # print(key_word_args)
+        exception_request = None
+        proxy_list = self._proxy_name_list * (self._max_request_retry_times + 1)
+        for i in range(self._max_request_retry_times + 1):
+            current_proxy_name = proxy_list[i]
+            t_start = time.time()
+            try:
+                request_proxy_method = self.PROXYNAME__REQUEST_METHED_MAP[current_proxy_name]
+                resp = request_proxy_method(**key_word_args)
+                time_spend = round(time.time() - t_start, 2)
+                resp.time_spend = time_spend
+                resp.ts = time_spend  # 简写
+                resp_log_dict = {
+                    'time_spend': round(time_spend, 2),
+                    'status_code': resp.status_code,
+                    'method': method,
+                    'current_retry_time': i,
+                    'current_proxy_name': current_proxy_name,
+                    'is_redirect': resp.is_redirect,
+                    'resp_len': len(resp.text),
+                    'resp_url': resp.url,
+                }
+                msg = f''' {self._using_platfrom}  request响应状态: {json.dumps(resp_log_dict, ensure_ascii=False)}'''
+                self.logger.debug(msg, extra=resp_log_dict)
+                if resp.status_code != 200 and i < self._max_request_retry_times + 1:
+                    self.logger.warning(msg, extra=resp_log_dict)
+                    raise HttpStatusError(resp.status_code)
+                if i != 0:
+                    pass
+                    # self.logger.info(f'第 {i} 次重试请求成功')
+                break
+            except Exception as e:
+                exception_request = e
+                if i != self._max_request_retry_times:
+                    self.logger.warning(
+                        f'{self._using_platfrom} RequestClient内部第{i}次请求出错，此次使用的代理是{current_proxy_name}, url: {url}'
+                        f'浪费时间[{round(time.time() - t_start, 2)}],再重试一次，原因是：{type(e)}    {e}')
+        self.close_session()
+        if resp is not None:  # 如<Response [404]>也是false,但不是none
+            return SpiderResponse(resp)
+        else:
+            raise exception_request
+
+    def get(self, url: str, verify: bool = None,
+            timeout: Union[int, float, tuple] = None, headers: dict = None,
+            cookies: dict = None, **kwargs):
+        params = copy.copy(locals())
+        params.pop('self')
+        params.pop('kwargs')
+        params.update(kwargs)
+        params['method'] = 'get'
+        return self.request(**params)
+
+    def post(self, url: str, verify: bool = None,
+             timeout: Union[int, float, tuple] = None, headers: dict = None,
+             cookies: dict = None, **kwargs):
+        params = copy.copy(locals())
+        params.pop('self')
+        params.pop('kwargs')
+        params.update(kwargs)
+        params['method'] = 'post'
+        return self.request(**params)
+
+    def close_session(self):
+        if self._is_close_session:
+            try:
+                self.ss.close()
+            except Exception:
+                pass
+
+    def save_picture(self, url, pic_path, pic_file=None, ):
+        resp = self.get(url)
+        if pic_file is None:
+            pic_file = url.split('/')[-1]
+        Path(pic_path).mkdir(exist_ok=True)
+        full_path = Path(pic_path) / Path(pic_file)
+        full_path.write_bytes(resp.content)
+
+    def _request_with_no_proxy(self, method, url, verify=None, timeout=None, headers=None, cookies=None, **kwargs):
+        """普通不使用代理"""
+
+        return self.ss.request(method, url, verify=verify or self._verify, timeout=timeout or self._timeout,
+                               headers=headers, cookies=cookies, **kwargs)
+
+    def _request_with_abuyun_proxy(self, method, url, verify=None, timeout=None, headers=None, cookies=None, **kwargs):
+        # 代理服务器
+        proxy_host = "http-dyn.abuyun.com"
+        proxy_port = "9020"
+
+        # 代理隧道验证信息
+        proxy_user = "HH65YN4C381XXXXX"
+        proxy_pass = "7176BE32A00YYYYY"
+
+        proxy_meta = "http://%(user)s:%(pass)s@%(host)s:%(port)s" % {
+            "host": proxy_host,
+            "port": proxy_port,
+            "user": proxy_user,
+            "pass": proxy_pass,
+        }
+
+        proxies = {
+            "http": proxy_meta,
+            "https": proxy_meta,
+        }
+        resp = self.ss.request(method, url, verify=verify or self._verify, timeout=timeout or self._timeout,
+                               headers=headers, cookies=cookies,
+                               proxies=proxies, **kwargs)
+        if resp.status_code == 429 or "429 Too Many Requests'" in resp.text or "429 To Many Requests'" in resp.text:
+            raise IOError(f'阿布云返回的状态是 {resp.status_code}')
+        return resp
+
+    def _request_with_kuai_proxy(self, method, url, verify=None, timeout=None, headers=None, cookies=None, **kwargs):
+        """使用redis中的快代理池子,怎么从redis拿代理ip和requests怎么使用代理，用户自己写"""
+
+        raise NotImplemented
+
+
+    PROXY_NOPROXY = 'noproxy'  # 方便代理名称补全.
+    PROXY_ABUYUN = 'abuyun'
+    PROXY_KUAI = 'kuai'
+
+    PROXYNAME__REQUEST_METHED_MAP = {'noproxy': _request_with_no_proxy,
+                                     'abuyun': _request_with_abuyun_proxy,
+                                     'kuai': _request_with_kuai_proxy
+                                     }  # 用户新增了方法后，在这里添加代理名字和请求方法的映射映射
+
+
+if __name__ == '__main__':
+    rc = RequestClient(using_platfrom='爬百度的')
+    resp = rc.get('https://www.baidu.com')
+    print(resp.request.headers)
+    print(resp.status_code)
+    print(resp.selector)
+    print(resp.selector)
+
+    rc.save_picture('https://scarb-images.oss-cn-hangzhou.aliyuncs.com/img/202207142159934.png', '/pics')
+
+```
 
 
 ### 8.31.3  `boost_spider` 内置了各种类型的数据库sink,全部只需要一行代码就能把字典入库.  

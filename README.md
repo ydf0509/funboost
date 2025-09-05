@@ -1,120 +1,151 @@
 # 1.python万能分布式函数调度框架简funboost简介  
 
-<pre style="color: greenyellow;background-color: #0c1119; font-size: medium;">  
-pip install funboost ,python全功能分布式函数调度框架。  demo用法例子见文档1.3  
+## 1.0 funboost 框架说明介绍
 
-funboost的功能是全面性重量级，用户能想得到的功能99%全都有;funboost的使用方式是轻量级，只有@boost一行代码需要写。  
-funboost的神奇之处在于它同时拥有"轻量级使用方式"和"重量级功能集"，完全颠覆了"功能强大=使用复杂"的传统思维。  
-它证明了一个框架可以既功能丰富又极其易用，这是对传统Python框架设计的一次巧妙超越。  
+`funboost`是一个 神奇 万能 简单 强大 自由 的 `python`框架,它的作用是给用户任意项目的任意函数赋能.
 
-只需要一行@boost代码即可分布式执行python一切任意函数，99%用过funboost的pythoner 感受是 方便 快速 强大。  
-支持python所有类型的并发模式,消息队列方面支持全球一切知名消息队列中间件和模拟的实现消息队列，  
-同时funboost支持celery整个框架作为核心来发布和消费消息，使用funboost的极简api方式来自动化配置和利用celery调度,  
-也支持huey dramatiq rq等任务队列框架作为funboost的broker。   
-
-python函数加速器，框架包罗万象，一统编程思维，兼容50% python编程业务场景，适用范围广。  
-python万能分布式函数调度框架，支持5种并发模式，30+种消息队列中间件  
-(不仅支持几乎所有你能想到的消息队列中间件，还支持本地磁盘队列、数据库队列 (SQLAlchemy, Peewee)、  
-内存队列、甚至是 HTTP 请求、WebSocket 等作为任务队列，甚至是将 Celery、Dramatiq、Huey 等其他框架整体作为其  
-Broker。funboost源码高扩展性的设计，造成“万物皆可为Broker”,并不是有30种传统意义上的经典消息队列，  
-因为世界上总共都没有30种知名的经典消息队列)，  
-30种任务控制功能。给任意python函数赋能。  
-用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。  
-
-框架只需要学习@boost这一个装饰器的入参就可以，所有用法几乎和1.3例子一摸一样，非常简化简单。  
-框架对代码没有入侵,可以加到任意已有项目而对项目python文件目录结构0要求,  
-不像 celery django scrapy 这样的框架,要从一开始就开始规划好项目目录结构,如果不想用框架了,  
-或者想改变使用其他框架框架,那么已经所写的代码组织形式就几乎成了废物,需要大改特改.   
-但是funboost完全不会这样,不管是加上还是去掉@boost装饰器,对你的项目影响为0,用户照常使用,  
-所以用户可以对任意项目,任意时候,引入使用funboost或者去掉使用funboost,代码组织形式不需要发生变化.  
-（即使不想用funboost了，也不需要亲自去掉@boost装饰器，因为函数上面有@boost装饰器对函数自身的直接调用运行没有任何影响，  
-用户照样可以直接例如 fun(x,y)是直接运行函数 ， fun.push(x,y) 才是发送到消息队列）  
-
-通过funboost web manager 管理系统，支持全面 查看 监控 管理 funboost的任务消费。  
-</pre>  
-
-### 框架评价  
+### 1.0.0 funboost 框架安装方式  
 
 ```  
-95%的用户在初步使用后，都表示赞不绝口、相见恨晚、两眼放光。认为funboost框架使用简单但功能强大和丰富。  
+pip install funboost --upgrade  
 
-第一次听说此框架的，100%用户会质疑框架性能不行，功能少，表示学习celery的教程文档上的所有功能  
-已近非常费劲头疼折磨，各种报错不知道如何解决。  
-一般python用户听到一个新的python框架，脚都软了，学习类似django celery scrapy意味着要学习  
-几个月文档才只能掌握框架的一小部分用法了，  
-尤其是celery这种框架，代码在pycharm完全不能自动补全提示，用户连@task装饰的函数有什么方法，  
-每个方法有什么入参都不知道，配置文件能写哪些配置都不知道，如果不按照博客上的celery目录结构写celery任务  
-，连celery命令行运行起来都要反复猜测尝试。  
-正因为如此用户从心理已近十分惧怕学习一种叫python框架的东西了，用户顶多愿意学习一个python包或者模块，  
-学习一个框架会非常害怕觉得难度高且耗时，所以非常反感尝试新的框架。  
-用过的99%都说funboost比celery简单方便太多,看都不看的人第一秒就是开始质疑重复造轮子.  
-
-funboost只有一个@boost装饰器，@boost入参能自动补全，更重要的是被@boost装饰的函数，  
-有哪些方法，每个方法入参是什么都能自动补全。funboost的中间件配置文件自当生成在用户当前项目根目录，  
-用户无需到处找文档，能配置什么东西，框架功能怎么配置。  
-因为funboost非常注重代码补全提示，所以不存在上面celery的那些复杂高难度缺点。  
+或 pip install funboost[all]  一次性安装所有小众三方中间件  
 ```  
 
-funboost的旧框架名字是function_scheduling_distributed_framework , 关系和兼容性见1.0.3介绍。  
+###  1.0.1 funboost 功能作用
+
+`funboost` 是一个万能分布式函数调度框架,是用于给用户任意新旧项目的任何函数赋能.\
+用户的函数只要加上 `@boost` 装饰器,就能轻松实现分布式函数调度.\
+自动支持 40种 消息队列 + 30种任务控制功能 + `python`中所有的并发执行方式\
+
+
+`funboost`的功能是全面性重量级，用户能想得到的功能99%全都有;`funboost`的使用方式是轻量级，只有`@boost`一行代码需要写。    
+`funboost`的神奇之处在于它同时拥有"轻量级使用方式"和"重量级功能集"，完全颠覆了"功能强大=使用复杂"的传统思维。   
+它证明了一个框架可以既功能丰富又极其易用，这是对传统Python框架设计的一次巧妙超越。   
+只需要一行`@boost`代码即可分布式执行`python`一切任意函数，99%用过`funboost`的`pythoner` 感受是 方便 高速 强大 自由。    
+
+#### funboost与celery的理念区别 
+**共同点:**
+`Celery` 是一个基于分布式消息队列的 异步任务队列/任务调度框架，用于在后台并发执行耗时任务、定时任务和分布式任务处理。
+说得更归根结底就是 `生产者 + broker + 消费者` 普通的编程思想.        
+如果你想一句话简单粗暴的概括`funboost`的作用,也可以套用`celery`的这个功能简介,但是区别也很大.  
+
+**区别:**
+`celery`是`围绕celery框架组织代码,属于重型奴役框架`,你围绕`celery`项目结构和`celery app`实例,去新增定义`@app.task`函数, app才是一等公民,task函数是二等公民  
+`funboost`是`函数增强器,属于轻型自由框架`,你可以对任意项目任意位置的新旧函数加上`@boost`装饰器,是给你函数赋能插上强大翅膀,用户函数自身就是一等公民   
+
+2个框架最显而易见明显差别就是 `funboost` 无需 `@app.boost` 而是直接`@boost`,这个小区别,造成影响深远的框架用法和理念区别.   
+`funboost`任务控制功能更多,支持broker中间件种类更多,并发方式更多,发布性能超越celery 22倍,消费性能超越 celery 40倍,但使用更简单.  
+
+
+#### **funboost 支持的并发模式:**      
+`funboost`支持python所有类型的并发模式,支持 `threading` `asyncio` `gevent` `eventlet` `单线程` 并发模式,同时支持 `多进程` 叠加这些细粒度并发模式.
+
+#### **funboost 支持的消息队列中间件:**     
+得益于强大的设计,在 `funboost` 中 万物可为`broker`,不仅仅支持了 所有的传统正经消息队列例如 `rabbitmq` `kafka` `nsq`等,\
+`funboost`还将各种 `tcp` `grpc` `http`等作为任务队列，\  
+`funboost` 将各种数据库作为`broker`,包括`redis` `sqlalchemy` `peewee` 作为 `broker`\   
+`funboost` 将文件系统作为 `broker`,包括 `sqlite` 和 文件夹 作为 `broker`   \
+并且`funboost` 将 `mysql cdc` 这种`mysql binlog`变化捕获作为`broker`,使得`funboost`可以是事件驱动的,远超`celery`的理念.\
+`funboost` 还轻松内置了将各种三方消费框架作为`broker`,例如直接将 `celery` `dramatiq` `huey` `rq` `nameko` 作为`broker`,使用这些框架的核心来执行用户的函数\
+
+#### **funboost的适用场景:**    
+`funboost`是python函数加速器，框架包罗万象，一统编程思维，兼容50% `python`编程业务场景，适用范围广,任何新老项目都能用到。\n  
+`funboost` 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。  
+
+
+#### **funboost 学习难吗?**   
+框架只需要学习`@boost`这一个装饰器的入参就可以，所有用法几乎和1.3例子一摸一样，非常简化简单。  
+框架对代码没有入侵,可以加到任意已有项目而对项目python文件目录结构0要求,   
+不像`celery` `django` `scrapy` 这样的框架,要从一开始就开始规划好项目目录结构,如果不想用框架了,   
+或者想改变使用其他框架框架,那么已经所写的代码组织形式就几乎成了废物,需要大改特改.    
+但是`funboost`完全不会这样,不管是加上还是去掉`@boost`装饰器,对你的项目影响为0,用户照常使用,   
+所以用户可以对任意项目,任意时候,引入使用`funboost`或者删除使用`funboost`,代码组织形式不需要发生变化.   
+
+即使不想用`funboost`了，也不需要亲自去掉`@boost`装饰器，因为函数上面有`@boost`装饰器对函数自身的直接调用运行没有任何影响，  
+用户照样可以直接例如 `fun(x,y)`是直接运行函数 ， `fun.push(x,y)` 才是发送到消息队列 
+
+#### **funboost支持可视化查看和管理消费情况:**    
+通过`funboost web manager` 管理系统，支持全面 查看 监控 管理 `funboost`的任务消费。  
+
+#### **funboost的性能超过`celery`一个数量级,不是一个档次上:**    
+`funboost`发布性能是`celery`的22倍,`funboost`消费性能是`celery`的40倍! 控制变量法对比方式,见文档2.6章节
+
+
+#### **funboost框架评价:**       
+95%的用户在初步使用后，都表示赞不绝口、相见恨晚、两眼放光。认为`funboost`框架使用简单但功能强大和丰富,\
+最重要的是用户使用`funboost`后自己是极端自由的,不像使用其他框架,导致用户编程思维需要发生翻天覆地变化,一切要围绕框架来编程,
+`funboost`对用户代码编程思维 入侵是0.  
+
+#### **funboost旧框架地址:**       
+`funboost`的旧框架名字是`function_scheduling_distributed_framework` , 关系和兼容性见1.0.3介绍。  
 旧框架地址： [https://github.com/ydf0509/distributed_framework](https://github.com/ydf0509/distributed_framework)  
 
-## 1.0 github地址和文档地址  
+## 1.1 github地址和文档地址  
 
-### 1.0.1 分布式函数调度框架文档地址   
+### 1.1.1 分布式函数调度框架文档地址   
 
 [查看分布式函数调度框架文档 https://funboost.readthedocs.io/zh-cn/latest/index.html](https://funboost.readthedocs.io/zh-cn/latest/index.html)  
 
 文档很长，大部分都是讲原理和对比各种框架,不仅仅 `how` to use,更多的是 `What` & `Why`。  
 但是用户只需要学习1.3这1个例子就能掌握了。因为其他例子只是 @boost的 BoosterParams 里面的控制入参换了一下。  
 
+用户只需要专门看 BoosterParams 里面的每个入参的注释就能掌握框架了，因为funboost只有@boost一行代码需要你写。   
+funboost 框架和一般的框架不一样，因为只有一行代码需要掌握，绝对不是要求用户先精通框架本身才能自由发挥。    
 
-用户只需要专门看 BoosterParams 里面的每个入参的注释就能掌握框架了，因为funboost只有@boost一行代码需要你写。  
+只要用过 `funboost` 的用户,都评价比 `celery` 的用法简单几百倍.
 
-funboost 框架和一般的框架不一样，因为只有一行代码需要掌握，绝对不是要求用户先精通框架本身才能自由发挥。  
+用户可以看文档`6.50`章节,怎么正确的用`ai`大模型掌握`funboost`的用法
 
-
+##### 1.python万能分布式函数调度框架简funboost简介
 [**1.python万能分布式函数调度框架简funboost简介**](https://funboost.readthedocs.io/zh-cn/latest/articles/c1.html)  
 
 ##### 2. funboost对比celery框架  
 [**2.funboost对比celery框架**](https://funboost.readthedocs.io/zh-cn/latest/articles/c2.html)  
-[2.funboost对比celery框架](https://funboost.readthedocs.io/zh-cn/latest/articles/c2.html)  
-[**3.funboost框架详细介绍**](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html)  
+
+  
 ##### 3.funboost框架详细介绍  
+[**3.funboost框架详细介绍**](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html)
+
+##### 4.funboost使用框架的各种代码示例
 [**4.funboost使用框架的各种代码示例**](https://funboost.readthedocs.io/zh-cn/latest/articles/c4.html)  
-[3.funboost框架详细介绍](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html)  
-[**4b.funboost使用框架的各种代码示例(高级进阶)**](https://funboost.readthedocs.io/zh-cn/latest/articles/c4b.html)  
-##### 4.funboost使用框架的各种代码示例  
-[4.funboost使用框架的各种代码示例](https://funboost.readthedocs.io/zh-cn/latest/articles/c4.html)  
-[**5.funboost框架运行时截图**](https://funboost.readthedocs.io/zh-cn/latest/articles/c5.html)  
+
 ##### 4b.funboost使用框架的各种代码示例(高级进阶)  
-[4b.funboost使用框架的各种代码示例(高级进阶)](https://funboost.readthedocs.io/zh-cn/latest/articles/c4b.html)  
-[**6.funboost常见问题回答**](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html)  
+[**4b.funboost使用框架的各种代码示例(高级进阶)**](https://funboost.readthedocs.io/zh-cn/latest/articles/c4b.html)  
+
+
 ##### 5.funboost框架运行时截图  
-[5.funboost框架运行时截图](https://funboost.readthedocs.io/zh-cn/latest/articles/c5.html)  
-[**7.funboost更新记录**](https://funboost.readthedocs.io/zh-cn/latest/articles/c7.html)  
+[**5.funboost框架运行时截图**](https://funboost.readthedocs.io/zh-cn/latest/articles/c5.html) 
+
+
 ##### 6.funboost常见问题回答  
-[6.funboost常见问题回答](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html)  
-[**8.funboost是万能函数调度框架，当然可以爬虫,自由编程 降维打击 框架奴役**](https://funboost.readthedocs.io/zh-cn/latest/articles/c8.html)  
-##### 7.funboost更新记录  
-[7.funboost更新记录](https://funboost.readthedocs.io/zh-cn/latest/articles/c7.html)  
-[**9.轻松远程服务器部署运行函数**](https://funboost.readthedocs.io/zh-cn/latest/articles/c9.html#)  
+[**6.funboost常见问题回答**](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html)  
+
+##### 7.funboost更新记录
+[**7.funboost更新记录**](https://funboost.readthedocs.io/zh-cn/latest/articles/c7.html)  
+
+
 ##### 8.funboost是万能函数调度框架，当然可以爬虫,自由编程 降维打击 框架奴役  
-[8.funboost是万能函数调度框架，当然可以爬虫,自由编程 降维打击 框架奴役](https://funboost.readthedocs.io/zh-cn/latest/articles/c8.html)  
-[**10.python3.6-3.12 安装/使用funboost出错问题反馈**](https://funboost.readthedocs.io/zh-cn/latest/articles/c10.html)  
+[**8.funboost是万能函数调度框架，当然可以爬虫,自由编程 降维打击 框架奴役**](https://funboost.readthedocs.io/zh-cn/latest/articles/c8.html)  
+
+ 
 ##### 9.轻松远程服务器部署运行函数  
-[9.轻松远程服务器部署运行函数](https://funboost.readthedocs.io/zh-cn/latest/articles/c9.html#)  
-[**11.funboost 使用某些中间件或三方任务队列框架作为broker的例子(包括celery框架)。**](https://funboost.readthedocs.io/zh-cn/latest/articles/c11.html)  
+[**9.轻松远程服务器部署运行函数**](https://funboost.readthedocs.io/zh-cn/latest/articles/c9.html)  
+9.轻松远程服务器部署运行函数](https://funboost.readthedocs.io/zh-cn/latest/articles/c9.html#)  
+
+
 ##### 10.python3.6-3.12 安装/使用funboost出错问题反馈  
-[10.python3.6-3.12 安装/使用funboost出错问题反馈](https://funboost.readthedocs.io/zh-cn/latest/articles/c10.html)  
-[**12.funboost 控制台支持命令行**](https://funboost.readthedocs.io/zh-cn/latest/articles/c12.html)  
+[**10.python3.6-3.12 安装/使用funboost出错问题反馈**](https://funboost.readthedocs.io/zh-cn/latest/articles/c10.html)  
+
 ##### 11.funboost 使用某些中间件或三方任务队列框架作为broker的例子(包括celery框架)。  
-[11.funboost 使用某些中间件或三方任务队列框架作为broker的例子(包括celery框架)。](https://funboost.readthedocs.io/zh-cn/latest/articles/c11.html)  
-[**13.启动 funboost web manager,查看消费结果和队列管理**](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html)  
+[**11.funboost 使用某些中间件或三方任务队列框架作为broker的例子(包括celery框架)**](https://funboost.readthedocs.io/zh-cn/latest/articles/c11.html)  
+
+
 ##### 12.funboost 控制台支持命令行  
-[12.funboost 控制台支持命令行](https://funboost.readthedocs.io/zh-cn/latest/articles/c12.html)  
+[**12.funboost 控制台支持命令行**](https://funboost.readthedocs.io/zh-cn/latest/articles/c12.html)  
 
 ##### 13.启动 funboost web manager,查看消费结果和队列管理  
-[13.启动 funboost web manager,查看消费结果和队列管理](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html)  
+[**13.启动 funboost web manager,查看消费结果和队列管理**](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html)  
 
 
 #### funboost依赖的nb_log日志文档   
@@ -124,42 +155,20 @@ funboost 框架和一般的框架不一样，因为只有一行代码需要掌�
 文档很长，但归根结底只需要学习 1.3 里面的这1个例子就行，主要是修改下@boost的各种参数，  
 通过不同的入参，实践测试下各种控制功能。  
 其中文档第四章列举了所有用法举例，  
-
-对比 celery 有20种改善，其中之一是无依赖文件夹层级和文件夹名字 文件名字。  
-首先能把  https://github.com/ydf0509/celery_demo  
-这个例子的已经写好的不规则目录层级和文件名字的函数用celery框架玩起来，才能说是了解celery，  
-否则如果项目文件夹层级和文件名字不规矩，后期再用celery，会把celery新手折磨得想死，  
-很多新手需要小心翼翼模仿网上说的项目目录结构，以为不按照那么规划目录和命名就玩不起来，本身说明celery很坑。  
 ```  
 
-### 1.0.2 分布式函数调度框架github地址  
+### 1.1.2 分布式函数调度框架github地址  
 
 [查看分布式函数调度框架github项目](https://github.com/ydf0509/funboost)  
 
-### 1.0.3 funboost 框架 和 function_scheduling_distributed_framework 框架 关系说明  
 
-```  
-funboost 是 function_scheduling_distributed_framework的包名更新版本  
-```  
-
-`<span style="font-size:15px">`旧框架地址：`<span><a href="https://github.com/ydf0509/distributed_framework" style="font-size: 15px">`function_scheduling_distributed_framework框架地址链接 `</a>`  
-
-## 1.1 安装方式  
-
-```  
-pip install funboost --upgrade  
-
-或pip install funboost[all]  一次性安装所有小众三方中间件  
-```  
 
 ## 1.2 框架功能介绍  
 
-分布式函数调度框架，支持5种并发模式，30+种消息中间件，30种任务控制功能。`<br>`  
-用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。  
 
-有了这个框架，用户再也无需亲自手写操作进程、线程、协程的并发的代码了。  
-
-有了这个框架，用户再也无需亲自手写操作redis rabbitmq socket kafka celery nameko了。  
+有了这个框架，用户再也无需亲自手写操作进程、线程、协程的并发的代码了。   
+有了这个框架，用户再也无需亲自手写操作`redis` `rabbitmq` `socket` `kafka` `celery` `nameko`了。  
+有了这个框架,用户再也无法亲自写各种任务控制功能了,`funboost`的任务控制功能应有尽有  
 
 funboost示图：  
 `<a href="https://imgse.com/i/pkFFghj"><img src="https://s21.ax1x.com/2024/04/29/pkFFghj.png" alt="pkFFghj.png" border="0" />``</a>`  
@@ -168,29 +177,7 @@ funboost示图：
 
 `<a href="https://imgse.com/i/pkFFcNQ"><img src="https://s21.ax1x.com/2024/04/29/pkFFcNQ.png" alt="pkFFcNQ.png" border="0" />``</a>`  
 
-### 1.2.1 框架支持5种并发模式  
-
-<div   style=" font-size: xx-large; font-family: 黑体,serif; "> threading  <span style="font-size: medium">(使用的是可变线程池，可以智能自动缩小和扩大线程数量,也可以运行async def的函数) </span> </div>  
-
-<div   style=" font-size: xx-large; font-family: 黑体,serif; "> gevent </div>  
-
-<div   style="font-size: xx-large; font-family: 黑体,serif; "> eventlet </div>  
-
-<div   style="font-size: xx-large; font-family: 黑体,serif; "> asyncio <span style="font-size: medium">(框架可以直接支持async 定义的携程函数作为任务,celery不支持) </span> </div>  
-
-<div   style=" font-size: xx-large; font-family: 黑体,serif; "> single_thread </div>  
-
-<br>  
-<div style=" font-size: 18px; font-family: 黑体,serif; ">除此之外，直接内置方便的支持 多进程multiprocess 叠加 以上5种并发，多进程和以上细粒度并发是叠加的而不是平行的二选一关系。</div>  
-<br><br>  
-
-```  
-总结一下那就是此框架可以适应所有编程场景，无论是io密集 cpu密集 还是cpu io双密集场景，框架能非常简便的应对任意场景。  
-框架的 单线程  多线程  gevent eventlet  asyncio 多进程  这些并发模型，囊括了目前python界所有的并发方式。  
-框架能自动实现 单线程  ，多线程， gevent ， eventlet ，asyncio ，多进程 并发 ，  
-多进程 + 单线程 ，多进程 + 多线程，多进程 + gevent,  多进程 + eventlet  ，多进程 + asyncio 的组合并发  
-这么多并发方式能够满足任意编程场景。  
-```  
+### 1.2.1 funboost 可以取代 线程池的例子
 
 以下两种方式，都是10线程加python内存queue方式运行f函数，有了此框架，用户无需代码手写手动操作线程 协程 asyncio 进程 来并发。  
 
@@ -214,7 +201,7 @@ if __name__ == '__main__':
 
 ```  
 
-2)funboost 使用内存队列,设置10线程并发  
+2)`funboost` 使用内存队列,设置10线程并发  
 
 ```python  
 import time  
@@ -234,36 +221,8 @@ if __name__ == '__main__':
 
 ```  
 
-### 1.2.2 框架支持30种中间件或三方框架  
 
-框架支持 rabbitmq redis python自带的queue.Queue  sqlite sqlachemy kafka pulsar mongodb 直接socket celery  nameko 等作为消息中间件。  
-
-同时此框架也支持操作 kombu 库作为中间件,所以此框架能够支持的中间件类型只会比celery更多。  
-
-框架支持的中间件种类大全和选型见文档3.1章节的介绍:  
-
-[3.1 各种中间件选择的场景和优势](https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html#id2)  
-
-### 1.2.3 框架对任务支持30种控制功能。  
-
-<pre>  
-
-python通用分布式函数调度框架。适用场景范围广泛， 框架非常适合io密集型(框架支持对函数自动使用 thread gevent eventlet asyncio 并发)  
-框架非常适合cpu密集型(框架能够在线程 协程基础上 叠加 多进程 multi_process 并发 ，不仅能够多进程执行任务还能多机器执行任务)。  
-不管是函数需要消耗时io还是消耗cpu，用此框架都很合适，因为任务都是在中间件里面，可以自动分布式分发执行。 此框架是函数的辅助控制倍增器。  
-
-框架不适合的场景是 函数极其简单，例如函数只是一行简单的 print hello，函数只需要非常小的cpu和耗时，运行一次函数只消耗了几十hz或者几纳秒，  
-此时那就采用直接调用函数就好了，因为框架施加了很多控制功能，当框架的运行逻辑耗时耗cpu 远大于函数本身 时候，使用框架反而会使函数执行变慢。  
-
-（python框架从全局概念上影响程序的代码组织和运行，包和模块是局部的只影响1个代码文件的几行。）  
-
-可以一行代码分布式并发调度起一切任何老代码的旧函数和新项目的新函数，并提供数十种函数控制功能。  
-
-还是不懂框架能做什么是什么，就必须先去了解下celery rq。如果连celery rq类似这种的用途概念听都没听说， 那就不可能知道框架的概念和功能用途。  
-
-</pre>  
-
-20种控制功能包括：  
+### 1.2.2 funboost支持丰富的任务控制功能
 
 <pre style="color: #A0A000">  
      分布式：  
@@ -385,12 +344,14 @@ win cmd和linux 运行时候，设置 PYTHONPATH 为项目根目录，是为了�
 ```  
 以下这只是简单求和例子，实际情况换成任意函数里面写任意逻辑，框架可没有规定只能用于 求和函数 的自动调度并发。  
 而是根据实际情况函数的参数个数、函数的内部逻辑功能，全部都由用户自定义，函数里面想写什么就写什么，想干什么就干什么，极端自由。  
-也就是框架很容易学和使用，把下面的task_fun函数的入参和内部逻辑换成你自己想写的函数功能就可以了，框架只需要学习boost这一个函数的参数就行。  
+也就是框架很容易学和使用，把下面的task_fun函数的入参和内部逻辑换成你自己想写的函数功能就可以了，
+框架只需要学习boost这一个函数的参数就行。  
 测试使用的时候函数里面加上sleep模拟阻塞，从而更好的了解框架的并发和各种控制功能。  
 ```  
 
 ```  
-有一点要说明的是框架的消息中间件的ip 端口 密码 等配置是在你第一次运行代码时候，在你当前项目的根目录下生成的 funboost_config.py 按需设置 (默认放在项目根目录是为了方便利用项目的 PYTHONPATH。当然，只要 PYTHONPATH 设置正确，  
+有一点要说明的是框架的消息中间件的ip 端口 密码 等配置是在你第一次运行代码时候，在你当前项目的根目录下
+生成的 funboost_config.py 按需设置 (默认放在项目根目录是为了方便利用项目的 PYTHONPATH。当然，只要 PYTHONPATH 设置正确，  
 该配置文件可以放在磁盘的任意文件夹里面。用户可以看教程 6.18.3 问答章节)。  
 
 funboost_config.py 里面仅仅是配置 中间件连接,例如ip 端口这些简单的配置, 只需要第一次配置正确即可,  
@@ -418,29 +379,27 @@ if __name__ == "__main__":
 
 <pre style="background-color: #BA2121;color: yellow">tips: sqlite作为消息队列,如果linux或mac运行报错read-only文件夹权限,需修改SQLLITE_QUEUES_PATH 就好啦,见文档10.3 </pre>  
 
-```text  
-"""  
+**代码说明:**
 对于消费函数，框架内部会生成发布者(生产者)和消费者。  
-1.推送。 task_fun.push(1,y=2) 会把 {"x":1,"y":2} (消息也自动包含一些其他辅助信息) 发送到中间件的 task_queue_name1 队列中。  
-2.消费。 task_fun.consume() 开始自动从中间件拉取消息，并发的调度运行函数，task_fun(**{"x":1,"y":2}),每秒运行5次  
-整个过程只有这两步，清晰明了，其他的控制方式需要看 boost 的中文入参解释，全都参数都很有用。  
-
+1.推送。 `task_fun.push(1,y=2)` 会把 `{"x":1,"y":2}` (消息也自动包含一些其他辅助信息) 发送到中间件的 `task_queue_name1` 队列中。   
+2.消费。 `task_fun.consume()` 开始自动从中间件拉取消息，并发的调度运行函数，`task_fun(**{"x":1,"y":2})`,每秒运行5次   
+整个过程只有这两步，清晰明了，其他的控制方式需要看 boost 的中文入参解释，全都参数都很有用。   
 
 这个是单个脚本实现了发布和消费，一般都是分离成两个文件的，任务发布和任务消费无需在同一个进程的解释器内部，  
 因为是使用了中间件解耦消息和持久化消息，不要被例子误导成了，以为发布和消费必须放在同一个脚本里面  
 
-
 框架使用方式基本上只需要练习这一个例子就行了，其他举得例子只是改了下broker_kind和其他参数而已，  
 而且装饰器的入参已近解释得非常详细了，框架浓缩到了一个装饰器，并没有用户需要从框架里面要继承什么组合什么的复杂写法。  
-用户可以修改此函数的sleep大小和@boost的数十种入参来学习 验证 测试框架的功能。  
-"""  
-```  
+用户可以修改此函数的`sleep`大小和`@boost`的数十种入参来学习 验证 测试框架的功能。  
+  
 
 控制台运行截图:  
+发布:
+![pkFkP4H.png](https://s21.ax1x.com/2024/04/29/pkFkP4H.png)
 
-`<a href="https://imgse.com/i/pkFkP4H"><img src="https://s21.ax1x.com/2024/04/29/pkFkP4H.png" alt="pkFkP4H.png" border="0" />``</a>`  
+消费:
+![pkFkCUe.png](https://s21.ax1x.com/2024/04/29/pkFkCUe.png)
 
-`<a href="https://imgse.com/i/pkFkCUe"><img src="https://s21.ax1x.com/2024/04/29/pkFkCUe.png" alt="pkFkCUe.png" border="0" />``</a>`  
 
 ### 1.3.2 funboost集中演示一个功能更多的综合例子  
 
@@ -550,20 +509,17 @@ if __name__ == '__main__':
 
 ```  
 
-funboost 上面用法小结:  
-```  
-funboost 鼓励一种“反框架”的思维。它告诉你：“你才是主角，我只是你的赋能工具。” 你的函数是独立的、可复用的、可独立运行,独立测试的。  
-@boost 只是一个可以随时加上或拿掉的“增强插件”。这种设计让你永远不会被框架“绑架”，保持了代码的纯粹性和长久的生命力。  
+**funboost 上面代码用法小结**:   
+`funboost` 鼓励一种`“反框架”`的思维。它告诉你：“你才是主角，我只是你的赋能工具。” 你的函数是独立的、可复用的、可独立运行,独立测试的。  
+`@boost` 只是一个可以随时加上或拿掉的“增强插件”。这种设计让你永远不会被框架“绑架”，保持了代码的纯粹性和长久的生命力。  
 
-并且即使你不想用funboost来赋能你的函数,也不需要去掉@boost装饰器,   
-因为 消费函数.push(1,2) 和 消费函数.publish({"x":1, "y":2}) 才是发布到消息队列,  
-你直接调用 消费函数(1,2) 是不会发布到消息队列的,是直接原始的调用函数本身。  
-```  
-
-```  
-“放荡不羁”的 funboost，是以最少的规则，释放了开发者最大的创造力。 它相信优秀的程序员能够自己管理好业务逻辑，  
+并且即使你不想用`funboost来`赋能你的函数,也不需要去掉`@boost`装饰器,   
+因为 `消费函数.push(1,2)` 和 `消费函数.publish({"x":1, "y":2})` 才是发布到消息队列,  
+你直接调用 `消费函数(1,2)` 是不会发布到消息队列的,是直接原始的调用函数本身。  
+ 
+“放荡不羁”的 `funboost`，是以最少的规则，释放了开发者最大的创造力。 它相信优秀的程序员能够自己管理好业务逻辑，  
 而框架的职责是赋能你的函数,扫清所有工程化障碍，让你自由驰骋。  
-```  
+
 
 
 ### 1.3.3  funboost的 @BoosterParams(...)  和 @boost(BoosterParams(...)) 等效  
@@ -650,6 +606,8 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 如果连只有一个重要函数的框架都学不会，那就学不会学习得了更复杂的其他框架了，大部分框架都很复杂比学习一个包难很多。  
 大部分框架，都要深入使用里面的很多个类，还需要继承组合一顿。  
 ```  
+
+用户也可以按照 文档6.50的方式,使用ai来掌握`funboost`
 
 ## 1.6 funboost支持支持celery框架整体作为funboost的broker (2023.4新增)  
 

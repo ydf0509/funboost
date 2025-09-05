@@ -14,7 +14,7 @@ import sys
 from pymongo import IndexModel, ReplaceOne
 
 from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig
-from funboost.core.helper_funs import get_publish_time, delete_keys_and_return_new_dict
+from funboost.core.helper_funs import get_publish_time, delete_keys_and_return_new_dict, get_publish_time_format
 from funboost.core.serialization import Serialization
 from funboost.utils import time_util, decorators
 from funboost.utils.mongo_util import MongoMixin
@@ -42,9 +42,9 @@ class FunctionResultStatus():
         self.task_id = self.msg_dict.get('extra', {}).get('task_id', '')
         self.process_id = os.getpid()
         self.thread_id = threading.get_ident()
-        self.publish_time = publish_time = get_publish_time(msg_dict)
-        if publish_time:
-            self.publish_time_str = time_util.DatetimeConverter(publish_time).datetime_str
+        self.publish_time  = get_publish_time(msg_dict)
+        self.publish_time_format = get_publish_time_format(msg_dict)
+        # print(self.publish_time_format)
         function_params = delete_keys_and_return_new_dict(msg_dict, )
         self.params = function_params
         self.params_str = Serialization.to_json_str(function_params)

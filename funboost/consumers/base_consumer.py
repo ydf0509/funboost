@@ -491,7 +491,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         return msg
 
     def _submit_task(self, kw):
-
         kw['body'] = self._convert_msg_before_run(kw['body'])
         self._print_message_get_from_broker(kw['body'])
         if self._judge_is_daylight():
@@ -499,6 +498,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             time.sleep(self.time_interval_for_check_do_not_run_time)
             return
         function_only_params = delete_keys_and_return_new_dict(kw['body'], )
+        kw['function_only_params'] = function_only_params
         if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
                 function_only_params,self._get_priority_conf(kw, 'filter_str')):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
             self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
@@ -688,7 +688,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             max_retry_times = self._get_priority_conf(kw, 'max_retry_times')
             current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
             current_retry_times = 0
-            function_only_params = delete_keys_and_return_new_dict(kw['body'])
+            function_only_params = kw['function_only_params']
             for current_retry_times in range(max_retry_times + 1):
                 current_function_result_status.run_times = current_retry_times + 1
                 current_function_result_status.run_status = RunStatus.running
@@ -747,10 +747,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     # noinspection PyProtectedMember
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
                                                        function_result_status: FunctionResultStatus, ):
-        function_only_params = delete_keys_and_return_new_dict(kw['body']) if self._do_not_delete_extra_from_msg is False else kw['body']
+        function_only_params = kw['function_only_params'] if self._do_not_delete_extra_from_msg is False else kw['body']
         task_id = kw['body']['extra']['task_id']
         t_start = time.time()
-        # function_result_status.run_times = current_retry_times + 1
+      
         fct = funboost_current_task()
         fct_context = FctContext(function_params=function_only_params,
                                  full_msg=kw['body'],
@@ -872,7 +872,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             max_retry_times = self._get_priority_conf(kw, 'max_retry_times')
             current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
             current_retry_times = 0
-            function_only_params = delete_keys_and_return_new_dict(kw['body'])
+            function_only_params = kw['function_only_params']
             for current_retry_times in range(max_retry_times + 1):
                 current_function_result_status.run_times = current_retry_times + 1
                 current_function_result_status.run_status = RunStatus.running
@@ -936,8 +936,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                                                    function_result_status: FunctionResultStatus, ):
         """虽然和上面有点大面积重复相似，这个是为了asyncio模式的，asyncio模式真的和普通同步模式的代码思维和形式区别太大，
         框架实现兼容async的消费函数很麻烦复杂，连并发池都要单独写"""
-        function_only_params = delete_keys_and_return_new_dict(kw['body']) if self._do_not_delete_extra_from_msg is False else kw['body']
-        function_result_status.run_times = current_retry_times + 1
+        function_only_params = kw['function_only_params'] if self._do_not_delete_extra_from_msg is False else kw['body']
+      
         # noinspection PyBroadException
         t_start = time.time()
         fct = funboost_current_task()

@@ -9,6 +9,7 @@ from faststream import FastStream,Context
 from faststream.annotations import Logger
 
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
+from funboost.core.serialization import Serialization
 from funboost.core.helper_funs import delete_keys_and_return_new_dict
 
 

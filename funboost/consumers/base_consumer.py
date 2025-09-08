@@ -168,8 +168,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # if  self.consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC and self.consumer_params.specify_async_loop is None:
         #     self.consumer_params.specify_async_loop= get_or_create_event_loop()
         self._lock_for_count_execute_task_times_every_unit_time = Lock()
-        if self.consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC:
-            self._async_lock_for_count_execute_task_times_every_unit_time = asyncio.Lock()
+        
         # self._unit_time_for_count = 10  # 每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。
         # self._execute_task_times_every_unit_time = 0  # 每单位时间执行了多少次任务。
         # self._execute_task_times_every_unit_time_fail =0  # 每单位时间执行了多少次任务失败。
@@ -837,7 +836,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
             function_result_status.result = FunctionResultStatus.FUNC_RUN_ERROR
         return function_result_status
-
+    
+    def _gen_asyncio_objects(self):
+        if getattr(self, '_async_lock_for_count_execute_task_times_every_unit_time', None) is None:
+            self._async_lock_for_count_execute_task_times_every_unit_time = asyncio.Lock()
+        
     # noinspection PyProtectedMember
     async def _async_run(self, kw: dict, ):
         """
@@ -868,6 +871,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         伪asyncio并发是在每个线程启动一个临时的loop,每个loop仅仅运行一个协程,然后等待这个协程结束,这完全违背了 asyncio 的核心初心理念,这种比多线程性能本身还差.
         """
         try:
+            self._gen_asyncio_objects()
             t_start_run_fun = time.time()
             max_retry_times = self._get_priority_conf(kw, 'max_retry_times')
             current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
@@ -913,7 +917,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
                 if (current_function_result_status.success is False and current_retry_times == max_retry_times) or current_function_result_status.success is True:
                     await simple_run_in_executor(push_result)
-
             async with self._async_lock_for_count_execute_task_times_every_unit_time:
                 self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
 

@@ -201,12 +201,15 @@ class BoosterParams(BaseJsonAbleModel):
     schedule_tasks_on_main_thread: bool = False  # 直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
 
     is_auto_start_consuming_message: bool = False  # 是否在定义后就自动启动消费，无需用户手动写 .consume() 来启动消息消费。
+    
+    # booster_group :消费分组名字， BoostersManager.consume_group 时候根据 booster_group 启动多个消费函数,减少需要写 f1.consume() f2.consume() ...这种。
+    # 不像BoostersManager.consume_all() 会启动所有不相关消费函数,也不像  f1.consume() f2.consume() 这样需要多次启动消费函数。
+    booster_group:typing.Union[str, None] = None
 
     consuming_function: typing.Optional[typing.Callable] = None  # 消费函数,在@boost时候不用指定,因为装饰器知道下面的函数.
     consuming_function_raw: typing.Optional[typing.Callable] = None  # 不需要传递，自动生成
     consuming_function_name: str = '' # 不需要传递，自动生成
 
-    
 
     broker_exclusive_config: dict = {}  # 加上一个不同种类中间件非通用的配置,不同中间件自身独有的配置，不是所有中间件都兼容的配置，因为框架支持30种消息队列，消息队列不仅仅是一般的先进先出queue这么简单的概念，
     # 例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，有的中间件原生能支持消息优先级有的中间件不支持,每一种消息队列都有独特的配置参数意义，可以通过这里传递。每种中间件能传递的键值对可以看consumer类的 BROKER_EXCLUSIVE_CONFIG_DEFAULT
@@ -228,9 +231,30 @@ class BoosterParams(BaseJsonAbleModel):
         COMMON_FUNCTION = 'COMMON_FUNCTION'
     """
 
+    """
+    user_options:
+    用户额外自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
+    user_options 提供了一个统一的、用户自定义的命名空间，让用户可以为自己的“奇葩需求”或“高级定制”传递配置，而无需等待框架开发者添加官方支持。
+    
+    funboost 是自由框架不是奴役框架,不仅消费函数逻辑自由,目录层级结构自由,自定义奇葩扩展也要追求自由,用户不用改funboost BoosterParams 源码来加装饰器参数
+
+    例如场景1:
+        假设框架装饰器不内置提供 BoostersManager.consume_group(booster_group) ,用户想启动一组相关消费函数,
+        可以传递 user_options={'booster_group': 'group1'} 来实现,然后for循环判断所有boosters
+        if booster.boost_params.user_options['booster_group'] ==  'group1' 来启动消费组
+    例如场景2:
+        funboost框架目前是只能消费一个kafka KAFKA_BOOTSTRAP_SERVERS,这个配置是在 funboost_config.py 定义的,但这也意味着项目只能使用一个kafka集群.
+        用户可以按照文档4.21 自定义consumer和publisher,用户的类不读取funboost_config.py 的kafka KAFKA_BOOTSTRAP_SERVERS,
+        而是读取 user_options 中的kafka KAFKA_BOOTSTRAP_SERVERS,
+        在使用时候,装饰器传递不同的 user_options={'kafka_bootstrap_servers': '192.168.1.10x'} ,
+        达到消费几十个不同的kafka集群的目的.
+    """
+    user_options: dict = {} # 用户自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
+    
+    
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
-
-
+    
+    
 
     @root_validator(skip_on_failure=True, )
     def check_values(cls, values: dict):
@@ -358,6 +382,8 @@ class PublisherParams(BaseJsonAbleModel):
     publish_msg_log_use_full_msg: bool = False # 发布到消息队列的消息内容的日志，是否显示消息的完整体，还是只显示函数入参。
     consuming_function_kind: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参.
     rpc_timeout: int = 1800 # rpc模式下，等待rpc结果返回的超时时间
+    user_options: dict = {}  # 用户自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
+
 
 if __name__ == '__main__':
     from funboost.concurrent_pool import FlexibleThreadPool

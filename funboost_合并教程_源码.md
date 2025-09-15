@@ -38,7 +38,7 @@ pip install funboost --upgrade
 `funboost`是`函数增强器,属于轻型自由框架`,你可以对任意项目任意位置的新旧函数加上`@boost`装饰器,是给你函数赋能插上强大翅膀,用户不需要围绕`funboost`或某个中央app实例来组织代码结构,用户函数自身就是一等公民   
 
 2个框架最显而易见明显差别就是 `funboost` 无需 `@app.boost` 而是直接`@boost`,这个小区别,造成影响深远的框架用法和理念区别.   
-`funboost`任务控制功能更多,支持broker中间件种类更多,并发方式更多,发布性能超越celery 22倍,消费性能超越 celery 40倍,性能是高几个数量级的断崖式遥遥领先,但反而使用比celery简单得多.  
+`funboost`任务控制功能更多,支持broker中间件种类更多,并发方式更多,发布性能超越celery 22倍,消费性能超越 celery 46倍,性能是高几个数量级的断崖式遥遥领先,但反而使用比celery简单得多.  
 ```
 
 #### **funboost 支持的并发模式:**      
@@ -76,7 +76,7 @@ pip install funboost --upgrade
 通过`funboost web manager` 管理系统，支持全面 查看 监控 管理 `funboost`的任务消费。  
 
 #### **funboost的性能超过`celery`一个数量级,不是一个档次上:**    
-`funboost`发布性能是`celery`的22倍,`funboost`消费性能是`celery`的40倍! 控制变量法对比方式,见文档2.6章节
+`funboost`发布性能是`celery`的22倍,`funboost`消费性能是`celery`的46倍! 控制变量法对比方式,见文档2.6章节
 
 
 #### **funboost框架评价:**  
@@ -105,7 +105,7 @@ funboost 框架和一般的框架不一样，因为只有一行代码需要掌�
 
 只要用过 `funboost` 的用户,都评价比 `celery` 的用法简单几百倍.
 
-用户可以看文档`6.50`章节,怎么正确的用`ai`大模型掌握`funboost`的用法
+用户可以看文档`14`章节,怎么正确的用`ai`大模型掌握`funboost`的用法
 ```
 
 [**1.python万能分布式函数调度框架简funboost简介**](https://funboost.readthedocs.io/zh-cn/latest/articles/c1.html)  
@@ -609,7 +609,7 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 大部分框架，都要深入使用里面的很多个类，还需要继承组合一顿。  
 ```  
 
-用户也可以按照 文档6.50的方式,使用ai来掌握`funboost`
+用户也可以按照 文档14章节的方式,使用ai来掌握`funboost`
 
 ## 1.6 funboost支持支持celery框架整体作为funboost的broker (2023.4新增)  
 
@@ -868,7 +868,7 @@ celery才需要从配置中写好 include imports  autodiscover_tasks，从而�
 
 任意并发模式，任意中间件类型，发布和消费性能远远超过celery。  
 
-funboost比celery的发布性能超过20倍，消费性能超过40倍。  
+funboost比celery的发布性能超过22倍，消费性能超过46倍。  
 
 性能跑分代码在下面 2.6 章节  
 
@@ -1460,7 +1460,7 @@ Funboost纳廿四路诸侯，内建队列立乾坤，更兼**兼容Celery全系�
 
 **三胜曰：神速之胜**  
 Celery吞吐若老牛破车，性能瓶颈成痼疾，此谓**老牛破车困泥潭**！  
-Funboost疾如雷霆裂空，**发布快1000%惊鬼神，消费疾2000%贯九霄**，此谓**追风逐电荡八荒**！  
+Funboost疾如雷霆裂空，**发布快2000%惊鬼神，消费疾4000%贯九霄**，此谓**追风逐电荡八荒**！  
 
 **四胜曰：明道之胜**  
 Celery动态元编程蔽日，参数传递如盲人摸象，此谓**雾锁重楼失北斗**！  
@@ -1574,16 +1574,16 @@ boost装饰器只需要指定 broker_kind=BrokerEnum.CELERY
 
 ### 2.6.3 `funboost` vs `celery` 消费性能对比
 
-`funboost`: 平均每隔0.08秒消费1000条消息，每秒消费约12000条
+`funboost`: 平均每隔0.08秒消费1000条消息，每秒消费约14000条
 
 `celery`: 平均每隔3.6秒消费1000条消息，每秒消费约300条
 
-对比结果: `funboost`消费性能约为`celery`的40倍
+对比结果: `funboost`消费性能约为`celery`的46倍
 
 ### 2.6.4 `funboost` vs `celery` 总体性能对比
 
 `funboost`在同样的硬件环境和测试条件下（win11 + python3.9 + 本机redis中间件 + AMD R7 5800H CPU + 单线程并发模式 + 相同消费函数），\
-无论是在消息发布还是消费方面都大幅优于`celery`，`funboost`是`celery`的发布性能是`22`倍，`funboost` 消费性能是`celery`的`40`倍 ，\
+无论是在消息发布还是消费方面都大幅优于`celery`，`funboost`是`celery`的发布性能是`22`倍，`funboost` 消费性能是`celery`的`46`倍 ，\
 所以`funboost`性能不是比`celery`高百分之多少这种级别,而是高了一个数量级，`funboost`性能是毫无争议的绝对的遥遥领先。
 
 
@@ -1979,6 +1979,10 @@ class BoosterParams(BaseJsonAbleModel):
 
     is_auto_start_consuming_message: bool = False  # 是否在定义后就自动启动消费，无需用户手动写 .consume() 来启动消息消费。  
 
+    # booster_group :消费分组名字， BoostersManager.consume_group 时候根据 booster_group 启动多个消费函数,减少需要写 f1.consume() f2.consume() ...这种。
+    # 不像BoostersManager.consume_all() 会启动所有不相关消费函数,也不像  f1.consume() f2.consume() 这样需要多次启动消费函数。
+    booster_group:typing.Union[str, None] = None
+
     consuming_function: typing.Optional[typing.Callable] = None  # 消费函数,在@boost时候不用指定,因为装饰器知道下面的函数.  
     consuming_function_raw: typing.Optional[typing.Callable] = None  # 不需要传递，自动生成  
     consuming_function_name: str = '' # 不需要传递，自动生成  
@@ -2004,6 +2008,27 @@ class BoosterParams(BaseJsonAbleModel):
         STATIC_METHOD = 'STATIC_METHOD'  
         COMMON_FUNCTION = 'COMMON_FUNCTION'  
     """  
+
+    """
+    user_options:
+    用户额外自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
+    user_options 提供了一个统一的、用户自定义的命名空间，让用户可以为自己的“奇葩需求”或“高级定制”传递配置，而无需等待框架开发者添加官方支持。
+    
+    funboost 是自由框架不是奴役框架,不仅消费函数逻辑自由,目录层级结构自由,自定义奇葩扩展也要追求自由,用户不用改funboost BoosterParams 源码来加装饰器参数
+
+    例如场景1:
+        假设框架装饰器不内置提供 BoostersManager.consume_group(booster_group) ,用户想启动一组相关消费函数,
+        可以传递 user_options={'booster_group': 'group1'} 来实现,然后for循环判断所有boosters
+        if booster.boost_params.user_options['booster_group'] ==  'group1' 来启动消费组
+    例如场景2:
+        funboost框架目前是只能消费一个kafka KAFKA_BOOTSTRAP_SERVERS,这个配置是在 funboost_config.py 定义的,但这也意味着项目只能使用一个kafka集群.
+        用户可以按照文档4.21 自定义consumer和publisher,用户的类不读取funboost_config.py 的kafka KAFKA_BOOTSTRAP_SERVERS,
+        而是读取 user_options 中的kafka KAFKA_BOOTSTRAP_SERVERS,
+        在使用时候,装饰器传递不同的 user_options={'kafka_bootstrap_servers': '192.168.1.10x'} ,
+        达到消费几十个不同的kafka集群的目的.
+    """
+    user_options: dict = {} # 用户自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
+    
 
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.  
 
@@ -2624,9 +2649,100 @@ if __name__ == '__main__':
 
 ```  
 
-### 4.2d.3 使用 BoostersManager ,通过queue_name 得到 booster对象  
+### 4.2d.3 使用 BoostersManager ,通过 consume_group 启动一组消费函数
+
+`BoostersManager.consume_group(booster_group)` 通过 `booster_group`消费分组, 启动消费  
+
+例如一组函数装饰器都写 `BoosterParams(booster_group='group1')` ，那么 `BoostersManager.consume_group('group1')` 会启动这组函数消费。
+
+主要是取代用户手动写 `f1.consume()` `f2.consume()`  这样需要多次亲自手写启动相关消费函数;    
+也避免了 `BoostersManager.consume_all()` 太过于粗暴,会启动不相关的多余消费函数.    
+也避免了 `BoostersManager.consume('q1', 'q2', ...)` 亲自写queue_name列表来启动消费函数.
+
+booster_group 代码演示:
+```python
+"""
+演示使用 BoostersManager.consume_group($booster_group) 启动消费组
+
+BoostersManager.consume_group(booster_group=GROUP1_NAME)
+相当于是内部执行了 f1.consume() f2.consume() 这种分多次启动消费函数,
+
+因为f1和f2的booster_group都是GROUP1_NAME,所以会被启动消费组,
+f3的booster_group是None,所以不会被启动消费
+"""
+
+import time
+from funboost import boost, BoosterParams, BoostersManager, ConcurrentModeEnum
+from funboost.utils.ctrl_c_end import ctrl_c_recv
+
+
+GROUP1_NAME = "my_group1"
+
+# 自定义的参数类，继承BoosterParams，用于减少每个消费函数装饰器的重复相同入参个数,
+# 不用相关函数都重复写 booster_group 入参.
+class MyGroup1BoosterParams(BoosterParams):
+    concurrent_mode: str = ConcurrentModeEnum.SINGLE_THREAD
+    booster_group: str = GROUP1_NAME  # 指定消费分组名字
+
+
+@boost(
+    MyGroup1BoosterParams(
+         # 使用了自定义类 MyGroup1BoosterParams ,所以 f1的booster_group 会自动指定为 GROUP1_NAME
+        queue_name="queue_test_consume_gq1",
+    )
+)
+def f1(x):
+    time.sleep(2)
+    print(f"f1 {x}")
+
+
+@boost(
+    MyGroup1BoosterParams( 
+        # 使用了自定义类 MyGroup1BoosterParams ,所以 f2的booster_group 会自动指定为 GROUP1_NAME
+        queue_name="queue_test_consume_gq2",
+    )
+)
+def f2(x):
+    time.sleep(2)
+    print(f"f2 {x}")
+
+
+@boost(
+    BoosterParams(
+        # 没有使用自定义类 MyGroup1BoosterParams 而是直接传入 BoosterParams,所以 f3 的booster_group 是 None
+        queue_name="queue_test_consume_gq3",
+        concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,
+    )
+)
+def f3(x):
+    time.sleep(2)
+    print(f"f3 {x}")
+
+
+if __name__ == "__main__":
+    for i in range(10):
+        f1.push(i)
+        f2.push(i)
+        f3.push(i)
+
+    # f1.consume() # 分多次启动消费函数,如果嫌麻烦觉得需要一个一个启动有关函数,可以 BoostersManager.consume_group 一次启动一个分组的所有函数的消费
+    # f2.consume()
+
+    BoostersManager.consume_group(
+        GROUP1_NAME
+    )  # 当前进程内启动消费组 GROUP1_NAME , 内部相当于是执行了 f1.consume() f2.consume() 
+    # BoostersManager.multi_process_consume_group(GROUP1_NAME,2) # 多进程启动消费组
+    ctrl_c_recv()
+
+```
+
+
+### 4.2d.4 使用 BoostersManager ,通过queue_name 得到 booster对象  
 
 BoostersManager.get_booster(queue_name) 通过queue_name 获取 booster(被@boost装饰的函数)  
+
+
+
 
 ## 4.2e funboost 支持实例方法、类方法、静态方法、普通函数 4种类型，作为消费函数的例子  
 
@@ -4399,17 +4515,25 @@ if __name__ == '__main__':
 @boost(BoosterParams(queue_name='test_queue70ac', broker_kind=BrokerEnum.KAFKA_CONFLUENT, broker_exclusive_config={'group_id':"my_kafka_group_id_xx"}))  
 def f(x):  
     pass  
-  
-具体的每种消息队列能支持哪些参数配置，必须是对应Consumer类的 BROKER_EXCLUSIVE_CONFIG_KEYS 指定的配置名字的范围之类才能起作用，  
-例如你使用redis的list结构做消息队列，你去设置消费者组那是没什么卵用的。  
+    
 
 打个比喻消费是看书，redis的list和rabbitmq消费消息，是看一页就把书本的那一页撕下来，下次继续看书本中剩下的页就好了。不可多组重复回拨消费，不需要存在啥消费者组这种概念。  
 kafka消费消息，是小明和小红分别看这本书，小明每看完几页后，会夹一个小明的书签到最新看到的地方，下次小明继续看就先找到小明的书签，继续读之后的页数。  
 小红和小明分别使用不同的书签标记他们各自读到哪一页了，kafka不是看完一页就把那张撕下来，所以kafka存在消费者组概念，  
-所以funboost提供broker_exclusive_config入参来支持不同消息队列独有特性。  
+所以funboost提供 broker_exclusive_config 入参来支持不同消息队列独有特性。  
 
 以后将增加更多的差异化设置参数，能更深入灵活使用不同中间件的独特概念和功能  
 ```  
+
+### 4.20.2 怎么知道每种消息队列 broker_exclusive_config 能支持哪些独有特殊的参数配置
+
+具体的每种消息队列 `broker_exclusive_config` 能支持哪些独有特殊的参数配置，必须是对应Consumer类的 `BROKER_EXCLUSIVE_CONFIG_DEFAULT` 中包含的keys.
+例如你使用redis的list结构做消息队列，你去设置消费者组那是没什么卵用的。
+
+例如 `ConsumerKafkaConfluent` 类的 `BROKER_EXCLUSIVE_CONFIG_DEFAULT` 的值是:     
+{'group_id': 'funboost_kafka', 'auto_offset_reset': 'earliest','num_partitions':10,'replication_factor':1,}    
+所以你可以传递指定这些值 group_id/ auto_offset_reset/ num_partitions/ replication_factor
+
 
 ## 4.21 【完全自由定制扩展（方式1）】 使用 register_custom_broker 完全彻底自由灵活自定义扩展和定制修改中间件(消费者和发布者)  
 
@@ -7831,275 +7955,7 @@ RedisBrpopLpush
 ```  
 
 
-## 6.50 利用ai大模型来更好的掌握funboost的最佳方式是什么?  
 
-现在是ai时代,谁不用ai就太落伍吃亏了.   
-
-但是使用 ai 大模型也有技巧.  
-
-**第一性原理:使用google ai studio网页版+上传markdown+免费+1000k上下文+全文一次性阅读=幻觉率几乎没有**  
-**gemini-2.5pro在上传 funboost_合并教程_源码.md 这文件后,对funboost的常规用法以及任何细节推理和funboost作者我本人不相上下,知我心者,gemini也**  
-
-### 6.50.1  强烈推荐选择 gemini 2.5pro 大模型  
-
-`gemini 2.5pro`大模型有1000k上下文, 并且可以在 `google ai studio` 免费无限使用  
-
-funboost的教程需要300k上下文,funboost的框架源码也需要300k上下文,  
-`funboost_合并教程_源码.md` 这个文件需要大约600k上下文 ,全球只有 `gemini 2.5pro` 能胜任阅读这个文档.  
-
-[https://aistudio.google.com/app/prompts](https://aistudio.google.com/app/prompts)  
-
-
-`claude`写代码牛,是修改代码调用工具链强大,但是上下文只有200k,并且不免费,所以pass.  
-`gpt5` token上下文太短,也pass  
-
-国产大模型都不推荐,国产的上下文更短,而且阅读推理能力亲测很差,上传文档后还幻觉乱写代码,    
-国产的都不推荐使用别看这个那个开个发布会吹牛吊打美国`ai`公司,     
-`funboost`知识, 就是ai大模型的试金石. 国产ai目前不行,国产ai大模型只是刻意训练`leetcode`题目,    
-然后在`hugging face` 刷ai评分排行榜,涉及到超长文档的陌生知识的推理,瞬间就露馅了,    
-做`leetcode`题目是很短的孤立的上下文,没有涉及到大范围知识的推理,和真实的日常需求脱轨了。  
-就像有的人只靠`leetcode`刷题，投机取巧只背诵一段八股文博客答案,来面试.    
-`funboost`框架包罗万象,几乎包含了`python`所有知识 + 所有消息队列中间件 + 设计模式 ,    
-需要极强的`跨领域的综合推理能力`,而不是在单一、封闭问题（如算法题）上的表现。    
- `gemini-2.5pro` 经过实测,在`funboost`的文档推理上 是真正的遥遥领先,    
-
-
-```  
-国产ai整天开发布会，搞机器人转发营销，吹牛在大模型排行榜上吊打美国最顶尖大模型，都不要信，那只是专门训练leetcode答案刷hugging face评分榜的。  
-leetcode 一个题目,一般就不到10行文字,和 funboost这种 几万行的 教程 + 源码 文档相比,对ai的 要求不是一个级别.  
-
-LeetCode 测试的是在 封闭、小上下文 环境中解决孤立问题的能力。这就像要求一个学生解答一道定义清晰的数学题。  
-funboost 则要求理解一个 开放、大上下文 的复杂系统。这需要AI不仅能看懂每一行代码（“How”），  
-更能理解组件之间的相互作用、设计模式的应用、以及作者的设计哲学（“Why”）。  
-```  
-
-**一个模型的真正实力，不应只看它在“闭卷考试”（Benchmark）上的分数，更要看它在“开卷项目”（真实世界问题）中的实际表现。**  
-
-
-### 6.50.2 强烈推荐在网页上传funboost文档提问!  
-
-强烈推荐在网页上传funboost文档提问,,不要使用`gemini-cli` 和 `gemini-code-assit` 和`cursor`阅读本地文档  
-
-**这是我实践得出来的经验,在网页提问markdown文档比gemini-cli阅读本地文件好**  
-
-推荐在 `google ai studio` 网页提问,而不是安装`gemini`插件,让gemini在ide或者命令行中去阅读funboost的文档。  
-
-[https://aistudio.google.com/app/prompts](https://aistudio.google.com/app/prompts)  
-
-
-这似乎听起来反智,但实际上在网页上传文档并提问 `funboost` 问题,完爆 `gemini-cli` 和 `gemini-code-assit `阅读本机文件.  
-
-因为网页上是可以一次性阅读 40000 行 markdown 并推理,如果你在本地阅读,大模型工具调用链阅读文件,会每1次阅读最高2000行,  
-然后自动分多次阅读,这太浪费生命时间了,并且分多次阅读会触发使用大模型太频繁,导致自动切换到 `gemini-2.5flash`这个差劲大模型了。  
-
-`gemini-cli` 不擅长阅读本机超长文件,其实可以理解的,不然用户随便在一个有1000个文件的目录中,对gemini  
-说一句 `你阅读分析文件夹下所有文件`, `gemini-cli` 如果老老实实的执行,那`google`公司会亏得裤衩都没了,  
-你随便一个不到10个字的命令,就烧掉几百万token,相当于浪费了google 公司 50人民币的gpu推理成本,  
-所以`google`分2000行慢慢阅读文档,超频后就降智切换flash模型,甚至拒绝回答,来保护自己的算力不被滥用.  
-如果多次切割成2000行分批阅读，就是**管中窥豹**，对于理解像 `funboost` 这样逻辑连贯、前后关联的复杂框架是灾难性的。  
-
-实测,在`google ai studio` 的网页中,效果非常非常好,因为它是一次性阅读全文,不会每2000行来分批次慢慢阅读,   
-不管是对教内容程,还是对源码内容,`gemini-2.5pro`都推理的非常准确。  
-
-有的人太懒惰了,不愿意吃苦阅读  `funboost` 的 `readthedocs` 教程,或者不清楚 `funboost` 实现的背后细节原理且不愿意分析框架源码,那么 把 `funboost_合并教程_源码.md` 这个文档上传到 `google ai studio` 并各种提问，就非常合适。  
-ai真的是生产力，人工需要阅读几天几夜的教程和框架源码，`gemini 2.5pro` 仅需不到1分钟就能分析的很准确。  
-
-### 6.50.3 一定要上传markdown文档再提问  
-不要直接在ai大模型的网页或者app提问`funboost`知识  
-直接在网页提问,除了最简单的demo,写稍微深入一点的, 幻觉率太高了,所有ai几乎100%会意淫瞎造 `funboost`   
-不存在的 入参 /类 /函数.  甚至有的国产水货大模型,连最基础简单`funboost` demo都会幻觉乱写。  
-
-**要想让 AI 成为您学习 funboost 的得力助手，而不是一个满嘴跑火车的“猪队友”，最佳实践就是：打开 `Google AI Studio` 网站，将 `funboost_合并教程_源码.md` 文件上传，然后开始向一个已经“吃透”了 `funboost` 所有官方资料的 `Gemini 2.5 Pro` 专家提问。**  
-
-### 6.50.4 funboost 的 markdown文档地址说明  
-
-`funboost` 文档是托管在 `readthedocs` 网站,原始教程是分为了多个`markdown`文件  
-
-在`github`中有合并的`markdown`,分为2个文件.  
-一个是 `funboost_合并教程.md` , 这个是把 教程markdown文件合并成1个文件,方便一次性丢给`ai`,免得要多次上传。        
-另一个是 `funboost_合并教程_源码.md` ,  这个是包含了所有教程 + 所有 `funboost` 框架源码 ,更推荐把这个markdown丢给 ai ,反正`gemini` 1000k上下文无敌且免费,不用担心花自己`token`和`money`。   
-
-[https://github.com/ydf0509/funboost](https://github.com/ydf0509/funboost)  
-
-![1756373743657](image/c6/1756373743657.png)  
-
-
-
-
-### 6.50.5 google ai studio 提问方式截图  
-
-![google ai studio 提问方式截图：](image.png)  
-
-`geimini` 的回答非常准确。不仅回答了`how`， 还回答了`why`， `gemini`的原理理解和作者我本人实现 `100%`一模一样。  
-
-
-
-
-### 6.50.6 为什么要使用ai来提问,而不是使用 readthedocs 的搜索框功能?  
-
-**第一性原理:搜索引擎听不懂人话,只会机械的字符串分词模糊匹配**  
-
-`readthedocs` 的搜索框是基于`分词`和`模糊匹配`来进行文档的搜索,对用户的输入要求比较精准.  
-
-例如你搜索 `我对同一个队列,反复启动了多次消费,怎么控制总的qps` ,你这样 提问,那就很为难 `readthedocs` 搜索框了.  
-你正确的`readthedocs`搜索框词语 应该是 `分布式控频` ,但是你不知道这个专门的术语情有可原, 如果你使用ai那就不一样了.  
->  
-
-
-在  `google ai studio` 你使用 `我对同一个队列,反复启动了多次消费,怎么控制总的qps` 来提问, gemini 不是基于严格模糊匹配来检索,  
-而是能准确推理理解你要问的就是 `分布式控频`.  
-
-
-这正是`ai`的强大啊,很多顽固分子,到现在2025年了还使用复古方式搜索编程问题,老是使用百度来搜编程问题,而不是使用ai大模型来提问解决,思想太落伍了.  
-
-#### 6.50.6.2 用户不懂专业术语,常规搜索无法找到答案,只有ai才可以  
-
-你在 `百度` `gooogle` 去搜索 `我的reids中很多 key同时过期，导致频繁请求mysql据库,数据库cpu飙升,怎么办`,  
-你由于 没听说 专业术语 `缓存雪崩`,   
-导致 传统搜索 不知道 不理解 不能使用字符串模糊匹配 你的问题,get不到你的重点,尤其是越长的字符串提问,传统搜索引擎几乎无能为力.     
-
-没有`ai`时候,你必须对搜索引擎 精确提问 `redis缓存雪崩` 才能准确快速找到答案.    
-有`ai`时候,你不知道这些专业术语,你提问语句非常独特个性且内容很长, `ai`都能准确的理解你, 一定要拥抱`ai`,不要老是用百度执行低级的模糊搜索匹配.    
-
-
-**🌐 缓存三大经典问题（面试高频）：**  
-
-| 术语 | 英文 | 核心含义 |  
-|------|------|----------|  
-🔴 **缓存雪崩** | Cache Avalanche | 大量 key **同时过期**，导致请求全打到数据库 |  
-🟡 **缓存穿透** | Cache Penetration | 查询 **不存在的数据**，绕过缓存，直击数据库 |  
-🟢 **缓存击穿** | Cache Breakdown | 热点 key **突然过期**，瞬间大量请求击穿到数据库 |  
-
-
-<span style="margin-left: 20em;">**✅ 为什么我们应该用 AI 提问，而不是依赖传统搜索？**  
-
-<div class="inner_markdown">  
-
-
-**因为 AI 理解“意图”，而搜索引擎只匹配“关键词”。**  
-
-##### 🔍 一、传统搜索的三大致命缺陷  
-
-| 缺陷 | 说明 |  
-|------|------|  
-🚫 **依赖专业术语** | 用户必须“先知道答案才能找到答案”——你得知道“缓存雪崩”这个词，才能搜到解决方案 |  
-🚫 **关键词模糊匹配失效** | 长句、口语化表达、逻辑复杂的问题无法被准确解析 |  
-🚫 **无法推理与联想** | 搜索引擎不会告诉你：“你说的其实是『分布式控频』问题” |  
-
-###### ❌ 示例：你在百度/Read the Docs 搜索  
-> “我的 Redis 中很多 key 同时过期，导致频繁请求 MySQL 数据库，CPU 飙升，怎么办？”  
-
-🔍 结果可能是：  
-- 一堆无关的 Redis 配置教程  
-- MySQL 性能优化文章  
-- 完全没有命中“缓存雪崩”这个核心概念  
-
-👉 因为你没写“**缓存雪崩**”四个字，搜索引擎就“听不懂”。  
-
----  
-
-##### 🚀 二、AI 的强大之处：语义理解 + 推理联想  
-
-AI 不是搜索引擎，它是 **语义理解引擎 + 领域专家**。  
-
-###### ✅ 示例：你在 Gemini / ChatGPT / 通义千问中提问  
-> “我对同一个队列反复启动了多次消费，怎么控制总的 QPS？”  
-
-🧠 AI 会这样思考：  
-- “队列消费” → 消息系统（Kafka/RabbitMQ）  
-- “控制总 QPS” → 流量控制、限流  
-- “多个消费者” → 分布式环境  
-- → 综合判断：这是 **分布式限流（Distributed Rate Limiting）** 问题！  
-
-💡 回答可能包括：  
-- 使用 Redis + Token Bucket 算法  
-- 基于滑动窗口的限流策略  
-- 推荐 `resilience4j`、`Sentinel` 等工具  
-
-👉 **即使你从未听说过“分布式控频”这个词，AI 也能把你从“问题描述”引导到“专业解决方案”**。  
-
----  
-
-##### 🌐 三、经典案例对比：缓存三大问题  
-
-| 用户原始问题（口语化） | AI 理解后的专业术语 | 传统搜索能否命中？ |  
-|------------------------|--------------------|------------------|  
-“Redis 很多 key 一起过期，MySQL 崩了” | 🔴 **缓存雪崩**（Cache Avalanche） | ❌ 必须输入“缓存雪崩”才能找到 |  
-“查一个不存在的用户，每次都打 DB” | 🟡 **缓存穿透**（Cache Penetration） | ❌ 不知道“布隆过滤器”就搜不到解法 |  
-“热点商品详情页缓存过期，瞬间炸了” | 🟢 **缓存击穿**（Cache Breakdown） | ❌ 需要精准关键词 |  
-
-> 💬 **AI 的价值：把“小白语言”翻译成“专家语言”**。  
-
----  
-
-##### 🧠 四、AI vs 搜索引擎：本质区别  
-
-| 维度 | 传统搜索引擎 | AI 大模型 |  
-|------|--------------|-----------|  
-🧠 **工作原理** | 关键词匹配 + PageRank | 语义理解 + 推理 + 知识图谱 |  
-🎯 **目标** | 找到“包含这些词”的页面 | 理解“你想解决什么问题” |  
-🧩 **是否需要术语** | 是（必须会说“黑话”） | 否（你说人话就行） |  
-💡 **能否反向教学** | 否 | 能（告诉你：“你遇到的是 XX 问题”） |  
-🚀 **使用门槛** | 高（需经验积累） | 低（新手友好） |  
-
----  
-
-##### 📣 五、结论：拥抱 AI，是程序员的认知升级  
-
-> **还在用百度搜“Redis key 过期导致数据库压力大”？**  
-> 你不是在解决问题，你是在“猜关键词”。  
-
-✅ 正确姿势是：  
-```text  
-直接对 AI 说：  
-“我有一个服务，Redis 缓存了很多数据，但设置的过期时间都一样，  
-一到整点就集体失效，数据库瞬间被打满，CPU 直接 100%，怎么办？”  
-```  
-
-🤖 AI 会告诉你：  
-> “你遇到了典型的『缓存雪崩』问题，建议：  
-> 1. 给过期时间加随机值（如 3600±300s）  
-> 2. 使用多级缓存  
-> 3. 加上线程隔离和熔断机制……”  
-
----  
-
-##### 🚫 六、警惕“技术复古主义”  
-
-有些开发者仍坚持：  
-- 只用 Google + Stack Overflow  
-- 拒绝 AI，认为“不准确”“不可信”  
-- 把 AI 当“玩具”，而不是“生产力工具”  
-
-📌 但现实是：  
-> **AI 已经成为新一代程序员的“外脑”**。  
-> 就像当年从纸质手册 → Google → Stack Overflow 的演进一样，  
-> 现在是从“搜索信息” → “对话式获取知识”的跃迁。  
-
----  
-
-##### ✅ 七、建议：AI + 搜索 = 最强组合  
-
-| 阶段 | 工具 | 用途 |  
-|------|------|------|  
-1️⃣ 问题识别 | AI | “我这个现象叫什么？” → 得到专业术语 |  
-2️⃣ 深入学习 | Google / Read the Docs / 官方文档 | 用 AI 给出的术语去查权威资料 |  
-3️⃣ 实践验证 | 代码 + 日志 + 监控 | 结合 AI 建议做实验 |  
-
-> 🔄 形成闭环：**AI 帮你“破题”，文档帮你“精进”**。  
-
----  
-
-##### 🏁 总结一句话：  
-
-> **AI 的伟大，不是因为它能回答问题，而是因为它能听懂你“不会问”的问题。**  
-> —— 尤其当你还不知道“缓存雪崩”这四个字怎么写的时候。  
-
-🧠 **不要做“关键词奴隶”，要做“意图表达者”**。  
-🚀 拥抱 AI，是每个现代程序员的必修课。  
-
----  
-<div>  
 
 
 <div> </div> 
@@ -8908,6 +8764,21 @@ class Booster:
 见文档 **11.8 使用 mysql_cdc 作为 funboost 的broker**  
 
 **第一性原理: `funboost`使用了 `pymysqlreplication` 包来实现`mysql_cdc`功能**  
+
+## 7.52 2025-10  @boost装饰器,新增设置 booster_group 消费分组  
+
+例如一组函数写 `BoosterParams(booster_group='group1')` ，那么 `BoostersManager.consume_group('group1')` 会启动这组函数消费。
+
+主要是取代用户手动写 `f1.consume()` `f2.consume()`  这样需要多次亲自手写启动相关消费函数。
+
+也避免了 `BoostersManager.consume_all()` 会启动不相关消费函数.
+
+
+python代码例子,见文档 4.2d.3 章节.
+
+
+
+
 
 
   
@@ -13717,6 +13588,309 @@ if __name__ == '__main__':
 ```  
 
 <div> </div>
+# 14 高效利用ai来掌握 funboost
+
+
+14.1 是推荐使用 `google ai studio` 网页版提问,而不是使用 `gemini-cli` 和 `gemini-code-assit` 和`cursor`阅读本地文档  
+
+14.2 是推荐使用腾讯ima知识库 + deepseek v3.1大模型
+
+## 14.1 利用ai大模型来更好的掌握funboost的最佳方式是什么?  
+
+现在是ai时代,谁不用ai就太落伍吃亏了.   
+
+但是使用 ai 大模型也有技巧.  
+
+**第一性原理:使用google ai studio网页版+上传markdown+免费+1000k上下文+全文一次性阅读=幻觉率几乎没有**  
+**gemini-2.5pro在上传 funboost_合并教程_源码.md 这文件后,对funboost的常规用法以及任何细节推理和funboost作者我本人不相上下,知我心者,gemini也**  
+
+### 14.1.1  强烈推荐选择 gemini 2.5pro 大模型  
+
+`gemini 2.5pro`大模型有1000k上下文, 并且可以在 `google ai studio` 免费无限使用  
+
+funboost的教程需要300k上下文,funboost的框架源码也需要300k上下文,  
+`funboost_合并教程_源码.md` 这个文件需要大约600k上下文 ,全球只有 `gemini 2.5pro` 能胜任阅读这个文档.  
+
+[https://aistudio.google.com/app/prompts](https://aistudio.google.com/app/prompts)  
+
+
+`claude`写代码牛,是修改代码调用工具链强大,但是上下文只有200k,并且不免费,所以pass.  
+`gpt5` token上下文太短,也pass  
+
+国产大模型都不推荐,国产的上下文更短,而且阅读推理能力亲测很差,上传文档后还幻觉乱写代码,    
+国产的都不推荐使用别看这个那个开个发布会吹牛吊打美国`ai`公司,     
+`funboost`知识, 就是ai大模型的试金石. 国产ai目前不行,国产ai大模型只是刻意训练`leetcode`题目,    
+然后在`hugging face` 刷ai评分排行榜,涉及到超长文档的陌生知识的推理,瞬间就露馅了,    
+做`leetcode`题目是很短的孤立的上下文,没有涉及到大范围知识的推理,和真实的日常需求脱轨了。  
+就像有的人只靠`leetcode`刷题，投机取巧只背诵一段八股文博客答案,来面试.    
+`funboost`框架包罗万象,几乎包含了`python`所有知识 + 所有消息队列中间件 + 设计模式 ,    
+需要极强的`跨领域的综合推理能力`,而不是在单一、封闭问题（如算法题）上的表现。    
+ `gemini-2.5pro` 经过实测,在`funboost`的文档推理上 是真正的遥遥领先,    
+
+
+```  
+国产ai整天开发布会，搞机器人转发营销，吹牛在大模型排行榜上吊打美国最顶尖大模型，都不要信，那只是专门训练leetcode答案刷hugging face评分榜的。  
+leetcode 一个题目,一般就不到10行文字,和 funboost这种 几万行的 教程 + 源码 文档相比,对ai的 要求不是一个级别.  
+
+LeetCode 测试的是在 封闭、小上下文 环境中解决孤立问题的能力。这就像要求一个学生解答一道定义清晰的数学题。  
+funboost 则要求理解一个 开放、大上下文 的复杂系统。这需要AI不仅能看懂每一行代码（“How”），  
+更能理解组件之间的相互作用、设计模式的应用、以及作者的设计哲学（“Why”）。  
+```  
+
+**一个模型的真正实力，不应只看它在“闭卷考试”（Benchmark）上的分数，更要看它在“开卷项目”（真实世界问题）中的实际表现。**  
+
+
+### 14.1.2 强烈推荐在网页上传funboost文档提问!  
+
+强烈推荐在网页上传funboost文档提问,,不要使用`gemini-cli` 和 `gemini-code-assit` 和`cursor`阅读本地文档  
+
+**这是我实践得出来的经验,在网页提问markdown文档比gemini-cli阅读本地文件好**  
+
+推荐在 `google ai studio` 网页提问,而不是安装`gemini`插件,让gemini在ide或者命令行中去阅读funboost的文档。  
+
+[https://aistudio.google.com/app/prompts](https://aistudio.google.com/app/prompts)  
+
+
+这似乎听起来反智,但实际上在网页上传文档并提问 `funboost` 问题,完爆 `gemini-cli` 和 `gemini-code-assit `阅读本机文件.  
+
+因为网页上是可以一次性阅读 40000 行 markdown 并推理,如果你在本地阅读,大模型工具调用链阅读文件,会每1次阅读最高2000行,  
+然后自动分多次阅读,这太浪费生命时间了,并且分多次阅读会触发使用大模型太频繁,导致自动切换到 `gemini-2.5flash`这个差劲大模型了。  
+
+`gemini-cli` 不擅长阅读本机超长文件,其实可以理解的,不然用户随便在一个有1000个文件的目录中,对gemini  
+说一句 `你阅读分析文件夹下所有文件`, `gemini-cli` 如果老老实实的执行,那`google`公司会亏得裤衩都没了,  
+你随便一个不到10个字的命令,就烧掉几百万token,相当于浪费了google 公司 50人民币的gpu推理成本,  
+所以`google`分2000行慢慢阅读文档,超频后就降智切换flash模型,甚至拒绝回答,来保护自己的算力不被滥用.  
+如果多次切割成2000行分批阅读，就是**管中窥豹**，对于理解像 `funboost` 这样逻辑连贯、前后关联的复杂框架是灾难性的。  
+
+实测,在`google ai studio` 的网页中,效果非常非常好,因为它是一次性阅读全文,不会每2000行来分批次慢慢阅读,   
+不管是对教内容程,还是对源码内容,`gemini-2.5pro`都推理的非常准确。  
+
+有的人太懒惰了,不愿意吃苦阅读  `funboost` 的 `readthedocs` 教程,或者不清楚 `funboost` 实现的背后细节原理且不愿意分析框架源码,那么 把 `funboost_合并教程_源码.md` 这个文档上传到 `google ai studio` 并各种提问，就非常合适。  
+ai真的是生产力，人工需要阅读几天几夜的教程和框架源码，`gemini 2.5pro` 仅需不到1分钟就能分析的很准确。  
+
+### 14.1.3 一定要上传markdown文档再提问  
+不要直接在ai大模型的网页或者app提问`funboost`知识  
+直接在网页提问,除了最简单的demo,写稍微深入一点的, 幻觉率太高了,所有ai几乎100%会意淫瞎造 `funboost`   
+不存在的 入参 /类 /函数.  甚至有的国产水货大模型,连最基础简单`funboost` demo都会幻觉乱写。  
+
+**要想让 AI 成为您学习 funboost 的得力助手，而不是一个满嘴跑火车的“猪队友”，最佳实践就是：打开 `Google AI Studio` 网站，将 `funboost_合并教程_源码.md` 文件上传，然后开始向一个已经“吃透”了 `funboost` 所有官方资料的 `Gemini 2.5 Pro` 专家提问。**  
+
+### 14.1.4 funboost 的 markdown文档地址说明  
+
+`funboost` 文档是托管在 `readthedocs` 网站,原始教程是分为了多个`markdown`文件  
+
+在`github`中有合并的`markdown`,分为2个文件.  
+一个是 `funboost_合并教程.md` , 这个是把 教程markdown文件合并成1个文件,方便一次性丢给`ai`,免得要多次上传。        
+另一个是 `funboost_合并教程_源码.md` ,  这个是包含了所有教程 + 所有 `funboost` 框架源码 ,更推荐把这个markdown丢给 ai ,反正`gemini` 1000k上下文无敌且免费,不用担心花自己`token`和`money`。   
+
+[https://github.com/ydf0509/funboost](https://github.com/ydf0509/funboost)  
+
+![1756373743657](image/c6/1756373743657.png)  
+
+### 14.1.5 google ai studio 提问方式截图  
+
+![google ai studio 提问方式截图：](image.png)  
+
+`geimini` 的回答非常准确。不仅回答了`how`， 还回答了`why`， `gemini`的原理理解和作者我本人实现 `100%`一模一样。  
+
+
+
+
+## 14.2 使用腾讯 ima 知识库 + deepseek v3.1大模型 掌握 funboost
+
+
+
+### 14.2.1 为什么推荐使用腾讯 ima 知识库 + deepseek v3.1大模型
+
+google `gemini-2.5pro` 是上下文1000k能阅读长文档,免费白嫖, 缺点是google全家桶网站都被中国封杀了,部分用户始终无法掌握科学上网的方式,导致无法使用 `google ai studio` 和 `gemini-cli` 和 `gemini-code-assit` 
+
+所以新推荐这个方式,使用腾讯的 ima 知识库 + deepseek v3.1大模型, deepseek虽然自身只有128k上下文,但是配合 ima 知识库 RAG 检索技术,也可以掌握 funboost 知识,实测还可以.
+
+注意是让你使用 ima知识库 + deepseek v3.1大模型,而不是直接在 deepseek 网页里面去上传 funboost 教程文档再提问.
+
+### 14.2.2 提供现成的已创建好的ima知识库
+
+[【ima知识库】funboost 网页连接](https://ima.qq.com/wiki/?shareId=aafc6364ae0f34ae237e4e2aa756e57d301d6461e51db030e0522cda3dc8729e)
+
+<br><br>
+
+![ima知识库funboost二维码](img_ima.png)
+
+
+### 14.2.3 用户也可以在 ima 自己创建知识库
+
+用户可以自己创建知识库,将 `funboost_合并教程_源码.md` 这个文件上传到 ima 知识库,然后使用 deepseek v3.1大模型来提问.
+
+### 14.2.4 腾讯ima截图
+
+![img_83.png](img_83.png)
+
+
+## 14.10 为什么要使用ai来提问,而不是使用 readthedocs 的搜索框功能?  
+
+**第一性原理:搜索引擎听不懂人话,只会机械的字符串分词模糊匹配**  
+
+`readthedocs` 的搜索框是基于`分词`和`模糊匹配`来进行文档的搜索,对用户的输入要求比较精准.  
+
+例如你搜索 `我对同一个队列,反复启动了多次消费,怎么控制总的qps` ,你这样 提问,那就很为难 `readthedocs` 搜索框了.  
+你正确的`readthedocs`搜索框词语 应该是 `分布式控频` ,但是你不知道这个专门的术语情有可原, 如果你使用ai那就不一样了.  
+>  
+
+
+在  `google ai studio` 你使用 `我对同一个队列,反复启动了多次消费,怎么控制总的qps` 来提问, gemini 不是基于严格模糊匹配来检索,  
+而是能准确推理理解你要问的就是 `分布式控频`.  
+
+
+这正是`ai`的强大啊,很多顽固分子,到现在2025年了还使用复古方式搜索编程问题,老是使用百度来搜编程问题,而不是使用ai大模型来提问解决,思想太落伍了.  
+
+### 14.10.2 用户不懂专业术语,常规搜索无法找到答案,只有ai才可以  
+
+你在 `百度` `gooogle` 去搜索 `我的reids中很多 key同时过期，导致频繁请求mysql据库,数据库cpu飙升,怎么办`,  
+你由于 没听说 专业术语 `缓存雪崩`,   
+导致 传统搜索 不知道 不理解 不能使用字符串模糊匹配 你的问题,get不到你的重点,尤其是越长的字符串提问,传统搜索引擎几乎无能为力.     
+
+没有`ai`时候,你必须对搜索引擎 精确提问 `redis缓存雪崩` 才能准确快速找到答案.    
+有`ai`时候,你不知道这些专业术语,你提问语句非常独特个性且内容很长, `ai`都能准确的理解你, 一定要拥抱`ai`,不要老是用百度执行低级的模糊搜索匹配.    
+
+
+**🌐 缓存三大经典问题（面试高频）：**  
+
+| 术语 | 英文 | 核心含义 |  
+|------|------|----------|  
+🔴 **缓存雪崩** | Cache Avalanche | 大量 key **同时过期**，导致请求全打到数据库 |  
+🟡 **缓存穿透** | Cache Penetration | 查询 **不存在的数据**，绕过缓存，直击数据库 |  
+🟢 **缓存击穿** | Cache Breakdown | 热点 key **突然过期**，瞬间大量请求击穿到数据库 |  
+
+
+<span style="margin-left: 20em;">**✅ 为什么我们应该用 AI 提问，而不是依赖传统搜索？**  
+
+<div class="inner_markdown">  
+
+
+**因为 AI 理解“意图”，而搜索引擎只匹配“关键词”。**  
+
+##### 🔍 一、传统搜索的三大致命缺陷  
+
+| 缺陷 | 说明 |  
+|------|------|  
+🚫 **依赖专业术语** | 用户必须“先知道答案才能找到答案”——你得知道“缓存雪崩”这个词，才能搜到解决方案 |  
+🚫 **关键词模糊匹配失效** | 长句、口语化表达、逻辑复杂的问题无法被准确解析 |  
+🚫 **无法推理与联想** | 搜索引擎不会告诉你：“你说的其实是『分布式控频』问题” |  
+
+###### ❌ 示例：你在百度/Read the Docs 搜索  
+> “我的 Redis 中很多 key 同时过期，导致频繁请求 MySQL 数据库，CPU 飙升，怎么办？”  
+
+🔍 结果可能是：  
+- 一堆无关的 Redis 配置教程  
+- MySQL 性能优化文章  
+- 完全没有命中“缓存雪崩”这个核心概念  
+
+👉 因为你没写“**缓存雪崩**”四个字，搜索引擎就“听不懂”。  
+
+---  
+
+##### 🚀 二、AI 的强大之处：语义理解 + 推理联想  
+
+AI 不是搜索引擎，它是 **语义理解引擎 + 领域专家**。  
+
+###### ✅ 示例：你在 Gemini / ChatGPT / 通义千问中提问  
+> “我对同一个队列反复启动了多次消费，怎么控制总的 QPS？”  
+
+🧠 AI 会这样思考：  
+- “队列消费” → 消息系统（Kafka/RabbitMQ）  
+- “控制总 QPS” → 流量控制、限流  
+- “多个消费者” → 分布式环境  
+- → 综合判断：这是 **分布式限流（Distributed Rate Limiting）** 问题！  
+
+💡 回答可能包括：  
+- 使用 Redis + Token Bucket 算法  
+- 基于滑动窗口的限流策略  
+- 推荐 `resilience4j`、`Sentinel` 等工具  
+
+👉 **即使你从未听说过“分布式控频”这个词，AI 也能把你从“问题描述”引导到“专业解决方案”**。  
+
+---  
+
+##### 🌐 三、经典案例对比：缓存三大问题  
+
+| 用户原始问题（口语化） | AI 理解后的专业术语 | 传统搜索能否命中？ |  
+|------------------------|--------------------|------------------|  
+“Redis 很多 key 一起过期，MySQL 崩了” | 🔴 **缓存雪崩**（Cache Avalanche） | ❌ 必须输入“缓存雪崩”才能找到 |  
+“查一个不存在的用户，每次都打 DB” | 🟡 **缓存穿透**（Cache Penetration） | ❌ 不知道“布隆过滤器”就搜不到解法 |  
+“热点商品详情页缓存过期，瞬间炸了” | 🟢 **缓存击穿**（Cache Breakdown） | ❌ 需要精准关键词 |  
+
+> 💬 **AI 的价值：把“小白语言”翻译成“专家语言”**。  
+
+---  
+
+##### 🧠 四、AI vs 搜索引擎：本质区别  
+
+| 维度 | 传统搜索引擎 | AI 大模型 |  
+|------|--------------|-----------|  
+🧠 **工作原理** | 关键词匹配 + PageRank | 语义理解 + 推理 + 知识图谱 |  
+🎯 **目标** | 找到“包含这些词”的页面 | 理解“你想解决什么问题” |  
+🧩 **是否需要术语** | 是（必须会说“黑话”） | 否（你说人话就行） |  
+💡 **能否反向教学** | 否 | 能（告诉你：“你遇到的是 XX 问题”） |  
+🚀 **使用门槛** | 高（需经验积累） | 低（新手友好） |  
+
+---  
+
+##### 📣 五、结论：拥抱 AI，是程序员的认知升级  
+
+> **还在用百度搜“Redis key 过期导致数据库压力大”？**  
+> 你不是在解决问题，你是在“猜关键词”。  
+
+✅ 正确姿势是：  
+```text  
+直接对 AI 说：  
+“我有一个服务，Redis 缓存了很多数据，但设置的过期时间都一样，  
+一到整点就集体失效，数据库瞬间被打满，CPU 直接 100%，怎么办？”  
+```  
+
+🤖 AI 会告诉你：  
+> “你遇到了典型的『缓存雪崩』问题，建议：  
+> 1. 给过期时间加随机值（如 3600±300s）  
+> 2. 使用多级缓存  
+> 3. 加上线程隔离和熔断机制……”  
+
+---  
+
+##### 🚫 六、警惕“技术复古主义”  
+
+有些开发者仍坚持：  
+- 只用 Google + Stack Overflow  
+- 拒绝 AI，认为“不准确”“不可信”  
+- 把 AI 当“玩具”，而不是“生产力工具”  
+
+📌 但现实是：  
+> **AI 已经成为新一代程序员的“外脑”**。  
+> 就像当年从纸质手册 → Google → Stack Overflow 的演进一样，  
+> 现在是从“搜索信息” → “对话式获取知识”的跃迁。  
+
+---  
+
+##### ✅ 七、建议：AI + 搜索 = 最强组合  
+
+| 阶段 | 工具 | 用途 |  
+|------|------|------|  
+1️⃣ 问题识别 | AI | “我这个现象叫什么？” → 得到专业术语 |  
+2️⃣ 深入学习 | Google / Read the Docs / 官方文档 | 用 AI 给出的术语去查权威资料 |  
+3️⃣ 实践验证 | 代码 + 日志 + 监控 | 结合 AI 建议做实验 |  
+
+> 🔄 形成闭环：**AI 帮你“破题”，文档帮你“精进”**。  
+
+---  
+
+##### 🏁 总结一句话：  
+
+> **AI 的伟大，不是因为它能回答问题，而是因为它能听懂你“不会问”的问题。**  
+> —— 尤其当你还不知道“缓存雪崩”这四个字怎么写的时候。  
+
+🧠 **不要做“关键词奴隶”，要做“意图表达者”**。  
+🚀 拥抱 AI，是每个现代程序员的必修课。  
+
+---  
+<div>  
   
 # 20 gemini ai大模型 生成的 `funboost` 框架的中心思想  
 
@@ -13840,8 +14014,8 @@ Funboost 框架在开发者体验方面的一个显著优势是其对 IDE 自动
 Funboost 在消息发布和消费方面表现出显著的性能优势 。在 Win11 + Python 3.9 + 本机 Redis 中间件 + AMD R7 5800H CPU + 单线程并发模式 + 相同逻辑消费函数的测试环境下，Funboost 的性能数据令人印象深刻 。  
 **性能对比数据：**  
 
-* **发布性能**：Funboost 发布 10 万条消息耗时 9 秒，平均每秒发布 11000 条。相比之下，Celery 发布 10 万条消息耗时 110 秒，平均每秒发布 900 条。这表明 **Funboost 的发布性能约为 Celery 的 12 倍** 。  
-* **消费性能**：Funboost 平均每隔 0.15 秒消费 1000 条消息，每秒消费约 7000 条。而 Celery 平均每隔 3.6 秒消费 1000 条消息，每秒消费约 300 条。这意味着 **Funboost 的消费性能约为 Celery 的 23 倍** 。  
+* **发布性能**：Funboost 发布 性能是 celery 22倍 。  
+* **消费性能**：Funboost 消费性能是 celery 46倍。  
 
 这些数据清晰地表明，Funboost 在性能上实现了对 Celery 的断崖式领先，性能不在一个数量级 。  
 **QPS 精准控制：** Funboost 提供了强大的 QPS（每秒查询/执行次数）控频功能，能够精确控制函数每秒的执行次数，无论是小数（如 0.01 次/秒）还是高频（如 50 次/秒），都能实现精准控频 。即使函数耗时随机波动，框架也能通过自适应并发数量来保持 QPS 恒定 。例如，对于一个耗时随机在 0.1 毫秒到 5 秒之间波动的函数，Funboost 依然能将其 QPS 精确控制在 100 次/秒，控频精确度达到 96% 以上 。对于耗时恒定的函数，其控频精确度甚至高达 99.9% 以上 。  
@@ -14016,7 +14190,7 @@ Funboost 不仅突破了 GIL 限制，还在整体性能和系统可伸缩性方
   * **QPS 精准控制**：Funboost 能够精确控制函数每秒的执行次数（QPS），无论函数本身耗时如何波动，都能保持设定的频率 。这对于控制对外部服务的请求频率、避免过载、实现精细化流量管理至关重要 。  
   * **分布式 QPS 控频**：在多进程或多机器部署时，Funboost 可以实现全局的 QPS 限制，自动在所有消费者之间平分流量，确保总的执行速率不超过设定值 。  
   * **智能线程池**：Funboost 自定义的线程池能够根据任务负载智能地扩大和缩小线程数量，避免不必要的线程创建和销毁开销，优化资源利用率 。  
-* **卓越的性能**：Funboost 在消息发布和消费方面都展现出远超 Celery 的性能，发布性能可达 Celery 的 12 倍，消费性能可达 23 倍 。这种性能优势直接转化为更高的吞吐量和更低的延迟，使得 Python 应用在处理大规模分布式任务时更具竞争力。  
+* **卓越的性能**：Funboost 在消息发布和消费方面都展现出远超 Celery 的性能，发布性能可达 Celery 的 22 倍，消费性能可达 46 倍 。这种性能优势直接转化为更高的吞吐量和更低的延迟，使得 Python 应用在处理大规模分布式任务时更具竞争力。  
 
 ### **20.6.3 确保任务可靠性与容错**  
 
@@ -14706,7 +14880,7 @@ set_frame_config这个模块的 use_config_form_funboost_config_module() 是核�
 这段注释说明和使用的用户无关,只和框架开发人员有关.
 '''
 
-__version__ = "50.1"
+__version__ = "50.2"
 
 from funboost.set_frame_config import show_frame_config
 
@@ -21049,10 +21223,7 @@ class KafkaConsumer(AbstractConsumer):
         # REMIND 好处是并发高。topic像翻书一样，随时可以设置偏移量重新消费。多个分组消费同一个主题，每个分组对相同主题的偏移量互不干扰 。
         for message in consumer:
             # 注意: message ,value都是原始的字节数据，需要decode
-            if self.consumer_params.is_show_message_get_from_broker:
-                self.logger.debug(
-                    f'从kafka的 [{message.topic}] 主题,分区 {message.partition} 中 取出的消息是：  {message.value.decode()}')
-            kw = {'consumer': consumer, 'message': message, 'body': message.value}
+            kw = {'consumer': consumer, 'message': message, 'body': message.value.decode('utf-8')}
             self._submit_task(kw)
 
     def _confirm_consume(self, kw):
@@ -24237,6 +24408,7 @@ if __name__ == '__main__':
 from __future__ import annotations
 import copy
 import inspect
+from multiprocessing import Process
 import os
 import sys
 import types
@@ -24628,6 +24800,34 @@ class BoostersManager:
 
     m_consume = multi_process_consume_queues
 
+    @classmethod
+    def consume_group(cls, booster_group:str,block=False):
+        """
+        根据@boost装饰器的 booster_group消费分组名字,启动多个消费函数;
+        """
+        if booster_group is None:
+            raise ValueError('booster_group 不能为None')
+        need_consume_queue_names = []
+        for queue_name in cls.get_all_queues():
+            booster= cls.get_booster(queue_name)
+            if booster.boost_params.booster_group == booster_group:
+                need_consume_queue_names.append(queue_name)
+        flogger.info(f'according to booster_group:{booster_group} ,start consume queues: {need_consume_queue_names}')
+        for queue_name in need_consume_queue_names:
+            cls.get_booster(queue_name).consume()
+        if block:
+            ctrl_c_recv()
+
+    @classmethod
+    def multi_process_consume_group(cls, booster_group:str, process_num=1):
+        """
+        根据@boost装饰器的 booster_group消费分组名字,启动多个消费函数;
+        """
+        for _ in range(process_num):
+            Process(target=cls.consume_group,args=(booster_group,True)).start()
+    
+    m_consume_group = multi_process_consume_group
+            
     @classmethod
     def multi_process_consume_all_queues(cls, process_num=1):
         """
@@ -25105,19 +25305,20 @@ import sys
 import datetime
 
 import typing
-
+import threading
 from nb_time import NbTime
 from funboost.funboost_config_deafult import FunboostCommonConfig
+
 
 class FunboostTime(NbTime):
     default_formatter = NbTime.FORMATTER_DATETIME_NO_ZONE
 
-    def get_time_zone_str(self,time_zone: typing.Union[str, datetime.tzinfo,None] = None):
-        return time_zone or self.default_time_zone or  FunboostCommonConfig.TIMEZONE  or self.get_localzone_name()
+    def get_time_zone_str(self, time_zone: typing.Union[str, datetime.tzinfo, None] = None):
+        return time_zone or self.default_time_zone or FunboostCommonConfig.TIMEZONE or self.get_localzone_name()
 
     @staticmethod
-    def _get_tow_digist(num:int)->str:
-        if len(str(num)) ==1:
+    def _get_tow_digist(num: int) -> str:
+        if len(str(num)) == 1:
             return f'0{num}'
         return str(num)
 
@@ -25129,12 +25330,18 @@ class FunboostTime(NbTime):
         return t_str
 
 
-
-
 # 缓存时区对象，提升性能（避免重复解析）
 _tz_cache = {}
 
-def get_now_time_str_by_tz(tz_name: str=None) -> str:                   
+_DIGIT_MAP = {i: f'{i:02d}' for i in range(100)}
+
+
+def _gen_2_dig_number(n):
+    return _DIGIT_MAP[n]
+
+
+def get_now_time_str_by_tz(tz_name: str = None) -> str:
+    # 生成100万次当前时间字符串%Y-%m-%d %H:%M:%S仅需1.9秒.              
     """
     根据时区名（如 'Asia/Shanghai'）返回当前时间字符串，格式：'%Y-%m-%d %H:%M:%S'
     
@@ -25151,27 +25358,64 @@ def get_now_time_str_by_tz(tz_name: str=None) -> str:
             _tz_cache[tz_name] = ZoneInfo(tz_name)
         else:
             # Python < 3.9，使用 pytz
-            try:
-                import pytz
-                _tz_cache[tz_name] = pytz.timezone(tz_name)
-            except ImportError:
-                raise RuntimeError(
-                    f"Python < 3.9 requires 'pytz' to handle timezones. "
-                    f"Install it with: pip install pytz"
-                ) from None
-            except pytz.UnknownTimeZoneError:
-                raise pytz.UnknownTimeZoneError(tz_name)
+            _tz_cache[tz_name] = pytz.timezone(tz_name)
+
 
     tz = _tz_cache[tz_name]
-    
+
     # 获取当前时间并格式化（注意：datetime.now(tz) 是最高效的方式）
     now = datetime.datetime.now(tz)
-    return f'{now.year:04d}-{now.month:02d}-{now.day:02d} {now.hour:02d}:{now.minute:02d}:{now.second:02d}'
+    # return f'{now.year:04d}-{now.month:02d}-{now.day:02d} {now.hour:02d}:{now.minute:02d}:{now.second:02d}'
     # return now.strftime("%Y-%m-%d %H:%M:%S")
+    return f'{now.year}-{_gen_2_dig_number(now.month)}-{_gen_2_dig_number(now.day)} {_gen_2_dig_number(now.hour)}:{_gen_2_dig_number(now.minute)}:{_gen_2_dig_number(now.second)}'
+
+
+class NowTimeStrCache:
+    # 生成100万次当前时间字符串%Y-%m-%d %H:%M:%S仅需0.4秒.
+    # 全局变量，用于存储缓存的时间字符串和对应的整秒时间戳
+    _cached_time_str: typing.Optional[str] = None
+    _cached_time_second: int = 0
+
+    # 为了线程安全，使用锁。在极高并发下，锁的开销远小于每毫秒都进行时间格式化。
+    _time_cache_lock = threading.Lock()
+
+    @classmethod
+    def fast_get_now_time_str(cls,timezone_str:str=None) -> str:
+        """
+        获取当前时间字符串，格式为 '%Y-%m-%d %H:%M:%S'。
+        通过缓存机制，同一秒内的多次调用直接返回缓存结果，极大提升性能。
+        适用于对时间精度要求不高（秒级即可）的高并发场景。
+        :return: 格式化后的时间字符串，例如 '2024-06-12 15:30:45'
+        """
+        timezone_str = timezone_str or FunboostCommonConfig.TIMEZONE
+
+        # 获取当前的整秒时间戳（去掉小数部分）
+        current_second = int(time.time())
+
+        # 如果缓存的时间戳与当前秒数一致，直接返回缓存的字符串。
+        if current_second == cls._cached_time_second:
+            return cls._cached_time_str
+
+        # 如果不一致，说明进入新的一秒，需要重新计算并更新缓存。
+        # 使用锁确保在多线程环境下，只有一个线程会执行更新操作。
+
+        with cls._time_cache_lock:
+            # 双重检查锁定 (Double-Checked Locking)，防止在等待锁的过程中，其他线程已经更新了缓存。
+            if current_second == cls._cached_time_second:
+                return cls._cached_time_str
+
+            # 重新计算时间字符串。这里直接使用 time.strftime，因为它在秒级更新的场景下性能足够。
+            # 我们不需要像 Funboost 那样为每一毫秒的调用都去做查表优化。
+            now = datetime.datetime.now(tz=pytz.timezone(timezone_str))
+            cls._cached_time_str = now.strftime('%Y-%m-%d %H:%M:%S', )
+            cls._cached_time_second = current_second
+
+        return cls._cached_time_str
+
 
 if __name__ == '__main__':
     print(FunboostTime().get_str())
-    tz=pytz.timezone(FunboostCommonConfig.TIMEZONE)
+    tz = pytz.timezone(FunboostCommonConfig.TIMEZONE)
     for i in range(1000000):
         pass
         # FunboostTime()#.get_str_fast()
@@ -25633,12 +25877,15 @@ class BoosterParams(BaseJsonAbleModel):
     schedule_tasks_on_main_thread: bool = False  # 直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
 
     is_auto_start_consuming_message: bool = False  # 是否在定义后就自动启动消费，无需用户手动写 .consume() 来启动消息消费。
+    
+    # booster_group :消费分组名字， BoostersManager.consume_group 时候根据 booster_group 启动多个消费函数,减少需要写 f1.consume() f2.consume() ...这种。
+    # 不像BoostersManager.consume_all() 会启动所有不相关消费函数,也不像  f1.consume() f2.consume() 这样需要多次启动消费函数。
+    booster_group:typing.Union[str, None] = None
 
     consuming_function: typing.Optional[typing.Callable] = None  # 消费函数,在@boost时候不用指定,因为装饰器知道下面的函数.
     consuming_function_raw: typing.Optional[typing.Callable] = None  # 不需要传递，自动生成
     consuming_function_name: str = '' # 不需要传递，自动生成
 
-    
 
     broker_exclusive_config: dict = {}  # 加上一个不同种类中间件非通用的配置,不同中间件自身独有的配置，不是所有中间件都兼容的配置，因为框架支持30种消息队列，消息队列不仅仅是一般的先进先出queue这么简单的概念，
     # 例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，有的中间件原生能支持消息优先级有的中间件不支持,每一种消息队列都有独特的配置参数意义，可以通过这里传递。每种中间件能传递的键值对可以看consumer类的 BROKER_EXCLUSIVE_CONFIG_DEFAULT
@@ -25660,9 +25907,30 @@ class BoosterParams(BaseJsonAbleModel):
         COMMON_FUNCTION = 'COMMON_FUNCTION'
     """
 
+    """
+    user_options:
+    用户额外自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
+    user_options 提供了一个统一的、用户自定义的命名空间，让用户可以为自己的“奇葩需求”或“高级定制”传递配置，而无需等待框架开发者添加官方支持。
+    
+    funboost 是自由框架不是奴役框架,不仅消费函数逻辑自由,目录层级结构自由,自定义奇葩扩展也要追求自由,用户不用改funboost BoosterParams 源码来加装饰器参数
+
+    例如场景1:
+        假设框架装饰器不内置提供 BoostersManager.consume_group(booster_group) ,用户想启动一组相关消费函数,
+        可以传递 user_options={'booster_group': 'group1'} 来实现,然后for循环判断所有boosters
+        if booster.boost_params.user_options['booster_group'] ==  'group1' 来启动消费组
+    例如场景2:
+        funboost框架目前是只能消费一个kafka KAFKA_BOOTSTRAP_SERVERS,这个配置是在 funboost_config.py 定义的,但这也意味着项目只能使用一个kafka集群.
+        用户可以按照文档4.21 自定义consumer和publisher,用户的类不读取funboost_config.py 的kafka KAFKA_BOOTSTRAP_SERVERS,
+        而是读取 user_options 中的kafka KAFKA_BOOTSTRAP_SERVERS,
+        在使用时候,装饰器传递不同的 user_options={'kafka_bootstrap_servers': '192.168.1.10x'} ,
+        达到消费几十个不同的kafka集群的目的.
+    """
+    user_options: dict = {} # 用户自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
+    
+    
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
-
-
+    
+    
 
     @root_validator(skip_on_failure=True, )
     def check_values(cls, values: dict):
@@ -25790,6 +26058,8 @@ class PublisherParams(BaseJsonAbleModel):
     publish_msg_log_use_full_msg: bool = False # 发布到消息队列的消息内容的日志，是否显示消息的完整体，还是只显示函数入参。
     consuming_function_kind: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参.
     rpc_timeout: int = 1800 # rpc模式下，等待rpc结果返回的超时时间
+    user_options: dict = {}  # 用户自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
+
 
 if __name__ == '__main__':
     from funboost.concurrent_pool import FlexibleThreadPool
@@ -25811,7 +26081,7 @@ import pytz
 import time
 import uuid
 import datetime
-from funboost.core.funboost_time import FunboostTime, get_now_time_str_by_tz
+from funboost.core.funboost_time import FunboostTime, get_now_time_str_by_tz, NowTimeStrCache
 
 
 def get_publish_time(paramsx: dict):
@@ -25865,13 +26135,13 @@ class MsgGenerater:
     def generate_publish_time() -> float:
         return round(time.time(),4)
 
-    # @staticmethod  # 性能不好
-    # def generate_publish_time_format() -> str:
-    #     return FunboostTime().get_str()
-    
+
     @staticmethod
     def generate_publish_time_format() -> str:
-        return get_now_time_str_by_tz()
+        # return FunboostTime().get_str()  # 性能不好
+        # return get_now_time_str_by_tz()  # 2秒100万次
+        return NowTimeStrCache.fast_get_now_time_str() # 0.4秒100万次
+
 
     @classmethod
     def generate_pulish_time_and_task_id(cls,queue_name:str,task_id=None):
@@ -25889,9 +26159,10 @@ if __name__ == '__main__':
     print(FunboostTime())
     for i in range(1000000):
         # time.time()
-        # MsgGenerater.generate_publish_time_format()
+        MsgGenerater.generate_publish_time_format()
+        # FunboostTime().get_str()
 
-        datetime.datetime.now(tz=pytz.timezone(FunboostCommonConfig.TIMEZONE)).strftime(FunboostTime.FORMATTER_DATETIME_NO_ZONE)
+        # datetime.datetime.now(tz=pytz.timezone(FunboostCommonConfig.TIMEZONE)).strftime(FunboostTime.FORMATTER_DATETIME_NO_ZONE)
 
     print(FunboostTime())
 ```

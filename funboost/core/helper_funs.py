@@ -3,7 +3,7 @@ import pytz
 import time
 import uuid
 import datetime
-from funboost.core.funboost_time import FunboostTime, get_now_time_str_by_tz
+from funboost.core.funboost_time import FunboostTime, get_now_time_str_by_tz, NowTimeStrCache
 
 
 def get_publish_time(paramsx: dict):
@@ -57,13 +57,13 @@ class MsgGenerater:
     def generate_publish_time() -> float:
         return round(time.time(),4)
 
-    # @staticmethod  # 性能不好
-    # def generate_publish_time_format() -> str:
-    #     return FunboostTime().get_str()
-    
+
     @staticmethod
     def generate_publish_time_format() -> str:
-        return get_now_time_str_by_tz()
+        # return FunboostTime().get_str()  # 性能不好
+        # return get_now_time_str_by_tz()  # 2秒100万次
+        return NowTimeStrCache.fast_get_now_time_str() # 0.4秒100万次
+
 
     @classmethod
     def generate_pulish_time_and_task_id(cls,queue_name:str,task_id=None):
@@ -81,8 +81,9 @@ if __name__ == '__main__':
     print(FunboostTime())
     for i in range(1000000):
         # time.time()
-        # MsgGenerater.generate_publish_time_format()
+        MsgGenerater.generate_publish_time_format()
+        # FunboostTime().get_str()
 
-        datetime.datetime.now(tz=pytz.timezone(FunboostCommonConfig.TIMEZONE)).strftime(FunboostTime.FORMATTER_DATETIME_NO_ZONE)
+        # datetime.datetime.now(tz=pytz.timezone(FunboostCommonConfig.TIMEZONE)).strftime(FunboostTime.FORMATTER_DATETIME_NO_ZONE)
 
     print(FunboostTime())

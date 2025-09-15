@@ -60,10 +60,7 @@ class KafkaConsumer(AbstractConsumer):
         # REMIND 好处是并发高。topic像翻书一样，随时可以设置偏移量重新消费。多个分组消费同一个主题，每个分组对相同主题的偏移量互不干扰 。
         for message in consumer:
             # 注意: message ,value都是原始的字节数据，需要decode
-            if self.consumer_params.is_show_message_get_from_broker:
-                self.logger.debug(
-                    f'从kafka的 [{message.topic}] 主题,分区 {message.partition} 中 取出的消息是：  {message.value.decode()}')
-            kw = {'consumer': consumer, 'message': message, 'body': message.value}
+            kw = {'consumer': consumer, 'message': message, 'body': message.value.decode('utf-8')}
             self._submit_task(kw)
 
     def _confirm_consume(self, kw):

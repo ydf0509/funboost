@@ -1,6 +1,7 @@
 from __future__ import annotations
 import copy
 import inspect
+from multiprocessing import Process
 import os
 import sys
 import types
@@ -392,6 +393,34 @@ class BoostersManager:
 
     m_consume = multi_process_consume_queues
 
+    @classmethod
+    def consume_group(cls, booster_group:str,block=False):
+        """
+        根据@boost装饰器的 booster_group消费分组名字,启动多个消费函数;
+        """
+        if booster_group is None:
+            raise ValueError('booster_group 不能为None')
+        need_consume_queue_names = []
+        for queue_name in cls.get_all_queues():
+            booster= cls.get_booster(queue_name)
+            if booster.boost_params.booster_group == booster_group:
+                need_consume_queue_names.append(queue_name)
+        flogger.info(f'according to booster_group:{booster_group} ,start consume queues: {need_consume_queue_names}')
+        for queue_name in need_consume_queue_names:
+            cls.get_booster(queue_name).consume()
+        if block:
+            ctrl_c_recv()
+
+    @classmethod
+    def multi_process_consume_group(cls, booster_group:str, process_num=1):
+        """
+        根据@boost装饰器的 booster_group消费分组名字,启动多个消费函数;
+        """
+        for _ in range(process_num):
+            Process(target=cls.consume_group,args=(booster_group,True)).start()
+    
+    m_consume_group = multi_process_consume_group
+            
     @classmethod
     def multi_process_consume_all_queues(cls, process_num=1):
         """

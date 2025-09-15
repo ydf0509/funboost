@@ -38,7 +38,7 @@ pip install funboost --upgrade
 `funboost`是`函数增强器,属于轻型自由框架`,你可以对任意项目任意位置的新旧函数加上`@boost`装饰器,是给你函数赋能插上强大翅膀,用户不需要围绕`funboost`或某个中央app实例来组织代码结构,用户函数自身就是一等公民   
 
 2个框架最显而易见明显差别就是 `funboost` 无需 `@app.boost` 而是直接`@boost`,这个小区别,造成影响深远的框架用法和理念区别.   
-`funboost`任务控制功能更多,支持broker中间件种类更多,并发方式更多,发布性能超越celery 22倍,消费性能超越 celery 40倍,性能是高几个数量级的断崖式遥遥领先,但反而使用比celery简单得多.  
+`funboost`任务控制功能更多,支持broker中间件种类更多,并发方式更多,发布性能超越celery 22倍,消费性能超越 celery 46倍,性能是高几个数量级的断崖式遥遥领先,但反而使用比celery简单得多.  
 ```
 
 #### **funboost 支持的并发模式:**      
@@ -76,7 +76,7 @@ pip install funboost --upgrade
 通过`funboost web manager` 管理系统，支持全面 查看 监控 管理 `funboost`的任务消费。  
 
 #### **funboost的性能超过`celery`一个数量级,不是一个档次上:**    
-`funboost`发布性能是`celery`的22倍,`funboost`消费性能是`celery`的40倍! 控制变量法对比方式,见文档2.6章节
+`funboost`发布性能是`celery`的22倍,`funboost`消费性能是`celery`的46倍! 控制变量法对比方式,见文档2.6章节
 
 
 #### **funboost框架评价:**  
@@ -105,7 +105,7 @@ funboost 框架和一般的框架不一样，因为只有一行代码需要掌�
 
 只要用过 `funboost` 的用户,都评价比 `celery` 的用法简单几百倍.
 
-用户可以看文档`6.50`章节,怎么正确的用`ai`大模型掌握`funboost`的用法
+用户可以看文档`14`章节,怎么正确的用`ai`大模型掌握`funboost`的用法
 ```
 
 [**1.python万能分布式函数调度框架简funboost简介**](https://funboost.readthedocs.io/zh-cn/latest/articles/c1.html)  
@@ -609,7 +609,7 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 大部分框架，都要深入使用里面的很多个类，还需要继承组合一顿。  
 ```  
 
-用户也可以按照 文档6.50的方式,使用ai来掌握`funboost`
+用户也可以按照 文档14章节的方式,使用ai来掌握`funboost`
 
 ## 1.6 funboost支持支持celery框架整体作为funboost的broker (2023.4新增)  
 

@@ -4,7 +4,7 @@ from funboost_consume import print_number
 import datetime
 
 if __name__ == '__main__':
-    for i in range(100000):
+    for i in range(500000):
         if i % 1000 == 0:
             print(f'当前时间: {datetime.datetime.now()} {i}')
         print_number.push(i)

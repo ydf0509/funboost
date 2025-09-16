@@ -2013,19 +2013,9 @@ class BoosterParams(BaseJsonAbleModel):
     user_options:
     用户额外自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
     user_options 提供了一个统一的、用户自定义的命名空间，让用户可以为自己的“奇葩需求”或“高级定制”传递配置，而无需等待框架开发者添加官方支持。
-    
     funboost 是自由框架不是奴役框架,不仅消费函数逻辑自由,目录层级结构自由,自定义奇葩扩展也要追求自由,用户不用改funboost BoosterParams 源码来加装饰器参数
-
-    例如场景1:
-        假设框架装饰器不内置提供 BoostersManager.consume_group(booster_group) ,用户想启动一组相关消费函数,
-        可以传递 user_options={'booster_group': 'group1'} 来实现,然后for循环判断所有boosters
-        if booster.boost_params.user_options['booster_group'] ==  'group1' 来启动消费组
-    例如场景2:
-        funboost框架目前是只能消费一个kafka KAFKA_BOOTSTRAP_SERVERS,这个配置是在 funboost_config.py 定义的,但这也意味着项目只能使用一个kafka集群.
-        用户可以按照文档4.21 自定义consumer和publisher,用户的类不读取funboost_config.py 的kafka KAFKA_BOOTSTRAP_SERVERS,
-        而是读取 user_options 中的kafka KAFKA_BOOTSTRAP_SERVERS,
-        在使用时候,装饰器传递不同的 user_options={'kafka_bootstrap_servers': '192.168.1.10x'} ,
-        达到消费几十个不同的kafka集群的目的.
+    
+    使用场景见文档 4b.6 章节.
     """
     user_options: dict = {} # 用户自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
     
@@ -6669,6 +6659,97 @@ if __name__ == '__main__':
     ctrl_c_recv()  
 
 ```  
+
+
+## 4b.6  @boost装饰器 user_options  入参的妙用
+
+`@boost`装饰器 `user_options` 是用户域传参,用户可以自由发挥,存放任何设置.
+
+有些用户想实现一些奇葩需求,但是框架没有提供,自己加入参,又要改 BoosterParams 源码来加装饰器参数,非常麻烦.
+
+user_options 是一个字典,字典就非常灵活了,因为字典可以放任意传参.
+
+```
+user_options 是用户额外自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
+user_options 提供了一个统一的、用户自定义的命名空间，让用户可以为自己的“奇葩需求”或“高级定制”传递配置，而无需等待框架开发者添加官方支持。
+
+funboost 是自由框架不是奴役框架,不仅消费函数逻辑自由,目录层级结构自由,自定义奇葩扩展也要追求自由,用户不用改funboost BoosterParams 源码来加装饰器参数
+
+例如场景1:
+    假设框架装饰器不内置提供 BoostersManager.consume_group(booster_group) ,用户想启动一组相关消费函数,
+    可以传递 user_options={'booster_group': 'group1'} 来实现,然后for循环判断所有boosters
+    if booster.boost_params.user_options['booster_group'] ==  'group1' 来启动消费组
+例如场景2:
+    funboost框架目前是只能消费一个kafka KAFKA_BOOTSTRAP_SERVERS,这个配置是在 funboost_config.py 定义的,但这也意味着项目只能使用一个全局的kafka集群.
+    用户可以按照文档4.21 自定义consumer和publisher,用户的类不读取funboost_config.py 的kafka KAFKA_BOOTSTRAP_SERVERS,
+    而是读取 user_options 中的kafka KAFKA_BOOTSTRAP_SERVERS,
+    在使用时候,装饰器传递不同的 user_options={'kafka_bootstrap_servers': '192.168.1.10x'} ,
+    达到消费几十个不同的kafka集群的目的.
+```
+
+### 4b.6.1场景一： user_options “反向实现” consume_group**
+
+这是一个绝佳的例子，证明了 `user_options` 的强大赋能作用。假设我当初没有开发 `BoostersManager.consume_group` 功能，一个聪明的用户完全可以利用 user_options 自己实现一个类似的功能：
+
+```python
+# 在消费者定义中
+@boost(BoosterParams(queue_name="q1", user_options={'module': 'billing'}))
+def process_payment(payment_id): ...
+
+@boost(BoosterParams(queue_name="q2", user_options={'module': 'billing'}))
+def generate_invoice(invoice_id): ...
+
+# 在启动脚本中
+if __name__ == '__main__':
+    for queue_name in BoostersManager.get_all_queues():
+        booster = BoostersManager.get_booster(queue_name)
+        # 通过 user_options 自己实现按组启动
+        if booster.boost_params.user_options.get('module') == 'billing':
+            booster.consume()
+    ctrl_c_recv()
+```
+
+### 场景二： user_options 多租户与覆盖全局配置（以Kafka集群做例子）
+
+这是 `user_options` 的一个杀手级应用。funboost_config.py 中通常定义一个全局的 Kafka 集群地址, 如果用户需要操作几十个kafka 集群, 而 funboost_config.py 中的 kafka_bootstrap_servers 只能是某1个集群地址,一个项目怎么操作消费几十个kafka集群? 这个场景在大数据消费是 非常普遍的,通常有十几个不同的kafka集群.
+
+
+没有 `user_options`，用户可以使用不同的配置文件或者环境变量,对不同的kafka集群分多次启动消费函数。有了它，解决方案变得异常清晰：
+
+这部分代码演示,使用了consumer_override_cls,可以看文档4.21章节 :
+
+1.  **在消费者定义时，通过 `user_options` 传入特殊配置：**
+```python
+@boost(BoosterParams(
+    queue_name='special_auditing_task',
+    consumer_override_cls=CustomKafkaConsumer, # 使用一个自定义的消费者
+    user_options={'kafka_bootstrap_servers': '10.0.0.100:9092,10.0.0.101:9092'} 
+    # 通过 user_options 对不同的消费函数可以传递不同的kafka集群地址,而不是只能固定全部使用funboost_config.py 中的kafka集群地址,
+    # 轻松操作几十个kafka集群
+))
+def auditing_task(data): ...
+```
+
+2.  **在自定义消费者 `CustomKafkaConsumer` 中，优先读取 `user_options` 的配置：**
+```python
+class CustomKafkaConsumer(KafkaConsumerManuallyCommit):
+    def _shedual_task(self):
+        # 优先从 user_options 读取 kafka 地址，如果不存在，则回退到 funboost_config.py 的全局配置
+        bootstrap_servers = self.consumer_params.user_options.get(
+            'kafka_bootstrap_servers',
+            BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS
+        )
+        
+        self._confluent_consumer = ConfluentConsumer({
+            'bootstrap.servers': ','.join(bootstrap_servers),
+            # ... 其他配置 ...
+        })
+        # ... 剩余的调度逻辑 ...
+```
+
+这种方式实现了**“配置与任务定义 co-located（配置与任务定义 co-located）”**，使得特殊配置清晰可见，且与对应的任务绑定，极大地提高了代码的可读性和可维护性。
+
+
 
 `<div>` `</div>`  
 
@@ -24650,10 +24731,10 @@ class BoostersManager:
     """
 
     # pid_queue_name__booster_map字典存放 {(进程id,queue_name):Booster对象}
-    pid_queue_name__booster_map = {}  # type: typing.Dict[typing.Tuple[int,str],Booster]
+    pid_queue_name__booster_map :typing.Dict[typing.Tuple[int,str],Booster]= {}  
 
     # queue_name__boost_params_consuming_function_map 字典存放  {queue_name,(@boost的入参字典,@boost装饰的消费函数)}
-    queue_name__boost_params_map = {}  # type: typing.Dict[str,BoosterParams]
+    queue_name__boost_params_map :typing.Dict[str,BoosterParams]= {}  
 
     pid_queue_name__has_start_consume_set = set()
 
@@ -25880,6 +25961,7 @@ class BoosterParams(BaseJsonAbleModel):
     
     # booster_group :消费分组名字， BoostersManager.consume_group 时候根据 booster_group 启动多个消费函数,减少需要写 f1.consume() f2.consume() ...这种。
     # 不像BoostersManager.consume_all() 会启动所有不相关消费函数,也不像  f1.consume() f2.consume() 这样需要多次启动消费函数。
+    # 用法见文档 4.2d.3 章节.   使用 BoostersManager ,通过 consume_group 启动一组消费函数
     booster_group:typing.Union[str, None] = None
 
     consuming_function: typing.Optional[typing.Callable] = None  # 消费函数,在@boost时候不用指定,因为装饰器知道下面的函数.
@@ -25911,19 +25993,9 @@ class BoosterParams(BaseJsonAbleModel):
     user_options:
     用户额外自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
     user_options 提供了一个统一的、用户自定义的命名空间，让用户可以为自己的“奇葩需求”或“高级定制”传递配置，而无需等待框架开发者添加官方支持。
-    
     funboost 是自由框架不是奴役框架,不仅消费函数逻辑自由,目录层级结构自由,自定义奇葩扩展也要追求自由,用户不用改funboost BoosterParams 源码来加装饰器参数
-
-    例如场景1:
-        假设框架装饰器不内置提供 BoostersManager.consume_group(booster_group) ,用户想启动一组相关消费函数,
-        可以传递 user_options={'booster_group': 'group1'} 来实现,然后for循环判断所有boosters
-        if booster.boost_params.user_options['booster_group'] ==  'group1' 来启动消费组
-    例如场景2:
-        funboost框架目前是只能消费一个kafka KAFKA_BOOTSTRAP_SERVERS,这个配置是在 funboost_config.py 定义的,但这也意味着项目只能使用一个kafka集群.
-        用户可以按照文档4.21 自定义consumer和publisher,用户的类不读取funboost_config.py 的kafka KAFKA_BOOTSTRAP_SERVERS,
-        而是读取 user_options 中的kafka KAFKA_BOOTSTRAP_SERVERS,
-        在使用时候,装饰器传递不同的 user_options={'kafka_bootstrap_servers': '192.168.1.10x'} ,
-        达到消费几十个不同的kafka集群的目的.
+    
+    使用场景见文档 4b.6 章节.
     """
     user_options: dict = {} # 用户自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
     

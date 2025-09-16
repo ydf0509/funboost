@@ -21,6 +21,7 @@ from threading import Lock
 import nb_log
 from funboost.constant import ConstStrForClassMethod, FunctionKind
 from funboost.core.func_params_model import PublisherParams, PriorityConsumingControlConfig
+from funboost.core.function_result_status_saver import FunctionResultStatus
 from funboost.core.helper_funs import MsgGenerater
 from funboost.core.loggers import develop_logger
 
@@ -314,6 +315,10 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     @abc.abstractmethod
     def concrete_realization_of_publish(self, msg: str):
         raise NotImplementedError
+
+    def sync_call(self, msg_dict: dict, is_return_rpc_data_obj=True) -> typing.Union[dict, FunctionResultStatus]:
+        """仅有部分中间件支持同步调用并阻塞等待返回结果,不依赖AsyncResult + redis作为rpc，例如 http grpc 等"""
+        raise NotImplementedError(f'broker  {self.publisher_params.broker_kind} not support sync_call method')
 
     @abc.abstractmethod
     def clear(self):

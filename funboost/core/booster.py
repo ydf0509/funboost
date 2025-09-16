@@ -243,10 +243,10 @@ class BoostersManager:
     """
 
     # pid_queue_name__booster_map字典存放 {(进程id,queue_name):Booster对象}
-    pid_queue_name__booster_map = {}  # type: typing.Dict[typing.Tuple[int,str],Booster]
+    pid_queue_name__booster_map :typing.Dict[typing.Tuple[int,str],Booster]= {}  
 
     # queue_name__boost_params_consuming_function_map 字典存放  {queue_name,(@boost的入参字典,@boost装饰的消费函数)}
-    queue_name__boost_params_map = {}  # type: typing.Dict[str,BoosterParams]
+    queue_name__boost_params_map :typing.Dict[str,BoosterParams]= {}  
 
     pid_queue_name__has_start_consume_set = set()
 
@@ -402,12 +402,12 @@ class BoostersManager:
             raise ValueError('booster_group 不能为None')
         need_consume_queue_names = []
         for queue_name in cls.get_all_queues():
-            booster= cls.get_booster(queue_name)
+            booster= cls.get_or_create_booster_by_queue_name(queue_name)
             if booster.boost_params.booster_group == booster_group:
                 need_consume_queue_names.append(queue_name)
         flogger.info(f'according to booster_group:{booster_group} ,start consume queues: {need_consume_queue_names}')
         for queue_name in need_consume_queue_names:
-            cls.get_booster(queue_name).consume()
+            cls.get_or_create_booster_by_queue_name(queue_name).consume()
         if block:
             ctrl_c_recv()
 

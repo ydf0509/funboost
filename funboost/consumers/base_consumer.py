@@ -639,6 +639,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _frame_custom_record_process_info_func(self,current_function_result_status: FunctionResultStatus,kw:dict):
         pass
 
+    async def _aio_frame_custom_record_process_info_func(self,current_function_result_status: FunctionResultStatus,kw:dict):
+        pass
+
     def user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus,):  # 这个可以继承
         pass
 
@@ -921,6 +924,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
 
             self._frame_custom_record_process_info_func(current_function_result_status,kw)
+            await self._aio_frame_custom_record_process_info_func(current_function_result_status,kw)
             self.user_custom_record_process_info_func(current_function_result_status,)  # 两种方式都可以自定义,记录结果.建议使用文档4.21.b的方式继承来重写
             await self.aio_user_custom_record_process_info_func(current_function_result_status,)
             if self.consumer_params.user_custom_record_process_info_func:

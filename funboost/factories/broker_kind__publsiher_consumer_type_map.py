@@ -1,7 +1,7 @@
 import typing
 
 from funboost.publishers.empty_publisher import EmptyPublisher
-from funboost.publishers.http_publisher import HTTPPublisher
+
 from funboost.publishers.nats_publisher import NatsPublisher
 from funboost.publishers.peewee_publisher import PeeweePublisher
 from funboost.publishers.redis_publisher_lpush import RedisPublisherLpush
@@ -28,7 +28,7 @@ from funboost.publishers.httpsqs_publisher import HttpsqsPublisher
 from funboost.consumers.empty_consumer import EmptyConsumer
 from funboost.consumers.redis_consumer_priority import RedisPriorityConsumer
 from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer
-from funboost.consumers.http_consumer import HTTPConsumer
+
 from funboost.consumers.kafka_consumer import KafkaConsumer
 from funboost.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
 from funboost.consumers.mongomq_consumer import MongoMqConsumer
@@ -74,7 +74,7 @@ broker_kind__publsiher_consumer_type_map = {
     BrokerEnum.HTTPSQS: (HttpsqsPublisher, HttpsqsConsumer),
     BrokerEnum.UDP: (UDPPublisher, UDPConsumer),
     BrokerEnum.TCP: (TCPPublisher, TCPConsumer),
-    BrokerEnum.HTTP: (HTTPPublisher, HTTPConsumer),
+
     BrokerEnum.NATS: (NatsPublisher, NatsConsumer),
     BrokerEnum.TXT_FILE: (TxtFilePublisher, TxtFileConsumer),
     BrokerEnum.PEEWEE: (PeeweePublisher, PeeweeConsumer),
@@ -184,6 +184,11 @@ def regist_to_funboost(broker_kind: str):
         from funboost.consumers.mysql_cdc_consumer import MysqlCdcConsumer
         from funboost.publishers.mysql_cdc_publisher import MysqlCdcPublisher
         register_custom_broker(broker_kind, MysqlCdcPublisher, MysqlCdcConsumer)
+    
+    if broker_kind == BrokerEnum.HTTP:
+        from funboost.consumers.http_consumer import HTTPConsumer
+        from funboost.publishers.http_publisher import HTTPPublisher
+        register_custom_broker(broker_kind, HTTPPublisher, HTTPConsumer)
 
 if __name__ == '__main__':
     import sys

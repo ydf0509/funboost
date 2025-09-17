@@ -32,7 +32,8 @@ def task_sync(x: int, y: int):
 # 2. 定义一个异步协程函数
 # 对于 async def 函数，需要明确指定并发模式为 ASYNC (ConcurrentModeEnum.ASYNC)。
 # funboost 会使用一个事件循环来并发地运行这些协程任务。
-@boost(BoosterParams(queue_name='async_task_queue', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_mode=ConcurrentModeEnum.ASYNC, concurrent_num=10))
+@boost(BoosterParams(queue_name='async_task_queue', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_mode=ConcurrentModeEnum.ASYNC, concurrent_num=10,
+    is_using_rpc_mode=True))
 async def task_async(url: str):
     """
     这是一个异步协程函数。

@@ -2,8 +2,8 @@
 from setuptools import setup, find_packages
 from funboost import __version__
 
-from logging_tree import printout
-printout()
+# from logging_tree import printout
+# printout()
 
 extra_brokers = ['confluent_kafka==1.7.0',
                  "pulsar-client==3.1.0; python_version>='3.7'",
@@ -36,6 +36,8 @@ extra_brokers = ['confluent_kafka==1.7.0',
                     'grpcio==1.60.0',
                     'grpcio-tools==1.60.0',
                     'protobuf==4.25.1',
+
+                    'waitress',
                  ]
 
 extra_flask = ['flask', 'flask_bootstrap', 'flask_wtf', 'wtforms', 'flask_login']

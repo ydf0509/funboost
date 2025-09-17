@@ -10,28 +10,11 @@ import time
 from funboost import FunctionResultStatus
 from funboost.assist.grpc_helper import funboost_grpc_pb2_grpc, funboost_grpc_pb2
 from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.core.msg_result_getter import FutureStatusResult
 from funboost.core.serialization import Serialization
 from funboost.core.exceptions import FunboostWaitRpcResultTimeout
 from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool
 
-
-class FutureStatusResult:
-    def __init__(self,call_type:str):
-        self.execute_finish_event = threading.Event()
-        self.staus_result_obj: FunctionResultStatus = None
-        self.call_type  = call_type  # sync_call   or  publish
-
-    def set_finish(self):
-        self.execute_finish_event.set()
-
-    def wait_finish(self,rpc_timeout):
-        return self.execute_finish_event.wait(rpc_timeout)
-
-    def set_staus_result_obj(self, staus_result_obj:FunctionResultStatus):
-        self.staus_result_obj = staus_result_obj
-
-    def get_staus_result_obj(self):
-        return self.staus_result_obj
 
 
 

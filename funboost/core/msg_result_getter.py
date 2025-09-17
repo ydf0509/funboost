@@ -1,4 +1,5 @@
 import asyncio
+import threading
 import time
 
 import typing
@@ -277,6 +278,32 @@ class ResultFromMongo(MongoMixin):
         self.query_result()
         return (self.mongo_row or {}).get('result', NO_RESULT)
 
+
+class FutureStatusResult:
+    """
+    用于sync_call模式的结果等待和通知
+    使用threading.Event实现同步等待
+    """
+    def __init__(self, call_type: str):
+        self.execute_finish_event = threading.Event()
+        self.staus_result_obj: FunctionResultStatus = None
+        self.call_type = call_type  # sync_call or publish
+
+    def set_finish(self):
+        """标记任务完成"""
+        self.execute_finish_event.set()
+
+    def wait_finish(self, rpc_timeout):
+        """等待任务完成，带超时"""
+        return self.execute_finish_event.wait(rpc_timeout)
+
+    def set_staus_result_obj(self, staus_result_obj: FunctionResultStatus):
+        """设置任务执行结果"""
+        self.staus_result_obj = staus_result_obj
+
+    def get_staus_result_obj(self):
+        """获取任务执行结果"""
+        return self.staus_result_obj
 
 if __name__ == '__main__':
     print(ResultFromMongo('test_queue77h6_result:764a1ba2-14eb-49e2-9209-ac83fc5db1e8').get_status_and_result())

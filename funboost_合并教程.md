@@ -1981,6 +1981,8 @@ class BoosterParams(BaseJsonAbleModel):
 
     # booster_group :消费分组名字， BoostersManager.consume_group 时候根据 booster_group 启动多个消费函数,减少需要写 f1.consume() f2.consume() ...这种。
     # 不像BoostersManager.consume_all() 会启动所有不相关消费函数,也不像  f1.consume() f2.consume() 这样需要多次启动消费函数。
+    # 可以根据业务逻辑创建不同的分组，实现灵活的消费启动策略。
+    # 用法见文档 4.2d.3 章节.   使用 BoostersManager ,通过 consume_group 启动一组消费函数
     booster_group:typing.Union[str, None] = None
 
     consuming_function: typing.Optional[typing.Callable] = None  # 消费函数,在@boost时候不用指定,因为装饰器知道下面的函数.  
@@ -2645,7 +2647,7 @@ if __name__ == '__main__':
 
 例如一组函数装饰器都写 `BoosterParams(booster_group='group1')` ，那么 `BoostersManager.consume_group('group1')` 会启动这组函数消费。
 
-主要是取代用户手动写 `f1.consume()` `f2.consume()`  这样需要多次亲自手写启动相关消费函数;    
+主要是取代用户手动写 `f1.consume()` `f2.consume()`  这样需要多次亲自手写逐个启动相关消费函数;    
 也避免了 `BoostersManager.consume_all()` 太过于粗暴,会启动不相关的多余消费函数.    
 也避免了 `BoostersManager.consume('q1', 'q2', ...)` 亲自写queue_name列表来启动消费函数.
 

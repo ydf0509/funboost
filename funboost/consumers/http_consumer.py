@@ -6,52 +6,18 @@ import threading
 
 
 from flask import Flask, request
+
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.core.function_result_status_saver import FunctionResultStatus
+from funboost.core.msg_result_getter import FutureStatusResult
 from funboost.core.serialization import Serialization
 
 
-class FutureStatusResult:
-    """
-    用于sync_call模式的结果等待和通知
-    使用threading.Event实现同步等待
-    """
-    def __init__(self, call_type: str):
-        self.execute_finish_event = threading.Event()
-        self.staus_result_obj: FunctionResultStatus = None
-        self.call_type = call_type  # sync_call or publish
 
-    def set_finish(self):
-        """标记任务完成"""
-        self.execute_finish_event.set()
-
-    def wait_finish(self, rpc_timeout):
-        """等待任务完成，带超时"""
-        return self.execute_finish_event.wait(rpc_timeout)
-
-    def set_staus_result_obj(self, staus_result_obj: FunctionResultStatus):
-        """设置任务执行结果"""
-        self.staus_result_obj = staus_result_obj
-
-    def get_staus_result_obj(self):
-        """获取任务执行结果"""
-        return self.staus_result_obj
 
 class HTTPConsumer(AbstractConsumer, ):
     """
-    HTTP消息队列实现（Flask版本）
-    
-    优势：
-    1. 使用Flask同步框架，避免了aiohttp异步阻塞问题
-    2. 支持多线程处理HTTP请求，提升并发性能
-    3. 直接调用_submit_task，不会阻塞HTTP响应
-    4. 对于sync_call使用threading.Event等待结果
-    
-    性能对比：
-    - 原aiohttp版本：串行处理，约200 QPS
-    - Flask版本：并行处理，预期2000+ QPS
-    
-    不支持持久化，但不需要安装额外的消息队列软件。
+    flask 作为消息队列实现 consumer
     """
     BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'host': '127.0.0.1', 'port': None}
 
@@ -140,13 +106,17 @@ class HTTPConsumer(AbstractConsumer, ):
         # 启动Flask服务器
         # 注意：Flask默认是单线程的，但funboost使用线程池处理任务，所以这里threaded=True
         self.logger.info(f'启动Flask HTTP服务器，监听 {self._ip}:{self._port}')
-        flask_app.run(
-            host='0.0.0.0',  # 监听所有接口
-            port=self._port,
-            debug=False,     # 生产环境关闭debug
-            threaded=True,   # 开启多线程支持
-            use_reloader=False,  # 关闭自动重载
-        )
+
+        # flask_app.run(
+        #     host='0.0.0.0',  # 监听所有接口
+        #     port=self._port,
+        #     debug=False,     # 生产环境关闭debug
+        #     threaded=True,   # 开启多线程支持
+        #     use_reloader=False,  # 关闭自动重载
+        # )
+
+        import waitress
+        waitress.serve(flask_app, host='0.0.0.0', port=self._port,threads=self.consumer_params.concurrent_num)
 
     def _frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
         """

@@ -1981,6 +1981,8 @@ class BoosterParams(BaseJsonAbleModel):
 
     # booster_group :消费分组名字， BoostersManager.consume_group 时候根据 booster_group 启动多个消费函数,减少需要写 f1.consume() f2.consume() ...这种。
     # 不像BoostersManager.consume_all() 会启动所有不相关消费函数,也不像  f1.consume() f2.consume() 这样需要多次启动消费函数。
+    # 可以根据业务逻辑创建不同的分组，实现灵活的消费启动策略。
+    # 用法见文档 4.2d.3 章节.   使用 BoostersManager ,通过 consume_group 启动一组消费函数
     booster_group:typing.Union[str, None] = None
 
     consuming_function: typing.Optional[typing.Callable] = None  # 消费函数,在@boost时候不用指定,因为装饰器知道下面的函数.  
@@ -2645,7 +2647,7 @@ if __name__ == '__main__':
 
 例如一组函数装饰器都写 `BoosterParams(booster_group='group1')` ，那么 `BoostersManager.consume_group('group1')` 会启动这组函数消费。
 
-主要是取代用户手动写 `f1.consume()` `f2.consume()`  这样需要多次亲自手写启动相关消费函数;    
+主要是取代用户手动写 `f1.consume()` `f2.consume()`  这样需要多次亲自手写逐个启动相关消费函数;    
 也避免了 `BoostersManager.consume_all()` 太过于粗暴,会启动不相关的多余消费函数.    
 也避免了 `BoostersManager.consume('q1', 'q2', ...)` 亲自写queue_name列表来启动消费函数.
 
@@ -19597,6 +19599,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _frame_custom_record_process_info_func(self,current_function_result_status: FunctionResultStatus,kw:dict):
         pass
 
+    async def _aio_frame_custom_record_process_info_func(self,current_function_result_status: FunctionResultStatus,kw:dict):
+        pass
+
     def user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus,):  # 这个可以继承
         pass
 
@@ -19879,6 +19884,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
 
             self._frame_custom_record_process_info_func(current_function_result_status,kw)
+            await self._aio_frame_custom_record_process_info_func(current_function_result_status,kw)
             self.user_custom_record_process_info_func(current_function_result_status,)  # 两种方式都可以自定义,记录结果.建议使用文档4.21.b的方式继承来重写
             await self.aio_user_custom_record_process_info_func(current_function_result_status,)
             if self.consumer_params.user_custom_record_process_info_func:
@@ -20838,28 +20844,11 @@ import time
 from funboost import FunctionResultStatus
 from funboost.assist.grpc_helper import funboost_grpc_pb2_grpc, funboost_grpc_pb2
 from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.core.msg_result_getter import FutureStatusResult
 from funboost.core.serialization import Serialization
 from funboost.core.exceptions import FunboostWaitRpcResultTimeout
 from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool
 
-
-class FutureStatusResult:
-    def __init__(self,call_type:str):
-        self.execute_finish_event = threading.Event()
-        self.staus_result_obj: FunctionResultStatus = None
-        self.call_type  = call_type  # sync_call   or  publish
-
-    def set_finish(self):
-        self.execute_finish_event.set()
-
-    def wait_finish(self,rpc_timeout):
-        return self.execute_finish_event.wait(rpc_timeout)
-
-    def set_staus_result_obj(self, staus_result_obj:FunctionResultStatus):
-        self.staus_result_obj = staus_result_obj
-
-    def get_staus_result_obj(self):
-        return self.staus_result_obj
 
 
 
@@ -20980,19 +20969,23 @@ class HttpsqsConsumer(AbstractConsumer):
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:32
-import asyncio
-import json
+import logging
+import threading
 
-# from aiohttp import web
-# from aiohttp.web_request import Request
+
+from flask import Flask, request
 
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost.core.lazy_impoter import AioHttpImporter
+from funboost.core.function_result_status_saver import FunctionResultStatus
+from funboost.core.msg_result_getter import FutureStatusResult
+from funboost.core.serialization import Serialization
+
+
 
 
 class HTTPConsumer(AbstractConsumer, ):
     """
-    http 实现消息队列，不支持持久化，但不需要安装软件。
+    flask 作为消息队列实现 consumer
     """
     BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'host': '127.0.0.1', 'port': None}
 
@@ -21009,44 +21002,107 @@ class HTTPConsumer(AbstractConsumer, ):
         if self._port is None:
             raise ValueError('please specify port')
 
-    # noinspection DuplicatedCode
     def _shedual_task(self):
-        # flask_app = Flask(__name__)
-        #
-        # @flask_app.route('/queue', methods=['post'])
-        # def recv_msg():
-        #     msg = request.form['msg']
-        #     kw = {'body': json.loads(msg)}
-        #     self._submit_task(kw)
-        #     return 'finish'
-        #
-        # flask_app.run('0.0.0.0', port=self._port,debug=False)
+        """
+        使用Flask实现HTTP服务器
+        相比aiohttp，Flask是同步框架，避免了异步阻塞问题
+        """
+     
 
-        routes = AioHttpImporter().web.RouteTableDef()
+        # 创建Flask应用
+        flask_app = Flask(__name__)
+        # 关闭Flask的日志，避免干扰funboost的日志
+        flask_app.logger.disabled = True
+        logging.getLogger('werkzeug').disabled = True
+        
+        @flask_app.route('/', methods=['GET'])
+        def hello():
+            """健康检查接口"""
+            return "Hello, from funboost (Flask version)"
+        
+        @flask_app.route('/queue', methods=['POST'])
+        def recv_msg():
+            """
+            接收消息的核心接口
+            支持两种调用类型：
+            1. publish: 异步发布，立即返回
+            2. sync_call: 同步调用，等待结果返回
+            """
+            try:
+                # 获取请求数据
+                msg = request.form.get('msg')
+                call_type = request.form.get('call_type', 'publish')
+                
+                if not msg:
+                    return {"error": "msg parameter is required"}, 400
+                
+                # 构造消息数据
+                kw = {
+                    'body': msg,
+                    'call_type': call_type,
+                }
+                
+                if call_type == 'sync_call':
+                    # 同步调用：需要等待执行结果
+                    future_status_result = FutureStatusResult(call_type=call_type)
+                    kw['future_status_result'] = future_status_result
+                    
+                    # 提交任务到线程池执行
+                    self._submit_task(kw)
+                    
+                    # 等待任务完成（带超时）
+                    if future_status_result.wait_finish(self.consumer_params.rpc_timeout):
+                        # 返回执行结果
+                        result = future_status_result.get_staus_result_obj()
+                        return Serialization.to_json_str(
+                            result.get_status_dict(without_datetime_obj=True)
+                        )
+                    else:
+                        # 超时处理
+                        self.logger.error(f'sync_call wait timeout after {self.consumer_params.rpc_timeout}s')
+                        return {"error": "execution timeout"}, 408
+                        
+                else:
+                    # 异步发布：直接提交任务，立即返回
+                    self._submit_task(kw)
+                    return "finish"
+                    
+            except Exception as e:
+                self.logger.error(f'处理HTTP请求时出错: {e}', exc_info=True)
+                return {"error": str(e)}, 500
+        
+        # 启动Flask服务器
+        # 注意：Flask默认是单线程的，但funboost使用线程池处理任务，所以这里threaded=True
+        self.logger.info(f'启动Flask HTTP服务器，监听 {self._ip}:{self._port}')
 
-        # noinspection PyUnusedLocal
-        @routes.get('/')
-        async def hello(request):
-            return AioHttpImporter().web.Response(text="Hello, from funboost")
+        # flask_app.run(
+        #     host='0.0.0.0',  # 监听所有接口
+        #     port=self._port,
+        #     debug=False,     # 生产环境关闭debug
+        #     threaded=True,   # 开启多线程支持
+        #     use_reloader=False,  # 关闭自动重载
+        # )
 
-        @routes.post('/queue')
-        async def recv_msg(request: AioHttpImporter().Request):
-            data = await request.post()
-            msg = data['msg']
-            kw = {'body': msg}
-            self._submit_task(kw)
-            return AioHttpImporter().web.Response(text="finish")
+        import waitress
+        waitress.serve(flask_app, host='0.0.0.0', port=self._port,threads=self.consumer_params.concurrent_num)
 
-        app = AioHttpImporter().web.Application()
-        app.add_routes(routes)
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        AioHttpImporter().web.run_app(app, host='0.0.0.0', port=self._port, )
+    def _frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
+        """
+        任务执行完成后的回调函数
+        对于sync_call模式，需要通知等待的HTTP请求
+        """
+        if kw['call_type'] == "sync_call":
+            future_status_result: FutureStatusResult = kw['future_status_result']
+            future_status_result.set_staus_result_obj(current_function_result_status)
+            future_status_result.set_finish()
+            # self.logger.info('sync_call任务执行完成，通知HTTP请求返回结果')
 
     def _confirm_consume(self, kw):
-        pass  # 没有确认消费的功能。
+        """HTTP模式没有确认消费的功能"""
+        pass
 
     def _requeue(self, kw):
+        """HTTP模式没有重新入队的功能"""
         pass
 
 ```
@@ -21179,6 +21235,124 @@ class HTTPConsumer(AbstractConsumer, ):
         print(f'Starting server, 0.0.0.0:{self._port}')
         server.serve_forever()
 
+    def _confirm_consume(self, kw):
+        pass  # 没有确认消费的功能。
+
+    def _requeue(self, kw):
+        pass
+
+```
+
+### 代码文件: funboost\consumers\http_consumer_aiohttp_old.py
+```python
+# -*- coding: utf-8 -*-
+# @Author  : ydf
+# @Time    : 2022/8/8 0008 13:32
+import asyncio
+import json
+
+# from aiohttp import web
+# from aiohttp.web_request import Request
+
+from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.core.function_result_status_saver import FunctionResultStatus
+from funboost.core.lazy_impoter import AioHttpImporter
+from funboost.core.serialization import Serialization
+
+
+class AioFutureStatusResult:
+    def __init__(self,call_type:str):
+        self.execute_finish_event = asyncio.Event()
+        self.staus_result_obj: FunctionResultStatus = None
+        self.call_type  = call_type  # sync_call   or  publish
+
+    def set_finish(self):
+        self.execute_finish_event.set()
+
+    async def wait_finish(self,rpc_timeout):
+        return await self.execute_finish_event.wait()
+
+    def set_staus_result_obj(self, staus_result_obj:FunctionResultStatus):
+        self.staus_result_obj = staus_result_obj
+
+    def get_staus_result_obj(self):
+        return self.staus_result_obj
+
+class HTTPConsumer(AbstractConsumer, ):
+    """
+    aiohttp 实现消息队列，不支持持久化，但不需要安装软件。
+    """
+    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'host': '127.0.0.1', 'port': None}
+
+    # noinspection PyAttributeOutsideInit
+    def custom_init(self):
+        # try:
+        #     self._ip, self._port = self.queue_name.split(':')
+        #     self._port = int(self._port)
+        # except BaseException as e:
+        #     self.logger.critical(f'http作为消息队列时候,队列名字必须设置为 例如 192.168.1.101:8200  这种,  ip:port')
+        #     raise e
+        self._ip = self.consumer_params.broker_exclusive_config['host']
+        self._port = self.consumer_params.broker_exclusive_config['port']
+        if self._port is None:
+            raise ValueError('please specify port')
+
+    # noinspection DuplicatedCode
+    def _shedual_task(self):
+        # flask_app = Flask(__name__)
+        #
+        # @flask_app.route('/queue', methods=['post'])
+        # def recv_msg():
+        #     msg = request.form['msg']
+        #     kw = {'body': json.loads(msg)}
+        #     self._submit_task(kw)
+        #     return 'finish'
+        #
+        # flask_app.run('0.0.0.0', port=self._port,debug=False)
+
+        routes = AioHttpImporter().web.RouteTableDef()
+
+        # noinspection PyUnusedLocal
+        @routes.get('/')
+        async def hello(request):
+            return AioHttpImporter().web.Response(text="Hello, from funboost")
+
+        @routes.post('/queue')
+        async def recv_msg(request: AioHttpImporter().Request):
+            data = await request.post()
+            msg = data['msg']
+            call_type = data['call_type']
+            kw = {'body': msg,'call_type': call_type,}
+            if call_type == 'sync_call':
+                aio_future_status_result = AioFutureStatusResult(call_type=call_type)
+                kw['aio_future_status_result'] = aio_future_status_result
+            self._submit_task(kw)
+            if data['call_type'] == 'sync_call':
+                await aio_future_status_result.wait_finish(self.consumer_params.rpc_timeout)
+                return AioHttpImporter().web.Response(text=Serialization.to_json_str(
+                    aio_future_status_result.get_staus_result_obj().get_status_dict(without_datetime_obj=True)))
+            return AioHttpImporter().web.Response(text="finish")
+
+        app = AioHttpImporter().web.Application()
+        app.add_routes(routes)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        AioHttpImporter().web.run_app(app, host='0.0.0.0', port=self._port, )
+
+    def _frame_custom_record_process_info_func(self,current_function_result_status: FunctionResultStatus,kw:dict):
+        if  kw['call_type'] == "sync_call":
+            aio_future_status_result: AioFutureStatusResult = kw['aio_future_status_result']
+            aio_future_status_result.set_staus_result_obj(current_function_result_status)
+            aio_future_status_result.set_finish()
+            self.logger.info(f'aio_future_status_result.set_finish()')
+
+    # async def _aio_frame_custom_record_process_info_func(self,current_function_result_status: FunctionResultStatus,kw:dict):
+    #     self.logger.info(666666)
+    #     if kw['call_type'] == "sync_call":
+    #         aio_future_status_result: AioFutureStatusResult = kw['aio_future_status_result']
+    #         aio_future_status_result.set_staus_result_obj(current_function_result_status)
+    #         aio_future_status_result.set_finish()
+    #         self.logger.info(f'aio_future_status_result.set_finish()')
     def _confirm_consume(self, kw):
         pass  # 没有确认消费的功能。
 
@@ -24890,12 +25064,12 @@ class BoostersManager:
             raise ValueError('booster_group 不能为None')
         need_consume_queue_names = []
         for queue_name in cls.get_all_queues():
-            booster= cls.get_booster(queue_name)
+            booster= cls.get_or_create_booster_by_queue_name(queue_name)
             if booster.boost_params.booster_group == booster_group:
                 need_consume_queue_names.append(queue_name)
         flogger.info(f'according to booster_group:{booster_group} ,start consume queues: {need_consume_queue_names}')
         for queue_name in need_consume_queue_names:
-            cls.get_booster(queue_name).consume()
+            cls.get_or_create_booster_by_queue_name(queue_name).consume()
         if block:
             ctrl_c_recv()
 
@@ -25960,7 +26134,8 @@ class BoosterParams(BaseJsonAbleModel):
     is_auto_start_consuming_message: bool = False  # 是否在定义后就自动启动消费，无需用户手动写 .consume() 来启动消息消费。
     
     # booster_group :消费分组名字， BoostersManager.consume_group 时候根据 booster_group 启动多个消费函数,减少需要写 f1.consume() f2.consume() ...这种。
-    # 不像BoostersManager.consume_all() 会启动所有不相关消费函数,也不像  f1.consume() f2.consume() 这样需要多次启动消费函数。
+    # 不像BoostersManager.consume_all() 会启动所有不相关消费函数,也不像  f1.consume() f2.consume() 这样需要逐个启动消费函数。
+    # 可以根据业务逻辑创建不同的分组，实现灵活的消费启动策略。
     # 用法见文档 4.2d.3 章节.   使用 BoostersManager ,通过 consume_group 启动一组消费函数
     booster_group:typing.Union[str, None] = None
 
@@ -26725,6 +26900,7 @@ if __name__ == '__main__':
 ### 代码文件: funboost\core\msg_result_getter.py
 ```python
 import asyncio
+import threading
 import time
 
 import typing
@@ -27003,6 +27179,32 @@ class ResultFromMongo(MongoMixin):
         self.query_result()
         return (self.mongo_row or {}).get('result', NO_RESULT)
 
+
+class FutureStatusResult:
+    """
+    用于sync_call模式的结果等待和通知
+    使用threading.Event实现同步等待
+    """
+    def __init__(self, call_type: str):
+        self.execute_finish_event = threading.Event()
+        self.staus_result_obj: FunctionResultStatus = None
+        self.call_type = call_type  # sync_call or publish
+
+    def set_finish(self):
+        """标记任务完成"""
+        self.execute_finish_event.set()
+
+    def wait_finish(self, rpc_timeout):
+        """等待任务完成，带超时"""
+        return self.execute_finish_event.wait(rpc_timeout)
+
+    def set_staus_result_obj(self, staus_result_obj: FunctionResultStatus):
+        """设置任务执行结果"""
+        self.staus_result_obj = staus_result_obj
+
+    def get_staus_result_obj(self):
+        """获取任务执行结果"""
+        return self.staus_result_obj
 
 if __name__ == '__main__':
     print(ResultFromMongo('test_queue77h6_result:764a1ba2-14eb-49e2-9209-ac83fc5db1e8').get_status_and_result())
@@ -27453,7 +27655,7 @@ class BoosterFire(object):
 import typing
 
 from funboost.publishers.empty_publisher import EmptyPublisher
-from funboost.publishers.http_publisher import HTTPPublisher
+
 from funboost.publishers.nats_publisher import NatsPublisher
 from funboost.publishers.peewee_publisher import PeeweePublisher
 from funboost.publishers.redis_publisher_lpush import RedisPublisherLpush
@@ -27480,7 +27682,7 @@ from funboost.publishers.httpsqs_publisher import HttpsqsPublisher
 from funboost.consumers.empty_consumer import EmptyConsumer
 from funboost.consumers.redis_consumer_priority import RedisPriorityConsumer
 from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer
-from funboost.consumers.http_consumer import HTTPConsumer
+
 from funboost.consumers.kafka_consumer import KafkaConsumer
 from funboost.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
 from funboost.consumers.mongomq_consumer import MongoMqConsumer
@@ -27526,7 +27728,7 @@ broker_kind__publsiher_consumer_type_map = {
     BrokerEnum.HTTPSQS: (HttpsqsPublisher, HttpsqsConsumer),
     BrokerEnum.UDP: (UDPPublisher, UDPConsumer),
     BrokerEnum.TCP: (TCPPublisher, TCPConsumer),
-    BrokerEnum.HTTP: (HTTPPublisher, HTTPConsumer),
+
     BrokerEnum.NATS: (NatsPublisher, NatsConsumer),
     BrokerEnum.TXT_FILE: (TxtFilePublisher, TxtFileConsumer),
     BrokerEnum.PEEWEE: (PeeweePublisher, PeeweeConsumer),
@@ -27636,6 +27838,11 @@ def regist_to_funboost(broker_kind: str):
         from funboost.consumers.mysql_cdc_consumer import MysqlCdcConsumer
         from funboost.publishers.mysql_cdc_publisher import MysqlCdcPublisher
         register_custom_broker(broker_kind, MysqlCdcPublisher, MysqlCdcConsumer)
+    
+    if broker_kind == BrokerEnum.HTTP:
+        from funboost.consumers.http_consumer import HTTPConsumer
+        from funboost.publishers.http_publisher import HTTPPublisher
+        register_custom_broker(broker_kind, HTTPPublisher, HTTPConsumer)
 
 if __name__ == '__main__':
     import sys
@@ -31749,6 +31956,7 @@ from threading import Lock
 import nb_log
 from funboost.constant import ConstStrForClassMethod, FunctionKind
 from funboost.core.func_params_model import PublisherParams, PriorityConsumingControlConfig
+from funboost.core.function_result_status_saver import FunctionResultStatus
 from funboost.core.helper_funs import MsgGenerater
 from funboost.core.loggers import develop_logger
 
@@ -32042,6 +32250,10 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     @abc.abstractmethod
     def concrete_realization_of_publish(self, msg: str):
         raise NotImplementedError
+
+    def sync_call(self, msg_dict: dict, is_return_rpc_data_obj=True) -> typing.Union[dict, FunctionResultStatus]:
+        """仅有部分中间件支持同步调用并阻塞等待返回结果,不依赖AsyncResult + redis作为rpc，例如 http grpc 等"""
+        raise NotImplementedError(f'broker  {self.publisher_params.broker_kind} not support sync_call method')
 
     @abc.abstractmethod
     def clear(self):
@@ -32656,7 +32868,10 @@ class HttpsqsPublisher(AbstractPublisher):
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 12:12
+import threading
 
+from funboost.core.function_result_status_saver import FunctionResultStatus
+from funboost.core.serialization import Serialization
 from funboost.publishers.base_publisher import AbstractPublisher
 from urllib3 import PoolManager
 
@@ -32668,7 +32883,7 @@ class HTTPPublisher(AbstractPublisher, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        self._http = PoolManager(10)
+        self._http = PoolManager(maxsize=100)
         self._ip = self.publisher_params.broker_exclusive_config['host']
         self._port = self.publisher_params.broker_exclusive_config['port']
         self._ip_port_str = f'{self._ip}:{self._port}'
@@ -32678,7 +32893,22 @@ class HTTPPublisher(AbstractPublisher, ):
 
     def concrete_realization_of_publish(self, msg):
         url = self._ip_port_str + '/queue'
-        self._http.request('post', url, fields={'msg': msg})
+        self._http.request('post', url, fields={'msg': msg,'call_type':'publish'})
+
+    def sync_call(self, msg_dict: dict, is_return_rpc_data_obj=True):
+        url = self._ip_port_str + '/queue'
+        response = self._http.request('post', url, 
+                  fields={'msg': Serialization.to_json_str(msg_dict),'call_type':'sync_call'})
+        json_resp =  response.data.decode('utf-8')
+        # import requests
+        # response = requests.request('post', url, 
+        #           data={'msg': Serialization.to_json_str(msg_dict),'call_type':'sync_call'})
+        # json_resp =  response.text()
+        if is_return_rpc_data_obj:
+            return FunctionResultStatus.parse_status_and_result_to_obj(Serialization.to_dict(json_resp))
+        else:
+            return Serialization.to_dict(json_resp)
+
 
     def clear(self):
         pass  # udp没有保存消息

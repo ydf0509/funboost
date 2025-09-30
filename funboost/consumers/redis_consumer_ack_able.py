@@ -99,7 +99,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
     # print(script_4(keys=["text_pipelien1","text_pipelien1b"]))
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = { 'pull_msg_batch_size': 100}
+
 
     def _shedual_task000(self):
         # 可以采用lua脚本，也可以采用redis的watch配合pipeline使用。比代码分两行pop和zadd比还能减少一次io交互，还能防止丢失小概率一个任务。

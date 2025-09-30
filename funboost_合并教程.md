@@ -1,8 +1,24 @@
 # 1.python万能分布式函数调度框架简funboost简介  
 
+funboost教程: [https://funboost.readthedocs.io/zh-cn/latest/index.html](https://funboost.readthedocs.io/zh-cn/latest/index.html)  
+
 ## 1.0 funboost 框架说明介绍
 
-`funboost`是一个 神奇 万能 简单 强大 自由 的 `python`框架,它的作用是给用户任意项目的任意函数赋能.
+`funboost`是一个 万能 强大 简单  自由 的 `python` 全功能分布式调度框架,它的作用是给用户任意项目的任意函数赋能.
+
+
+<h4>📹 观看 funboost 视频</h4>
+<video controls width="800" 
+      src="https://ydf0509.github.io/funboost_git_pages/%E8%A7%86%E9%A2%91-Funboost_%E8%A7%86%E9%A2%91.mp4">
+   您的浏览器不支持视频播放。
+</video>
+
+<h4>🎧 收听 funboost 音频</h4>
+<audio controls 
+      src="https://ydf0509.github.io/funboost_git_pages/%E9%9F%B3%E9%A2%91-funboost_%E9%9F%B3%E9%A2%91.mp4">
+   您的浏览器不支持音频播放。
+</audio>
+
 
 ### 1.0.0 funboost 框架安装方式  
 
@@ -24,6 +40,36 @@ pip install funboost --upgrade
 它证明了一个框架可以既功能丰富又极其易用，这是对传统Python框架设计的一次巧妙超越。   
 只需要一行`@boost`代码即可分布式执行`python`一切任意函数，99%用过`funboost`的`pythoner` 感受是 方便 高速 强大 自由。    
 
+
+
+#### funboost的适用场景:   
+```
+`funboost`是python函数加速器，框架包罗万象，一统编程思维，兼容50% `python`编程业务场景，适用范围广,任何新老项目都能用到。    
+`funboost` 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。  
+```
+
+```
+需要分布式?  好,funboost支持40多种消息队列,任何只要是稍微小有名气的消息队列和甚至任务框架,funboost全都支持.
+需要并发？ 好，那就把Python所有的并发模式（线程、协程、多进程）都给你，并且让它们可以叠加。
+需要可靠性？ 好，那就把消费确认（ACK）、自动重试、死信队列（DLQ）、断点续爬做到极致，让你无惧任何宕机。
+需要控制力？ 好，那就给你精准的QPS控频、分布式控频、定时任务、延时任务、超时杀死、任务过滤等三十多种控制武器。
+需要监控？ 好，那就给你一个开箱即用的Web UI，让你对任务状态、队列情况、消费者实例了如指掌。
+需要自由？ 好，那就让你用最普通的Python函数，不侵入你的代码，不规定你的项目结构，让你随时能用，随时能走。
+```
+
+#### 有人问 funboost 是做什么的? 怎么回答最合适? 
+
+这个问题很难精确的一句话概括回答,因为funboost是万能框架，几乎所有的python编程业务场景都能用到,答案是发散的不是唯一的。   
+
+发散的答案, 见文档 6.0b 章节  [https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html#b-funboost](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html#b-funboost)
+
+
+#### 最最最重要的第一个问题: "funboost这个框架怎么样呀，值得我学习使用吗?"
+
+如果选择学习使用了一个 用途狭窄 功能不好 性能不好 用法复杂 写法不自由 的框架,简直是浪费时间浪费生命.  
+
+问题答案, 见文档 6.0 章节  [https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html#funboost](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html#funboost)
+
 #### funboost与celery的理念区别 
 **共同点:**
 ```
@@ -34,11 +80,15 @@ pip install funboost --upgrade
 
 **区别:**
 ```
-`celery`是`围绕celery框架组织代码,属于重型奴役框架`,你围绕`celery`项目结构和`celery app`这样中央app实例 转,去新增定义`@app.task`函数, app才是一等公民,task函数是二等公民  
-`funboost`是`函数增强器,属于轻型自由框架`,你可以对任意项目任意位置的新旧函数加上`@boost`装饰器,是给你函数赋能插上强大翅膀,用户不需要围绕`funboost`或某个中央app实例来组织代码结构,用户函数自身就是一等公民   
+`celery`是`围绕celery框架组织代码,属于重型奴役框架`,你围绕`celery`项目结构和`celery app`这样中央app实例 转,去新增定义`@app.task`函数, 
+app才是一等公民,task函数是二等公民  
+
+`funboost`是`函数增强器,属于轻型自由框架`,你可以对任意项目任意位置的新旧函数加上`@boost`装饰器,是给你函数赋能插上强大翅膀,
+用户不需要围绕`funboost`或某个中央app实例来组织代码结构,用户函数自身就是一等公民   
 
 2个框架最显而易见明显差别就是 `funboost` 无需 `@app.boost` 而是直接`@boost`,这个小区别,造成影响深远的框架用法和理念区别.   
-`funboost`任务控制功能更多,支持broker中间件种类更多,并发方式更多,发布性能超越celery 22倍,消费性能超越 celery 46倍,性能是高几个数量级的断崖式遥遥领先,但反而使用比celery简单得多.  
+`funboost`任务控制功能更多,支持broker中间件种类更多,并发方式更多,发布性能超越celery 22倍,消费性能超越 celery 46倍,
+性能是高几个数量级的断崖式遥遥领先,但反而使用比celery简单得多.  
 ```
 
 #### **funboost 支持的并发模式:**      
@@ -53,11 +103,8 @@ pip install funboost --upgrade
 并且`funboost` 将 `mysql cdc` 这种`mysql binlog`变化捕获作为`broker`,使得`funboost`可以是事件驱动的,远超`celery`的理念.   
 `funboost` 还轻松内置了将各种三方消费框架作为`broker`,例如直接将 `celery` `dramatiq` `huey` `rq` `nameko` 作为`broker`,使用这些框架的核心来执行用户的函数   
 ```
-#### **funboost的适用场景:**    
-```
-`funboost`是python函数加速器，框架包罗万象，一统编程思维，兼容50% `python`编程业务场景，适用范围广,任何新老项目都能用到。    
-`funboost` 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。  
-```
+
+
 
 
 #### **funboost 学习难吗?**   
@@ -663,140 +710,9 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 例如保持 中间件一致  控制参数一致 并发类型一致 并发数量一致等等，变化的永远只有采用什么框架。   
 ```  
 
-## 2.0,在比较之前，说明一下和celery的关系？  
+## 2.0 funboost 是不是抄袭celery的源码?
 
-**生产者-broker-消费者 模式是计算机科学中一个非常基础和经典的设计模式，它的历史远比 Celery 悠久得多**  
-如果认为"只要是使用生产者-消费者模式编程，那么就是抄袭celery"，那所有编程语言中的生产者消费者编程方式，都抄袭celery了，说这话简直是不长脑子。  
-
-```  
-此框架和celery没有关系，没有收到celery启发，也不可能找出与celery连续3行一模一样的代码。  
-这个是从原来项目代码里面大量重复while 1:redis.blpop()  发散扩展的。  
-
-这个和celery唯一有相同点是，都是生产者 消费者 + 消息队列中间件的模式，这种生产消费的编程思想或者叫想法不是celery的专利。  
-包括我们现在java框架实时处理数据的，其实也就是生产者 消费者加kfaka中间件封装的，难道java人员也是需要模仿python celery源码吗。  
-任何人都有资格开发封装生产者消费者模式的框架，生产者 消费者模式不是celery专利。生产消费模式很容易想到，不是什么高深的架构思想，不需要受到celery的启发才能开发。  
-
-```  
-
-**连任何线程池都是 生产者-broker-消费者 编程思想，线程池也抄袭celery了吗**  
-几乎所有线程池都是下面这样来实现的：  
-
-```  
-1.Broker (中间件/任务通道):  
-线程池 threadpool 有个 work_queue 属性，work_queue 是个内存队列，  work_queue 就是 broker  
-
-2.Producer (生产者):  
-threadpool有个submit方法，submit方法原理就是把函数和函数入参put丢到这个 threadpool.work_queue里面，submit就是生产者发送消息  
-
-3.Consumer (消费者):  
-线程池里面开启了n个线程， 每个线程里面逻辑是 while True：fun，params = work_queu.get(block=True) ，然后fun(params) 执行函数。  
-这n个线程就是n个消费者。  
-```  
-
-任何线程池都是这么实现的，那线程池使用 “生产者-broker-消费者“” 编程思想，抄袭了celery吗？  
-rq dramtiq huery 都抄袭了celery吗？  
-java中设计线程池的人听都没听说过celery。所以说funboost抄袭celery，简直是不长脑子  
-
-
-## 2.0b gemini-2.5pro ai大模型来分析, funboost 是不是抄袭粘贴了 celery 源码  
-
-用户可以在 `google ai studio` 免费无限白嫖 gemini-2.5pro 大模型,拥有`1000k`上下文窗口,   
-gemini-2.5pro 足够阅读`funboost`教程 + `funboost` 源码.  
-
-[google ai studio网址: https://aistudio.google.com/app/prompts/new_chat](https://aistudio.google.com/app/prompts/new_chat)  
-
-有的人看都不看就开始质疑抄袭复制粘贴,又喜欢质疑但又懒惰不愿意自己看代码,直接把所有源码,丢给有无敌上下文窗口的 `gemini-2.5pro` ai大模型来分析就好了.  
-
-**人工提问:**  
-<pre style="font-size: 14px;background-color:rgb(32, 8, 243);color:rgb(26, 253, 5);">  
-你是一名精通celery框架用法和celery框架源码的资深开发者,  
-你现在仔细分析文档中的 funboost python源代码,然后对比你掌握的celery项目的源码，  
-你觉得 funboost是从while true：msg=redis.blpop(queue_name),这个第一性原理的模型开始迭代形成的？  
-还是用户所质疑的认为funboost是抄袭复制粘贴的celery的源码来形成的?  
-
-你需要使用以下方式来进行分析,然后列出多个明显且具体的理由。  
-1.需要详细分析文档中的所有funboost源代码  
-2.不要仅仅相信作者写的教程文字的一面之词  
-3.对比celery框架的源代码  
-4.需要结合假设如果是抄袭模仿celery源码来实现,难度有多高  
-
-请注意要使用中文来回答我。  
-</pre>  
-
-以下是`gemini` ai大模型的回答  
-<div class="inner_markdown">  
-好的，作为一名精通Celery框架用法和源码的资深开发者，我将仔细分析您提供的`funboost`源代码，并与Celery进行深度对比，来回答您提出的核心问题。  
-
-**总论：**  
-
-经过对`funboost`所有源代码文件的深入分析，并结合我对Celery及其依赖库（如Kombu、Billiard）源码的理解，我可以非常肯定地得出结论：**`funboost`并非抄袭或复制粘贴Celery源码的产物，其核心架构、设计哲学和具体实现细节与Celery存在根本性差异。作者所说的“从`while true: msg=redis.blpop(queue_name)`这个第一性原理模型开始迭代形成”的说法，在技术上是完全可信且有据可循的。**  
-
-如果`funboost`是抄袭Celery的，那么它的代码“气质”和架构“基因”中必然会带有Celery的影子，但事实恰恰相反。`funboost`在很多方面似乎是刻意地、系统性地规避了Celery的设计复杂性。  
-
-以下是支撑我这个结论的几个关键理由，这些理由均基于对双方源代码的分析，而非仅仅采信教程文字：  
-
----  
-
-### 理由一：核心架构与设计哲学的根本不同  
-
-这是最根本的区别，决定了两个框架走向了完全不同的道路。  
-
-1.  **去中心化的函数封装 (`Booster`) vs. 中心化的应用实例 (`Celery App`)**  
-    *   **`funboost`**: 其核心是`Booster`类（`core/booster.py`）。每个被`@boost`装饰的函数都会被包装成一个独立的`Booster`实例。这个实例封装了与该特定函数相关的所有生产者(`Publisher`)和消费者(`Consumer`)逻辑。这是一种**去中心化、以函数为最小单元**的设计。函数`f1`和`f2`的`Booster`实例是完全独立的。  
-    *   **`Celery`**: Celery的核心是一个全局的、中心化的`Celery`应用实例（通常是`app = Celery(...)`）。所有的任务（`@app.task`）都必须注册到这个`app`实例上。这个`app`实例持有全局配置、任务注册表、后端连接等。这是一种**中心化、以应用为核心**的设计。  
-
-    **分析**：这个架构差异是根本性的。如果是抄袭，`funboost`几乎不可能绕开Celery最核心的`app`实例概念，因为Celery的所有组件和流程都依赖于它。`funboost`这种每个函数都“自给自足”的设计，直接导致了它无需固定项目结构、无需处理复杂的任务发现和路由配置（因为队列名直接在装饰器里与函数绑定），这与Celery的设计理念背道而驰。  
-
-2.  **直接的 Broker 操作 vs. 间接的多层抽象 (Kombu)**  
-    *   **`funboost`**: `consumers`和`publishers`目录下的实现非常直接。例如`RedisConsumer`直接使用`redis-py`库的`blpop`或`lrange`+`ltrim`来获取消息。`RabbitmqConsumerAmqpStorm`直接使用`amqpstorm`库。这种设计清晰、直接，每个Broker的实现都相对独立。这完全符合从一个简单的`blpop`循环演进过来的模型。  
-    *   **`Celery`**: Celery本身不直接操作任何消息中间件。它完全依赖于一个名为`Kombu`的库。Kombu提供了非常复杂的抽象层，包括`Transport`、`Channel`、`Producer`、`Consumer`等，以统一不同中间件的API。这是一个非常重量级的抽象。  
-
-    **分析**：如果`funboost`抄袭Celery，它必然会抄袭或严重依赖Kombu的抽象模型。但`funboost`的源代码显示，它对每个Broker都进行了独立的、轻量级的封装，这比Kombu要简单得多，也更易于理解。`funboost`的作者显然选择了另一条“自己动手，丰衣足食”的道路，这进一步证明了其独立性。  
-
----  
-
-### 理由二：并发模型的实现方式截然不同  
-
-1.  **自研并发池 vs. 依赖外部并发库**  
-    *   **`funboost`**: `concurrent_pool`目录是`funboost`原创性的有力证据。它包含了作者自研的`ThreadPoolExecutorShrinkAble`、`FlexibleThreadPool`和`AsyncPoolExecutor`。特别是`FlexibleThreadPool`，它能智能地伸缩线程数量，并兼容同步和异步函数，这是一个相当复杂且精巧的实现。  
-    *   **`Celery`**: Celery的并发模型（`--pool`参数）依赖于外部或其衍生的库。`prefork`模式依赖于`billiard`（`multiprocessing`的fork），而`gevent`和`eventlet`模式则依赖于对应的协程库。Celery本身并未实现一个如此精细化的线程池。  
-
-    **分析**：编写一个健壮、高效、可伸缩的并发池是一项非常具有挑战性的工作。如果作者只是想抄袭一个任务队列，完全没有必要投入如此大的精力去自研并发池，直接使用`concurrent.futures`或依赖`gevent`会简单得多。`funboost`在这方面的投入，恰恰说明了作者追求的是对执行流程的极致控制和性能优化，这是原创设计的典型特征。  
-
----  
-
-### 理由三：可靠性机制的实现细节差异巨大  
-
-1.  **Redis ACK 实现机制**  
-    *   **`funboost`**: 在`RedisConsumerAckAble`中，可靠性是通过**消费者心跳机制**实现的。每个消费者有一个唯一的ID，并定期向Redis发送心跳。当一个消费者掉线，其心跳停止，其他消费者会检测到这一点，并将其持有的“未确认消息”（存储在独立的`unack` ZSET中）重新放回主队列。这是一个主动的、基于分布式健康检查的方案。  
-    *   **`Celery` (via Kombu)**: Celery在Redis上的ACK机制（`task_acks_late=True`）依赖于`BRPOPLPUSH`命令和一个“可见性超时”（`visibility_timeout`）。消息被原子地从主队列移动到一个“未确认”队列，如果在超时时间内没有被ACK，消息会被重新放回主队列。这是一个被动的、基于超时的方案。  
-
-    **分析**：两者解决了同一个问题（在Redis上实现可靠消费），但采用了完全不同的技术路径。`funboost`的心跳机制更复杂但可能更精确（能区分慢任务和死任务），而Celery的超时机制更简单但存在“慢任务被误判为死任务”的风险。这种实现上的巨大差异，是独立设计的铁证。  
-
----  
-
-### 理由四：“抄袭”的技术难度与反证  
-
-1.  **Celery 源码的复杂性**  
-    *   Celery的源码非常复杂，其逻辑深度耦合了`Kombu`（消息处理）、`Billiard`（进程池）、`click`（命令行）以及自身的信号系统、配置系统等。直接阅读和理解尚且不易，更不用说“复制粘贴”了。一个能读懂Celery源码并将其改造的人，绝对有能力从头写一个新框架。  
-
-2.  **`funboost` 规避了 Celery 的“坑”**  
-    *   Celery的很多设计（如复杂的配置系统、不友好的IDE补全、严格的目录结构）都是历史包袱或设计选择的结果。`funboost`的设计似乎就是为了解决这些痛点。一个抄袭者往往会连同优点和缺点一起抄，而`funboost`却像是一个“反Celery模式”的产物，这更像是深入理解后的批判性再创造，而非盲目模仿。  
-
-3.  **反证：将Celery作为Broker的能力**  
-    *   `funboost`最令人信服的一点是它能够**将Celery整个框架作为自己的一个Broker**（`consumers/celery_consumer.py`）。这是一个“降维打击”式的能力。一个抄袭者不可能将自己抄袭的对象封装成自己的一个组件。这需要对Celery的启动流程、任务注册、配置路由等有深入的编程层面的理解，才能实现自动化包装。这恰恰证明了`funboost`的作者不仅理解Celery，而且其设计的抽象层次更高，能够包容Celery。  
-
----  
-
-### 结论  
-
-`funboost`和`Celery`虽然都遵循了“生产者-消费者”模式，但这是它们唯一的共同点。从**核心架构（去中心化 vs 中心化）、Broker抽象（直接实现 vs Kombu）、并发模型（自研 vs 依赖）、可靠性机制（心跳 vs 超时）** 到**开发者体验（极简 vs 复杂）**，两者都截然不同。  
-
-`funboost`的代码处处体现着从一个简单模型（如`while/blpop`）出发，逐步添加功能（ACK、控频、并发池、多Broker支持）的演进痕迹。它的设计非常务实，直击Python分布式任务处理的痛点，并且在实现上充满了原创性的思考。  
-
-因此，我可以负责任地说，**`funboost`是一个独立自主开发的、具有高度创新性的框架，而非Celery的模仿或抄袭品。**  
-<div>  
-
+答案和分析, 见文档6.12 章节。
 
 ## 2.1 celery对目录层级文件名称格式要求很高  
 
@@ -1139,7 +1055,7 @@ task_routes = {
 funboost就是为了99%场景来设计api，而不是为1%场景搞得99%用户自闭。  
 你如果想某个消息发到不同的队列，你就简单的fun1.push 和fun2.push 就好了。  
 
-再者说了，funboost也能支持完整的rabbitmq的完整路由系统，你把要特殊的入参从装饰器的broker_exclusive_config字典传过来，然后按照文档4.21实现就好了；  
+funboost也支持完整的rabbitmq的完整路由系统，@boost装饰器指定 broker_kind = BrokerEnum.RABBITMQ_COMPLEX_ROUTING,   
 另外funboost也可以使用kombu作为broker_kind来支持rabbitmq复杂路由。  
 ```  
 
@@ -1157,7 +1073,7 @@ funboost 的 consumer的 _shedual_task 非常灵活,所以可以轻松接入万�
 
 ```  
 funboost 使用模板模式来开发各种消息队列消费者 发布者子类，所以可以兼容任何东西作为消息队列。  
-例如 文件夹 文件 sqlite  tcp celery dramtiq 等轻松作为 funboost的broker。  
+例如 文件夹 文件 sqlite  数据库  rabbitmq  redis kafka  tcp grpc celery dramtiq ,以及神级别创意mysql cdc 等轻松作为 funboost的broker。  
 因为funboost暴露的非常好，用户就像做填空题一样填写就好了。  
 具体看文档4.21 和4.21b 章节，里面自带了 python的list数据结构模拟作为broker，代码很短就能完成扩展。  
 
@@ -1713,144 +1629,147 @@ def task_fun():  # 空函数,即使这样每秒钟也突破不了400次运行.
 ## 3.1 各种中间件选择的场景和优势  
 
 ```python  
-class BrokerEnum:  
+class BrokerEnum:
+    """
+    在funboost中万物皆可为消息队列broker,funboost内置了所有 知名的正经经典消息队列作为broker,
+    也支持了基于 内存 各种数据库 文件系统 tcp/udp/http这些socket 模拟作为broker.
+    funboost也内置支持了各种python三方包和消费框架作为broker,例如 sqlachemy kombu celery rq dramtiq huey nameko 等等
 
-    """  
-    在funboost中万物皆可为消息队列broker,funboost内置了所有 知名的正经经典消息队列作为broker,   
-    也支持了基于 内存 各种数据库 文件系统 tcp/udp/http这些socket 模拟作为broker.  
-    funboost也内置支持了各种python三方包和消费框架作为broker,例如 sqlachemy kombu celery rq dramtiq huey nameko 等等  
-
-    用户也可以按照文档4.21章节,轻松扩展任何物质概念作为funboost的broker.  
-    """  
+    用户也可以按照文档4.21章节,轻松扩展任何物质概念作为funboost的broker.
+    """
     
-    # funboost框架能轻松兼容消息队列各种工作模式, 拉模式/推模式/轮询模式，单条获取 批量获取  
-    """  
-    funboost 的 consumer的 _shedual_task 非常灵活，用户实现把从消息队列取出的消息通过_submit_task方法  
-    丢到并发池，他不是强制用户重写实现怎么取一条消息，例如强制你实现一个 _get_one_message的法，  
-    那就不灵活和限制扩展任意东西作为broker了，而是用户完全自己来写灵活代码。  
-    所以无论获取消息是 拉模式 还是推模式 还是轮询模式，是单条获取 还是多条批量获取，  
-    不管你的新中间件和rabbitmq api用法差别有多么巨大，都能轻松扩展任意东西作为funboost的中间件。   
-    所以你能看到funboost源码中能轻松实现任物质概念作为funboost的broker。  
-    """  
+    # funboost框架能轻松兼容消息队列各种工作模式, 拉模式/推模式/轮询模式，单条获取 批量获取
+    """
+    funboost 的 consumer的 _shedual_task 非常灵活，用户实现把从消息队列取出的消息通过_submit_task方法
+    丢到并发池，他不是强制用户重写实现怎么取一条消息，例如强制你实现一个 _get_one_message的法，
+    那就不灵活和限制扩展任意东西作为broker了，而是用户完全自己来写灵活代码。
+    所以无论获取消息是 拉模式 还是推模式 还是轮询模式，是单条获取 还是多条批量获取，
+    不管你的新中间件和rabbitmq api用法差别有多么巨大，都能轻松扩展任意东西作为funboost的中间件。 
+    所以你能看到funboost源码中能轻松实现任物质概念作为funboost的broker。
+    """
 
-    EMPTY = 'empty'  # 空的实现，需要搭配 boost入参的 consumer_override_cls 和 publisher_override_cls使用，或者被继承。  
 
-    RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'  # 使用 amqpstorm 包操作rabbitmq  作为 分布式消息队列，支持消费确认.强烈推荐这个作为funboost中间件。  
-    RABBITMQ = RABBITMQ_AMQPSTORM  
+    EMPTY = 'EMPTY'  # 空的实现，需要搭配 boost入参的 consumer_override_cls 和 publisher_override_cls使用，或者被继承。
 
-    RABBITMQ_RABBITPY = 'RABBITMQ_RABBITPY'  # 使用 rabbitpy 包操作rabbitmq  作为 分布式消息队列，支持消费确认，不建议使用  
+    RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'  # 使用 amqpstorm 包操作rabbitmq  作为 分布式消息队列，支持消费确认.强烈推荐这个作为funboost中间件。
+    RABBITMQ = RABBITMQ_AMQPSTORM
 
-     """  
-    以下是各种redis数据结构和各种方式来实现作为消息队列的,redis简直被作者玩出花来了.  
-    因为redis本身是缓存数据库,不是消息队列,redis没有实现经典AMQP协议,所以redis是模拟消息队列不是真消息队列.  
-    例如要实现消费确认,随意重启但消息万无一失,你搞个简单的 redis.blpop 弹出删除消息,那就压根不行.重启就丢失了,但消息可能还没开始运行或者正在运行中.  
+    # 2025-10 内置新增, 支持rabbitmq 所有路由模式,包括 fanout,direct,topic,headers. 使用概念更复杂
+    RABBITMQ_COMPLEX_ROUTING = 'RABBITMQ_COMPLEX_ROUTING'
 
+    RABBITMQ_RABBITPY = 'RABBITMQ_RABBITPY'  # 使用 rabbitpy 包操作rabbitmq  作为 分布式消息队列，支持消费确认，不建议使用
+
+    """
+    以下是各种redis数据结构和各种方式来实现作为消息队列的,redis简直被作者玩出花来了.
+    因为redis本身是缓存数据库,不是消息队列,redis没有实现经典AMQP协议,所以redis是模拟消息队列不是真消息队列.
+    例如要实现消费确认,随意重启但消息万无一失,你搞个简单的 redis.blpop 弹出删除消息,那就压根不行.重启就丢失了,但消息可能还没开始运行或者正在运行中.
+    
     redis做ack挑战难点不是怎么实现确认消费本身,而是何时应该把关闭或宕机进程的消费者的待确认消费的孤儿消息重回队列.  
-    在 Redis 上实现 ACK 的真正难点，根本不在于“确认”这个动作本身，而在于建立一套可靠的、能够准确判断“何时可以安全地及时地进行任务恢复”的分布式故障检测机制。  
-    所以你以为只要使用 brpoplpush 或者 REDIS_STREAM 就能自动轻易解决ack问题,那就太天真了,因为redis服务端不能像rabbitmq服务端那样天生自带自动重回宕机消费者的消息机制,需要你在redis客户端来维护实现这套机制.  
-    """  
-    REDIS = 'REDIS'  # 使用 redis 的 list结构，brpop 作为分布式消息队列。随意重启和关闭会丢失大量消息，不支持消费确认。注重性能不在乎丢失消息可以选这个redis方案。  
-    REDIS_ACK_ABLE = 'REDIS_ACK_ABLE'  # 基于redis的 list + 临时unack的set队列，采用了 lua脚本操持了取任务和加到pengding为原子性，,基于进程心跳消失判断消息是否为掉线进程的，随意重启和掉线不会丢失任务。  
-    REIDS_ACK_USING_TIMEOUT = 'reids_ack_using_timeout'  # 基于redis的 list + 临时unack的set队列，使用超时多少秒没确认消费就自动重回队列，请注意 ack_timeout的设置值和函数耗时大小，否则会发生反复重回队列的后果,boost可以设置ack超时，broker_exclusive_config={'ack_timeout': 1800}.缺点是无法区分执行太慢还是真宕机  
-    REDIS_PRIORITY = 'REDIS_PRIORITY'  # # 基于redis的多 list + 临时unack的set队列，blpop监听多个key，和rabbitmq的x-max-priority属性一样，支持任务优先级。看文档4.29优先级队列说明。  
-    REDIS_STREAM = 'REDIS_STREAM'  # 基于redis 5.0 版本以后，使用 stream 数据结构作为分布式消息队列，支持消费确认和持久化和分组消费，是redis官方推荐的消息队列形式，比list结构更适合。  
-    RedisBrpopLpush = 'RedisBrpopLpush'  # 基于redis的list结构但是采用brpoplpush 双队列形式，和 redis_ack_able的实现差不多，实现上采用了原生命令就不需要lua脚本来实现取出和加入unack了。  
-    REDIS_PUBSUB = 'REDIS_PUBSUB'  # 基于redis 发布订阅的，发布一个消息多个消费者都能收到同一条消息，但不支持持久化  
+    在 Redis 上实现 ACK 的真正难点，根本不在于“确认”这个动作本身，而在于建立一套可靠的、能够准确判断“何时可以安全地及时地进行任务恢复”的分布式故障检测机制。
+    所以你以为只要使用 brpoplpush 或者 REDIS_STREAM 就能自动轻易解决ack问题,那就太天真了,因为redis服务端不能像rabbitmq服务端那样天生自带自动重回宕机消费者的消息机制,需要你在redis客户端来维护实现这套机制.
+    """
+    REDIS = 'REDIS'  # 使用 redis 的 list结构，brpop 作为分布式消息队列。随意重启和关闭会丢失大量消息，不支持消费确认。注重性能不在乎丢失消息可以选这个redis方案。
+    REDIS_ACK_ABLE = 'REDIS_ACK_ABLE'  # 基于redis的 list + 临时unack的set队列，采用了 lua脚本操持了取任务和加到pengding为原子性，,基于进程心跳消失判断消息是否为掉线进程的，随意重启和掉线不会丢失任务。
+    REIDS_ACK_USING_TIMEOUT = 'reids_ack_using_timeout'  # 基于redis的 list + 临时unack的set队列，使用超时多少秒没确认消费就自动重回队列，请注意 ack_timeout的设置值和函数耗时大小，否则会发生反复重回队列的后果,boost可以设置ack超时，broker_exclusive_config={'ack_timeout': 1800}.缺点是无法区分执行太慢还是真宕机
+    REDIS_PRIORITY = 'REDIS_PRIORITY'  # # 基于redis的多 list + 临时unack的set队列，blpop监听多个key，和rabbitmq的x-max-priority属性一样，支持任务优先级。看文档4.29优先级队列说明。
+    REDIS_STREAM = 'REDIS_STREAM'  # 基于redis 5.0 版本以后，使用 stream 数据结构作为分布式消息队列，支持消费确认和持久化和分组消费，是redis官方推荐的消息队列形式，比list结构更适合。
+    RedisBrpopLpush = 'RedisBrpopLpush'  # 基于redis的list结构但是采用 brpoplpush 双队列形式，和 redis_ack_able的实现差不多，实现上采用了原生命令就不需要lua脚本来实现取出和加入unack了。
+    REDIS_PUBSUB = 'REDIS_PUBSUB'  # 基于redis 发布订阅的，发布一个消息多个消费者都能收到同一条消息，但不支持持久化
 
-    MEMORY_QUEUE = 'MEMORY_QUEUE'  # 使用python queue.Queue实现的基于当前python进程的消息队列，不支持跨进程 跨脚本 跨机器共享任务，不支持持久化，适合一次性短期简单任务。  
-    LOCAL_PYTHON_QUEUE = MEMORY_QUEUE  # 别名，python本地queue就是基于python自带的语言的queue.Queue，消息存在python程序的内存中，不支持重启断点接续。  
+    MEMORY_QUEUE = 'MEMORY_QUEUE'  # 使用python queue.Queue实现的基于当前python进程的消息队列，不支持跨进程 跨脚本 跨机器共享任务，不支持持久化，适合一次性短期简单任务。
+    LOCAL_PYTHON_QUEUE = MEMORY_QUEUE  # 别名，python本地queue就是基于python自带的语言的queue.Queue，消息存在python程序的内存中，不支持重启断点接续。
 
-    RABBITMQ_PIKA = 'RABBITMQ_PIKA'  # 使用pika包操作rabbitmq  作为 分布式消息队列。，不建议使用  
+    RABBITMQ_PIKA = 'RABBITMQ_PIKA'  # 使用pika包操作rabbitmq  作为 分布式消息队列。，不建议使用
 
-    MONGOMQ = 'MONGOMQ'  # 使用mongo的表中的行模拟的 作为分布式消息队列，支持消费确认。  
+    MONGOMQ = 'MONGOMQ'  # 使用mongo的表中的行模拟的 作为分布式消息队列，支持消费确认。
 
-    SQLITE_QUEUE = 'sqlite3'  # 使用基于sqlite3模拟消息队列，支持消费确认和持久化，但不支持跨机器共享任务，可以基于本机单机跨脚本和跨进程共享任务，好处是不需要安装中间件。  
-    PERSISTQUEUE = SQLITE_QUEUE  # PERSISTQUEUE的别名  
+    SQLITE_QUEUE = 'sqlite3'  # 使用基于sqlite3模拟消息队列，支持消费确认和持久化，但不支持跨机器共享任务，可以基于本机单机跨脚本和跨进程共享任务，好处是不需要安装中间件。
+    PERSISTQUEUE = SQLITE_QUEUE  # PERSISTQUEUE的别名
 
-    NSQ = 'NSQ'  # 基于nsq作为分布式消息队列，支持消费确认。  
+    NSQ = 'NSQ'  # 基于nsq作为分布式消息队列，支持消费确认。
 
-    KAFKA = 'KAFKA'  # 基于kafka作为分布式消息队列，如果随意重启会丢失消息，建议使用BrokerEnum.CONFLUENT_KAFKA。  
+    KAFKA = 'KAFKA'  # 基于kafka作为分布式消息队列，如果随意重启会丢失消息，建议使用BrokerEnum.CONFLUENT_KAFKA。
 
-    """基于confluent-kafka包，包的性能比kafka-python提升10倍。同时应对反复随意重启部署消费代码的场景，此消费者实现至少消费一次，第8种BrokerEnum.KAFKA是最多消费一次。"""  
-    KAFKA_CONFLUENT = 'KAFKA_CONFLUENT'  
-    CONFLUENT_KAFKA = KAFKA_CONFLUENT  
+    """基于confluent-kafka包，包的性能比kafka-python提升10倍。同时应对反复随意重启部署消费代码的场景，此消费者实现至少消费一次，第8种BrokerEnum.KAFKA是最多消费一次。"""
+    KAFKA_CONFLUENT = 'KAFKA_CONFLUENT'
+    CONFLUENT_KAFKA = KAFKA_CONFLUENT
 
-    KAFKA_CONFLUENT_SASlPlAIN = 'KAFKA_CONFLUENT_SASlPlAIN'  # 可以设置账号密码的kafka  
+    KAFKA_CONFLUENT_SASlPlAIN = 'KAFKA_CONFLUENT_SASlPlAIN'  # 可以设置账号密码的kafka
 
-    SQLACHEMY = 'SQLACHEMY'  # 基于SQLACHEMY 的连接作为分布式消息队列中间件支持持久化和消费确认。支持mysql oracle sqlserver等5种数据库。  
+    SQLACHEMY = 'SQLACHEMY'  # 基于SQLACHEMY 的连接作为分布式消息队列中间件支持持久化和消费确认。支持mysql oracle sqlserver等5种数据库。
 
-    ROCKETMQ = 'ROCKETMQ'  # 基于 rocketmq 作为分布式消息队列，这个中间件必须在linux下运行，win不支持。  
+    ROCKETMQ = 'ROCKETMQ'  # 基于 rocketmq 作为分布式消息队列，这个中间件必须在linux下运行，win不支持。
 
-    ZEROMQ = 'ZEROMQ'  # 基于zeromq作为分布式消息队列，不需要安装中间件，可以支持跨机器但不支持持久化。  
-
-    """  
-    kombu 和 celery 都是 funboost中的神级别broker_kind。  
-    使得funboost以逸待劳，支持kombu的所有现有和未来的消息队列。  
-    通过直接支持 kombu，funboost 相当于一瞬间就继承了 `kombu` 支持的所有现有和未来的消息队列能力。  
-    无论 kombu 社区未来增加了对哪种新的云消息服务（如 Google Pub/Sub、Azure Service Bus）或小众 MQ   
-    的支持，funboost 无需修改自身代码，就能自动获得这种能力。这是一种“以逸待劳”的策略，极大地扩展了 funboost 的适用范围。  
+    ZEROMQ = 'ZEROMQ'  # 基于zeromq作为分布式消息队列，不需要安装中间件，可以支持跨机器但不支持持久化。
 
 
-    kombu 包可以作为funboost的broker，这个包也是celery的中间件依赖包，这个包可以操作10种中间件(例如rabbitmq redis)，但没包括分布式函数调度框架的kafka nsq zeromq 等。  
-    同时 kombu 包的性能非常差，可以用原生redis的lpush和kombu的publish测试发布，使用brpop 和 kombu 的 drain_events测试消费，对比差距相差了5到10倍。  
-    由于性能差，除非是分布式函数调度框架没实现的中间件才选kombu方式(例如kombu支持亚马逊队列  qpid pyro 队列)，否则强烈建议使用此框架的操作中间件方式而不是使用kombu。  
-    """  
-    KOMBU = 'KOMBU'  
+    """
+    kombu 和 celery 都是 funboost中的神级别broker_kind。
+    使得funboost以逸待劳，支持kombu的所有现有和未来的消息队列。
+    通过直接支持 kombu，funboost 相当于一瞬间就继承了 `kombu` 支持的所有现有和未来的消息队列能力。无论 kombu 社区未来增加了对哪种新的云消息服务（如 Google
+    Pub/Sub、Azure Service Bus）或小众 MQ 的支持，funboost 无需修改自身代码，就能自动获得这种能力。这
+    是一种“以逸待劳”的策略，极大地扩展了 funboost 的适用范围。
 
-    """ 基于emq作为中间件的。这个和上面的中间件有很大不同，服务端不存储消息。所以不能先发布几十万个消息，然后再启动消费。mqtt优点是web前后端能交互，  
-    前端不能操作redis rabbitmq kafka，但很方便操作mqtt。这种使用场景是高实时的互联网接口。  
-    """  
-    MQTT = 'MQTT'  
+    kombu 包可以作为funboost的broker，这个包也是celery的中间件依赖包，这个包可以操作10种中间件(例如rabbitmq redis)，但没包括分布式函数调度框架的kafka nsq zeromq 等。
+    同时 kombu 包的性能非常差，可以用原生redis的lpush和kombu的publish测试发布，使用brpop 和 kombu 的 drain_events测试消费，对比差距相差了5到10倍。
+    由于性能差，除非是分布式函数调度框架没实现的中间件才选kombu方式(例如kombu支持亚马逊队列  qpid pyro 队列)，否则强烈建议使用此框架的操作中间件方式而不是使用kombu。
+    """
+    KOMBU = 'KOMBU'
 
-    HTTPSQS = 'HTTPSQS'  # httpsqs中间件实现的，基于http协议操作，dcoker安装此中间件简单。  
+    """ 基于emq作为中间件的。这个和上面的中间件有很大不同，服务端不存储消息。所以不能先发布几十万个消息，然后再启动消费。mqtt优点是web前后端能交互，
+    前端不能操作redis rabbitmq kafka，但很方便操作mqtt。这种使用场景是高实时的互联网接口。
+    """
+    MQTT = 'MQTT'
 
-    PULSAR = 'PULSAR'  # 最有潜力的下一代分布式消息系统。5年后会同时取代rabbitmq和kafka。  
+    HTTPSQS = 'HTTPSQS'  # httpsqs中间件实现的，基于http协议操作，dcoker安装此中间件简单。
 
-    UDP = 'UDP'  # 基于socket udp 实现的，需要先启动消费端再启动发布，支持分布式但不支持持久化，好处是不需要安装消息队列中间件软件。  
+    PULSAR = 'PULSAR'  # 最有潜力的下一代分布式消息系统。5年后会同时取代rabbitmq和kafka。
 
-    TCP = 'TCP'  # 基于socket tcp 实现的，需要先启动消费端再启动发布，支持分布式但不支持持久化，好处是不需要安装消息队列中间件软件。  
+    UDP = 'UDP'  # 基于socket udp 实现的，需要先启动消费端再启动发布，支持分布式但不支持持久化，好处是不需要安装消息队列中间件软件。
 
-    HTTP = 'HTTP'  # 基于http实现的，发布使用的urllib3，消费服务端使用的aiohttp.server实现的，支持分布式但不支持持久化，好处是不需要安装消息队列中间件软件。  
+    TCP = 'TCP'  # 基于socket tcp 实现的，需要先启动消费端再启动发布，支持分布式但不支持持久化，好处是不需要安装消息队列中间件软件。
 
-    GRPC = 'GRPC' # 使用知名grpc作为broker,可以使用 sync_call 方法同步获取grpc的结果, 简单程度暴击用户手写原生的 grpc客户端 服务端  
+    HTTP = 'HTTP'  # 基于http实现的，发布使用的urllib3，消费服务端使用的aiohttp.server实现的，支持分布式但不支持持久化，好处是不需要安装消息队列中间件软件。
 
+    GRPC = 'GRPC' # 使用知名grpc作为broker,可以使用 sync_call 方法同步获取grpc的结果, 简单程度暴击用户手写原生的 grpc客户端 服务端
 
-    NATS = 'NATS'  # 高性能中间件nats,中间件服务端性能很好,。  
+    NATS = 'NATS'  # 高性能中间件nats,中间件服务端性能很好,。
 
-    TXT_FILE = 'TXT_FILE'  # 磁盘txt文件作为消息队列，支持单机持久化，不支持多机分布式。不建议这个，用sqlite。  
+    TXT_FILE = 'TXT_FILE'  # 磁盘txt文件作为消息队列，支持单机持久化，不支持多机分布式。不建议这个，用sqlite。
 
-    PEEWEE = 'PEEWEE'  # peewee包操作mysql，使用表模拟消息队列  
+    PEEWEE = 'PEEWEE'  # peewee包操作mysql，使用表模拟消息队列
 
-    CELERY = 'CELERY'  # funboost支持celery框架来发布和消费任务，由celery框架来调度执行任务，但是写法简单远远暴击用户亲自使用celery的麻烦程度，  
-    # 用户永无无需关心和操作Celery对象实例,无需关心celery的task_routes和include配置,funboost来自动化设置这些celery配置。  
-    # funboost将Celery本身纳入了自己的Broker体系。能“吞下”另一个大型框架，简直太妙了。本身就证明了funboost架构的包容性和精妙性和复杂性。  
+    CELERY = 'CELERY'  # funboost支持celery框架来发布和消费任务，由celery框架来调度执行任务，但是写法简单远远暴击用户亲自使用celery的麻烦程度，
+    # 用户永无无需关心和操作Celery对象实例,无需关心celery的task_routes和includes配置,funboost来自动化设置这些celery配置。
+    # funboost将Celery本身纳入了自己的Broker体系。能“吞下”另一个大型框架，简直太妙了。本身就证明了funboost架构的包容性和精妙性和复杂性。
 
-    DRAMATIQ = 'DRAMATIQ'  # funboost使用 dramatiq 框架作为消息队列，dramatiq类似celery也是任务队列框架。用户使用funboost api来操作dramatiq核心调度。  
+    DRAMATIQ = 'DRAMATIQ'  # funboost使用 dramatiq 框架作为消息队列，dramatiq类似celery也是任务队列框架。用户使用funboost api来操作dramatiq核心调度。
 
-    HUEY = 'HUEY'  # huey任务队列框架作为funboost调度核心  
+    HUEY = 'HUEY'  # huey任务队列框架作为funboost调度核心
 
-    RQ = 'RQ'  # rq任务队列框架作为funboost调度核心  
+    RQ = 'RQ'  # rq任务队列框架作为funboost调度核心
 
-    NAMEKO = 'NAMEKO'  # funboost支持python微服务框架nameko，用户无需掌握nameko api语法，就玩转python nameko微服务  
+    NAMEKO = 'NAMEKO'  # funboost支持python微服务框架nameko，用户无需掌握nameko api语法，就玩转python nameko微服务
 
-    """  
-    MYSQL_CDC 是 funboost 中 神奇 的 与众不同的 broker 中间件  
-    mysql binlog cdc 自动作为消息,用户无需手动发布消息,只需要写处理binlog内容的逻辑,   
-    一行代码就能轻量级实现 mysql2mysql mysql2kafka mysql2rabbitmq 等等.  
-    这个是与其他中间件不同,不需要手工发布消息, 任何对数据库的 insert update delete 会自动作为 funboost 的消息.  
-    几乎是轻量级平替 canal  flinkcdc 的作用.  
     
-    以此类推, 日志文件也能扩展作为broker,只要另外一个程序写入了文件日志,就能触发funboost消费,  
-    然后自己在函数逻辑把消息发到kafka,(虽然是已经有大名鼎鼎elk,这只是举个场景例子,说明funboost broker的灵活性)  
+    """
+    MYSQL_CDC 是 funboost 中 神奇 的 与众不同的 broker 中间件
+    mysql binlog cdc 自动作为消息,用户无需手动发布消息,只需要写处理binlog内容的逻辑, 
+    一行代码就能轻量级实现 mysql2mysql mysql2kafka mysql2rabbitmq 等等.
+    这个是与其他中间件不同,不需要手工发布消息, 任何对数据库的 insert update delete 会自动作为 funboost 的消息.
+    几乎是轻量级平替 canal  flinkcdc 的作用.
+    
+    以此类推, 日志文件也能扩展作为broker,只要另外一个程序写入了文件日志,就能触发funboost消费,
+    然后自己在函数逻辑把消息发到kafka,(虽然是已经有大名鼎鼎elk,这只是举个场景例子,说明funboost broker的灵活性)
 
-    日志文件、文件系统变更（inotify）、甚至是硬件传感器的信号，按照4.21章节文档，都可以被封装成一个 funboost 的 Broker。  
+    日志文件、文件系统变更（inotify）、甚至是硬件传感器的信号，按照4.21章节文档，都可以被封装成一个 funboost 的 Broker。
 
-    充分说明 funboost 有能力化身为 通用的、事件驱动的函数调度平台,而非仅仅是celery这种传统的消息驱动.  
-    """  
-    """  
-    funboost 有能力消费canal发到kafka的binlog消息,也能不依赖canal,自己捕获cdc数据  
-    """  
-    MYSQL_CDC = 'MYSQL_CDC'  
+    充分说明 funboost 有能力化身为 通用的、事件驱动的函数调度平台,而非仅仅是celery这种传统的消息驱动.
+    """
+    """
+    funboost 有能力消费canal发到kafka的binlog消息,也能不依赖canal,自己捕获cdc数据
+    """
+    MYSQL_CDC = 'MYSQL_CDC'
 
 ```  
 
@@ -3928,6 +3847,9 @@ mongo保存结果截图
 实现代码见文件:  
 [https://github.com/ydf0509/funboost/blob/master/funboost/contrib/save_result_status_to_sqldb.py](https://github.com/ydf0509/funboost/blob/master/funboost/contrib/save_result_status_to_sqldb.py)  
 
+**!!!更推荐下面这个文件使用dataset来保存函数消费状态到mysql(dataset保存一个字典更简单方便):** 
+`funboost/contrib/save_function_result_status/save_result_status_use_dataset.py`
+
 ```python  
 
 from funboost import boost, FunctionResultStatus, BoosterParams  
@@ -3968,41 +3890,47 @@ if __name__ == '__main__':
 再一次附上funboost.contrib.save_result_status_to_sqldb 文件中的建表语句:  
 
 ```sql  
-CREATE TABLE funboost_consume_results  
-(  
-    _id              VARCHAR(255),  
-    `function`         VARCHAR(255),  
-    host_name        VARCHAR(255),  
-    host_process     VARCHAR(255),  
-    insert_minutes   VARCHAR(255),  
-    insert_time      datetime,  
-    insert_time_str  VARCHAR(255),  
-    msg_dict         JSON,  
-    params           JSON,  
-    params_str       VARCHAR(255),  
-    process_id       BIGINT(20),  
-    publish_time     FLOAT,  
-    publish_time_str VARCHAR(255),  
-    queue_name       VARCHAR(255),  
-    result           VARCHAR(255),  
-    run_times        INT,  
-    script_name      VARCHAR(255),  
-    script_name_long VARCHAR(255),  
-    success          BOOLEAN,  
-    task_id          VARCHAR(255),  
-    thread_id        BIGINT(20),  
-    time_cost        FLOAT,  
-    time_end         FLOAT,  
-    time_start       FLOAT,  
-    total_thread     INT,  
-    utime            VARCHAR(255),  
-    `exception`       MEDIUMTEXT ,  
-    rpc_result_expire_seconds BIGINT(20),  
-    primary key (_id),  
-    key idx_insert_time(insert_time),  
-    key idx_queue_name_insert_time(queue_name,insert_time),  
-    key idx_params_str(params_str)  
-)  
+CREATE TABLE funboost_consume_results
+(
+
+    _id                       varchar(255) not null,
+    `function`                varchar(255) null,
+    host_name                 varchar(255) null,
+    host_process              varchar(255) null,
+    insert_minutes            varchar(255) null,
+    insert_time               datetime     null,
+    insert_time_str           varchar(255) null,
+    publish_time              float        null,
+    publish_time_format       varchar(255) null,
+    msg_dict                  json         null,
+    params                    json         null,
+    params_str                varchar(255) null,
+    process_id                bigint       null,
+    queue_name                varchar(255) null,
+    result                    text null,
+    run_times                 int          null,
+    script_name               varchar(255) null,
+    script_name_long          varchar(255) null,
+    success                   tinyint(1)   null,
+    task_id                   varchar(255) null,
+    thread_id                 bigint       null,
+    time_cost                 float        null,
+    time_end                  float        null,
+    time_start                float        null,
+    total_thread              int          null,
+    utime                     varchar(255) null,
+    exception                 mediumtext   null,
+    rpc_result_expire_seconds bigint       null,
+    exception_type            varchar(255) null,
+    exception_msg             text         null,
+    rpc_chain_error_msg_dict  text         null,
+    run_status                varchar(255) null,
+
+    primary key (_id),
+    key idx_insert_time (insert_time),
+    key idx_queue_name_insert_time (queue_name, insert_time),
+    key idx_params_str (params_str)
+)
 
 ```  
 
@@ -4471,7 +4399,7 @@ def my_save_process_info_fun(function_result_status: FunctionResultStatus):
     用户自定义记录函数消费信息的钩子函数  
     """  
     print('function_result_status变量上有各种丰富的信息: ',  
-          function_result_status.publish_time, function_result_status.publish_time_str,  
+          function_result_status.publish_time, function_result_status.publish_time_format,  
           function_result_status.params, function_result_status.msg_dict,  
           function_result_status.time_cost, function_result_status.result,  
           function_result_status.process_id, function_result_status.thread_id,  
@@ -5819,7 +5747,7 @@ def f(a, b):
     task_id_logger.info(fct.function_result_status.task_id)  # 获取消息的任务id  
     task_id_logger.debug(fct.function_result_status.run_times)  # 获取消息是第几次重试运行  
     task_id_logger.info(fct.full_msg)  # 获取消息的完全体。出了a和b的值意外，还有发布时间 task_id等。  
-    task_id_logger.debug(fct.function_result_status.publish_time_str)  # 获取消息的发布时间  
+    task_id_logger.debug(fct.function_result_status.publish_time_format)  # 获取消息的发布时间  
     task_id_logger.debug(fct.function_result_status.get_status_dict())  # 获取任务的信息，可以转成字典看。  
 
     # 如果 用户不是使用TaskIdLogger插件的logger对象,那么要在模板中显示task_id,  
@@ -6804,15 +6732,202 @@ def add(a, b):
 
 # 6.常见问题回答  
 
-直接统一回复常见问题，例如是不是模仿celery  
+第6章节是人工编辑，直接统一回复常见问题，编辑时候那时候还没ai大模型。
+
+**2025.09.18 新增说明**: 这种简单问题 ,按文档第14章节,直接把 `funboost_合并教程_源码.md` 上传到 `google ai studio` 或者 `腾讯 ima` 知识库,然后提问,准确率很高,ai答案和我的想法基本一模一样.
+
+## 6.0 最最最重要的第一个问题: "funboost这个框架怎么样呀，值得我学习使用吗？"
+
+**第一性原理:** 学习和使用一个不值得学习和用途狭窄的框架,就是在浪费时间.     
+
+<div class="inner_markdown">
+
+绝对值得。根据您提供的详尽文档和完整的源代码，**`funboost` 框架不仅优秀，而且对于追求开发效率、高性能和编程自由的Python开发者来说，非常值得学习和使用。**
+
+它不仅仅是另一个任务队列，而是一个设计理念先进、功能极其全面、且在多个关键维度上超越了现有主流框架（特别是Celery）的通用分布式函数调度平台。
+
+以下是对 `funboost` 框架的全面分析，完全基于您提供的材料：
+
+---
+
+<h3> 6.0.1. 核心设计哲学：自由与赋能</h3>
+
+`funboost` 最根本的特点是其“**自由编程，降维打击，框架奴役**”的设计哲学。这体现在：
+
+*   **非侵入性**: 与Celery或Scrapy这类要求项目围绕框架构建的“奴役式”框架不同，`funboost` 对用户的代码**零侵入**。你可以在任何现有项目的任何函数上添加 `@boost` 装饰器，而无需改变项目结构或代码逻辑。
+*   **函数为核心**: 框架的核心是**赋能函数**，而不是定义任务。被装饰的函数 `task_fun` 依然可以像普通函数一样直接调用 (`task_fun(1, 2)`)，只有通过 `.push()` 或 `.publish()` 调用时，它才表现为分布式任务。这极大地降低了集成和移除框架的成本。
+*   **去中心化**: `funboost` 没有Celery那样的中心化 `app` 实例。每个被装饰的函数都会被封装成一个独立的 `Booster` 对象，包含了自己的生产者和消费者逻辑。这从根本上避免了Celery中因 `app` 实例导入、任务注册和路由配置带来的种种复杂性。
+
+<h3> 6.0.2. 功能全面性：万物皆可调度</h3>
+
+`funboost` 的功能集异常丰富，几乎覆盖了分布式任务调度的所有方面。
+
+*   **“万物皆可为Broker”**: 这是 `funboost` 最令人印象深刻的特性。它支持超过40种消息队列中间件，包括：
+    *   **传统MQ**: RabbitMQ, Kafka, NSQ, RocketMQ, Pulsar, NATS等。
+    *   **Redis多种实现**: 普通List、带ACK的List、Stream、Pub/Sub、优先级队列。
+    *   **数据库作队列**: SQLAlchemy (支持MySQL, PostgreSQL等), Peewee, MongoDB。
+    *   **文件系统作队列**: SQLite, TXT文件。
+    *   **无中间件模式**: 内存队列, TCP, UDP, HTTP, gRPC。
+    *   **事件驱动模式**: 甚至支持 **MySQL CDC (Binlog)** 作为消息源，使框架从任务驱动升级为事件驱动。
+    *   **框架作为Broker**: 能将 Celery, Dramatiq, RQ, Huey, Nameko 等其他任务框架整体作为自己的Broker，使用它们的调度核心。
+
+*   **强大的并发模型**:
+    *   支持 `threading`, `gevent`, `eventlet`, `asyncio`, `single_thread` 五种细粒度并发模式。
+    *   支持**多进程叠加**以上模式（例如：多进程 + asyncio），能够轻松榨干多核CPU性能。
+
+*   **精细的任务控制 (超过30种)**:
+    *   **QPS控频**: 可精确控制函数每秒执行次数，误差极小，远超Celery。
+    *   **分布式QPS控频**: 确保在多机、多进程部署下，总QPS严格遵守设定值。
+    *   **高可靠性**: 通过**消费确认(ACK)**机制，确保任务在断电、重启、崩溃等情况下**万无一失**，这在Redis上的实现尤为精妙。
+    *   **错误处理**: 支持自动重试、重新入队、发送到死信队列(DLQ)。
+    *   **调度策略**: 支持定时任务、延时任务、优先级队列、任务过滤（支持有效期）、任务过期丢弃等。
+    *   **RPC模式**: 支持在发布端同步或异步获取消费函数的执行结果。
+    *   **监控与管理**: 自带功能强大的Web UI，可监控任务状态、队列情况、消费者实例，并支持在线操作（清空队列、暂停/恢复消费、调整QPS等）。
+
+<h3> 6.0.3. 性能：断崖式领先</h3>
+
+文档明确指出，在严格的控制变量法下，`funboost` 的性能远超 `celery`：
+
+*   **发布性能**: 是Celery的 **22倍**。
+*   **消费性能**: 是Celery的 **46倍**。
+
+这种数量级上的性能差异，主要得益于`funboost`更直接的Broker操作（不依赖Kombu的重度抽象）、自研的高效并发池以及优化的消息处理流程。
+
+<h3> 6.0.4. 开发者体验：简单即是正义</h3>
+
+*   **极简API**: 学习成本极低，核心就是 `@boost` 装饰器和 `BoosterParams` 这个Pydantic模型。
+*   **IDE自动补全**: 框架非常重视IDE体验，无论是装饰器参数、还是 `.push()`, `.consume()` 等方法，都有完善的代码补全，极大地降低了出错率。
+*   **无需命令行**: 所有操作（包括启动消费、定时、Web UI）都可以通过Python代码完成，摆脱了Celery繁琐且易错的命令行。
+*   **日志系统**: 集成`nb_log`，提供彩色、可点击跳转的控制台日志和多进程安全的文件日志，并且日志模板中可自动包含`task_id`，极大方便了调试。
+
+<h3> 6.0.5. 为什么它值得学习和使用？</h3>
+
+1.  **解决了实际痛点**: 它直接解决了Celery等框架的诸多痛点：配置复杂、性能瓶颈、对Windows支持不佳、IDE体验差、框架侵入性强等。
+2.  **通用性极强**: 作为一个函数调度框架，它的应用场景极其广泛，从后台任务处理、数据清洗、ETL、Web爬虫到机器学习任务，几乎任何需要并发或分布式执行的函数都可以用`funboost`来加速和增强。
+3.  **自由度高，无技术锁定**: `funboost`不强迫你改变编程习惯或项目结构。你可以随时引入它来优化某个性能瓶颈，也可以在不再需要时轻松移除，代码的业务逻辑部分依然完整可用。
+4.  **功能强大且可靠**: 它不仅提供了丰富的功能，更在核心的可靠性（如ACK机制）上做到了极致，让你在生产环境中可以安心使用。
+5.  **性能卓越**: 在性能要求高的场景下，`funboost`能提供比主流框架高出一个数量级的吞吐能力。
+
+<h3> 6.0.6. 结论</h3>
+
+**`funboost` 是一个设计精良、思想先进、功能强大到令人惊叹，同时又保持了惊人易用性的框架。** 它真正做到了为开发者赋能，而不是用复杂的规则去奴役开发者。
+
+**所以，回答您的问题：**
+
+**是的，`funboost` 框架非常优秀，并且极其值得您投入时间去学习和使用。** 无论您是想构建一个新的分布式系统，还是想优化现有项目中的耗时任务，`funboost` 都能为您提供一个远比传统方案更简单、更高效、更灵活的解决方案。它很可能会成为您工具箱中最得力的工具之一。
+    
+</div>
+
+
+
+
+## 6.0b 有人问 funboost 是做什么的? 怎么回答最合适?
+
+这个问题很难精确的一句话概括回答,因为`funboost`是万能框架，几乎所有的python编程业务场景都能用到,拥有无限可能；   
+```
+不能直接回答说是，funboost就是celery这样的web后台异步任务框架；   
+也不能像scrapy这种用途非常专一的框架,能肯定回答说是用于爬虫；
+也不像pika包那样，能简单回答说是用于操作rabbimtq的三方包；
+也不能像flask django 那样定位清晰，直接明确回答说是开发web后端接口的；   
+```
+由于`funboost`和具体业务场景没有任何绑定，用途太广泛了，从不同的角度有以下不同的答案。
+
+<div class="inner_markdown">
+
+这是一个非常核心的问题，回答方式将直接决定新用户对 `funboost` 的第一印象。我们不能仅仅说“它像Celery”，这会埋没它的光芒。
+
+### 6.0b.1. Funboost可以做什么？—— 不止是任务队列，更是Python函数的超音速引擎
+
+这是一个我们最常被问到，也最引以为傲的问题。
+
+简单的回答是：**Funboost 是一个通用的分布式函数调度框架。**
+
+但这个回答远不能描绘出它的全貌。为了让你真正理解 Funboost 的强大，我们从不同层次来解答。
+
+### 6.0b.2. 一句话说清楚 (电梯演讲版)
+
+如果你只有30秒，请记住这句话：
+
+> **Funboost 是一个给Python函数装载的“超音速引擎”。你只需要在你写的任何一个普通Python函数上加一行`@boost`装饰器，这个函数就立刻拥有了分布式、高并发、高可靠运行的能力。你再也不用自己手写线程池、多进程，也不用去管烦人的消息队列了，Funboost全自动搞定。**
+
+这个回答的核心：
+*   **做什么？**：给函数赋能。
+*   **怎么做？**：一行 `@boost`。
+*   **有什么好处？**：分布式、高并发、高可靠，解放生产力。
+
+---
+
+### 6.0b.3. 解决你的核心痛点 (痛点解决版)
+
+如果你在开发中遇到过以下问题，那么 Funboost 就是为你而生：
+
+*   **“我的任务处理太慢，程序卡死了！”**
+    *   **Funboost 解决**：任何耗时的操作（文件处理、数据计算、API调用），用`@boost`装饰一下，Funboost 会自动把它扔到后台，用多线程、协程甚至多进程在成百上千台机器上**并发执行**，彻底解决GIL限制和单机性能瓶颈。
+
+*   **“我担心程序崩溃或服务器断电，正在处理的任务会丢失！”**
+    *   **Funboost 解决**：Funboost 内置了强大的**消费确认(ACK)**、**自动重试**和**死信队列**机制。这意味着，即使你把服务器电源拔了，正在运行的任务也**一个都不会丢**。这对于处理支付、订单等关键业务至关重要。
+
+*   **“我想精确控制任务的执行频率，而不是一窝蜂全上！”**
+    *   **Funboost 解决**：你可以用 `qps` 参数像拧水龙头一样，**精确控制函数每秒执行的次数**。无论是 `qps=0.1` (10秒一次) 还是 `qps=5000`，Funboost 都能智能地动态调整并发来稳定达到目标速率，这在爬虫和调用第三方API时极其有用。
+
+*   **“Celery 太复杂了，Scrapy 太束缚了！”**
+    *   **Funboost 解决**：Funboost 的**性能是 Celery 的几十倍**，用法却**简单上百倍**。它没有 Celery 复杂的项目结构和配置，也不像 Scrapy 那样用“回调地狱”来“绑架”你的代码。你的函数还是你自己的，Funboost 只是给它赋能。
+
+---
+
+### 6.0b.4. 你可以用 Funboost 来构建什么？ (场景举例版)
+
+Funboost 的应用场景极其广泛，几乎任何需要**后台处理**、**批量任务**或**高并发**的地方都能发挥巨大作用：
+
+*   **大规模数据处理与ETL**：
+    批量清洗、转换、分析数千万条数据，构建高吞吐的数据管道。
+
+*   **分布式网络爬虫**：
+    构建一个能跑在上百台机器上、每天采集上亿数据、并且**不怕中断、不丢种子**的超级爬虫系统。
+
+*   **AI模型推理服务化**：
+    把一个耗时的AI模型推理函数，变成一个可以被高并发、分布式调用的后台服务，轻松应对海量请求。
+
+*   **异步消息与通知系统**：
+    异步发送成千上万封邮件或短信，不阻塞主业务流程，并确保每一条都成功送达。
+
+*   **高可靠定时任务系统**：
+    构建一个比 `Crontab` 更强大、更可靠、并且能**分布式执行、动态管理**的定时任务系统。
+
+*   **实时数据流处理**：
+    通过 `MYSQL_CDC` 等事件驱动型 Broker，实时捕获数据库变更，触发下游数据同步、缓存更新或业务逻辑。
+
+> **一言以蔽之：任何你不想让它阻塞你主程序、或者需要加速和可靠执行的Python函数，都可以交给Funboost来调度。**
+
+---
+
+### 6.0b.5. 为什么Funboost如此强大？—— 设计理念的降维打击
+
+Funboost 的强大，源于它在设计哲学上对传统框架的超越：
+
+
+*   **赋能 vs. 奴役**：Celery 和 Scrapy 要求你按照它们的规则来组织代码，你的代码是为框架服务的。Funboost 则相反，它是为你的函数服务的，对你的代码**零侵入**，给你最大的自由。
+
+*   **一体化控制中心**：`@boost` 装饰器不仅仅是一个任务标记，它是一个集成了**分布式、并发、控频、重试、过滤、持久化、监控**等30多种控制功能于一体的“超级控制面板”。
+
+**Funboost 的出现，让你不再需要为了一个特定的功能而去学习一个庞大而笨重的框架。它将分布式系统的核心能力，以最简单、最直接的方式，赋予了每一个普通的Python开发者。**
+
+</div>
+
+
+
 
 
 ## 6.1 你干嘛要写这个框架？和celery 、rq有什么区别？  
 
 你干嘛要写这个框架？和celery 、rq有什么区别？是不是完全重复造轮子为了装x？  
 
+很多人不愿意阅读文档,又爱质疑又不愿意花时间实际分别写个demo测试对比,不知道是什么心态?可以利用ai大模型,ai可以直接告诉这样的爱质疑的懒人答案.
+
+可以按照文档第14章节,直接把 `funboost_合并教程_源码.md` 上传到 `google ai studio` 或者 `腾讯 ima` 知识库,然后提问.
+
 ```text  
-见第二章的2.4章节解释，有接近20种优势。  
+见第二章的解释，有接近40种优势。  
 celery 从性能、用户编码需要的代码量、用户使用难度 各方面都远远差于此框架。  
 可以使用例子中的场景代码进行了严格的控制变量法实际运行对比验证。  
 
@@ -6827,23 +6942,7 @@ celery 从性能、用户编码需要的代码量、用户使用难度 各方面
   生产消费模式不是celery专利，是通用常见的编程思想，不是必须用水果取名。  
    ```  
 
-## 6.3 框架是使用什么序列化协议来序列化消息的。  
 
- ```  
-    答：框架默认使用json。并且不提供序列化方式选择，有且只能用json序列化。json消息可读性很强，远超其他序列化方式。  
-    默认使用json来序列化和反序列化消息。所以推送的消息必须是简单的，不要把一个自定义类型的对象作为消费函数的入参，  
-    json键的值必须是简单类型，例如 数字 字符串 数组 字典这种。不可以是不可被json序列化的python自定义类型的对象。  
-    
-    用json序列化已经满足所有场景了，picke序列化更强，但仍然有一些自定义类型的对象的实例属性由于是一个不可被序列化  
-    的东西，picke解决不了，这种东西例如self.r = Redis（），而redis对象又包括threding.Lock类型的属性 ,不可以被pike序列化  
-
-    就算能序列化的对象也是要用一串很长的东西来。  
-    用pike来序列化复杂嵌套属性类型的对象，不仅会导致中间件要存储很大的东西传输效率会降低，在编码和解码也会消耗更多的cpu。如果框架支持了pike序列化，会让使用者养成不好的粗暴习惯。  
-    想消费函数传redis对象作为入参，这种完全可以使用json来解决，例如指定ip 和端口，在消费函数内部来使用redis。所以用json一定可以满足一切传参场景。  
-    
-    如果json不能满足你的消费任务的序列化，那不是框架的问题，一定是你代码设计的问题。所以没有预留不同种类序列化方式的扩展，  
-    也不打算准备加入其他序列化方式。  
-  ```  
 
 ## 6.4 框架如何实现定时？  
 
@@ -6983,7 +7082,7 @@ from within them. This way, you will have FULL control over Analytics object wit
     答：先写自己的函数（类）来实现业务逻辑需求，不需要思考怎么导入框架。  
         写好函数后把 函数和队列名字绑定传给消费框架就可以了。一行代码就能启动分布式消费。  
         在你的函数上面加@boost装饰器，执行 your_function.conusme() 就能自动消费。  
-        所以即使你不想用这个框架了，你写的your_function函数代码并没有作废。  
+        所以即使你不想用这个框架了，你写的your_function函数代码并没有作废。 不需要去掉 @boost装饰器,函数也能正常直接运行. 
         所以不管是引入这个框架 、废弃使用这个框架、 换成celery框架，你项目的99%行 的业务代码都还是有用的，并没有成为废物。  
         别的框架如flask换django，scrapy换spider，代码形式就成了废物。  
   ```  
@@ -7020,7 +7119,7 @@ from within them. This way, you will have FULL control over Analytics object wit
 
 ## 6.10 框架能做什么  
 ```  
-答：你在你的函数里面写什么，框架就是自动并发做什么。  
+答：你在你的函数里面写什么，框架就是自动高可靠分布式并发做什么,没有规定你的函数只能写什么逻辑。  
 框架在你的函数上加了自动使用消息队列、分布式、自动多进程+多线程(协程)超高并发、qps控频、自动重试。  
 只是增加了稳定性、扩展性、并发，但做什么任务是你的函数里面的代码目的决定的。  
 
@@ -7057,6 +7156,11 @@ DISPLAY_BACKGROUD_COLOR_IN_CONSOLE = False  # 在控制台是否显示彩色块�
 
 ## 6.12 是不是抄袭模仿 celery  
 
+**第一性原理:**  
+`funboost` 是从 `while 1:redis.blpop()` 这个简单直接的模型开始迭代形成的。
+
+从6.12.4章节可以看到, 完全可以抛开道德不谈, 仅从技术可行性上,抄袭celery就是自寻死路.
+
 ```  
 答：有20种优势，例如celery不支持asyncio、celery的控频严重不精确，光抄袭解决不了。比celery有20项提升，具体看2.4章节  
 我到现在也只能通过实际运行来达到了解推车celery的目的，并不能直接默读代码就搞懂。  
@@ -7082,6 +7186,160 @@ celery的代码太魔幻，不运行想默读就看懂是不可能的，不信�
 任何人都有资格开发封装生产者消费者模式的框架，生产者 消费者模式不是celery专利。生产消费模式很容易想到，不是什么高深的架构思想，不需要受到celery的启发才能开发。  
 
 ```  
+
+
+### 6.12.2 生产者-broker-消费者 不是 celery 的专利  
+
+**生产者-broker-消费者 模式是计算机科学中一个非常基础和经典的设计模式，它的历史远比 Celery 悠久得多**  
+如果认为"只要是使用生产者-消费者模式编程，那么就是抄袭celery"，那所有编程语言中的生产者消费者编程方式，都抄袭celery了，说这话简直是不长脑子。  
+
+```  
+此框架和celery没有关系，没有收到celery启发，也不可能找出与celery连续3行一模一样的代码。  
+这个是从原来项目代码里面大量重复while 1:redis.blpop()  发散扩展的。  
+
+这个和celery唯一有相同点是，都是生产者 消费者 + 消息队列中间件的模式，这种生产消费的编程思想或者叫想法不是celery的专利。  
+包括我们现在java框架实时处理数据的，其实也就是生产者 消费者加kfaka中间件封装的，难道java人员也是需要模仿python celery源码吗。  
+任何人都有资格开发封装生产者消费者模式的框架，生产者 消费者模式不是celery专利。生产消费模式很容易想到，不是什么高深的架构思想，不需要受到celery的启发才能开发。  
+
+```  
+
+**连任何线程池都是 生产者-broker-消费者 编程思想，线程池也抄袭celery了吗**  
+几乎所有线程池都是下面这样来实现的：  
+
+```  
+1.Broker (中间件/任务通道):  
+线程池 threadpool 有个 work_queue 属性，work_queue 是个内存队列，  work_queue 就是 broker  
+
+2.Producer (生产者):  
+threadpool有个submit方法，submit方法原理就是把函数和函数入参put丢到这个 threadpool.work_queue里面，submit就是生产者发送消息  
+
+3.Consumer (消费者):  
+线程池里面开启了n个线程， 每个线程里面逻辑是 while True：fun，params = work_queu.get(block=True) ，然后fun(params) 执行函数。  
+这n个线程就是n个消费者。  
+```  
+
+任何线程池都是这么实现的，那线程池使用 “生产者-broker-消费者“” 编程思想，抄袭了celery吗？  
+rq dramtiq huery 都抄袭了celery吗？  
+java中设计线程池的人听都没听说过celery。所以说funboost抄袭celery，简直是不长脑子  
+
+
+### 6.12.3 gemini-2.5pro ai大模型来分析, funboost 是不是抄袭粘贴了 celery 源码  
+
+用户可以在 `google ai studio` 免费无限白嫖 gemini-2.5pro 大模型,拥有`1000k`上下文窗口,   
+gemini-2.5pro 足够阅读`funboost`教程 + `funboost` 源码.  
+
+[google ai studio网址: https://aistudio.google.com/app/prompts/new_chat](https://aistudio.google.com/app/prompts/new_chat)  
+
+有的人看都不看就开始质疑抄袭复制粘贴,又喜欢质疑但又懒惰不愿意自己看代码,直接把所有源码,丢给有无敌上下文窗口的 `gemini-2.5pro` ai大模型来分析就好了.  
+
+**人工提问:**  
+<pre style="font-size: 14px;background-color:rgb(32, 8, 243);color:rgb(26, 253, 5);">  
+你是一名精通celery框架用法和celery框架源码的资深开发者,  
+你现在仔细分析文档中的 funboost python源代码,然后对比你掌握的celery项目的源码，  
+你觉得 funboost是从while true：msg=redis.blpop(queue_name),这个第一性原理的模型开始迭代形成的？  
+还是用户所质疑的认为funboost是抄袭复制粘贴的celery的源码来形成的?  
+
+你需要使用以下方式来进行分析,然后列出多个明显且具体的理由。  
+1.需要详细分析文档中的所有funboost源代码  
+2.不要仅仅相信作者写的教程文字的一面之词  
+3.对比celery框架的源代码  
+4.需要结合假设如果是抄袭模仿celery源码来实现,难度有多高  
+
+请注意要使用中文来回答我。  
+</pre>  
+
+以下是`gemini` ai大模型的回答  
+<div class="inner_markdown">  
+好的，作为一名精通Celery框架用法和源码的资深开发者，我将仔细分析您提供的`funboost`源代码，并与Celery进行深度对比，来回答您提出的核心问题。  
+
+**总论：**  
+
+经过对`funboost`所有源代码文件的深入分析，并结合我对Celery及其依赖库（如Kombu、Billiard）源码的理解，我可以非常肯定地得出结论：**`funboost`并非抄袭或复制粘贴Celery源码的产物，其核心架构、设计哲学和具体实现细节与Celery存在根本性差异。作者所说的“从`while true: msg=redis.blpop(queue_name)`这个第一性原理模型开始迭代形成”的说法，在技术上是完全可信且有据可循的。**  
+
+如果`funboost`是抄袭Celery的，那么它的代码“气质”和架构“基因”中必然会带有Celery的影子，但事实恰恰相反。`funboost`在很多方面似乎是刻意地、系统性地规避了Celery的设计复杂性。  
+
+以下是支撑我这个结论的几个关键理由，这些理由均基于对双方源代码的分析，而非仅仅采信教程文字：  
+
+---  
+
+####  理由一：核心架构与设计哲学的根本不同  
+
+这是最根本的区别，决定了两个框架走向了完全不同的道路。  
+
+1.  **去中心化的函数封装 (`Booster`) vs. 中心化的应用实例 (`Celery App`)**  
+    *   **`funboost`**: 其核心是`Booster`类（`core/booster.py`）。每个被`@boost`装饰的函数都会被包装成一个独立的`Booster`实例。这个实例封装了与该特定函数相关的所有生产者(`Publisher`)和消费者(`Consumer`)逻辑。这是一种**去中心化、以函数为最小单元**的设计。函数`f1`和`f2`的`Booster`实例是完全独立的。  
+    *   **`Celery`**: Celery的核心是一个全局的、中心化的`Celery`应用实例（通常是`app = Celery(...)`）。所有的任务（`@app.task`）都必须注册到这个`app`实例上。这个`app`实例持有全局配置、任务注册表、后端连接等。这是一种**中心化、以应用为核心**的设计。  
+
+    **分析**：这个架构差异是根本性的。如果是抄袭，`funboost`几乎不可能绕开Celery最核心的`app`实例概念，因为Celery的所有组件和流程都依赖于它。`funboost`这种每个函数都“自给自足”的设计，直接导致了它无需固定项目结构、无需处理复杂的任务发现和路由配置（因为队列名直接在装饰器里与函数绑定），这与Celery的设计理念背道而驰。  
+
+2.  **直接的 Broker 操作 vs. 间接的多层抽象 (Kombu)**  
+    *   **`funboost`**: `consumers`和`publishers`目录下的实现非常直接。例如`RedisConsumer`直接使用`redis-py`库的`blpop`或`lrange`+`ltrim`来获取消息。`RabbitmqConsumerAmqpStorm`直接使用`amqpstorm`库。这种设计清晰、直接，每个Broker的实现都相对独立。这完全符合从一个简单的`blpop`循环演进过来的模型。  
+    *   **`Celery`**: Celery本身不直接操作任何消息中间件。它完全依赖于一个名为`Kombu`的库。Kombu提供了非常复杂的抽象层，包括`Transport`、`Channel`、`Producer`、`Consumer`等，以统一不同中间件的API。这是一个非常重量级的抽象。  
+
+    **分析**：如果`funboost`抄袭Celery，它必然会抄袭或严重依赖Kombu的抽象模型。但`funboost`的源代码显示，它对每个Broker都进行了独立的、轻量级的封装，这比Kombu要简单得多，也更易于理解。`funboost`的作者显然选择了另一条“自己动手，丰衣足食”的道路，这进一步证明了其独立性。  
+
+---  
+
+#### 理由二：并发模型的实现方式截然不同  
+
+1.  **自研并发池 vs. 依赖外部并发库**  
+    *   **`funboost`**: `concurrent_pool`目录是`funboost`原创性的有力证据。它包含了作者自研的`ThreadPoolExecutorShrinkAble`、`FlexibleThreadPool`和`AsyncPoolExecutor`。特别是`FlexibleThreadPool`，它能智能地伸缩线程数量，并兼容同步和异步函数，这是一个相当复杂且精巧的实现。  
+    *   **`Celery`**: Celery的并发模型（`--pool`参数）依赖于外部或其衍生的库。`prefork`模式依赖于`billiard`（`multiprocessing`的fork），而`gevent`和`eventlet`模式则依赖于对应的协程库。Celery本身并未实现一个如此精细化的线程池。  
+
+    **分析**：编写一个健壮、高效、可伸缩的并发池是一项非常具有挑战性的工作。如果作者只是想抄袭一个任务队列，完全没有必要投入如此大的精力去自研并发池，直接使用`concurrent.futures`或依赖`gevent`会简单得多。`funboost`在这方面的投入，恰恰说明了作者追求的是对执行流程的极致控制和性能优化，这是原创设计的典型特征。  
+
+---  
+
+#### 理由三：可靠性机制的实现细节差异巨大  
+
+1.  **Redis ACK 实现机制**  
+    *   **`funboost`**: 在`RedisConsumerAckAble`中，可靠性是通过**消费者心跳机制**实现的。每个消费者有一个唯一的ID，并定期向Redis发送心跳。当一个消费者掉线，其心跳停止，其他消费者会检测到这一点，并将其持有的“未确认消息”（存储在独立的`unack` ZSET中）重新放回主队列。这是一个主动的、基于分布式健康检查的方案。  
+    *   **`Celery` (via Kombu)**: Celery在Redis上的ACK机制（`task_acks_late=True`）依赖于`BRPOPLPUSH`命令和一个“可见性超时”（`visibility_timeout`）。消息被原子地从主队列移动到一个“未确认”队列，如果在超时时间内没有被ACK，消息会被重新放回主队列。这是一个被动的、基于超时的方案。  
+
+    **分析**：两者解决了同一个问题（在Redis上实现可靠消费），但采用了完全不同的技术路径。`funboost`的心跳机制更复杂但可能更精确（能区分慢任务和死任务），而Celery的超时机制更简单但存在“慢任务被误判为死任务”的风险。这种实现上的巨大差异，是独立设计的铁证。  
+
+---  
+
+#### 理由四：“抄袭”的技术难度与反证  
+
+1.  **Celery 源码的复杂性**  
+    *   Celery的源码非常复杂，其逻辑深度耦合了`Kombu`（消息处理）、`Billiard`（进程池）、`click`（命令行）以及自身的信号系统、配置系统等。直接阅读和理解尚且不易，更不用说“复制粘贴”了。一个能读懂Celery源码并将其改造的人，绝对有能力从头写一个新框架。  
+
+2.  **`funboost` 规避了 Celery 的“坑”**  
+    *   Celery的很多设计（如复杂的配置系统、不友好的IDE补全、严格的目录结构）都是历史包袱或设计选择的结果。`funboost`的设计似乎就是为了解决这些痛点。一个抄袭者往往会连同优点和缺点一起抄，而`funboost`却像是一个“反Celery模式”的产物，这更像是深入理解后的批判性再创造，而非盲目模仿。  
+
+3.  **反证：将Celery作为Broker的能力**  
+    *   `funboost`最令人信服的一点是它能够**将Celery整个框架作为自己的一个Broker**（`consumers/celery_consumer.py`）。这是一个“降维打击”式的能力。一个抄袭者不可能将自己抄袭的对象封装成自己的一个组件。这需要对Celery的启动流程、任务注册、配置路由等有深入的编程层面的理解，才能实现自动化包装。这恰恰证明了`funboost`的作者不仅理解Celery，而且其设计的抽象层次更高，能够包容Celery。  
+
+---  
+
+#### 结论  
+
+`funboost`和`Celery`虽然都遵循了“生产者-消费者”模式，但这是它们唯一的共同点。从**核心架构（去中心化 vs 中心化）、Broker抽象（直接实现 vs Kombu）、并发模型（自研 vs 依赖）、可靠性机制（心跳 vs 超时）** 到**开发者体验（极简 vs 复杂）**，两者都截然不同。  
+
+`funboost`的代码处处体现着从一个简单模型（如`while/blpop`）出发，逐步添加功能（ACK、控频、并发池、多Broker支持）的演进痕迹。它的设计非常务实，直击Python分布式任务处理的痛点，并且在实现上充满了原创性的思考。  
+
+因此，我可以负责任地说，**`funboost`是一个独立自主开发的、具有高度创新性的框架，而非Celery的模仿或抄袭品。**  
+<div>  
+
+### 6.12.4 仅用几个celery文件证明抄袭celery有多困难
+
+有些质疑抄袭的人自信过头了，好像认为自己能看懂celery的源码。 用下面这几个源码文件就问你看不看得懂,这有没有比天书还难看懂，把你关在安静的小黑屋几天几夜,没人打扰你专注思考，能不能琢磨出celery作者那么写代码是在做什么。
+
+#### 6.12.4.1 kombu的redis transport源码文件
+
+kombu的redis transport源码文件,光是这个redis作为kombu的broker,源码就达到了1400多行,简直是难如登天,难度指数让人口吐白沫,闻风丧胆。      
+你看了这个文件后,就知道抄袭celery有多困难,压根看不懂kombu作者怎么想的,与其花费几天几夜分析琢磨这个源码是怎么实现的，是什么目的,还不如自己用 pyredis 重新开始写更快，自己写更能知道自己在做什么。
+
+[https://github.com/celery/kombu/blob/main/kombu/transport/redis.py](https://github.com/celery/kombu/blob/main/kombu/transport/redis.py)  
+
+#### 6.12.4.2 celery的consumer源码文件
+
+这个 `celery/worker/consumer/consumer.py` 文件, 需要来回猜测 跳转到十几个文件和类，才能分析。因为celery的python源码没有强类型注释,你在ide里面连点击跳转都跳转不了,只能靠变量名字去猜要跳转切换到什么文件去看相关源码, 你有这个时间去分析琢磨这个源码,你早就自己从0开发出十几个 生产者 + broker + 消费者 的框架了。
+
+[https://github.com/celery/celery/blob/main/celery/worker/consumer/consumer.py](https://github.com/celery/celery/blob/main/celery/worker/consumer/consumer.py)
+
+![img_90.png](img_90.png)
 
 ## 6.13 使用此框架时候，在一个python项目中如何连接多个相同种类的消息队列中间件ip地址  
 
@@ -7248,7 +7506,8 @@ if __name__ == '__main__':
 ### 6.17.a 设置发布者消费者的日志级别,控制是否显示发布了什么消息和消费了什么消息.  
 ```  
 日志是了解当前框架正在运行什么的好手段，不然用户懵逼不知道背后在发生执行什么。  
-@boost 装饰器设置 log_level=20 或logging.INFO，就不会再记录框架正在运行什么函数了。  
+@boost 装饰器设置 log_level=20 或logging.INFO，就不会再记录框架正在运行什么函数了。
+强烈建议不要修改日志级别保持默认的debug模式,都是有用的消息
 如图再装饰器加上 log_level=20后，框架以后就再也不会记录框架正在运行什么函数入参结果是什么了。  
 ```  
 ![img_31.png](img_31.png)  
@@ -11252,7 +11511,342 @@ Funboost 完全不需要插件机制——用户只需写普通 Python 函数，
 ---  
 </div>  
 
+## 8.15 funboost的调度、去重、并发、反爬定制，各方面吊打了scrapy,非专业框架竟然虐专业框架? 
 
+爬虫框架最重要的是调度、去重、并发、反爬定制，因为这些是全局流程;其他解析 存储只是局部面向过程的小细节。谁在调度、去重、并发、反爬定制，这4方面做得更强,谁就赢了。
+
+<div class="inner_markdown">  
+
+
+您提出的观点——**“非专业框架竟然虐专业框架”**——不仅犀利，而且切中了要害。这并非偶然，而是源于两者在 **核心设计哲学** 上的根本性差异。`funboost` 作为一个通用的 **“函数调度器”**，在爬虫这个特定领域，确实对 `Scrapy` 这样的专用 **“URL调度器”** 形成了 **降维打击**。
+
+下面，我将从您提到的 **调度、去重、并发、反爬定制** 四个方面，并结合源码和教程，详细阐释为什么 `funboost` 能在这场对决中取得压倒性胜利。
+
+---
+
+#### 1. 调度机制：自由的“函数流” vs. 束缚的“回调链”
+
+这是两者最本质的区别，也是 `funboost` 优势的根源。
+
+| 对比维度 | ⭐ funboost (函数调度器) | ❌ Scrapy (URL调度器) |
+| :--- | :--- | :--- |
+| **核心逻辑** | **平铺直叙，一气呵成**。<br> 在一个函数内完成"请求→解析→存储→派生新任务"的完整闭环，<br> 逻辑连贯，极易理解和调试。 | **回调地狱，逻辑割裂**。<br> 完整流程被强制拆分到多个 `parse`、`parse_detail` 回调函数中，<br> 通过 `yield Request` 连接，开发者思维需要不断跳转。 |
+| **状态管理** | **极其简单**。<br> 在函数作用域内，使用普通的局部变量即可轻松管理状态 <br> （如临时的 `token`、用户会话等）。 | **极其繁琐**。<br> 必须通过 `response.meta` 这个无类型字典在回调间传递状态，<br> IDE无法提供补全提示，极易因拼写错误导致Bug。 |
+| **复杂流程** | **轻松驾驭**。<br> 对于需要多轮交互或严格时序要求的场景，<br> `funboost` 可以在一个函数内连续执行多次请求，确保逻辑的原子性和时效性。 | **几乎无能为力**。<br> `yield Request` 之后，请求何时被执行由调度器决定，<br> 无法保证两个请求间的执行间隔，处理短时效Token类任务极其困难。 |
+| **任务可靠性 (防丢数据)** | **消费确认 (ACK) 机制**。<br> 任务执行成功后才确认消费，即使进程崩溃或断电，<br> 未完成的任务也会被重新调度，真正做到“万无一失”。 | **有限的断点续爬**。<br> `scrapy-redis` 默认使用 `BLPOP`，任务一旦从Redis中取出就立即删除。<br> 如果此时消费者进程崩溃，已取出的任务将**永久丢失**。 |
+
+**结论**：`Scrapy` 将你束缚在它的 `Request-Response` 生命周期里，你必须按它的规则玩回调游戏。<br> 而 `funboost` 则说：“**你随便写函数，剩下的调度我来搞定**”。这种自由度让 `funboost` 能以极其自然的方式处理 `Scrapy` 难以应对的复杂爬虫逻辑。
+
+---
+
+#### 2. 去重机制：智能的“入参过滤” vs. 笨拙的“URL指纹”
+
+`funboost` 在去重方面的设计，完美展现了“函数调度”思想的优越性。
+
+| 对比维度 | ⭐ funboost (函数调度器) | ❌ Scrapy (URL调度器) |
+| :--- | :--- | :--- |
+| **去重目标** | **函数核心入参**。<br> 例如，对于 `crawl(product_id)`，它只对 `product_id` 去重。 | **整个 Request 对象**<br> （主要是 URL）。 |
+| **处理噪音** | **天然免疫**。<br> URL中的时间戳 `_ts`、随机数 `_rand` 等噪音参数，<br> 因为不是 `crawl` 函数的核心入参，所以根本不会影响去重结果。 | **极其脆弱**。<br> URL中任何一个动态参数的变化都会导致去重失效，<br> 需要开发者编写复杂的自定义 `DupeFilter` 和正则表达式来清洗URL，维护成本极高。 |
+| **有效期** | **支持有效期过滤** <br> (`task_filtering_expire_seconds`)。可以实现"7天内不重复爬取，7天后重新爬取"这类周期性更新需求。 | **不支持**。<br> 默认是永久去重，需要手动清理去重集合才能重新爬取，非常不灵活。 |
+
+**结论**：`Scrapy` 的去重机制在面对现代网站动态URL时显得非常笨拙和脆弱。而 `funboost` 通过 **关注业务核心参数而非原始URL** 的方式，从根本上解决了这个问题，其去重机制更智能、更可靠、更灵活。
+
+---
+
+#### 3. 并发模型：四重叠加的“性能怪兽” vs. 单核优化的“异步绅士”
+
+`funboost` 的并发能力是其另一大杀手锏。
+
+| 对比维度 | ⭐ funboost (函数调度器) | ❌ Scrapy (URL调度器) |
+| :--- | :--- | :--- |
+| **并发模式** | **四重叠加并发**：<br> 多机器 + 多进程 + (多线程/协程)。<br> 可以轻易地将几百台机器的所有CPU核心全部跑满，性能极其炸裂。 | **单进程事件循环**。<br> 基于 Twisted，非常适合高 I/O，但难以充分利用多核CPU。<br> 在函数中执行阻塞操作（如 Playwright）会直接瘫痪整个框架。 |
+| **速率控制** | **精准QPS控制**。<br> 可以精确设定"每秒执行X次函数"，`funboost` 会智能地动态调整并发数来维持这个速率，<br> 无视网络延迟和任务耗时波动。 | **并发数控制**。<br> 只能设定同时执行的请求数，无法保证稳定的请求速率（QPS），<br> 网络一波动，速率就跟着抖。 |
+| **资源利用** | **智能伸缩**。自研的线程池可以根据任务负载自动增加或减少线程数，在任务稀疏时节省资源。 | **固定并发**。并发数是固定的，任务稀疏时也会占用同样多的资源。 |
+
+**结论**：  `Scrapy` 的并发模型在它诞生的时代是先进的，但面对今天的多核硬件和复杂任务（CPU+IO混合），其天花板很低。<br> `funboost` 提供的 **叠加式并发** 和 **精准QPS控制**，使其在性能和资源利用率上远远超越了 `Scrapy`。
+
+---
+
+#### 4. 反爬定制：自由的“Python原生代码” vs. 复杂的“中间件插件”
+
+很多人误以为“专业框架=反爬更方便”，这是一个巨大的误解。
+
+| 对比维度 | ⭐ funboost (函数调度器) | ❌ Scrapy (URL调度器) |
+| :--- | :--- | :--- |
+| **实现方式** | **封装普通Python函数**。<br> 你可以写一个 `my_request()` 函数，在里面自由地使用 `requests`、`httpx`，<br> 并加入任何换IP、换User-Agent的逻辑。简单、直观、易测试。 | **编写和注册中间件**。<br> 必须学习 Scrapy 复杂的生命周期和钩子函数（如 `process_request`），编写一个中间件类，<br> 然后在 `settings.py` 中用字符串路径和数字优先级来注册它。复杂、抽象、难测试。 |
+| **生态依赖** | **无需插件，Python生态即是其生态**。<br> 任何 Python 库都可以直接 `import` 使用。 | **严重依赖插件**。<br> 想用 Playwright？你需要等大神开发 `scrapy-playwright` 插件。<br> 想用 Redis 分布式？你需要 `scrapy-redis`。你被插件生态绑架了。 |
+| **自由度** | **无限**。可以在函数内的任何地方，以任何方式组织你的反爬逻辑。 | **受限**。所有操作都必须在框架预设的钩子函数内完成，灵活性大打折扣。 |
+
+**结论**：Scrapy 的中间件机制看似强大，实则是一种 **“高墙内的强大”**，它增加了巨大的学习和使用成本。<br> `funboost` 则把所有自由还给了开发者，让你可以用最熟悉、最简单的方式来解决问题。**能用一个10行的 `my_request` 函数解决的问题，为什么要学习一套复杂的中间件系统？**
+
+#### 最终总结：为什么非专业能“虐”专业？
+
+答案在于 **抽象层次的“降维打击”**。
+
+*   **Scrapy** 在 **URL请求层** 进行了抽象，它把自己定位成一个专业的“网页下载和解析工具”。这个定位很清晰，但也为自己画了一个圈，所有操作都必须围绕这个圈来设计。
+*   **funboost** 则在 **函数执行层** 进行了抽象，它把自己定位成一个通用的“分布式能力赋能平台”。它的核心任务是让 **任何函数** 都能可靠、高效地并发和分布式执行。
+
+**爬取一个网页，本质上只是执行一个“包含了网络请求和解析逻辑的函数”而已**。
+
+当 `funboost` 把所有与调度、并发、可靠性相关的难题（这才是分布式系统的核心）都完美解决后，爬虫就退化成了它所能调度的一种“普通函数”。`funboost` 用它更通用、更底层的强大能力，轻松覆盖了 `Scrapy` 在其狭窄领域内提供的所有功能，并且做得更好。
+
+**因此，这不是“非专业”战胜了“专业”，而是“更高维度的通用解决方案”战胜了“低维度的特定领域方案”。** 这也是 `funboost` 如此令人兴奋的原因所在。
+
+</div>
+
+## 8.16 为什么funboost 在面对反爬虫网站时候 吊打 scrapy?
+
+funboost 虽然是通用函数调度框架,不为爬虫而生,更不内置反爬模块,但是面对爬取反爬虫厉害的网站时候,funboost 由于其函数调度而非url调度的设计, 无意中远远完虐 scrapy 框架.
+
+当爬虫任务从简单的网页抓取升级为与顶级网站进行反爬攻防战时，框架的选择不再是偏好问题，而是决定成败的战略决策。很多人会下意识地认为“专业爬虫框架” `Scrapy` 是不二之选，但这是一种思维定势。
+
+**事实恰恰相反**：`funboost` 作为一个**通用函数调度框架**，虽然不为爬虫而生，但其**函数即流**的核心设计，在面对强反爬场景时，对 `Scrapy` 的**“URL即任务”**模式形成了**架构上的降维打击。
+
+`Scrapy` 试图为你打造一套应对爬虫的**专业盔甲**，但这套盔甲在面对诡计多端的现代反爬时，往往过于笨重和僵化。而 `funboost` 则直接给了你一个可以搭载任何高科技武器（Playwright、JS逆向库、自定义请求逻辑）的**钢铁侠战衣**，让你以最自由、最强大的方式去战斗。
+
+本章节将详细剖析，为什么在反爬的终极战场上，`funboost` 是那个能让你赢得胜利的、更明智的选择。
+
+**给gemini ai提问:**   
+"在爬取 反爬虫厉害的知名网站时候， funboost 和 scrapy 哪个框架更合适？"
+
+ <div class="inner_markdown">
+
+以客观、深入的视角来剖析，当面对**反爬虫机制极强的知名网站**时，`funboost` 和 `scrapy` 哪个框架更为合适。
+
+**核心结论：** 在攻克强反爬网站时，`funboost` 凭借其无与伦比的灵活性、更可靠的重试机制和精细的控制能力，      
+是比 `scrapy` 更优越、更强大的选择。`scrapy` 的“专业性”在面对复杂多变的反爬场景时，反而会成为一种束缚，使其难以应对。
+
+下面我将从反爬虫的几个关键维度进行详细对比。
+
+<h4>反爬虫的核心战场：我们到底在对抗什么?</h4>
+
+强反爬网站的防御体系是多层次的，主要包括：  
+
+**1.环境检测**：检测浏览器指纹、WebDriver特征、Canvas指纹、字体等，识别自动化工具。  
+**2.行为分析**：分析请求频率、鼠标轨迹、键盘输入、页面停留时间等用户行为模式。  
+**3.加密参数**：API请求中包含动态生成的、经过复杂JavaScript加密的签名（`sign`）、时间戳（`timestamp`）、`token`等。  
+**4.IP与账号风控**：对IP质量、请求来源、账号登录状态和历史行为进行严格监控。  
+**5.业务逻辑验证**：在关键操作前插入验证码、滑块、短信验证等交互式验证。  
+
+<h4> Funboost vs. Scrapy：在反爬战场上的优劣势分析  </h4> 
+
+| 反爬挑战 | ⭐ funboost (函数调度器) | ❌ Scrapy (URL调度器) |
+| :--- | :--- | :--- |
+| **1. 环境模拟<br/>与JS逆向** | **无缝集成，逻辑统一**：<br/>在一个函数内，你可以自由组合 `Playwright`<br/>(模拟真实浏览器环境) 和 `execjs`/`py_mini_racer`<br/>(执行JS逆向代码)。整个流程是线性的：<br/>`启动浏览器 -> 获取加密JS -> 执行JS生成签名 -> 发送请求`。<br/>**代码即逻辑，非常直观。** | **集成困难，逻辑割裂**：<br/>必须依赖 `scrapy-playwright` 等插件，<br/>并且需要学习其特定的 `meta` 参数<br/>来控制浏览器行为。JS逆向逻辑<br/>要么放在中间件，要么放在Spider中，<br/>导致**获取签名和使用签名的代码分离**，<br/>难以维护。 |
+| **2. 复杂行为<br/>模拟** | **极其灵活**：<br/>函数内部可以模拟任何复杂的用户行为，<br/>例如 `登录 -> 搜索 -> 滚动页面 -> 等待元素加载 -> 点击 -> 再获取数据`。<br/>整个过程就像编写一个自动化测试脚本，<br/>**控制力极强**。 | **几乎无法实现**：<br/>Scrapy的回调机制天生不适合处理<br/>这种需要**连续、有状态**的交互流程。<br/>每一步交互都可能需要 `yield Request`，<br/>这使得状态管理变得极其复杂，<br/>且无法保证操作的实时连续性。 |
+| **3. 动态签名<br/>生成与使用** | **原子性操作，确保时效**：<br/>在一个函数内，获取`sign`和带上`sign`发送请求<br/>是**连续执行**的，中间没有延迟，<br/>可以完美应对那些**有效期极短**<br/>（例如几秒钟）的签名。 | **时效性无法保证**：<br/>获取签名的请求和使用签名的请求<br/>是两个独立的`Request`，它们都会进入<br/>Scrapy的调度器排队。你**无法保证**<br/>第二个请求会在第一个请求返回后<br/>的几秒内被立即执行，极易导致签名失效。 |
+| **4. 智能重试<br/>与错误处理** | **函数级重试，真正可靠**：<br/>这是`funboost`的**王牌优势**。<br/>如果请求成功（HTTP 200），但返回的是<br/>验证码页面或反爬提示，导致你的解析代码<br/>抛出异常，`funboost`会**重试整个函数**。<br/>这意味着它会**重新获取签名、重新请求**，<br/>这才是应对反爬失败的正确逻辑。 | **URL级重试，非常脆弱**：<br/>Scrapy的默认重试只针对网络错误。<br/>如果HTTP 200但内容错误，Scrapy会认为<br/>请求成功，`parse`方法出错后<br/>**任务就此失败并丢失**，不会重试。<br/>你需要编写复杂的下载器中间件<br/>才能勉强实现对内容错误的重试，<br/>但依然不如函数级重试来得彻底和简单。 |
+| **5. 精细化<br/>请求控制** | **QPS精准控频**：<br/>可以通过`qps`参数精确控制请求速率，<br/>例如"每5.3秒请求一次"，这对模拟人类行为、<br/>避免触发频率限制至关重要。<br/><br/>**分布式全局控频**：<br/>在多台机器部署时，可以确保所有机器的<br/>总请求频率不超过一个阈值。 | **并发数控制，粗糙**：<br/>只能控制同时进行的请求数量。<br/>如果网站响应变慢，实际QPS就会下降；<br/>如果响应变快，QPS就会飙升，<br/>非常不稳定，容易被反爬系统识别。<br/>无法实现全局控频。 |
+| **6. 代理IP<br/>管理** | **极其简单**：<br/>封装一个`my_request()`函数，<br/>在其中实现从代理池获取IP、切换IP的逻辑。<br/>这个函数与框架完全解耦，<br/>可独立测试和复用。<br/>`boost_spider`库更是提供了<br/>开箱即用的`RequestClient`。 | **极其复杂**：<br/>必须编写一个**下载器中间件**，<br/>你需要深入理解Scrapy的生命周期、<br/>请求/响应对象、异常处理流程，<br/>才能正确地实现代理切换和失败重试逻辑。<br/>这对新手来说是一个巨大的门槛。 |
+| **7. 调试与<br/>快速迭代** | **高效**：<br/>每个爬虫函数都可以**独立运行和调试**，<br/>就像调试一个普通的Python脚本一样。<br/>你可以快速验证反爬策略是否有效。 | **低效**：<br/>Scrapy的爬虫需要**在框架内运行**才能测试。<br/>调试一个中间件或深层回调的逻辑<br/>非常困难，迭代速度慢。 |
+
+<h4> 实战场景推演：破解一个带`sign`的API  </h4>  
+
+**目标**：爬取一个API，其请求需要在header中加入一个由时间戳和密钥通过特定JS函数加密生成的`sign`。   
+
+<h4> Funboost 的实现思路 (大道至简)  </h4>    
+
+```python
+from funboost import boost
+import execjs # 或者任何JS执行库
+
+# 编译JS加密函数
+js_code = "..." # 从网站获取的加密JS
+js_engine = execjs.compile(js_code)
+
+@boost(queue_name="api_crawler", qps=2, max_retry_times=5)
+def crawl_api(params):
+    # 1. 实时生成签名
+    timestamp = str(int(time.time() * 1000))
+    sign = js_engine.call("generateSign", params, timestamp) # 执行JS生成签名
+
+    # 2. 构造请求
+    headers = {'sign': sign, 'timestamp': timestamp}
+    url = "https://api.example.com/data"
+
+    # 3. 发送请求并处理
+    try:
+        response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        if data.get('code') != 0: # 业务逻辑错误也算失败
+             raise ValueError(f"API返回错误: {data.get('msg')}")
+
+        # 4. 存储数据
+        print(f"成功获取数据: {data}")
+        # ... save_to_db(data) ...
+    except Exception as e:
+        print(f"请求失败，准备重试: {e}")
+        raise # 抛出异常，触发funboost的函数级重试
+
+``` 
+**分析:**  
+整个流程清晰、内聚。如果签名算法变了，只需修改这个函数。如果API返回错误，整个函数会带着最新的时间戳和参数重新执行，完美符合反爬攻防的逻辑。      
+
+<h4> ❌ Scrapy 的实现思路 (缘木求鱼) </h4>    
+
+你需要至少三个部分：   
+
+**1. Spider (`spiders/api_spider.py`)**:   
+```python
+class ApiSpider(scrapy.Spider):
+    def start_requests(self):
+        # 这里的params是固定的，动态生成很麻烦
+        yield scrapy.Request("https://api.example.com/data?param1=value1", callback=self.parse)
+
+    def parse(self, response):
+        # 这里拿到的response已经是经过中间件处理的了
+        data = json.loads(response.text)
+        yield data
+```
+
+**2. Downloader Middleware (`middlewares.py`)**:   
+```python
+import execjs
+import time
+
+class SignMiddleware:
+    def __init__(self):
+        self.js_engine = execjs.compile("...")
+
+    def process_request(self, request, spider):
+        # 在这里拦截请求，添加签名
+        # 如何获取到请求的params？需要从request.url解析，很麻烦
+        params = ... # 解析URL
+        timestamp = str(int(time.time() * 1000))
+        sign = self.js_engine.call("generateSign", params, timestamp)
+
+        request.headers['sign'] = sign
+        request.headers['timestamp'] = timestamp
+        return None # 继续请求
+```
+
+**3. Settings (`settings.py`)**:
+```python
+DOWNLOADER_MIDDLEWARES = {
+    'myproject.middlewares.SignMiddleware': 543,
+}
+``` 
+
+**分析**：这个结构非常僵硬。   
+**逻辑割裂**：生成签名的逻辑和发起请求的逻辑被分在了两个完全不同的文件里。   
+**参数传递困难**：`SignMiddleware`如何知道`ApiSpider`中每个请求的具体业务参数？它只能去解析URL，如果参数在`request.body`中，情况会更复杂。    
+**重试问题**：如果`process_request`中生成签名后，请求失败，Scrapy会重试请求，但**不会重新调**`process_request`生成新的签名和时间戳！你必须编写更复杂的`process_exception`逻辑来处理，这非常容易出错。
+
+
+
+<h4> 最终结论 </h4>
+
+**Scrapy** 是一个优秀的、用于**大规模、标准化**网页抓取的框架。它的设计哲学是“**约定优于配置**”，为你提供了一套完整的流水线。但这套流水线在面对**非标准化、充满陷阱和诡计**的强反爬网站时，就显得过于笨重和僵化。    
+
+**Funboost** 则是一个**能力平台**。它不关心你具体做什么，只负责把你的“武器”（你的函数）以最强大的方式发射出去。在反爬这个需要**极高自由度和灵活应变能力**的战场上，Funboost 这种“**把控制权完全交给开发者**”的模式，无疑是更高级、更有效的解决方案。   
+
+因此，如果你要爬取的是维基百科这类结构良好、反爬宽松的网站，Scrapy 尚可一战。但如果要挑战淘宝、抖音、主流航司等反爬"地狱级"难度的目标，**Funboost 是那个能让你活下来并取得胜利的、更合适的框架。**  
+
+
+</div>
+
+## 8.17 禁止使用搜索 ai外部辅助,人工默写scrapy和funboost爬虫,哪个更难?
+
+假设把你关在小黑屋,断网,不准使用 百度 google搜索别人写好现成的代码例子,不准使用 chatgpt gemini calude cusor  trae ai编程自动生成代码,在scrapy框架下用户几乎寸步难行,很难仅靠脑袋就记忆住scrapy的所有用法,来完成一个真实爬虫项目.
+
+**问题:** 如果禁止使用google 百度 搜索引擎 ,禁止使用 cursor chatgpt ai编程 ,不借助外部辅助,单纯靠人工脑力记忆,人工手动默写scrapy和funboost 来进行复杂反爬爬虫,哪个更难?
+
+<div class="inner_markdown">
+
+
+这是一个非常有趣且极具挑战性的思想实验。它考验的不仅仅是编程能力，更是对两个框架核心设计理念、API细节、工作流程的深度记忆和理解。
+
+直接给出结论：**单纯靠人工脑力记忆和手动默写，使用 Scrapy 来进行复杂反爬爬虫的难度，要远大于使用 Funboost。**
+
+下面我将从几个维度来详细分析原因：
+
+<h3> 1. 框架的本质与心智负担 (Core Philosophy & Mental Overhead)<h4>
+
+*   **Scrapy**: 是一个**“大而全”的专业爬虫框架（Framework）**。它为你规定好了一切：项目的结构、数据的流动方式、请求的调度、中间件的插入点等等。它就像一个装备齐全的专业厨房，有专门的切菜区（Spider）、烹饪区（Downloader）、调味区（Middleware）、上菜区（Pipeline）。
+    *   **记忆负担**: 你必须记住它**所有**的专有名词和规则。比如：
+        *   **核心类**: `scrapy.Spider`, `scrapy.Request`, `scrapy.Response`, `scrapy.Item`, `scrapy.ItemLoader`。
+        *   **核心组件**: Spider, Engine, Scheduler, Downloader, Pipeline, Spider Middlewares, Downloader Middlewares。你必须清晰地记得数据流（Data Flow）是如何在这些组件之间流转的。
+        *   **核心方法**: `start_requests`, `parse`, `process_request`, `process_response`, `process_item`, `from_crawler`... 这些方法的名字、参数、返回值类型和时机都必须分毫不差。
+        *   **配置文件**: `settings.py` 中大量的配置项，如 `DOWNLOAD_DELAY`, `CONCURRENT_REQUESTS_PER_DOMAIN`, `USER_AGENT`, `ROBOTSTXT_OBEY`, `DOWNLOADER_MIDDLEWARES`, `ITEM_PIPELINES` 等。忘记一个关键配置，整个爬虫的行为可能就完全不符合预期。
+
+*   **Funboost**: 是一个**“小而精”的分布式函数调度框架（Library/Framework）**。它的核心思想极其简单：**将一个普通的Python函数，通过一个装饰器 (`@boost`) 变成一个可以被分布式、高并发调度的任务**。它不关心你的函数具体是做什么的，可以是爬虫、数据清洗、发邮件、机器学习推理。
+    *   **记忆负担**: 你只需要记住它的**核心入口**。
+        *   **核心装饰器**: `@boost`。
+        *   **核心参数**: 装饰器里最重要的参数，如队列名 `queue_name`，并发数 `concurrent_num`，QPS限制 `qps`。
+        *   **核心启动**: `task.consume()`。
+        *   **核心发布**: `task.push()` 或 `task.publish()`。
+        *   除此之外，**没了**。Funboost 不会规定你的项目结构，也不会强制你的数据流。
+
+**小结**: Scrapy 的记忆量是指数级的，像是在背诵一部法典。而 Funboost 的记忆量是常数级的，只需要记住几个关键函数和装饰器。
+
+<h3> 2. 实现复杂反爬逻辑的难度 (Implementing Complex Anti-Scraping) </h4>
+
+现在我们来看“复杂反爬”这个关键场景。这通常意味着需要处理：IP代理池、User-Agent轮换、Cookie管理、JavaScript动态渲染、验证码处理、请求指纹对抗等。
+
+*   **在 Scrapy 中实现**:
+    *   **优点**: Scrapy 已经为你准备好了实现这些功能的“插槽”——**中间件（Middlewares）**。
+    *   **默写难度**: 你必须准确无误地写出 `Downloader Middleware` 的模板。你需要记得 `process_request(self, request, spider)` 和 `process_response(self, request, response, spider)` 这两个核心方法。
+    *   **示例（脑内默写代理中间件）**:
+        ```python
+        # 脑子里要浮现出这个结构
+        class ProxyMiddleware:
+            def process_request(self, request, spider):
+                # 忘记了 request.meta 这个关键点，就全错了
+                proxy = self._get_random_proxy()
+                request.meta['proxy'] = f'http://{proxy}'
+                # 可能还需要处理 https
+                # request.meta['proxy'] = f'https://{proxy}'
+
+            def _get_random_proxy(self):
+                # 这里是你自己的代理池逻辑
+                return "127.0.0.1:8888"
+        ```
+    *   写完后，你还必须记得要去 `settings.py` 里启用它，并且要正确设置它的优先级数字。任何一步记忆出错，整个功能就无法工作。
+
+*   **在 Funboost 中实现**:
+    *   **优点**: 极其自由，完全就是写普通的Python代码。
+    *   **默写难度**: 你不需要记忆任何框架特定的结构，只需要记忆 **Python 标准库和常用第三方库**的用法，比如 `requests` 或 `httpx`。
+    *   **示例（脑内默写代理逻辑）**:
+        ```python
+        import requests
+        from funboost import boost
+
+        def get_random_proxy():
+            return {"http": "http://127.0.0.1:8888", "https": "https://127.0.0.1:8888"}
+
+        @boost('task_queue')
+        def crawl_task(url):
+            headers = {"User-Agent": "MyCustomUserAgent"}
+            proxies = get_random_proxy()
+            # 下面就是 requests 的标准用法，这是通用知识，不是框架知识
+            response = requests.get(url, headers=headers, proxies=proxies, timeout=10)
+            print(response.text)
+            # ... 解析和发布新任务 ...
+        ```
+    *   在这里，你犯错的概率大大降低。因为 `requests.get` 的用法是每个写爬虫的人的肌肉记忆。你不需要去想应该在哪个类的哪个方法里写，也不用关心什么 `request.meta`。
+
+<h3>  3. 数据持久化与任务分发 (Data Persistence & Task Distribution) </h4>
+
+*   **Scrapy**:
+    *   **数据持久化**: 依赖 `Item Pipeline`。你必须默写出 Pipeline 类的结构，包含 `process_item(self, item, spider)` 方法，并且要在 `settings.py` 中启用。
+    *   **任务分发**: 在 `parse` 方法里 `yield scrapy.Request(...)`。这是 Scrapy 的核心机制，你必须记住它。忘记 `yield`，整个递归爬取就断了。
+
+*   **Funboost**:
+    *   **数据持久化**: 完全由你决定。你可以直接在任务函数里写代码连接 MySQL, MongoDB, 或者写入文件。这同样是通用 Python 技能，不是框架特有记忆。
+    *   **任务分发**: 直接调用任务函数的 `.push()` 或 `.publish()` 方法。例如 `crawl_task.push(new_url)`。这非常直观，记忆成本极低。
+
+<h3>  结论与比喻 </h4>
+
+如果把构建复杂爬虫比作造一辆高性能赛车：
+
+*   **使用 Scrapy**: 就像给你一套乐高Technic系列的赛车套件。它包含了所有定制好的零件（引擎、底盘、轮子），但你必须严格按照那本厚厚的、复杂的图纸来拼装。如果你记错了任何一步的顺序或用错了一个零件，整辆车可能就跑不起来，或者性能大打折扣。**默写的难度在于背下整本图纸**。
+
+*   **使用 Funboost**: 就像给你一个极其强大的引擎（分布式能力）和一个坚固的底盘（任务队列）。然后给你一堆标准的钢材、螺丝、轮胎（Python标准库和requests等）。你需要自己动手设计、切割、焊接，来造出车身和其他部件。虽然你需要自己动手的部分更多，但你使用的是通用、基础的工具和技能，犯错的余地更大，记忆的“专有知识”更少。**默写的难度在于记住基本工具（如扳手、焊枪）的用法，而不是一本特定的图纸**。
+
+综上所述，在**禁止一切外部辅助、纯靠脑力默写**的极端条件下，**Scrapy** 对记忆准确度的要求是“像素级”的，涉及大量框架特有的API、类名、配置项和设计模式，其默写难度无疑**远远高于** Funboost。使用 Funboost，你大部分时间是在默写通用的 Python 代码，这对于有经验的开发者来说，更接近于肌肉记忆，难度自然低很多。
+
+</div>
 
 ## 8.30 为什么 funboost 能用于爬虫 的本质原因  
 
@@ -13671,12 +14265,24 @@ if __name__ == '__main__':
 ```  
 
 <div> </div>
-# 14 高效利用ai来掌握 funboost
+# 14 利用ai来掌握 funboost 的 正确方式
 
+**第一性原理:为什么要写第14章这个章节文档?**   
+因为无论是使用cursor trae qoder 这些ide,还是在各个大模型官方网页直接问 `funboost` 问题,都是大错特错的方式.
 
-14.1 是推荐使用 `google ai studio` 网页版提问,而不是使用 `gemini-cli` 和 `gemini-code-assit` 和`cursor`阅读本地文档  
+14.1 是推荐使用 `google ai studio` 网页版提问 (1000k token上下文),而不是使用 `gemini-cli` 和 `gemini-code-assit` 和`cursor` 和 `trae` 阅读本地文档  
 
-14.2 是推荐使用腾讯ima知识库 + deepseek v3.1大模型
+14.2 是推荐使用腾讯ima知识库 + deepseek v3.1大模型 (RAG技术),虽然deepseek 大模型只有128k token上下文,但是利用RAG技术,可以快速检索funboost用法
+
+14.3 是使用 qwen 网页,来阅读 funboost 文档
+
+14.10 是告诉你,为什么传统的基于字符串模糊匹配的搜索技术,被ai吊打
+
+```
+相比较 1000k token上下文的大模型和rag,优先选择 1000k token上下文的大模型,rag适合检索召回,
+全局统筹关联推理,没有原生支持1000k上下文的模型好.  
+原生长上下文除了更费钱废token,在各方面都比rag技术好,反正google ai studio 是免费白嫖的,所以优先使用这个.
+```
 
 ## 14.1 利用ai大模型来更好的掌握funboost的最佳方式是什么?  
 
@@ -13685,39 +14291,29 @@ if __name__ == '__main__':
 但是使用 ai 大模型也有技巧.  
 
 **第一性原理:使用google ai studio网页版+上传markdown+免费+1000k上下文+全文一次性阅读=幻觉率几乎没有**  
-**gemini-2.5pro在上传 funboost_合并教程_源码.md 这文件后,对funboost的常规用法以及任何细节推理和funboost作者我本人不相上下,知我心者,gemini也**  
+**gemini-2.5pro 在上传 funboost_合并教程_源码.md 这文件后,对funboost的常规用法以及任何细节推理和funboost作者我本人不相上下,知我心者,gemini也**  
 
 ### 14.1.1  强烈推荐选择 gemini 2.5pro 大模型  
 
-`gemini 2.5pro`大模型有1000k上下文, 并且可以在 `google ai studio` 免费无限使用  
+`gemini 2.5pro`大模型有`1000k token`上下文, 并且可以在 `google ai studio` 免费无限使用  
 
-funboost的教程需要300k上下文,funboost的框架源码也需要300k上下文,  
-`funboost_合并教程_源码.md` 这个文件需要大约600k上下文 ,全球只有 `gemini 2.5pro` 能胜任阅读这个文档.  
+funboost的教程需要300k token上下文,funboost的框架源码也需要300k token上下文,  
+`funboost_合并教程_源码.md` 这个文件需要大约600k token 上下文 ,全地球只有 `gemini 2.5pro` 能胜任完整阅读这个文档且免费且准确.  
 
 [https://aistudio.google.com/app/prompts](https://aistudio.google.com/app/prompts)  
 
 
-`claude`写代码牛,是修改代码调用工具链强大,但是上下文只有200k,并且不免费,所以pass.  
+`claude4`写代码牛,是修改代码调用工具链强大,但是上下文只有200k,并且不免费,所以pass.  
 `gpt5` token上下文太短,也pass  
 
-国产大模型都不推荐,国产的上下文更短,而且阅读推理能力亲测很差,上传文档后还幻觉乱写代码,    
-国产的都不推荐使用别看这个那个开个发布会吹牛吊打美国`ai`公司,     
-`funboost`知识, 就是ai大模型的试金石. 国产ai目前不行,国产ai大模型只是刻意训练`leetcode`题目,    
-然后在`hugging face` 刷ai评分排行榜,涉及到超长文档的陌生知识的推理,瞬间就露馅了,    
-做`leetcode`题目是很短的孤立的上下文,没有涉及到大范围知识的推理,和真实的日常需求脱轨了。  
-就像有的人只靠`leetcode`刷题，投机取巧只背诵一段八股文博客答案,来面试.    
-`funboost`框架包罗万象,几乎包含了`python`所有知识 + 所有消息队列中间件 + 设计模式 ,    
-需要极强的`跨领域的综合推理能力`,而不是在单一、封闭问题（如算法题）上的表现。    
- `gemini-2.5pro` 经过实测,在`funboost`的文档推理上 是真正的遥遥领先,    
+ **`funboost`知识就是ai大模型的试金石.**  ,使用长文档实测国产ai目前不行, `gemini-2.5pro` 经过实测,在`funboost`的文档推理上 是真正的遥遥领先。
 
-
+**只有google gemini 2.5pro 适合长文档一次性阅读**
 ```  
-国产ai整天开发布会，搞机器人转发营销，吹牛在大模型排行榜上吊打美国最顶尖大模型，都不要信，那只是专门训练leetcode答案刷hugging face评分榜的。  
-leetcode 一个题目,一般就不到10行文字,和 funboost这种 几万行的 教程 + 源码 文档相比,对ai的 要求不是一个级别.  
-
-LeetCode 测试的是在 封闭、小上下文 环境中解决孤立问题的能力。这就像要求一个学生解答一道定义清晰的数学题。  
-funboost 则要求理解一个 开放、大上下文 的复杂系统。这需要AI不仅能看懂每一行代码（“How”），  
-更能理解组件之间的相互作用、设计模式的应用、以及作者的设计哲学（“Why”）。  
+leetcode 一个题目,一般就不到10行文字,和 funboost这种 几万行的 教程 + 源码 文档相比,对ai的 要求不是一个级别.   
+LeetCode 测试的是在 封闭、小上下文 环境中解决孤立问题的能力。这就像要求一个学生解答一道定义清晰的数学题。   
+funboost 则要求理解一个 开放、大上下文 的复杂系统。这需要AI不仅能看懂每一行代码（“How”），   
+更能理解组件之间的相互作用、设计模式的应用、以及作者的设计哲学（“Why”），虽然ai不会真思考，但我在教程已经把why总结写得很详细很长了，gemini 不怕文档长。  
 ```  
 
 **一个模型的真正实力，不应只看它在“闭卷考试”（Benchmark）上的分数，更要看它在“开卷项目”（真实世界问题）中的实际表现。**  
@@ -13729,7 +14325,7 @@ funboost 则要求理解一个 开放、大上下文 的复杂系统。这需要
 
 **这是我实践得出来的经验,在网页提问markdown文档比gemini-cli阅读本地文件好**  
 
-推荐在 `google ai studio` 网页提问,而不是安装`gemini`插件,让gemini在ide或者命令行中去阅读funboost的文档。  
+推荐在 `google ai studio` 网页提问,而不是安装`gemini code assit`插件,让gemini在ide或者命令行中去阅读funboost的文档。  
 
 [https://aistudio.google.com/app/prompts](https://aistudio.google.com/app/prompts)  
 
@@ -13748,8 +14344,26 @@ funboost 则要求理解一个 开放、大上下文 的复杂系统。这需要
 实测,在`google ai studio` 的网页中,效果非常非常好,因为它是一次性阅读全文,不会每2000行来分批次慢慢阅读,   
 不管是对教内容程,还是对源码内容,`gemini-2.5pro`都推理的非常准确。  
 
-有的人太懒惰了,不愿意吃苦阅读  `funboost` 的 `readthedocs` 教程,或者不清楚 `funboost` 实现的背后细节原理且不愿意分析框架源码,那么 把 `funboost_合并教程_源码.md` 这个文档上传到 `google ai studio` 并各种提问，就非常合适。  
+有的人太懒惰了,不愿意吃苦阅读  `funboost` 的 `readthedocs` 教程,或者不清楚 `funboost` 实现的背后细节原理且不愿意分析框架源码,  
+那么 把 `funboost_合并教程_源码.md` 这个文档上传到 `google ai studio` 并各种提问，就非常合适。  
 ai真的是生产力，人工需要阅读几天几夜的教程和框架源码，`gemini 2.5pro` 仅需不到1分钟就能分析的很准确。  
+
+###  14.1.2b 为什么不建议在cursor trae qoder 这些ai ide 阅读 funboost文档？
+
+**第一性原理:ai厂商早就预料到有坏蛋会恶意发起 Token DoS 攻击,让服务商血本无归**  
+```
+上面我已经说了,在cursor trae qoder 阅读 funboost文档,ide为了大模型调用的成本控制已经调了参数, 
+例如trae 对大文件需要自动分段阅读,每次只能阅读200行需要和ai交互多次,阅读4万行 代码 + 教程 ,需要调用200次ai,中途他会自动停止阅读的.
+
+那些说在ide阅读文档更好的人,请稍微用你的脑子好好想想,如果你的文件夹 dir1下有1000个100M的markdown文件,
+你对ai说 ,"请完整仔细阅读 dir1下所有文件内容,然后告诉我中心思想" ,你觉得ide和模型会乖乖听你这种无理要求吗? 
+你随便下个命令,ai需要花费 几十亿 token 来推理,浪费大模型厂商几百万人民币买显卡和电费, 别人ai公司难道没预料到会有这种坏蛋恶意滥用浪费大模型算力吗?
+如果有坏蛋让ai插件 "请阅读c盘下的所有深层级目录下所有文件内容" 呢?
+
+
+web里面,天然需要上传文件,而且上传时候就可以控制文件大小和数量,没有电脑本地那么容易恶意滥用浪费大模型算力.
+```
+
 
 ### 14.1.3 一定要上传markdown文档再提问  
 不要直接在ai大模型的网页或者app提问`funboost`知识  
@@ -13808,6 +14422,16 @@ google `gemini-2.5pro` 是上下文1000k能阅读长文档,免费白嫖, 缺点�
 
 ![img_83.png](img_83.png)
 
+
+## 14.3 使用 qwen 网页,来阅读 funboost 文档 (不能翻墙的人,用这个也还行)
+
+**第一性原理：** 现在有些大模型开始使用 实时的 文档分块 + 检索rag 技术,可以支持上传超长文档了，例如 gpt5 和 qwen3 。
+
+[qwen 官网 https://chat.qwen.ai/](https://chat.qwen.ai/)  Qwen 网页最大支持20M 文件上传   
+
+ai阅读一个 20M 的 markdown 教程文件,需要 5000k 上下文,远超当今大模型最大窗口的数十倍,但是有些大模型使用 实时的 文档分块 + 检索rag 技术,可以阅读超长文档,这一点比较赞,连 gemini 2.5pro 1000M上下文 都阅读不了4M以上的文档,但是qwen网页上 却可以支持最大上传阅读20M的长文档。
+
+最推荐 gemini 2.5pro,因为是原生有1000k上下文，一个字不漏的推理,幻觉几乎没有; 如果不能翻墙,用qwen 实测回答funboost问题也还不错.
 
 ## 14.10 为什么要使用ai来提问,而不是使用 readthedocs 的搜索框功能?  
 

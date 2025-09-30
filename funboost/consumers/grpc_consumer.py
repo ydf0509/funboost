@@ -23,7 +23,7 @@ class GrpcConsumer(AbstractConsumer, ):
     """
      grpc as  broker
     """
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'host': '127.0.0.1', 'port': None}
+
 
     def custom_init(self):
         class FunboostGrpcServicer(funboost_grpc_pb2_grpc.FunboostBrokerServiceServicer):

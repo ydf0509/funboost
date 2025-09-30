@@ -22,8 +22,6 @@ class KafkaConsumer(AbstractConsumer):
     可以让消费函数内部 sleep60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group funboost 来证实自动确认消费和手动确认消费的区别。
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group_id': 'funboost_kafka', 'auto_offset_reset': 'earliest','num_partitions':10,'replication_factor':1,}
-    # not_all_brokers_general_settings配置 ，支持独立的中间件配置参数是 group_id 和 auto_offset_reset
     """
     auto_offset_reset 介绍
       auto_offset_reset (str): A policy for resetting offsets on

@@ -3,10 +3,8 @@
 # @Time    : 2022/8/8 0008 13:30
 
 import amqpstorm
-from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost.publishers.rabbitmq_amqpstorm_publisher import RabbitmqPublisherUsingAmqpStorm
-from funboost.core.func_params_model import PublisherParams
+
 
 
 class RabbitmqConsumerAmqpStorm(AbstractConsumer):
@@ -14,7 +12,8 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
     使用AmqpStorm实现的，多线程安全的，不用加锁。
     funboost 强烈推荐使用这个做消息队列中间件。
     """
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'x-max-priority': None,'no_ack':False}  # x-max-priority 是 rabbitmq的优先级队列配置，必须为整数，强烈建议要小于5。为None就代表队列不支持优先级。
+
+    # _rabbitmq_pb_cls = RabbitmqPublisherUsingAmqpStorm
 
     def _shedual_task(self):
         # noinspection PyTypeChecker
@@ -24,13 +23,14 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
             kw = {'amqpstorm_message': amqpstorm_message, 'body': body}
             self._submit_task(kw)
 
-        rp = RabbitmqPublisherUsingAmqpStorm(publisher_params=PublisherParams(queue_name=self.queue_name,
-                                                                              broker_exclusive_config=self.consumer_params.broker_exclusive_config))
+        # rp = self._rabbitmq_pb_cls(publisher_params=PublisherParams(queue_name=self.queue_name,broker_kind=self.consumer_params.broker_kind,
+                                                                    # broker_exclusive_config=self.consumer_params.broker_exclusive_config))
+        rp = self.bulid_a_new_publisher_of_same_queue()
         rp.init_broker()
         rp.channel_wrapper_by_ampqstormbaic.qos(self.consumer_params.concurrent_num)
         rp.channel_wrapper_by_ampqstormbaic.consume(callback=callback, queue=self.queue_name, no_ack=self.consumer_params.broker_exclusive_config['no_ack'],
                                                     )
-        self._rp=rp
+        self._rp = rp
         rp.channel.start_consuming(auto_decode=True)
 
     def _confirm_consume(self, kw):
@@ -48,4 +48,3 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
         # kw['amqpstorm_message'].reject(requeue=True)
         # kw['amqpstorm_message'].ack()
         # self.publisher_of_same_queue.publish(kw['body'])
-

@@ -15,13 +15,9 @@ class RedisConsumerAckUsingTimeout(AbstractConsumer, RedisMixin):
     使用超时未能ack就自动重入消息队列，例如消息取出后，由于突然断电或重启或其他原因，导致消息以后再也不能主动ack了，超过一定时间就重新放入消息队列
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'ack_timeout': 3600}
 
-    # RedisConsumerAckUsingTimeout的ack timeot 是代表消息取出后过了多少秒还未ack，就自动重回队列。这个配置一定要大于函数消耗时间，否则不停的重回队列。
-    '''用法，如何设置ack_timeout，是使用 broker_exclusive_config 中传递，就能覆盖这里的3600，用户不用改BROKER_EXCLUSIVE_CONFIG_DEFAULT的源码。
-    @boost(BoosterParams(queue_name='test_redis_ack__use_timeout', broker_kind=BrokerEnum.REIDS_ACK_USING_TIMEOUT,
-                         concurrent_num=5, log_level=20, broker_exclusive_config={'ack_timeout': 30}))
-    '''
+
+
 
     def custom_init(self):
         self._unack_zset_name = f'{self._queue_name}__unack_using_timeout'

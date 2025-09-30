@@ -115,6 +115,11 @@ def regist_to_funboost(broker_kind: str):
         from funboost.consumers.rabbitmq_amqpstorm_consumer import RabbitmqConsumerAmqpStorm
         register_custom_broker(BrokerEnum.RABBITMQ_AMQPSTORM, RabbitmqPublisherUsingAmqpStorm, RabbitmqConsumerAmqpStorm)
 
+    if broker_kind == BrokerEnum.RABBITMQ_COMPLEX_ROUTING:
+        from funboost.publishers.rabbitmq_complex_routing_publisher import RabbitmqComplexRoutingPublisher
+        from funboost.consumers.rabbitmq_complex_routing_consumer import RabbitmqComplexRoutingConsumer
+        register_custom_broker(BrokerEnum.RABBITMQ_COMPLEX_ROUTING, RabbitmqComplexRoutingPublisher, RabbitmqComplexRoutingConsumer)
+
     if broker_kind == BrokerEnum.RABBITMQ_RABBITPY:
         from funboost.publishers.rabbitmq_rabbitpy_publisher import RabbitmqPublisherUsingRabbitpy
         from funboost.consumers.rabbitmq_rabbitpy_consumer import RabbitmqConsumerRabbitpy

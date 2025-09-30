@@ -67,7 +67,7 @@ class ZeroMqConsumer(AbstractConsumer):
     zeromq 中间件的消费者，zeromq基于socket代码，不会持久化，且不需要安装软件。
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'port': None}
+
 
     def custom_init(self):
         self._port = self.consumer_params.broker_exclusive_config['port']

@@ -19,7 +19,7 @@ class HTTPConsumer(AbstractConsumer, ):
     """
     flask 作为消息队列实现 consumer
     """
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'host': '127.0.0.1', 'port': None}
+
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):

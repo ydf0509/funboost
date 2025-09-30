@@ -50,7 +50,7 @@ class RedisPriorityConsumer(RedisConsumerAckAble):
         f.consume()
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'x-max-priority': None}  # x-max-priority 是 rabbitmq的优先级队列配置，必须为整数，强烈建议要小于5。为None就代表队列不支持优先级。
+
 
     def _shedual_task0000(self):
 

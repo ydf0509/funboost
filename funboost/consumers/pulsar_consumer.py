@@ -32,10 +32,7 @@ class PulsarConsumer(AbstractConsumer, ):
     pulsar作为中间件实现的。
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'subscription_name': 'funboost_group',
-                                       'replicate_subscription_state_enabled': True,
-                                       'consumer_type': ConsumerType.Shared,
-                                       }
+
 
     def custom_init(self):
         pass
@@ -46,9 +43,17 @@ class PulsarConsumer(AbstractConsumer, ):
         except ImportError:
             raise ImportError('需要用户自己 pip install pulsar-client ，')
         self._client = pulsar.Client(BrokerConnConfig.PULSAR_URL, )
+
+        consumer_type_map = {
+            'Exclusive':ConsumerType.Exclusive,
+            'Shared':ConsumerType.Shared,
+            'Failover':ConsumerType.Failover,
+            'KeyShared':ConsumerType.KeyShared,
+        }
+        consumer_type_obj = consumer_type_map[self.consumer_params.broker_exclusive_config['consumer_type']]
         self._consumer = self._client.subscribe(self._queue_name, schema=schema.StringSchema(), consumer_name=f'funboost_consumer_{os.getpid()}',
                                                 subscription_name=self.consumer_params.broker_exclusive_config['subscription_name'],
-                                                consumer_type=self.consumer_params.broker_exclusive_config['consumer_type'],
+                                                consumer_type=consumer_type_obj,
                                                 replicate_subscription_state_enabled=self.consumer_params.broker_exclusive_config['replicate_subscription_state_enabled'])
         while True:
             msg = self._consumer.receive()

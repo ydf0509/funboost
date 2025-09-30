@@ -13,7 +13,7 @@ class CeleryConsumer(AbstractConsumer):
     celery作为中间件实现的。
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'celery_task_config': {}}
+
 
     # celery的可以配置项大全  https://docs.celeryq.dev/en/stable/userguide/configuration.html#new-lowercase-settings
     # celery @app.task() 所有可以配置项可以看  D:\ProgramData\Miniconda3\Lib\site-packages\celery\app\task.py

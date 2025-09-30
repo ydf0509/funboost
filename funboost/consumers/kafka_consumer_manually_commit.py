@@ -31,7 +31,6 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
     可以让消费函数内部 sleep 60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group frame_group 来证实自动确认消费和手动确认消费的区别。
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group_id': 'funboost_kafka', 'auto_offset_reset': 'earliest','num_partitions':10,'replication_factor':1,}
 
     def custom_init(self):
         self._lock_for_operate_offset_dict = threading.Lock()

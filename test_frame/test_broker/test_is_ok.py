@@ -2,6 +2,7 @@ import time
 import asyncio
 import copy
 from funboost import boost, BrokerEnum, BoosterParams, ConcurrentModeEnum, ctrl_c_recv
+from funboost.contrib.save_function_result_status.save_result_status_use_dataset import ResultStatusUseDatasetMixin
 from funboost.utils.class_utils import ClsHelper
 
 
@@ -18,7 +19,10 @@ class MyObject:
 # 1. 定义一个普通的同步函数
 # funboost 默认的并发模式是多线程（ConcurrentModeEnum.THREADING），
 # 非常适合执行这种包含 time.sleep 的 IO 阻塞型函数。
-@boost(BoosterParams(queue_name='sync_task_queue', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_mode=ConcurrentModeEnum.THREADING, concurrent_num=5))
+@boost(BoosterParams(queue_name='sync_task_queue', broker_kind=BrokerEnum.REDIS_ACK_ABLE,
+                     concurrent_mode=ConcurrentModeEnum.THREADING, concurrent_num=5,
+                     consumer_override_cls=ResultStatusUseDatasetMixin
+                     ))
 def task_sync(x: int, y: int):
     """
     这是一个常规的同步函数。
@@ -82,7 +86,13 @@ if __name__ == '__main__':
     task_with_pickle.clear()
     my_instance = MyClass(multiplier=10)  # 创建一个实例
     my_instance.multiply.clear()
-
+    
+    # 测试直接运行函数
+    print("测试直接运行函数")
+    task_sync(1, 2)
+    asyncio.get_event_loop().run_until_complete(task_async("https://example.com/page/1"))
+    my_instance.multiply(10)
+    task_with_pickle(MyObject(name="obj_1", value=1))
 
     # 6. 启动所有消费者
     # .consume() 是非阻塞的，它会在后台启动消费者

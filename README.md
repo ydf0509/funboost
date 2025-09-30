@@ -1,8 +1,24 @@
 # 1.python万能分布式函数调度框架简funboost简介  
 
+funboost教程: [https://funboost.readthedocs.io/zh-cn/latest/index.html](https://funboost.readthedocs.io/zh-cn/latest/index.html)  
+
 ## 1.0 funboost 框架说明介绍
 
-`funboost`是一个 神奇 万能 简单 强大 自由 的 `python`框架,它的作用是给用户任意项目的任意函数赋能.
+`funboost`是一个 万能 强大 简单  自由 的 `python` 全功能分布式调度框架,它的作用是给用户任意项目的任意函数赋能.
+
+
+<h4>📹 观看 funboost 视频</h4>
+<video controls width="800" 
+      src="https://ydf0509.github.io/funboost_git_pages/%E8%A7%86%E9%A2%91-Funboost_%E8%A7%86%E9%A2%91.mp4">
+   您的浏览器不支持视频播放。
+</video>
+
+<h4>🎧 收听 funboost 音频</h4>
+<audio controls 
+      src="https://ydf0509.github.io/funboost_git_pages/%E9%9F%B3%E9%A2%91-funboost_%E9%9F%B3%E9%A2%91.mp4">
+   您的浏览器不支持音频播放。
+</audio>
+
 
 ### 1.0.0 funboost 框架安装方式  
 
@@ -24,6 +40,36 @@ pip install funboost --upgrade
 它证明了一个框架可以既功能丰富又极其易用，这是对传统Python框架设计的一次巧妙超越。   
 只需要一行`@boost`代码即可分布式执行`python`一切任意函数，99%用过`funboost`的`pythoner` 感受是 方便 高速 强大 自由。    
 
+
+
+#### funboost的适用场景:   
+```
+`funboost`是python函数加速器，框架包罗万象，一统编程思维，兼容50% `python`编程业务场景，适用范围广,任何新老项目都能用到。    
+`funboost` 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。  
+```
+
+```
+需要分布式?  好,funboost支持40多种消息队列,任何只要是稍微小有名气的消息队列和甚至任务框架,funboost全都支持.
+需要并发？ 好，那就把Python所有的并发模式（线程、协程、多进程）都给你，并且让它们可以叠加。
+需要可靠性？ 好，那就把消费确认（ACK）、自动重试、死信队列（DLQ）、断点续爬做到极致，让你无惧任何宕机。
+需要控制力？ 好，那就给你精准的QPS控频、分布式控频、定时任务、延时任务、超时杀死、任务过滤等三十多种控制武器。
+需要监控？ 好，那就给你一个开箱即用的Web UI，让你对任务状态、队列情况、消费者实例了如指掌。
+需要自由？ 好，那就让你用最普通的Python函数，不侵入你的代码，不规定你的项目结构，让你随时能用，随时能走。
+```
+
+#### 有人问 funboost 是做什么的? 怎么回答最合适? 
+
+这个问题很难精确的一句话概括回答,因为funboost是万能框架，几乎所有的python编程业务场景都能用到,答案是发散的不是唯一的。   
+
+发散的答案, 见文档 6.0b 章节  [https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html#b-funboost](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html#b-funboost)
+
+
+#### 最最最重要的第一个问题: "funboost这个框架怎么样呀，值得我学习使用吗?"
+
+如果选择学习使用了一个 用途狭窄 功能不好 性能不好 用法复杂 写法不自由 的框架,简直是浪费时间浪费生命.  
+
+问题答案, 见文档 6.0 章节  [https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html#funboost](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html#funboost)
+
 #### funboost与celery的理念区别 
 **共同点:**
 ```
@@ -34,11 +80,15 @@ pip install funboost --upgrade
 
 **区别:**
 ```
-`celery`是`围绕celery框架组织代码,属于重型奴役框架`,你围绕`celery`项目结构和`celery app`这样中央app实例 转,去新增定义`@app.task`函数, app才是一等公民,task函数是二等公民  
-`funboost`是`函数增强器,属于轻型自由框架`,你可以对任意项目任意位置的新旧函数加上`@boost`装饰器,是给你函数赋能插上强大翅膀,用户不需要围绕`funboost`或某个中央app实例来组织代码结构,用户函数自身就是一等公民   
+`celery`是`围绕celery框架组织代码,属于重型奴役框架`,你围绕`celery`项目结构和`celery app`这样中央app实例 转,去新增定义`@app.task`函数, 
+app才是一等公民,task函数是二等公民  
+
+`funboost`是`函数增强器,属于轻型自由框架`,你可以对任意项目任意位置的新旧函数加上`@boost`装饰器,是给你函数赋能插上强大翅膀,
+用户不需要围绕`funboost`或某个中央app实例来组织代码结构,用户函数自身就是一等公民   
 
 2个框架最显而易见明显差别就是 `funboost` 无需 `@app.boost` 而是直接`@boost`,这个小区别,造成影响深远的框架用法和理念区别.   
-`funboost`任务控制功能更多,支持broker中间件种类更多,并发方式更多,发布性能超越celery 22倍,消费性能超越 celery 46倍,性能是高几个数量级的断崖式遥遥领先,但反而使用比celery简单得多.  
+`funboost`任务控制功能更多,支持broker中间件种类更多,并发方式更多,发布性能超越celery 22倍,消费性能超越 celery 46倍,
+性能是高几个数量级的断崖式遥遥领先,但反而使用比celery简单得多.  
 ```
 
 #### **funboost 支持的并发模式:**      
@@ -53,11 +103,8 @@ pip install funboost --upgrade
 并且`funboost` 将 `mysql cdc` 这种`mysql binlog`变化捕获作为`broker`,使得`funboost`可以是事件驱动的,远超`celery`的理念.   
 `funboost` 还轻松内置了将各种三方消费框架作为`broker`,例如直接将 `celery` `dramatiq` `huey` `rq` `nameko` 作为`broker`,使用这些框架的核心来执行用户的函数   
 ```
-#### **funboost的适用场景:**    
-```
-`funboost`是python函数加速器，框架包罗万象，一统编程思维，兼容50% `python`编程业务场景，适用范围广,任何新老项目都能用到。    
-`funboost` 用途概念就是常规经典的 生产者 + 消息队列中间件 + 消费者 编程思想。  
-```
+
+
 
 
 #### **funboost 学习难吗?**   

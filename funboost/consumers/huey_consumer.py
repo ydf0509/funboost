@@ -12,11 +12,8 @@ class HueyConsumer(AbstractConsumer):
     huey作为中间件实现的。
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'huey_task_kwargs': {}}
-    """
-    retries=0, retry_delay=0, priority=None, context=False,
-             name=None, expires=None, **kwargs
-    """
+
+
 
     def custom_init(self):
         # 这就是核心，

@@ -10,8 +10,8 @@ from faststream.rabbit import RabbitBroker
 import nb_log
 
 RABBITMQ_USER = 'admin'
-RABBITMQ_PASS = '372148'
-RABBITMQ_HOST = '106.55.244.110'
+RABBITMQ_PASS = 'xxxx'
+RABBITMQ_HOST = '106.55.244.xxx'
 RABBITMQ_PORT = 5672
 RABBITMQ_VIRTUAL_HOST = ''  # my_host # 这个是rabbitmq的虚拟子host用户自己创建的，如果你想直接用rabbitmq的根host而不是使用虚拟子host，这里写 空字符串 即可。
 RABBITMQ_URL = f'amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VIRTUAL_HOST}'

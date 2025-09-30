@@ -35,7 +35,7 @@ class HTTPConsumer(AbstractConsumer, ):
     """
     aiohttp 实现消息队列，不支持持久化，但不需要安装软件。
     """
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'host': '127.0.0.1', 'port': None}
+
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):

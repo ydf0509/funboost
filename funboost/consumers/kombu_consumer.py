@@ -81,45 +81,6 @@ class KombuConsumer(AbstractConsumer, ):
     使用kombu作为中间件,这个能直接一次性支持很多种小众中间件，但性能很差，除非是分布式函数调度框架没实现的中间件种类用户才可以用这种，用户也可以自己对比性能。
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'kombu_url': None,  # 如果这里也配置了kombu_url,则优先使用跟着你的kombu_url，否则使用funboost_config. KOMBU_URL
-                                       'transport_options': {},  # transport_options是kombu的transport_options 。
-                                       'prefetch_count': 500
-                                       }
-    # prefetch_count 是预获取消息数量
-    ''' transport_options是kombu的transport_options 。 
-       例如使用kombu使用redis作为中间件时候，可以设置 visibility_timeout 来决定消息取出多久没有ack，就自动重回队列。
-       kombu的每个中间件能设置什么 transport_options 可以看 kombu的源码中的 transport_options 参数说明。
-
-例如kombu redis的Transport Options 说明
-D:\ProgramData\Miniconda3\envs\py311\Lib\site-packages\kombu\transport\redis.py
-
-Transport Options
-=================
-* ``sep``
-* ``ack_emulation``: (bool) If set to True transport will
-  simulate Acknowledge of AMQP protocol.
-* ``unacked_key``
-* ``unacked_index_key``
-* ``unacked_mutex_key``
-* ``unacked_mutex_expire``
-* ``visibility_timeout``
-* ``unacked_restore_limit``
-* ``fanout_prefix``
-* ``fanout_patterns``
-* ``global_keyprefix``: (str) The global key prefix to be prepended to all keys
-  used by Kombu
-* ``socket_timeout``
-* ``socket_connect_timeout``
-* ``socket_keepalive``
-* ``socket_keepalive_options``
-* ``queue_order_strategy``
-* ``max_connections``
-* ``health_check_interval``
-* ``retry_on_timeout``
-* ``priority_steps``
-
-
-      '''
 
     def custom_init(self):
         self.kombu_url = self.consumer_params.broker_exclusive_config['kombu_url'] or BrokerConnConfig.KOMBU_URL

@@ -13,11 +13,9 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
     """
     redis 的 stream 结构 作为中间件实现的。需要redis 5.0以上，redis stream结构 是redis的消息队列，概念类似kafka，功能远超 list结构。
     """
-    GROUP = 'funboost_group'
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'group': 'funboost_group','pull_msg_batch_size': 100}
 
     def custom_init(self):
-        self.group = self.consumer_params.broker_exclusive_config['group'] or self.GROUP
+        self.group = self.consumer_params.broker_exclusive_config['group']
 
     def start_consuming_message(self):
         redis_server_info_dict = self.redis_db_frame.info()

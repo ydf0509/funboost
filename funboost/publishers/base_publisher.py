@@ -10,7 +10,6 @@ import atexit
 import json
 import logging
 import multiprocessing
-from re import S
 import sys
 import threading
 import time
@@ -20,6 +19,7 @@ from threading import Lock
 
 import nb_log
 from funboost.constant import ConstStrForClassMethod, FunctionKind
+from funboost.core.broker_kind__exclusive_config_default_define import generate_broker_exclusive_config
 from funboost.core.func_params_model import PublisherParams, PriorityConsumingControlConfig
 from funboost.core.function_result_status_saver import FunctionResultStatus
 from funboost.core.helper_funs import MsgGenerater
@@ -140,11 +140,12 @@ class PublishParamsChecker(FunboostFileLoggerMixin):
 class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def __init__(self, publisher_params: PublisherParams, ):
         self.publisher_params = publisher_params
+        
         self.queue_name = self._queue_name = publisher_params.queue_name
         self.logger: logging.Logger
         self._build_logger()
         self.publish_params_checker = PublishParamsChecker(publisher_params.consuming_function) if publisher_params.consuming_function else None
-
+        self.publisher_params.broker_exclusive_config = generate_broker_exclusive_config(self.publisher_params.broker_kind,self.publisher_params.broker_exclusive_config,self.logger)
         self.has_init_broker = 0
         self._lock_for_count = Lock()
         self._current_time = None

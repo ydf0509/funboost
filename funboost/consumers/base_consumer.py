@@ -13,6 +13,7 @@ import typing
 import abc
 import copy
 from apscheduler.jobstores.memory import MemoryJobStore
+from funboost.core.broker_kind__exclusive_config_default_define import generate_broker_exclusive_config
 from funboost.core.funboost_time import FunboostTime
 from pathlib import Path
 # from multiprocessing import Process
@@ -40,7 +41,6 @@ from funboost.core.func_params_model import BoosterParams, PublisherParams, Base
 from funboost.core.serialization import PickleHelper, Serialization
 from funboost.core.task_id_logger import TaskIdLogger
 from funboost.constant import FunctionKind
-
 
 from nb_libs.path_helper import PathHelper
 from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, is_main_process,
@@ -74,7 +74,7 @@ from funboost.consumers.redis_filter import RedisFilter, RedisImpermanencyFilter
 from funboost.factories.publisher_factotry import get_publisher
 
 from funboost.utils import decorators, time_util, redis_manager
-from funboost.constant import ConcurrentModeEnum, BrokerEnum, ConstStrForClassMethod,RedisKeys
+from funboost.constant import ConcurrentModeEnum, BrokerEnum, ConstStrForClassMethod, RedisKeys
 from funboost.core import kill_remote_task
 from funboost.core.exceptions import ExceptionForRequeue, ExceptionForPushToDlxqueue
 
@@ -93,7 +93,6 @@ class GlobalVars:
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     time_interval_for_check_do_not_run_time = 60
     BROKER_KIND = None
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {}  # 每种中间件的概念有所不同，用户可以从 broker_exclusive_config 中传递该种中间件特有的配置意义参数。
 
     @property
     @decorators.synchronized
@@ -164,11 +163,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         filter_class = RedisFilter if consumer_params.task_filtering_expire_seconds == 0 else RedisImpermanencyFilter
         self._redis_filter = filter_class(self._redis_filter_key_name, consumer_params.task_filtering_expire_seconds)
         self._redis_filter.delete_expire_filter_task_cycle()
- 
+
         # if  self.consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC and self.consumer_params.specify_async_loop is None:
         #     self.consumer_params.specify_async_loop= get_or_create_event_loop()
         self._lock_for_count_execute_task_times_every_unit_time = Lock()
-        
+
         # self._unit_time_for_count = 10  # 每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。
         # self._execute_task_times_every_unit_time = 0  # 每单位时间执行了多少次任务。
         # self._execute_task_times_every_unit_time_fail =0  # 每单位时间执行了多少次任务失败。
@@ -189,12 +188,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.metric_calculation = MetricCalculation(self)
 
         self._result_persistence_helper: ResultPersistenceHelper
-        self._check_broker_exclusive_config()
-        broker_exclusive_config_merge = dict()
-        broker_exclusive_config_merge.update(self.BROKER_EXCLUSIVE_CONFIG_DEFAULT)
-        broker_exclusive_config_merge.update(self.consumer_params.broker_exclusive_config)
-        # print(broker_exclusive_config_merge)
-        self.consumer_params.broker_exclusive_config = broker_exclusive_config_merge
+        self.consumer_params.broker_exclusive_config = generate_broker_exclusive_config(self.consumer_params.broker_kind,self.consumer_params.broker_exclusive_config,self.logger)
 
         self._stop_flag = None
         self._pause_flag = threading.Event()  # 暂停消费标志，从reids读取
@@ -233,7 +227,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._has_start_delay_task_scheduler = False
         self._consuming_function_is_asyncio = inspect.iscoroutinefunction(self.consuming_function)
-        self.custom_init()
+        
         # develop_logger.warning(consumer_params._log_filename)
         # self.publisher_params = PublisherParams(queue_name=consumer_params.queue_name, consuming_function=consumer_params.consuming_function,
         #                                         broker_kind=self.BROKER_KIND, log_level=consumer_params.log_level,
@@ -244,6 +238,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         #                                         broker_exclusive_config=self.consumer_params.broker_exclusive_config)
         self.publisher_params = BaseJsonAbleModel.init_by_another_model(PublisherParams, self.consumer_params)
         # print(self.publisher_params)
+        self.custom_init()
         if is_main_process:
             self.logger.info(f'{self.queue_name} consumer 的消费者配置:\n {self.consumer_params.json_str_value()}')
 
@@ -261,12 +256,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :return:
         """
         if self.consumer_params.is_send_consumer_hearbeat_to_redis:
-            RedisMixin().redis_db_frame.sadd(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES,self.queue_name)
+            RedisMixin().redis_db_frame.sadd(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES, self.queue_name)
             RedisMixin().redis_db_frame.hmset(RedisKeys.FUNBOOST_QUEUE__CONSUMER_PARAMS,
-                                    {self.queue_name: self.consumer_params.json_str_value()})
-            RedisMixin().redis_db_frame.sadd(RedisKeys.FUNBOOST_ALL_IPS,nb_log_config_default.computer_ip)
-        
-    
+                                              {self.queue_name: self.consumer_params.json_str_value()})
+            RedisMixin().redis_db_frame.sadd(RedisKeys.FUNBOOST_ALL_IPS, nb_log_config_default.computer_ip)
+
     def _build_logger(self):
         logger_prefix = self.consumer_params.logger_prefix
         if logger_prefix != '':
@@ -282,13 +276,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             formatter_template=FunboostCommonConfig.NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER, )
         self.logger.info(f'队列 {self.queue_name} 的日志写入到 {nb_log_config_default.LOG_PATH} 文件夹的 {log_filename} 和 {nb_log.generate_error_file_name(log_filename)} 文件中')
 
-    def _check_broker_exclusive_config(self):
-        broker_exclusive_config_keys = self.BROKER_EXCLUSIVE_CONFIG_DEFAULT.keys()
-        if self.consumer_params.broker_exclusive_config:
-            if set(self.consumer_params.broker_exclusive_config.keys()).issubset(broker_exclusive_config_keys):
-                self.logger.info(f'当前消息队列中间件能支持特殊独有配置 {self.consumer_params.broker_exclusive_config.keys()}')
-            else:
-                self.logger.warning(f'当前消息队列中间件含有不支持的特殊配置 {self.consumer_params.broker_exclusive_config.keys()}，能支持的特殊独有配置包括 {broker_exclusive_config_keys}')
 
     def _check_monkey_patch(self):
         if self.consumer_params.concurrent_mode == ConcurrentModeEnum.GEVENT:
@@ -406,19 +393,18 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                          )
             }
             self._delay_task_scheduler = FunboostBackgroundSchedulerProcessJobsWithinRedisLock(timezone=FunboostCommonConfig.TIMEZONE, daemon=False,
-                                                       jobstores=jobstores  # push 方法的序列化带thredignn.lock
-                                                       )
+                                                                                               jobstores=jobstores  # push 方法的序列化带thredignn.lock
+                                                                                               )
             self._delay_task_scheduler.set_process_jobs_redis_lock_key(
                 RedisKeys.gen_funboost_apscheduler_redis_lock_key_by_queue_name(self.queue_name))
         elif self.consumer_params.delay_task_apscheduler_jobstores_kind == 'memory':
             jobstores = {"default": MemoryJobStore()}
             self._delay_task_scheduler = FsdfBackgroundScheduler(timezone=FunboostCommonConfig.TIMEZONE, daemon=False,
-                                                       jobstores=jobstores  # push 方法的序列化带thredignn.lock
-                                                       )
+                                                                 jobstores=jobstores  # push 方法的序列化带thredignn.lock
+                                                                 )
 
         else:
             raise Exception(f'delay_task_apsscheduler_jobstores_kind is error: {self.consumer_params.delay_task_apscheduler_jobstores_kind}')
-
 
         # self._delay_task_scheduler.add_executor(ApschedulerThreadPoolExecutor(2))  # 只是运行submit任务到并发池，不需要很多线程。
         # self._delay_task_scheduler.add_listener(self._apscheduler_job_miss, EVENT_JOB_MISSED)
@@ -431,7 +417,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     @classmethod
     def _push_apscheduler_task_to_broker(cls, queue_name, msg):
         funboost_lazy_impoter.BoostersManager.get_or_create_booster_by_queue_name(queue_name).publish(msg)
-       
+
     @abc.abstractmethod
     def _shedual_task(self):
         """
@@ -441,10 +427,23 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         调用 self._submit_task(msg) 方法把它交给我处理就行。”
 
         所以无论获取消息是 拉模式 还是推模式 还是轮询模式，无论是是单条获取 还是多条批量多条获取，
-        都能轻松扩展任意东西作为funboost的中间件。 
+        无论是传统mq,kafka,还是数据库,还是socket grpc tcp,还是kombu,还是python任务框架 celery rq dramtiq,
+        还是文件系统 ,以及火热的 mysql cdc(数据变更捕获) ,都能轻松扩展任意东西作为funboost的中间件。 
+
+        _shedual_task 是万物可作为broker的核心,没有任何东西作为不了broker,扩展性无敌. 
 
         :return:
         """
+
+        """
+        反观celery,由于kombu强行模拟靠拢经典amqp协议,只有rabbitmq作为broker在celery最完美,
+        redis在celery作为broker,消费确认ack 使用visibility_timeout,方案简直太糟糕了,
+        强制断电重启程序,要么孤儿消息重回不及时,要么把长耗时消息错误的当做是孤儿消息无限懵逼死循环重新入队.
+
+        celery实现kafka作为broker,这个issue 提了十几年一直无法完美实现,这就是celery+kombu 的局限性.
+        更别说把 mysql cdc作为celery的broker 了,funboost的设计在这方面是吊打celery.
+        """
+
         raise NotImplementedError
 
     def _convert_msg_before_run(self, msg: typing.Union[str, dict]) -> dict:
@@ -481,7 +480,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if 'publish_time_format':
             extra['publish_time_format'] = MsgGenerater.generate_publish_time_format()
         return msg
-    
+
     def _user_convert_msg_before_run(self, msg: typing.Union[str, dict]) -> dict:
         """
         用户也可以提前清洗数据
@@ -499,9 +498,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         function_only_params = delete_keys_and_return_new_dict(kw['body'], )
         kw['function_only_params'] = function_only_params
         if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
-                function_only_params,self._get_priority_conf(kw, 'filter_str')):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
+                function_only_params, self._get_priority_conf(kw, 'filter_str')):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
             self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
-            self._confirm_consume(kw) # 不运行就必须确认消费，否则会发不能确认消费，导致消息队列中间件认为消息没有被消费。
+            self._confirm_consume(kw)  # 不运行就必须确认消费，否则会发不能确认消费，导致消息队列中间件认为消息没有被消费。
             return
         publish_time = get_publish_time(kw['body'])
         msg_expire_senconds_priority = self._get_priority_conf(kw, 'msg_expire_senconds')
@@ -520,7 +519,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if msg_countdown:
             run_date = FunboostTime(kw['body']['extra']['publish_time']).datetime_obj + datetime.timedelta(seconds=msg_countdown)
         if msg_eta:
-
             run_date = FunboostTime(msg_eta).datetime_obj
         # print(run_date,time_util.DatetimeConverter().datetime_obj)
         # print(run_date.timestamp(),time_util.DatetimeConverter().datetime_obj.timestamp())
@@ -543,7 +541,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._delay_task_scheduler.add_job(self._push_apscheduler_task_to_broker, 'date', run_date=run_date,
                                                kwargs={'queue_name': self.queue_name, 'msg': msg_no_delay, },
                                                misfire_grace_time=misfire_grace_time,
-                                              )
+                                               )
             self._confirm_consume(kw)
 
         else:  # 普通任务
@@ -636,21 +634,21 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """
         self._do_not_delete_extra_from_msg = True
 
-    def _frame_custom_record_process_info_func(self,current_function_result_status: FunctionResultStatus,kw:dict):
+    def _frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
         pass
 
-    async def _aio_frame_custom_record_process_info_func(self,current_function_result_status: FunctionResultStatus,kw:dict):
+    async def _aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
         pass
 
-    def user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus,):  # 这个可以继承
+    def user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, ):  # 这个可以继承
         pass
 
-    async def aio_user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus,):  # 这个可以继承
+    async def aio_user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, ):  # 这个可以继承
         pass
 
-    def _convert_real_function_only_params_by_conusuming_function_kind(self, function_only_params: dict,extra_params:dict):
+    def _convert_real_function_only_params_by_conusuming_function_kind(self, function_only_params: dict, extra_params: dict):
         """对于实例方法和classmethod 方法， 从消息队列的消息恢复第一个入参， self 和 cls"""
-        can_not_json_serializable_keys = extra_params.get('can_not_json_serializable_keys',[])
+        can_not_json_serializable_keys = extra_params.get('can_not_json_serializable_keys', [])
         if self.consumer_params.consuming_function_kind in [FunctionKind.CLASS_METHOD, FunctionKind.INSTANCE_METHOD]:
             real_function_only_params = copy.copy(function_only_params)
             method_first_param_name = None
@@ -710,7 +708,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             current_function_result_status.run_status = RunStatus.finish
             self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
             if self._get_priority_conf(kw, 'do_task_filtering'):
-                self._redis_filter.add_a_value(function_only_params,self._get_priority_conf(kw, 'filter_str'))  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
+                self._redis_filter.add_a_value(function_only_params, self._get_priority_conf(kw, 'filter_str'))  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
             if current_function_result_status.success is False and current_retry_times == max_retry_times:
                 log_msg = f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} '
                 if self.consumer_params.is_push_to_dlx_queue_when_retry_max_times:
@@ -733,11 +731,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                         p.execute()
 
             with self._lock_for_count_execute_task_times_every_unit_time:
-                self.metric_calculation.cal(t_start_run_fun,current_function_result_status)
-            self._frame_custom_record_process_info_func(current_function_result_status,kw)
-            self.user_custom_record_process_info_func(current_function_result_status,)  # 两种方式都可以自定义,记录结果,建议继承方式,不使用boost中指定 user_custom_record_process_info_func
+                self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
+            self._frame_custom_record_process_info_func(current_function_result_status, kw)
+            self.user_custom_record_process_info_func(current_function_result_status, )  # 两种方式都可以自定义,记录结果,建议继承方式,不使用boost中指定 user_custom_record_process_info_func
             if self.consumer_params.user_custom_record_process_info_func:
-                self.consumer_params.user_custom_record_process_info_func(current_function_result_status,)
+                self.consumer_params.user_custom_record_process_info_func(current_function_result_status, )
         except BaseException as e:
             log_msg = f' error 严重错误 {type(e)} {e} '
             # self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
@@ -752,12 +750,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         function_only_params = kw['function_only_params'] if self._do_not_delete_extra_from_msg is False else kw['body']
         task_id = kw['body']['extra']['task_id']
         t_start = time.time()
-      
+
         fct = funboost_current_task()
         fct_context = FctContext(function_params=function_only_params,
                                  full_msg=kw['body'],
                                  function_result_status=function_result_status,
-                                 logger=self.logger, queue_name=self.queue_name,)
+                                 logger=self.logger, queue_name=self.queue_name, )
 
         try:
             function_run = self.consuming_function
@@ -779,7 +777,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     self.logger.warning(f'取消运行 {task_id} {function_only_params}')
                     return function_result_status
                 function_run = kill_remote_task.kill_fun_deco(task_id)(function_run)  # 用杀死装饰器包装起来在另一个线程运行函数,以便等待远程杀死。
-            function_result_status.result = function_run(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params,kw['body']['extra']))
+            function_result_status.result = function_run(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params, kw['body']['extra']))
             # if asyncio.iscoroutine(function_result_status.result):
             #     log_msg = f'''异步的协程消费函数必须使用 async 并发模式并发,请设置消费函数 {self.consuming_function.__name__} 的concurrent_mode 为 ConcurrentModeEnum.ASYNC 或 4'''
             #     # self.logger.critical(msg=f'{log_msg} \n')
@@ -839,11 +837,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
             function_result_status.result = FunctionResultStatus.FUNC_RUN_ERROR
         return function_result_status
-    
+
     def _gen_asyncio_objects(self):
         if getattr(self, '_async_lock_for_count_execute_task_times_every_unit_time', None) is None:
             self._async_lock_for_count_execute_task_times_every_unit_time = asyncio.Lock()
-        
+
     # noinspection PyProtectedMember
     async def _async_run(self, kw: dict, ):
         """
@@ -898,7 +896,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             await simple_run_in_executor(self._result_persistence_helper.save_function_result_to_mongo, current_function_result_status)
             if self._get_priority_conf(kw, 'do_task_filtering'):
                 # self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
-                await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params,self._get_priority_conf(kw, 'filter_str'))
+                await simple_run_in_executor(self._redis_filter.add_a_value, function_only_params, self._get_priority_conf(kw, 'filter_str'))
             if current_function_result_status.success is False and current_retry_times == max_retry_times:
                 log_msg = f'函数 {self.consuming_function.__name__} 达到最大重试次数 {self._get_priority_conf(kw, "max_retry_times")} 后,仍然失败， 入参是  {function_only_params} '
                 if self.consumer_params.is_push_to_dlx_queue_when_retry_max_times:
@@ -923,12 +921,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             async with self._async_lock_for_count_execute_task_times_every_unit_time:
                 self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
 
-            self._frame_custom_record_process_info_func(current_function_result_status,kw)
-            await self._aio_frame_custom_record_process_info_func(current_function_result_status,kw)
-            self.user_custom_record_process_info_func(current_function_result_status,)  # 两种方式都可以自定义,记录结果.建议使用文档4.21.b的方式继承来重写
-            await self.aio_user_custom_record_process_info_func(current_function_result_status,)
+            self._frame_custom_record_process_info_func(current_function_result_status, kw)
+            await self._aio_frame_custom_record_process_info_func(current_function_result_status, kw)
+            self.user_custom_record_process_info_func(current_function_result_status, )  # 两种方式都可以自定义,记录结果.建议使用文档4.21.b的方式继承来重写
+            await self.aio_user_custom_record_process_info_func(current_function_result_status, )
             if self.consumer_params.user_custom_record_process_info_func:
-                self.consumer_params.user_custom_record_process_info_func(current_function_result_status,)
+                self.consumer_params.user_custom_record_process_info_func(current_function_result_status, )
 
         except BaseException as e:
             log_msg = f' error 严重错误 {type(e)} {e} '
@@ -944,17 +942,17 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """虽然和上面有点大面积重复相似，这个是为了asyncio模式的，asyncio模式真的和普通同步模式的代码思维和形式区别太大，
         框架实现兼容async的消费函数很麻烦复杂，连并发池都要单独写"""
         function_only_params = kw['function_only_params'] if self._do_not_delete_extra_from_msg is False else kw['body']
-      
+
         # noinspection PyBroadException
         t_start = time.time()
         fct = funboost_current_task()
         fct_context = FctContext(function_params=function_only_params,
                                  full_msg=kw['body'],
                                  function_result_status=function_result_status,
-                                 logger=self.logger,queue_name=self.queue_name,)
+                                 logger=self.logger, queue_name=self.queue_name, )
         fct.set_fct_context(fct_context)
         try:
-            corotinue_obj = self.consuming_function(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params,kw['body']['extra']))
+            corotinue_obj = self.consuming_function(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params, kw['body']['extra']))
             if not asyncio.iscoroutine(corotinue_obj):
                 log_msg = f'''当前设置的并发模式为 async 并发模式，但消费函数不是异步协程函数，请不要把消费函数 {self.consuming_function.__name__} 的 concurrent_mode 设置错误'''
                 # self.logger.critical(msg=f'{log_msg} \n')
@@ -1058,11 +1056,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def pause_consume(self):
         """从远程机器可以设置队列为暂停消费状态，funboost框架会自动停止消费，此功能需要配置好redis"""
-        RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, self.queue_name,'1')
+        RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, self.queue_name, '1')
 
     def continue_consume(self):
         """从远程机器可以设置队列为暂停消费状态，funboost框架会自动继续消费，此功能需要配置好redis"""
-        RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, self.queue_name,'0')
+        RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, self.queue_name, '0')
 
     @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)
     def _judge_is_daylight(self):
@@ -1164,8 +1162,8 @@ class ConcurrentModeDispatcher(FunboostFileLoggerMixin):
         if self._concurrent_mode == ConcurrentModeEnum.ASYNC:
             self.consumer._concurrent_pool = self.consumer.consumer_params.specify_concurrent_pool or pool_type(
                 self.consumer.consumer_params.concurrent_num,
-                  specify_async_loop=self.consumer.consumer_params.specify_async_loop,
-                  is_auto_start_specify_async_loop_in_child_thread=self.consumer.consumer_params.is_auto_start_specify_async_loop_in_child_thread)
+                specify_async_loop=self.consumer.consumer_params.specify_async_loop,
+                is_auto_start_specify_async_loop_in_child_thread=self.consumer.consumer_params.is_auto_start_specify_async_loop_in_child_thread)
         else:
             # print(pool_type)
             self.consumer._concurrent_pool = self.consumer.consumer_params.specify_concurrent_pool or pool_type(self.consumer.consumer_params.concurrent_num)
@@ -1212,14 +1210,14 @@ def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typin
 
 
 class MetricCalculation:
-    UNIT_TIME_FOR_COUNT = 10 # 这个不要随意改,需要其他地方配合,每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。
+    UNIT_TIME_FOR_COUNT = 10  # 这个不要随意改,需要其他地方配合,每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。
 
-    def __init__(self,conusmer:AbstractConsumer) -> None:
+    def __init__(self, conusmer: AbstractConsumer) -> None:
         self.consumer = conusmer
 
         self.unit_time_for_count = self.UNIT_TIME_FOR_COUNT  # 
         self.execute_task_times_every_unit_time_temp = 0  # 每单位时间执行了多少次任务。
-        self.execute_task_times_every_unit_time_temp_fail =0  # 每单位时间执行了多少次任务失败。
+        self.execute_task_times_every_unit_time_temp_fail = 0  # 每单位时间执行了多少次任务失败。
         self.current_time_for_execute_task_times_every_unit_time = time.time()
         self.consuming_function_cost_time_total_every_unit_time_tmp = 0
         self.last_execute_task_time = time.time()  # 最近一次执行任务的时间。
@@ -1233,22 +1231,22 @@ class MetricCalculation:
         self.last_timestamp_when_has_task_in_queue = 0
         self.last_timestamp_print_msg_num = 0
 
-        self.total_consume_count_from_start =0
-        self.total_consume_count_from_start_fail =0
+        self.total_consume_count_from_start = 0
+        self.total_consume_count_from_start_fail = 0
         self.total_cost_time_from_start = 0  # 函数运行累计花费时间
         self.last_x_s_total_cost_time = None
 
-    def cal(self,t_start_run_fun:float,current_function_result_status:FunctionResultStatus):
+    def cal(self, t_start_run_fun: float, current_function_result_status: FunctionResultStatus):
         self.last_execute_task_time = time.time()
         current_msg_cost_time = time.time() - t_start_run_fun
         self.execute_task_times_every_unit_time_temp += 1
-        self.total_consume_count_from_start  +=1
+        self.total_consume_count_from_start += 1
         self.total_cost_time_from_start += current_msg_cost_time
         if current_function_result_status.success is False:
             self.execute_task_times_every_unit_time_temp_fail += 1
-            self.total_consume_count_from_start_fail +=1
+            self.total_consume_count_from_start_fail += 1
         self.consuming_function_cost_time_total_every_unit_time_tmp += current_msg_cost_time
-        
+
         if time.time() - self.current_time_for_execute_task_times_every_unit_time > self.unit_time_for_count:
             self.last_x_s_execute_count = self.execute_task_times_every_unit_time_temp
             self.last_x_s_execute_count_fail = self.execute_task_times_every_unit_time_temp_fail
@@ -1267,30 +1265,30 @@ class MetricCalculation:
                     self.consumer.logger.info(msg)
                 self.last_show_remaining_execution_time = time.time()
             if self.consumer.consumer_params.is_send_consumer_hearbeat_to_redis is True:
-                RedisMixin().redis_db_frame.hincrby(RedisKeys.FUNBOOST_QUEUE__RUN_COUNT_MAP,self.consumer.queue_name,self.execute_task_times_every_unit_time_temp)
-                RedisMixin().redis_db_frame.hincrby(RedisKeys.FUNBOOST_QUEUE__RUN_FAIL_COUNT_MAP,self.consumer.queue_name,self.execute_task_times_every_unit_time_temp_fail)
+                RedisMixin().redis_db_frame.hincrby(RedisKeys.FUNBOOST_QUEUE__RUN_COUNT_MAP, self.consumer.queue_name, self.execute_task_times_every_unit_time_temp)
+                RedisMixin().redis_db_frame.hincrby(RedisKeys.FUNBOOST_QUEUE__RUN_FAIL_COUNT_MAP, self.consumer.queue_name, self.execute_task_times_every_unit_time_temp_fail)
 
             self.current_time_for_execute_task_times_every_unit_time = time.time()
             self.consuming_function_cost_time_total_every_unit_time_tmp = 0
             self.execute_task_times_every_unit_time_temp = 0
             self.execute_task_times_every_unit_time_temp_fail = 0
 
-    def get_report_hearbeat_info(self) ->dict:
+    def get_report_hearbeat_info(self) -> dict:
         return {
-            'unit_time_for_count':self.unit_time_for_count,
-            'last_x_s_execute_count':self.last_x_s_execute_count,
-            'last_x_s_execute_count_fail':self.last_x_s_execute_count_fail,
-            'last_execute_task_time':self.last_execute_task_time,
-            'last_x_s_avarage_function_spend_time':self.last_x_s_avarage_function_spend_time,
+            'unit_time_for_count': self.unit_time_for_count,
+            'last_x_s_execute_count': self.last_x_s_execute_count,
+            'last_x_s_execute_count_fail': self.last_x_s_execute_count_fail,
+            'last_execute_task_time': self.last_execute_task_time,
+            'last_x_s_avarage_function_spend_time': self.last_x_s_avarage_function_spend_time,
             # 'last_show_remaining_execution_time':self.last_show_remaining_execution_time,
-            'msg_num_in_broker':self.msg_num_in_broker,
-            'current_time_for_execute_task_times_every_unit_time':self.current_time_for_execute_task_times_every_unit_time,
-            'last_timestamp_when_has_task_in_queue':self.last_timestamp_when_has_task_in_queue,
-            'total_consume_count_from_start':self.total_consume_count_from_start,
-            'total_consume_count_from_start_fail':self.total_consume_count_from_start_fail,
-            'total_cost_time_from_start':self.total_cost_time_from_start,
-            'last_x_s_total_cost_time':self.last_x_s_total_cost_time,
-            'avarage_function_spend_time_from_start':round(self.total_cost_time_from_start / self.total_consume_count_from_start,3) if self.total_consume_count_from_start else None,
+            'msg_num_in_broker': self.msg_num_in_broker,
+            'current_time_for_execute_task_times_every_unit_time': self.current_time_for_execute_task_times_every_unit_time,
+            'last_timestamp_when_has_task_in_queue': self.last_timestamp_when_has_task_in_queue,
+            'total_consume_count_from_start': self.total_consume_count_from_start,
+            'total_consume_count_from_start_fail': self.total_consume_count_from_start_fail,
+            'total_cost_time_from_start': self.total_cost_time_from_start,
+            'last_x_s_total_cost_time': self.last_x_s_total_cost_time,
+            'avarage_function_spend_time_from_start': round(self.total_cost_time_from_start / self.total_consume_count_from_start, 3) if self.total_consume_count_from_start else None,
         }
 
 
@@ -1351,11 +1349,10 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
             p.sadd(redis_key, value)
             p.execute()
 
-
     def _send_msg_num(self):
-        dic = {'msg_num_in_broker':self._consumer.metric_calculation.msg_num_in_broker,
-               'last_get_msg_num_ts':self._consumer.metric_calculation.last_get_msg_num_ts,
-               'report_ts':time.time(),
+        dic = {'msg_num_in_broker': self._consumer.metric_calculation.msg_num_in_broker,
+               'last_get_msg_num_ts': self._consumer.metric_calculation.last_get_msg_num_ts,
+               'report_ts': time.time(),
                }
         self.redis_db_frame.hset(RedisKeys.QUEUE__MSG_COUNT_MAP, self._consumer.queue_name, json.dumps(dic))
 
@@ -1391,16 +1388,14 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
 
     # noinspection PyProtectedMember
     def _get_stop_and_pause_flag_from_redis(self):
-        stop_flag = self.redis_db_frame.hget(RedisKeys.REDIS_KEY_STOP_FLAG,self._consumer.queue_name)
+        stop_flag = self.redis_db_frame.hget(RedisKeys.REDIS_KEY_STOP_FLAG, self._consumer.queue_name)
         if stop_flag is not None and int(stop_flag) == 1:
             self._consumer._stop_flag = 1
         else:
             self._consumer._stop_flag = 0
 
-        pause_flag = self.redis_db_frame.hget(RedisKeys.REDIS_KEY_PAUSE_FLAG,self._consumer.queue_name)
+        pause_flag = self.redis_db_frame.hget(RedisKeys.REDIS_KEY_PAUSE_FLAG, self._consumer.queue_name)
         if pause_flag is not None and int(pause_flag) == 1:
             self._consumer._pause_flag.set()
         else:
             self._consumer._pause_flag.clear()
-  
-      

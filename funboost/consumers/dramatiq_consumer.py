@@ -11,11 +11,6 @@ class DramatiqConsumer(AbstractConsumer):
     dramatiq作为中间件实现的。
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'dramatiq_actor_options': {}}
-    """
-    dramatiq_actor_options 的值可以是：
-     {'max_age', 'throws', 'pipe_target', 'pipe_ignore', 'on_success', 'retry_when', 'time_limit', 'min_backoff', 'max_retries', 'max_backoff', 'notify_shutdown', 'on_failure'}
-    """
 
     def custom_init(self):
         # 这就是核心，

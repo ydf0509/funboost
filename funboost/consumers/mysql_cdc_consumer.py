@@ -21,9 +21,7 @@ class MysqlCdcConsumer(AbstractConsumer):
     This broker is consumer-driven; it automatically generates tasks from database changes.
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {
-        'BinLogStreamReaderConfig': {},
-    }
+
 
     def custom_init(self):
         """Validates the essential configuration."""

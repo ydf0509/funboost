@@ -97,7 +97,13 @@ class Booster:
             return types.MethodType(self, instance)
 
     def __call__(self, *args, **kwargs) -> Booster:
-        if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], typing.Callable):
+        """
+        # 第一次调用__call__，是装饰函数,返回了Booster对象,从此之后,被消费函数就变成了Booster类型对象.
+        # Booster类型对象,怎么支持函数原来本身的直接运行功能? 那就是要让他走到 else 分支,直接用 self.consuming_function 函数本身去运行入参
+        # 这里非常巧妙
+        # 如果用户之后不打算使用funboost 的分布式函数调度功能,那么直接运行函数和原来一模一样,用户不需要删除 @boost装饰器 也能直接运行函数本身
+        """
+        if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], typing.Callable) and not isinstance(args[0], Booster):
             consuming_function = args[0]
             self.boost_params.consuming_function = consuming_function
             self.boost_params.consuming_function_raw = consuming_function

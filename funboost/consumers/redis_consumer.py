@@ -20,7 +20,7 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
     这个是复杂版，一次性拉取100个,减少和redis的交互，简单版在 funboost/consumers/redis_consumer_simple.py
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'redis_bulk_push':1,'pull_msg_batch_size':100}   #redis_bulk_push 是否redis批量推送
+
 
     # noinspection DuplicatedCode
     def _shedual_task(self):

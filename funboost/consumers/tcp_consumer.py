@@ -13,7 +13,7 @@ class TCPConsumer(AbstractConsumer, ):
     socket 实现消息队列，不支持持久化，但不需要安装软件。
     """
 
-    BROKER_EXCLUSIVE_CONFIG_DEFAULT = {'host': '127.0.0.1', 'port': None, 'bufsize': 10240}
+
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):

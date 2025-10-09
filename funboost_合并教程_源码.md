@@ -9506,8 +9506,22 @@ scrapy需要特殊中间件或信号处理
 ```  
 
 **你质疑funboost 没有 pipeline，质疑保存数据麻烦？**  
+
+这个问题问得好，但结论恰恰相反！**没有 Pipeline 正是 Funboost 的巨大优势**，因为它让你摆脱了不必要的束缚。  
+`Funboost`: 一行代码，一个文件，逻辑高度内聚，极其灵活。  
+`Scrapy`: 四个文件，几十行模板代码，逻辑支离破碎，极其死板。  
+
 ```    
-答：用户可以自己封装一个保存字典到数据库的函数， 最简单就是使用dataset知名包 一行代码就能保存字典到数据库了。  
+答：用户可以自己封装一个保存字典到数据库的函数，最简单就是使用dataset知名包,只要一行代码就能保存字典到mysql postgre 数据库了。   
+boost_spider 就是自带了 datasetsink 类,dataset_sink1.save('your_table', data_dict),简单直观多了。
+
+
+反观,scrapy 的 pipeline 反而才是垃圾 过度设计,为了保存一个字典需要切换写四个文件,你单纯想喝瓶水而已,但被迫建一个矿泉水生产线。
+scrapy保存数据需要来回切换4个文件写代码:
+第一步,在 items.py 定义Item类型
+第二部,在 spider类 的 parse_xx 中 yield item
+第三部,在 pipelines.py 中 process_item 方法中判断不同item类型,从而保存到对应的表中.
+第四部,在 settings.py 的 ITEM_PIPELINES 中配置 指定pipeline类(如果忘了这一步就白忙活了)
 ```  
 
 **你说Scrapy 插件生态丰富，质疑Funboost 没有三方包插件生态不够？**  
@@ -14265,7 +14279,9 @@ if __name__ == '__main__':
 ```  
 
 <div> </div>
-# 14 利用ai来掌握 funboost 的 正确方式
+# 14 [懒人必看章节] 利用ai来掌握 funboost 的 正确方式
+
+有的人太懒惰了,不愿意吃苦阅读  `funboost` 的 `readthedocs` 教程,或者不清楚 `funboost` 实现的背后细节原理且不愿意分析框架源码,那就使用 ai 来替你搞定一切.  
 
 **第一性原理:为什么要写第14章这个章节文档?**   
 因为无论是使用cursor trae qoder 这些ide,还是在各个大模型官方网页直接问 `funboost` 问题,都是大错特错的方式.
@@ -15069,6 +15085,7 @@ class BrokerEnum:
     RABBITMQ = RABBITMQ_AMQPSTORM
 
     # 2025-10 内置新增, 支持rabbitmq 所有路由模式,包括 fanout,direct,topic,headers. 使用概念更复杂
+    # 用法见 test_frame/test_broker_rabbitmq/test_rabbitmq_complex_routing 中的demo代码.
     RABBITMQ_COMPLEX_ROUTING = 'RABBITMQ_COMPLEX_ROUTING'
 
     RABBITMQ_RABBITPY = 'RABBITMQ_RABBITPY'  # 使用 rabbitpy 包操作rabbitmq  作为 分布式消息队列，支持消费确认，不建议使用
@@ -15587,7 +15604,7 @@ set_frame_config这个模块的 use_config_form_funboost_config_module() 是核�
 这段注释说明和使用的用户无关,只和框架开发人员有关.
 '''
 
-__version__ = "50.3"
+__version__ = "50.4"
 
 from funboost.set_frame_config import show_frame_config
 
@@ -26504,7 +26521,7 @@ import datetime
 
 import typing
 import threading
-from nb_time import NbTime
+from nb_time import NbTime,NowTimeStrCache
 from funboost.funboost_config_deafult import FunboostCommonConfig
 
 
@@ -26528,87 +26545,8 @@ class FunboostTime(NbTime):
         return t_str
 
 
-# 缓存时区对象，提升性能（避免重复解析）
-_tz_cache = {}
-
-_DIGIT_MAP = {i: f'{i:02d}' for i in range(100)}
-
-
-def _gen_2_dig_number(n):
-    return _DIGIT_MAP[n]
-
-
-def get_now_time_str_by_tz(tz_name: str = None) -> str:
-    # 生成100万次当前时间字符串%Y-%m-%d %H:%M:%S仅需1.9秒.              
-    """
-    根据时区名（如 'Asia/Shanghai'）返回当前时间字符串，格式：'%Y-%m-%d %H:%M:%S'
-    
-    兼容 Python 3.6+，优先使用 zoneinfo（3.9+），否则尝试 pytz
-    
-    :param tz_name: IANA 时区名称，如 'Asia/Shanghai', 'America/New_York'
-    :return: 格式化时间字符串
-    """
-    # 检查缓存
-    tz_name = tz_name or FunboostCommonConfig.TIMEZONE
-    if tz_name not in _tz_cache:
-        if sys.version_info >= (3, 9):
-            from zoneinfo import ZoneInfo
-            _tz_cache[tz_name] = ZoneInfo(tz_name)
-        else:
-            # Python < 3.9，使用 pytz
-            _tz_cache[tz_name] = pytz.timezone(tz_name)
-
-
-    tz = _tz_cache[tz_name]
-
-    # 获取当前时间并格式化（注意：datetime.now(tz) 是最高效的方式）
-    now = datetime.datetime.now(tz)
-    # return f'{now.year:04d}-{now.month:02d}-{now.day:02d} {now.hour:02d}:{now.minute:02d}:{now.second:02d}'
-    # return now.strftime("%Y-%m-%d %H:%M:%S")
-    return f'{now.year}-{_gen_2_dig_number(now.month)}-{_gen_2_dig_number(now.day)} {_gen_2_dig_number(now.hour)}:{_gen_2_dig_number(now.minute)}:{_gen_2_dig_number(now.second)}'
-
-
-class NowTimeStrCache:
-    # 生成100万次当前时间字符串%Y-%m-%d %H:%M:%S仅需0.4秒.
-    # 全局变量，用于存储缓存的时间字符串和对应的整秒时间戳
-    _cached_time_str: typing.Optional[str] = None
-    _cached_time_second: int = 0
-
-    # 为了线程安全，使用锁。在极高并发下，锁的开销远小于每毫秒都进行时间格式化。
-    _time_cache_lock = threading.Lock()
-
-    @classmethod
-    def fast_get_now_time_str(cls,timezone_str:str=None) -> str:
-        """
-        获取当前时间字符串，格式为 '%Y-%m-%d %H:%M:%S'。
-        通过缓存机制，同一秒内的多次调用直接返回缓存结果，极大提升性能。
-        适用于对时间精度要求不高（秒级即可）的高并发场景。
-        :return: 格式化后的时间字符串，例如 '2024-06-12 15:30:45'
-        """
-        timezone_str = timezone_str or FunboostCommonConfig.TIMEZONE
-
-        # 获取当前的整秒时间戳（去掉小数部分）
-        current_second = int(time.time())
-
-        # 如果缓存的时间戳与当前秒数一致，直接返回缓存的字符串。
-        if current_second == cls._cached_time_second:
-            return cls._cached_time_str
-
-        # 如果不一致，说明进入新的一秒，需要重新计算并更新缓存。
-        # 使用锁确保在多线程环境下，只有一个线程会执行更新操作。
-
-        with cls._time_cache_lock:
-            # 双重检查锁定 (Double-Checked Locking)，防止在等待锁的过程中，其他线程已经更新了缓存。
-            if current_second == cls._cached_time_second:
-                return cls._cached_time_str
-
-            # 重新计算时间字符串。这里直接使用 time.strftime，因为它在秒级更新的场景下性能足够。
-            # 我们不需要像 Funboost 那样为每一毫秒的调用都去做查表优化。
-            now = datetime.datetime.now(tz=pytz.timezone(timezone_str))
-            cls._cached_time_str = now.strftime('%Y-%m-%d %H:%M:%S', )
-            cls._cached_time_second = current_second
-
-        return cls._cached_time_str
+def fast_get_now_time_str() -> str:
+    return NowTimeStrCache.fast_get_now_time_str(FunboostCommonConfig.TIMEZONE)
 
 
 if __name__ == '__main__':
@@ -27277,7 +27215,7 @@ import pytz
 import time
 import uuid
 import datetime
-from funboost.core.funboost_time import FunboostTime, get_now_time_str_by_tz, NowTimeStrCache
+from funboost.core.funboost_time import FunboostTime, fast_get_now_time_str
 
 
 def get_publish_time(paramsx: dict):
@@ -27336,7 +27274,7 @@ class MsgGenerater:
     def generate_publish_time_format() -> str:
         # return FunboostTime().get_str()  # 性能不好
         # return get_now_time_str_by_tz()  # 2秒100万次
-        return NowTimeStrCache.fast_get_now_time_str() # 0.4秒100万次
+        return fast_get_now_time_str() # 0.4秒100万次
 
 
     @classmethod

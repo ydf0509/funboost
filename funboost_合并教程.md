@@ -9506,8 +9506,22 @@ scrapy需要特殊中间件或信号处理
 ```  
 
 **你质疑funboost 没有 pipeline，质疑保存数据麻烦？**  
+
+这个问题问得好，但结论恰恰相反！**没有 Pipeline 正是 Funboost 的巨大优势**，因为它让你摆脱了不必要的束缚。  
+`Funboost`: 一行代码，一个文件，逻辑高度内聚，极其灵活。  
+`Scrapy`: 四个文件，几十行模板代码，逻辑支离破碎，极其死板。  
+
 ```    
-答：用户可以自己封装一个保存字典到数据库的函数， 最简单就是使用dataset知名包 一行代码就能保存字典到数据库了。  
+答：用户可以自己封装一个保存字典到数据库的函数，最简单就是使用dataset知名包,只要一行代码就能保存字典到mysql postgre 数据库了。   
+boost_spider 就是自带了 datasetsink 类,dataset_sink1.save('your_table', data_dict),简单直观多了。
+
+
+反观,scrapy 的 pipeline 反而才是垃圾 过度设计,为了保存一个字典需要切换写四个文件,你单纯想喝瓶水而已,但被迫建一个矿泉水生产线。
+scrapy保存数据需要来回切换4个文件写代码:
+第一步,在 items.py 定义Item类型
+第二部,在 spider类 的 parse_xx 中 yield item
+第三部,在 pipelines.py 中 process_item 方法中判断不同item类型,从而保存到对应的表中.
+第四部,在 settings.py 的 ITEM_PIPELINES 中配置 指定pipeline类(如果忘了这一步就白忙活了)
 ```  
 
 **你说Scrapy 插件生态丰富，质疑Funboost 没有三方包插件生态不够？**  
@@ -14265,7 +14279,9 @@ if __name__ == '__main__':
 ```  
 
 <div> </div>
-# 14 利用ai来掌握 funboost 的 正确方式
+# 14 [懒人必看章节] 利用ai来掌握 funboost 的 正确方式
+
+有的人太懒惰了,不愿意吃苦阅读  `funboost` 的 `readthedocs` 教程,或者不清楚 `funboost` 实现的背后细节原理且不愿意分析框架源码,那就使用 ai 来替你搞定一切.  
 
 **第一性原理:为什么要写第14章这个章节文档?**   
 因为无论是使用cursor trae qoder 这些ide,还是在各个大模型官方网页直接问 `funboost` 问题,都是大错特错的方式.

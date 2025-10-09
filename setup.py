@@ -67,7 +67,7 @@ setup(
         'Development Status :: 4 - Beta',
         'Operating System :: OS Independent',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
+        # 'License :: OSI Approved :: BSD License',
         'Programming Language :: Python',
         'Programming Language :: Python :: Implementation',
         'Programming Language :: Python :: 3',
@@ -92,7 +92,7 @@ setup(
     install_requires=[
         'nb_log>=13.9',
         'nb_libs>=1.9',
-        'nb_time>=2.4',
+        'nb_time>=2.7',
         "pymongo>=4.6.3",  # 3.5.1  -> 4.0.2
         'AMQPStorm==2.10.6',
         'rabbitpy==2.0.1',

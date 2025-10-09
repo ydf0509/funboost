@@ -3,7 +3,7 @@ import pytz
 import time
 import uuid
 import datetime
-from funboost.core.funboost_time import FunboostTime, get_now_time_str_by_tz, NowTimeStrCache
+from funboost.core.funboost_time import FunboostTime, fast_get_now_time_str
 
 
 def get_publish_time(paramsx: dict):
@@ -62,7 +62,7 @@ class MsgGenerater:
     def generate_publish_time_format() -> str:
         # return FunboostTime().get_str()  # 性能不好
         # return get_now_time_str_by_tz()  # 2秒100万次
-        return NowTimeStrCache.fast_get_now_time_str() # 0.4秒100万次
+        return fast_get_now_time_str() # 0.4秒100万次
 
 
     @classmethod

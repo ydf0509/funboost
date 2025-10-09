@@ -56,7 +56,8 @@ setup(
     author_email='ydf0509@sohu.com',
     maintainer='ydf',
     maintainer_email='ydf0509@sohu.com',
-    license='BSD License',
+    # license='BSD License',
+    license='BSD-3-Clause',
     # packages=['douban'], #
     packages=find_packages() + ['funboost.beggar_version_implementation', 'funboost.assist'],  # 也可以写在 MANiFEST.in
     # packages=['function_scheduling_distributed_framework'], # 这样内层级文件夹的没有打包进去。

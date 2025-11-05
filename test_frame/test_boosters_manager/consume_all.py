@@ -19,10 +19,10 @@ if __name__ == '__main__':
     # BoostersManager.consume(queue_names.q_test_queue_manager1,queue_names.q_test_queue_manager2a)
 
     # 选择启动哪些队列名消费,每个队列设置不同的消费进程数量
-    # BoostersManager.m_consume(**{queue_names.q_test_queue_manager1: 2, queue_names.q_test_queue_manager2a: 3})
+    # BoostersManager.mp_consume(**{queue_names.q_test_queue_manager1: 2, queue_names.q_test_queue_manager2a: 3})
 
     # 启动所有队列名消费,在同一个进程内消费
     BoostersManager.consume_all()
 
     # 启动所有队列名消费,每个队列启动单独的n个进程消费
-    # BoostersManager.m_consume_all(2)
+    # BoostersManager.mp_consume_all(2)

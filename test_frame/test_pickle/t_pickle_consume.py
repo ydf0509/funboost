@@ -21,7 +21,11 @@ class MyClass:
     def change(self,n):
         self.x +=n
         self.y +=n
+
     def __str__(self):
+        return f'<MyClass(x={self.x},y={self.y})>'
+
+    def __repr__(self):
         return f'<MyClass(x={self.x},y={self.y})>'
 
 class MyPydanticModel(BaseModel):

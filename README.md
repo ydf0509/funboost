@@ -71,6 +71,10 @@ pip install funboost --upgrade
 问题答案, 见文档 6.0 章节  [https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html#funboost](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html#funboost)
 
 #### funboost与celery的理念区别 
+
+`funboost`与`celery`关系，如同iphone手机和诺基亚塞班手机，核心本质功能都是通讯打电话，但不能下结论`iphone`是抄袭`诺基亚塞班手机`重复造轮子，`iphone`是重新定义了轮子。    
+正如 `iphone` 让`塞班`成为历史，`funboost` 正在让`框架奴役`成为过去。
+
 **共同点:**
 ```
 `Celery` 是一个基于分布式消息队列的 异步任务队列/任务调度框架，用于在后台并发执行耗时任务、定时任务和分布式任务处理。
@@ -88,7 +92,7 @@ app才是一等公民,task函数是二等公民
 
 2个框架最显而易见明显差别就是 `funboost` 无需 `@app.boost` 而是直接`@boost`,这个小区别,造成影响深远的框架用法和理念区别.   
 `funboost`任务控制功能更多,支持broker中间件种类更多,并发方式更多,发布性能超越celery 22倍,消费性能超越 celery 46倍,
-性能是高几个数量级的断崖式遥遥领先,但反而使用比celery简单得多.  
+性能是高几个数量级的断崖式遥遥领先,但反而使用比celery简单得多.
 ```
 
 #### **funboost 支持的并发模式:**      
@@ -109,7 +113,9 @@ app才是一等公民,task函数是二等公民
 
 #### **funboost 学习难吗?**   
 ```
-框架只需要学习`@boost`这一个装饰器的入参就可以，所有用法几乎和1.3例子一摸一样，非常简化简单。  
+框架只需要学习`@boost`这一个装饰器的入参就可以，所有用法几乎和1.3例子一摸一样，非常简化简单。 
+教程所有例子只是改了下@boost装饰器的入参而已,用户自己可以看装饰器入参解释就行了.
+
 框架对代码没有入侵,可以加到任意已有项目而对项目python文件目录结构0要求,   
 不像`celery` `django` `scrapy` 这样的框架,要从一开始就开始规划好项目目录结构,如果不想用框架了,   
 或者想改变使用其他框架框架,那么已经所写的代码组织形式就几乎成了废物,需要大改特改.    
@@ -119,6 +125,10 @@ app才是一等公民,task函数是二等公民
 即使不想用`funboost`了，也不需要亲自去掉`@boost`装饰器，因为函数上面有`@boost`装饰器对函数自身的直接调用运行没有任何影响，  
 用户照样可以直接例如 `fun(x,y)`是直接运行函数 ， `fun.push(x,y)` 才是发送到消息队列 
 ```
+
+"funboost学习和使用难吗?" 的 详细回答可以看文档 `6.0.c` 章节
+
+
 #### **funboost支持可视化查看和管理消费情况:**    
 通过`funboost web manager` 管理系统，支持全面 查看 监控 管理 `funboost`的任务消费。  
 

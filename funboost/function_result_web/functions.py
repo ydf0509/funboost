@@ -67,7 +67,7 @@ def query_result(col_name, start_time, end_time, is_success, function_params: st
     # with decorators.TimerContextManager():
     results = list(db.get_collection(col_name).find(condition, {'insert_time': 0, 'utime': 0}).skip(int(page) * 100).limit(100))
     # nb_print(results)
-    nb_print(time.time() -t0, query_kw)
+    nb_print(time.time() -t0, query_kw,len(results))
     return results
 
 

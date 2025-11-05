@@ -40,3 +40,4 @@ nb_log_config.py
 .history
 queue_csv_files/test_csv_queue.csv
 test_txt_queue.txt
+/.*/

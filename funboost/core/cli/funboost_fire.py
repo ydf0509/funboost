@@ -97,11 +97,11 @@ class BoosterFire(object):
     def multi_process_consume_queues(self, **queue_name__process_num):
         """
         使用多进程启动消费,每个队列开启多个单独的进程消费;
-        例子:  m_consume --queue1=2 --queue2=3    # queue1启动两个单独进程消费  queue2 启动3个单独进程消费
+        例子:  mp_consume --queue1=2 --queue2=3    # queue1启动两个单独进程消费  queue2 启动3个单独进程消费
         """
         BoostersManager.multi_process_consume_queues(**queue_name__process_num)
 
-    m_consume = multi_process_consume_queues
+    mp_consume = multi_process_consume_queues
 
     def multi_process_consume_all_queues(self, process_num=1):
         """
@@ -110,7 +110,7 @@ class BoosterFire(object):
         """
         BoostersManager.multi_process_consume_all_queues(process_num)
 
-    m_consume_all = multi_process_consume_all_queues
+    mp_consume_all = multi_process_consume_all_queues
 
     def pause(self, *queue_names: str):
         """

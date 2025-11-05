@@ -181,6 +181,14 @@
 
    
     <script>
+        // 全局错误处理器
+        window.addEventListener('error', function(e) {
+            console.error('全局错误捕获:', e.error);
+            if (e.error && e.error.message && e.error.message.includes('tabulator')) {
+                console.warn('检测到Tabulator相关错误，可能是表格初始化问题');
+            }
+        });
+
         // 检查Chart.js是否正确加载
         if (typeof Chart === 'undefined') {
             console.error('Chart.js未正确加载！请检查文件路径。');
@@ -199,6 +207,18 @@
             paginationSize: 1000,
             height: "auto",
             locale: true,
+            // 添加表格初始化完成回调
+            dataLoaded: function(data) {
+                console.log("表格数据加载完成");
+                // 在数据加载完成后应用过滤器
+                setTimeout(function() {
+                    updateTableFilters();
+                }, 100);
+            },
+            tableBuilt: function() {
+                console.log("表格构建完成");
+                this.initialized = true;
+            },
             rowFormatter: function(row) {
                 var data = row.getData();
                 var cell = row.getCell("queue_name"); 
@@ -344,31 +364,53 @@
         });
 
         function updateTableFilters() {
-            const searchValue = document.getElementById("searchInput").value;
-            const showActiveOnly = document.getElementById('showActiveQueuesOnly').checked;
-
-            const filters = [];
-
-            if (searchValue) {
-                filters.push({field: "queue_name", type: "like", value: searchValue});
+            // 检查表格是否已经初始化
+            if (!table || !table.initialized) {
+                console.log("表格还未初始化，跳过过滤器更新");
+                return;
             }
 
-            if (showActiveOnly) {
-                filters.push({field: "consumer_count", type: ">", value: 0});
-            }
+            try {
+                const searchValue = document.getElementById("searchInput").value;
+                const showActiveOnly = document.getElementById('showActiveQueuesOnly').checked;
 
-            table.setFilter(filters);
+                const filters = [];
+
+                if (searchValue && searchValue.trim() !== "") {
+                    filters.push({field: "queue_name", type: "like", value: searchValue.trim()});
+                }
+
+                if (showActiveOnly) {
+                    filters.push({field: "consumer_count", type: ">", value: 0});
+                }
+
+                // 清除现有过滤器并设置新的过滤器
+                table.clearFilter();
+                if (filters.length > 0) {
+                    table.setFilter(filters);
+                }
+            } catch (error) {
+                console.error("更新表格过滤器时出错:", error);
+            }
         }
 
         // 搜索功能实现
         document.getElementById("searchInput").addEventListener("keyup", function() {
-            updateTableFilters();
+            try {
+                updateTableFilters();
+            } catch (error) {
+                console.error("搜索过滤时出错:", error);
+            }
         });
 
         // 清除搜索
         function clearSearch() {
-            document.getElementById("searchInput").value = "";
-            updateTableFilters();
+            try {
+                document.getElementById("searchInput").value = "";
+                updateTableFilters();
+            } catch (error) {
+                console.error("清除搜索时出错:", error);
+            }
         }
 
         // 显示参数的模态框
@@ -897,12 +939,17 @@
 
         // 新增：处理复选框状态变化的函数
         function toggleActiveQueuesFilter() {
-            updateTableFilters();
+            try {
+                updateTableFilters();
+            } catch (error) {
+                console.error("切换活跃队列过滤器时出错:", error);
+            }
         }
 
-        // 初始化时设置默认过滤条件
+        // 初始化时不立即设置过滤条件，等待表格完全加载
         document.addEventListener('DOMContentLoaded', function() {
-            updateTableFilters();
+            console.log("DOM内容加载完成，等待表格初始化...");
+            // 移除立即调用 updateTableFilters()，改为在表格数据加载完成后调用
         });
 
     </script>

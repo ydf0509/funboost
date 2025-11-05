@@ -397,7 +397,7 @@ class BoostersManager:
             cls.get_booster(queue_name).multi_process_consume(process_num)
         ctrl_c_recv()
 
-    m_consume = multi_process_consume_queues
+    mp_consume = multi_process_consume_queues
 
     @classmethod
     def consume_group(cls, booster_group:str,block=False):
@@ -425,7 +425,7 @@ class BoostersManager:
         for _ in range(process_num):
             Process(target=cls.consume_group,args=(booster_group,True)).start()
     
-    m_consume_group = multi_process_consume_group
+    mp_consume_group = multi_process_consume_group
             
     @classmethod
     def multi_process_consume_all_queues(cls, process_num=1):
@@ -437,4 +437,4 @@ class BoostersManager:
             cls.get_booster(queue_name).multi_process_consume(process_num)
         ctrl_c_recv()
 
-    m_consume_all = multi_process_consume_all_queues
+    mp_consume_all = multi_process_consume_all_queues

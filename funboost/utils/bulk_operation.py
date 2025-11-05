@@ -207,7 +207,7 @@ class _Test(unittest.TestCase, LoggerMixin):
     # @unittest.skip
     def test_mongo_bulk_write(self):
         # col = MongoMixin().mongo_16_client.get_database('test').get_collection('ydf_test2')
-        col = MongoClient('mongodb://myUserAdmin:8mwTdy1klnSYepNo@192.168.199.202:27016/admin').get_database('test').get_collection('ydf_test3')
+        col = MongoClient('mongodb://myUserAdmin:XXXXXXX@192.168.199.202:27016/admin').get_database('test').get_collection('ydf_test3')
         with decorators.TimerContextManager():
             for i in range(5000 + 13):
                 # time.sleep(0.01)

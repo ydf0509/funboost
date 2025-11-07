@@ -3516,8 +3516,71 @@ def task_fun():  # 空函数,即使这样每秒钟也突破不了400次运行.
 
 
 
+## 2.7 rq  celery  funboost 段位比较
 
 
+-   **RQ 是倔强青桐**：简单，但也就那样了。
+-   **Celery 是荣耀黄金**：强大，但笨重且复杂。
+-   **Funboost 是传奇王者**：简单、强大、灵活、可靠，是设计理念上的领先者。
+
+
+
+---
+
+### 2.7.1**倔强青铜：RQ (Redis Queue)**
+
+**段位特点**：简单直接，目标明确，但技能单一，适应性差。
+
+*   **核心技能 (Q技能 - “简单入队”)**: `queue.enqueue(my_func, arg1, arg2)`。非常简单，易于上手。就像青铜玩家只会用一个核心技能打天下。
+*   **被动技能 (“Redis依赖”)**: 只能使用 Redis 作为 Broker，无法更换。就像一个英雄只能走一条路，换线就崩。
+*   **英雄短板**:
+    1.  **没有原生定时任务 (Beat)**: 需要配合 `rq-scheduler`，一个独立的、需要额外学习和部署的组件。
+    2.  **并发模型单一**: 依赖 `fork()`，因此在 Windows 上原生无法并发运行，
+    3.  **功能基础**: 缺乏复杂的任务控制，如 QPS 限流、优先级队列（需要特殊队列）、死信队列等高级功能。
+    4.  **监控简陋**: 自带的 `rq-dashboard` 功能比较基础。
+
+**总结**: `RQ` 就像一个只知道“往前冲”的青铜英雄。它能完成最基本的任务，但在复杂的战局（生产环境）中，缺乏灵活性和高级策略，很容易被对面的“高级玩家”（如复杂的业务需求、高可靠性要求）打败。它非常适合入门和简单场景，但上限很低。
+
+---
+
+### 2.7.2**荣耀黄金：Celery**
+
+**段位特点**：功能全面，有成熟的“套路”和“装备”（生态），是标准对局中的中坚力量，但操作复杂，意识和熟练度要求高。
+
+*   **核心技能 (Q/W/E/R - “全套连招”)**: 提供了任务定义 (`@app.task`)、发布 (`.delay/.apply_async`)、定时 (`beat_schedule`)、工作流 (`canvas`) 等一整套完整的技能。
+*   **装备库 (生态系统)**: 支持多种 Broker 和 Backend，有 `flower` 监控，有大量的第三方插件。就像一个黄金玩家，知道根据局势出不同的装备。
+*   **英雄短板 (高操作门槛)**:
+    1.  **操作极其复杂**: 命令行启动繁琐，任务路由 (`task_routes`) 配置反直觉，新手很容易“技能放歪”或者“忘记开大”。
+    2.  **僵硬的身板 (框架束缚)**: 强制的项目结构，中心化的 `app` 实例，让代码不够灵活，难以适应“野区”的突发状况（例如集成到不规则的老项目中）。
+    3.  **不稳定的发挥 (性能与可靠性问题)**:
+        *   性能被 `kombu` 和 `celery`自身复杂的层层调用链路 拖累，远不如原生操作。
+        *   在 Redis 上的 ACK 机制依赖 `visibility_timeout`，存在“慢任务被误判为死亡而重复执行”的风险。
+        *   对 Windows 支持不佳，像一个“在北方服务器上会水土不服”的英雄。
+    4.  **“黑盒”机制**: 很多内部机制对开发者不透明，出问题时难以调试。IDE 代码补全的缺失，就像在迷雾中打团。
+
+**总结**: `Celery` 是一个强大的黄金段位英雄。如果你能投入大量时间去练习它的连招、背诵它的出装顺序（配置）、理解它的复杂机制，你确实能打出不错的战绩。但它的操作难度和僵硬的玩法，决定了它永远无法成为那种能够凭一己之力改变战局的“传奇王者”。
+
+---
+
+### 2.7.3 **传奇王者：Funboost**
+
+**段位特点**：全能型英雄，集刺客的爆发、坦克的可靠、法师的控制、射手的射程于一身。操作极其简单，但上限极高，能够适应任何战局，并且能用“降维打击”的方式碾压对手。
+
+*   **被动技能 (“王者光环 - 自由赋能”)**: 核心是被动技能。`@boost` 装饰器就像一个王者光环，任何一个普通的 Python 函数（小兵）只要靠近它，就能瞬间被强化成一个拥有**分布式、高并发、高可靠**能力的超级英雄。
+*   **Q技能 (`.push()` / `.consume()`)**: 极其简单的核心操作，易于上手，但威力巨大。
+*   **W技能 (30+ 任务控制)**: `qps`, `max_retry_times`, `do_task_filtering`, `is_using_rpc_mode`... 无数个可供选择的控制技能，让你能应对任何复杂的战术需求。
+*   **E技能 (万物皆可为 Broker)**: 支持 40 多种消息队列，甚至能把 `Celery` 和 `RQ` 本身当作自己的“小兵”来驱使。这种“吞噬”能力，是王者段位才有的霸气。
+*   **R技能 (终极技能 - 叠加并发与函数级重试)**:
+    *   **多进程 + 多线程/协程**的叠加并发，提供了毁天灭地般的性能爆发力。
+    *   **函数级重试**机制，提供了无与伦比的生存能力和可靠性。即使被对方的“反爬技能”命中（HTTP 200 但内容错误），也能原地复活（重试整个函数），直到任务完成。
+*   **超神意识 (设计哲学)**:
+    *   **全图视野 (IDE 自动补全)**: 让你对所有技能和参数了如指掌，操作行云流水。
+    *   **战术自由 (非侵入式)**: 不限制你的走位（项目结构）和出装（第三方库），让你能用最舒服的方式打出最高的操作。
+    *   **降维打击**: 用“函数调度”这个更高级的抽象，成为一招鲜吃遍天的万能框架，例如轻松解决“URL调度”（爬虫）等特定领域的问题。
+
+**总结**: `Funboost` 是一个真正的“传奇王者”。它不仅拥有所有英雄的优点，还弥补了他们的缺点。它的操作**像青铜一样简单**，但它的**战术深度和能力上限却超越了所有王者**。它重新定义了“任务调度”这场游戏，让开发者不再是“被英雄束缚的玩家”，而是“创造和指挥英雄的上帝”。
+
+---
 
 
 
@@ -11658,6 +11721,8 @@ python代码例子,见文档 4.2d.3 章节.
 
 **Funboost 是“写函数就能爬虫”，Scrapy 是“写框架才能爬虫”。**  
 
+**funboost/boost_spider 对仿scrapy api框架最大优势是 自由编程暴击框架奴役， 能复用用户自己的utils文件夹下的 宝贵资产**
+
 ### funboost scrapy 两种框架写爬虫代码方式代码明显对比
 
 #### funboost框架是自由框架的证据:                   
@@ -11697,6 +11762,8 @@ funboost 是自由框架,不仅体现在,用户函数内部可以随意写任何
 也体现在 funboost 对用户代码无入侵,没有强迫你像 celery  scrapy django 那样规定死死的目录结构和文件名字,  
 也体现在可以加到任何新老项目的任意新旧函数上面.
 </pre>
+
+
 
 #### scrapy是框架奴役的证据:   
 ```shell
@@ -12032,12 +12099,12 @@ scrapy需要特殊中间件或信号处理
 
 知道有些人会质疑说scrapy爬虫更好，有些人举的scrapy更强的例子，喜欢以卵击石，以弱击强，倒反天罡，必须集中统一回答反驳。  
 
-**你质疑funboost 没有 http middware ？**  
+#### **你质疑funboost 没有 http middware ？**  
 ```   
 答：上面已经回答了，用户手写定义一个通用的 my_request 更强更自由更简单。  
 ```  
 
-**你质疑funboost 没有 pipeline，质疑保存数据麻烦？**  
+#### **你质疑funboost 没有 pipeline，质疑保存数据麻烦？**  
 
 这个问题问得好，但结论恰恰相反！**没有 Pipeline 正是 Funboost 的巨大优势**，因为它让你摆脱了不必要的束缚。  
 `Funboost`: 一行代码，一个文件，逻辑高度内聚，极其灵活。  
@@ -12057,18 +12124,19 @@ scrapy保存数据需要来回切换4个文件写代码:
 第四部,在 settings.py 的 ITEM_PIPELINES 中配置 指定pipeline类(如果忘了这一步就白忙活了)
 ```  
 
-**你说Scrapy 插件生态丰富，质疑Funboost 没有三方包插件生态不够？**  
+#### **你说Scrapy 插件生态丰富，质疑Funboost 没有三方包插件生态不够？**  
 
 `funboost` 不需要任何插件,是无招胜有招.  
      
-scrapy插件多是“病”，不是“药” 。Python pypi生态就是funboost的生态，funboost不需要各种funboost-xx的三方包插件。       
-说插件多就是生态好，这么想法的人简直是没长脑子，用户已经会了三方包的使用，但在scrapy框架下，为什么还需要等专门的美国编程大神去给三方包开发插件适配scrapy框架的生命周期和组件流程，才能在scrapy中愉快的使用三方包。用户压根没想过这个问题。  
+- scrapy插件多是“病”，不是“药” 。Python pypi生态就是funboost的生态，你的python项目下的 utils/ 或者 helpers/ 文件夹下日积月累的各种工具类和函数都是 funboost的生态, funboost不需要各种funboost-xx的三方包插件。
+
+- 说插件多就是生态好，这么想法的人简直是没长脑子，用户已经会了三方包的使用，但在scrapy框架下，为什么还需要等专门的美国编程大神去给三方包开发插件适配scrapy框架的生命周期和组件流程，才能在scrapy中愉快的使用三方包。用户压根没想过这个问题。  
 
 详细的驳斥看文档8.14.2章节  
 
-Scrapy 插件多 ≠ 框架强，恰恰说明了框架对用户自由的压制太多，“什么都得经过官方那一套”。          
-Funboost 是函数式的框架，自由度高、无约束、无钩子、无上下文依赖，天然就能融合任何三方库，python三方包生态就是funboost的生态，funboost不需要学 scrapy-redis scrapy-selenium scrapy-playwright  scrapy-user-agents  scrapy-splash 专门开发各种 funboost-xx 的三方包插件。funboost压根不需要三方包插件，而不是三方包插件生态薄弱。      
-
+- Scrapy 插件多 ≠ 框架强，恰恰说明了框架对用户自由的压制太多，“什么都得经过官方那一套”。          
+Funboost 是函数式的框架，自由度高、无约束、无钩子、无上下文依赖，天然就能融合任何三方库，python三方包生态就是funboost的生态，你utils下积累的工具类和函数都是 funboost的生态。
+- funboost不需要学 scrapy-redis scrapy-selenium scrapy-playwright  scrapy-user-agents  scrapy-splash 专门开发各种 funboost-xx 的三方包插件。funboost压根不需要三方包插件，而不是三方包插件生态薄弱。      
 
 
 ```  
@@ -12103,7 +12171,15 @@ funboost需要学习这些扩展插件怎么使用吗？ 绝对不需要，funbo
 学习要用的包 → 2. 开始开发  
 
 
-**你说scrapy社区支持，有庞大的专门各种问题的讨论？质疑funboost没有社区？**  
+#### 你项目下的 utils 文件夹的工具类是黄金还是废铁？取决于你用什么哲学的框架
+
+- 详细见文档 8.0b 章节
+
+Python pypi生态就是funboost的生态，你的python项目下的 utils/ 或者 helpers/ 文件夹下日积月累的各种工具类和函数都是 funboost的生态,   
+例如你的爬虫项目 utils 文件夹下日积月累，99%的概率已经存在很多好用的经过实战检验的爬虫工具类和函数，可以直接被 import 复用使用。
+ 
+
+#### **你说scrapy社区支持，有庞大的专门各种问题的讨论？质疑funboost没有社区？**  
 ```   
 因为scrapy太难了，用户必须精通scrapy框架本身，精通scrapy各种组件和生命周期，用户难以自由扩展，所以需要讨论。  
 funboost是你写一个函数，你可以在函数里面自由自在写任何代码，你在写你的消费函数里面是自由的，  
@@ -12116,26 +12192,26 @@ funboost 没有需要讨论的，因为funboost 是顺其自然自由使用任�
 例如你不会使用xpath解析html，那去xpath论坛讨论，这和funboost没关系。  
 ```  
 
-**你羡慕scrapy的response有自带.xpath .css .extract_first .extract_all 方法？**  
+#### **你羡慕scrapy的response有自带.xpath .css .extract_first .extract_all 方法？**  
 ```  
 答：你可以看看boost_spider项目的response，也有xpath方法，实现很简单。  
 这些真的很简单啊，你的my_request函数可以是返回一个带有这些方法的response对象就好了。  
 封装一个带有这些方法的Response类型的对象简直不要太简单。  
 ```  
 
-**scrapy twisted 性能强悍？担心funboost爬取不快？**  
+#### **scrapy twisted 性能强悍？担心funboost爬取不快？**  
 ```   
 答： 没有funboost 的 多机器 + 多进程 + asyncio强。 asyncio才是未来。  
 拿scrapy的短处去攻击funboost的长处，以卵击石。  
 ```   
 
-**你质疑scrapy重试功能强大？**  
+#### **你质疑scrapy重试功能强大？**  
 ```  
 答：funboost 的函数重试功能远远暴击scrapy的url重试功能(防丢数据2),你可以看8.13.2章节。  
 如果http状态码200，但是页面反扒，scrapy会丢失大量数据，funboost则不会。  
 ```  
 
-**你怀疑scrapy稳定，funboost不稳定？**  
+#### **你怀疑scrapy稳定，funboost不稳定？**  
 ```  
 答：funboost 框架核心 执行函数是稳定的，funboost爬虫比scrapy更不容易漏数据，看文档8.13.2  
 因为funboost对用户怎么写爬虫函数干预很少，少即是稳，所以funboost很稳定。  
@@ -12144,7 +12220,7 @@ funboost不会退出代码，会自动重试连接，只要网络恢复后，就
 ```  
 
 
-**你质疑scrapy自带去重，funboost不能去重？**  
+#### **你质疑scrapy自带去重，funboost不能去重？**  
 ```  
 答：  
 详细看8.14.1章节的为什么funboost的函数入参去重功能远远吊打scrapy的Request对象指纹去重？  
@@ -12152,7 +12228,7 @@ funboost不会退出代码，会自动重试连接，只要网络恢复后，就
 你用scrapy而不用funboost，你不忙的吐血谁吐血，你不住icu谁住icu  
 ```  
 
-**你质疑funboost不能断点续爬？**  
+#### **你质疑funboost不能断点续爬？**  
 ```  
 scrapy-redis 是blpop删除种子，随意重启代码或关机会丢失大量已从reids pop取出来到内存中的种子。  
 funboost 各种中间件支持确认消费，那才是真正的断点续爬万无一失，不怕你随意突然反复重启代码和突然关机。  
@@ -12192,6 +12268,77 @@ Funboost 就是碾压Scrapy，这是一个基于技术事实的客观结论，�
 国产爬虫框架很难使用,用户使用框架难以自由发挥,主要原因不是框架抄袭,而是框架作者脑袋思维被束缚禁锢了,导致了情不自禁模仿scrapy的api  
 
 **结论**：feapder Tinepeas 等框架“情不自禁”地模仿 `yield Request`，因为国产爬虫框架的思想还停留在“Scrapy 是如何调度请求的”这个层面，而没有跳出思考“我们真正需要调度的是什么”。它们复制了 Scrapy 的“形”（回调、中间件、管道），却未能突破其“神”（对开发者自由的限制）。  
+
+
+## 8.0b 你的 utils 文件夹是黄金还是废铁？取决于你用什么哲学的框架
+
+- **funboost/boost_spider 对仿scrapy api框架最大优势是 自由编程暴击框架奴役， 能复用用户自己的 utils 宝贵资产**
+
+- scrapy的三方包插件，各种 scrapy-xx 插件，例如 scrapy-redis scrapy-playwright scrapy-selenium scrapy-user-agents scrapy-splash 等等，三方包插件总量不会超过1000个.
+  只有pypi的三方包才是星辰大海，100万多个pypi三方包都是你的工具。  
+  **最重要的是，只有用户自己项目下utils文件夹下积累的工具类和函数才是最符合用户自己实际需求的工具，而不是 scrapy-xx 插件。**
+
+- Python pypi生态就是funboost的生态，你的python项目下的 utils/ 或者 helpers/ 文件夹下日积月累的各种工具类和函数都是 funboost的生态,   
+  例如你的爬虫项目 utils 文件夹下日积月累，99%的概率已经存在如下，好用的经过实战检验的工具类和函数： 
+  
+```python
+def anti_request(method,url,...retry_times=3,is_change_ua=True,is_change_proxy)：
+   """自动重试 换代理ip  user-agent 的http请求函数""" 
+
+def save_to_mysql(data:dict)：   
+    """保存字典到数据库的函数"""
+
+class RedisBloomFilter:
+    """redis 布隆过滤器"""
+    def is_exists(self, key):
+        ...
+    def add(self, key):
+        ...
+    
+def extract_all_with_join(selector, separator=' '):
+    """提取选择器所有结果并用指定分隔符连接成字符串。"""
+    return separator.join(selector.getall()).strip()
+
+class WebsiteAuthenticator:  
+    """对于需要登录的网站，一个管理会话、Cookie 和 Token 的类是无价之宝。"""
+    def login(self):
+        ...
+    def get_session(self):
+        ...
+
+def send_email_notification(subject, body, recipient):
+    """发送爬虫邮件通知。"""
+
+def download_and_upload_to_s3(url, bucket_name, object_name):
+    """下载文件并直接流式上传到 S3。"""
+    s3 = boto3.client('s3')
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        s3.upload_fileobj(r.raw, bucket_name, object_name)
+    return f"s3://{bucket_name}/{object_name}"
+    
+```
+
+**在 funboost中**，你utils文件夹下的宝贵资产，黄金任然是黄金，可以直接import 复用使用： 
+```python
+from funboost import boost, BrokerEnum
+from utils.http_client import anti_request  # 你日积月累的工具
+from utils.db import save_to_mysql        # 你日积月累的工具
+from utils.redis_dedup import RedisBloomFilter   # 你日积月累的工具
+from utils.website_authenticator import WebsiteAuthenticator   # 你日积月累的工具
+from utils.send_notification import send_email_notification   # 你日积月累的工具
+from utils.download_and_upload import download_and_upload_to_s3   # 你日积月累的工具
+```
+**而在`scrapy` `feapder`面前**，你曾经引以为豪在`utils`文件夹下积累的宝贵资产，他不是黄金，只是一堆破铜烂铁而已，不能被导入复用。    
+你没有按照他们框架的`Downloader Middleware` 和 `Pipeline`规范写的`utils`文件夹下的工具类，都是废铁一文不值。  
+`scrapy`的扩展插件机制 被 `funboost` 的自由import复用吊打。
+
+- 复用用户自己的 utils 宝贵资产，正是 `funboost`  区别于 `Scrapy/Feapder` 等传统框架的**根本性优势**，是战略层面的胜利。
+
+*   **`utils` 是开发者的“内功心法”**：一个开发者的 `utils` 文件夹，是他/她多年经验的结晶，是解决特定领域问题的最佳实践沉淀。它包含了对业务逻辑的深刻理解，是**不可替代的、高度定制化的“私有武器库”**。
+*   **“复用 `utils`” = 复用经验和智慧**：一个框架如果能让开发者无缝地复用自己的 `utils`，就意味着它尊重并放大了开发者的个人能力和历史积累。开发者可以用最熟悉、最高效的方式解决问题。
+*   **“无法复用 `utils`” = 废掉武功，重练套路**：`Scrapy/Feapder` 的插件和中间件机制，本质上是让你放弃自己的“内功”，去学习并练习一套它们规定好的“套路招式”。你的 `my_request` 函数再精妙，也得改成 `Downloader Middleware` 的形状；你的 `save_to_mysql` 再高效，也得塞进 `Item Pipeline` 的模子里。这是一个**巨大的、隐性的成本**。
+
 
 ## 8.1 演示获取汽车之家资讯的 新闻 导购 和 评测 3个板块 的 文章。  
 
@@ -14493,7 +14640,7 @@ RequestClient SpiderResponse DatasetSink 这些类在编写实现的时候,丝�
 `SpiderResponse` 对象除了 有`text`属性,还有 `xpath`方法,`css`方法,`re`方法 ,方便你parse解析网页源码.  
 
 
-### 8.31.2b **boost_spider/http/request_client.py 中的 RequestClient 和 SpiderResponse 源码如下:**
+### 8.31.2b **boost_spider/http/request_client.py 中的 RequestClient 和 SpiderResponse 功能如下:**
 ```python
 # coding=utf-8
 """
@@ -14506,334 +14653,8 @@ RequestClient SpiderResponse DatasetSink 这些类在编写实现的时候,丝�
 6、从使用requests修改为使用RequstClient门槛很低，三方包的request方法和此类的request方法入参和返回完全100%保持了一致。
 7、支持代理自动切换。需要将proxy_name设置为一个列表，指定多个代理的名字。
 8、支持继承 RequestClient 来增加使用各种代理的请求方法，新增加代理商后，将请求方法名字加到 PROXYNAME__REQUEST_METHED_MAP 中。
+9. RequestClient 返回 SpiderResponse ，response 直接支持 .xpath  .css  .re_find_all 等解析反方法
 """
-import json
-import logging
-import typing
-from enum import Enum
-from functools import lru_cache
-from pathlib import Path
-
-import nb_log
-import copy
-import time
-from typing import Union
-import requests
-from requests.cookies import RequestsCookieJar
-import urllib3.exceptions
-
-from boost_spider.http.user_agent import rand_get_useragent
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-from parsel import Selector
-import re
-
-
-class HttpStatusError(Exception):
-    def __init__(self, http_status_code):
-        super().__init__(f'请求返回的状态码不是200，是{http_status_code}')
-
-
-request_logger = nb_log.get_logger('RequestClient', log_level_int=logging.DEBUG)
-
-
-class SpiderResponse(requests.Response):  # 继承主要是方便代码补全提示，
-    # noinspection PyMissingConstructor
-
-    re_pattern_map = {}  # type: typing.Dict[str,re.Pattern]
-
-    def __init__(self, resp: requests.Response):
-        self.__dict__.update(resp.__dict__)  # 使 SpiderResponse 类具备requests.Response的所有属性
-
-    @property
-    @lru_cache()
-    def selector(self) -> Selector:
-        return Selector(self.text)
-
-    @property
-    @lru_cache()
-    def resp_dict(self) -> typing.Dict:
-        return json.loads(self.text)
-
-    @property
-    @lru_cache()
-    def text(self) -> str:
-        return super().text
-
-    def re_search(self, pattern, flags=0):
-        key = f'{pattern} {flags}'
-        if key not in self.re_pattern_map:
-            pa_obj = re.compile(pattern=pattern, flags=flags)
-            self.re_pattern_map[key] = pa_obj
-        return self.re_pattern_map[key].search(self.text)
-
-    def re_findall(self, pattern, flags=0):
-        # return re.findall(pattern, self.text, flags)
-        key = f'{pattern} {flags}'
-        if key not in self.re_pattern_map:
-            pa_obj = re.compile(pattern=pattern, flags=flags)
-            self.re_pattern_map[key] = pa_obj
-        return self.re_pattern_map[key].findall(self.text)
-
-    def xpath(self, query):
-        return self.selector.xpath(query)
-
-    def css(self, query):
-        return self.selector.css(query)
-
-
-# noinspection PyBroadException
-class RequestClient:
-    logger = request_logger
-
-    def __init__(self, proxy_name_list=None,
-                 ua=None, default_use_pc_ua=True, is_change_ua_every_request=False,
-                 timeout: Union[tuple, float] = (30, 40),
-                 verify=False, allow_redirects=True, is_close_session=True,
-                 request_retry_times=2,
-                 using_platfrom=''):
-        """
-        :param proxy_name_list: 轮流使用代理服务商名字，可设置为 None,'noproxy', 'kuai', 'abuyun', 'crawlera',为None不使用代理
-        :param ua:  useragent，如果不设置就随机分配一个欺骗的
-        :param is_change_ua_every_request: 为每次请求设置新的useragent
-        :param timeout: 超时设置
-        :param verify:  是否校验服务器证书
-        :param allow_redirects
-        :param is_close_session: 是否在请求后关闭会话，连续型的请求需要cookie保持的，请设置为False，并且一直使用RequestClient实例化后的对象
-        :param logger_level:日志级别，10 20 30 40 50
-        """
-        if proxy_name_list is None:
-            proxy_name_list = ['noproxy']
-        if not isinstance(proxy_name_list, list):
-            proxy_name_list = [proxy_name_list]
-        if not set(proxy_name_list).issubset(set(self.PROXYNAME__REQUEST_METHED_MAP.keys())):
-            raise Exception('设置的代理名称错误')
-        self._proxy_name_list = proxy_name_list
-        default_ua = (
-            'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36' if default_use_pc_ua else
-            'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Mobile Safari/537.36')
-        self._ua = ua if ua else default_ua
-        self._default_use_pc_ua = default_use_pc_ua
-        self._is_change_ua_every_request = is_change_ua_every_request
-        self._timeout = timeout
-        self._verify = verify
-        self._allow_redirects = allow_redirects
-        self._is_close_session = is_close_session
-        self.ss = requests.Session()
-        self._max_request_retry_times = request_retry_times
-        self._using_platfrom = using_platfrom
-
-    def __add_ua_to_headers(self, headers):
-        # noinspection PyDictCreation
-        if not headers:
-            headers = dict()
-            headers['user-agent'] = self._ua
-        else:
-            if 'user-agent' not in headers and 'User-Agent' not in headers:
-                headers['user-agent'] = self._ua
-        if self._is_change_ua_every_request:
-            if self._default_use_pc_ua:
-                headers['user-agent'] = rand_get_useragent('chrome')
-            else:
-                headers['user-agent'] = rand_get_useragent('mobile')
-        headers.update({'Accept-Language': 'zh-CN,zh;q=0.8'})
-        return headers
-
-    def get_cookie_jar(self):
-        """返回cookiejar"""
-        return self.ss.cookies
-
-    def get_cookie_dict(self):
-        """返回cookie字典"""
-        return self.ss.cookies.get_dict()
-
-    def get_cookie_str(self):
-        """返回cookie字典"""
-        cookie_str = ''
-        for cookie_item in self.get_cookie_dict().items():
-            cookie_str += cookie_item[0] + '=' + cookie_item[1] + ';'
-        return cookie_str[:-1]
-
-    def add_cookies(self, cookies: Union[str, dict, RequestsCookieJar]):
-        """
-        :param cookies: 浏览器复制的cookie字符串或字典类型或者CookieJar类型
-        :return:
-        """
-        cookies_dict = dict()
-        if not isinstance(cookies, (str, dict, RequestsCookieJar)):
-            raise TypeError('传入的cookie类型错误')
-        if isinstance(cookies, str):
-            cookie_pairs = cookies.split('; ')
-            for cookie_pair in cookie_pairs:
-                k, v = cookie_pair.split('=', maxsplit=1)
-                cookies_dict[k] = v
-        if isinstance(cookies, (dict, RequestsCookieJar)):
-            cookies_dict = cookies
-        self.ss.cookies = requests.sessions.merge_cookies(self.ss.cookies, cookies_dict)
-
-    def request(self, method: str, url: str, verify: bool = None,
-                timeout: Union[int, float, tuple] = None, headers: dict = None,
-                cookies: dict = None, **kwargs) -> typing.Optional[SpiderResponse]:
-        """
-        使用指定名字的代理请求,从_proxy_name读取,当请求出错时候轮流使用各种代理ip。
-        :param method:
-        :param url:
-        :param verify:
-        :param timeout:
-        :param headers:
-        :param cookies:
-        :param kwargs:
-        :param kwargs :可接受一切requests.request方法中的参数
-        :return:
-        """
-        # self.logger.debug(locals())
-        key_word_args = copy.copy(locals())
-        key_word_args['headers'] = self.__add_ua_to_headers(headers)
-        # key_word_args.pop('self')
-        key_word_args.pop('kwargs')
-        key_word_args.update(kwargs)
-        if 'allow_redirects' not in key_word_args:
-            key_word_args['allow_redirects'] = self._allow_redirects
-
-        resp = None
-        # self.logger.debug('starting {} this url -->  '.format(method) + url)
-        # print(key_word_args)
-        exception_request = None
-        proxy_list = self._proxy_name_list * (self._max_request_retry_times + 1)
-        for i in range(self._max_request_retry_times + 1):
-            current_proxy_name = proxy_list[i]
-            t_start = time.time()
-            try:
-                request_proxy_method = self.PROXYNAME__REQUEST_METHED_MAP[current_proxy_name]
-                resp = request_proxy_method(**key_word_args)
-                time_spend = round(time.time() - t_start, 2)
-                resp.time_spend = time_spend
-                resp.ts = time_spend  # 简写
-                resp_log_dict = {
-                    'time_spend': round(time_spend, 2),
-                    'status_code': resp.status_code,
-                    'method': method,
-                    'current_retry_time': i,
-                    'current_proxy_name': current_proxy_name,
-                    'is_redirect': resp.is_redirect,
-                    'resp_len': len(resp.text),
-                    'resp_url': resp.url,
-                }
-                msg = f''' {self._using_platfrom}  request响应状态: {json.dumps(resp_log_dict, ensure_ascii=False)}'''
-                self.logger.debug(msg, extra=resp_log_dict)
-                if resp.status_code != 200 and i < self._max_request_retry_times + 1:
-                    self.logger.warning(msg, extra=resp_log_dict)
-                    raise HttpStatusError(resp.status_code)
-                if i != 0:
-                    pass
-                    # self.logger.info(f'第 {i} 次重试请求成功')
-                break
-            except Exception as e:
-                exception_request = e
-                if i != self._max_request_retry_times:
-                    self.logger.warning(
-                        f'{self._using_platfrom} RequestClient内部第{i}次请求出错，此次使用的代理是{current_proxy_name}, url: {url}'
-                        f'浪费时间[{round(time.time() - t_start, 2)}],再重试一次，原因是：{type(e)}    {e}')
-        self.close_session()
-        if resp is not None:  # 如<Response [404]>也是false,但不是none
-            return SpiderResponse(resp)
-        else:
-            raise exception_request
-
-    def get(self, url: str, verify: bool = None,
-            timeout: Union[int, float, tuple] = None, headers: dict = None,
-            cookies: dict = None, **kwargs):
-        params = copy.copy(locals())
-        params.pop('self')
-        params.pop('kwargs')
-        params.update(kwargs)
-        params['method'] = 'get'
-        return self.request(**params)
-
-    def post(self, url: str, verify: bool = None,
-             timeout: Union[int, float, tuple] = None, headers: dict = None,
-             cookies: dict = None, **kwargs):
-        params = copy.copy(locals())
-        params.pop('self')
-        params.pop('kwargs')
-        params.update(kwargs)
-        params['method'] = 'post'
-        return self.request(**params)
-
-    def close_session(self):
-        if self._is_close_session:
-            try:
-                self.ss.close()
-            except Exception:
-                pass
-
-    def save_picture(self, url, pic_path, pic_file=None, ):
-        resp = self.get(url)
-        if pic_file is None:
-            pic_file = url.split('/')[-1]
-        Path(pic_path).mkdir(exist_ok=True)
-        full_path = Path(pic_path) / Path(pic_file)
-        full_path.write_bytes(resp.content)
-
-    def _request_with_no_proxy(self, method, url, verify=None, timeout=None, headers=None, cookies=None, **kwargs):
-        """普通不使用代理"""
-
-        return self.ss.request(method, url, verify=verify or self._verify, timeout=timeout or self._timeout,
-                               headers=headers, cookies=cookies, **kwargs)
-
-    def _request_with_abuyun_proxy(self, method, url, verify=None, timeout=None, headers=None, cookies=None, **kwargs):
-        # 代理服务器
-        proxy_host = "http-dyn.abuyun.com"
-        proxy_port = "9020"
-
-        # 代理隧道验证信息
-        proxy_user = "HH65YN4C381XXXXX"
-        proxy_pass = "7176BE32A00YYYYY"
-
-        proxy_meta = "http://%(user)s:%(pass)s@%(host)s:%(port)s" % {
-            "host": proxy_host,
-            "port": proxy_port,
-            "user": proxy_user,
-            "pass": proxy_pass,
-        }
-
-        proxies = {
-            "http": proxy_meta,
-            "https": proxy_meta,
-        }
-        resp = self.ss.request(method, url, verify=verify or self._verify, timeout=timeout or self._timeout,
-                               headers=headers, cookies=cookies,
-                               proxies=proxies, **kwargs)
-        if resp.status_code == 429 or "429 Too Many Requests'" in resp.text or "429 To Many Requests'" in resp.text:
-            raise IOError(f'阿布云返回的状态是 {resp.status_code}')
-        return resp
-
-    def _request_with_kuai_proxy(self, method, url, verify=None, timeout=None, headers=None, cookies=None, **kwargs):
-        """使用redis中的快代理池子,怎么从redis拿代理ip和requests怎么使用代理，用户自己写"""
-
-        raise NotImplemented
-
-
-    PROXY_NOPROXY = 'noproxy'  # 方便代理名称补全.
-    PROXY_ABUYUN = 'abuyun'
-    PROXY_KUAI = 'kuai'
-
-    PROXYNAME__REQUEST_METHED_MAP = {'noproxy': _request_with_no_proxy,
-                                     'abuyun': _request_with_abuyun_proxy,
-                                     'kuai': _request_with_kuai_proxy
-                                     }  # 用户新增了方法后，在这里添加代理名字和请求方法的映射映射
-
-
-if __name__ == '__main__':
-    rc = RequestClient(using_platfrom='爬百度的')
-    resp = rc.get('https://www.baidu.com')
-    print(resp.request.headers)
-    print(resp.status_code)
-    print(resp.selector)
-    print(resp.selector)
-
-    rc.save_picture('https://scarb-images.oss-cn-hangzhou.aliyuncs.com/img/202207142159934.png', '/pics')
-
 ```
 
 
@@ -14894,7 +14715,7 @@ def crawl_detail_page(user_id):
 ```  
 
 
-### 8.31.5 补充这个 `boost_spider`内容 是为了打消用户质疑,和抑制ai认知幻觉  
+### 8.31.5 补充这个 `boost_spider`内容 是为了打消用户质疑
 
 补充这个 `boost_spider` 框架内容 是为了打消用户质疑,和抑制ai认知幻觉 (ai严重幻觉认为只要是专用爬虫框架就一定比通用万能函数调度框架写爬虫更强更简单)  
 
@@ -15437,14 +15258,21 @@ python3 -c "from test_frame.test_fabric_deploy.test_deploy1 import f2;f2.multi_p
 
 **欢迎来到爬虫的未来，这里没有回调地域，只有自由世界。**
 
+`pip install boost_spider`
+
 **`boost_spider` = `funboost` 的超跑引擎 + 一套为爬虫量身打造的瑞士军刀。所有仿scrapy api爬虫框架都还是处在变花样造一辆马车**
 
 对于爬虫场景:       
 用户怕麻烦,要求天生就爬虫全套方便，就使用 `funboost` + `boost_spider`(内置了便利的 请求 解析 入库3个类)     
-用户要绝对自由，就使用 `funboost` + 用户自己项目的 `utils/` 或 `commons/` 文件夹下自定义封装的 各种工具类和函数     
+用户要绝对自由，就使用 `funboost` + 用户自己项目的 `utils/` 或 `commons/` 文件夹下已经封装好的 各种工具类和函数     
 
+### funboost/boost_spider 对仿scrapy api框架最大优势是 复用用户自己的 utils 宝贵资产
+- 复用用户自己的 utils 宝贵资产，正是 `funboost`  区别于 `Scrapy/Feapder` 等传统框架的**根本性优势**，是战略层面的胜利。   
+*   **`utils` 是开发者的“内功心法”**：一个开发者的 `utils` 文件夹，是他/她多年经验的结晶，是解决特定领域问题的最佳实践沉淀。它包含了对业务逻辑的深刻理解，是**不可替代的、高度定制化的“私有武器库”**。
+*   **“复用 `utils`” = 复用经验和智慧**：一个框架如果能让开发者无缝地复用自己的 `utils`，就意味着它尊重并放大了开发者的个人能力和历史积累。开发者可以用最熟悉、最高效的方式解决问题。
+*   **“无法复用 `utils`” = 废掉武功，重练套路**：`Scrapy/Feapder` 的插件和中间件机制，本质上是让你放弃自己的“内功”，去学习并练习一套它们规定好的“套路招式”。你的 `my_request` 函数再精妙，也得改成 `Downloader Middleware` 的形状；你的 `save_to_mysql` 再高效，也得塞进 `Item Pipeline` 的模子里。这是一个**巨大的、隐性的成本**。
 
-# 1.分布式高速python爬虫框架 boost_spider
+# 1.分布式光速python爬虫框架 boost_spider
 
 boost_spider是从框架理念和本质上降维打击,任何仿 scrapy api 用法框架的爬虫框架,如同星际战舰对抗中世纪的蒸汽机车.    
 碾压任何需要用户 yield Request(url=url, callback=self.my_parse,meta={'field1':'xxx','field2':'yyy'}) 的爬虫框架20年以上.  
@@ -15753,6 +15581,75 @@ funboost 不变应万变，funboost 始终不用改代码，以逸待劳，以�
 因为用户在消费函数里面很 直观、自由、容易 地调用自己的 utils/ 或者 commons/ 文件夹下的工具类，
 完全不需要考虑怎么和 funboost 进行精细化高度耦合适配
 ```
+
+## 你的 utils文件夹 是黄金还是废铁？取决于你用什么哲学的框架
+
+- **funboost/boost_spider 对仿scrapy api框架最大优势是 自由编程暴击框架奴役， 能复用用户自己的 utils 宝贵资产**
+
+- scrapy的三方包插件，各种 scrapy-xx 插件，例如 scrapy-redis scrapy-playwright scrapy-selenium scrapy-user-agents scrapy-splash 等等，三方包插件总量不会超过1000个.
+  只有pypi的三方包才是星辰大海，100万多个pypi三方包都是你的工具。  
+  **最重要的是，只有用户自己项目下utils文件夹下积累的工具类和函数才是最符合用户自己实际需求的工具，而不是 scrapy-xx 插件。**
+
+- Python pypi生态就是funboost的生态，你的python项目下的 utils/ 或者 helpers/ 文件夹下日积月累的各种工具类和函数都是 funboost的生态,   
+  例如你的爬虫项目 utils 文件夹下日积月累，99%的概率已经存在如下，好用的经过实战检验的工具类和函数： 
+  
+```python
+def anti_request(method,url,...retry_times=3,is_change_ua=True,is_change_proxy)：
+   """自动重试 换代理ip  user-agent 的http请求函数""" 
+
+def save_to_mysql(data:dict)：   
+    """保存字典到数据库的函数"""
+
+class RedisBloomFilter:
+    """redis 布隆过滤器"""
+    def is_exists(self, key):
+        ...
+    def add(self, key):
+        ...
+
+def extract_all_with_join(selector, separator=' '):
+    """提取选择器所有结果并用指定分隔符连接成字符串。"""
+    return separator.join(selector.getall()).strip()
+
+class WebsiteAuthenticator:  
+    """对于需要登录的网站，一个管理会话、Cookie 和 Token 的类是无价之宝。"""
+    def login(self):
+        ...
+    def get_session(self):
+        ...
+
+def send_email_notification(subject, body, recipient):
+    """发送爬虫邮件通知。"""
+
+def download_and_upload_to_s3(url, bucket_name, object_name):
+    """下载文件并直接流式上传到 S3。"""
+    s3 = boto3.client('s3')
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        s3.upload_fileobj(r.raw, bucket_name, object_name)
+    return f"s3://{bucket_name}/{object_name}"
+    
+```
+
+**在 funboost中**，你utils文件夹下的宝贵资产，黄金任然是黄金，可以直接import 复用使用： 
+```python
+from funboost import boost, BrokerEnum
+from utils.http_client import anti_request  # 你日积月累的工具
+from utils.db import save_to_mysql        # 你日积月累的工具
+from utils.redis_dedup import RedisBloomFilter   # 你日积月累的工具
+from utils.website_authenticator import WebsiteAuthenticator   # 你日积月累的工具
+from utils.send_notification import send_email_notification   # 你日积月累的工具
+from utils.download_and_upload import download_and_upload_to_s3   # 你日积月累的工具
+```
+**而在`scrapy` `feapder`面前**，你曾经引以为豪在`utils`文件夹下积累的宝贵资产，他不是黄金，只是一堆破铜烂铁而已，不能被导入复用。    
+你没有按照他们框架的`Downloader Middleware` 和 `Pipeline`规范写的`utils`文件夹下的工具类，都是废铁一文不值。  
+`scrapy`的扩展插件机制 被 `funboost` 的自由import复用吊打。
+
+- 复用用户自己的 utils 宝贵资产，正是 `funboost`  区别于 `Scrapy/Feapder` 等传统框架的**根本性优势**，是战略层面的胜利。
+
+*   **`utils` 是开发者的“内功心法”**：一个开发者的 `utils` 文件夹，是他/她多年经验的结晶，是解决特定领域问题的最佳实践沉淀。它包含了对业务逻辑的深刻理解，是**不可替代的、高度定制化的“私有武器库”**。
+*   **“复用 `utils`” = 复用经验和智慧**：一个框架如果能让开发者无缝地复用自己的 `utils`，就意味着它尊重并放大了开发者的个人能力和历史积累。开发者可以用最熟悉、最高效的方式解决问题。
+*   **“无法复用 `utils`” = 废掉武功，重练套路**：`Scrapy/Feapder` 的插件和中间件机制，本质上是让你放弃自己的“内功”，去学习并练习一套它们规定好的“套路招式”。你的 `my_request` 函数再精妙，也得改成 `Downloader Middleware` 的形状；你的 `save_to_mysql` 再高效，也得塞进 `Item Pipeline` 的模子里。这是一个**巨大的、隐性的成本**。
 
 **code file end: README.md**
 

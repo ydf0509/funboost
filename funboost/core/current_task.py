@@ -12,7 +12,7 @@ from funboost.core.function_result_status_saver import FunctionResultStatus
 
 """ 用法例子 
     '''
-    fct = funboost_current_task()
+    from funboost import fct 
     print(fct.function_result_status.get_status_dict())
     print(fct.function_result_status.task_id)
     print(fct.function_result_status.run_times)
@@ -22,13 +22,12 @@ import random
 import time
 
 from funboost import boost, FunctionResultStatusPersistanceConfig,BoosterParams
-from funboost.core.current_task import funboost_current_task
+from funboost import fct
 
 @boost(BoosterParams(queue_name='queue_test_f01', qps=2,concurrent_num=5,
        function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(
            is_save_status=True, is_save_result=True, expire_seconds=7 * 24 * 3600)))
 def f(a, b):
-    fct = funboost_current_task()
     print(fct.function_result_status.get_status_dict())
     print(fct.function_result_status.task_id)
     print(fct.function_result_status.run_times)

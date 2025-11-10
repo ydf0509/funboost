@@ -8,6 +8,7 @@
 
 └── source
     └── articles
+        ├── c0.md
         ├── c1.md
         ├── c10.md
         ├── c11.md
@@ -23,10 +24,7 @@
         ├── c6.md
         ├── c7.md
         ├── c8.md
-        ├── c8_ai.md
-        ├── c9.md
-        └── images
-            └── image.md
+        └── c9.md
 
 ```
 
@@ -35,6 +33,8 @@
 
 ## Included Files
 
+
+- `source/articles/c0.md`
 
 - `source/articles/c1.md`
 
@@ -66,17 +66,35 @@
 
 - `source/articles/c8.md`
 
-- `source/articles/c8_ai.md`
-
 - `source/articles/c9.md`
-
-- `source/articles/images/image.md`
 
 
 ---
 
 
+### code file start: source/articles/c0.md 
+
+
+
+
+
+# 0. Funboost 引导首页
+
+<iframe src="https://ydf0509.github.io/funboost_git_pages/funboost_promo.html" width="100%" height="7240" style="border:none;"></iframe>
+
+
+
+**code file end: source/articles/c0.md**
+
+---
+
+
 ### code file start: source/articles/c1.md 
+
+# 0. Funboost 引导首页
+
+<iframe src="https://ydf0509.github.io/funboost_git_pages/funboost_promo.html" width="100%" height="7240" style="border:none;"></iframe>
+
 
 # 1.python万能分布式函数调度框架简funboost简介  
 
@@ -85,6 +103,8 @@ funboost教程: [https://funboost.readthedocs.io/zh-cn/latest/index.html](https:
 ## 1.0 funboost 框架说明介绍
 
 `funboost`是一个 万能 强大 简单  自由 的 `python` 全功能分布式调度框架,它的作用是给用户任意项目的任意函数赋能.
+
+<iframe src="https://ydf0509.github.io/funboost_git_pages/index2.html" width="100%" height="2400" style="border:none;"></iframe>
 
 
 <h4>📹 观看 funboost 视频</h4>
@@ -99,6 +119,8 @@ funboost教程: [https://funboost.readthedocs.io/zh-cn/latest/index.html](https:
    您的浏览器不支持音频播放。
 </audio>
 
+#### 快速了解和上手funboost，直接看[1.3例子](#13-框架使用例子)
+
 
 ### 1.0.0 funboost 框架安装方式  
 
@@ -107,6 +129,7 @@ pip install funboost --upgrade
 
 或 pip install funboost[all]  一次性安装所有小众三方中间件  
 ```  
+
 
 ###  1.0.1 funboost 功能作用
 
@@ -3364,10 +3387,10 @@ boost装饰器只需要指定 broker_kind=BrokerEnum.CELERY
 
 ## 2.6 funboost 和 celery 性能比较源码（控制变量法）  
 
-用户不信的可以直接运行里面的代码  
-
-对比源代码在：  
+- 用户不信的可以直接运行里面的代码，对比源代码在：   
 [https://github.com/ydf0509/funboost/tree/master/test_frame/funboost_vs_celery_benchmark](https://github.com/ydf0509/funboost/tree/master/test_frame/funboost_vs_celery_benchmark)  
+
+- **Funboost：46 倍消费速度，碾压旧时代队列，快到不讲道理！**
 
 **`funboost` vs `celery` 性能对比测试结论**
 
@@ -3402,9 +3425,10 @@ boost装饰器只需要指定 broker_kind=BrokerEnum.CELERY
 
 ### 2.6.4 `funboost` vs `celery` 总体性能对比
 
-`funboost`在同样的硬件环境和测试条件下（win11 + python3.9 + 本机redis中间件 + AMD R7 5800H CPU + 单线程并发模式 + 相同消费函数），\
-无论是在消息发布还是消费方面都大幅优于`celery`，`funboost`是`celery`的发布性能是`22`倍，`funboost` 消费性能是`celery`的`46`倍 ，\
-所以`funboost`性能不是比`celery`高百分之多少这种级别,而是高了一个数量级，`funboost`性能是毫无争议的绝对的遥遥领先。
+
+- `funboost`在同样的硬件环境和测试条件下（win11 + python3.9 + 本机redis中间件 + AMD R7 5800H CPU + 单线程并发模式 + 相同消费函数），\
+- 无论是在消息发布还是消费方面都大幅优于`celery`，`funboost`是`celery`的发布性能是`22`倍，`funboost` 消费性能是`celery`的`46`倍 ，\
+- 所以`funboost`性能不是比`celery`高百分之多少这种级别,通常情况下快`200%`可以称之为遥遥领先，快`4600%`应该叫 跨代碾压
 
 
 ### 2.6.7 funboost VScelery benchmark对比源代码直接贴出来
@@ -3518,12 +3542,23 @@ def task_fun():  # 空函数,即使这样每秒钟也突破不了400次运行.
 
 ## 2.7 rq  celery  funboost 段位比较
 
+如果框架有段位：
 
+* **倔强青铜（RQ）**
+* **秩序白银**
+* **荣耀黄金（Celery）**
+* **尊贵铂金**
+* **永恒钻石**
+* **至尊星耀**
+* **最强王者**
+* **无双王者**
+* **荣耀王者**
+* **传奇王者（Funboost）**
+
+那么`rq` `celery` `funboost` 的段位分别是：
 -   **RQ 是倔强青桐**：简单，但也就那样了。
 -   **Celery 是荣耀黄金**：强大，但笨重且复杂。
 -   **Funboost 是传奇王者**：简单、强大、灵活、可靠，是设计理念上的领先者。
-
-
 
 ---
 
@@ -15091,21 +15126,6 @@ Funboost 是“函数调度器”，而 Scrapy 是“URL调度器”；前者赋
 ---
 
 
-### code file start: source/articles/c8_ai.md 
-
----
-noteId: "783f4c60d7c811efa28fd9576329602f"
-tags: []
-
----
-
-
-
-**code file end: source/articles/c8_ai.md**
-
----
-
-
 ### code file start: source/articles/c9.md 
 
 # 9 轻松远程服务器部署运行函数  
@@ -15183,49 +15203,6 @@ python3 -c "from test_frame.test_fabric_deploy.test_deploy1 import f2;f2.multi_p
 <div> </div>
 
 **code file end: source/articles/c9.md**
-
----
-
-
-### code file start: source/articles/images/image.md 
-
-
-
-[![pEGDim8.png](https://s21.ax1x.com/2025/03/03/pEGDim8.png)](https://imgse.com/i/pEGDim8)
-[![pEGD96P.png](https://s21.ax1x.com/2025/03/03/pEGD96P.png)](https://imgse.com/i/pEGD96P)
-[![pEGDCOf.png](https://s21.ax1x.com/2025/03/03/pEGDCOf.png)](https://imgse.com/i/pEGDCOf)
-
-
-0304图片
-
-
-
-
-
-
-函数消费结果：可查看和搜索函数实时消费状态和结果
-[![pEJCffK.png](https://s21.ax1x.com/2025/03/04/pEJCffK.png)](https://imgse.com/i/pEJCffK)
-
-消费速度图：可查看实时和历史消费速度
-[![pEJCWY6.png](https://s21.ax1x.com/2025/03/04/pEJCWY6.png)](https://imgse.com/i/pEJCWY6)
-
-运行中消费者 by ip： 根据ip搜索有哪些消费者
-[![pEJCRFx.png](https://s21.ax1x.com/2025/03/04/pEJCRFx.png)](https://imgse.com/i/pEJCRFx)
-
-运行中消费者 by queue： 根据队列名字搜索有哪些消费者
-[![pEJCcwR.png](https://s21.ax1x.com/2025/03/04/pEJCcwR.png)](https://imgse.com/i/pEJCcwR)
-
-队列操作：查看和操作队列
-[![pEJC6m9.png](https://s21.ax1x.com/2025/03/04/pEJC6m9.png)](https://imgse.com/i/pEJC6m9)
-
-队列操作，查看消费者详情：查看队列的所有消费者详情
-[![pEJCgT1.png](https://s21.ax1x.com/2025/03/04/pEJCgT1.png)](https://imgse.com/i/pEJCgT1)
-
-
-
-
-
-**code file end: source/articles/images/image.md**
 
 ---
 

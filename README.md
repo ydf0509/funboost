@@ -1,3 +1,8 @@
+# 0. Funboost 引导首页
+
+<iframe src="https://ydf0509.github.io/funboost_git_pages/funboost_promo.html" width="100%" height="7240" style="border:none;"></iframe>
+
+
 # 1.python万能分布式函数调度框架简funboost简介  
 
 funboost教程: [https://funboost.readthedocs.io/zh-cn/latest/index.html](https://funboost.readthedocs.io/zh-cn/latest/index.html)  
@@ -5,6 +10,8 @@ funboost教程: [https://funboost.readthedocs.io/zh-cn/latest/index.html](https:
 ## 1.0 funboost 框架说明介绍
 
 `funboost`是一个 万能 强大 简单  自由 的 `python` 全功能分布式调度框架,它的作用是给用户任意项目的任意函数赋能.
+
+<iframe src="https://ydf0509.github.io/funboost_git_pages/index2.html" width="100%" height="2400" style="border:none;"></iframe>
 
 
 <h4>📹 观看 funboost 视频</h4>
@@ -19,6 +26,8 @@ funboost教程: [https://funboost.readthedocs.io/zh-cn/latest/index.html](https:
    您的浏览器不支持音频播放。
 </audio>
 
+#### 快速了解和上手funboost，直接看[1.3例子](#13-框架使用例子)
+
 
 ### 1.0.0 funboost 框架安装方式  
 
@@ -27,6 +36,7 @@ pip install funboost --upgrade
 
 或 pip install funboost[all]  一次性安装所有小众三方中间件  
 ```  
+
 
 ###  1.0.1 funboost 功能作用
 
@@ -710,3 +720,4 @@ python比其他语言更需要分布式函数调度框架来执行函数，有�
 [//]: #  
 [//]: #  
 [//]: #  
+

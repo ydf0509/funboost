@@ -91,12 +91,10 @@
 
 ### code file start: source/articles/c1.md 
 
-# 0. Funboost 引导首页
-
-<iframe src="https://ydf0509.github.io/funboost_git_pages/funboost_promo.html" width="100%" height="7240" style="border:none;"></iframe>
-
 
 # 1.python万能分布式函数调度框架简funboost简介  
+
+funboost快速了解：[https://ydf0509.github.io/funboost_git_pages/funboost_promo.html](https://ydf0509.github.io/funboost_git_pages/funboost_promo.html)
 
 funboost教程: [https://funboost.readthedocs.io/zh-cn/latest/index.html](https://funboost.readthedocs.io/zh-cn/latest/index.html)  
 

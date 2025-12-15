@@ -4197,6 +4197,14 @@ def task_fun(a, b):
 | **在线RPC** | 发布消息并同步获取结果 | ![RPC](https://s21.ax1x.com/2025/04/29/pE7y8oT.png) |
 | | | |
 
+### ⏰ 定时任务管理
+| 模块 | 功能 | 视图 |
+| :--- | :--- | :--- |
+| **任务列表** | 定时任务管理列表页 | [![列表页](https://s41.ax1x.com/2025/12/15/pZQlfaT.png)](https://imgchr.com/i/pZQlfaT) |
+| **新增任务** | 添加定时任务 | [![新增](https://s41.ax1x.com/2025/12/15/pZQl5iF.png)](https://imgchr.com/i/pZQl5iF) |
+| **任务详情** | 查看定时任务详情 | [![详情](https://s41.ax1x.com/2025/12/15/pZQlhIU.png)](https://imgchr.com/i/pZQlhIU) |
+
+
 ## 1.4 💡 为什么 Python 极其需要分布式函数调度？
 
 Python 语言的特性决定了它比 Java/Go 等语言更依赖分布式调度框架。主要原因有两点：
@@ -5610,6 +5618,15 @@ rpc调用：在网页上对30种消息队列发布消息并获取消息的函数
 <!-- [![pETq8hj.png](https://s21.ax1x.com/2025/04/28/pETq8hj.png)](https://imgse.com/i/pETq8hj) -->  
 [![pE7y8oT.png](https://s21.ax1x.com/2025/04/29/pE7y8oT.png)](https://imgse.com/i/pE7y8oT)  
 
+定时任务管理：列表页
+[![pZQlfaT.png](https://s41.ax1x.com/2025/12/15/pZQlfaT.png)](https://imgchr.com/i/pZQlfaT)
+
+定时任务：新增
+[![pZQl5iF.png](https://s41.ax1x.com/2025/12/15/pZQl5iF.png)](https://imgchr.com/i/pZQl5iF)
+
+定时任务：任务详情
+[![pZQlhIU.png](https://s41.ax1x.com/2025/12/15/pZQlhIU.png)](https://imgchr.com/i/pZQlhIU)
+
 ## 13.3 funboost web 图片对应的测试代码  
 
 ```python  
@@ -6311,7 +6328,7 @@ curl -X POST "http://127.0.0.1:8000/funboost/publish" \
 - 2. 别忘了，**需要启动funboost消费**，否则只发布消息，没有后台消费执行消息。启动消费可以和web一起启动，也可以单独的脚本部署启动消费。（因为funboost.faas 是基于funboost的redis 注册的元数据驱动，不需要import依赖具体的函数。）
 
 
-## 15.9 funboost.faas 演示例子
+## 🧪 15.9 funboost.faas 演示例子
 
 🌐 [example_faas例子](https://github.com/ydf0509/funboost/tree/master/test_frame/examples/example_faas)
 
@@ -6343,7 +6360,7 @@ python example_req_fastapi.py
 - 4. 如果你乱造请求，例如乱造 不存在的`queue_name` 或者 乱写`msg_body` 的函数入参 ,接口会迅速反馈请求参数不合法，而不是让你请求有错还不知情。
 - 5. Web 服务和消费函数可分开写在不同的git项目仓库中。
 
-## 15.10 funboost.faas 定时任务管理 —— 架构级解耦的调度中心(完爆传统 APScheduler 管理)
+## ⏰ 15.10 funboost.faas 定时任务管理 —— 架构级解耦的调度中心(完爆传统 APScheduler 管理)
 
 - **凡是 Web 管理端需要 import 业务函数的调度系统，都不可能成为真正的调度平台**
 
@@ -6376,6 +6393,7 @@ python example_req_fastapi.py
     *   只负责往 Redis 的 JobStore 里写入一条记录：“*每隔 5 秒，往 `queue_A` 队列里推一条 JSON 消息 `{"x": 1}`*”。
     *   **它完全不需要 import 任何业务代码**。
     *   它可以是一个独立部署的通用服务，甚至可以是 Go 或 Java 写的前端页面。
+    *   funboost添加定时计划，会立刻校验入参是否合法，如果不合法，会立刻返回错误，不继续添加错误的定时任务。
 
 *   **Worker 端（执行面）**：
     *   启动时会自动扫描 Redis。
@@ -25459,7 +25477,7 @@ set_frame_config这个模块的 use_config_form_funboost_config_module() 是核�
 这段注释说明和使用的用户无关,只和框架开发人员有关.
 '''
 
-__version__ = "51.0"
+__version__ = "52.0"
 
 from funboost.set_frame_config import show_frame_config
 

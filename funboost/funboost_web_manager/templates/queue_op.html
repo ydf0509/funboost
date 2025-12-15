@@ -581,7 +581,7 @@
 
         // 作废队列
         function deprecateQueue(queueName) {
-            if (!confirm(`确定要作废队列 "${queueName}" 吗？\n\n作废后，该队列将从队列列表中移除，但不会删除队列中的数据。\n如果需要再次使用，需要重新启动消费者。`)) {
+            if (!confirm(`确定要作废队列 "${queueName}" 吗？\n\n作废后，该队列将从redis元数据的队列set中移除，但不会删除队列中的数据。\n如果需要再次使用，需要重新启动消费者。`)) {
                 return;
             }
             

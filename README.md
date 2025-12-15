@@ -505,6 +505,14 @@ def task_fun(a, b):
 | **在线RPC** | 发布消息并同步获取结果 | ![RPC](https://s21.ax1x.com/2025/04/29/pE7y8oT.png) |
 | | | |
 
+### ⏰ 定时任务管理
+| 模块 | 功能 | 视图 |
+| :--- | :--- | :--- |
+| **任务列表** | 定时任务管理列表页 | [![列表页](https://s41.ax1x.com/2025/12/15/pZQlfaT.png)](https://imgchr.com/i/pZQlfaT) |
+| **新增任务** | 添加定时任务 | [![新增](https://s41.ax1x.com/2025/12/15/pZQl5iF.png)](https://imgchr.com/i/pZQl5iF) |
+| **任务详情** | 查看定时任务详情 | [![详情](https://s41.ax1x.com/2025/12/15/pZQlhIU.png)](https://imgchr.com/i/pZQlhIU) |
+
+
 ## 1.4 💡 为什么 Python 极其需要分布式函数调度？
 
 Python 语言的特性决定了它比 Java/Go 等语言更依赖分布式调度框架。主要原因有两点：

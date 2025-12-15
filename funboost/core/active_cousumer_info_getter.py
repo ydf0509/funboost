@@ -74,7 +74,7 @@ class RedisReportInfoGetterMixin:
         return list(self.redis_db_frame.smembers(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES))
 
     def get_queue_names_by_project_name(self,project_name:str) ->list:
-        return list(self.redis_db_frame.smembers(f'funboost.project_name:{project_name}'))
+        return list(self.redis_db_frame.smembers(RedisKeys.gen_funboost_project_name_key(project_name)))
     
     @property
     def all_queue_names(self):
@@ -679,7 +679,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
         # 从所有队列名 set 中移除
         self.redis_db_frame.srem(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES, self.queue_name)
         # 从项目队列名 set 中移除
-        self.redis_db_frame.srem(f'funboost.project_name:{self.care_project_name}', self.queue_name)
+        self.redis_db_frame.srem(RedisKeys.gen_funboost_project_name_key(self.care_project_name), self.queue_name)
 
     
  

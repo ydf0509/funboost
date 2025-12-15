@@ -60,7 +60,8 @@ login_manager.login_message = "Access denied."
 login_manager.init_app(app)
 
 
-app.register_blueprint(flask_blueprint)  # 定时任务用faas这里面的flask蓝图，因为通用faas是2025年12月才有的，老的flask接口是单独开发的。
+# 定时任务用faas这里面自带的flask蓝图，因为通用的faas接口是2025年12月才有的功能，老的flask接口是在这里单独开发的。
+app.register_blueprint(flask_blueprint)  
 
 
 

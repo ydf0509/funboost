@@ -16,7 +16,7 @@ from funboost.core.serialization import Serialization
 from funboost.utils import time_util, decorators, LoggerMixin
 from funboost.utils.mongo_util import MongoMixin
 from funboost.utils.redis_manager import RedisMixin
-from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter
+from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter, SingleQueueConusmerParamsGetter
 
 # from test_frame.my_patch_frame_config import do_patch_frame_config
 #
@@ -158,30 +158,35 @@ def rpc_call(queue_name, msg_body, need_result, timeout):
     status_and_result = None
     task_id = None
     try:
-        boost_params_json = RedisMixin().redis_db_frame.hget(RedisKeys.FUNBOOST_QUEUE__CONSUMER_PARAMS,queue_name)
-        boost_params_dict = Serialization.to_dict(boost_params_json)
-        broker_kind = boost_params_dict['broker_kind']
-        publisher = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name=queue_name,
-                                                                            broker_kind=broker_kind, 
-                                                                            publish_msg_log_use_full_msg=True))
+        # 不能直接用 get_cross_project_publisher(PublisherParams(...))，因为 PublisherParams 默认没有 consuming_function，
+        # 新版 funboost 会基于 consuming_function 生成/校验入参信息，None 会导致 inspect.getfullargspec 报错。
+        # 这里使用 redis 中保存的 auto_generate_info.final_func_input_params_info 生成 fake consuming_function，
+        # 从而做到跨项目、无需导入业务代码也能安全发布消息。
+        publisher = SingleQueueConusmerParamsGetter(queue_name).generate_publisher_by_funboost_redis_info()
+        booster_params_by_redis = SingleQueueConusmerParamsGetter(queue_name).get_one_queue_params_use_cache()
     
         if need_result:
-            # if booster.boost_params.is_using_rpc_mode is False:
-            #     raise ValueError(f' need_result 为true,{booster.queue_name} 队列消费者 需要@boost设置支持rpc模式')
+            if booster_params_by_redis.get('is_using_rpc_mode') is False:
+                raise ValueError(f'need_result 为true，{queue_name} 队列消费者需要 @boost 设置支持 rpc 模式（is_using_rpc_mode=True）')
             
             async_result: AsyncResult =  publisher.publish(msg_body,priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True))
             async_result.set_timeout(timeout)
             status_and_result = async_result.status_and_result
             # print(status_and_result)
             task_id = async_result.task_id
+            if status_and_result is None:
+                return dict(succ=False, msg=f'{queue_name} 队列,消息发布成功,但等待结果超时或结果不存在',
+                            status_and_result=status_and_result, task_id=task_id)
         else:
             async_result =publisher.publish(msg_body)
             task_id = async_result.task_id
-        if status_and_result['success'] is False:
-            return dict(succ=False, msg=f'{queue_name} 队列,消息发布成功,但是函数执行失败', 
-                            status_and_result=status_and_result,task_id=task_id)
-        return dict(succ=True, msg=f'{queue_name} 队列,消息发布成功', 
-                            status_and_result=status_and_result,task_id=task_id)
+
+        if need_result and status_and_result and status_and_result.get('success') is False:
+            return dict(succ=False, msg=f'{queue_name} 队列,消息发布成功,但是函数执行失败',
+                            status_and_result=status_and_result, task_id=task_id)
+
+        return dict(succ=True, msg=f'{queue_name} 队列,消息发布成功',
+                            status_and_result=status_and_result, task_id=task_id)
     except Exception as e:
         return dict(succ=False, msg=f'{queue_name} 队列,消息发布失败 {type(e)} {e} {traceback.format_exc()}',
                                status_and_result=status_and_result,task_id=task_id)

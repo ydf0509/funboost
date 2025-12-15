@@ -66,12 +66,17 @@ class ApsJobAdder:
 
     @property
     def aps_obj(self) -> BaseScheduler:
-        if self.job_store_kind == 'redis':
-            return self.get_funboost_redis_apscheduler(self.booster.queue_name)
-        elif self.job_store_kind == 'memory':
+        return self.get_aps_obj(self.booster.queue_name,self.job_store_kind)
+
+    @classmethod
+    def get_aps_obj(cls,queue_name,job_store_kind):
+        if job_store_kind == 'redis':
+            return cls.get_funboost_redis_apscheduler(queue_name)
+        elif job_store_kind == 'memory':
             return funboost_aps_scheduler
         else:
             raise ValueError('Unsupported job_store_kind')
+
 
     def add_push_job(self, trigger=None, args=None, kwargs=None,
                      id=None, name=None,
@@ -161,4 +166,4 @@ if __name__ == '__main__':
     
 
 
-    ctrl_c_recv() # 启动了守护线程的定时器，一定要阻止主线程退出。 你可以代码最末尾加这个 ctrl_c_recv() 或者加个 while 1:time.sleep(10)
+    # ctrl_c_recv() # 启动了守护线程的定时器，一定要阻止主线程退出。 你可以代码最末尾加这个 ctrl_c_recv() 或者加个 while 1:time.sleep(10)

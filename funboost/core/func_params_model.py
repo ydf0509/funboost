@@ -129,6 +129,13 @@ class BoosterParams(BaseJsonAbleModel):
     queue_name: str  # 队列名字,必传项,每个函数要使用不同的队列名字.
     broker_kind: str = BrokerEnum.SQLITE_QUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html
 
+    """ project_name是项目名，属于管理层面的标签, 默认为None, 给booster设置所属项目名, 用于对于在redis保存的funboost信息中，根据项目名字查看相关队列。
+    # 如果不设置很难从redis保存的funboost信息中，区分哪些队列名属于哪个项目。 主要是给web接口查看用。
+    # 一个项目的队列名字有哪些，是保存在redis的set中，key为 f'funboost.project_name:{project_name}'
+    # 通常配合 CareProjectNameEnv.set($project_name) 使用 ，它可以让你在监控和管理时“只看自己的一亩三分地“，避免被其他人的队列刷屏干扰。"""
+    project_name: typing.Optional[str] = None
+
+
     """如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。
     具体看ThreadPoolExecutorShrinkAble的说明
     由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。"""
@@ -214,7 +221,7 @@ class BoosterParams(BaseJsonAbleModel):
 
     
     is_do_not_run_by_specify_time_effect: bool = False  # 是否使不运行的时间段生效
-    do_not_run_by_specify_time: tuple = ('10:00:00', '22:00:00')  # 不运行的时间段,在这个时间段自动不运行函数.
+    do_not_run_by_specify_time: list = ['10:00:00', '22:00:00']  # 不运行的时间段,在这个时间段自动不运行函数.
 
     schedule_tasks_on_main_thread: bool = False  # 直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
 
@@ -238,11 +245,12 @@ class BoosterParams(BaseJsonAbleModel):
     # 每种中间件能传递的键值对可以看 funboost/core/broker_kind__exclusive_config_default.py 的 BROKER_EXCLUSIVE_CONFIG_DEFAULT 属性。
     """
     broker_exclusive_config: dict = {} 
-
+    
 
 
     should_check_publish_func_params: bool = True  # 消息发布时候是否校验消息发布内容,比如有的人发布消息,函数只接受a,b两个入参,他去传2个入参,或者传参不存在的参数名字; 如果消费函数加了装饰器 ，你非要写*args,**kwargs,那就需要关掉发布消息时候的函数入参检查
-   
+    manual_func_input_params :dict= {'is_manual_func_input_params': False,'must_arg_name_list':[],'optional_arg_name_list':[]} # 也可以手动指定函数入参字段，默认是根据消费函数def定义的入参来生成这个。
+
 
     consumer_override_cls: typing.Optional[typing.Type] = None  # 使用 consumer_override_cls 和 publisher_override_cls 来自定义重写或新增消费者 发布者,见文档4.21b介绍，
     publisher_override_cls: typing.Optional[typing.Type] = None
@@ -269,7 +277,7 @@ class BoosterParams(BaseJsonAbleModel):
     user_options: dict = {} # 用户自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置,例如配合 consumer_override_cls中读取 或 register_custom_broker 使用
     
     
-    auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
+    auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.例如包含 final_func_input_params_info 和 where_to_instantiate 等。
     
     
 
@@ -384,6 +392,12 @@ class PriorityConsumingControlConfig(BaseJsonAbleModel):
 
 class PublisherParams(BaseJsonAbleModel):
     queue_name: str
+    broker_kind: typing.Optional[str] = None
+
+    # 项目名, 默认为None, 给booster设置所属项目名, 用于在redis保存的funboost信息中，根据项目名字查看相关队列。
+    # 如果不设置很难从redis保存的funboost信息中，区分哪些队列名属于哪个项目。 主要是给web接口查看用。
+    project_name: typing.Optional[str] = None
+
     log_level: int = logging.DEBUG
     logger_prefix: str = ''
     create_logger_file: bool = True
@@ -391,15 +405,19 @@ class PublisherParams(BaseJsonAbleModel):
     log_filename: typing.Optional[str] = None
     clear_queue_within_init: bool = False  # with 语法发布时候,先清空消息队列
     consuming_function: typing.Optional[typing.Callable] = None  # consuming_function 作用是 inspect 模块获取函数的入参信息
-    broker_kind: typing.Optional[str] = None
+
     broker_exclusive_config: dict = {}
+    
     should_check_publish_func_params: bool = True  # 消息发布时候是否校验消息发布内容,比如有的人发布消息,函数只接受a,b两个入参,他去传2个入参,或者传参不存在的参数名字,  如果消费函数你非要写*args,**kwargs,那就需要关掉发布消息时候的函数入参检查
+    manual_func_input_params :dict= {'is_manual_func_input_params': False,'must_arg_name_list':[],'optional_arg_name_list':[]}
+
     publisher_override_cls: typing.Optional[typing.Type] = None
     # func_params_is_pydantic_model: bool = False  # funboost 兼容支持 函数娼还是 pydantic model类型，funboost在发布之前和取出来时候自己转化。
     publish_msg_log_use_full_msg: bool = False # 发布到消息队列的消息内容的日志，是否显示消息的完整体，还是只显示函数入参。
     consuming_function_kind: typing.Optional[str] = None  # 自动生成的信息,不需要用户主动传参.
     rpc_timeout: int = 1800 # rpc模式下，等待rpc结果返回的超时时间
     user_options: dict = {}  # 用户自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
+    auto_generate_info: dict = {}
 
 
 if __name__ == '__main__':

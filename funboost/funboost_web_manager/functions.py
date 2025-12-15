@@ -16,6 +16,7 @@ from funboost.core.serialization import Serialization
 from funboost.utils import time_util, decorators, LoggerMixin
 from funboost.utils.mongo_util import MongoMixin
 from funboost.utils.redis_manager import RedisMixin
+from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter
 
 # from test_frame.my_patch_frame_config import do_patch_frame_config
 #
@@ -35,7 +36,8 @@ def get_cols(col_name_search: str):
     else:
         collection_name_list = [collection_name for collection_name in db.list_collection_names() if col_name_search in collection_name]
     # return [{'collection_name': collection_name, 'count': db.get_collection(collection_name).find().count()} for collection_name in collection_name_list]
-    return [{'collection_name': collection_name, 'count': db.get_collection(collection_name).count_documents({})} for collection_name in collection_name_list]
+    collection_name_set_filter = set(collection_name_list).intersection(QueuesConusmerParamsGetter().all_queue_names)
+    return [{'collection_name': collection_name, 'count': db.get_collection(collection_name).count_documents({})} for collection_name in collection_name_set_filter]
     # for collection_name in collection_list:
     #     if col_name_search in collection_name:
     #     print (collection,db[collection].find().count())

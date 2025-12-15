@@ -9,6 +9,8 @@
     <!-- Tabulator CSS -->
     <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator_bootstrap3.min.css') }}" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="{{ url_for('static',filename='css_cdn/select2/4.0.13/css/select2.min.css') }}" rel="stylesheet">
 
 
      <!-- jQuery -->
@@ -19,7 +21,8 @@
      <!-- <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script> -->
      <!-- Tabulator JS -->
      <script type="text/javascript" src="{{ url_for('static',filename='js_cdn/tabulator-tables@5.5.0/dist/js/tabulator.min.js') }}"></script>
-     <!-- <script src="https://cdn.bootcdn.net/ajax/libs/tabulator/5.5.0/js/tabulator.min.js"></script> -->
+     <!-- Select2 JS -->
+     <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
      <script src="{{ url_for('static',filename='js_cdn/chart.js') }}"></script>
 
     <style>
@@ -28,10 +31,6 @@
         }
         .search-container {
             margin-bottom: 15px;
-        }
-        #searchInput {
-            width: 500px;
-            display: inline-block;
         }
         /* .frozen-column-background { background-color: #FFFFFF !important; } */ /* 移除或注释掉这里 */
         .tabulator-cell {
@@ -89,19 +88,26 @@
         input:checked + .slider:before { transform: translateX(26px); }
         .slider.round { border-radius: 24px; }
         .slider.round:before { border-radius: 50%; }
+        
+        /* Select2 下拉框自定义样式 - 应用到所有 Select2 */
+        .select2-results__option {
+            padding: 12px 16px !important;  /* 增加选项内边距 */
+            font-size: 15px !important;  /* 增加字体大小 */
+            line-height: 1.6 !important;  /* 增加行高 */
+        }
+        
+        .select2-container--default .select2-results>.select2-results__options {
+            max-height: 450px !important;  /* 增加结果列表最大高度 */
+        }
     </style>
 </head>
 <body>
     <div class="container-fluid" style="margin-top: 5px;">
         <div class="search-container" style="display: flex; align-items: center; margin-bottom: 10px;">
-            <div class="input-group" style="width: 400px;">
-                <input type="text" id="searchInput" class="form-control" placeholder="输入队列名称进行过滤..." style="width: 100%;">
-                <span class="input-group-btn">
-                    <button class="btn btn-default" type="button" onclick="clearSearch()">
-                        <i class="glyphicon glyphicon-remove"></i>
-                    </button>
-                </span>
-            </div>
+            <!-- 使用 Select2 的队列选择器 -->
+            <select id="queueSearchSelect" class="form-control" style="width: 700px;">
+                <option value="">请选择队列名字...</option>
+            </select>
             <!-- 美化后的复选框 -->
             <div class="toggle-switch-container">
                 <label class="switch">
@@ -197,26 +203,78 @@
             console.log('Chart.js已正确加载，版本:', Chart.version);
         }
 
-        // 创建表格实例
+        // 初始化队列选择器（提取为独立函数）
+        function initializeQueueSelector(data) {
+            if (!data || data.length === 0) {
+                return;
+            }
+            
+            // 填充队列选择器 - 显示 consumer_count
+            let html = '<option value="">请选择队列名字...</option>';
+            data.forEach(function(item) {
+                const queueName = item.queue_name;
+                const consumerCount = item.consumer_count || 0;
+                html += `<option value="${queueName}">${queueName}&nbsp;&nbsp;&nbsp;&nbsp;(consumer_count:${consumerCount})</option>`;
+            });
+            
+            // 先销毁已有的 Select2 实例（如果存在）
+            if ($("#queueSearchSelect").hasClass("select2-hidden-accessible")) {
+                $("#queueSearchSelect").select2('destroy');
+            }
+            
+            // 填充选项
+            $("#queueSearchSelect").html(html);
+            
+            // 初始化 Select2
+            $("#queueSearchSelect").select2({
+                placeholder: "请输入队列名称搜索...",
+                allowClear: true,
+                width: '700px',
+                minimumResultsForSearch: 0  // 总是显示搜索框
+            }).on('change', function() {
+                const selectedQueue = $(this).val();
+                // 使用 Tabulator 的过滤功能
+                if (selectedQueue) {
+                    table.setFilter("queue_name", "=", selectedQueue);
+                } else {
+                    table.clearFilter();
+                    updateTableFilters(); // 重新应用其他过滤器
+                }
+            });
+        }
+
         var table = new Tabulator("#queue-table", {
             theme: "bootstrap3",
             ajaxURL: "/queue/params_and_active_consumers",
+            ajaxResponse: function(url, params, response) {
+                console.log("AJAX 响应成功");
+                console.log("URL:", url);
+                console.log("响应数据:", response);
+                return response; // 返回数据给表格
+            },
+            ajaxError: function(xhr, textStatus, errorThrown) {
+                console.error("AJAX 请求失败!");
+                console.error("状态:", textStatus);
+                console.error("错误:", errorThrown);
+                console.error("响应:", xhr);
+                alert("数据加载失败: " + textStatus);
+            },
             layout: "fitDataFill",
             responsiveLayout: false,
             pagination: true,
             paginationSize: 1000,
             height: "auto",
             locale: true,
-            // 添加表格初始化完成回调
             dataLoaded: function(data) {
-                console.log("表格数据加载完成");
+                // 调用独立的初始化函数
+                initializeQueueSelector(data);
+                
                 // 在数据加载完成后应用过滤器
                 setTimeout(function() {
                     updateTableFilters();
                 }, 100);
             },
             tableBuilt: function() {
-                console.log("表格构建完成");
                 this.initialized = true;
             },
             rowFormatter: function(row) {
@@ -323,7 +381,7 @@
                 },
                 {
                     title: "<br><br>操作",
-                    width: 500,
+                    width: 600,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
                         const btnId = 'showParamsBtn_' + Math.random().toString(36).substr(2, 9);
@@ -335,6 +393,7 @@
                             <button class="btn btn-danger btn-sm action-btn" onclick="clearQueue('${row.queue_name}')">清空队列消息</button>
                             <button class="btn btn-warning btn-sm action-btn" onclick="pauseConsume('${row.queue_name}')">暂停消费</button>
                             <button class="btn btn-success btn-sm action-btn" onclick="resumeConsume('${row.queue_name}')">恢复消费</button>
+                            <button class="btn btn-default btn-sm action-btn" onclick="deprecateQueue('${row.queue_name}')" style="background-color: #d9534f; color: white;">作废队列</button>
                         `;
                     }
                 },
@@ -359,6 +418,9 @@
                     all_consumers_avarage_function_spend_time_from_start:data.all_consumers_avarage_function_spend_time_from_start
                 }));
 
+                // 初始化 Select2
+                initializeQueueSelector(tableData);
+
                 return tableData;
             },
         });
@@ -371,13 +433,13 @@
             }
 
             try {
-                const searchValue = document.getElementById("searchInput").value;
+                const selectedQueue = $("#queueSearchSelect").val();
                 const showActiveOnly = document.getElementById('showActiveQueuesOnly').checked;
 
                 const filters = [];
 
-                if (searchValue && searchValue.trim() !== "") {
-                    filters.push({field: "queue_name", type: "like", value: searchValue.trim()});
+                if (selectedQueue && selectedQueue.trim() !== "") {
+                    filters.push({field: "queue_name", type: "=", value: selectedQueue});
                 }
 
                 if (showActiveOnly) {
@@ -391,25 +453,6 @@
                 }
             } catch (error) {
                 console.error("更新表格过滤器时出错:", error);
-            }
-        }
-
-        // 搜索功能实现
-        document.getElementById("searchInput").addEventListener("keyup", function() {
-            try {
-                updateTableFilters();
-            } catch (error) {
-                console.error("搜索过滤时出错:", error);
-            }
-        });
-
-        // 清除搜索
-        function clearSearch() {
-            try {
-                document.getElementById("searchInput").value = "";
-                updateTableFilters();
-            } catch (error) {
-                console.error("清除搜索时出错:", error);
             }
         }
 
@@ -532,6 +575,34 @@
                     if (row) {
                         row.update({pause_flag: 0});
                     }
+                }
+            });
+        }
+
+        // 作废队列
+        function deprecateQueue(queueName) {
+            if (!confirm(`确定要作废队列 "${queueName}" 吗？\n\n作废后，该队列将从队列列表中移除，但不会删除队列中的数据。\n如果需要再次使用，需要重新启动消费者。`)) {
+                return;
+            }
+            
+            $.ajax({
+                url: '/funboost/deprecate_queue',
+                type: 'DELETE',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    queue_name: queueName
+                }),
+                success: function(response) {
+                    if (response.succ) {
+                        alert(`队列 "${queueName}" 已成功作废！`);
+                        // 刷新表格数据
+                        table.replaceData();
+                    } else {
+                        alert(`作废队列失败：${response.msg}`);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert(`作废队列失败：${error}`);
                 }
             });
         }

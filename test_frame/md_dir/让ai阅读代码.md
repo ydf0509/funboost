@@ -8,4 +8,4 @@
 但不要阅读以下文件夹的代码
 D:\codes\funboost\funboost\utils\dependency_packages 
 D:\codes\funboost\funboost\utils\dependency_packages_in_pythonpath
-D:\codes\funboost\funboost\function_result_web\static
+D:\codes\funboost\funboost\funboost_web_manager\static

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置care_project_name</title>
+    <!-- Bootstrap CSS -->
+    <link href="{{ url_for('static',filename='css_cdn/twitter-bootstrap/3.3.7/css/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            padding: 30px;
+        }
+        
+        .main-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .card-header i {
+            font-size: 22px;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .current-status {
+            background: linear-gradient(145deg, #f0f7ff 0%, #e8f4fd 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .current-status-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .current-status-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .current-status-value .badge-all {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .current-status-value .badge-project {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+        
+        .form-control {
+            height: 45px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+        
+        .btn-apply {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+        
+        .btn-apply:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .btn-clear {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-clear:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(127, 140, 141, 0.4);
+            color: white;
+        }
+        
+        .help-section {
+            background: linear-gradient(145deg, #fff9e6 0%, #fff5d6 100%);
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .help-section-title {
+            font-weight: 600;
+            color: #d68910;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .help-section-content {
+            color: #666;
+            line-height: 1.8;
+            font-size: 14px;
+        }
+        
+        .help-section-content p {
+            margin-bottom: 8px;
+        }
+        
+        .project-list {
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .project-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        
+        .project-item:hover {
+            background: #e8f4fd;
+            border-color: #3498db;
+        }
+        
+        .project-item.active {
+            background: linear-gradient(145deg, #e8f4fd 0%, #d4ecfc 100%);
+            border-color: #3498db;
+        }
+        
+        .project-item i {
+            margin-right: 12px;
+            color: #3498db;
+            font-size: 16px;
+        }
+        
+        .project-item.all-projects {
+            background: linear-gradient(145deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-color: #27ae60;
+        }
+        
+        .project-item.all-projects:hover {
+            border-color: #27ae60;
+        }
+        
+        .project-item.all-projects.active {
+            border-color: #27ae60;
+        }
+        
+        .project-item.all-projects i {
+            color: #27ae60;
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+        
+        .loading-spinner i {
+            font-size: 30px;
+            color: #667eea;
+        }
+        
+        .alert-success-custom {
+            background: linear-gradient(145deg, #d4edda 0%, #c3e6cb 100%);
+            border: none;
+            border-left: 4px solid #28a745;
+            border-radius: 8px;
+            padding: 15px 20px;
+        }
+        
+        .no-projects {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+        }
+        
+        .no-projects i {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- 标题卡片 -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fa fa-filter"></i>
+                设置关心的项目 (care_project_name)
+            </div>
+            <div class="card-body">
+                <!-- 当前状态 -->
+                <div class="current-status">
+                    <div class="current-status-label">当前关心的项目：</div>
+                    <div class="current-status-value" id="currentStatusDisplay">
+                        <i class="fa fa-spinner fa-spin"></i> 加载中...
+                    </div>
+                </div>
+                
+                <!-- 成功提示 (默认隐藏) -->
+                <div class="alert alert-success-custom" id="successAlert" style="display: none;">
+                    <i class="fa fa-check-circle"></i> <span id="successMessage"></span>
+                </div>
+                
+                <!-- 项目列表 -->
+                <div class="form-group">
+                    <label><i class="fa fa-list"></i> 选择关心的项目：</label>
+                    <div class="project-list" id="projectList">
+                        <div class="loading-spinner">
+                            <i class="fa fa-spinner fa-spin"></i>
+                            <p>正在加载项目列表...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 说明卡片 -->
+        <div class="card">
+            <div class="card-body">
+                <div class="help-section">
+                    <div class="help-section-title">
+                        <i class="fa fa-info-circle"></i> 功能说明
+                    </div>
+                    <div class="help-section-content">
+                        <p><strong>care_project_name</strong> 用于控制 Funboost Web Manager 只显示某个特定项目的队列信息。</p>
+                        <p>用户是在 <strong>@boost(BoosterParams(project_name=$你的项目名字))</strong> 去设置booster是属于什么项目</p>
+                        <p>因为如果多个项目都用一个redis db，或者很多过气遗留或者改过名字的队列元数据在redis中，造成信息干扰和funboost web manager性能下降</p>
+                        <p><strong>设置后的效果：</strong></p>
+                        <p style="margin-left: 15px;">• <strong>不限制（显示全部）</strong>：显示 Redis 中存储的所有队列信息</p>
+                        <p style="margin-left: 15px;">• <strong>选择具体项目</strong>：只显示该项目（project_name）下的队列信息，减少信息干扰，提升性能</p>
+                        <p style="margin-top: 15px;"><strong>⚠️ 注意：</strong>设置后会影响本次会话的所有页面（队列操作、消费者信息等），刷新页面后仍然生效，直到手动更改或重启服务。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentProjectName = null;
+        
+        $(document).ready(function() {
+            loadCurrentStatus();
+            loadProjectList();
+        });
+        
+        // 加载当前状态
+        function loadCurrentStatus() {
+            $.get('/funboost/get_care_project_name', function(response) {
+                if (response.succ) {
+                    currentProjectName = response.data.care_project_name;
+                    updateStatusDisplay(currentProjectName);
+                }
+            }).fail(function() {
+                $('#currentStatusDisplay').html('<span style="color: #e74c3c;"><i class="fa fa-exclamation-circle"></i> 获取状态失败</span>');
+            });
+        }
+        
+        // 更新状态显示
+        function updateStatusDisplay(projectName) {
+            if (projectName === null || projectName === '') {
+                $('#currentStatusDisplay').html('<span class="badge-all"><i class="fa fa-globe"></i> 不限制（显示全部项目）</span>');
+            } else {
+                $('#currentStatusDisplay').html('<span class="badge-project"><i class="fa fa-folder"></i> ' + projectName + '</span>');
+            }
+        }
+        
+        // 加载项目列表
+        function loadProjectList() {
+            $.get('/funboost/get_all_project_names', function(response) {
+                if (response.succ) {
+                    renderProjectList(response.data.project_names);
+                } else {
+                    $('#projectList').html('<div class="no-projects"><i class="fa fa-folder-open-o"></i><p>暂无项目数据</p></div>');
+                }
+            }).fail(function() {
+                $('#projectList').html('<div class="no-projects"><i class="fa fa-exclamation-triangle"></i><p>加载项目列表失败</p></div>');
+            });
+        }
+        
+        // 渲染项目列表
+        function renderProjectList(projectNames) {
+            let html = '';
+            
+            // 添加"不限制"选项
+            const isAllActive = (currentProjectName === null || currentProjectName === '');
+            html += `<div class="project-item all-projects ${isAllActive ? 'active' : ''}" onclick="selectProject('')">
+                        <i class="fa fa-globe"></i>
+                        <span>不限制（显示全部项目）</span>
+                    </div>`;
+            
+            if (projectNames && projectNames.length > 0) {
+                projectNames.forEach(function(name) {
+                    const isActive = (currentProjectName === name);
+                    html += `<div class="project-item ${isActive ? 'active' : ''}" onclick="selectProject('${name}')">
+                                <i class="fa fa-folder"></i>
+                                <span>${name}</span>
+                            </div>`;
+                });
+            }
+            
+            $('#projectList').html(html);
+        }
+        
+        // 选择项目
+        function selectProject(projectName) {
+            // 更新UI选中状态
+            $('.project-item').removeClass('active');
+            if (projectName === '') {
+                $('.project-item.all-projects').addClass('active');
+            } else {
+                $(`.project-item:contains('${projectName}')`).not('.all-projects').addClass('active');
+            }
+            
+            // 发送请求设置
+            $.ajax({
+                url: '/funboost/set_care_project_name',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ care_project_name: projectName }),
+                success: function(response) {
+                    if (response.succ) {
+                        currentProjectName = projectName || null;
+                        updateStatusDisplay(currentProjectName);
+                        showSuccess(projectName ? `已设置为只显示项目: ${projectName}` : '已设置为显示全部项目');
+                    } else {
+                        alert('设置失败: ' + response.msg);
+                    }
+                },
+                error: function() {
+                    alert('设置失败，请重试');
+                }
+            });
+        }
+        
+        // 显示成功提示
+        function showSuccess(message) {
+            $('#successMessage').text(message);
+            $('#successAlert').fadeIn();
+            setTimeout(function() {
+                $('#successAlert').fadeOut();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

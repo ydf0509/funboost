@@ -18,8 +18,8 @@ __version__ = "51.0"
 from funboost.set_frame_config import show_frame_config
 
 # noinspection PyUnresolvedReferences
-from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath  # 这是把 dependency_packages_in_pythonpath 添加到 PYTHONPATH了。
-from funboost.utils import monkey_patches
+from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath as _  # 这是把 dependency_packages_in_pythonpath 添加到 PYTHONPATH了。
+from funboost.utils import monkey_patches as _
 
 from funboost.core.loggers import get_logger, get_funboost_file_logger, FunboostFileLoggerMixin, FunboostMetaTypeFileLogger, flogger
 from funboost.core.func_params_model import (BoosterParams, BoosterParamsComplete, FunctionResultStatusPersistanceConfig,
@@ -42,7 +42,9 @@ from funboost.factories.broker_kind__publsiher_consumer_type_map import register
 from funboost.factories.publisher_factotry import get_publisher
 from funboost.factories.consumer_factory import get_consumer
 
-from funboost.timing_job import fsdf_background_scheduler, timing_publish_deco, funboost_aps_scheduler,ApsJobAdder
+from funboost.timing_job import fsdf_background_scheduler, timing_publish_deco, funboost_aps_scheduler #,ApsJobAdder
+from funboost.timing_job.timing_push import ApsJobAdder
+
 from funboost.constant import BrokerEnum, ConcurrentModeEnum
 
 from funboost.core.booster import boost, Booster, BoostersManager
@@ -62,9 +64,5 @@ from funboost.core.current_task import funboost_current_task,fct,get_current_tas
 
 
 
-# atexit.register(ctrl_c_recv)  # 还是需要用户自己在代码末尾加才可以.
-# set_interrupt_signal_handler()
 
-# 有的包默认没加handlers，原始的日志不漂亮且不可跳转不知道哪里发生的。这里把warnning级别以上的日志默认加上handlers。
-# nb_log.get_logger(name='', log_level_int=30, log_filename='pywarning.log')
 

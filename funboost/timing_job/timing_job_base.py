@@ -23,7 +23,7 @@ from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.core.booster import BoostersManager, Booster
 
 from funboost import BoosterParams
-from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble
+from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble,ThreadPoolExecutorShrinkAbleNonDaemon
 
 
 @deprecated.deprecated(reason='以后不要再使用这种方式，对于job_store为数据库时候需要序列化不好。使用内存和数据库都兼容的添加任务方式: add_push_job')
@@ -44,8 +44,8 @@ def push_fun_params_to_broker(queue_name: str, *args, **kwargs):
     queue_name 队列名字
     *args **kwargs 是消费函数的入参
     """
-    
-    BoostersManager.get_or_create_booster_by_queue_name(queue_name).push(*args, **kwargs)
+    booster = BoostersManager.get_or_create_booster_by_queue_name(queue_name)
+    booster.push(*args, **kwargs)
 
 
 class ThreadPoolExecutorForAps(BasePoolExecutor):
@@ -60,7 +60,18 @@ class ThreadPoolExecutorForAps(BasePoolExecutor):
     """
 
     def __init__(self, max_workers=100, pool_kwargs=None):
-        pool = ThreadPoolExecutorShrinkAble(int(max_workers), )
+
+        # pool = ThreadPoolExecutorShrinkAble(int(max_workers), )
+        pool = ThreadPoolExecutorShrinkAbleNonDaemon(int(max_workers), ) 
+
+        """
+        raise RuntimeError('cannot schedule new futures after ' RuntimeError: cannot schedule new futures after interpreter shutdown
+        
+        ThreadPoolExecutorShrinkAbleNonDaemon 这个更好，阻止主线程退出导致apschrduler使用了守护线程的线程池而导致这个报错。
+        ThreadPoolExecutorShrinkAbleNonDaemon 线程池里面的线程不是守护线程，
+        
+        """
+
         super().__init__(pool)
 
 
@@ -114,11 +125,13 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
         """
         if args is None:
             args = tuple()
+        
         args_list = list(args)
         args_list.insert(0, func.queue_name)
         args = tuple(args_list)
         if name is None:
             name = f'push_fun_params_to_broker_for_queue_{func.queue_name}'
+        func.publisher.check_func_input_params(*args[1:], **kwargs) # 这一行是检查入参是否合法，防止添加了不合法的定时入参，到执行时候才发现，这比官方apscheduler更靠谱。
         return self.add_job(push_fun_params_to_broker, trigger, args, kwargs, id, name,
                             misfire_grace_time, coalesce, max_instances,
                             next_run_time, jobstore, executor,

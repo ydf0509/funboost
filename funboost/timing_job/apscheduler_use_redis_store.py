@@ -7,7 +7,7 @@ from funboost.utils.decorators import RedisDistributedBlockLockContextManager
 
 
 """
-这个是使用redis作为定时任务持久化，支持跨机器好跨进程，外部远程 动态修改/添加/删除定时任务
+这个是使用redis作为定时任务持久化，支持跨机器和跨进程，外部远程 动态修改/添加/删除定时任务
 """
 
 
@@ -52,7 +52,7 @@ class FunboostBackgroundSchedulerProcessJobsWithinRedisLock(FunboostBackgroundSc
 
         不要以为随便在你自己的消费函数加个redis分布式锁就不会重复执行任务了,redis分布式锁是解决相同代码块不会并发执行,而不是解决重复执行.
         但funboost是神级别骚操作,把分布式锁加到_process_jobs里面,
-        _process_jobs是获取一个即将运行的定时任务,是扫描并删除这个即将运行的定时任务,
+        _process_jobs是获取一批即将运行的定时任务,是扫描并删除这个即将运行的定时任务,
         所以这里加分布式锁能间接解决不重复运行定时任务,一旦任务被取出，就会从 jobstore 中删除,其他实例就无法再取到这个任务了.
 
         """

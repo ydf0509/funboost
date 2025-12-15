@@ -183,8 +183,8 @@ class RedisKeys:
     FUNBOOST_QUEUE__RUN_FAIL_COUNT_MAP = 'funboost_queue__run_fail_count_map'
     FUNBOOST_ALL_QUEUE_NAMES = 'funboost_all_queue_names'
     FUNBOOST_ALL_IPS = 'funboost_all_ips'
-    FUNBOOST_LAST_GET_QUEUE_PARAMS_AND_ACTIVE_CONSUMERS_AND_REPORT__UUID_TS = 'funboost_last_get_queue_params_and_active_consumers_and_report__uuid_ts'
-
+    FUNBOOST_ALL_PROJECT_NAMES = 'funboost_all_project_names'
+    FUNBOOST_LAST_GET_QUEUES_PARAMS_AND_ACTIVE_CONSUMERS_AND_REPORT__UUID_TS = 'funboost_last_get_queues_params_and_active_consumers_and_report__uuid_ts'
 
     FUNBOOST_HEARTBEAT_QUEUE__DICT_PREFIX = 'funboost_hearbeat_queue__dict:'
     FUNBOOST_HEARTBEAT_SERVER__DICT_PREFIX = 'funboost_hearbeat_server__dict:'
@@ -215,3 +215,19 @@ class RedisKeys:
     def gen_funboost_redis_apscheduler_run_times_key_by_queue_name(queue_name):
         run_times_key=f'funboost.apscheduler.run_times:{queue_name}'
         return run_times_key
+
+    @staticmethod
+    def gen_funboost_project_name_key(project_name):
+        prject_name_key = f'funboost.project_name:{project_name}'
+        return prject_name_key
+
+class ConsumingFuncInputParamsCheckerField:
+    is_manual_func_input_params = 'is_manual_func_input_params'
+    all_arg_name_list = 'all_arg_name_list'
+    must_arg_name_list = 'must_arg_name_list'
+    optional_arg_name_list = 'optional_arg_name_list'
+    func_name = 'func_name' 
+    func_position = 'func_position'
+    
+
+    

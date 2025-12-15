@@ -12203,7 +12203,7 @@ class BoosterFire(object):
         启动funboost web管理器;
         例子: start_funboost_web_manager
         """
-        from funboost.function_result_web.app import start_funboost_web_manager
+        from funboost.funboost_web_manager.app import start_funboost_web_manager
         start_funboost_web_manager()
 
     start_web = start_funboost_web_manager
@@ -12498,7 +12498,7 @@ def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher:
 """
 ```
 
-### 代码文件: funboost\function_result_web\app.py
+### 代码文件: funboost\funboost_web_manager\app.py
 ```python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -12530,8 +12530,8 @@ from flask_login import login_user, logout_user, login_required, LoginManager, U
 
 import nb_log
 from funboost import nb_print,ActiveCousumerProcessInfoGetter,BoostersManager,PublisherParams,RedisMixin
-from funboost.function_result_web.functions import get_cols, query_result, get_speed, Statistic
-from funboost.function_result_web import functions as app_functions
+from funboost.funboost_web_manager.functions import get_cols, query_result, get_speed, Statistic
+from funboost.funboost_web_manager import functions as app_functions
 from funboost.core.active_cousumer_info_getter import QueueConusmerParamsGetter
 from funboost.constant import RedisKeys
 
@@ -12839,20 +12839,20 @@ if __name__ == '__main__':
       win powershell 语法是  $env:PYTHONPATH = "/home/ydf/codes/ydfhome"   
 
     第二步： 启动flask app   
-    win上这么做 python3 -m funboost.function_result_web.app 
+    win上这么做 python3 -m funboost.funboost_web_manager.app 
 
     linux上可以这么做性能好一些，也可以按win的做。
-    gunicorn -w 4 --threads=30 --bind 0.0.0.0:27018 funboost.function_result_web.app:app
+    gunicorn -w 4 --threads=30 --bind 0.0.0.0:27018 funboost.funboost_web_manager.app:app
     '''
 
 ```
 
-### 代码文件: funboost\function_result_web\app_debug_start.py
+### 代码文件: funboost\funboost_web_manager\app_debug_start.py
 ```python
 
 
 from funboost.core.active_cousumer_info_getter import QueueConusmerParamsGetter
-from funboost.function_result_web.app import app
+from funboost.funboost_web_manager.app import app
 
 
 if __name__ == '__main__':
@@ -12862,7 +12862,7 @@ if __name__ == '__main__':
 
 ```
 
-### 代码文件: funboost\function_result_web\functions.py
+### 代码文件: funboost\funboost_web_manager\functions.py
 ```python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -13087,7 +13087,7 @@ if __name__ == '__main__':
 
 ```
 
-### 代码文件: funboost\function_result_web\templates\about.html
+### 代码文件: funboost\funboost_web_manager\templates\about.html
 ```python
 <!DOCTYPE html>
 <html lang="en">
@@ -13149,7 +13149,7 @@ if __name__ == '__main__':
 </html>
 ```
 
-### 代码文件: funboost\function_result_web\templates\conusme_speed.html
+### 代码文件: funboost\funboost_web_manager\templates\conusme_speed.html
 ```python
 <!DOCTYPE html>
 <html lang="zh">
@@ -13370,7 +13370,7 @@ if __name__ == '__main__':
 </html>
 ```
 
-### 代码文件: funboost\function_result_web\templates\fun_result_table.html
+### 代码文件: funboost\funboost_web_manager\templates\fun_result_table.html
 ```python
 <!DOCTYPE html>
 <html lang="zh">
@@ -13807,7 +13807,7 @@ if __name__ == '__main__':
 </html>
 ```
 
-### 代码文件: funboost\function_result_web\templates\index.html
+### 代码文件: funboost\funboost_web_manager\templates\index.html
 ```python
 <!DOCTYPE html>
 <html lang="en">
@@ -14099,7 +14099,7 @@ if __name__ == '__main__':
 </html>
 ```
 
-### 代码文件: funboost\function_result_web\templates\index_backup.html
+### 代码文件: funboost\funboost_web_manager\templates\index_backup.html
 ```python
 <!DOCTYPE html>
 <html lang="zh">
@@ -14578,7 +14578,7 @@ if __name__ == '__main__':
 </html>
 ```
 
-### 代码文件: funboost\function_result_web\templates\login.html
+### 代码文件: funboost\funboost_web_manager\templates\login.html
 ```python
 ﻿<!DOCTYPE html>
 <html>
@@ -14635,7 +14635,7 @@ if __name__ == '__main__':
 
 ```
 
-### 代码文件: funboost\function_result_web\templates\queue_op.html
+### 代码文件: funboost\funboost_web_manager\templates\queue_op.html
 ```python
 <!DOCTYPE html>
 <html lang="zh">
@@ -15491,7 +15491,7 @@ if __name__ == '__main__':
 -->
 ```
 
-### 代码文件: funboost\function_result_web\templates\rpc_call.html
+### 代码文件: funboost\funboost_web_manager\templates\rpc_call.html
 ```python
 <!DOCTYPE html>
 <html lang="zh">
@@ -15807,7 +15807,7 @@ if __name__ == '__main__':
 </html>
 ```
 
-### 代码文件: funboost\function_result_web\templates\running_consumer_by_ip.html
+### 代码文件: funboost\funboost_web_manager\templates\running_consumer_by_ip.html
 ```python
 <!DOCTYPE html>
 <html lang="zh">
@@ -16030,7 +16030,7 @@ if __name__ == '__main__':
 </html>
 ```
 
-### 代码文件: funboost\function_result_web\templates\running_consumer_by_queue_name.html
+### 代码文件: funboost\funboost_web_manager\templates\running_consumer_by_queue_name.html
 ```python
 <!DOCTYPE html>
 <html lang="zh">

@@ -18,6 +18,7 @@ from functools import wraps
 from threading import Lock
 
 import nb_log
+from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.constant import ConstStrForClassMethod, FunctionKind
 from funboost.core.broker_kind__exclusive_config_default_define import generate_broker_exclusive_config
 from funboost.core.func_params_model import PublisherParams, PriorityConsumingControlConfig
@@ -33,108 +34,53 @@ from funboost.core.task_id_logger import TaskIdLogger
 from funboost.utils import decorators
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
 from nb_libs.path_helper import PathHelper
+from funboost.core.consuming_func_iniput_params_check import ConsumingFuncInputParamsChecker
 
 RedisAsyncResult = AsyncResult  # 别名
 RedisAioAsyncResult = AioAsyncResult  # 别名
 
 
-# class PriorityConsumingControlConfig:
-#     """
-#     为每个独立的任务设置控制参数，和函数参数一起发布到中间件。可能有少数时候有这种需求。
-#     例如消费为add函数，可以每个独立的任务设置不同的超时时间，不同的重试次数，是否使用rpc模式。这里的配置优先，可以覆盖生成消费者时候的配置。
-#     """
-#
-#     def __init__(self, function_timeout: float = None, max_retry_times: int = None,
-#                  is_print_detail_exception: bool = None,
-#                  msg_expire_senconds: int = None,
-#                  is_using_rpc_mode: bool = None,
-#
-#                  countdown: typing.Union[float, int] = None,
-#                  eta: datetime.datetime = None,
-#                  misfire_grace_time: typing.Union[int, None] = None,
-#
-#                  other_extra_params: dict = None,
-#
-#                  ):
-#         """
-#
-#         :param function_timeout: 超时杀死
-#         :param max_retry_times:
-#         :param is_print_detail_exception:
-#         :param msg_expire_senconds:
-#         :param is_using_rpc_mode: rpc模式才能在发布端获取结果
-#         :param eta: 规定什么时候运行
-#         :param countdown: 规定多少秒后运行
-#         # execute_delay_task_even_if_when_task_is_expired
-#         :param misfire_grace_time: 单位为秒。这个参数是配合 eta 或 countdown 使用的。是延时任务专用配置.
-#
-#                一个延时任务，例如规定发布10秒后才运行，但由于消费速度慢导致任务积压，导致任务还没轮到开始消费就已经过了30秒，
-#                如果 misfire_grace_time 配置的值是大于20则会依旧运行。如果配置的值是5，那么由于10 + 5 < 30,所以不会执行。
-#
-#                例如规定18点运行，但由于消费速度慢导致任务积压，导致任务还没轮到开始消费就已经过了18点10分
-#                ，如果 misfire_grace_time设置为700，则这个任务会被执行，如果设置为300，忧郁18点10分超过了18点5分，就不会执行。
-#
-#                misfire_grace_time 如果设置为None，则任务永远不会过期，一定会被执行。
-#                misfire_grace_time 的值要么是大于1的整数， 要么等于None
-#
-#                此含义也可以百度 apscheduler包的 misfire_grace_time 参数的含义。
-#
-#         """
-#         self.function_timeout = function_timeout
-#         self.max_retry_times = max_retry_times
-#         self.is_print_detail_exception = is_print_detail_exception
-#         self.msg_expire_senconds = msg_expire_senconds
-#         self.is_using_rpc_mode = is_using_rpc_mode
-#
-#         if countdown and eta:
-#             raise ValueError('不能同时设置eta和countdown')
-#         self.eta = eta
-#         self.countdown = countdown
-#         self.misfire_grace_time = misfire_grace_time
-#         if misfire_grace_time is not None and misfire_grace_time < 1:
-#             raise ValueError(f'misfire_grace_time 的值要么是大于1的整数， 要么等于None')
-#
-#         self.other_extra_params = other_extra_params
-#
-#     def to_dict(self):
-#         if isinstance(self.countdown, datetime.datetime):
-#             self.countdown = time_util.DatetimeConverter(self.countdown).datetime_str
-#         priority_consuming_control_config_dict = {k: v for k, v in self.__dict__.items() if v is not None}  # 使中间件消息不要太长，框架默认的值不发到中间件。
-#         return priority_consuming_control_config_dict
 
 
-class PublishParamsChecker(FunboostFileLoggerMixin):
-    """
-    发布的任务的函数参数检查，使发布的任务在消费时候不会出现低级错误。
-    """
 
-    def __init__(self, func: typing.Callable):
-        # print(func)
-        spec = inspect.getfullargspec(func)
-        self.all_arg_name = spec.args
-        self.all_arg_name_set = set(spec.args)
-        # print(spec.args)
-        if spec.defaults:
-            len_deafult_args = len(spec.defaults)
-            self.position_arg_name_list = spec.args[0: -len_deafult_args]
-            self.position_arg_name_set = set(self.position_arg_name_list)
-            self.keyword_arg_name_list = spec.args[-len_deafult_args:]
-            self.keyword_arg_name_set = set(self.keyword_arg_name_list)
-        else:
-            self.position_arg_name_list = spec.args
-            self.position_arg_name_set = set(self.position_arg_name_list)
-            self.keyword_arg_name_list = []
-            self.keyword_arg_name_set = set()
-        self.logger.debug(f'{func} 函数的入参要求是 全字段 {self.all_arg_name_set} ,必须字段为 {self.position_arg_name_set} ')
 
-    def check_params(self, publish_params: dict):
-        publish_params_keys_set = set(publish_params.keys())
-        if publish_params_keys_set.issubset(self.all_arg_name_set) and publish_params_keys_set.issuperset(
-                self.position_arg_name_set):
-            return True
-        else:
-            raise ValueError(f'你发布的参数不正确，你发布的任务的所有键是 {publish_params_keys_set}， '
-                             f'必须是 {self.all_arg_name_set} 的子集， 必须是 {self.position_arg_name_set} 的超集')
+
+# 现在push函数入参是手动转成字典的，实际上可以使用 inspect 的 signature.bind 这是python内置的更简单。  但对用户使用push方便程度无影响，这只是内部实现。
+"""
+import inspect
+
+def func(a,b,c=3,d=4,e=5):
+    pass
+
+sig = inspect.signature(func)
+bound = sig.bind(*(1,2), **{'d':8,'c':7})
+bound.apply_defaults()
+print(bound.arguments)
+
+
+#### ------------------------------------
+
+
+class MyClass:
+    def __init__(self,x):
+        self.x = x
+
+    def func(self, a, b, c=3, d=4, e=5):
+        pass
+
+obj = MyClass(1)
+
+sig = inspect.signature(MyClass.func)
+bound = sig.bind(*(obj,1,2), **{'d':8,'c':7})
+bound.apply_defaults()
+
+print(bound.arguments)
+
+
+# 关键点：返回稳定顺序的参数 tuple
+print(tuple(bound.arguments.items()))
+"""
+
 
 
 class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
@@ -144,7 +90,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.queue_name = self._queue_name = publisher_params.queue_name
         self.logger: logging.Logger
         self._build_logger()
-        self.publish_params_checker = PublishParamsChecker(publisher_params.consuming_function) if publisher_params.consuming_function else None
+        
         self.publisher_params.broker_exclusive_config = generate_broker_exclusive_config(self.publisher_params.broker_kind,self.publisher_params.broker_exclusive_config,self.logger)
         self.has_init_broker = 0
         self._lock_for_count = Lock()
@@ -154,11 +100,38 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self.custom_init()
         self.logger.info(f'{self.__class__} 被实例化了')
         self.publish_msg_num_total = 0
+        
+        ConsumingFuncInputParamsChecker.gen_final_func_input_params_info(publisher_params)
+        self.publish_params_checker = ConsumingFuncInputParamsChecker(self.final_func_input_params_info) if publisher_params.consuming_function else None
 
         self.__init_time = time.time()
         atexit.register(self._at_exit)
         if publisher_params.clear_queue_within_init:
             self.clear()
+    
+    @property
+    def final_func_input_params_info(self):
+        """
+        {...
+         "auto_generate_info": {
+    "where_to_instantiate": "D:\\codes\\funboost\\examples\\example_faas\\task_funs_dir\\sub.py:5",
+    "final_func_input_params_info": {
+      "func_name": "sub",
+      "func_position": "<function sub at 0x00000272649BBA60>",
+      "is_manual_func_input_params": false,
+      "all_arg_name_list": [
+        "a",
+        "b"
+      ],
+      "must_arg_name_list": [
+        "a",
+        "b"
+      ],
+      "optional_arg_name_list": []
+    }
+  }}
+        """
+        return self.publisher_params.auto_generate_info['final_func_input_params_info']
 
     def _build_logger(self):
         logger_prefix = self.publisher_params.logger_prefix
@@ -193,8 +166,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if 'extra' in msg:
             msg_function_kw.pop('extra')
             raw_extra = msg['extra']
-        if self.publish_params_checker and self.publisher_params.should_check_publish_func_params:
-            self.publish_params_checker.check_params(msg_function_kw)
+        self.check_func_msg_dict(msg_function_kw)
         task_id = task_id or MsgGenerater.generate_task_id(self._queue_name)
         extra_params = MsgGenerater.generate_pulish_time_and_task_id(self._queue_name, task_id=task_id)
         if priority_control_config:
@@ -284,18 +256,22 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             #                       )
             cls = func_args_list[0]
             # print(cls,cls.__name__, sys.modules[cls.__module__].__file__)
-
-            func_args_list[0] = {ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
+            if not inspect.isclass(cls):
+                raise ValueError(f'The consuming_function {self.publisher_params.consuming_function} is class_method,the first params of push must be a class')
+            func_args_list[0] = {ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name_list[0],
                                  ConstStrForClassMethod.CLS_NAME: cls.__name__,
                                  ConstStrForClassMethod.CLS_FILE: self.__get_cls_file(cls),
                                  ConstStrForClassMethod.CLS_MODULE: PathHelper(self.__get_cls_file(cls)).get_module_name(),
                                  }
         elif self.publisher_params.consuming_function_kind == FunctionKind.INSTANCE_METHOD:
             obj = func_args[0]
+
             cls = type(obj)
             if not hasattr(obj, ConstStrForClassMethod.OBJ_INIT_PARAMS):
-                raise ValueError(f'消费函数 {self.publisher_params.consuming_function} 是实例方法，实例必须有 {ConstStrForClassMethod.OBJ_INIT_PARAMS} 属性')
-            func_args_list[0] = {ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name[0],
+                raise ValueError(f'''The consuming_function {self.publisher_params.consuming_function} is an instance method, and the instance must have the {ConstStrForClassMethod.OBJ_INIT_PARAMS} attribute.
+The first argument of the push method must be the instance of the class.
+                ''')
+            func_args_list[0] = {ConstStrForClassMethod.FIRST_PARAM_NAME: self.publish_params_checker.all_arg_name_list[0],
                                  ConstStrForClassMethod.CLS_NAME: cls.__name__,
                                  ConstStrForClassMethod.CLS_FILE: self.__get_cls_file(cls),
                                  ConstStrForClassMethod.CLS_MODULE: PathHelper(self.__get_cls_file(cls)).get_module_name(),
@@ -306,7 +282,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         for index, arg in enumerate(func_args_list):
             # print(index,arg,self.publish_params_checker.position_arg_name_list)
             # msg_dict[self.publish_params_checker.position_arg_name_list[index]] = arg
-            msg_dict[self.publish_params_checker.all_arg_name[index]] = arg
+            msg_dict[self.publish_params_checker.all_arg_name_list[index]] = arg
 
         # print(msg_dict)
         return self.publish(msg_dict)
@@ -344,6 +320,50 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if multiprocessing.current_process().name == 'MainProcess':
             self.logger.warning(
                 f'程序关闭前，{round(time.time() - self.__init_time)} 秒内，累计推送了 {self.publish_msg_num_total} 条消息 到 {self._queue_name} 中')
+
+    async def aio_push(self, *func_args, **func_kwargs) -> AioAsyncResult:
+        """asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
+        但为了更好的防止网络波动(例如发布消息到外网的消息队列耗时达到10毫秒),可以使用aio_push"""
+        async_result = await simple_run_in_executor(self.push, *func_args, **func_kwargs)
+        return AioAsyncResult(async_result.task_id,timeout=async_result.timeout )
+
+    async def aio_publish(self, msg: typing.Union[str, dict], task_id=None,
+                          priority_control_config: PriorityConsumingControlConfig = None) -> AioAsyncResult:
+        """asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
+        但为了更好的防止网络波动(例如发布消息到外网的消息队列耗时达到10毫秒),可以使用aio_push"""
+        async_result = await simple_run_in_executor(self.publish, msg, task_id, priority_control_config)
+        return AioAsyncResult(async_result.task_id, timeout=async_result.timeout)
+
+    def check_func_msg_dict(self,msg_dict:dict):
+        if self.publish_params_checker and self.publisher_params.should_check_publish_func_params:
+            if not isinstance(msg_dict,dict):
+                raise ValueError(f"check_func_msg_dict 入参必须是字典, 当前是: {type(msg_dict)}")
+            if 'extra' in msg_dict:
+                msg_function_kw = copy.deepcopy(msg_dict)
+                msg_function_kw.pop('extra')
+            else:
+                msg_function_kw = msg_dict
+            self.publish_params_checker.check_func_msg_dict(msg_function_kw)
+        return True
+
+    def check_func_input_params(self, *args, **kwargs):
+        """
+        校验 push 风格的参数: f.check_params(1, y=2)
+        利用框架启动时已经解析好的 final_func_input_params_info 进行参数映射和校验。
+        :param args: 位置参数
+        :param kwargs: 关键字参数
+        :return: 校验通过返回 True，失败抛出异常
+        """
+
+        params_dict = dict(zip(self.publish_params_checker.all_arg_name_list, args))
+        if kwargs:
+            params_dict.update(kwargs)
+        # print(4444,args,kwargs, params_dict)
+        return self.check_func_msg_dict(params_dict)
+
+        
+
+
 
 
 has_init_broker_lock = threading.Lock()

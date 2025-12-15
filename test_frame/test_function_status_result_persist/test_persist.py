@@ -1,7 +1,7 @@
 import asyncio
 
 from funboost import boost, FunctionResultStatusPersistanceConfig, BoosterParams,BrokerEnum,ctrl_c_recv,ConcurrentModeEnum
-from funboost.function_result_web.app import start_funboost_web_manager
+from funboost.funboost_web_manager.app import start_funboost_web_manager
 import time
 import random
 
@@ -11,6 +11,7 @@ class MyBoosterParams(BoosterParams):
         is_save_status=True, is_save_result=True, expire_seconds=7 * 24 * 3600)
     is_send_consumer_hearbeat_to_redis:bool = True
     broker_exclusive_config :dict= {'pull_msg_batch_size':1}
+    project_name:str = 'test_project1'
 
 
 @boost(MyBoosterParams(queue_name='queue_test_g01t',broker_kind=BrokerEnum.REDIS,qps=1,))

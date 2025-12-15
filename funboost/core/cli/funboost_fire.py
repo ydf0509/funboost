@@ -133,7 +133,7 @@ class BoosterFire(object):
         启动funboost web管理器;
         例子: start_funboost_web_manager
         """
-        from funboost.function_result_web.app import start_funboost_web_manager
+        from funboost.funboost_web_manager.app import start_funboost_web_manager
         start_funboost_web_manager()
 
     start_web = start_funboost_web_manager

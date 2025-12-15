@@ -128,7 +128,7 @@ class _KeepAliveTimeThread(threading.Thread, metaclass=FunboostMetaTypeFileLogge
                 fun = sync_or_async_fun_deco(func)
                 fun(*args, **kwargs)
             except BaseException as exc:
-                self.logger.exception(f'函数 {func.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
+                self.logger.exception(f'函数 {func} 中发生错误，错误原因是 {type(exc)} {exc} ')
             self.pool._change_threads_free_count(1)
 
 

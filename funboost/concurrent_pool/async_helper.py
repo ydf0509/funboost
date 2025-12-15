@@ -10,6 +10,13 @@ async_executor_default = ThreadPoolExecutorShrinkAble(500)
 
 
 def get_or_create_event_loop():
+    """
+    Python 3.7 风格的 get_event_loop。
+    作用：
+    - 有 running loop → 返回当前 loop
+    - 没有 loop → 自动创建一个新的 loop 并 set
+    python3.10后的get_event_loop和python3.7的区别很大
+    """
     try:
         # Python 3.7+
         return asyncio.get_running_loop()

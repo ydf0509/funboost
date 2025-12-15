@@ -1,3 +1,11 @@
+"""
+这是个简单例子，演示web中如何发布和获取结果。
+
+更建议使用  from funboost.fass ,见教程第15章节。
+因为是一键开箱即用，还能更好的和你的fastapi 融合成一个服务端口，而且支持的url路由更多
+
+"""
+
 import traceback
 import typing
 

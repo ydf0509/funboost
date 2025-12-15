@@ -76,7 +76,7 @@ class _WorkItem(FunboostFileLoggerMixin):
         try:
             result = self.fn(*self.args, **self.kwargs)
         except BaseException as exc:
-            self.logger.exception(f'函数 {self.fn.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
+            self.logger.exception(f'函数 {self.fn} 中发生错误，错误原因是 {type(exc)} {exc} ')
             self.future.set_exception(exc)
             # Break a reference cycle with the exception 'exc'
             self = None  # noqa
@@ -100,6 +100,7 @@ class ThreadPoolExecutorShrinkAble(Executor, FunboostFileLoggerMixin, LoggerLeve
 
     MIN_WORKERS = 1
     KEEP_ALIVE_TIME = 60
+    THREAD_USE_DAEMON = True
 
     def __init__(self, max_workers: int = None, thread_name_prefix='',work_queue_maxsize=10):
         """
@@ -139,7 +140,7 @@ class ThreadPoolExecutorShrinkAble(Executor, FunboostFileLoggerMixin, LoggerLeve
         # print(self.threads_free_count, self.MIN_WORKERS, len(self._threads), self._max_workers)
         if self.threads_free_count <= self.MIN_WORKERS and len(self._threads) < self._max_workers:
             t = _CustomThread(self).set_log_level(self.logger.level)
-            t.daemon = True
+            t.daemon = self.THREAD_USE_DAEMON
             t.start()
             self._threads.add(t)
             _threads_queues[t] = self._work_queue
@@ -157,6 +158,20 @@ class ThreadPoolExecutorShrinkAble(Executor, FunboostFileLoggerMixin, LoggerLeve
 
 # 两个名字都可以，兼容以前的老名字（中文意思是 自定义线程池），但新名字更能表达意思（可缩小线程池）。
 CustomThreadpoolExecutor = CustomThreadPoolExecutor = ThreadPoolExecutorShrinkAble
+
+
+class ThreadPoolExecutorShrinkAbleNonDaemon(ThreadPoolExecutorShrinkAble):
+    """这个给 apscheduler 的 ThreadPoolExecutorForAps 使用很好，这个线程池里面的线程不是守护线程，
+
+    防止代码里面有子线程在运行但是主线程结束，导致这个报错 
+    raise RuntimeError('cannot schedule new futures after ' RuntimeError: cannot schedule new futures after interpreter shutdown
+
+    之前backgroud scheduler使用得是线程池里面是守护线程，为了避免cannot schedule new futures after ，
+    用户需要手动在主线程加个 ctrl_c_recv() 或者 while 1::time.sleep(10) 来阻止主线程结束，这样会麻烦用户。
+    """
+    MIN_WORKERS = 0
+    THREAD_USE_DAEMON = False
+
 
 
 # noinspection PyProtectedMember

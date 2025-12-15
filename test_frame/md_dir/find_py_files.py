@@ -29,7 +29,7 @@ if __name__ == "__main__":
     excluded_directories = [
         r"D:\codes\funboost\funboost\utils\dependency_packages",
         r"D:\codes\funboost\funboost\utils\dependency_packages_in_pythonpath",
-        r"D:\codes\funboost\funboost\function_result_web\static",
+        r"D:\codes\funboost\funboost\funboost_web_manager\static",
     ]
     specify_file_list = [
         r'D:\codes\funboost\README.md',

@@ -42,14 +42,17 @@ class Booster:
     def __init__(self, queue_name: typing.Union[BoosterParams, str] = None, *, boost_params: BoosterParams = None, **kwargs):
         """
         @boost 这是funboost框架最重要的一个函数，必须看懂BoosterParams里面的入参有哪些。
+        建议永远使用 @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, )) 这种传参方式。
+
+
         pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
         (高版本的pycharm pydantic是内置支持代码补全的,由此可见,pydantic太好了,pycharm官方都来支持)
 
         强烈建议所有入参放在 BoosterParams() 中,不要直接在BoosterParams之外传参.现在是兼容老的直接在@boost中传参方式.
-        """
+        建议不要给第一个入参queue_name传递字符串，而是永远传递BoosterParams类型， 例如 @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, ))
 
-        """
-        '''
+
+        ```python
         # @boost('queue_test_f01', qps=0.2, ) # 老的入参方式
         @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, )) # 新的入参方式,所有入参放在 最流行的三方包 pydantic model BoosterParams 里面.
         def f(a, b):
@@ -60,7 +63,7 @@ class Booster:
             f.push(i, i * 2)
         f.consume()
         # f.multi_process_conusme(8)             # # 这个是新加的方法，细粒度 线程 协程并发 同时叠加8个进程，速度炸裂。
-        '''
+        ```
         
         
         @boost('queue_test_f01', qps=0.2, ) 
@@ -68,7 +71,6 @@ class Booster:
         @Booster(BoosterParams(queue_name='queue_test_f01', qps=0.2, ))
         @BoosterParams(queue_name='queue_test_f01', qps=0.2, )
         以上4种写法等效。 
-        @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, )) 的写法升级到 pycharm 2024.2 版本后，导致被装饰的函数不能自动补全提示了，pycharm升级后自动补全功能反而抽风bug了。
         """
 
         # 以下代码很复杂，主要是兼容老的在@boost直接传参的方式,强烈建议使用新的入参方式,所有入参放在一个 BoosterParams 中，那就不需要理会下面这段逻辑.
@@ -80,7 +82,7 @@ class Booster:
         elif isinstance(queue_name, BoosterParams):
             boost_params = queue_name
         if isinstance(queue_name, str) or kwargs:
-            flogger.warning(f'''你的 {queue_name} 队列， funboost 40.0版本以后： {BoostDecoParamsIsOldVersion.new_version_change_hint}''')
+            flogger.warning(f'''你的 {queue_name} 队列， funboost 40.0版本以后： {BoostDecoParamsIsOldVersion.default_message}''')
         boost_params_merge = boost_params.copy()
         boost_params_merge.update_from_dict(kwargs)
         self.boost_params: BoosterParams = boost_params_merge
@@ -179,6 +181,7 @@ class Booster:
         run_consumer_with_multi_process(self, process_num)
 
     multi_process_start = multi_process_consume
+    mp_consume = multi_process_consume
 
     # noinspection PyMethodMayBeStatic
     def multi_process_pub_params_list(self, params_list, process_num=16):
@@ -249,7 +252,7 @@ class BoostersManager:
     """
 
     # pid_queue_name__booster_map字典存放 {(进程id,queue_name):Booster对象}
-    pid_queue_name__booster_map :typing.Dict[typing.Tuple[int,str],Booster]= {}  
+    pid_queue_name__booster_map :typing.Dict[typing.Tuple[int,str],Booster]= {}
 
     # queue_name__boost_params_consuming_function_map 字典存放  {queue_name,(@boost的入参字典,@boost装饰的消费函数)}
     queue_name__boost_params_map :typing.Dict[str,BoosterParams]= {}  
@@ -270,8 +273,18 @@ class BoostersManager:
             flogger.debug(f'booster: {pid_queue_name[1]}  {booster}')
 
     @classmethod
-    def get_all_queues(cls):
-        return cls.queue_name__boost_params_map.keys()
+    def get_all_queues(cls) ->list:
+        return list(cls.queue_name__boost_params_map.keys())
+
+    @classmethod
+    def get_all_queue_name__boost_params_unstrict_dict(cls):
+        """
+        主要用来给前端或可视化观看的。
+
+        返回一个字典,键是队列名,值是@boost的 BoosterParams 入参字典,
+        因为 BoosterParams 有的入参是复杂对象类型,不能json序列化
+        """
+        return {k:v.get_str_dict() for k,v in cls.queue_name__boost_params_map.items()}
 
     @classmethod
     def get_booster(cls, queue_name: str) -> Booster:
@@ -342,7 +355,7 @@ class BoostersManager:
         publisher.publish({'x': aaa})
         """
         pid = os.getpid()
-        key = (pid, publisher_params.queue_name)
+        key = (pid,publisher_params.broker_kind, publisher_params.queue_name)
         if key not in cls.queue_name__cross_project_publisher_map:
             publisher = get_publisher(publisher_params)
             publisher.push = lambda *args, **kwargs: print('跨项目虚拟publisher不支持push方法，请使用publish来发布消息')
@@ -438,3 +451,4 @@ class BoostersManager:
         ctrl_c_recv()
 
     mp_consume_all = multi_process_consume_all_queues
+    

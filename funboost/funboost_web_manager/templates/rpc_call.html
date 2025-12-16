@@ -116,18 +116,18 @@
                 <div id="rpc_summary_area" style="background-color: #f9f9f9; border-radius: 8px; padding: 15px; border-left: 5px solid #2ecc71; box-shadow: 0 2px 5px rgba(0,0,0,0.08); margin-bottom: 12px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <strong style="font-size: 15px;">关键结果</strong>
-                        <span id="rpc_summary_success_badge" class="label label-default">-</span>
+                        <span id="rpc_summary_success_badge" class="label label-default rpc-success-badge">-</span>
                     </div>
 
                     <div style="display: flex; flex-wrap: wrap;">
                         <div class="rpc-key-box">
                             <div class="rpc-key-title">task_id</div>
-                            <div class="rpc-key-value" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <div class="rpc-key-value">
                                 <code id="rpc_summary_task_id">-</code>
-                                <button type="button" class="btn btn-default btn-xs" id="copy_task_id_btn" title="复制 task_id">
-                                    <i class="fa fa-copy"></i> 复制
+                                <button type="button" class="btn btn-default btn-xs rpc-copy-btn" id="copy_task_id_btn" title="复制 task_id">
+                                    <i class="fa fa-copy"></i>
                                 </button>
-                                <span id="copy_task_id_feedback" style="color: #5cb85c; display: none;"><i class="fa fa-check"></i> 已复制</span>
+                                <span id="copy_task_id_feedback" class="rpc-copy-feedback"><i class="fa fa-check"></i> 已复制</span>
                             </div>
                         </div>
                         <div class="rpc-key-box">
@@ -237,31 +237,32 @@
             }
         }
 
-        function rpcCopyToClipboard(text, $feedback) {
-            if (!text || text === "-") {
+        function rpcCopyTextWithFeedback(text, feedbackSelector) {
+            if (!text) {
                 return;
             }
-            var show = function () {
-                if ($feedback && $feedback.length) {
-                    $feedback.fadeIn(200).delay(1500).fadeOut(400);
+            var $fb = feedbackSelector ? $(feedbackSelector) : null;
+            var showFeedback = function () {
+                if ($fb && $fb.length) {
+                    $fb.stop(true, true).fadeIn(200).delay(1500).fadeOut(400);
                 }
             };
-            var fallback = function () {
+            var fallbackCopy = function () {
                 var $temp = $("<textarea>");
                 $("body").append($temp);
                 $temp.val(text).select();
                 try {
                     document.execCommand("copy");
-                    show();
+                    showFeedback();
                 } catch (e) {
                     alert("复制失败，请手动复制");
                 }
                 $temp.remove();
             };
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(show).catch(fallback);
+                navigator.clipboard.writeText(text).then(showFeedback).catch(fallbackCopy);
             } else {
-                fallback();
+                fallbackCopy();
             }
         }
 
@@ -646,11 +647,17 @@
         // 复制 RPC status_and_result 到剪贴板
         $(document).ready(function() {
             $("#copy_rpc_result_btn").click(function() {
-                rpcCopyToClipboard($("#rpc_result").val(), $("#copy_rpc_result_feedback"));
+                rpcCopyTextWithFeedback($("#rpc_result").val(), "#copy_rpc_result_feedback");
             });
+        });
 
+        // 复制关键结果中的 task_id
+        $(document).ready(function() {
             $("#copy_task_id_btn").click(function() {
-                rpcCopyToClipboard($("#rpc_summary_task_id").text(), $("#copy_task_id_feedback"));
+                var tid = $("#rpc_summary_task_id").text().trim();
+                if (tid && tid !== "-") {
+                    rpcCopyTextWithFeedback(tid, "#copy_task_id_feedback");
+                }
             });
         });
 
@@ -774,12 +781,20 @@
             font-weight: bold;
             word-break: break-all;
         }
-        #rpc_summary_success_badge {
+        .rpc-copy-btn {
+            margin-left: 6px;
+            padding: 2px 6px;
+        }
+        .rpc-copy-feedback {
+            margin-left: 6px;
+            color: #5cb85c;
+            display: none;
+        }
+        .rpc-success-badge {
             font-size: 16px;
-            padding: 8px 14px;
-            border-radius: 16px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
+            padding: 6px 12px;
+            border-radius: 12px;
+            letter-spacing: 1px;
         }
     </style>
 </body>

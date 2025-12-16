@@ -22,7 +22,7 @@ from funboost.funboost_config_deafult import FunboostCommonConfig
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.core.booster import BoostersManager, Booster
 
-from funboost import BoosterParams
+from funboost.core.func_params_model import BoosterParams
 from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble,ThreadPoolExecutorShrinkAbleNonDaemon
 
 
@@ -44,8 +44,13 @@ def push_fun_params_to_broker(queue_name: str, *args, **kwargs):
     queue_name 队列名字
     *args **kwargs 是消费函数的入参
     """
-    booster = BoostersManager.get_or_create_booster_by_queue_name(queue_name)
-    booster.push(*args, **kwargs)
+    try:
+        booster = BoostersManager.get_or_create_booster_by_queue_name(queue_name)
+    except KeyError as e:
+        from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter
+        booster = SingleQueueConusmerParamsGetter(queue_name).generate_booster_by_funboost_redis_info_for_timing_push()
+    booster.publisher.push(*args, **kwargs)
+        
 
 
 class ThreadPoolExecutorForAps(BasePoolExecutor):

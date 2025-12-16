@@ -122,7 +122,13 @@
                     <div style="display: flex; flex-wrap: wrap;">
                         <div class="rpc-key-box">
                             <div class="rpc-key-title">task_id</div>
-                            <div class="rpc-key-value"><code id="rpc_summary_task_id">-</code></div>
+                            <div class="rpc-key-value" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <code id="rpc_summary_task_id">-</code>
+                                <button type="button" class="btn btn-default btn-xs" id="copy_task_id_btn" title="复制 task_id">
+                                    <i class="fa fa-copy"></i> 复制
+                                </button>
+                                <span id="copy_task_id_feedback" style="color: #5cb85c; display: none;"><i class="fa fa-check"></i> 已复制</span>
+                            </div>
                         </div>
                         <div class="rpc-key-box">
                             <div class="rpc-key-title">queue</div>
@@ -228,6 +234,34 @@
                 } catch (e2) {
                     return "";
                 }
+            }
+        }
+
+        function rpcCopyToClipboard(text, $feedback) {
+            if (!text || text === "-") {
+                return;
+            }
+            var show = function () {
+                if ($feedback && $feedback.length) {
+                    $feedback.fadeIn(200).delay(1500).fadeOut(400);
+                }
+            };
+            var fallback = function () {
+                var $temp = $("<textarea>");
+                $("body").append($temp);
+                $temp.val(text).select();
+                try {
+                    document.execCommand("copy");
+                    show();
+                } catch (e) {
+                    alert("复制失败，请手动复制");
+                }
+                $temp.remove();
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(show).catch(fallback);
+            } else {
+                fallback();
             }
         }
 
@@ -612,33 +646,12 @@
         // 复制 RPC status_and_result 到剪贴板
         $(document).ready(function() {
             $("#copy_rpc_result_btn").click(function() {
-                var text = $("#rpc_result").val();
-                if (!text) {
-                    return;
-                }
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(text).then(function() {
-                        $("#copy_rpc_result_feedback").fadeIn(200).delay(1500).fadeOut(400);
-                    }).catch(function() {
-                        fallbackCopyText(text);
-                    });
-                } else {
-                    fallbackCopyText(text);
-                }
+                rpcCopyToClipboard($("#rpc_result").val(), $("#copy_rpc_result_feedback"));
             });
 
-            function fallbackCopyText(text) {
-                var $temp = $("<textarea>");
-                $("body").append($temp);
-                $temp.val(text).select();
-                try {
-                    document.execCommand("copy");
-                    $("#copy_rpc_result_feedback").fadeIn(200).delay(1500).fadeOut(400);
-                } catch (e) {
-                    alert("复制失败，请手动复制");
-                }
-                $temp.remove();
-            }
+            $("#copy_task_id_btn").click(function() {
+                rpcCopyToClipboard($("#rpc_summary_task_id").text(), $("#copy_task_id_feedback"));
+            });
         });
 
         // 添加获取结果功能
@@ -760,6 +773,13 @@
             font-size: 13px;
             font-weight: bold;
             word-break: break-all;
+        }
+        #rpc_summary_success_badge {
+            font-size: 16px;
+            padding: 8px 14px;
+            border-radius: 16px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
     </style>
 </body>

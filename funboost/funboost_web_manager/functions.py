@@ -159,6 +159,7 @@ class Statistic(LoggerMixin):
      
 
 if __name__ == '__main__':
+    pass
     # print(get_cols('4'))
     # pprint(query_result('queue_test54_task_status', '2019-09-15 00:00:00', '2019-09-25 00:00:00', True, '999', 0))
     # print(json.dumps(query_result(**{'col_name': 'queue_test56', 'start_time': '2019-09-18 16:03:29', 'end_time': '2019-09-21 16:03:29', 'is_success': '1', 'function_params': '', 'page': '0'}))[:1000])

@@ -171,7 +171,6 @@ This markdown document is structured as follows:
 - `from funboost.factories.consumer_factory import get_consumer`
 - `from funboost.factories.publisher_factotry import get_publisher`
 - `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from collections import defaultdict`
 - `from funboost.core.msg_result_getter import AsyncResult`
 - `from funboost.core.msg_result_getter import AioAsyncResult`
 - `from funboost.core.muliti_process_enhance import run_consumer_with_multi_process`
@@ -455,7 +454,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 **Public Methods (1):**
 - `def check_values(cls, values: dict)` `root_validator(skip_on_failure=True)`
 
-**Class Variables (50):**
+**Class Variables (51):**
 - `queue_name: str`
 - `broker_kind: str = BrokerEnum.SQLITE_QUEUE`
 - `project_name: typing.Optional[str] = None`
@@ -506,9 +505,10 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `consuming_function_kind: typing.Optional[str] = None`
 - `user_options: dict = {}`
 - `auto_generate_info: dict = {}`
+- `is_fake_booster: bool = False`
 
 ##### 📌 `class BoosterParamsComplete(BoosterParams)`
-*Line: 325*
+*Line: 332*
 
 **Docstring:**
 `````
@@ -530,7 +530,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))`
 
 ##### 📌 `class PriorityConsumingControlConfig(BaseJsonAbleModel)`
-*Line: 345*
+*Line: 352*
 
 **Docstring:**
 `````
@@ -555,9 +555,9 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `can_not_json_serializable_keys: typing.List[str] = None`
 
 ##### 📌 `class PublisherParams(BaseJsonAbleModel)`
-*Line: 393*
+*Line: 400*
 
-**Class Variables (19):**
+**Class Variables (20):**
 - `queue_name: str`
 - `broker_kind: typing.Optional[str] = None`
 - `project_name: typing.Optional[str] = None`
@@ -577,6 +577,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `rpc_timeout: int = 1800`
 - `user_options: dict = {}`
 - `auto_generate_info: dict = {}`
+- `is_fake_booster: bool = False`
 
 
 ---
@@ -1582,7 +1583,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')`
 
 ##### 📌 `class ConcurrentModeDispatcher(FunboostFileLoggerMixin)`
-*Line: 1115*
+*Line: 1116*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumerx: AbstractConsumer)`
@@ -1596,7 +1597,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `def schedulal_task_with_no_block(self)`
 
 ##### 📌 `class MetricCalculation`
-*Line: 1221*
+*Line: 1222*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, conusmer: AbstractConsumer)`
@@ -1612,7 +1613,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `UNIT_TIME_FOR_COUNT = 10`
 
 ##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1304*
+*Line: 1305*
 
 **Docstring:**
 `````
@@ -1647,7 +1648,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 #### 🔧 Public Functions (1)
 
 - `def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3)`
-  - *Line: 1206*
+  - *Line: 1207*
   - **Docstring:**
   `````
   判断多个消费者是否消费完成了。
@@ -3325,7 +3326,6 @@ def add(x, y=10,):
 
 #### 📦 Imports
 
-- `from re import T`
 - `from funboost import BoosterParams`
 - `from funboost import BrokerEnum`
 - `from funboost import FunctionResultStatusPersistanceConfig`
@@ -3348,7 +3348,7 @@ def add(x, y=10,):
 ---
 
 `````python
-from re import T
+
 from funboost import  BoosterParams, BrokerEnum, FunctionResultStatusPersistanceConfig
 
 
@@ -5474,12 +5474,17 @@ from funboost.funboost_web_manager.app import start_funboost_web_manager
 
 
 class MyBoosterParams(BoosterParams):  
-    function_result_status_persistance_conf:FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(  
-        is_save_status=True, is_save_result=True, expire_seconds=7 * 24 * 3600)  
-    is_send_consumer_hearbeat_to_redis:bool = True  
+    project_name:str = 'test_project1'  # 核心配置，项目名，设置后，web接口就可以只关心某个项目下的队列，减少无关返回信息的干扰。
+    broker_kind:str = BrokerEnum.REDIS
+    is_send_consumer_hearbeat_to_redis : bool= True # 向redis发送心跳，这样才能从redis获取相关队列的运行信息。
+    is_using_rpc_mode:bool = True # 必须设置这一个参数为True，才能支持rpc功能。
+    booster_group : str = 'test_group1' # 方便按分组启动消费
+    should_check_publish_func_params:bool = True # 发布消息时，是否检查消息内容是否正确，不正确的消息格式立刻从接口返回报错消息内容不正确。
+    function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
+        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False) 
 
 
-@boost(MyBoosterParams(queue_name='queue_test_g01t',broker_kind=BrokerEnum.REDIS,qps=1,))  
+@boost(MyBoosterParams(queue_name='queue_test_g01t',qps=1,))  
 def f(x):  
     time.sleep(5)  
     print(f'hi: {x}')  
@@ -5487,7 +5492,7 @@ def f(x):
         raise ValueError('f error')  
     return x + 1  
 
-@boost(MyBoosterParams(queue_name='queue_test_g02t',broker_kind=BrokerEnum.REDIS,qps=0.5,  
+@boost(MyBoosterParams(queue_name='queue_test_g02t',qps=0.5,  
 max_retry_times=0,))  
 def f2(x,y):  
     time.sleep(2)  
@@ -5496,7 +5501,7 @@ def f2(x,y):
         raise ValueError('f2 error')  
     return x + y  
 
-@boost(MyBoosterParams(queue_name='queue_test_g03t',broker_kind=BrokerEnum.REDIS,qps=0.5,  
+@boost(MyBoosterParams(queue_name='queue_test_g03t',qps=0.5,  
 max_retry_times=0,concurrent_mode=ConcurrentModeEnum.ASYNC))  
 async def aio_f3(x):  
     await asyncio.sleep(3)  
@@ -20082,7 +20087,6 @@ This markdown document is structured as follows:
 - `from funboost.factories.consumer_factory import get_consumer`
 - `from funboost.factories.publisher_factotry import get_publisher`
 - `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from collections import defaultdict`
 - `from funboost.core.msg_result_getter import AsyncResult`
 - `from funboost.core.msg_result_getter import AioAsyncResult`
 - `from funboost.core.muliti_process_enhance import run_consumer_with_multi_process`
@@ -20366,7 +20370,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 **Public Methods (1):**
 - `def check_values(cls, values: dict)` `root_validator(skip_on_failure=True)`
 
-**Class Variables (50):**
+**Class Variables (51):**
 - `queue_name: str`
 - `broker_kind: str = BrokerEnum.SQLITE_QUEUE`
 - `project_name: typing.Optional[str] = None`
@@ -20417,9 +20421,10 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `consuming_function_kind: typing.Optional[str] = None`
 - `user_options: dict = {}`
 - `auto_generate_info: dict = {}`
+- `is_fake_booster: bool = False`
 
 ##### 📌 `class BoosterParamsComplete(BoosterParams)`
-*Line: 325*
+*Line: 332*
 
 **Docstring:**
 `````
@@ -20441,7 +20446,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))`
 
 ##### 📌 `class PriorityConsumingControlConfig(BaseJsonAbleModel)`
-*Line: 345*
+*Line: 352*
 
 **Docstring:**
 `````
@@ -20466,9 +20471,9 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `can_not_json_serializable_keys: typing.List[str] = None`
 
 ##### 📌 `class PublisherParams(BaseJsonAbleModel)`
-*Line: 393*
+*Line: 400*
 
-**Class Variables (19):**
+**Class Variables (20):**
 - `queue_name: str`
 - `broker_kind: typing.Optional[str] = None`
 - `project_name: typing.Optional[str] = None`
@@ -20488,6 +20493,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `rpc_timeout: int = 1800`
 - `user_options: dict = {}`
 - `auto_generate_info: dict = {}`
+- `is_fake_booster: bool = False`
 
 
 ---
@@ -21493,7 +21499,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')`
 
 ##### 📌 `class ConcurrentModeDispatcher(FunboostFileLoggerMixin)`
-*Line: 1115*
+*Line: 1116*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumerx: AbstractConsumer)`
@@ -21507,7 +21513,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `def schedulal_task_with_no_block(self)`
 
 ##### 📌 `class MetricCalculation`
-*Line: 1221*
+*Line: 1222*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, conusmer: AbstractConsumer)`
@@ -21523,7 +21529,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `UNIT_TIME_FOR_COUNT = 10`
 
 ##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1304*
+*Line: 1305*
 
 **Docstring:**
 `````
@@ -21558,7 +21564,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 #### 🔧 Public Functions (1)
 
 - `def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3)`
-  - *Line: 1206*
+  - *Line: 1207*
   - **Docstring:**
   `````
   判断多个消费者是否消费完成了。
@@ -23402,7 +23408,6 @@ def add(x, y=10,):
 
 #### 📦 Imports
 
-- `from re import T`
 - `from funboost import BoosterParams`
 - `from funboost import BrokerEnum`
 - `from funboost import FunctionResultStatusPersistanceConfig`
@@ -23425,7 +23430,7 @@ def add(x, y=10,):
 ---
 
 `````python
-from re import T
+
 from funboost import  BoosterParams, BrokerEnum, FunctionResultStatusPersistanceConfig
 
 
@@ -25143,7 +25148,7 @@ set_frame_config这个模块的 use_config_form_funboost_config_module() 是核�
 这段注释说明和使用的用户无关,只和框架开发人员有关.
 '''
 
-__version__ = "52.1"
+__version__ = "52.4"
 
 from funboost.set_frame_config import show_frame_config
 
@@ -30060,7 +30065,7 @@ from .pool_commons import ConcurrentPoolBuilder
 - `logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')`
 
 ##### 📌 `class ConcurrentModeDispatcher(FunboostFileLoggerMixin)`
-*Line: 1115*
+*Line: 1116*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumerx: AbstractConsumer)`
@@ -30074,7 +30079,7 @@ from .pool_commons import ConcurrentPoolBuilder
 - `def schedulal_task_with_no_block(self)`
 
 ##### 📌 `class MetricCalculation`
-*Line: 1221*
+*Line: 1222*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, conusmer: AbstractConsumer)`
@@ -30090,7 +30095,7 @@ from .pool_commons import ConcurrentPoolBuilder
 - `UNIT_TIME_FOR_COUNT = 10`
 
 ##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1304*
+*Line: 1305*
 
 **Docstring:**
 `````
@@ -30125,7 +30130,7 @@ from .pool_commons import ConcurrentPoolBuilder
 #### 🔧 Public Functions (1)
 
 - `def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3)`
-  - *Line: 1206*
+  - *Line: 1207*
   - **Docstring:**
   `````
   判断多个消费者是否消费完成了。
@@ -30404,16 +30409,17 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :return:
         """
         # pass
+        if self.consumer_params.is_fake_booster is True:
+            return
         if self.consumer_params.is_send_consumer_hearbeat_to_redis:
+            RedisMixin().redis_db_frame.hmset(RedisKeys.FUNBOOST_QUEUE__CONSUMER_PARAMS,{self.queue_name: self.consumer_params.json_str_value()})
             RedisMixin().redis_db_frame.sadd(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES, self.queue_name)
-            if FakeFunGenerator.is_fake_fun(self.consumer_params.consuming_function) is False:
-                RedisMixin().redis_db_frame.hmset(RedisKeys.FUNBOOST_QUEUE__CONSUMER_PARAMS,{self.queue_name: self.consumer_params.json_str_value()})
-            else:
-                self.logger.warning(f'fake fun  {self.consumer_params.consuming_function} for  faas')
             RedisMixin().redis_db_frame.sadd(RedisKeys.FUNBOOST_ALL_IPS, nb_log_config_default.computer_ip)
             if self.consumer_params.project_name:
                 RedisMixin().redis_db_frame.sadd(RedisKeys.FUNBOOST_ALL_PROJECT_NAMES, self.consumer_params.project_name)
                 RedisMixin().redis_db_frame.sadd(RedisKeys.gen_funboost_project_name_key(self.consumer_params.project_name), self.queue_name)
+
+       
 
     def _build_logger(self):
         logger_prefix = self.consumer_params.logger_prefix
@@ -38657,6 +38663,8 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
                 fake_fun = FakeFunGenerator.gen_fake_fun_by_params(redis_final_func_input_params_info)
                 booster_params['consuming_function'] = fake_fun
                 booster_params['consuming_function_raw'] = fake_fun
+                
+                booster_params['is_fake_booster'] = True # 重要，不要注册到BoostersManager，防止干扰用户的真实booster的消费函数逻辑。由此类的 _pid_broker_kind_queue_name__publisher_map 管理
                 # 发布消息时候会立即校验入参是否正确，你使用了redis中的 booster配置的 auto_generate_info.final_func_input_params_info 信息来校验入参名字和个数是否正确
                 # booster_params['should_check_publish_func_params'] = False # 
                 booster_params_model = BoosterParams(**booster_params)
@@ -38677,6 +38685,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
                 fake_fun = FakeFunGenerator.gen_fake_fun_by_params(redis_final_func_input_params_info)
                 booster_params['consuming_function'] = fake_fun
                 booster_params['consuming_function_raw'] = fake_fun
+
                 # booster_params['should_check_publish_func_params'] = False
                 booster_params['specify_concurrent_pool'] = None
                 booster_params['specify_async_loop'] = None
@@ -38685,6 +38694,8 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
                 booster_params['user_custom_record_process_info_func'] = None
                 booster_params['consumer_override_cls'] = None
                 booster_params['publisher_override_cls'] = None
+
+                booster_params['is_fake_booster'] = True # 重要，不要注册到BoostersManager，防止干扰用户的真实booster的消费函数逻辑。由此类的 _pid_broker_kind_queue_name__booster_map 管理
                 booster_params_model = BoosterParams(**booster_params)
                 booster = Booster(booster_params_model)(booster_params_model.consuming_function)
                 self._pid_broker_kind_queue_name__booster_map[key] = booster
@@ -38891,7 +38902,6 @@ if __name__ == '__main__':
 - `from funboost.factories.consumer_factory import get_consumer`
 - `from funboost.factories.publisher_factotry import get_publisher`
 - `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from collections import defaultdict`
 - `from funboost.core.msg_result_getter import AsyncResult`
 - `from funboost.core.msg_result_getter import AioAsyncResult`
 - `from funboost.core.muliti_process_enhance import run_consumer_with_multi_process`
@@ -39124,7 +39134,7 @@ from funboost.core.func_params_model import BoosterParams, FunctionResultStatusP
 from funboost.factories.consumer_factory import get_consumer
 from funboost.factories.publisher_factotry import get_publisher
 from funboost.publishers.base_publisher import AbstractPublisher
-from collections import defaultdict
+
 
 from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
 
@@ -39363,6 +39373,8 @@ class BoostersManager:
     @classmethod
     def regist_booster(cls, queue_name: str, booster: Booster):
         """这个是框架在@boost时候自动调用的,无需用户亲自调用"""
+        if booster.boost_params.is_fake_booster is True:
+            return
         cls.pid_queue_name__booster_map[(os.getpid(), queue_name)] = booster
         cls.queue_name__boost_params_map[queue_name] = booster.boost_params
 
@@ -41583,7 +41595,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 **Public Methods (1):**
 - `def check_values(cls, values: dict)` `root_validator(skip_on_failure=True)`
 
-**Class Variables (50):**
+**Class Variables (51):**
 - `queue_name: str`
 - `broker_kind: str = BrokerEnum.SQLITE_QUEUE`
 - `project_name: typing.Optional[str] = None`
@@ -41634,9 +41646,10 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `consuming_function_kind: typing.Optional[str] = None`
 - `user_options: dict = {}`
 - `auto_generate_info: dict = {}`
+- `is_fake_booster: bool = False`
 
 ##### 📌 `class BoosterParamsComplete(BoosterParams)`
-*Line: 325*
+*Line: 332*
 
 **Docstring:**
 `````
@@ -41658,7 +41671,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))`
 
 ##### 📌 `class PriorityConsumingControlConfig(BaseJsonAbleModel)`
-*Line: 345*
+*Line: 352*
 
 **Docstring:**
 `````
@@ -41683,9 +41696,9 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `can_not_json_serializable_keys: typing.List[str] = None`
 
 ##### 📌 `class PublisherParams(BaseJsonAbleModel)`
-*Line: 393*
+*Line: 400*
 
-**Class Variables (19):**
+**Class Variables (20):**
 - `queue_name: str`
 - `broker_kind: typing.Optional[str] = None`
 - `project_name: typing.Optional[str] = None`
@@ -41705,6 +41718,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `rpc_timeout: int = 1800`
 - `user_options: dict = {}`
 - `auto_generate_info: dict = {}`
+- `is_fake_booster: bool = False`
 
 
 ---
@@ -41991,6 +42005,13 @@ class BoosterParams(BaseJsonAbleModel):
     
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.例如包含 final_func_input_params_info 和 where_to_instantiate 等。
     
+    """# is_fake_booster：是否是伪造的booster,
+    # 用于faas模式下，因为跨项目的faas管理只拿到了redis的一些基本元数据，没有booster的函数逻辑，
+    # 例如ApsJobAdder管理定时任务，需要booster，但没有真实的函数逻辑，
+    # 你可以看 SingleQueueConusmerParamsGetter.generate_booster_by_funboost_redis_info_for_timing_push 的用法，目前主要是控制不要执行 BoostersManager.regist_booster
+    # 普通用户完全不用改这个参数。
+    """
+    is_fake_booster: bool = False
     
 
     @root_validator(skip_on_failure=True, )
@@ -42130,6 +42151,8 @@ class PublisherParams(BaseJsonAbleModel):
     rpc_timeout: int = 1800 # rpc模式下，等待rpc结果返回的超时时间
     user_options: dict = {}  # 用户自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
     auto_generate_info: dict = {}
+    is_fake_booster: bool = False # 是否是伪造的booster, 不注册到BoostersManager
+    
 
 
 if __name__ == '__main__':
@@ -47523,7 +47546,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
 - `from funboost.core.loggers import get_funboost_file_logger`
 - `from flask import Flask`
 
-#### 🔧 Public Functions (20)
+#### 🔧 Public Functions (21)
 
 - `def publish_msg()` `flask_blueprint.route('/publish', methods=['POST'])`
   - *Line: 34*
@@ -47570,8 +47593,30 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   返回所有通过 @boost 装饰器注册的队列名称列表
   `````
 
+- `def clear_queue()` `flask_blueprint.route('/clear_queue', methods=['POST'])`
+  - *Line: 270*
+  - **Docstring:**
+  `````
+  清空队列中的所有消息
+  
+  请求体 (JSON):
+      {
+          "queue_name": "队列名称"
+      }
+  
+  返回:
+      清空操作的结果
+      
+  说明:
+      此接口会清空指定队列中的所有待消费消息。
+      ⚠️ 此操作不可逆，请谨慎使用！
+      
+  注意:
+      broker_kind 会自动从已注册的 booster 中获取，无需手动指定。
+  `````
+
 - `def get_one_queue_config()` `flask_blueprint.route('/get_one_queue_config', methods=['GET'])`
-  - *Line: 273*
+  - *Line: 331*
   - **Docstring:**
   `````
   获取单个队列的配置信息
@@ -47584,7 +47629,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def add_timing_job()` `flask_blueprint.route('/add_timing_job', methods=['POST'])`
-  - *Line: 311*
+  - *Line: 369*
   - **Docstring:**
   `````
   添加定时任务
@@ -47614,7 +47659,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def get_timing_jobs()` `flask_blueprint.route('/get_timing_jobs', methods=['GET'])`
-  - *Line: 442*
+  - *Line: 500*
   - **Docstring:**
   `````
   获取定时任务列表
@@ -47639,7 +47684,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def get_timing_job()` `flask_blueprint.route('/get_timing_job', methods=['GET'])`
-  - *Line: 545*
+  - *Line: 603*
   - **Docstring:**
   `````
   获取单个定时任务的详细信息
@@ -47651,7 +47696,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def delete_timing_job()` `flask_blueprint.route('/delete_timing_job', methods=['DELETE'])`
-  - *Line: 603*
+  - *Line: 661*
   - **Docstring:**
   `````
   删除定时任务
@@ -47663,7 +47708,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def delete_all_timing_jobs()` `flask_blueprint.route('/delete_all_timing_jobs', methods=['DELETE'])`
-  - *Line: 643*
+  - *Line: 701*
   - **Docstring:**
   `````
   删除所有定时任务
@@ -47674,7 +47719,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def pause_timing_job()` `flask_blueprint.route('/pause_timing_job', methods=['POST'])`
-  - *Line: 720*
+  - *Line: 778*
   - **Docstring:**
   `````
   暂停定时任务
@@ -47686,7 +47731,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def resume_timing_job()` `flask_blueprint.route('/resume_timing_job', methods=['POST'])`
-  - *Line: 760*
+  - *Line: 818*
   - **Docstring:**
   `````
   恢复定时任务
@@ -47698,7 +47743,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def get_scheduler_status()` `flask_blueprint.route('/get_scheduler_status', methods=['GET'])`
-  - *Line: 815*
+  - *Line: 873*
   - **Docstring:**
   `````
   获取定时器调度器状态
@@ -47712,7 +47757,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def pause_scheduler()` `flask_blueprint.route('/pause_scheduler', methods=['POST'])`
-  - *Line: 862*
+  - *Line: 920*
   - **Docstring:**
   `````
   暂停定时器调度器
@@ -47724,7 +47769,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def resume_scheduler()` `flask_blueprint.route('/resume_scheduler', methods=['POST'])`
-  - *Line: 904*
+  - *Line: 962*
   - **Docstring:**
   `````
   恢复运行定时器调度器
@@ -47735,7 +47780,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def deprecate_queue()` `flask_blueprint.route('/deprecate_queue', methods=['DELETE'])`
-  - *Line: 945*
+  - *Line: 1003*
   - **Docstring:**
   `````
   废弃队列 - 从 Redis 的 funboost_all_queue_names set 和 项目的队列名下 移除队列名
@@ -47757,7 +47802,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def get_care_project_name()` `flask_blueprint.route('/get_care_project_name', methods=['GET'])`
-  - *Line: 1000*
+  - *Line: 1058*
   - **Docstring:**
   `````
   获取当前的 care_project_name 设置
@@ -47773,7 +47818,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def set_care_project_name()` `flask_blueprint.route('/set_care_project_name', methods=['POST'])`
-  - *Line: 1034*
+  - *Line: 1092*
   - **Docstring:**
   `````
   设置 care_project_name
@@ -47794,7 +47839,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def get_all_project_names()` `flask_blueprint.route('/get_all_project_names', methods=['GET'])`
-  - *Line: 1081*
+  - *Line: 1139*
   - **Docstring:**
   `````
   获取所有已注册的项目名称列表
@@ -47811,7 +47856,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
   `````
 
 - `def index()` `app.route('/')`
-  - *Line: 1131*
+  - *Line: 1189*
 
 
 ---
@@ -48085,7 +48130,65 @@ def get_all_queues():
 
 
 
+@flask_blueprint.route("/clear_queue", methods=['POST'])
+def clear_queue():
+    """
+    清空队列中的所有消息
+    
+    请求体 (JSON):
+        {
+            "queue_name": "队列名称"
+        }
+    
+    返回:
+        清空操作的结果
+        
+    说明:
+        此接口会清空指定队列中的所有待消费消息。
+        ⚠️ 此操作不可逆，请谨慎使用！
+        
+    注意:
+        broker_kind 会自动从已注册的 booster 中获取，无需手动指定。
+    """
+    try:
+        data = request.get_json()
+        queue_name = data.get('queue_name')
+        
+        if not queue_name:
+            return jsonify({
+                "succ": False,
+                "msg": "queue_name 字段必填",
+                "data": None
+            }), 400
+        
+        # 通过 queue_name 自动获取对应的 publisher
+        publisher = SingleQueueConusmerParamsGetter(queue_name).generate_publisher_by_funboost_redis_info()
+        publisher.clear()
+        
+        return jsonify({
+            "succ": True,
+            "msg": f"队列 {queue_name} 清空成功",
+            "data": {
+                "queue_name": queue_name,
+                "success": True
+            }
+        })
+        
+    except Exception as e:
+        logger.exception(f'清空队列失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"清空队列 {queue_name if 'queue_name' in locals() else ''} 失败: {str(e)}",
+            "data": {
+                "queue_name": queue_name if 'queue_name' in locals() else None,
+                "success": False
+            }
+        }), 500
+
+
+
 # ==================== 定时任务管理接口 ====================
+
 
 
 @flask_blueprint.route("/get_one_queue_config", methods=['GET'])
@@ -49707,7 +49810,7 @@ def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher:
 - `password = PasswordField('密码', validators=[DataRequired(), Length(3, 64)])`
 - `remember_me = BooleanField('记住我')`
 
-#### 🔧 Public Functions (24)
+#### 🔧 Public Functions (20)
 
 - `def query_user(user_name)`
   - *Line: 83*
@@ -49754,25 +49857,18 @@ def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher:
 - `def get_queues_params_and_active_consumers()` `app.route('/queue/params_and_active_consumers')`
   - *Line: 255*
 
-- `def clear_queue(broker_kind, queue_name)` `app.route('/queue/clear/<broker_kind>/<queue_name>', methods=['POST'])`
-  - *Line: 262*
-
 - `def pause_cousume(queue_name)` `app.route('/queue/pause/<queue_name>', methods=['POST'])`
-  - *Line: 275*
+  - *Line: 265*
 
 - `def resume_consume(queue_name)` `app.route('/queue/resume/<queue_name>', methods=['POST'])`
-  - *Line: 281*
+  - *Line: 271*
 
 - `def get_msg_num_all_queues()` `app.route('/queue/get_msg_num_all_queues', methods=['GET'])`
-  - *Line: 287*
+  - *Line: 277*
   - *这个是通过消费者周期每隔10秒上报到redis的，性能好。不需要实时获取每个消息队列，直接从redis读取所有队列的消息数量*
 
-- `def get_message_count(broker_kind, queue_name)` `app.route('/queue/message_count/<broker_kind>/<queue_name>')`
-  - *Line: 293*
-  - *这个是实时获取每个消息队列的消息数量，性能差，但是可以实时获取每个消息队列的消息数量*
-
 - `def get_time_series_data_by_queue_name(queue_name)` `app.route('/queue/get_time_series_data/<queue_name>', methods=['GET'])`
-  - *Line: 302*
+  - *Line: 284*
   - **Docstring:**
   `````
   _summary_
@@ -49786,29 +49882,8 @@ def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher:
   返回例如  [{'report_data': {'pause_flag': -1, 'msg_num_in_broker': 936748, 'history_run_count': '150180', 'history_run_fail_count': '46511', 'all_consumers_last_x_s_execute_count': 7, 'all_consumers_last_x_s_execute_count_fail': 0, 'all_consumers_last_x_s_avarage_function_spend_time': 3.441, 'all_consumers_avarage_function_spend_time_from_start': 4.598, 'all_consumers_total_consume_count_from_start': 1296, 'all_consumers_total_consume_count_from_start_fail': 314, 'report_ts': 1749617360.597841}, 'report_ts': 1749617360.597841}, {'report_data': {'pause_flag': -1, 'msg_num_in_broker': 936748, 'history_run_count': '150184', 'history_run_fail_count': '46514', 'all_consumers_last_x_s_execute_count': 7, 'all_consumers_last_x_s_execute_count_fail': 0, 'all_consumers_last_x_s_avarage_function_spend_time': 3.441, 'all_consumers_avarage_function_spend_time_from_start': 4.599, 'all_consumers_total_consume_count_from_start': 1299, 'all_consumers_total_consume_count_from_start_fail': 316, 'report_ts': 1749617370.628166}, 'report_ts': 1749617370.628166}]
   `````
 
-- `def rpc_call()` `app.route('/rpc/rpc_call', methods=['POST'])`
-  - *Line: 342*
-  - **Docstring:**
-  `````
-  class MsgItem(BaseModel):
-      queue_name: str  # 队列名
-      msg_body: dict  # 消息体,就是boost函数的入参字典,例如 {"x":1,"y":2}
-      need_result: bool = False  # 发布消息后,是否需要返回结果
-      timeout: int = 60  # 等待结果返回的最大等待时间.
-  
-  
-  class PublishResponse(BaseModel):
-      succ: bool
-      msg: str
-      status_and_result: typing.Optional[dict] = None  # 消费函数的消费状态和结果.
-      task_id:str
-  `````
-
-- `def get_result_by_task_id()` `app.route('/rpc/get_result_by_task_id', methods=['GET'])`
-  - *Line: 363*
-
 - `def start_funboost_web_manager(host = '0.0.0.0', port = 27018, block = False, debug = False, care_project_name: typing.Optional[str] = None)`
-  - *Line: 372*
+  - *Line: 325*
 
 
 ---
@@ -50074,17 +50149,7 @@ def get_queues_params_and_active_consumers():
     )
 
 
-@app.route("/queue/clear/<broker_kind>/<queue_name>", methods=["POST"])
-def clear_queue(broker_kind, queue_name):
-    publisher = BoostersManager.get_cross_project_publisher(
-        PublisherParams(
-            queue_name=queue_name,
-            broker_kind=broker_kind,
-            publish_msg_log_use_full_msg=True,
-        )
-    )
-    publisher.clear()
-    return jsonify({"success": True})
+
 
 
 @app.route("/queue/pause/<queue_name>", methods=["POST"])
@@ -50104,14 +50169,6 @@ def get_msg_num_all_queues():
     """这个是通过消费者周期每隔10秒上报到redis的，性能好。不需要实时获取每个消息队列，直接从redis读取所有队列的消息数量"""
     return jsonify(QueuesConusmerParamsGetter().get_msg_num(ignore_report_ts=True))
 
-
-@app.route("/queue/message_count/<broker_kind>/<queue_name>")
-def get_message_count(broker_kind, queue_name):
-    """这个是实时获取每个消息队列的消息数量，性能差，但是可以实时获取每个消息队列的消息数量"""
-    rt_msg_num = SingleQueueConusmerParamsGetter(
-        queue_name
-    ).get_one_queue_msg_num_realtime()
-    return jsonify({"count": rt_msg_num, "success": True})
 
 
 @app.route("/queue/get_time_series_data/<queue_name>", methods=["GET"])
@@ -50154,35 +50211,6 @@ def get_time_series_data_by_queue_name(
     )
 
 
-@app.route("/rpc/rpc_call", methods=["POST"])
-def rpc_call():
-    """
-    class MsgItem(BaseModel):
-        queue_name: str  # 队列名
-        msg_body: dict  # 消息体,就是boost函数的入参字典,例如 {"x":1,"y":2}
-        need_result: bool = False  # 发布消息后,是否需要返回结果
-        timeout: int = 60  # 等待结果返回的最大等待时间.
-
-
-    class PublishResponse(BaseModel):
-        succ: bool
-        msg: str
-        status_and_result: typing.Optional[dict] = None  # 消费函数的消费状态和结果.
-        task_id:str
-    """
-
-    msg_item = request.get_json()
-    return jsonify(app_functions.rpc_call(**msg_item))
-
-
-@app.route("/rpc/get_result_by_task_id", methods=["GET"])
-def get_result_by_task_id():
-    res = app_functions.get_result_by_task_id(
-        task_id=request.args.get("task_id"), timeout=request.args.get("timeout") or 60
-    )
-    if res["status_and_result"] is None:
-        return jsonify({"succ": False, "msg": "task_id不存在或者超时或者结果已经过期"})
-    return jsonify(res)
 
 
 def start_funboost_web_manager(
@@ -50258,7 +50286,6 @@ if __name__ == "__main__":
 
 #### 📦 Imports
 
-- `from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter`
 - `from funboost.funboost_web_manager.app import start_funboost_web_manager`
 
 
@@ -50267,18 +50294,17 @@ if __name__ == "__main__":
 `````python
 
 
-from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter
-from funboost.funboost_web_manager.app import start_funboost_web_manager
 
+from funboost.funboost_web_manager.app import start_funboost_web_manager
 
 if __name__ == '__main__':
     start_funboost_web_manager(
-        port=27010,
+        port=27011,
         debug=True,
         care_project_name='test_project1',
         block=True
         )
-
+   
 
 `````
 
@@ -50302,7 +50328,6 @@ if __name__ == '__main__':
 - `import traceback`
 - `from funboost import nb_print`
 - `from funboost.constant import RedisKeys`
-- `from funboost.core.booster import BoostersManager`
 - `from funboost.core.func_params_model import PriorityConsumingControlConfig`
 - `from funboost.core.func_params_model import PublisherParams`
 - `from funboost.core.msg_result_getter import AsyncResult`
@@ -50330,7 +50355,7 @@ if __name__ == '__main__':
 - `def statistic_by_period(self, t_start: str, t_end: str)`
 - `def build_result(self)`
 
-#### 🔧 Public Functions (5)
+#### 🔧 Public Functions (3)
 
 - `def get_cols(col_name_search: str)`
   - *Line: 32*
@@ -50340,12 +50365,6 @@ if __name__ == '__main__':
 
 - `def get_speed(col_name, start_time, end_time)`
   - *Line: 76*
-
-- `def rpc_call(queue_name, msg_body, need_result, timeout)`
-  - *Line: 156*
-
-- `def get_result_by_task_id(task_id, timeout)`
-  - *Line: 195*
 
 
 ---
@@ -50362,7 +50381,7 @@ import copy
 import traceback
 from funboost import nb_print
 from funboost.constant import RedisKeys
-from funboost.core.booster import BoostersManager
+
 from funboost.core.func_params_model import PriorityConsumingControlConfig, PublisherParams
 from funboost.core.msg_result_getter import AsyncResult
 from funboost.core.serialization import Serialization
@@ -50506,62 +50525,13 @@ class Statistic(LoggerMixin):
                                                  t2.strftime('%Y-%m-%d %H:%M:%S'))
                 self.result['recent_60_seconds']['count_arr'].append(count)
 
-def rpc_call(queue_name, msg_body, need_result, timeout):
-  
-    status_and_result = None
-    task_id = None
-    try:
-        # 不能直接用 get_cross_project_publisher(PublisherParams(...))，因为 PublisherParams 默认没有 consuming_function，
-        # 新版 funboost 会基于 consuming_function 生成/校验入参信息，None 会导致 inspect.getfullargspec 报错。
-        # 这里使用 redis 中保存的 auto_generate_info.final_func_input_params_info 生成 fake consuming_function，
-        # 从而做到跨项目、无需导入业务代码也能安全发布消息。
-        publisher = SingleQueueConusmerParamsGetter(queue_name).generate_publisher_by_funboost_redis_info()
-        booster_params_by_redis = SingleQueueConusmerParamsGetter(queue_name).get_one_queue_params_use_cache()
-    
-        if need_result:
-            if booster_params_by_redis.get('is_using_rpc_mode') is False:
-                raise ValueError(f'need_result 为true，{queue_name} 队列消费者需要 @boost 设置支持 rpc 模式（is_using_rpc_mode=True）')
-            
-            async_result: AsyncResult =  publisher.publish(msg_body,priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True))
-            async_result.set_timeout(timeout)
-            status_and_result = async_result.status_and_result
-            # print(status_and_result)
-            task_id = async_result.task_id
-            if status_and_result is None:
-                return dict(succ=False, msg=f'{queue_name} 队列,消息发布成功,但等待结果超时或结果不存在',
-                            status_and_result=status_and_result, task_id=task_id)
-        else:
-            async_result =publisher.publish(msg_body)
-            task_id = async_result.task_id
 
-        if need_result and status_and_result and status_and_result.get('success') is False:
-            return dict(succ=False, msg=f'{queue_name} 队列,消息发布成功,但是函数执行失败',
-                            status_and_result=status_and_result, task_id=task_id)
 
-        return dict(succ=True, msg=f'{queue_name} 队列,消息发布成功',
-                            status_and_result=status_and_result, task_id=task_id)
-    except Exception as e:
-        return dict(succ=False, msg=f'{queue_name} 队列,消息发布失败 {type(e)} {e} {traceback.format_exc()}',
-                               status_and_result=status_and_result,task_id=task_id)
-    
-
-def get_result_by_task_id(task_id,timeout):
-    async_result = AsyncResult(task_id)
-    async_result.set_timeout(timeout)
-    status_and_result = async_result.status_and_result
-    if status_and_result is None:
-        return dict(succ=False, msg=f'{task_id} 不存在 或 超时 或 结果已过期', 
-                        status_and_result=status_and_result,task_id=task_id)
-    if status_and_result['success'] is False:
-        return dict(succ=False, msg=f'{task_id} 执行失败', 
-                        status_and_result=status_and_result,task_id=task_id)
-    return dict(succ=True, msg=f'task_id:{task_id} 获取结果成功', 
-                            status_and_result=status_and_result,task_id=task_id)
-        
     
      
 
 if __name__ == '__main__':
+    pass
     # print(get_cols('4'))
     # pprint(query_result('queue_test54_task_status', '2019-09-15 00:00:00', '2019-09-25 00:00:00', True, '999', 0))
     # print(json.dumps(query_result(**{'col_name': 'queue_test56', 'start_time': '2019-09-18 16:03:29', 'end_time': '2019-09-21 16:03:29', 'is_success': '1', 'function_params': '', 'page': '0'}))[:1000])
@@ -50573,12 +50543,6 @@ if __name__ == '__main__':
     # nb_print(stat.result)
     
     # res = rpc_call('queue_test_g02t',{'x':1,'y':2},True,60)
-    
-    res = get_result_by_task_id('3232',60)
-    print(res)
-    
-    
-
 `````
 
 --- **end of file: funboost/funboost_web_manager/functions.py** (project: funboost) --- 
@@ -51881,6 +51845,43 @@ if __name__ == '__main__':
         background-color: #1e4d61;
     }
 
+    .sidebar-care-box {
+        margin: 8px 10px 14px 10px;
+        padding: 10px 12px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px;
+        color: #cde6f7;
+    }
+    .sidebar-care-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        letter-spacing: 0.3px;
+    }
+    .sidebar-care-display {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+    .sidebar-care-label {
+        color: #e0f0ff;
+        opacity: 0.9;
+    }
+    .badge-all {
+        color: #a8f3bf;
+        font-weight: 700;
+    }
+    .badge-project {
+        color: #ffd27f;
+        font-weight: 800;
+    }
+
     </style>
 </head>
 
@@ -51897,6 +51898,15 @@ if __name__ == '__main__':
                 <a class="nav-link" href="/?page=care_project_name" data-target="/tpl/care_project_name.html">
                     <i class="fa fa-filter"></i><span>设置care_project_name</span>
                 </a>
+                <div class="sidebar-care-box">
+                    <div class="sidebar-care-title">
+                        <i class="fa fa-tag"></i><span>当前关注项目</span>
+                    </div>
+                    <div class="sidebar-care-display" id="sidebar_care_project_display">
+                        <span class="sidebar-care-label">project_name</span>
+                        <span id="sidebar_care_project_value">加载中...</span>
+                    </div>
+                </div>
             </li>
             <li class="nav-item">
                 <a class="nav-link " href="/?page=fun_result_table" data-target="/tpl/fun_result_table.html">
@@ -51910,22 +51920,22 @@ if __name__ == '__main__':
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/?page=running_consumer_by_ip" data-target="/tpl/running_consumer_by_ip.html">
-                    <i class="fa fa-server"></i><span>运行中消费者(by ip)</span>
+                    <i class="fa fa-sitemap"></i><span>运行中消费者(by ip)</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/?page=running_consumer_by_queue_name" data-target="/tpl/running_consumer_by_queue_name.html">
-                    <i class="fa fa-list"></i><span>运行中消费者(by queue)</span>
+                    <i class="fa fa-tasks"></i><span>运行中消费者(by queue)</span>
                 </a>
             </li>
             <li class="nav-item ">
                 <a class="nav-link active" href="/?page=queue_op" data-target="/tpl/queue_op.html">
-                    <i class="fa fa-cogs"></i><span>队列操作</span>
+                    <i class="fa fa-sliders"></i><span>队列操作</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/?page=rpc_call" data-target="/tpl/rpc_call.html">
-                    <i class="fa fa-cogs"></i><span>rpc调用</span>
+                    <i class="fa fa-random"></i><span>rpc调用</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -52052,6 +52062,31 @@ if __name__ == '__main__':
             $('#confirmLogout').click(function() {
                 window.location.href = '/logout';
             });
+
+            // 显示侧边栏当前 care_project_name
+            function updateSidebarCareProjectDisplay(val) {
+                var $v = $('#sidebar_care_project_value');
+                $v.removeClass('badge-all badge-project');
+                if (val === null || val === '') {
+                    $v.text('不限项目').addClass('badge-all');
+                } else {
+                    $v.text(val).addClass('badge-project');
+                }
+            }
+
+            function loadSidebarCareProjectName() {
+                $.get('/funboost/get_care_project_name', function(resp) {
+                    var val = '';
+                    if (resp && resp.succ && resp.data) {
+                        val = resp.data.care_project_name || '';
+                    }
+                    updateSidebarCareProjectDisplay(val);
+                }).fail(function() {
+                    $('#sidebar_care_project_value').text('获取失败');
+                });
+            }
+
+            loadSidebarCareProjectName();
         });
     </script>
 </body>
@@ -52966,14 +53001,6 @@ if __name__ == '__main__':
                 { title: "<br>broker<br>类型", field: "broker_kind", sorter: "string"  },
                 { title: "<br>消费<br>函数", field: "consuming_function_name", sorter: "string"  },
               
-                { title: "<br>历史运<br>行次数", field: "history_run_count", sorter: "number", width: 150 },
-                { title: "<br>历史运<br>行失败<br>次数", field: "history_run_fail_count", sorter: "number", width: 150 },
-                { title: "<br>近10秒<br>完成", field: "all_consumers_last_x_s_execute_count", sorter: "number", width: 100 },
-                { title: "<br>近10秒<br>失败", field: "all_consumers_last_x_s_execute_count_fail", sorter: "number", width: 100 },
-
-                { title: "近10秒<br>函数运行<br>平均耗时", field: "all_consumers_last_x_s_avarage_function_spend_time", sorter: "number", width: 100 },
-                { title: "累计<br>函数运行<br>平均耗时", field: "all_consumers_avarage_function_spend_time_from_start", sorter: "number", width: 100 },
-
                 { title: "<br><br>消息数量", field: "msg_count", sorter: "number", width: 250,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
@@ -52987,6 +53014,14 @@ if __name__ == '__main__':
                         `;
                     }
                 },
+
+                { title: "<br>历史运<br>行次数", field: "history_run_count", sorter: "number", width: 150 },
+                { title: "<br>历史运<br>行失败<br>次数", field: "history_run_fail_count", sorter: "number", width: 150 },
+                { title: "<br>近10秒<br>完成", field: "all_consumers_last_x_s_execute_count", sorter: "number", width: 100 },
+                { title: "<br>近10秒<br>失败", field: "all_consumers_last_x_s_execute_count_fail", sorter: "number", width: 100 },
+
+                { title: "近10秒<br>函数运行<br>平均耗时", field: "all_consumers_last_x_s_avarage_function_spend_time", sorter: "number", width: 100 },
+                { title: "累计<br>函数运行<br>平均耗时", field: "all_consumers_avarage_function_spend_time_from_start", sorter: "number", width: 100 },
 
                 { 
                     title: "暂停<br>消费<br>状态",
@@ -53110,13 +53145,6 @@ if __name__ == '__main__':
         }
         // 操作函数
         function getMessageCount(queueName) {
-            const row = table.getRows().find(row => row.getData().queue_name === queueName);
-            if (!row) {
-                alert('找不到对应的队列数据');
-                return;
-            }
-            const broker_kind = row.getData().broker_kind;
-            
             let countSpan = document.getElementById(`msg-count-${queueName}`);
             let previous_count_str = countSpan.getAttribute('data-last-count') || '0';
             let previous_count = parseInt(previous_count_str);
@@ -53124,10 +53152,10 @@ if __name__ == '__main__':
 
             countSpan.innerHTML = '正在获取...'; // Add a loading indicator
 
-            // 获取消息数量的API调用
-            $.get(`/queue/message_count/${broker_kind}/${queueName}`, function(response) {
-                if (response.success) {
-                    const new_count = parseInt(response.count);
+            // 使用 Flask 蓝图接口获取消息数量
+            $.get(`/funboost/get_msg_count?queue_name=${encodeURIComponent(queueName)}`, function(response) {
+                if (response.succ) {
+                    const new_count = parseInt(response.data.count);
                     if (isNaN(new_count)) {
                         countSpan.innerHTML = 'get_msg_num_error';
                         countSpan.setAttribute('data-last-count', '0'); // Reset last count on error
@@ -53157,17 +53185,25 @@ if __name__ == '__main__':
         }
 
         function clearQueue(queueName) {
-            const row = table.getRows().find(row => row.getData().queue_name === queueName);
-            if (!row) {
-                alert('找不到对应的队列数据');
-                return;
-            }
-            const broker_kind = row.getData().broker_kind;
             if (confirm(`确定要清空队列 ${queueName} 的所有消息吗？`)) {
-                $.post(`/queue/clear/${broker_kind}/${queueName}`, function(response) {
-                    alert(`清空 ${queueName} 队列成功`);
-                    // table.replaceData();
-                    getMessageCount(queueName); // 自动获取最新的消息数量
+                $.ajax({
+                    url: '/funboost/clear_queue',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        queue_name: queueName
+                    }),
+                    success: function(response) {
+                        if (response.succ) {
+                            alert(`清空 ${queueName} 队列成功`);
+                            getMessageCount(queueName); // 自动获取最新的消息数量
+                        } else {
+                            alert(`清空队列失败：${response.msg}`);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert(`清空队列失败：${error}`);
+                    }
                 });
             }
         }
@@ -53922,13 +53958,19 @@ if __name__ == '__main__':
                 <div id="rpc_summary_area" style="background-color: #f9f9f9; border-radius: 8px; padding: 15px; border-left: 5px solid #2ecc71; box-shadow: 0 2px 5px rgba(0,0,0,0.08); margin-bottom: 12px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <strong style="font-size: 15px;">关键结果</strong>
-                        <span id="rpc_summary_success_badge" class="label label-default">-</span>
+                        <span id="rpc_summary_success_badge" class="label label-default rpc-success-badge">-</span>
                     </div>
 
                     <div style="display: flex; flex-wrap: wrap;">
                         <div class="rpc-key-box">
                             <div class="rpc-key-title">task_id</div>
-                            <div class="rpc-key-value"><code id="rpc_summary_task_id">-</code></div>
+                            <div class="rpc-key-value">
+                                <code id="rpc_summary_task_id">-</code>
+                                <button type="button" class="btn btn-default btn-xs rpc-copy-btn" id="copy_task_id_btn" title="复制 task_id">
+                                    <i class="fa fa-copy"></i>
+                                </button>
+                                <span id="copy_task_id_feedback" class="rpc-copy-feedback"><i class="fa fa-check"></i> 已复制</span>
+                            </div>
                         </div>
                         <div class="rpc-key-box">
                             <div class="rpc-key-title">queue</div>
@@ -54034,6 +54076,35 @@ if __name__ == '__main__':
                 } catch (e2) {
                     return "";
                 }
+            }
+        }
+
+        function rpcCopyTextWithFeedback(text, feedbackSelector) {
+            if (!text) {
+                return;
+            }
+            var $fb = feedbackSelector ? $(feedbackSelector) : null;
+            var showFeedback = function () {
+                if ($fb && $fb.length) {
+                    $fb.stop(true, true).fadeIn(200).delay(1500).fadeOut(400);
+                }
+            };
+            var fallbackCopy = function () {
+                var $temp = $("<textarea>");
+                $("body").append($temp);
+                $temp.val(text).select();
+                try {
+                    document.execCommand("copy");
+                    showFeedback();
+                } catch (e) {
+                    alert("复制失败，请手动复制");
+                }
+                $temp.remove();
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(showFeedback).catch(fallbackCopy);
+            } else {
+                fallbackCopy();
             }
         }
 
@@ -54418,33 +54489,18 @@ if __name__ == '__main__':
         // 复制 RPC status_and_result 到剪贴板
         $(document).ready(function() {
             $("#copy_rpc_result_btn").click(function() {
-                var text = $("#rpc_result").val();
-                if (!text) {
-                    return;
-                }
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(text).then(function() {
-                        $("#copy_rpc_result_feedback").fadeIn(200).delay(1500).fadeOut(400);
-                    }).catch(function() {
-                        fallbackCopyText(text);
-                    });
-                } else {
-                    fallbackCopyText(text);
+                rpcCopyTextWithFeedback($("#rpc_result").val(), "#copy_rpc_result_feedback");
+            });
+        });
+
+        // 复制关键结果中的 task_id
+        $(document).ready(function() {
+            $("#copy_task_id_btn").click(function() {
+                var tid = $("#rpc_summary_task_id").text().trim();
+                if (tid && tid !== "-") {
+                    rpcCopyTextWithFeedback(tid, "#copy_task_id_feedback");
                 }
             });
-
-            function fallbackCopyText(text) {
-                var $temp = $("<textarea>");
-                $("body").append($temp);
-                $temp.val(text).select();
-                try {
-                    document.execCommand("copy");
-                    $("#copy_rpc_result_feedback").fadeIn(200).delay(1500).fadeOut(400);
-                } catch (e) {
-                    alert("复制失败，请手动复制");
-                }
-                $temp.remove();
-            }
         });
 
         // 添加获取结果功能
@@ -54566,6 +54622,21 @@ if __name__ == '__main__':
             font-size: 13px;
             font-weight: bold;
             word-break: break-all;
+        }
+        .rpc-copy-btn {
+            margin-left: 6px;
+            padding: 2px 6px;
+        }
+        .rpc-copy-feedback {
+            margin-left: 6px;
+            color: #5cb85c;
+            display: none;
+        }
+        .rpc-success-badge {
+            font-size: 16px;
+            padding: 6px 12px;
+            border-radius: 12px;
+            letter-spacing: 1px;
         }
     </style>
 </body>
@@ -62286,7 +62357,7 @@ test_frame/test_apschedual/test_change_aps_conf.py
 - `from funboost.consumers.base_consumer import AbstractConsumer`
 - `from funboost.core.booster import BoostersManager`
 - `from funboost.core.booster import Booster`
-- `from funboost import BoosterParams`
+- `from funboost.core.func_params_model import BoosterParams`
 - `from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble`
 - `from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAbleNonDaemon`
 - `import datetime`
@@ -62295,11 +62366,12 @@ test_frame/test_apschedual/test_change_aps_conf.py
 - `from funboost import fsdf_background_scheduler`
 - `from funboost import timing_publish_deco`
 - `from funboost import run_forever`
+- `from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter`
 
 #### 🏛️ Classes (2)
 
 ##### 📌 `class ThreadPoolExecutorForAps(BasePoolExecutor)`
-*Line: 51*
+*Line: 57*
 
 **Docstring:**
 `````
@@ -62320,7 +62392,7 @@ Plugin alias: ``threadpool``
     - `pool_kwargs = None`
 
 ##### 📌 `class FunboostBackgroundScheduler(BackgroundScheduler)`
-*Line: 78*
+*Line: 84*
 
 **Docstring:**
 `````
@@ -62369,7 +62441,7 @@ Plugin alias: ``threadpool``
   `````
 
 - `def consume_func(x, y)` `Booster(boost_params=BoosterParams(queue_name='queue_test_666', broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE))`
-  - *Line: 218*
+  - *Line: 224*
 
 
 ---
@@ -62399,7 +62471,7 @@ from funboost.funboost_config_deafult import FunboostCommonConfig
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.core.booster import BoostersManager, Booster
 
-from funboost import BoosterParams
+from funboost.core.func_params_model import BoosterParams
 from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble,ThreadPoolExecutorShrinkAbleNonDaemon
 
 
@@ -62421,8 +62493,14 @@ def push_fun_params_to_broker(queue_name: str, *args, **kwargs):
     queue_name 队列名字
     *args **kwargs 是消费函数的入参
     """
-    booster = BoostersManager.get_or_create_booster_by_queue_name(queue_name)
-    booster.push(*args, **kwargs)
+    try:
+        booster = BoostersManager.get_or_create_booster_by_queue_name(queue_name)
+        return booster.push(*args, **kwargs)
+    except KeyError as e:
+        from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter
+        publisher = SingleQueueConusmerParamsGetter(queue_name).generate_publisher_by_funboost_redis_info()
+        return publisher.push(*args, **kwargs)
+        
 
 
 class ThreadPoolExecutorForAps(BasePoolExecutor):
@@ -62508,7 +62586,7 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
         args = tuple(args_list)
         if name is None:
             name = f'push_fun_params_to_broker_for_queue_{func.queue_name}'
-        func.publisher.check_func_input_params(*args[1:], **kwargs) # 这一行是检查入参是否合法，防止添加了不合法的定时入参，到执行时候才发现，这比官方apscheduler更靠谱。
+        func.publisher.check_func_input_params(*args[1:], **(kwargs or {})) # 这一行是检查入参是否合法，防止添加了不合法的定时入参，到执行时候才发现，这比官方apscheduler更靠谱。
         return self.add_job(push_fun_params_to_broker, trigger, args, kwargs, id, name,
                             misfire_grace_time, coalesce, max_instances,
                             next_run_time, jobstore, executor,

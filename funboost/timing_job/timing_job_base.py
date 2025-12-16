@@ -46,10 +46,11 @@ def push_fun_params_to_broker(queue_name: str, *args, **kwargs):
     """
     try:
         booster = BoostersManager.get_or_create_booster_by_queue_name(queue_name)
+        return booster.push(*args, **kwargs)
     except KeyError as e:
         from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter
-        booster = SingleQueueConusmerParamsGetter(queue_name).generate_booster_by_funboost_redis_info_for_timing_push()
-    booster.publisher.push(*args, **kwargs)
+        publisher = SingleQueueConusmerParamsGetter(queue_name).generate_publisher_by_funboost_redis_info()
+        return publisher.push(*args, **kwargs)
         
 
 

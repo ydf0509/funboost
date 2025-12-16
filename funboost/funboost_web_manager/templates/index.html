@@ -120,6 +120,43 @@
         background-color: #1e4d61;
     }
 
+    .sidebar-care-box {
+        margin: 8px 10px 14px 10px;
+        padding: 10px 12px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px;
+        color: #cde6f7;
+    }
+    .sidebar-care-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        letter-spacing: 0.3px;
+    }
+    .sidebar-care-display {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+    .sidebar-care-label {
+        color: #e0f0ff;
+        opacity: 0.9;
+    }
+    .badge-all {
+        color: #a8f3bf;
+        font-weight: 700;
+    }
+    .badge-project {
+        color: #ffd27f;
+        font-weight: 800;
+    }
+
     </style>
 </head>
 
@@ -136,6 +173,15 @@
                 <a class="nav-link" href="/?page=care_project_name" data-target="/tpl/care_project_name.html">
                     <i class="fa fa-filter"></i><span>设置care_project_name</span>
                 </a>
+                <div class="sidebar-care-box">
+                    <div class="sidebar-care-title">
+                        <i class="fa fa-tag"></i><span>当前关注项目</span>
+                    </div>
+                    <div class="sidebar-care-display" id="sidebar_care_project_display">
+                        <span class="sidebar-care-label">project_name</span>
+                        <span id="sidebar_care_project_value">加载中...</span>
+                    </div>
+                </div>
             </li>
             <li class="nav-item">
                 <a class="nav-link " href="/?page=fun_result_table" data-target="/tpl/fun_result_table.html">
@@ -291,6 +337,31 @@
             $('#confirmLogout').click(function() {
                 window.location.href = '/logout';
             });
+
+            // 显示侧边栏当前 care_project_name
+            function updateSidebarCareProjectDisplay(val) {
+                var $v = $('#sidebar_care_project_value');
+                $v.removeClass('badge-all badge-project');
+                if (val === null || val === '') {
+                    $v.text('不限项目').addClass('badge-all');
+                } else {
+                    $v.text(val).addClass('badge-project');
+                }
+            }
+
+            function loadSidebarCareProjectName() {
+                $.get('/funboost/get_care_project_name', function(resp) {
+                    var val = '';
+                    if (resp && resp.succ && resp.data) {
+                        val = resp.data.care_project_name || '';
+                    }
+                    updateSidebarCareProjectDisplay(val);
+                }).fail(function() {
+                    $('#sidebar_care_project_value').text('获取失败');
+                });
+            }
+
+            loadSidebarCareProjectName();
         });
     </script>
 </body>

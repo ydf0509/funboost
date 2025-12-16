@@ -4,7 +4,7 @@ from funboost.utils.redis_manager import RedisMixin,get_redis_conn_kwargs
 from funboost.timing_job import FunboostBackgroundScheduler
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
 from funboost.utils.decorators import RedisDistributedBlockLockContextManager
-
+from funboost.core.loggers import flogger
 
 """
 这个是使用redis作为定时任务持久化，支持跨机器和跨进程，外部远程 动态修改/添加/删除定时任务
@@ -58,8 +58,12 @@ class FunboostBackgroundSchedulerProcessJobsWithinRedisLock(FunboostBackgroundSc
         """
         if self.process_jobs_redis_lock_key is None:
             raise ValueError('process_jobs_redis_lock_key is not set')
-        with RedisDistributedBlockLockContextManager(RedisMixin().redis_db_frame, self.process_jobs_redis_lock_key, ):
-            return super()._process_jobs()
+        try:    
+            with RedisDistributedBlockLockContextManager(RedisMixin().redis_db_frame, self.process_jobs_redis_lock_key, ):
+                return super()._process_jobs()
+        except Exception as e: # 这里必须捕获错误，否则一旦RedisDistributedBlockLockContextManager redis 报错断网一次，_main_loop 循环就会退出，导致定时器的扫描任务的while 线程永久不再运行了。
+            flogger.exception(e)
+            return 0.1
 
 
 jobstores = {

@@ -349,14 +349,6 @@
                 { title: "<br>broker<br>类型", field: "broker_kind", sorter: "string"  },
                 { title: "<br>消费<br>函数", field: "consuming_function_name", sorter: "string"  },
               
-                { title: "<br>历史运<br>行次数", field: "history_run_count", sorter: "number", width: 150 },
-                { title: "<br>历史运<br>行失败<br>次数", field: "history_run_fail_count", sorter: "number", width: 150 },
-                { title: "<br>近10秒<br>完成", field: "all_consumers_last_x_s_execute_count", sorter: "number", width: 100 },
-                { title: "<br>近10秒<br>失败", field: "all_consumers_last_x_s_execute_count_fail", sorter: "number", width: 100 },
-
-                { title: "近10秒<br>函数运行<br>平均耗时", field: "all_consumers_last_x_s_avarage_function_spend_time", sorter: "number", width: 100 },
-                { title: "累计<br>函数运行<br>平均耗时", field: "all_consumers_avarage_function_spend_time_from_start", sorter: "number", width: 100 },
-
                 { title: "<br><br>消息数量", field: "msg_count", sorter: "number", width: 250,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
@@ -370,6 +362,14 @@
                         `;
                     }
                 },
+
+                { title: "<br>历史运<br>行次数", field: "history_run_count", sorter: "number", width: 150 },
+                { title: "<br>历史运<br>行失败<br>次数", field: "history_run_fail_count", sorter: "number", width: 150 },
+                { title: "<br>近10秒<br>完成", field: "all_consumers_last_x_s_execute_count", sorter: "number", width: 100 },
+                { title: "<br>近10秒<br>失败", field: "all_consumers_last_x_s_execute_count_fail", sorter: "number", width: 100 },
+
+                { title: "近10秒<br>函数运行<br>平均耗时", field: "all_consumers_last_x_s_avarage_function_spend_time", sorter: "number", width: 100 },
+                { title: "累计<br>函数运行<br>平均耗时", field: "all_consumers_avarage_function_spend_time_from_start", sorter: "number", width: 100 },
 
                 { 
                     title: "暂停<br>消费<br>状态",

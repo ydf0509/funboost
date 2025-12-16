@@ -503,6 +503,8 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
                 fake_fun = FakeFunGenerator.gen_fake_fun_by_params(redis_final_func_input_params_info)
                 booster_params['consuming_function'] = fake_fun
                 booster_params['consuming_function_raw'] = fake_fun
+                
+                booster_params['is_fake_booster'] = True # 重要，不要注册到BoostersManager，防止干扰用户的真实booster的消费函数逻辑。由此类的 _pid_broker_kind_queue_name__publisher_map 管理
                 # 发布消息时候会立即校验入参是否正确，你使用了redis中的 booster配置的 auto_generate_info.final_func_input_params_info 信息来校验入参名字和个数是否正确
                 # booster_params['should_check_publish_func_params'] = False # 
                 booster_params_model = BoosterParams(**booster_params)
@@ -523,6 +525,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
                 fake_fun = FakeFunGenerator.gen_fake_fun_by_params(redis_final_func_input_params_info)
                 booster_params['consuming_function'] = fake_fun
                 booster_params['consuming_function_raw'] = fake_fun
+
                 # booster_params['should_check_publish_func_params'] = False
                 booster_params['specify_concurrent_pool'] = None
                 booster_params['specify_async_loop'] = None
@@ -531,6 +534,8 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
                 booster_params['user_custom_record_process_info_func'] = None
                 booster_params['consumer_override_cls'] = None
                 booster_params['publisher_override_cls'] = None
+
+                booster_params['is_fake_booster'] = True # 重要，不要注册到BoostersManager，防止干扰用户的真实booster的消费函数逻辑。由此类的 _pid_broker_kind_queue_name__booster_map 管理
                 booster_params_model = BoosterParams(**booster_params)
                 booster = Booster(booster_params_model)(booster_params_model.consuming_function)
                 self._pid_broker_kind_queue_name__booster_map[key] = booster

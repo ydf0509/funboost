@@ -279,6 +279,13 @@ class BoosterParams(BaseJsonAbleModel):
     
     auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.例如包含 final_func_input_params_info 和 where_to_instantiate 等。
     
+    """# is_fake_booster：是否是伪造的booster,
+    # 用于faas模式下，因为跨项目的faas管理只拿到了redis的一些基本元数据，没有booster的函数逻辑，
+    # 例如ApsJobAdder管理定时任务，需要booster，但没有真实的函数逻辑，
+    # 你可以看 SingleQueueConusmerParamsGetter.generate_booster_by_funboost_redis_info_for_timing_push 的用法，目前主要是控制不要执行 BoostersManager.regist_booster
+    # 普通用户完全不用改这个参数。
+    """
+    is_fake_booster: bool = False
     
 
     @root_validator(skip_on_failure=True, )
@@ -418,6 +425,8 @@ class PublisherParams(BaseJsonAbleModel):
     rpc_timeout: int = 1800 # rpc模式下，等待rpc结果返回的超时时间
     user_options: dict = {}  # 用户自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
     auto_generate_info: dict = {}
+    is_fake_booster: bool = False # 是否是伪造的booster, 不注册到BoostersManager
+    
 
 
 if __name__ == '__main__':

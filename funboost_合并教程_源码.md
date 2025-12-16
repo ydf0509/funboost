@@ -2284,27 +2284,24 @@ Entry Points (not imported by other project files):
 └── examples
     ├── example_all_usage.py
     ├── example_easy.py
-    ├── example_faas
-    │   ├── README.md
-    │   ├── example_fastapi_faas.py
-    │   ├── example_req_fastapi.py
-    │   ├── example_req_timing_api.py
-    │   ├── start_consume.py
-    │   └── task_funs_dir
-    │       ├── __init__.py
-    │       ├── add.py
-    │       ├── base_booster_params.py
-    │       └── sub.py
-    └── example_fastapi_funboost_router
+    └── example_faas
         ├── README.md
-        └── start_consume.py
+        ├── example_fastapi_faas.py
+        ├── example_req_fastapi.py
+        ├── example_req_timing_api.py
+        ├── start_consume.py
+        └── task_funs_dir
+            ├── __init__.py
+            ├── add.py
+            ├── base_booster_params.py
+            └── sub.py
 
 `````
 
 ---
 
 
-## funboost_docs (relative dir: `examples`)  Included Files (total: 13 files)
+## funboost_docs (relative dir: `examples`)  Included Files (total: 11 files)
 
 
 - `examples/example_all_usage.py`
@@ -2328,10 +2325,6 @@ Entry Points (not imported by other project files):
 - `examples/example_faas/task_funs_dir/sub.py`
 
 - `examples/example_faas/task_funs_dir/__init__.py`
-
-- `examples/example_fastapi_funboost_router/README.md`
-
-- `examples/example_fastapi_funboost_router/start_consume.py`
 
 
 ---
@@ -3332,27 +3325,31 @@ def add(x, y=10,):
 
 #### 📦 Imports
 
+- `from re import T`
 - `from funboost import BoosterParams`
 - `from funboost import BrokerEnum`
+- `from funboost import FunctionResultStatusPersistanceConfig`
 
 #### 🏛️ Classes (1)
 
 ##### 📌 `class Project1BoosterParams(BoosterParams)`
-*Line: 5*
+*Line: 6*
 
-**Class Variables (6):**
+**Class Variables (7):**
 - `project_name: str = 'test_project1'`
 - `broker_kind: str = BrokerEnum.REDIS`
 - `is_send_consumer_hearbeat_to_redis: bool = True`
 - `is_using_rpc_mode: bool = True`
 - `booster_group: str = 'test_group1'`
 - `should_check_publish_func_params: bool = True`
+- `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)`
 
 
 ---
 
 `````python
-from funboost import  BoosterParams, BrokerEnum
+from re import T
+from funboost import  BoosterParams, BrokerEnum, FunctionResultStatusPersistanceConfig
 
 
 
@@ -3363,6 +3360,8 @@ class Project1BoosterParams(BoosterParams):
     is_using_rpc_mode:bool = True # 必须设置这一个参数为True，才能支持rpc功能。
     booster_group : str = 'test_group1' # 方便按分组启动消费
     should_check_publish_func_params:bool = True # 发布消息时，是否检查消息内容是否正确，不正确的消息格式立刻从接口返回报错消息内容不正确。
+    function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
+        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False) 
 `````
 
 --- **end of file: examples/example_faas/task_funs_dir/base_booster_params.py** (project: funboost_docs) --- 
@@ -3422,172 +3421,6 @@ def sub(a, b):
 `````
 
 --- **end of file: examples/example_faas/task_funs_dir/__init__.py** (project: funboost_docs) --- 
-
----
-
-
---- **start of file: examples/example_fastapi_funboost_router/README.md** (project: funboost_docs) --- 
-
-`````markdown
-# funboost faas （Function as a Service） 示例
-
-本示例演示如何在funboost faas 用法。
-
-```
-funboost faas ,可以单独部署启动消费，用户可以让booster随着web一起启动，也可以单独启动消费。
-
-因为 funboost.faas 是基于funboost注册到redis中的元数据驱动，所以可以动态发现booster，
-所以只要消费函数部署上线了，web服务完全无需重启，从http接口马上就能调用了，
-相比传统web开发，加一个功能就要加一个接口，然后重启web，funboost faas爽的一逼。
-```
-
-
-## 📁 文件说明
-
-### 1. `task_funs_dir` - 任务函数定义文件夹
-
-**作用**: 定义需要被 Funboost 管理的消费函数（任务函数）
-
-`Project1BoosterParams` 是 `BoosterParams`子类 ，每个消费函数可以直接用这个子类，减少每个装饰器都重复相同入参
-
-
-
-
-### 2. `example_fastapi_faas.py` - FastAPI 应用主入口
-
-**作用**: FastAPI 应用的主程序，展示如何一键集成 Funboost 路由，实现faas
-
-运行 Uvicorn 服务器
-
-
-**核心代码**:
-```python
-from funboost.faas import fastapi_router,CareProjectNameEnv
-
-CareProjectNameEnv.set('test_project1') # 可选，只关注指定的test_project1项目下的队列
-
-app = FastAPI()
-app.include_router(fastapi_router)  # 核心用法：一行代码集成
-
-
-
-if __name__ == '__main__':
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-```
-
-**访问地址**:
-- API 文档: http://127.0.0.1:8000/docs
-- 根路径: http://127.0.0.1:8000/
-
----
-
-### 3. `start_consume.py` - 独立消费者启动脚本
-
-**作用**: 演示如何单独启动 Funboost 消费者，而不随 FastAPI 一起启动
-
-
-
----
-
-### 4. `example_req_fastapi.py` - API 测试客户端
-
-**作用**: 演示如何调用 Funboost FastAPI 路由的各个接口
-
-**包含的测试用例**:
-
-#### 测试 1: `test_publish_and_get_result()`
-- **功能**: 发布任务并同步等待结果
-- **请求**: `POST /funboost/publish`
-- **参数**:
-  ```json
-  {
-    "queue_name": "test_fastapi_router_queue",
-    "msg_body": {"x": 10, "y": 20},
-    "need_result": true,
-    "timeout": 10
-  }
-  ```
-- **特点**: `need_result=True` 时，接口会阻塞等待任务完成并返回结果
-
-#### 测试 2: `test_get_msg_count()`
-- **功能**: 获取指定队列的消息数量
-- **请求**: `GET /funboost/get_msg_count?queue_name=test_fastapi_router_queue`
-- **用途**: 监控队列积压情况
-
-#### 测试 3: `test_publish_async_then_get_result()`
-- **功能**: 异步发布任务，先获取 task_id，再通过 task_id 查询结果
-- **流程**:
-  1. 发布任务（`need_result=False`），立即返回 task_id
-  2. 使用 task_id 调用 `GET /funboost/get_result` 获取结果
-- **优势**: 不阻塞，适合长时间任务
-
-**运行方式**:
-```bash
-python example_req_fastapi.py
-```
-
----
-
-
-
-
-
-
-`````
-
---- **end of file: examples/example_fastapi_funboost_router/README.md** (project: funboost_docs) --- 
-
----
-
-
---- **start of file: examples/example_fastapi_funboost_router/start_consume.py** (project: funboost_docs) --- 
-
-
-### 📄 Python File Metadata: `examples/example_fastapi_funboost_router/start_consume.py`
-
-#### 📝 Module Docstring
-
-`````
-可以单独部署启动消费，用户可以让booster随着fastapi一起启动，也可以单独启动消费。
-
-因为 funboost.faas 是基于funboost注册到redis中的元数据，所以可以动态发现booster，
-所以只要消费函数部署上线了，web服务完全无需重启，从http接口马上就能调用了，
-相比传统web开发，加一个功能就要加一个接口，然后重启web，funboost faas爽的一逼。
-`````
-
-#### 📦 Imports
-
-- `from funboost import BoosterDiscovery`
-- `from funboost import BoostersManager`
-
-
----
-
-`````python
-"""
-可以单独部署启动消费，用户可以让booster随着fastapi一起启动，也可以单独启动消费。
-
-因为 funboost.faas 是基于funboost注册到redis中的元数据，所以可以动态发现booster，
-所以只要消费函数部署上线了，web服务完全无需重启，从http接口马上就能调用了，
-相比传统web开发，加一个功能就要加一个接口，然后重启web，funboost faas爽的一逼。
-"""
-
-from funboost import BoosterDiscovery,BoostersManager
-
-if __name__ == '__main__':
-    # 演示 BoosterDiscovery ，自动扫描注册 @boost，
-    # 效果等同于 直接 import task_funs_dir 下的add和sub模块。
-    BoosterDiscovery(
-        project_root_path=r'D:\codes\funboost',
-        booster_dirs=['examples/example_faas/task_funs_dir'],
-         ).auto_discovery()
-
-    print(BoostersManager.get_all_queues())
-
-    BoostersManager.consume_group('test_group1')
-`````
-
---- **end of file: examples/example_fastapi_funboost_router/start_consume.py** (project: funboost_docs) --- 
 
 ---
 
@@ -22528,27 +22361,24 @@ Entry Points (not imported by other project files):
 └── examples
     ├── example_all_usage.py
     ├── example_easy.py
-    ├── example_faas
-    │   ├── README.md
-    │   ├── example_fastapi_faas.py
-    │   ├── example_req_fastapi.py
-    │   ├── example_req_timing_api.py
-    │   ├── start_consume.py
-    │   └── task_funs_dir
-    │       ├── __init__.py
-    │       ├── add.py
-    │       ├── base_booster_params.py
-    │       └── sub.py
-    └── example_fastapi_funboost_router
+    └── example_faas
         ├── README.md
-        └── start_consume.py
+        ├── example_fastapi_faas.py
+        ├── example_req_fastapi.py
+        ├── example_req_timing_api.py
+        ├── start_consume.py
+        └── task_funs_dir
+            ├── __init__.py
+            ├── add.py
+            ├── base_booster_params.py
+            └── sub.py
 
 `````
 
 ---
 
 
-## funboost (relative dir: `examples`)  Included Files (total: 13 files)
+## funboost (relative dir: `examples`)  Included Files (total: 11 files)
 
 
 - `examples/example_all_usage.py`
@@ -22572,10 +22402,6 @@ Entry Points (not imported by other project files):
 - `examples/example_faas/task_funs_dir/sub.py`
 
 - `examples/example_faas/task_funs_dir/__init__.py`
-
-- `examples/example_fastapi_funboost_router/README.md`
-
-- `examples/example_fastapi_funboost_router/start_consume.py`
 
 
 ---
@@ -23576,27 +23402,31 @@ def add(x, y=10,):
 
 #### 📦 Imports
 
+- `from re import T`
 - `from funboost import BoosterParams`
 - `from funboost import BrokerEnum`
+- `from funboost import FunctionResultStatusPersistanceConfig`
 
 #### 🏛️ Classes (1)
 
 ##### 📌 `class Project1BoosterParams(BoosterParams)`
-*Line: 5*
+*Line: 6*
 
-**Class Variables (6):**
+**Class Variables (7):**
 - `project_name: str = 'test_project1'`
 - `broker_kind: str = BrokerEnum.REDIS`
 - `is_send_consumer_hearbeat_to_redis: bool = True`
 - `is_using_rpc_mode: bool = True`
 - `booster_group: str = 'test_group1'`
 - `should_check_publish_func_params: bool = True`
+- `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)`
 
 
 ---
 
 `````python
-from funboost import  BoosterParams, BrokerEnum
+from re import T
+from funboost import  BoosterParams, BrokerEnum, FunctionResultStatusPersistanceConfig
 
 
 
@@ -23607,6 +23437,8 @@ class Project1BoosterParams(BoosterParams):
     is_using_rpc_mode:bool = True # 必须设置这一个参数为True，才能支持rpc功能。
     booster_group : str = 'test_group1' # 方便按分组启动消费
     should_check_publish_func_params:bool = True # 发布消息时，是否检查消息内容是否正确，不正确的消息格式立刻从接口返回报错消息内容不正确。
+    function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
+        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False) 
 `````
 
 --- **end of file: examples/example_faas/task_funs_dir/base_booster_params.py** (project: funboost) --- 
@@ -23666,172 +23498,6 @@ def sub(a, b):
 `````
 
 --- **end of file: examples/example_faas/task_funs_dir/__init__.py** (project: funboost) --- 
-
----
-
-
---- **start of file: examples/example_fastapi_funboost_router/README.md** (project: funboost) --- 
-
-`````markdown
-# funboost faas （Function as a Service） 示例
-
-本示例演示如何在funboost faas 用法。
-
-```
-funboost faas ,可以单独部署启动消费，用户可以让booster随着web一起启动，也可以单独启动消费。
-
-因为 funboost.faas 是基于funboost注册到redis中的元数据驱动，所以可以动态发现booster，
-所以只要消费函数部署上线了，web服务完全无需重启，从http接口马上就能调用了，
-相比传统web开发，加一个功能就要加一个接口，然后重启web，funboost faas爽的一逼。
-```
-
-
-## 📁 文件说明
-
-### 1. `task_funs_dir` - 任务函数定义文件夹
-
-**作用**: 定义需要被 Funboost 管理的消费函数（任务函数）
-
-`Project1BoosterParams` 是 `BoosterParams`子类 ，每个消费函数可以直接用这个子类，减少每个装饰器都重复相同入参
-
-
-
-
-### 2. `example_fastapi_faas.py` - FastAPI 应用主入口
-
-**作用**: FastAPI 应用的主程序，展示如何一键集成 Funboost 路由，实现faas
-
-运行 Uvicorn 服务器
-
-
-**核心代码**:
-```python
-from funboost.faas import fastapi_router,CareProjectNameEnv
-
-CareProjectNameEnv.set('test_project1') # 可选，只关注指定的test_project1项目下的队列
-
-app = FastAPI()
-app.include_router(fastapi_router)  # 核心用法：一行代码集成
-
-
-
-if __name__ == '__main__':
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-```
-
-**访问地址**:
-- API 文档: http://127.0.0.1:8000/docs
-- 根路径: http://127.0.0.1:8000/
-
----
-
-### 3. `start_consume.py` - 独立消费者启动脚本
-
-**作用**: 演示如何单独启动 Funboost 消费者，而不随 FastAPI 一起启动
-
-
-
----
-
-### 4. `example_req_fastapi.py` - API 测试客户端
-
-**作用**: 演示如何调用 Funboost FastAPI 路由的各个接口
-
-**包含的测试用例**:
-
-#### 测试 1: `test_publish_and_get_result()`
-- **功能**: 发布任务并同步等待结果
-- **请求**: `POST /funboost/publish`
-- **参数**:
-  ```json
-  {
-    "queue_name": "test_fastapi_router_queue",
-    "msg_body": {"x": 10, "y": 20},
-    "need_result": true,
-    "timeout": 10
-  }
-  ```
-- **特点**: `need_result=True` 时，接口会阻塞等待任务完成并返回结果
-
-#### 测试 2: `test_get_msg_count()`
-- **功能**: 获取指定队列的消息数量
-- **请求**: `GET /funboost/get_msg_count?queue_name=test_fastapi_router_queue`
-- **用途**: 监控队列积压情况
-
-#### 测试 3: `test_publish_async_then_get_result()`
-- **功能**: 异步发布任务，先获取 task_id，再通过 task_id 查询结果
-- **流程**:
-  1. 发布任务（`need_result=False`），立即返回 task_id
-  2. 使用 task_id 调用 `GET /funboost/get_result` 获取结果
-- **优势**: 不阻塞，适合长时间任务
-
-**运行方式**:
-```bash
-python example_req_fastapi.py
-```
-
----
-
-
-
-
-
-
-`````
-
---- **end of file: examples/example_fastapi_funboost_router/README.md** (project: funboost) --- 
-
----
-
-
---- **start of file: examples/example_fastapi_funboost_router/start_consume.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `examples/example_fastapi_funboost_router/start_consume.py`
-
-#### 📝 Module Docstring
-
-`````
-可以单独部署启动消费，用户可以让booster随着fastapi一起启动，也可以单独启动消费。
-
-因为 funboost.faas 是基于funboost注册到redis中的元数据，所以可以动态发现booster，
-所以只要消费函数部署上线了，web服务完全无需重启，从http接口马上就能调用了，
-相比传统web开发，加一个功能就要加一个接口，然后重启web，funboost faas爽的一逼。
-`````
-
-#### 📦 Imports
-
-- `from funboost import BoosterDiscovery`
-- `from funboost import BoostersManager`
-
-
----
-
-`````python
-"""
-可以单独部署启动消费，用户可以让booster随着fastapi一起启动，也可以单独启动消费。
-
-因为 funboost.faas 是基于funboost注册到redis中的元数据，所以可以动态发现booster，
-所以只要消费函数部署上线了，web服务完全无需重启，从http接口马上就能调用了，
-相比传统web开发，加一个功能就要加一个接口，然后重启web，funboost faas爽的一逼。
-"""
-
-from funboost import BoosterDiscovery,BoostersManager
-
-if __name__ == '__main__':
-    # 演示 BoosterDiscovery ，自动扫描注册 @boost，
-    # 效果等同于 直接 import task_funs_dir 下的add和sub模块。
-    BoosterDiscovery(
-        project_root_path=r'D:\codes\funboost',
-        booster_dirs=['examples/example_faas/task_funs_dir'],
-         ).auto_discovery()
-
-    print(BoostersManager.get_all_queues())
-
-    BoostersManager.consume_group('test_group1')
-`````
-
---- **end of file: examples/example_fastapi_funboost_router/start_consume.py** (project: funboost) --- 
 
 ---
 
@@ -25477,7 +25143,7 @@ set_frame_config这个模块的 use_config_form_funboost_config_module() 是核�
 这段注释说明和使用的用户无关,只和框架开发人员有关.
 '''
 
-__version__ = "52.0"
+__version__ = "52.1"
 
 from funboost.set_frame_config import show_frame_config
 
@@ -38562,7 +38228,7 @@ class RedisReportInfoGetterMixin:
         return list(self.redis_db_frame.smembers(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES))
 
     def get_queue_names_by_project_name(self,project_name:str) ->list:
-        return list(self.redis_db_frame.smembers(f'funboost.project_name:{project_name}'))
+        return list(self.redis_db_frame.smembers(RedisKeys.gen_funboost_project_name_key(project_name)))
     
     @property
     def all_queue_names(self):
@@ -39167,7 +38833,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
         # 从所有队列名 set 中移除
         self.redis_db_frame.srem(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES, self.queue_name)
         # 从项目队列名 set 中移除
-        self.redis_db_frame.srem(f'funboost.project_name:{self.care_project_name}', self.queue_name)
+        self.redis_db_frame.srem(RedisKeys.gen_funboost_project_name_key(self.care_project_name), self.queue_name)
 
     
  
@@ -50031,10 +49697,10 @@ def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher:
 #### 🏛️ Classes (2)
 
 ##### 📌 `class User(UserMixin)`
-*Line: 67*
+*Line: 68*
 
 ##### 📌 `class LoginForm(FlaskForm)`
-*Line: 96*
+*Line: 97*
 
 **Class Variables (3):**
 - `user_name = StringField('用户名', validators=[DataRequired(), Length(3, 64)])`
@@ -50044,69 +49710,69 @@ def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher:
 #### 🔧 Public Functions (24)
 
 - `def query_user(user_name)`
-  - *Line: 82*
+  - *Line: 83*
 
 - `def load_user(user_id)` `login_manager.user_loader`
-  - *Line: 89*
+  - *Line: 90*
 
 - `def login()` `app.route('/login', methods=['GET', 'POST'])`
-  - *Line: 103*
+  - *Line: 104*
 
 - `def logout()` `app.route('/logout')` `login_required`
-  - *Line: 141*
+  - *Line: 142*
 
 - `def index()` `app.route('/')` `login_required`
-  - *Line: 148*
+  - *Line: 149*
 
 - `def query_cols_view()` `app.route('/query_cols')` `login_required`
-  - *Line: 155*
+  - *Line: 156*
 
 - `def query_result_view()` `app.route('/query_result')` `login_required`
-  - *Line: 162*
+  - *Line: 163*
 
 - `def speed_stats()` `app.route('/speed_stats')` `login_required`
-  - *Line: 168*
+  - *Line: 169*
 
 - `def speed_statistic_for_echarts()` `app.route('/speed_statistic_for_echarts')` `login_required`
-  - *Line: 174*
+  - *Line: 175*
 
 - `def serve_template(template)` `app.route('/tpl/<template>')` `login_required`
-  - *Line: 182*
+  - *Line: 183*
 
 - `def hearbeat_info_by_queue_name()` `app.route('/running_consumer/hearbeat_info_by_queue_name')`
-  - *Line: 193*
+  - *Line: 194*
 
 - `def hearbeat_info_by_ip()` `app.route('/running_consumer/hearbeat_info_by_ip')`
-  - *Line: 209*
+  - *Line: 210*
 
 - `def hearbeat_info_partion_by_queue_name()` `app.route('/running_consumer/hearbeat_info_partion_by_queue_name')`
-  - *Line: 227*
+  - *Line: 228*
 
 - `def hearbeat_info_partion_by_ip()` `app.route('/running_consumer/hearbeat_info_partion_by_ip')`
-  - *Line: 240*
+  - *Line: 241*
 
 - `def get_queues_params_and_active_consumers()` `app.route('/queue/params_and_active_consumers')`
-  - *Line: 254*
+  - *Line: 255*
 
 - `def clear_queue(broker_kind, queue_name)` `app.route('/queue/clear/<broker_kind>/<queue_name>', methods=['POST'])`
-  - *Line: 261*
+  - *Line: 262*
 
 - `def pause_cousume(queue_name)` `app.route('/queue/pause/<queue_name>', methods=['POST'])`
-  - *Line: 274*
+  - *Line: 275*
 
 - `def resume_consume(queue_name)` `app.route('/queue/resume/<queue_name>', methods=['POST'])`
-  - *Line: 280*
+  - *Line: 281*
 
 - `def get_msg_num_all_queues()` `app.route('/queue/get_msg_num_all_queues', methods=['GET'])`
-  - *Line: 286*
+  - *Line: 287*
   - *这个是通过消费者周期每隔10秒上报到redis的，性能好。不需要实时获取每个消息队列，直接从redis读取所有队列的消息数量*
 
 - `def get_message_count(broker_kind, queue_name)` `app.route('/queue/message_count/<broker_kind>/<queue_name>')`
-  - *Line: 292*
+  - *Line: 293*
   - *这个是实时获取每个消息队列的消息数量，性能差，但是可以实时获取每个消息队列的消息数量*
 
 - `def get_time_series_data_by_queue_name(queue_name)` `app.route('/queue/get_time_series_data/<queue_name>', methods=['GET'])`
-  - *Line: 301*
+  - *Line: 302*
   - **Docstring:**
   `````
   _summary_
@@ -50121,7 +49787,7 @@ def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher:
   `````
 
 - `def rpc_call()` `app.route('/rpc/rpc_call', methods=['POST'])`
-  - *Line: 341*
+  - *Line: 342*
   - **Docstring:**
   `````
   class MsgItem(BaseModel):
@@ -50139,10 +49805,10 @@ def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher:
   `````
 
 - `def get_result_by_task_id()` `app.route('/rpc/get_result_by_task_id', methods=['GET'])`
-  - *Line: 362*
+  - *Line: 363*
 
 - `def start_funboost_web_manager(host = '0.0.0.0', port = 27018, block = False, debug = False, care_project_name: typing.Optional[str] = None)`
-  - *Line: 371*
+  - *Line: 372*
 
 
 ---
@@ -50210,7 +49876,8 @@ login_manager.login_message = "Access denied."
 login_manager.init_app(app)
 
 
-app.register_blueprint(flask_blueprint)  # 定时任务用faas这里面的flask蓝图，因为通用faas是2025年12月才有的，老的flask接口是单独开发的。
+# 定时任务用faas这里面自带的flask蓝图，因为通用的faas接口是2025年12月才有的功能，老的flask接口是在这里单独开发的。
+app.register_blueprint(flask_blueprint)  
 
 
 
@@ -50606,7 +50273,7 @@ from funboost.funboost_web_manager.app import start_funboost_web_manager
 
 if __name__ == '__main__':
     start_funboost_web_manager(
-        port=27019,
+        port=27010,
         debug=True,
         care_project_name='test_project1',
         block=True
@@ -50646,6 +50313,7 @@ if __name__ == '__main__':
 - `from funboost.utils.mongo_util import MongoMixin`
 - `from funboost.utils.redis_manager import RedisMixin`
 - `from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter`
+- `from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter`
 
 #### 🏛️ Classes (1)
 
@@ -50677,7 +50345,7 @@ if __name__ == '__main__':
   - *Line: 156*
 
 - `def get_result_by_task_id(task_id, timeout)`
-  - *Line: 190*
+  - *Line: 195*
 
 
 ---
@@ -50701,7 +50369,7 @@ from funboost.core.serialization import Serialization
 from funboost.utils import time_util, decorators, LoggerMixin
 from funboost.utils.mongo_util import MongoMixin
 from funboost.utils.redis_manager import RedisMixin
-from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter
+from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter, SingleQueueConusmerParamsGetter
 
 # from test_frame.my_patch_frame_config import do_patch_frame_config
 #
@@ -50843,30 +50511,35 @@ def rpc_call(queue_name, msg_body, need_result, timeout):
     status_and_result = None
     task_id = None
     try:
-        boost_params_json = RedisMixin().redis_db_frame.hget(RedisKeys.FUNBOOST_QUEUE__CONSUMER_PARAMS,queue_name)
-        boost_params_dict = Serialization.to_dict(boost_params_json)
-        broker_kind = boost_params_dict['broker_kind']
-        publisher = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name=queue_name,
-                                                                            broker_kind=broker_kind, 
-                                                                            publish_msg_log_use_full_msg=True))
+        # 不能直接用 get_cross_project_publisher(PublisherParams(...))，因为 PublisherParams 默认没有 consuming_function，
+        # 新版 funboost 会基于 consuming_function 生成/校验入参信息，None 会导致 inspect.getfullargspec 报错。
+        # 这里使用 redis 中保存的 auto_generate_info.final_func_input_params_info 生成 fake consuming_function，
+        # 从而做到跨项目、无需导入业务代码也能安全发布消息。
+        publisher = SingleQueueConusmerParamsGetter(queue_name).generate_publisher_by_funboost_redis_info()
+        booster_params_by_redis = SingleQueueConusmerParamsGetter(queue_name).get_one_queue_params_use_cache()
     
         if need_result:
-            # if booster.boost_params.is_using_rpc_mode is False:
-            #     raise ValueError(f' need_result 为true,{booster.queue_name} 队列消费者 需要@boost设置支持rpc模式')
+            if booster_params_by_redis.get('is_using_rpc_mode') is False:
+                raise ValueError(f'need_result 为true，{queue_name} 队列消费者需要 @boost 设置支持 rpc 模式（is_using_rpc_mode=True）')
             
             async_result: AsyncResult =  publisher.publish(msg_body,priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True))
             async_result.set_timeout(timeout)
             status_and_result = async_result.status_and_result
             # print(status_and_result)
             task_id = async_result.task_id
+            if status_and_result is None:
+                return dict(succ=False, msg=f'{queue_name} 队列,消息发布成功,但等待结果超时或结果不存在',
+                            status_and_result=status_and_result, task_id=task_id)
         else:
             async_result =publisher.publish(msg_body)
             task_id = async_result.task_id
-        if status_and_result['success'] is False:
-            return dict(succ=False, msg=f'{queue_name} 队列,消息发布成功,但是函数执行失败', 
-                            status_and_result=status_and_result,task_id=task_id)
-        return dict(succ=True, msg=f'{queue_name} 队列,消息发布成功', 
-                            status_and_result=status_and_result,task_id=task_id)
+
+        if need_result and status_and_result and status_and_result.get('success') is False:
+            return dict(succ=False, msg=f'{queue_name} 队列,消息发布成功,但是函数执行失败',
+                            status_and_result=status_and_result, task_id=task_id)
+
+        return dict(succ=True, msg=f'{queue_name} 队列,消息发布成功',
+                            status_and_result=status_and_result, task_id=task_id)
     except Exception as e:
         return dict(succ=False, msg=f'{queue_name} 队列,消息发布失败 {type(e)} {e} {traceback.format_exc()}',
                                status_and_result=status_and_result,task_id=task_id)
@@ -53525,7 +53198,7 @@ if __name__ == '__main__':
 
         // 作废队列
         function deprecateQueue(queueName) {
-            if (!confirm(`确定要作废队列 "${queueName}" 吗？\n\n作废后，该队列将从队列列表中移除，但不会删除队列中的数据。\n如果需要再次使用，需要重新启动消费者。`)) {
+            if (!confirm(`确定要作废队列 "${queueName}" 吗？\n\n作废后，该队列将从redis元数据的队列set中移除，但不会删除队列中的数据。\n如果需要再次使用，需要重新启动消费者。`)) {
                 return;
             }
             
@@ -54195,7 +53868,11 @@ if __name__ == '__main__':
                                 <option value="">请选择队列名字...</option>
                             </select>
                         </div>
-                        <textarea class="form-control" id="message_content" rows="7" placeholder="请输入消息体JSON格式，如：{&quot;x&quot;:1,&quot;y&quot;:2}"></textarea>
+                        <textarea class="form-control" id="message_content" rows="7" placeholder="请先选择队列名称，将自动生成消息体 JSON 模板"></textarea>
+                        <div id="rpc_func_params_info" style="margin-top: 8px; padding: 10px; background-color: #f0f7ff; border-radius: 4px; border-left: 3px solid #337ab7;">
+                            <i class="fa fa-info-circle" style="color: #337ab7;"></i>
+                            <span id="rpc_func_params_text">请先选择队列名称，将显示函数所需参数</span>
+                        </div>
                     </div>
                     <div class="form-inline" style="margin-bottom: 15px;">
                         <div class="checkbox" style="margin-right: 20px;">
@@ -54241,9 +53918,59 @@ if __name__ == '__main__':
 
 
             <div class="col-md-6">
+                <!-- 关键结果汇总区域（方便一眼看到结果/耗时/是否成功等） -->
+                <div id="rpc_summary_area" style="background-color: #f9f9f9; border-radius: 8px; padding: 15px; border-left: 5px solid #2ecc71; box-shadow: 0 2px 5px rgba(0,0,0,0.08); margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <strong style="font-size: 15px;">关键结果</strong>
+                        <span id="rpc_summary_success_badge" class="label label-default">-</span>
+                    </div>
+
+                    <div style="display: flex; flex-wrap: wrap;">
+                        <div class="rpc-key-box">
+                            <div class="rpc-key-title">task_id</div>
+                            <div class="rpc-key-value"><code id="rpc_summary_task_id">-</code></div>
+                        </div>
+                        <div class="rpc-key-box">
+                            <div class="rpc-key-title">queue</div>
+                            <div class="rpc-key-value" id="rpc_summary_queue">-</div>
+                        </div>
+                        <div class="rpc-key-box">
+                            <div class="rpc-key-title">function</div>
+                            <div class="rpc-key-value" id="rpc_summary_function">-</div>
+                        </div>
+                        <div class="rpc-key-box">
+                            <div class="rpc-key-title">run_status</div>
+                            <div class="rpc-key-value" id="rpc_summary_run_status">-</div>
+                        </div>
+                        <div class="rpc-key-box">
+                            <div class="rpc-key-title">耗时(秒)</div>
+                            <div class="rpc-key-value" id="rpc_summary_time_cost">-</div>
+                        </div>
+                        <div class="rpc-key-box">
+                            <div class="rpc-key-title">host_process</div>
+                            <div class="rpc-key-value" id="rpc_summary_host_process">-</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 10px; margin-bottom: 10px;">
+                        <label style="margin-bottom: 6px;">函数结果 result：</label>
+                        <textarea class="form-control" id="rpc_summary_result" rows="6" readonly style="background-color: #1e1e1e; color: #ffffff; font-family: Consolas, Monaco, 'Courier New', monospace; border: 1px solid #333;"></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="margin-bottom: 6px;">异常 exception：</label>
+                        <textarea class="form-control" id="rpc_summary_exception" rows="4" readonly style="background-color: #1e1e1e; color: #ffffff; font-family: Consolas, Monaco, 'Courier New', monospace; border: 1px solid #333;"></textarea>
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label for="rpc_result">RPC结果：</label>
-                    <textarea class="form-control" id="rpc_result" rows="39" readonly style="background-color: #1e1e1e; color: #ffffff; font-family: Consolas, Monaco, 'Courier New', monospace; border: 1px solid #333;"></textarea>
+                    <label for="rpc_result">RPC status_and_result：
+                        <button type="button" class="btn btn-default btn-xs" id="copy_rpc_result_btn" style="margin-left: 10px;" title="复制JSON">
+                            <i class="fa fa-copy"></i> 复制
+                        </button>
+                        <span id="copy_rpc_result_feedback" style="margin-left: 8px; color: #5cb85c; display: none;"><i class="fa fa-check"></i> 已复制</span>
+                    </label>
+                    <textarea class="form-control" id="rpc_result" rows="24" readonly style="background-color: #1e1e1e; color: #ffffff; font-family: Consolas, Monaco, 'Courier New', monospace; border: 1px solid #333;"></textarea>
                 </div>
             </div>
         </div>
@@ -54264,9 +53991,274 @@ if __name__ == '__main__':
         // 在现有的变量声明后添加
         var allQueues = [];  // 存储所有队列数据
         var currentColName;
+        var rpc_last_auto_filled_template = "";  // 上一次自动生成并填充的 JSON 模板
+        var rpc_is_auto_filled = false;  // 当前 message_content 是否仍然是“自动生成内容”（用户未修改）
+        var rpc_last_selected_queue = "";  // 上一次选择的队列（用于判断是否需要覆盖）
+        var rpc_template_cache_by_queue = {};  // queue_name -> templateText（用于比较/覆盖）
+        var rpc_latest_request_queue = "";  // 用于丢弃过期回包，避免快速切换队列导致覆盖错乱
+
+        function resetRpcFuncParamsUI() {
+            $("#rpc_func_params_text").html("请先选择队列名称，将显示函数所需参数");
+            $("#message_content").attr("placeholder", "请先选择队列名称，将自动生成消息体 JSON 模板");
+        }
+
+        function normalizeJsonText(text) {
+            var s = (text || "").trim();
+            if (!s) {
+                return "";
+            }
+            try {
+                var obj = JSON.parse(s);
+                // 模板应该是 object（kwargs），不是数组
+                if (obj && typeof obj === "object" && !Array.isArray(obj)) {
+                    return JSON.stringify(obj, null, 2);
+                }
+            } catch (e) {
+                // ignore
+            }
+            return s;
+        }
+
+        function rpcStringifyAny(v) {
+            if (v === undefined || v === null) {
+                return "";
+            }
+            if (typeof v === "string") {
+                return v;
+            }
+            try {
+                return JSON.stringify(v, null, 2);
+            } catch (e) {
+                try {
+                    return String(v);
+                } catch (e2) {
+                    return "";
+                }
+            }
+        }
+
+        function rpcResetSummaryUI() {
+            $("#rpc_summary_success_badge").removeClass("label-success label-danger label-warning label-info").addClass("label-default").text("-");
+            $("#rpc_summary_task_id").text("-");
+            $("#rpc_summary_queue").text("-");
+            $("#rpc_summary_function").text("-");
+            $("#rpc_summary_run_status").text("-");
+            $("#rpc_summary_time_cost").text("-");
+            $("#rpc_summary_host_process").text("-");
+            $("#rpc_summary_result").val("");
+            $("#rpc_summary_exception").val("");
+        }
+
+        function rpcExtractTaskId(resp) {
+            if (resp && resp.data && resp.data.task_id) {
+                return resp.data.task_id;
+            }
+            if (resp && resp.task_id) {
+                return resp.task_id;
+            }
+            return "";
+        }
+
+        function rpcExtractStatusAndResult(resp) {
+            if (resp && resp.data && resp.data.hasOwnProperty("status_and_result")) {
+                return resp.data.status_and_result;
+            }
+            if (resp && resp.hasOwnProperty("status_and_result")) {
+                return resp.status_and_result;
+            }
+            return null;
+        }
+
+        function rpcIsSuccessValue(v) {
+            if (v === true) return true;
+            if (v === false) return false;
+            if (v === 1) return true;
+            if (v === 0) return false;
+            if (typeof v === "string") {
+                var s = v.toLowerCase();
+                if (s === "true") return true;
+                if (s === "false") return false;
+            }
+            return null;
+        }
+
+        function rpcUpdateSummaryFromResponse(resp) {
+            var taskId = rpcExtractTaskId(resp);
+            if (taskId) {
+                $("#rpc_summary_task_id").text(taskId);
+            } else {
+                $("#rpc_summary_task_id").text("-");
+            }
+
+            var statusAndResult = rpcExtractStatusAndResult(resp);
+
+            // 没有结果（例如 need_result=false 或结果未返回）
+            if (!statusAndResult) {
+                var publishSucc = !!(resp && resp.succ);
+                if (publishSucc) {
+                    $("#rpc_summary_success_badge").removeClass("label-default label-danger label-warning").addClass("label-info").text("已发布(无结果)");
+                } else {
+                    $("#rpc_summary_success_badge").removeClass("label-default label-success label-info").addClass("label-danger").text("失败");
+                }
+                $("#rpc_summary_result").val("");
+                $("#rpc_summary_exception").val(resp && resp.msg ? String(resp.msg) : "");
+                return;
+            }
+
+            // 基本字段
+            $("#rpc_summary_queue").text(statusAndResult.queue_name || "-");
+            $("#rpc_summary_function").text(statusAndResult.function || "-");
+            $("#rpc_summary_run_status").text(statusAndResult.run_status || "-");
+            $("#rpc_summary_host_process").text(statusAndResult.host_process || "-");
+
+            // 耗时
+            if (statusAndResult.time_cost !== undefined && statusAndResult.time_cost !== null && statusAndResult.time_cost !== "") {
+                var tc = statusAndResult.time_cost;
+                if (typeof tc === "number") {
+                    $("#rpc_summary_time_cost").text(tc.toFixed(6));
+                } else {
+                    $("#rpc_summary_time_cost").text(String(tc));
+                }
+            } else {
+                $("#rpc_summary_time_cost").text("-");
+            }
+
+            // 成功/失败
+            var sVal = rpcIsSuccessValue(statusAndResult.success);
+            if (sVal === true) {
+                $("#rpc_summary_success_badge").removeClass("label-default label-danger label-warning label-info").addClass("label-success").text("成功");
+            } else if (sVal === false) {
+                $("#rpc_summary_success_badge").removeClass("label-default label-success label-warning label-info").addClass("label-danger").text("失败");
+            } else {
+                $("#rpc_summary_success_badge").removeClass("label-success label-danger label-warning label-info").addClass("label-default").text("-");
+            }
+
+            // result / exception
+            $("#rpc_summary_result").val(rpcStringifyAny(statusAndResult.result));
+
+            var exText = "";
+            if (statusAndResult.exception) {
+                exText = String(statusAndResult.exception);
+            } else {
+                var exParts = [];
+                if (statusAndResult.exception_type) exParts.push(String(statusAndResult.exception_type));
+                if (statusAndResult.exception_msg) exParts.push(String(statusAndResult.exception_msg));
+                if (statusAndResult.rpc_chain_error_msg_dict) exParts.push(rpcStringifyAny(statusAndResult.rpc_chain_error_msg_dict));
+                exText = exParts.join(" | ");
+            }
+            $("#rpc_summary_exception").val(exText);
+        }
+
+        function buildRpcTemplateText(paramsInfo) {
+            if (!paramsInfo) {
+                return "{}";
+            }
+            var mustArgs = paramsInfo.must_arg_name_list || [];
+            var optionalArgs = paramsInfo.optional_arg_name_list || [];
+            var templateObj = {};
+
+            for (var i = 0; i < mustArgs.length; i++) {
+                templateObj[mustArgs[i]] = "";
+            }
+            for (var j = 0; j < optionalArgs.length; j++) {
+                var k = optionalArgs[j];
+                if (!(k in templateObj)) {
+                    templateObj[k] = "";
+                }
+            }
+            if (Object.keys(templateObj).length === 0) {
+                return "{}";
+            }
+            return JSON.stringify(templateObj, null, 2);
+        }
+
+        function renderRpcFuncParamsInfo(paramsInfo) {
+            if (!paramsInfo) {
+                $("#rpc_func_params_text").html("无法获取函数入参信息");
+                return;
+            }
+            var funcName = paramsInfo.func_name || "未知函数";
+            var mustArgs = paramsInfo.must_arg_name_list || [];
+            var optionalArgs = paramsInfo.optional_arg_name_list || [];
+
+            var html = "<strong>函数: " + funcName + "</strong><br>";
+            if (mustArgs.length > 0) {
+                html += '<span style="color: #d9534f;">必填参数:</span> <code>' + mustArgs.join("</code>, <code>") + "</code>";
+            } else {
+                html += '<span style="color: #5cb85c;">无必填参数</span>';
+            }
+            if (optionalArgs.length > 0) {
+                html += '<br><span style="color: #f0ad4e;">可选参数:</span> <code>' + optionalArgs.join("</code>, <code>") + "</code>";
+            }
+            $("#rpc_func_params_text").html(html);
+        }
+
+        function loadRpcTemplateAndParamsInfo(queueName, prevQueueName) {
+            if (!queueName) {
+                resetRpcFuncParamsUI();
+                return;
+            }
+
+            rpc_latest_request_queue = queueName;
+            $("#rpc_func_params_text").html('<i class="fa fa-spinner fa-spin"></i> 加载中...');
+            $.get("/funboost/get_one_queue_config?queue_name=" + encodeURIComponent(queueName), function (response) {
+                // 如果用户快速切换队列，丢弃旧回包
+                if (queueName !== rpc_latest_request_queue || queueName !== rpc_last_selected_queue) {
+                    return;
+                }
+                if (response && response.succ && response.data && response.data.auto_generate_info) {
+                    var paramsInfo = response.data.auto_generate_info.final_func_input_params_info;
+                    renderRpcFuncParamsInfo(paramsInfo);
+
+                    var templateText = buildRpcTemplateText(paramsInfo);
+                    rpc_template_cache_by_queue[queueName] = templateText;
+
+                    var currentText = $("#message_content").val();
+                    var currentNorm = normalizeJsonText(currentText);
+                    var prevTemplate = prevQueueName ? rpc_template_cache_by_queue[prevQueueName] : null;
+                    var prevTemplateNorm = prevTemplate ? normalizeJsonText(prevTemplate) : null;
+
+                    // 覆盖判定（更可靠）
+                    // - 输入框为空
+                    // - 输入框内容等于“上一次队列的默认模板”（忽略空白/缩进）
+                    // - 或者仍被标记为自动生成内容（用户未改）
+                    var shouldOverwrite = false;
+                    if (!currentNorm) {
+                        shouldOverwrite = true;
+                    } else if (prevTemplateNorm && currentNorm === prevTemplateNorm) {
+                        shouldOverwrite = true;
+                    } else if (rpc_is_auto_filled === true) {
+                        shouldOverwrite = true;
+                    }
+
+                    if (shouldOverwrite) {
+                        $("#message_content").val(templateText);
+                        rpc_last_auto_filled_template = templateText;
+                        rpc_is_auto_filled = true;
+                    }
+
+                    $("#message_content").attr("placeholder", "已根据队列自动生成消息体 JSON 模板（可自行修改）");
+                } else {
+                    $("#rpc_func_params_text").html("无法获取队列配置信息");
+                }
+            }).fail(function () {
+                $("#rpc_func_params_text").html("获取队列配置失败");
+            });
+        }
 
         // 页面加载完成后立即获取所有队列
         $(document).ready(function () {
+            // 监听用户修改消息内容，用于判断是否需要自动覆盖模板
+            $("#message_content").on("input propertychange", function () {
+                var currentVal = $(this).val();
+                if (normalizeJsonText(currentVal) === normalizeJsonText(rpc_last_auto_filled_template)) {
+                    rpc_is_auto_filled = true;
+                } else {
+                    rpc_is_auto_filled = false;
+                }
+            });
+            resetRpcFuncParamsUI();
+
             $.ajax({
                 url: "{{ url_for('get_msg_num_all_queues')}}",
                 data: {},
@@ -54293,6 +54285,9 @@ if __name__ == '__main__':
                         var selectedQueue = $(this).val();
                         console.log("Selected queue:", selectedQueue);
                         currentColName = selectedQueue;
+                        var prevQueue = rpc_last_selected_queue;
+                        rpc_last_selected_queue = selectedQueue || "";
+                        loadRpcTemplateAndParamsInfo(selectedQueue, prevQueue);
                         // if(selectedQueue) {
                         //     queryResult(selectedQueue, 0, true);
                         // }
@@ -54331,6 +54326,9 @@ if __name__ == '__main__':
                 // 更新状态显示
                 $("#status_display").removeClass("alert-info alert-success alert-danger").addClass("alert-warning");
                 $("#status_display").text("正在发送RPC请求，请稍候...");
+
+                // 重置关键结果显示
+                rpcResetSummaryUI();
                 
                 // 清空结果框
                 $("#rpc_result").val("");
@@ -54338,7 +54336,8 @@ if __name__ == '__main__':
                 
                 // 发送RPC请求
                 $.ajax({
-                    url: "{{ url_for('rpc_call') }}",
+                    // 使用 funboost faas 的接口（flask_blueprint）
+                    url: "/funboost/publish",
                     type: "POST",
                     contentType: "application/json",
                     data: JSON.stringify({
@@ -54351,29 +54350,101 @@ if __name__ == '__main__':
                        
                         console.log(result)
 
-                        $("#rpc_result").val(JSON.stringify(result, null, 2));
+                        // 优先显示 status_and_result，便于阅读；没有则显示原始返回
+                        var statusAndResult = (result && result.data && result.data.status_and_result) ? result.data.status_and_result : null;
+                        var displayObj = statusAndResult ? statusAndResult : result;
+                        $("#rpc_result").val(JSON.stringify(displayObj, null, 2));
+
+                        // 更新关键结果
+                        rpcUpdateSummaryFromResponse(result);
+
+                        // 自动回填 task_id，方便继续查询
+                        try {
+                            if (result && result.data && result.data.task_id) {
+                                $("#task_id").val(result.data.task_id);
+                            }
+                        } catch (e) {}
+
+                        // 兼容 publish 成功但函数执行失败的情况
+                        var bizSucc = !!(result && result.succ);
+                        statusAndResult = (result && result.data && result.data.status_and_result) ? result.data.status_and_result : null;
+                        if (statusAndResult && (statusAndResult.success === false || statusAndResult.success === 'false' || statusAndResult.success === 0)) {
+                            bizSucc = false;
+                        }
                         
                         // 更新状态显示
-                        if (result.succ) {
+                        if (bizSucc) {
                             $("#status_display").removeClass("alert-warning alert-danger").addClass("alert-success");
                             $("#status_display").text("RPC请求成功: " + result.msg);
                             $("#rpc_result").css({"background-color": "#5cb85c", "color": "#ffffff"});
                         } else {
                             $("#status_display").removeClass("alert-warning alert-success").addClass("alert-danger");
-                            $("#status_display").text("RPC请求失败: " + result.msg);
+                            var failMsg = (result && result.msg) ? result.msg : "未知错误";
+                            if (statusAndResult && (statusAndResult.success === false || statusAndResult.success === 'false' || statusAndResult.success === 0)) {
+                                failMsg = failMsg + "（函数执行失败）";
+                            }
+                            $("#status_display").text("RPC请求失败: " + failMsg);
                             $("#rpc_result").css({"background-color": "#d9534f", "color": "#ffffff"});
                         }
                     },
                     error: function(xhr, status, error) {
-                        $("#rpc_result").val("请求失败: " + error);
+                        // 尝试解析后端返回的 JSON 错误
+                        var errText = "";
+                        try {
+                            var errJson = xhr.responseJSON ? xhr.responseJSON : JSON.parse(xhr.responseText);
+                            $("#rpc_result").val(JSON.stringify(errJson, null, 2));
+                            if (errJson && errJson.msg) {
+                                errText = errJson.msg;
+                            }
+                        } catch (e) {
+                            $("#rpc_result").val("请求失败: " + (xhr.responseText || error));
+                            errText = xhr.responseText || error;
+                        }
                         $("#rpc_result").css({"background-color": "#d9534f", "color": "#ffffff"});
+
+                        // 失败时也展示错误到关键结果区
+                        rpcResetSummaryUI();
+                        $("#rpc_summary_success_badge").removeClass("label-default label-success label-info").addClass("label-danger").text("失败");
+                        $("#rpc_summary_exception").val(errText || error || "");
                         
                         // 更新状态显示
                         $("#status_display").removeClass("alert-warning alert-success").addClass("alert-danger");
-                        $("#status_display").text("RPC请求发送失败: " + error);
+                        $("#status_display").text("RPC请求发送失败: " + (errText || error));
                     }
                 });
             });
+        });
+
+        // 复制 RPC status_and_result 到剪贴板
+        $(document).ready(function() {
+            $("#copy_rpc_result_btn").click(function() {
+                var text = $("#rpc_result").val();
+                if (!text) {
+                    return;
+                }
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(function() {
+                        $("#copy_rpc_result_feedback").fadeIn(200).delay(1500).fadeOut(400);
+                    }).catch(function() {
+                        fallbackCopyText(text);
+                    });
+                } else {
+                    fallbackCopyText(text);
+                }
+            });
+
+            function fallbackCopyText(text) {
+                var $temp = $("<textarea>");
+                $("body").append($temp);
+                $temp.val(text).select();
+                try {
+                    document.execCommand("copy");
+                    $("#copy_rpc_result_feedback").fadeIn(200).delay(1500).fadeOut(400);
+                } catch (e) {
+                    alert("复制失败，请手动复制");
+                }
+                $temp.remove();
+            }
         });
 
         // 添加获取结果功能
@@ -54390,6 +54461,9 @@ if __name__ == '__main__':
                 // 更新状态显示
                 $("#task_status_display").removeClass("alert-info alert-success alert-danger").addClass("alert-warning");
                 $("#task_status_display").text("正在获取结果，请稍候...");
+
+                // 重置关键结果显示
+                rpcResetSummaryUI();
                 
                 // 清空结果框
                 $("#rpc_result").val("");
@@ -54397,7 +54471,8 @@ if __name__ == '__main__':
                 
                 // 获取结果
                 $.ajax({
-                    url: "{{ url_for('get_result_by_task_id') }}",
+                    // 使用 funboost faas 的接口（flask_blueprint）
+                    url: "/funboost/get_result",
                     type: "GET",
                     data: {
                         task_id: taskId,
@@ -54405,26 +54480,55 @@ if __name__ == '__main__':
                     },
                     success: function(result) {
                         console.log(result);
-                        $("#rpc_result").val(JSON.stringify(result, null, 2));
+                        var statusAndResult = (result && result.data && result.data.status_and_result) ? result.data.status_and_result : null;
+                        var displayObj = statusAndResult ? statusAndResult : result;
+                        $("#rpc_result").val(JSON.stringify(displayObj, null, 2));
+
+                        // 更新关键结果
+                        rpcUpdateSummaryFromResponse(result);
+
+                        var bizSucc = !!(result && result.succ);
+                        statusAndResult = (result && result.data && result.data.status_and_result) ? result.data.status_and_result : null;
+                        if (statusAndResult && (statusAndResult.success === false || statusAndResult.success === 'false' || statusAndResult.success === 0)) {
+                            bizSucc = false;
+                        }
                         
                         // 更新状态显示
-                        if (result.succ) {
+                        if (bizSucc) {
                             $("#task_status_display").removeClass("alert-warning alert-danger").addClass("alert-success");
                             $("#task_status_display").text("获取结果成功");
                             $("#rpc_result").css({"background-color": "#5cb85c", "color": "#ffffff"});
                         } else {
                             $("#task_status_display").removeClass("alert-warning alert-success").addClass("alert-danger");
-                            $("#task_status_display").text("获取结果失败: " + result.msg);
+                            var failMsg = (result && result.msg) ? result.msg : "未知错误";
+                            if (statusAndResult && (statusAndResult.success === false || statusAndResult.success === 'false' || statusAndResult.success === 0)) {
+                                failMsg = failMsg + "（函数执行失败）";
+                            }
+                            $("#task_status_display").text("获取结果失败: " + failMsg);
                             $("#rpc_result").css({"background-color": "#d9534f", "color": "#ffffff"});
                         }
                     },
                     error: function(xhr, status, error) {
-                        $("#rpc_result").val("请求失败: " + error);
+                        var errText = "";
+                        try {
+                            var errJson = xhr.responseJSON ? xhr.responseJSON : JSON.parse(xhr.responseText);
+                            $("#rpc_result").val(JSON.stringify(errJson, null, 2));
+                            if (errJson && errJson.msg) {
+                                errText = errJson.msg;
+                            }
+                        } catch (e) {
+                            $("#rpc_result").val("请求失败: " + (xhr.responseText || error));
+                            errText = xhr.responseText || error;
+                        }
                         $("#rpc_result").css({"background-color": "#d9534f", "color": "#ffffff"});
+
+                        rpcResetSummaryUI();
+                        $("#rpc_summary_success_badge").removeClass("label-default label-success label-info").addClass("label-danger").text("失败");
+                        $("#rpc_summary_exception").val(errText || error || "");
                         
                         // 更新状态显示
                         $("#task_status_display").removeClass("alert-warning alert-success").addClass("alert-danger");
-                        $("#task_status_display").text("获取结果失败: " + error);
+                        $("#task_status_display").text("获取结果失败: " + (errText || error));
                     }
                 });
             });
@@ -54440,6 +54544,30 @@ if __name__ == '__main__':
 
 
     </script>
+
+    <style>
+        .rpc-key-box {
+            display: inline-block;
+            vertical-align: top;
+            margin: 0 10px 10px 0;
+            padding: 10px 12px;
+            background-color: #ffffff;
+            border: 1px solid #e1e1e1;
+            border-radius: 6px;
+            min-width: 180px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .rpc-key-title {
+            color: #777;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .rpc-key-value {
+            font-size: 13px;
+            font-weight: bold;
+            word-break: break-all;
+        }
+    </style>
 </body>
 
 </html>

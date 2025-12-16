@@ -260,16 +260,17 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         :return:
         """
         # pass
+        if self.consumer_params.is_fake_booster is True:
+            return
         if self.consumer_params.is_send_consumer_hearbeat_to_redis:
+            RedisMixin().redis_db_frame.hmset(RedisKeys.FUNBOOST_QUEUE__CONSUMER_PARAMS,{self.queue_name: self.consumer_params.json_str_value()})
             RedisMixin().redis_db_frame.sadd(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES, self.queue_name)
-            if FakeFunGenerator.is_fake_fun(self.consumer_params.consuming_function) is False:
-                RedisMixin().redis_db_frame.hmset(RedisKeys.FUNBOOST_QUEUE__CONSUMER_PARAMS,{self.queue_name: self.consumer_params.json_str_value()})
-            else:
-                self.logger.warning(f'fake fun  {self.consumer_params.consuming_function} for  faas')
             RedisMixin().redis_db_frame.sadd(RedisKeys.FUNBOOST_ALL_IPS, nb_log_config_default.computer_ip)
             if self.consumer_params.project_name:
                 RedisMixin().redis_db_frame.sadd(RedisKeys.FUNBOOST_ALL_PROJECT_NAMES, self.consumer_params.project_name)
                 RedisMixin().redis_db_frame.sadd(RedisKeys.gen_funboost_project_name_key(self.consumer_params.project_name), self.queue_name)
+
+       
 
     def _build_logger(self):
         logger_prefix = self.consumer_params.logger_prefix

@@ -23,7 +23,7 @@ from funboost.core.func_params_model import BoosterParams, FunctionResultStatusP
 from funboost.factories.consumer_factory import get_consumer
 from funboost.factories.publisher_factotry import get_publisher
 from funboost.publishers.base_publisher import AbstractPublisher
-from collections import defaultdict
+
 
 from funboost.core.msg_result_getter import AsyncResult, AioAsyncResult
 
@@ -262,6 +262,8 @@ class BoostersManager:
     @classmethod
     def regist_booster(cls, queue_name: str, booster: Booster):
         """这个是框架在@boost时候自动调用的,无需用户亲自调用"""
+        if booster.boost_params.is_fake_booster is True:
+            return
         cls.pid_queue_name__booster_map[(os.getpid(), queue_name)] = booster
         cls.queue_name__boost_params_map[queue_name] = booster.boost_params
 

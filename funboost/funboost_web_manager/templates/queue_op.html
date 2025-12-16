@@ -493,13 +493,6 @@
         }
         // 操作函数
         function getMessageCount(queueName) {
-            const row = table.getRows().find(row => row.getData().queue_name === queueName);
-            if (!row) {
-                alert('找不到对应的队列数据');
-                return;
-            }
-            const broker_kind = row.getData().broker_kind;
-            
             let countSpan = document.getElementById(`msg-count-${queueName}`);
             let previous_count_str = countSpan.getAttribute('data-last-count') || '0';
             let previous_count = parseInt(previous_count_str);
@@ -507,10 +500,10 @@
 
             countSpan.innerHTML = '正在获取...'; // Add a loading indicator
 
-            // 获取消息数量的API调用
-            $.get(`/queue/message_count/${broker_kind}/${queueName}`, function(response) {
-                if (response.success) {
-                    const new_count = parseInt(response.count);
+            // 使用 Flask 蓝图接口获取消息数量
+            $.get(`/funboost/get_msg_count?queue_name=${encodeURIComponent(queueName)}`, function(response) {
+                if (response.succ) {
+                    const new_count = parseInt(response.data.count);
                     if (isNaN(new_count)) {
                         countSpan.innerHTML = 'get_msg_num_error';
                         countSpan.setAttribute('data-last-count', '0'); // Reset last count on error
@@ -540,17 +533,25 @@
         }
 
         function clearQueue(queueName) {
-            const row = table.getRows().find(row => row.getData().queue_name === queueName);
-            if (!row) {
-                alert('找不到对应的队列数据');
-                return;
-            }
-            const broker_kind = row.getData().broker_kind;
             if (confirm(`确定要清空队列 ${queueName} 的所有消息吗？`)) {
-                $.post(`/queue/clear/${broker_kind}/${queueName}`, function(response) {
-                    alert(`清空 ${queueName} 队列成功`);
-                    // table.replaceData();
-                    getMessageCount(queueName); // 自动获取最新的消息数量
+                $.ajax({
+                    url: '/funboost/clear_queue',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        queue_name: queueName
+                    }),
+                    success: function(response) {
+                        if (response.succ) {
+                            alert(`清空 ${queueName} 队列成功`);
+                            getMessageCount(queueName); // 自动获取最新的消息数量
+                        } else {
+                            alert(`清空队列失败：${response.msg}`);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert(`清空队列失败：${error}`);
+                    }
                 });
             }
         }

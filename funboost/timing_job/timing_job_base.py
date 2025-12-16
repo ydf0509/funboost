@@ -131,7 +131,7 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
         args = tuple(args_list)
         if name is None:
             name = f'push_fun_params_to_broker_for_queue_{func.queue_name}'
-        func.publisher.check_func_input_params(*args[1:], **kwargs) # 这一行是检查入参是否合法，防止添加了不合法的定时入参，到执行时候才发现，这比官方apscheduler更靠谱。
+        func.publisher.check_func_input_params(*args[1:], **(kwargs or {})) # 这一行是检查入参是否合法，防止添加了不合法的定时入参，到执行时候才发现，这比官方apscheduler更靠谱。
         return self.add_job(push_fun_params_to_broker, trigger, args, kwargs, id, name,
                             misfire_grace_time, coalesce, max_instances,
                             next_run_time, jobstore, executor,

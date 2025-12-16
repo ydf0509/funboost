@@ -266,7 +266,65 @@ def get_all_queues():
 
 
 
+@flask_blueprint.route("/clear_queue", methods=['POST'])
+def clear_queue():
+    """
+    清空队列中的所有消息
+    
+    请求体 (JSON):
+        {
+            "queue_name": "队列名称"
+        }
+    
+    返回:
+        清空操作的结果
+        
+    说明:
+        此接口会清空指定队列中的所有待消费消息。
+        ⚠️ 此操作不可逆，请谨慎使用！
+        
+    注意:
+        broker_kind 会自动从已注册的 booster 中获取，无需手动指定。
+    """
+    try:
+        data = request.get_json()
+        queue_name = data.get('queue_name')
+        
+        if not queue_name:
+            return jsonify({
+                "succ": False,
+                "msg": "queue_name 字段必填",
+                "data": None
+            }), 400
+        
+        # 通过 queue_name 自动获取对应的 publisher
+        publisher = SingleQueueConusmerParamsGetter(queue_name).generate_publisher_by_funboost_redis_info()
+        publisher.clear()
+        
+        return jsonify({
+            "succ": True,
+            "msg": f"队列 {queue_name} 清空成功",
+            "data": {
+                "queue_name": queue_name,
+                "success": True
+            }
+        })
+        
+    except Exception as e:
+        logger.exception(f'清空队列失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"清空队列 {queue_name if 'queue_name' in locals() else ''} 失败: {str(e)}",
+            "data": {
+                "queue_name": queue_name if 'queue_name' in locals() else None,
+                "success": False
+            }
+        }), 500
+
+
+
 # ==================== 定时任务管理接口 ====================
+
 
 
 @flask_blueprint.route("/get_one_queue_config", methods=['GET'])

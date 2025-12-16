@@ -1,7 +1,7 @@
 import time
 import asyncio
 import copy
-from funboost import boost, BrokerEnum, BoosterParams, ConcurrentModeEnum, ctrl_c_recv
+from funboost import boost, BrokerEnum, BoosterParams, ConcurrentModeEnum, ctrl_c_recv,ApsJobAdder
 from funboost.contrib.save_function_result_status.save_result_status_use_dataset import ResultStatusUseDatasetMixin
 from funboost.utils.class_utils import ClsHelper
 
@@ -112,8 +112,14 @@ if __name__ == '__main__':
         task_with_pickle.push(MyObject(name=f'obj_{i}', value=i)) # 发布一个自定义对象
     print("任务发布完成。")
 
+
+    # 8 添加定时任务
+    ApsJobAdder(task_sync).add_push_job(trigger='interval', seconds=1, args=(111, 222))
+
    
     print("按 Ctrl+C 退出程序。")
 
-    # 8. 阻塞主线程，以便后台的消费者可以持续运行
+
+
+    # 10. 阻塞主线程，以便后台的消费者可以持续运行
     ctrl_c_recv()

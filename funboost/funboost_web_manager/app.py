@@ -258,17 +258,7 @@ def get_queues_params_and_active_consumers():
     )
 
 
-@app.route("/queue/clear/<broker_kind>/<queue_name>", methods=["POST"])
-def clear_queue(broker_kind, queue_name):
-    publisher = BoostersManager.get_cross_project_publisher(
-        PublisherParams(
-            queue_name=queue_name,
-            broker_kind=broker_kind,
-            publish_msg_log_use_full_msg=True,
-        )
-    )
-    publisher.clear()
-    return jsonify({"success": True})
+
 
 
 @app.route("/queue/pause/<queue_name>", methods=["POST"])
@@ -288,14 +278,6 @@ def get_msg_num_all_queues():
     """这个是通过消费者周期每隔10秒上报到redis的，性能好。不需要实时获取每个消息队列，直接从redis读取所有队列的消息数量"""
     return jsonify(QueuesConusmerParamsGetter().get_msg_num(ignore_report_ts=True))
 
-
-@app.route("/queue/message_count/<broker_kind>/<queue_name>")
-def get_message_count(broker_kind, queue_name):
-    """这个是实时获取每个消息队列的消息数量，性能差，但是可以实时获取每个消息队列的消息数量"""
-    rt_msg_num = SingleQueueConusmerParamsGetter(
-        queue_name
-    ).get_one_queue_msg_num_realtime()
-    return jsonify({"count": rt_msg_num, "success": True})
 
 
 @app.route("/queue/get_time_series_data/<queue_name>", methods=["GET"])
@@ -338,35 +320,6 @@ def get_time_series_data_by_queue_name(
     )
 
 
-@app.route("/rpc/rpc_call", methods=["POST"])
-def rpc_call():
-    """
-    class MsgItem(BaseModel):
-        queue_name: str  # 队列名
-        msg_body: dict  # 消息体,就是boost函数的入参字典,例如 {"x":1,"y":2}
-        need_result: bool = False  # 发布消息后,是否需要返回结果
-        timeout: int = 60  # 等待结果返回的最大等待时间.
-
-
-    class PublishResponse(BaseModel):
-        succ: bool
-        msg: str
-        status_and_result: typing.Optional[dict] = None  # 消费函数的消费状态和结果.
-        task_id:str
-    """
-
-    msg_item = request.get_json()
-    return jsonify(app_functions.rpc_call(**msg_item))
-
-
-@app.route("/rpc/get_result_by_task_id", methods=["GET"])
-def get_result_by_task_id():
-    res = app_functions.get_result_by_task_id(
-        task_id=request.args.get("task_id"), timeout=request.args.get("timeout") or 60
-    )
-    if res["status_and_result"] is None:
-        return jsonify({"succ": False, "msg": "task_id不存在或者超时或者结果已经过期"})
-    return jsonify(res)
 
 
 def start_funboost_web_manager(

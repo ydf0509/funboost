@@ -11,58 +11,238 @@
     <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator_bootstrap3.min.css') }}" rel="stylesheet">
     <!-- Select2 CSS -->
     <link href="{{ url_for('static',filename='css_cdn/select2/4.0.13/css/select2.min.css') }}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
 
-
-     <!-- jQuery -->
-     <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
-     <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script> -->
-     <!-- Bootstrap JS -->
-     <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
-     <!-- <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script> -->
-     <!-- Tabulator JS -->
-     <script type="text/javascript" src="{{ url_for('static',filename='js_cdn/tabulator-tables@5.5.0/dist/js/tabulator.min.js') }}"></script>
-     <!-- Select2 JS -->
-     <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
-     <script src="{{ url_for('static',filename='js_cdn/chart.js') }}"></script>
+    <!-- jQuery -->
+    <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
+    <!-- Tabulator JS -->
+    <script type="text/javascript" src="{{ url_for('static',filename='js_cdn/tabulator-tables@5.5.0/dist/js/tabulator.min.js') }}"></script>
+    <!-- Select2 JS -->
+    <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js_cdn/chart.js') }}"></script>
 
     <style>
-        .action-btn {
-            margin: 2px;
+        * {
+            box-sizing: border-box;
         }
-        .search-container {
-            margin-bottom: 15px;
+        
+        body {
+            background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
         }
-        /* .frozen-column-background { background-color: #FFFFFF !important; } */ /* 移除或注释掉这里 */
-        .tabulator-cell {
-            padding-left: 20px !important;
-            padding-right: 20px !important;
-            padding-top: 10px !important;
-            border: 1px solid #555 !important; 
-            background-color: #000000; /* 移除 !important */
-            color: #FFFFFF; /* 移除 !important */
+
+        /* 页面主容器 */
+        .main-container {
+            padding: 20px 25px;
+            max-width: 100%;
         }
-        /* 新增: 自定义超大模态框样式 */
-        .modal-xl-custom {
-            width: 80%; /* 宽度占屏幕的80% */
-            max-width: 1400px; /* 最大宽度限制 */
+
+        /* 页面标题区域 */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding: 20px 25px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            backdrop-filter: blur(10px);
         }
-        /* 新增: 开关切换样式 */
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4);
+        }
+
+        .header-icon i {
+            font-size: 28px;
+            color: white;
+        }
+
+        .header-title h1 {
+            margin: 0 0 5px 0;
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ffffff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-title p {
+            margin: 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* 统计卡片 */
+        .stats-cards {
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.8) 0%, rgba(40, 40, 80, 0.6) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 15px 25px;
+            text-align: center;
+            min-width: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        .stat-card.active {
+            border-color: #10b981;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
+        }
+
+        .stat-card.inactive {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card.inactive .stat-value {
+            background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 3px;
+        }
+
+        /* 控制面板 */
+        .control-panel {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.6) 0%, rgba(40, 40, 80, 0.4) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-group label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        /* Select2 自定义样式 */
+        .select2-container--default .select2-selection--single {
+            background: rgba(30, 30, 60, 0.8) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            border-radius: 10px !important;
+            height: 42px !important;
+            padding: 5px 10px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #e0e0e0 !important;
+            line-height: 30px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px !important;
+        }
+
+        .select2-dropdown {
+            background: #1e1e3f !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            border-radius: 10px !important;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            background: rgba(30, 30, 60, 0.8) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            color: #e0e0e0 !important;
+            border-radius: 8px !important;
+            padding: 8px 12px !important;
+        }
+
+        .select2-results__option {
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+            color: #e0e0e0 !important;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%) !important;
+        }
+
+        .select2-container--default .select2-results>.select2-results__options {
+            max-height: 400px !important;
+        }
+
+        /* 开关样式 */
         .toggle-switch-container {
             display: flex;
             align-items: center;
-            margin-left: 30px;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(30, 30, 60, 0.5);
+            border-radius: 10px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
         }
+
         .switch {
             position: relative;
             display: inline-block;
-            width: 50px; /* 宽度调整 */
-            height: 24px; /* 高度调整 */
+            width: 52px;
+            height: 28px;
         }
+
         .switch input {
             opacity: 0;
             width: 0;
             height: 0;
         }
+
         .slider {
             position: absolute;
             cursor: pointer;
@@ -70,81 +250,622 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ccc;
+            background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
             transition: .4s;
+            border-radius: 28px;
         }
+
         .slider:before {
             position: absolute;
             content: "";
-            height: 18px; /* 滑块大小 */
-            width: 18px;  /* 滑块大小 */
-            left: 3px;    /* 滑块位置 */
-            bottom: 3px;  /* 滑块位置 */
-            background-color: white;
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
             transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
-        input:checked + .slider { background-color: #4CAF50; }
-        input:focus + .slider { box-shadow: 0 0 1px #4CAF50; }
-        input:checked + .slider:before { transform: translateX(26px); }
-        .slider.round { border-radius: 24px; }
-        .slider.round:before { border-radius: 50%; }
-        
-        /* Select2 下拉框自定义样式 - 应用到所有 Select2 */
-        .select2-results__option {
-            padding: 12px 16px !important;  /* 增加选项内边距 */
-            font-size: 15px !important;  /* 增加字体大小 */
-            line-height: 1.6 !important;  /* 增加行高 */
+
+        input:checked + .slider {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .toggle-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* 按钮样式 */
+        .btn-modern {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary-modern {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-success-modern {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-success-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-danger-modern {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-danger-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-info-modern {
+            background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+        }
+
+        .btn-info-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5);
+        }
+
+        .btn-outline-modern {
+            background: transparent;
+            border: 1px solid rgba(139, 92, 246, 0.5);
+            color: #a5b4fc;
+        }
+
+        .btn-outline-modern:hover {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: rgba(139, 92, 246, 0.8);
+        }
+
+        /* 表格容器 */
+        .table-container {
+            background: linear-gradient(135deg, rgba(20, 20, 40, 0.8) 0%, rgba(30, 30, 60, 0.6) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 5px;
+            overflow: hidden;
+        }
+
+        /* Tabulator 表格样式 */
+        .tabulator {
+            background: transparent !important;
+            border: none !important;
+            font-size: 13px;
+        }
+
+        .tabulator .tabulator-header {
+            background: linear-gradient(90deg, #2d1b69 0%, #3d2a7a 100%) !important;
+            border-bottom: 2px solid rgba(167, 139, 250, 0.5) !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col {
+            background: transparent !important;
+            border-right: 1px solid rgba(167, 139, 250, 0.25) !important;
+            min-height: 55px !important;
+            padding: 8px 5px !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
+            color: #ffffff !important;
+            font-weight: 700;
+            font-size: 12px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            white-space: normal !important;
+            line-height: 1.5 !important;
+            word-break: break-word !important;
+        }
+
+        .tabulator-row {
+            background: rgba(15, 15, 35, 0.9) !important;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.15) !important;
+        }
+
+        .tabulator-row:nth-child(even) {
+            background: rgba(25, 25, 50, 0.9) !important;
+        }
+
+        .tabulator-row:hover {
+            background: rgba(99, 102, 241, 0.35) !important;
         }
         
-        .select2-container--default .select2-results>.select2-results__options {
-            max-height: 450px !important;  /* 增加结果列表最大高度 */
+        .tabulator-row:hover .tabulator-cell {
+            color: #ffffff !important;
+            text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
+        }
+
+        .tabulator-row .tabulator-cell {
+            border-right: 1px solid rgba(139, 92, 246, 0.15) !important;
+            color: #ffffff !important;
+            padding: 12px 15px !important;
+            font-weight: 500;
+        }
+
+        .tabulator .tabulator-footer {
+            background: linear-gradient(90deg, #1e1e3f 0%, #2a2a4a 100%) !important;
+            border-top: 1px solid rgba(139, 92, 246, 0.2) !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page {
+            background: rgba(99, 102, 241, 0.2) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            color: #e0e0e0 !important;
+            border-radius: 6px !important;
+            margin: 0 3px !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page.active {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+            color: white !important;
+        }
+
+        /* 队列名称单元格样式 */
+        .queue-cell {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .queue-name {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .queue-active {
+            color: #4ade80;
+            text-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
+        }
+
+        .queue-inactive {
+            color: #fcd34d;
+            text-shadow: 0 0 8px rgba(252, 211, 77, 0.3);
+        }
+
+        .queue-badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-active {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+        }
+
+        .badge-inactive {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: #1a1a2e;
+        }
+
+        /* 表格内按钮 */
+        .table-btn {
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 2px;
+        }
+
+        .table-btn-chart {
+            background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+            color: white;
+        }
+
+        .table-btn-chart:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
+        }
+
+        .table-btn-info {
+            background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+            color: white;
+        }
+
+        .table-btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            color: white;
+        }
+
+        .table-btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: #1a1a2e;
+        }
+
+        .table-btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+        }
+
+        .table-btn-deprecate {
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+            color: white;
+        }
+
+        .table-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* 消息数量显示 */
+        .msg-count-cell {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .msg-count-value {
+            font-weight: 700;
+            font-size: 15px;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .msg-diff-up {
+            color: #f87171;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .msg-diff-down {
+            color: #4ade80;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* 模态框样式 */
+        .modal-content {
+            background: linear-gradient(135deg, #1e1e3f 0%, #2a2a4a 100%) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            border-radius: 16px !important;
+            color: #e0e0e0;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid rgba(139, 92, 246, 0.2) !important;
+            padding: 20px 25px !important;
+        }
+
+        .modal-title {
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 25px !important;
+        }
+
+        .modal-footer {
+            border-top: 1px solid rgba(139, 92, 246, 0.2) !important;
+            padding: 15px 25px !important;
+        }
+
+        .close {
+            color: #a5b4fc !important;
+            opacity: 1 !important;
+            font-size: 28px;
+        }
+
+        .close:hover {
+            color: #ffffff !important;
+        }
+
+        /* 图表模态框 */
+        .modal-xl-custom {
+            width: 90%;
+            max-width: 1600px;
+        }
+
+        .chart-controls {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(30, 30, 60, 0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .chart-control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-control-group label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .chart-control-group input,
+        .chart-control-group select {
+            background: rgba(30, 30, 60, 0.8) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            color: #e0e0e0 !important;
+            border-radius: 8px !important;
+            padding: 8px 12px !important;
+        }
+
+        .chart-canvas-container {
+            background: rgba(20, 20, 40, 0.5);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(139, 92, 246, 0.1);
+        }
+
+        /* 消费者详情表格 */
+        .consumer-detail-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .consumer-detail-table th {
+            background: linear-gradient(90deg, #1e1e3f 0%, #2a2a4a 100%);
+            color: #ffffff;
+            padding: 12px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .consumer-detail-table td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+            font-size: 13px;
+        }
+
+        .consumer-detail-table tr:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* JSON 显示 */
+        .json-display {
+            background: #0d0d1a;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 13px;
+            color: #a5b4fc;
+            max-height: 60vh;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* 暂停状态 */
+        .pause-badge {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* 自动刷新指示器 */
+        .refresh-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            color: #34d399;
+        }
+
+        .refresh-indicator.active .refresh-dot {
+            animation: blink 1s infinite;
+        }
+
+        .refresh-dot {
+            width: 8px;
+            height: 8px;
+            background: #34d399;
+            border-radius: 50%;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .page-header {
+                flex-direction: column;
+                gap: 20px;
+                align-items: flex-start;
+            }
+            
+            .stats-cards {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            
+            .control-panel {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* 加载动画 */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 操作按钮组 */
+        .action-btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid" style="margin-top: 5px;">
-        <div class="search-container" style="display: flex; align-items: center; margin-bottom: 10px;">
-            <!-- 使用 Select2 的队列选择器 -->
-            <select id="queueSearchSelect" class="form-control" style="width: 700px;">
-                <option value="">请选择队列名字...</option>
-            </select>
-            <!-- 美化后的复选框 -->
+    <div class="main-container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fa fa-sliders"></i>
+                </div>
+                <div class="header-title">
+                    <h1>队列操作中心</h1>
+                    <p>实时监控和管理所有消息队列的状态与配置</p>
+                </div>
+            </div>
+            <div class="stats-cards">
+                <div class="stat-card active">
+                    <div class="stat-value" id="active_queue_count">0</div>
+                    <div class="stat-label">活跃队列</div>
+                </div>
+                <div class="stat-card inactive">
+                    <div class="stat-value" id="inactive_queue_count">0</div>
+                    <div class="stat-label">闲置队列</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total_consumer_count">0</div>
+                    <div class="stat-label">消费者总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total_msg_count">-</div>
+                    <div class="stat-label">消息总数</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="control-panel">
+            <div class="search-group">
+                <label><i class="fa fa-search"></i> 队列搜索</label>
+                <select id="queueSearchSelect" class="form-control" style="width: 500px;">
+                    <option value="">请选择队列名字...</option>
+                </select>
+            </div>
+
             <div class="toggle-switch-container">
                 <label class="switch">
                     <input type="checkbox" id="showActiveQueuesOnly" onchange="toggleActiveQueuesFilter()">
                     <span class="slider round"></span>
                 </label>
-                <span style="margin-left: 8px; cursor: pointer;" onclick="document.getElementById('showActiveQueuesOnly').click();">正在消费的队列</span>
+                <span class="toggle-label" onclick="document.getElementById('showActiveQueuesOnly').click();">
+                    <i class="fa fa-filter"></i> 仅显示活跃队列
+                </span>
             </div>
-            <button id="refresh-all-msg-counts" class="btn btn-info" style="margin-left: 30px;">更新所有队列的消息数量</button>
-            <button id="toggle-auto-refresh" class="btn btn-success" style="margin-left: 10px;">启动自动刷新</button>
-            <button id="show-explanation-btn" class="btn btn-default" style="margin-left: 10px;">说明</button>
+
+            <button id="refresh-all-msg-counts" class="btn-modern btn-primary-modern">
+                <i class="fa fa-refresh"></i> 刷新所有消息数量
+            </button>
+
+            <button id="toggle-auto-refresh" class="btn-modern btn-success-modern">
+                <i class="fa fa-play"></i> 启动自动刷新
+            </button>
+
+            <button id="show-explanation-btn" class="btn-modern btn-outline-modern">
+                <i class="fa fa-info-circle"></i> 说明
+            </button>
+
+            <div class="refresh-indicator" id="refresh-indicator" style="display: none;">
+                <div class="refresh-dot"></div>
+                <span>每 10 秒自动刷新</span>
+            </div>
         </div>
-        <div id="queue-table"></div>
+
+        <!-- 表格容器 -->
+        <div class="table-container">
+            <div id="queue-table"></div>
+        </div>
     </div>
 
     <!-- Chart Modal -->
     <div class="modal fade" id="chartModal" tabindex="-1" role="dialog" aria-labelledby="chartModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-xl-custom" role="document">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title" id="chartModalLabel">队列数据曲线图: <span id="chartQueueName"></span></h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h4 class="modal-title" style="margin: 0;">
+                        <i class="fa fa-line-chart" style="color: #ec4899; margin-right: 10px;"></i>
+                        队列数据曲线图: <span id="chartQueueName" style="color: #a5b4fc;"></span>
+                    </h4>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <button type="button" class="btn-modern btn-outline-modern" onclick="showChartDataExplanation()" style="padding: 6px 14px; font-size: 12px;">
+                            <i class="fa fa-question-circle"></i> 数据说明
+                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="margin: 0;"><span aria-hidden="true">&times;</span></button>
+                    </div>
                 </div>
                 <div class="modal-body">
-                    <!-- 新增：时间范围筛选控件和采样点数选择 -->
-                    <div style="margin-bottom: 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
-                        <div style="display: flex; align-items: center;">
-                            <label style="margin-right:5px;">起始时间：</label>
-                            <input type="datetime-local" id="chartStartTime" style="margin-right: 10px;">
+                    <div class="chart-controls">
+                        <div class="chart-control-group">
+                            <label><i class="fa fa-calendar"></i> 起始时间</label>
+                            <input type="datetime-local" id="chartStartTime">
                         </div>
-                        <div style="display: flex; align-items: center;">
-                            <label style="margin-right:5px;">结束时间：</label>
-                            <input type="datetime-local" id="chartEndTime" style="margin-right: 10px;">
+                        <div class="chart-control-group">
+                            <label><i class="fa fa-calendar"></i> 结束时间</label>
+                            <input type="datetime-local" id="chartEndTime">
                         </div>
-                        <div style="display: flex; align-items: center;">
-                            <label style="margin-right:5px;">采样点数：</label>
-                            <select id="curveSamplesCount" class="form-control" style="width: 100px; margin-right: 10px;" title="推荐使用360-720个采样点以获得最佳显示效果">
+                        <div class="chart-control-group">
+                            <label><i class="fa fa-cog"></i> 采样点数</label>
+                            <select id="curveSamplesCount" class="form-control" title="推荐使用360-720个采样点以获得最佳显示效果">
                                 <option value="60">60 (粗略)</option>
                                 <option value="120">120 (简单)</option>
                                 <option value="180">180 (清晰)</option>
@@ -154,12 +875,66 @@
                                 <option value="8640">8640 (极精细)</option>
                             </select>
                         </div>
-                        <button class="btn btn-primary btn-sm" onclick="reloadQueueChartWithTimeRange()">查询</button>
+                        <button class="btn-modern btn-primary-modern" onclick="reloadQueueChartWithTimeRange()">
+                            <i class="fa fa-search"></i> 查询
+                        </button>
                     </div>
-                    <canvas id="queueDataChart" style="height:600px;max-height:600px;"></canvas>
+                    <div class="chart-canvas-container">
+                        <canvas id="queueDataChart" style="height:550px;max-height:550px;"></canvas>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn-modern btn-outline-modern" data-dismiss="modal">
+                        <i class="fa fa-times"></i> 关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Data Explanation Modal -->
+    <div class="modal fade" id="chartDataExplanationModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">
+                        <i class="fa fa-info-circle" style="color: #ec4899; margin-right: 10px;"></i>
+                        曲线图数据来源说明
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <div style="background: linear-gradient(145deg, rgba(236,72,153,0.1) 0%, rgba(168,85,247,0.05) 100%); border-left: 4px solid #ec4899; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h5 style="margin: 0 0 10px 0; color: #f9a8d4; font-size: 15px;"><i class="fa fa-heartbeat"></i> 数据来源</h5>
+                        <p style="margin: 0; color: #e0e0e0; font-size: 14px; line-height: 1.8;">
+                            此曲线图的数据来源于 <strong style="color: #f472b6;">funboost 消费者心跳上报到 Redis</strong> 的统计数据。<br>
+                            每个消费者每隔 <strong style="color: #a78bfa;">10 秒</strong> 会向 Redis 上报一次自身的运行状态数据。
+                        </p>
+                    </div>
+                    
+                    <div style="background: rgba(30, 30, 60, 0.5); border-radius: 8px; padding: 15px 20px; margin-bottom: 15px;">
+                        <h5 style="margin: 0 0 12px 0; color: #a5b4fc; font-size: 14px;"><i class="fa fa-list-ul"></i> 可查看的指标</h5>
+                        <ul style="margin: 0; padding-left: 20px; color: #c4b5fd; line-height: 2;">
+                            <li><span style="color: #f87171;">历史运行次数</span> / <span style="color: #60a5fa;">历史失败次数</span></li>
+                            <li><span style="color: #4ade80;">近10秒完成数</span> / <span style="color: #fb923c;">近10秒失败数</span></li>
+                            <li><span style="color: #fde047;">近10秒平均耗时</span> / <span style="color: #f0abfc;">累计平均耗时</span></li>
+                            <li><span style="color: #67e8f9;">消息数量</span>（Broker 中待消费的消息数）</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: linear-gradient(145deg, rgba(59,130,246,0.1) 0%, rgba(99,102,241,0.05) 100%); border-left: 4px solid #3b82f6; padding: 15px 20px; border-radius: 8px;">
+                        <h5 style="margin: 0 0 10px 0; color: #93c5fd; font-size: 14px;"><i class="fa fa-lightbulb-o"></i> 提示</h5>
+                        <p style="margin: 0; color: #e0e0e0; font-size: 13px; line-height: 1.7;">
+                            • 数据精度为 <strong style="color: #60a5fa;">10 秒级</strong>，不是毫秒级实时<br>
+                            • 如果队列没有启动消费者，则不会有心跳上报数据<br>
+                            • 可通过调整"采样点数"控制图表精细程度
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modern btn-outline-modern" data-dismiss="modal">
+                        <i class="fa fa-check"></i> 知道了
+                    </button>
                 </div>
             </div>
         </div>
@@ -170,16 +945,19 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="explanationModalLabel">说明</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">
+                        <i class="fa fa-info-circle" style="color: #6366f1; margin-right: 10px;"></i>
+                        功能说明
+                    </h4>
                 </div>
                 <div class="modal-body">
-                    <ul id="explanation-text">
-                        {# Content will be added by JavaScript #}
-                    </ul>
+                    <ul id="explanation-text" style="line-height: 2; padding-left: 20px;"></ul>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn-modern btn-outline-modern" data-dismiss="modal">
+                        <i class="fa fa-check"></i> 知道了
+                    </button>
                 </div>
             </div>
         </div>
@@ -190,86 +968,106 @@
         // 全局错误处理器
         window.addEventListener('error', function(e) {
             console.error('全局错误捕获:', e.error);
-            if (e.error && e.error.message && e.error.message.includes('tabulator')) {
-                console.warn('检测到Tabulator相关错误，可能是表格初始化问题');
-            }
         });
 
         // 检查Chart.js是否正确加载
         if (typeof Chart === 'undefined') {
-            console.error('Chart.js未正确加载！请检查文件路径。');
-            alert('Chart.js库未正确加载，图表功能可能无法正常使用。');
+            console.error('Chart.js未正确加载！');
         } else {
             console.log('Chart.js已正确加载，版本:', Chart.version);
         }
 
-        // 初始化队列选择器（提取为独立函数）
+        // 初始化队列选择器
         function initializeQueueSelector(data) {
-            if (!data || data.length === 0) {
-                return;
-            }
+            if (!data || data.length === 0) return;
             
-            // 填充队列选择器 - 显示 consumer_count
             let html = '<option value="">请选择队列名字...</option>';
             data.forEach(function(item) {
                 const queueName = item.queue_name;
                 const consumerCount = item.consumer_count || 0;
-                html += `<option value="${queueName}">${queueName}&nbsp;&nbsp;&nbsp;&nbsp;(consumer_count:${consumerCount})</option>`;
+                const statusIcon = consumerCount > 0 ? '🟢' : '🟡';
+                html += `<option value="${queueName}">${statusIcon} ${queueName} (${consumerCount}个消费者)</option>`;
             });
             
-            // 先销毁已有的 Select2 实例（如果存在）
             if ($("#queueSearchSelect").hasClass("select2-hidden-accessible")) {
                 $("#queueSearchSelect").select2('destroy');
             }
             
-            // 填充选项
             $("#queueSearchSelect").html(html);
             
-            // 初始化 Select2
             $("#queueSearchSelect").select2({
                 placeholder: "请输入队列名称搜索...",
                 allowClear: true,
-                width: '700px',
-                minimumResultsForSearch: 0  // 总是显示搜索框
+                width: '500px',
+                minimumResultsForSearch: 0
             }).on('change', function() {
                 const selectedQueue = $(this).val();
-                // 使用 Tabulator 的过滤功能
                 if (selectedQueue) {
                     table.setFilter("queue_name", "=", selectedQueue);
                 } else {
                     table.clearFilter();
-                    updateTableFilters(); // 重新应用其他过滤器
+                    updateTableFilters();
                 }
             });
         }
 
+        // 更新统计信息
+        function updateStats(data) {
+            let activeCount = 0, inactiveCount = 0, totalConsumers = 0, totalMsg = 0;
+            let hasMsgData = false;
+            
+            data.forEach(item => {
+                if (item.consumer_count > 0) {
+                    activeCount++;
+                } else {
+                    inactiveCount++;
+                }
+                totalConsumers += item.consumer_count || 0;
+                if (item.msg_count !== null && item.msg_count !== undefined) {
+                    totalMsg += item.msg_count;
+                    hasMsgData = true;
+                }
+            });
+            
+            $('#active_queue_count').text(activeCount);
+            $('#inactive_queue_count').text(inactiveCount);
+            $('#total_consumer_count').text(totalConsumers);
+            $('#total_msg_count').text(hasMsgData ? totalMsg.toLocaleString() : '-');
+        }
+
         var table = new Tabulator("#queue-table", {
-            theme: "bootstrap3",
             ajaxURL: "/queue/params_and_active_consumers",
             ajaxResponse: function(url, params, response) {
-                console.log("AJAX 响应成功");
-                console.log("URL:", url);
-                console.log("响应数据:", response);
-                return response; // 返回数据给表格
-            },
-            ajaxError: function(xhr, textStatus, errorThrown) {
-                console.error("AJAX 请求失败!");
-                console.error("状态:", textStatus);
-                console.error("错误:", errorThrown);
-                console.error("响应:", xhr);
-                alert("数据加载失败: " + textStatus);
+                const tableData = Object.entries(response).map(([queue_name, data]) => ({
+                    queue_name: queue_name,
+                    broker_kind: data.queue_params.broker_kind,
+                    consuming_function_name: data.queue_params.consuming_function_name,
+                    history_run_count: data.history_run_count,
+                    history_run_fail_count: data.history_run_fail_count,
+                    all_consumers_last_x_s_execute_count: data.all_consumers_last_x_s_execute_count,
+                    all_consumers_last_x_s_execute_count_fail: data.all_consumers_last_x_s_execute_count_fail,
+                    all_consumers_last_execute_task_time: data.all_consumers_last_execute_task_time,
+                    msg_count: data.msg_num_in_broker, 
+                    consumer_count: data.active_consumers.length,
+                    active_consumers: data.active_consumers,
+                    queue_params: data.queue_params,
+                    pause_flag: data.pause_flag,
+                    all_consumers_last_x_s_avarage_function_spend_time: data.all_consumers_last_x_s_avarage_function_spend_time,
+                    all_consumers_avarage_function_spend_time_from_start: data.all_consumers_avarage_function_spend_time_from_start
+                }));
+
+                initializeQueueSelector(tableData);
+                updateStats(tableData);
+
+                return tableData;
             },
             layout: "fitDataFill",
             responsiveLayout: false,
             pagination: true,
-            paginationSize: 1000,
+            paginationSize: 100,
             height: "auto",
             locale: true,
             dataLoaded: function(data) {
-                // 调用独立的初始化函数
-                initializeQueueSelector(data);
-                
-                // 在数据加载完成后应用过滤器
                 setTimeout(function() {
                     updateTableFilters();
                 }, 100);
@@ -277,165 +1075,245 @@
             tableBuilt: function() {
                 this.initialized = true;
             },
-            rowFormatter: function(row) {
-                var data = row.getData();
-                var cell = row.getCell("queue_name"); 
-
-                if (cell && cell.getElement()) { 
-                    var element = cell.getElement();
-                    if (data.consumer_count > 0) {
-                        element.style.backgroundColor = "#4CAF50"; // 恢复绿色背景
-                        element.style.color = "white";
-                    } else {
-                        element.style.backgroundColor = "#F44336"; // 恢复红色背景
-                        element.style.color = "white";
-                    }
-                }
-            },
             langs: {
                 "zh-cn": {
                     "pagination": {
                         "first": "首页",
-                        "first_title": "首页",
                         "last": "末页",
-                        "last_title": "末页",
                         "prev": "上一页",
-                        "prev_title": "上一页",
                         "next": "下一页",
-                        "next_title": "下一页",
                     }
                 }
             },
             columns: [
                 {
-                    title: "<br><br>队列名字",
+                    title: "队列名称",
                     field: "queue_name",
                     sorter: "string",
                     headerSort: true,
-                    headerHozAlign: "center",
                     hozAlign: "left",
-                    minWidth: 320, // 增加宽度以容纳按钮
-                    headerWordWrap: true,
+                    width: 380,
                     frozen: true,
-                    formatter: function(cell, formatterParams, onRendered) {
+                    formatter: function(cell) {
                         const queueName = cell.getValue();
-                        // 让按钮始终显示，不再依赖 isAutoRefreshing
-                        return `<div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span>${queueName}</span>
-                                    <button class="btn btn-xs btn-info view-chart-btn"
-                                            data-queue-name="${queueName}"
-                                            style="margin-left: 10px; display: inline-block;"
-                                            onclick="showQueueChart('${queueName}')">
-                                        <i class="glyphicon glyphicon-stats"></i> 查看曲线图
+                        const rowData = cell.getRow().getData();
+                        const isActive = rowData.consumer_count > 0;
+                        const statusClass = isActive ? 'queue-active' : 'queue-inactive';
+                        const badgeClass = isActive ? 'badge-active' : 'badge-inactive';
+                        const badgeText = isActive ? '活跃' : '闲置';
+                        
+                        return `<div class="queue-cell">
+                                    <span class="queue-name ${statusClass}">${queueName}</span>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <span class="queue-badge ${badgeClass}">${badgeText}</span>
+                                        <button class="table-btn table-btn-chart" onclick="showQueueChart('${queueName}')">
+                                            <i class="fa fa-line-chart"></i> 曲线图
+                                        </button>
+                                    </div>
+                                </div>`;
+                    }
+                },
+                {
+                    title: "消费者数量",
+                    field: "consumer_count",
+                    sorter: "number",
+                    width: 180,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const row = cell.getRow().getData();
+                        const count = cell.getValue() || 0;
+                        const color = count > 0 ? '#86efac' : '#fcd34d';
+                        const shadow = count > 0 ? 'rgba(134, 239, 172, 0.4)' : 'rgba(252, 211, 77, 0.4)';
+                        return `<div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                    <span style="color: ${color}; font-weight: 700; font-size: 18px; text-shadow: 0 0 10px ${shadow};">${count}</span>
+                                    <button class="table-btn table-btn-info" onclick='showConsumerDetails(${JSON.stringify(row.active_consumers)}, "${row.queue_name}")'>
+                                        <i class="fa fa-eye"></i> 详情
                                     </button>
                                 </div>`;
                     }
                 },
-                { title: "<br><br>consumer数量", field: "consumer_count", sorter: "number", width: 200,
-                formatter: function(cell) {
-                    const row = cell.getRow().getData();
-                    var consumers = row.active_consumers;
-                    return `
-                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 10px;">
-                            <span style="min-width: 50px; text-align: right; padding-right: 15px;">${cell.getValue() || ''}</span>
-                            <button class="btn btn-primary btn-sm" onclick='showConsumerDetails(${JSON.stringify(consumers)}, "${row.queue_name}")'>
-                                查看消费者详情
-                            </button>
-                        </div>
-                    `;
-                }
-            },
-                
-                { title: "<br>broker<br>类型", field: "broker_kind", sorter: "string"  },
-                { title: "<br>消费<br>函数", field: "consuming_function_name", sorter: "string"  },
-              
-                { title: "<br><br>消息数量", field: "msg_count", sorter: "number", width: 250,
+                {
+                    title: "Broker类型",
+                    field: "broker_kind",
+                    sorter: "string",
+                    width: 130,
+                    hozAlign: "center",
                     formatter: function(cell) {
-                        const row = cell.getRow().getData();
-                        const initialCount = cell.getValue() === null ? '' : cell.getValue();
-                        const initialCountStr = initialCount === '' ? '0' : String(initialCount); // Ensure '0' for empty initial
-                        return `
-                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 10px;">
-                                <span id="msg-count-${row.queue_name}" data-last-count="${initialCountStr}" style="min-width: 70px; text-align: right; padding-right: 25px;">${initialCount}</span>
-                                <button class="btn btn-primary btn-sm" onclick="getMessageCount('${row.queue_name}')">获取</button>
-                            </div>
-                        `;
-                    }
-                },
-
-                { title: "<br>历史运<br>行次数", field: "history_run_count", sorter: "number", width: 150 },
-                { title: "<br>历史运<br>行失败<br>次数", field: "history_run_fail_count", sorter: "number", width: 150 },
-                { title: "<br>近10秒<br>完成", field: "all_consumers_last_x_s_execute_count", sorter: "number", width: 100 },
-                { title: "<br>近10秒<br>失败", field: "all_consumers_last_x_s_execute_count_fail", sorter: "number", width: 100 },
-
-                { title: "近10秒<br>函数运行<br>平均耗时", field: "all_consumers_last_x_s_avarage_function_spend_time", sorter: "number", width: 100 },
-                { title: "累计<br>函数运行<br>平均耗时", field: "all_consumers_avarage_function_spend_time_from_start", sorter: "number", width: 100 },
-
-                { 
-                    title: "暂停<br>消费<br>状态",
-                    field: "pause_flag",
-                    width: 100,
-                    formatter: function(cell) {
-                        return cell.getValue()===1 ? '<span style="color: red;">已暂停</span>' : "";
+                        const value = cell.getValue();
+                        const colors = {
+                            'REDIS': '#f87171',
+                            'RABBITMQ_AMQPSTORM': '#fbbf24',
+                            'KAFKA': '#4ade80',
+                            'MONGODB': '#60a5fa'
+                        };
+                        const color = colors[value] || '#a78bfa';
+                        return `<span style="background: ${color}33; color: ${color}; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; text-shadow: 0 0 8px ${color}44;">${value}</span>`;
                     }
                 },
                 {
-                    title: "<br><br>操作",
-                    width: 600,
+                    title: "消费函数",
+                    field: "consuming_function_name",
+                    sorter: "string",
+                    width: 140,
+                    formatter: function(cell) {
+                        return `<code style="background: rgba(167,139,250,0.25); color: #e0d4ff; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">${cell.getValue()}</code>`;
+                    }
+                },
+                {
+                    title: "最后执行时间",
+                    field: "all_consumers_last_execute_task_time",
+                    sorter: "number",
+                    width: 160,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const val = cell.getValue();
+                        if (val === null || val === undefined) return '<span style="color: #888;">-</span>';
+                        const d = new Date(val * 1000);
+                        const timeStr = d.toLocaleString('zh-CN', { hour12: false, month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        // 计算距今多久
+                        const now = Date.now() / 1000;
+                        const diffSec = Math.floor(now - val);
+                        let agoStr = '';
+                        if (diffSec < 60) {
+                            agoStr = `${diffSec}秒前`;
+                        } else if (diffSec < 3600) {
+                            agoStr = `${Math.floor(diffSec / 60)}分钟前`;
+                        } else if (diffSec < 86400) {
+                            agoStr = `${Math.floor(diffSec / 3600)}小时前`;
+                        } else {
+                            agoStr = `${Math.floor(diffSec / 86400)}天前`;
+                        }
+                        const color = diffSec < 60 ? '#4ade80' : (diffSec < 300 ? '#fbbf24' : '#f87171');
+                        return `<div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                                    <span style="color: ${color}; font-weight: 600; font-size: 11px;">${agoStr}</span>
+                                    <span style="color: #888; font-size: 10px;">${timeStr}</span>
+                                </div>`;
+                    }
+                },
+                {
+                    title: "消息数量",
+                    field: "msg_count",
+                    sorter: "number",
+                    width: 200,
+                    formatter: function(cell) {
+                        const row = cell.getRow().getData();
+                        const initialCount = cell.getValue() === null ? '' : cell.getValue();
+                        const initialCountStr = initialCount === '' ? '0' : String(initialCount);
+                        return `<div class="msg-count-cell">
+                                    <span id="msg-count-${row.queue_name}" data-last-count="${initialCountStr}" class="msg-count-value" style="color: #93c5fd;">${initialCount}</span>
+                                    <button class="table-btn table-btn-info" onclick="getMessageCount('${row.queue_name}')">
+                                        <i class="fa fa-refresh"></i> 获取
+                                    </button>
+                                </div>`;
+                    }
+                },
+                {
+                    title: "历史运行次数",
+                    field: "history_run_count",
+                    sorter: "number",
+                    width: 120,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const val = cell.getValue() || 0;
+                        return `<span style="color: #67e8f9; font-weight: 700; text-shadow: 0 0 8px rgba(103, 232, 249, 0.3);">${val.toLocaleString()}</span>`;
+                    }
+                },
+                {
+                    title: "历史失败次数",
+                    field: "history_run_fail_count",
+                    sorter: "number",
+                    width: 120,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const val = cell.getValue() || 0;
+                        const color = val > 0 ? '#fca5a5' : '#888';
+                        return `<span style="color: ${color}; font-weight: 700;">${val.toLocaleString()}</span>`;
+                    }
+                },
+                {
+                    title: "近10秒完成",
+                    field: "all_consumers_last_x_s_execute_count",
+                    sorter: "number",
+                    width: 100,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const val = cell.getValue() || 0;
+                        const color = val > 0 ? '#86efac' : '#888';
+                        return `<span style="color: ${color}; font-weight: 700;">${val}</span>`;
+                    }
+                },
+                {
+                    title: "近10秒失败",
+                    field: "all_consumers_last_x_s_execute_count_fail",
+                    sorter: "number",
+                    width: 100,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const val = cell.getValue() || 0;
+                        const color = val > 0 ? '#fca5a5' : '#888';
+                        return `<span style="color: ${color}; font-weight: 700;">${val}</span>`;
+                    }
+                },
+                {
+                    title: "近10秒平均耗时",
+                    field: "all_consumers_last_x_s_avarage_function_spend_time",
+                    sorter: "number",
+                    width: 120,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const val = cell.getValue();
+                        if (val === null || val === undefined) return '<span style="color: #888;">-</span>';
+                        return `<span style="color: #fde047; font-weight: 600;">${val.toFixed(3)}s</span>`;
+                    }
+                },
+                {
+                    title: "累计平均耗时",
+                    field: "all_consumers_avarage_function_spend_time_from_start",
+                    sorter: "number",
+                    width: 120,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const val = cell.getValue();
+                        if (val === null || val === undefined) return '<span style="color: #888;">-</span>';
+                        return `<span style="color: #fdba74; font-weight: 600;">${val.toFixed(3)}s</span>`;
+                    }
+                },
+                {
+                    title: "状态",
+                    field: "pause_flag",
+                    width: 80,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        return cell.getValue() === 1 ? '<span class="pause-badge">已暂停</span>' : '';
+                    }
+                },
+                {
+                    title: "操作",
+                    width: 450,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
                         const btnId = 'showParamsBtn_' + Math.random().toString(36).substr(2, 9);
                         setTimeout(() => {
                             document.getElementById(btnId)?.addEventListener('click', () => showParams(row.queue_params));
                         }, 0);
-                        return `
-                            <button id="${btnId}" class="btn btn-info btn-sm action-btn">查看消费者配置</button>
-                            <button class="btn btn-danger btn-sm action-btn" onclick="clearQueue('${row.queue_name}')">清空队列消息</button>
-                            <button class="btn btn-warning btn-sm action-btn" onclick="pauseConsume('${row.queue_name}')">暂停消费</button>
-                            <button class="btn btn-success btn-sm action-btn" onclick="resumeConsume('${row.queue_name}')">恢复消费</button>
-                            <button class="btn btn-default btn-sm action-btn" onclick="deprecateQueue('${row.queue_name}')" style="background-color: #d9534f; color: white;">作废队列</button>
-                        `;
+                        return `<div class="action-btn-group">
+                                    <button id="${btnId}" class="table-btn table-btn-info"><i class="fa fa-cog"></i> 配置</button>
+                                    <button class="table-btn table-btn-danger" onclick="clearQueue('${row.queue_name}')"><i class="fa fa-trash"></i> 清空</button>
+                                    <button class="table-btn table-btn-warning" onclick="pauseConsume('${row.queue_name}')"><i class="fa fa-pause"></i> 暂停</button>
+                                    <button class="table-btn table-btn-success" onclick="resumeConsume('${row.queue_name}')"><i class="fa fa-play"></i> 恢复</button>
+                                    <button class="table-btn table-btn-deprecate" onclick="deprecateQueue('${row.queue_name}')"><i class="fa fa-ban"></i> 作废</button>
+                                </div>`;
                     }
                 },
             ],
-            ajaxResponse: function(url, params, response) {
-                // 转换API响应为表格数据
-                const tableData = Object.entries(response).map(([queue_name, data]) => ({
-                    queue_name: queue_name,
-                    
-                    broker_kind: data.queue_params.broker_kind,
-                    consuming_function_name: data.queue_params.consuming_function_name,
-                    history_run_count: data.history_run_count,
-                    history_run_fail_count: data.history_run_fail_count,
-                    all_consumers_last_x_s_execute_count: data.all_consumers_last_x_s_execute_count,
-                    all_consumers_last_x_s_execute_count_fail: data.all_consumers_last_x_s_execute_count_fail,
-                    msg_count: data.msg_num_in_broker, 
-                    consumer_count: data.active_consumers.length,
-                    active_consumers: data.active_consumers,
-                    queue_params: data.queue_params,
-                    pause_flag: data.pause_flag ,
-                    all_consumers_last_x_s_avarage_function_spend_time:data.all_consumers_last_x_s_avarage_function_spend_time,
-                    all_consumers_avarage_function_spend_time_from_start:data.all_consumers_avarage_function_spend_time_from_start
-                }));
-
-                // 初始化 Select2
-                initializeQueueSelector(tableData);
-
-                return tableData;
-            },
         });
 
         function updateTableFilters() {
-            // 检查表格是否已经初始化
-            if (!table || !table.initialized) {
-                console.log("表格还未初始化，跳过过滤器更新");
-                return;
-            }
+            if (!table || !table.initialized) return;
 
             try {
                 const selectedQueue = $("#queueSearchSelect").val();
                 const showActiveOnly = document.getElementById('showActiveQueuesOnly').checked;
-
                 const filters = [];
 
                 if (selectedQueue && selectedQueue.trim() !== "") {
@@ -446,7 +1324,6 @@
                     filters.push({field: "consumer_count", type: ">", value: 0});
                 }
 
-                // 清除现有过滤器并设置新的过滤器
                 table.clearFilter();
                 if (filters.length > 0) {
                     table.setFilter(filters);
@@ -456,101 +1333,90 @@
             }
         }
 
-        // 显示参数的模态框
         function showParams(params) {
-            // 如果已存在模态框，先移除
             if ($("#paramsModal").length) {
                 $("#paramsModal").remove();
             }
 
             const modalHtml = `
                 <div class="modal" id="paramsModal" tabindex="-1" role="dialog">
-                    <div class="modal-dialog" role="document">
+                    <div class="modal-dialog modal-lg" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                <h4 class="modal-title">消费者配置详情</h4>
+                                <h4 class="modal-title"><i class="fa fa-cog" style="color: #6366f1; margin-right: 10px;"></i>消费者配置详情</h4>
                             </div>
-                            <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
-                                <pre style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #dee2e6; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;">${JSON.stringify(params, null, 2)}</pre>
+                            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                                <pre class="json-display">${JSON.stringify(params, null, 2)}</pre>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                <button type="button" class="btn-modern btn-outline-modern" data-dismiss="modal"><i class="fa fa-times"></i> 关闭</button>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
 
-            // 添加模态框到body
             $("body").append(modalHtml);
-            
-            // 初始化并显示模态框
-            $("#paramsModal").modal({
-                backdrop: "static",
-                keyboard: false
-            });
+            $("#paramsModal").modal({ backdrop: "static", keyboard: false });
         }
-        // 操作函数
+
         function getMessageCount(queueName) {
             let countSpan = document.getElementById(`msg-count-${queueName}`);
             let previous_count_str = countSpan.getAttribute('data-last-count') || '0';
             let previous_count = parseInt(previous_count_str);
-            if (isNaN(previous_count)) previous_count = 0; // Fallback
+            if (isNaN(previous_count)) previous_count = 0;
 
-            countSpan.innerHTML = '正在获取...'; // Add a loading indicator
+            countSpan.innerHTML = '<span class="loading-spinner"></span>';
 
-            // 使用 Flask 蓝图接口获取消息数量
             $.get(`/funboost/get_msg_count?queue_name=${encodeURIComponent(queueName)}`, function(response) {
                 if (response.succ) {
                     const new_count = parseInt(response.data.count);
                     if (isNaN(new_count)) {
-                        countSpan.innerHTML = 'get_msg_num_error';
-                        countSpan.setAttribute('data-last-count', '0'); // Reset last count on error
+                        countSpan.innerHTML = '<span style="color: #ef4444;">错误</span>';
+                        countSpan.setAttribute('data-last-count', '0');
                         return;
                     } 
 
                     const difference = new_count - previous_count;
                     let diff_display_html = '';
-                    if (countSpan.getAttribute('data-last-count') !== '0' || previous_count_str !== '') { // Only show diff if not initial load or previous was not error
+                    if (countSpan.getAttribute('data-last-count') !== '0' || previous_count_str !== '') {
                         if (difference > 0) {
-                            diff_display_html = ` <span style="color: red;">↑ +${difference}</span>`;
+                            diff_display_html = ` <span class="msg-diff-up">↑ +${difference}</span>`;
                         } else if (difference < 0) {
-                            diff_display_html = ` <span style="color: green;">↓ ${difference}</span>`;
+                            diff_display_html = ` <span class="msg-diff-down">↓ ${difference}</span>`;
                         }
                     }
 
-                    countSpan.innerHTML = `${new_count}${diff_display_html}`;
+                    countSpan.innerHTML = `${new_count.toLocaleString()}${diff_display_html}`;
                     countSpan.setAttribute('data-last-count', new_count.toString());
                 } else {
-                    countSpan.innerHTML = 'get_msg_num_error';
-                    countSpan.setAttribute('data-last-count', '0'); // Reset last count on error
+                    countSpan.innerHTML = '<span style="color: #ef4444;">错误</span>';
+                    countSpan.setAttribute('data-last-count', '0');
                 }
             }).fail(function() {
-                countSpan.innerHTML = 'get_msg_num_error';
-                countSpan.setAttribute('data-last-count', '0'); // Reset last count on error
+                countSpan.innerHTML = '<span style="color: #ef4444;">错误</span>';
+                countSpan.setAttribute('data-last-count', '0');
             });
         }
 
         function clearQueue(queueName) {
-            if (confirm(`确定要清空队列 ${queueName} 的所有消息吗？`)) {
+            if (confirm(`确定要清空队列 "${queueName}" 的所有消息吗？\n\n此操作不可撤销！`)) {
                 $.ajax({
                     url: '/funboost/clear_queue',
                     type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({
-                        queue_name: queueName
-                    }),
+                    data: JSON.stringify({ queue_name: queueName }),
                     success: function(response) {
                         if (response.succ) {
-                            alert(`清空 ${queueName} 队列成功`);
-                            getMessageCount(queueName); // 自动获取最新的消息数量
+                            alert(`✅ 清空 "${queueName}" 队列成功`);
+                            getMessageCount(queueName);
                         } else {
-                            alert(`清空队列失败：${response.msg}`);
+                            alert(`❌ 清空队列失败：${response.msg}`);
                         }
                     },
                     error: function(xhr, status, error) {
-                        alert(`清空队列失败：${error}`);
+                        alert(`❌ 清空队列失败：${error}`);
                     }
                 });
             }
@@ -559,11 +1425,9 @@
         function pauseConsume(queueName) {
             $.post(`/queue/pause/${queueName}`, function(response) {
                 if (response.success) {
-                    alert("暂停消费成功");
+                    alert("✅ 暂停消费成功");
                     const row = table.getRows().find(row => row.getData().queue_name === queueName);
-                    if (row) {
-                        row.update({pause_flag: 1});
-                    }
+                    if (row) row.update({pause_flag: 1});
                 }
             });
         }
@@ -571,18 +1435,15 @@
         function resumeConsume(queueName) {
             $.post(`/queue/resume/${queueName}`, function(response) {
                 if (response.success) {
-                    alert("恢复消费成功");
+                    alert("✅ 恢复消费成功");
                     const row = table.getRows().find(row => row.getData().queue_name === queueName);
-                    if (row) {
-                        row.update({pause_flag: 0});
-                    }
+                    if (row) row.update({pause_flag: 0});
                 }
             });
         }
 
-        // 作废队列
         function deprecateQueue(queueName) {
-            if (!confirm(`确定要作废队列 "${queueName}" 吗？\n\n作废后，该队列将从redis元数据的队列set中移除，但不会删除队列中的数据。\n如果需要再次使用，需要重新启动消费者。`)) {
+            if (!confirm(`确定要作废队列 "${queueName}" 吗？\n\n作废后，该队列将从Redis元数据中移除。\n如需再次使用，需要重新启动消费者。`)) {
                 return;
             }
             
@@ -590,25 +1451,21 @@
                 url: '/funboost/deprecate_queue',
                 type: 'DELETE',
                 contentType: 'application/json',
-                data: JSON.stringify({
-                    queue_name: queueName
-                }),
+                data: JSON.stringify({ queue_name: queueName }),
                 success: function(response) {
                     if (response.succ) {
-                        alert(`队列 "${queueName}" 已成功作废！`);
-                        // 刷新表格数据
+                        alert(`✅ 队列 "${queueName}" 已成功作废！`);
                         table.replaceData();
                     } else {
-                        alert(`作废队列失败：${response.msg}`);
+                        alert(`❌ 作废队列失败：${response.msg}`);
                     }
                 },
                 error: function(xhr, status, error) {
-                    alert(`作废队列失败：${error}`);
+                    alert(`❌ 作废队列失败：${error}`);
                 }
             });
         }
 
-        // 显示消费者详情的模态框
         function showConsumerDetails(consumers, queueName) {
             $.ajax({
                 url: '/running_consumer/hearbeat_info_by_queue_name',
@@ -618,78 +1475,71 @@
                     consumers.forEach(consumer => {
                         consumerRows += `
                             <tr>
-                                <td>${consumer.computer_ip}</td>
+                                <td style="color: #60a5fa;">${consumer.computer_ip}</td>
                                 <td>${consumer.computer_name}</td>
-                                <td>${consumer.process_id}</td>
-                                <td>${consumer.hearbeat_datetime_str}</td>
-                                
+                                <td style="color: #a5b4fc;">${consumer.process_id}</td>
+                                <td style="color: #8b5cf6;">${consumer.hearbeat_datetime_str}</td>
                                 <td>${consumer.start_datetime_str}</td>
-                                
-                                <td>${consumer.last_x_s_execute_count}</td>
-                                <td>${consumer.last_x_s_execute_count_fail}</td>
-                                <td>${consumer.last_x_s_avarage_function_spend_time}</td>
-                                <td>${consumer.total_consume_count_from_start}</td>
-                                <td>${consumer.total_consume_count_from_start_fail}</td>
-                                <td>${consumer.avarage_function_spend_time_from_start}</td>
-                                <td>${consumer.code_filename}</td>,
-                                <td>${consumer.consumer_uuid}</td>
+                                <td style="color: #34d399; font-weight: 600;">${consumer.last_x_s_execute_count}</td>
+                                <td style="color: ${consumer.last_x_s_execute_count_fail > 0 ? '#f87171' : '#666'}; font-weight: 600;">${consumer.last_x_s_execute_count_fail}</td>
+                                <td style="color: #fbbf24;">${consumer.last_x_s_avarage_function_spend_time?.toFixed(3) || '-'}s</td>
+                                <td style="color: #22d3ee;">${consumer.total_consume_count_from_start?.toLocaleString() || 0}</td>
+                                <td style="color: ${consumer.total_consume_count_from_start_fail > 0 ? '#f87171' : '#666'};">${consumer.total_consume_count_from_start_fail?.toLocaleString() || 0}</td>
+                                <td style="color: #fb923c;">${consumer.avarage_function_spend_time_from_start?.toFixed(3) || '-'}s</td>
+                                <td style="font-size: 11px; color: #888;" title="${consumer.code_filename}">${consumer.code_filename.split(/[\\/]/).pop()}</td>
+                                <td style="font-size: 10px; color: #666;">${consumer.consumer_uuid}</td>
                             </tr>
                         `;
                     });
                 
                     const modalHtml = `
                         <div class="modal" id="consumerDetailsModal" tabindex="-1" role="dialog">
-                            <div class="modal-dialog" style="width: 90%;" role="document">
+                            <div class="modal-dialog" style="width: 95%;" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                        <h4 class="modal-title">${queueName}队列的消费者详情信息</h4>
+                                        <h4 class="modal-title">
+                                            <i class="fa fa-users" style="color: #10b981; margin-right: 10px;"></i>
+                                            队列 <span style="color: #a5b4fc;">${queueName}</span> 的消费者详情
+                                        </h4>
                                     </div>
-                                    <div class="modal-body">
-                                        <div class="table-responsive">
-                                            <table class="table table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th>计算机IP</th>
-                                                        <th>计算机名称</th>
-                                                        <th>进程ID</th>
-                                                        <th>最后心跳时间</th>
-                                                        
-                                                        <th>启动时间</th>
-                                                        
-                                                        <th>近10秒<br>运行完成<br>消息个数</th>
-                                                        <th>近10秒<br>运行失败<br>消息个数</th>
-                                                        <th>近10秒<br>函数运行<br>平均耗时</th>
-                                                        <th>累计<br>运行完成<br>消息个数</th>
-                                                        <th>累计<br>运行失败<br>消息个数</th>
-                                                        <th>累计<br>函数运行<br>平均耗时</th>
-                                                        <th>代码文件名</th>
-                                                        <th>消费者UUID</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    ${consumerRows}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                    <div class="modal-body" style="overflow-x: auto;">
+                                        <table class="consumer-detail-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>IP地址</th>
+                                                    <th>主机名</th>
+                                                    <th>进程ID</th>
+                                                    <th>最后心跳</th>
+                                                    <th>启动时间</th>
+                                                    <th>近10秒完成</th>
+                                                    <th>近10秒失败</th>
+                                                    <th>近10秒耗时</th>
+                                                    <th>累计完成</th>
+                                                    <th>累计失败</th>
+                                                    <th>累计耗时</th>
+                                                    <th>代码文件</th>
+                                                    <th>消费者UUID</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${consumerRows}
+                                            </tbody>
+                                        </table>
                                     </div>
                                     <div class="modal-footer">
-                                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                        <button type="button" class="btn-modern btn-outline-modern" data-dismiss="modal"><i class="fa fa-times"></i> 关闭</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     `;
                 
-                    // 移除已存在的模态框
                     $('#consumerDetailsModal').remove();
-                    // 添加新的模态框到body
                     $('body').append(modalHtml);
-                    // 显示模态框
                     $('#consumerDetailsModal').modal('show');
                 },
-                error: function(xhr, status, error) {
-                    console.error('获取消费者详情失败:', error);
+                error: function() {
                     alert('获取消费者详情失败');
                 }
             });
@@ -702,13 +1552,12 @@
             });
         };
 
-        // --- BEGIN NEW SCRIPT LOGIC ---
+        // 自动刷新逻辑
         let isAutoRefreshing = false;
         let autoRefreshIntervalId = null;
-        const AUTO_REFRESH_INTERVAL = 10000; // 10 秒
-        let chartInstance = null; // 用于存储Chart.js的实例
+        const AUTO_REFRESH_INTERVAL = 10000;
+        let chartInstance = null;
 
-        // 定义需要记录并展示在图表中的列字段及其显示名称
         const CHARTABLE_FIELDS_MAP = {
             "history_run_count": "历史运行次数",
             "history_run_fail_count": "历史运行失败次数",
@@ -718,37 +1567,36 @@
             "all_consumers_avarage_function_spend_time_from_start": "累计函数运行平均耗时",
             "msg_num_in_broker": "消息数量"
         };
-        // 预定义颜色
+
         const PREDEFINED_COLORS = [
             '#E60012', '#005AC8', '#00A600', '#FF9900', '#8B28B7', '#9A6324', '#5E8C78', '#F58231', '#42D4F4', '#BF6131', '#3CB44B', '#4363D8', '#F032E6', '#BCF60C', '#FABEBE', '#AAFFC3', '#E6BEFF', '#FFFAC8'
         ];
 
         function refreshTableData() {
             table.replaceData()
-                .then(() => {
-                    console.log("Auto-refresh: table data refreshed successfully.");
-                })
-                .catch(error => {
-                    console.error("Auto-refresh: error refreshing table data:", error);
-                });
+                .then(() => console.log("Auto-refresh: 数据刷新成功"))
+                .catch(error => console.error("Auto-refresh: 刷新失败:", error));
         }
 
         function toggleAutoRefresh() {
             const button = document.getElementById("toggle-auto-refresh");
+            const indicator = document.getElementById("refresh-indicator");
+            
             if (isAutoRefreshing) {
                 clearInterval(autoRefreshIntervalId);
                 isAutoRefreshing = false;
-                button.textContent = "启动自动刷新";
-                button.classList.remove("btn-danger");
-                button.classList.add("btn-success");
-                if (table) {
-                    table.redraw(true);
-                }
+                button.innerHTML = '<i class="fa fa-play"></i> 启动自动刷新';
+                button.classList.remove("btn-danger-modern");
+                button.classList.add("btn-success-modern");
+                indicator.style.display = 'none';
+                indicator.classList.remove('active');
             } else {
                 isAutoRefreshing = true;
-                button.textContent = "暂停自动刷新";
-                button.classList.remove("btn-success");
-                button.classList.add("btn-danger");
+                button.innerHTML = '<i class="fa fa-pause"></i> 暂停自动刷新';
+                button.classList.remove("btn-success-modern");
+                button.classList.add("btn-danger-modern");
+                indicator.style.display = 'flex';
+                indicator.classList.add('active');
                 refreshTableData();
                 autoRefreshIntervalId = setInterval(refreshTableData, AUTO_REFRESH_INTERVAL);
             }
@@ -758,10 +1606,11 @@
 
         let currentChartQueueName = null;
         let endTimeUserChanged = false;
+        
         document.getElementById("chartEndTime").addEventListener("input", function() {
             endTimeUserChanged = true;
         });
-        // 工具函数：将Date对象转为input[type=datetime-local]需要的本地时间字符串
+
         function toDatetimeLocalString(date) {
             const pad = n => n < 10 ? '0' + n : n;
             return date.getFullYear() + '-' +
@@ -770,104 +1619,79 @@
                 pad(date.getHours()) + ':' +
                 pad(date.getMinutes());
         }
+
         function showQueueChart(queueName) {
             currentChartQueueName = queueName;
             document.getElementById("chartQueueName").textContent = queueName;
-            // 设置默认时间范围：最近1小时（本地时区字符串）
+            
             const now = new Date();
-            const start = new Date(now.getTime() - 60 * 60 * 1000); // 1小时
-            const startStr = toDatetimeLocalString(start);
-            const endStr = toDatetimeLocalString(now);
-            const minStart = toDatetimeLocalString(new Date(now.getTime() - 24 * 60 * 60 * 1000)); // 24小时
-            document.getElementById("chartStartTime").value = startStr;
-            document.getElementById("chartEndTime").value = endStr;
-            document.getElementById("chartStartTime").setAttribute('max', endStr);
-            document.getElementById("chartStartTime").setAttribute('min', minStart);
-            document.getElementById("chartEndTime").removeAttribute('max');
-            document.getElementById("chartEndTime").setAttribute('min', minStart);
-            endTimeUserChanged = false; // 重置
+            const start = new Date(now.getTime() - 60 * 60 * 1000);
+            document.getElementById("chartStartTime").value = toDatetimeLocalString(start);
+            document.getElementById("chartEndTime").value = toDatetimeLocalString(now);
+            endTimeUserChanged = false;
+            
             loadQueueChartData(queueName, Math.floor(start.getTime() / 1000), Math.floor(now.getTime() / 1000), 360);
         }
+
         function reloadQueueChartWithTimeRange() {
             const start = document.getElementById("chartStartTime").value;
             const end = document.getElementById("chartEndTime").value;
             const curveSamplesCount = document.getElementById("curveSamplesCount").value;
             let start_ts = start ? (new Date(start).getTime() / 1000) : null;
             let end_ts = end ? (new Date(end).getTime() / 1000) : null;
-            if (endTimeUserChanged) {
-                console.log('用户手动填写了结束时间:', end);
-            } else {
-                console.log('结束时间为默认值:', end);
-            }
             loadQueueChartData(currentChartQueueName, start_ts, end_ts, curveSamplesCount);
         }
+
         function loadQueueChartData(queueName, start_ts, end_ts, curveSamplesCount) {
             if (chartInstance) chartInstance.destroy();
+            
             const chartCanvas = document.getElementById('queueDataChart');
             const ctx = chartCanvas.getContext('2d');
             ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
-            ctx.font = "16px Arial";
+            ctx.font = "16px 'Segoe UI'";
+            ctx.fillStyle = "#a5b4fc";
             ctx.textAlign = "center";
-            ctx.fillText("正在加载数据...", chartCanvas.width / 2, chartCanvas.height / 2);
+            ctx.fillText("⏳ 正在加载数据...", chartCanvas.width / 2, chartCanvas.height / 2);
+            
             let url = `/queue/get_time_series_data/${queueName}`;
             let params = [];
             if (start_ts) params.push(`start_ts=${start_ts}`);
             if (end_ts) params.push(`end_ts=${end_ts}`);
             if (curveSamplesCount) params.push(`curve_samples_count=${curveSamplesCount}`);
             if (params.length > 0) url += '?' + params.join('&');
+            
             $.get(url, function(response) {
-                console.log('AJAX请求成功，返回数据:', response);
-                console.log('数据类型:', typeof response, '数据长度:', response ? response.length : 'undefined');
-                
                 if (!response || response.length === 0) {
-                    console.log('数据为空，显示暂无数据');
                     ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
-                    ctx.fillText("暂无历史数据", chartCanvas.width / 2, chartCanvas.height / 2);
+                    ctx.fillText("📭 暂无历史数据", chartCanvas.width / 2, chartCanvas.height / 2);
                     $('#chartModal').modal('show');
                     return;
                 }
                 
-                console.log('开始处理', response.length, '个数据点');
-                // 横坐标用本地时间字符串显示
+                const dataPointCount = response.length;
                 const labels = response.map(dp => {
                     const d = new Date(dp.report_ts * 1000);
                     return d.toLocaleString('zh-CN', { hour12: false });
                 });
-                console.log('时间标签生成完成，数量:', labels.length);
-                console.log('开始生成数据集，字段映射:', CHARTABLE_FIELDS_MAP);
-                
-                // 在函数作用域中定义dataPointCount，确保在Chart配置中可以访问
-                const dataPointCount = response.length;
-                console.log('数据点数量:', dataPointCount);
                 
                 const datasets = Object.keys(CHARTABLE_FIELDS_MAP).map((fieldKey, index) => {
                     const displayName = CHARTABLE_FIELDS_MAP[fieldKey];
                     const isDefaultVisible = fieldKey === 'all_consumers_last_x_s_execute_count' || fieldKey === 'all_consumers_last_x_s_execute_count_fail';
                     
-                                    // 根据数据点数量动态调整配置 - 优化平滑度
-                let pointRadius, tension, borderWidth;
-                
-                if (dataPointCount > 2000) {
-                    // 超大量数据点：隐藏点，高张力，细线条
-                    pointRadius = 0;
-                    tension = 0.7;
-                    borderWidth = 1.2;
-                } else if (dataPointCount > 800) {
-                    // 大量数据点：隐藏点，较高张力，较细线条
-                    pointRadius = 0;
-                    tension = 0.65;
-                    borderWidth = 1.5;
-                } else if (dataPointCount > 300) {
-                    // 中等数据点：小点，中高张力 - 针对360等常用采样点数优化
-                    pointRadius = 0.3;
-                    tension = 0.6;
-                    borderWidth = 1.8;
-                } else {
-                    // 少量数据点：正常配置，增加平滑度
-                    pointRadius = 1;
-                    tension = 0.5;
-                    borderWidth = 2;
-                }
+                    let pointRadius, tension, borderWidth;
+                    if (dataPointCount > 800) {
+                        pointRadius = 0;
+                        tension = 0.65;
+                        borderWidth = 1.5;
+                    } else if (dataPointCount > 300) {
+                        pointRadius = 0.3;
+                        tension = 0.6;
+                        borderWidth = 1.8;
+                    } else {
+                        pointRadius = 1;
+                        tension = 0.5;
+                        borderWidth = 2;
+                    }
                     
                     return {
                         label: displayName,
@@ -884,132 +1708,81 @@
                         pointHoverRadius: Math.max(3, pointRadius + 2),
                         borderWidth: borderWidth,
                         hidden: !isDefaultVisible,
-                        cubicInterpolationMode: 'monotone', // 单调插值，更平滑
-                        spanGaps: true, // 跨越空值
-                        segment: {
-                            borderColor: ctx => dataPointCount > 300 ? 
-                                (ctx.p0.parsed.y == null || ctx.p1.parsed.y == null ? 'transparent' : undefined) : undefined
-                        } // 优化大数据量时的线段渲染
+                        cubicInterpolationMode: 'monotone',
+                        spanGaps: true
                     };
                 });
-                console.log('数据集生成完成，数量:', datasets.length);
-                console.log('开始创建Chart实例...');
-                try {
-                    chartInstance = new Chart(ctx, {
-                        type: 'line',
-                        data: { labels, datasets },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            // 性能优化设置
-                            animation: {
-                                duration: dataPointCount > 800 ? 0 : 1000, // 数据点多时禁用动画
-                                easing: 'easeInOutQuart' // 使用更平滑的缓动函数
-                            },
-                            // 启用数据集动画以获得更平滑的效果
-                            datasets: {
-                                line: {
-                                    pointHoverBackgroundColor: 'rgba(255,255,255,0.8)',
-                                    pointHoverBorderColor: 'rgba(220,220,220,1)',
-                                    pointHoverBorderWidth: 2
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    title: { display: true, text: '时间' },
-                                    ticks: {
-                                        autoSkip: true,
-                                        maxTicksLimit: Math.min(20, Math.max(10, Math.floor(dataPointCount / 50))) // 根据数据点数量动态调整
-                                    }
+                
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: dataPointCount > 800 ? 0 : 1000,
+                            easing: 'easeInOutQuart'
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: '时间', color: '#a5b4fc' },
+                                ticks: {
+                                    autoSkip: true,
+                                    maxTicksLimit: Math.min(20, Math.max(10, Math.floor(dataPointCount / 50))),
+                                    color: '#888'
                                 },
-                                y: { 
-                                    beginAtZero: false, 
-                                    title: { display: true, text: '数值' },
-                                    // 为大量数据点添加性能优化
-                                    ticks: {
-                                        maxTicksLimit: 10
-                                    }
-                                }
+                                grid: { color: 'rgba(139, 92, 246, 0.1)' }
                             },
-                            plugins: {
-                                legend: { position: 'top' },
-                                title: { 
-                                    display: true, 
-                                    text: `队列 [${queueName}] 各项指标变化趋势 (${dataPointCount}个数据点)` 
-                                },
-                                tooltip: { 
-                                    mode: 'index', 
-                                    intersect: false
-                                }
+                            y: { 
+                                beginAtZero: false, 
+                                title: { display: true, text: '数值', color: '#a5b4fc' },
+                                ticks: { maxTicksLimit: 10, color: '#888' },
+                                grid: { color: 'rgba(139, 92, 246, 0.1)' }
+                            }
+                        },
+                        plugins: {
+                            legend: { 
+                                position: 'top',
+                                labels: { color: '#e0e0e0' }
                             },
-                            interaction: { 
-                                mode: 'nearest', 
-                                axis: 'x', 
-                                intersect: false
+                            title: { 
+                                display: true, 
+                                text: `队列 [${queueName}] 各项指标变化趋势 (${dataPointCount}个数据点)`,
+                                color: '#ffffff'
                             },
-                            // 大量数据点时的额外优化
-                            elements: {
-                                line: {
-                                    borderJoinStyle: 'round', // 更平滑的线条连接
-                                    borderCapStyle: 'round',  // 圆形端点
-                                    fill: false
-                                },
-                                point: {
-                                    hoverRadius: dataPointCount > 800 ? 2 : 4, // 根据数据量调整悬停半径
-                                    hitRadius: dataPointCount > 800 ? 3 : 6    // 根据数据量调整点击半径
-                                }
-                            },
-                            // 针对大数据量的优化配置
-                            parsing: dataPointCount > 1000 ? {
-                                xAxisKey: false, // 禁用x轴解析以提高性能
-                                yAxisKey: false  // 禁用y轴解析以提高性能
-                            } : undefined
-                        }
-                    });
-                    console.log('Chart created successfully with', dataPointCount, 'data points');
-                } catch (error) {
-                    console.error('Error creating chart:', error);
-                    ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
-                    ctx.fillText("图表创建失败: " + error.message, chartCanvas.width / 2, chartCanvas.height / 2);
-                }
+                            tooltip: { mode: 'index', intersect: false }
+                        },
+                        interaction: { mode: 'nearest', axis: 'x', intersect: false }
+                    }
+                });
+                
                 $('#chartModal').modal('show');
             }).fail(function(xhr, status, error) {
-                console.error('AJAX请求失败:', {
-                    status: status,
-                    error: error,
-                    responseText: xhr.responseText,
-                    url: url
-                });
                 ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
-                ctx.fillText("获取数据失败: " + error, chartCanvas.width / 2, chartCanvas.height / 2);
+                ctx.fillText("❌ 获取数据失败: " + error, chartCanvas.width / 2, chartCanvas.height / 2);
                 $('#chartModal').modal('show');
             });
         }
 
-        // 新增：模态框关闭时的处理
         $('#chartModal').on('hidden.bs.modal', function () {
             if (chartInstance) {
                 chartInstance.destroy();
                 chartInstance = null;
             }
-            console.log("Chart modal closed and instance destroyed.");
         });
 
-        // 新增：显示说明模态框的函数
         function showExplanationModal() {
             const explanationTextHtml = `
-                <li>消息队列的各项指标数据是 funboost 消费者每隔10秒周期上报到 redis 的，所以不是毫秒级实时，而是10秒级实时。</li>
-                <li>"更新所有队列消息数量"按钮和表格"消息数量"列的获取按钮，是实时查询 broker 的消息数量，不是基于消费者上报到 redis 的数据。（因为有的队列可能没有启动相应的消费者，也就没有上报方）</li>
-                
+                <li style="margin-bottom: 12px;"><i class="fa fa-clock-o" style="color: #6366f1; margin-right: 8px;"></i>消息队列的各项指标数据是 funboost 消费者每隔10秒周期上报到 redis 的，所以不是毫秒级实时，而是10秒级实时。</li>
+                <li style="margin-bottom: 12px;"><i class="fa fa-refresh" style="color: #10b981; margin-right: 8px;"></i>"刷新所有消息数量"按钮和表格"消息数量"列的获取按钮，是实时查询 broker 的消息数量，不是基于消费者上报到 redis 的数据。</li>
+                <li><i class="fa fa-info-circle" style="color: #f59e0b; margin-right: 8px;"></i>因为有的队列可能没有启动相应的消费者，也就没有上报方，所以需要单独获取消息数量。</li>
             `;
             document.getElementById('explanation-text').innerHTML = explanationTextHtml;
             $('#explanationModal').modal('show');
         }
 
-        // 绑定说明按钮的点击事件
         document.getElementById('show-explanation-btn').addEventListener('click', showExplanationModal);
 
-        // 新增：处理复选框状态变化的函数
         function toggleActiveQueuesFilter() {
             try {
                 updateTableFilters();
@@ -1018,162 +1791,10 @@
             }
         }
 
-        // 初始化时不立即设置过滤条件，等待表格完全加载
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM内容加载完成，等待表格初始化...");
-            // 移除立即调用 updateTableFilters()，改为在表格数据加载完成后调用
-        });
-
+        // 显示曲线图数据来源说明
+        function showChartDataExplanation() {
+            $('#chartDataExplanationModal').modal('show');
+        }
     </script>
 </body>
 </html>
-
-
-<!-- 
- 队列名字  broker_kind  消息数量  consumer数量 消费者参数   是否暂停消费状态     操作(这一列都是按钮)
-                                                                            获取消息数量、清空队列消息、 暂停消费 、恢复消费
-                                                                        
-                                                                            
-     接口   /queue/params_and_active_consumers 返回的是如下字典,字典中的key是队列名字，
-     value是一个字典，字典中有两个key，一个是active_consumers，一个是 queue_params ，
-     queue_params的broker_kind 是队列的类型，active_consumers 数组长度是 consumer数量
-     
-     
-     显示到表格中
-
-     {
-    "queue_test_g01t": {
-        "active_consumers": [
-            {
-                "code_filename": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py",
-                "computer_ip": "10.0.133.57",
-                "computer_name": "LAPTOP-7V78BBO2",
-                "consumer_id": 2642746547464,
-                "consumer_uuid": "5ba1aa04-1067-4173-8ee6-0c1e29f8b015",
-                "consuming_function": "f",
-                "hearbeat_datetime_str": "2025-02-26 20:29:40",
-                "hearbeat_timestamp": 1740572980.216993,
-                "process_id": 51852,
-                "queue_name": "queue_test_g01t",
-                "start_datetime_str": "2025-02-26 20:03:06",
-                "start_timestamp": 1740571386.7500842,
-                 "execute_task_times_every_unit_time_temp": 2
-            }
-        ],
-        "queue_params": {
-            "auto_generate_info": {
-                "where_to_instantiate": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py:10"
-            },
-            "broker_exclusive_config": {
-                "pull_msg_batch_size": 100,
-                "redis_bulk_push": 1
-            },
-            "broker_kind": "REDIS",
-            "concurrent_mode": "threading",
-            "concurrent_num": 50,
-            "consuming_function": "<function f at 0x000002674C8A1708>",
-            "consuming_function_kind": "COMMON_FUNCTION",
-            "consuming_function_raw": "<function f at 0x000002674C8A1708>",
-            "create_logger_file": true,
-            "delay_task_apscheduler_jobstores_kind": "redis",
-            "do_not_run_by_specify_time": [
-                "10:00:00",
-                "22:00:00"
-            ],
-            "do_task_filtering": false,
-            "function_result_status_persistance_conf": {
-                "expire_seconds": 604800,
-                "is_save_result": true,
-                "is_save_status": true,
-                "is_use_bulk_insert": false
-            },
-            "is_auto_start_consuming_message": false,
-            "is_do_not_run_by_specify_time_effect": false,
-            "is_print_detail_exception": true,
-            "is_push_to_dlx_queue_when_retry_max_times": false,
-            "is_send_consumer_hearbeat_to_redis": true,
-            "is_show_message_get_from_broker": false,
-            "is_support_remote_kill_task": false,
-            "is_using_distributed_frequency_control": false,
-            "is_using_rpc_mode": false,
-            "log_level": 10,
-            "logger_name": "",
-            "logger_prefix": "",
-            "max_retry_times": 3,
-            "publish_msg_log_use_full_msg": false,
-            "queue_name": "queue_test_g01t",
-            "retry_interval": 0,
-            "rpc_result_expire_seconds": 600,
-            "schedule_tasks_on_main_thread": false,
-            "should_check_publish_func_params": true,
-            "task_filtering_expire_seconds": 0
-        }
-    },
-    "queue_test_g02t": {
-        "active_consumers": [
-            {
-                "code_filename": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py",
-                "computer_ip": "10.0.133.57",
-                "computer_name": "LAPTOP-7V78BBO2",
-                "consumer_id": 2642746605384,
-                "consumer_uuid": "a5528e66-2949-47ca-9aea-bbf920165c53",
-                "consuming_function": "f2",
-                "hearbeat_datetime_str": "2025-02-26 20:29:40",
-                "hearbeat_timestamp": 1740572980.13895,
-                "process_id": 51852,
-                "queue_name": "queue_test_g02t",
-                "start_datetime_str": "2025-02-26 20:03:06",
-                "start_timestamp": 1740571386.7650468,
-                 "execute_task_times_every_unit_time_temp": 2
-            }
-        ],
-        "queue_params": {
-            "auto_generate_info": {
-                "where_to_instantiate": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py:18"
-            },
-            "broker_exclusive_config": {
-                "pull_msg_batch_size": 100,
-                "redis_bulk_push": 1
-            },
-            "broker_kind": "REDIS",
-            "concurrent_mode": "threading",
-            "concurrent_num": 50,
-            "consuming_function": "<function f2 at 0x000002674FF5DE58>",
-            "consuming_function_kind": "COMMON_FUNCTION",
-            "consuming_function_raw": "<function f2 at 0x000002674FF5DE58>",
-            "create_logger_file": true,
-            "delay_task_apscheduler_jobstores_kind": "redis",
-            "do_not_run_by_specify_time": [
-                "10:00:00",
-                "22:00:00"
-            ],
-            "do_task_filtering": false,
-            "function_result_status_persistance_conf": {
-                "expire_seconds": 604800,
-                "is_save_result": true,
-                "is_save_status": true,
-                "is_use_bulk_insert": false
-            },
-            "is_auto_start_consuming_message": false,
-            "is_do_not_run_by_specify_time_effect": false,
-            "is_print_detail_exception": true,
-            "is_push_to_dlx_queue_when_retry_max_times": false,
-            "is_send_consumer_hearbeat_to_redis": true,
-            "is_show_message_get_from_broker": false,
-            "is_support_remote_kill_task": false,
-            "is_using_distributed_frequency_control": false,
-            "is_using_rpc_mode": false,
-            "log_level": 10,
-            "logger_name": "",
-            "logger_prefix": "",
-            "max_retry_times": 3,
-            "publish_msg_log_use_full_msg": false,
-            "queue_name": "queue_test_g02t",
-            "retry_interval": 0,
-            "rpc_result_expire_seconds": 600,
-            "schedule_tasks_on_main_thread": false,
-            "should_check_publish_func_params": true,
-            "task_filtering_expire_seconds": 0
-        }
-    }
-}

@@ -12,166 +12,543 @@
     <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
     <!-- 引入 Bootstrap JS -->
     <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
-     <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
-    <title>funboost web manager</title>
+    <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
+    <title>Funboost Web Manager</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             overflow-x: hidden;
+            background: #0f0c29;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         }
 
+        /* ============================================
+           侧边栏主体
+        ============================================ */
         .sidebar {
             position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 180px;
-        background-color: #296074;
-        padding-top: 20px;
-        overflow-y: auto;
-        transition: all 0.3s ease;  /* 添加过渡效果 */
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 220px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f0c29 100%);
+            padding-top: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-right: 1px solid rgba(99, 102, 241, 0.2);
+            box-shadow: 4px 0 30px rgba(99, 102, 241, 0.15);
+            z-index: 1000;
         }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+        }
+
         .sidebar.collapsed {
-        width: 50px;
-    }
+            width: 70px;
+        }
 
+        /* ============================================
+           Logo 区域
+        ============================================ */
+        .sidebar-logo {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+        }
 
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+            }
+            50% {
+                box-shadow: 0 8px 40px rgba(139, 92, 246, 0.6);
+            }
+        }
+
+        .logo-text {
+            font-size: 16px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ffffff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-subtitle {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 4px;
+        }
+
+        .sidebar.collapsed .logo-text,
+        .sidebar.collapsed .logo-subtitle {
+            display: none;
+        }
+
+        .sidebar.collapsed .logo-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            margin-bottom: 0;
+        }
+
+        /* ============================================
+           导航列表
+        ============================================ */
+        .sidebar .nav {
+            padding: 0 10px;
+        }
+
+        .sidebar .nav-item {
+            margin-bottom: 4px;
+            position: relative;
+        }
+
+        /* ============================================
+           导航链接样式
+        ============================================ */
         .sidebar .nav-link {
-            color: white;
-            background-color: #296074; /* 导航栏链接默认灰色背景 */
-            margin-bottom: 5px;
-            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.7);
+            background: transparent;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            font-size: 14px;
+            font-weight: 500;
         }
 
+        /* 链接悬浮效果 */
+        .sidebar .nav-link:hover {
+            color: #ffffff;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%);
+            transform: translateX(5px);
+        }
+
+        .sidebar .nav-link:hover::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 60%;
+            background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 0 3px 3px 0;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                height: 0;
+                opacity: 0;
+            }
+            to {
+                height: 60%;
+                opacity: 1;
+            }
+        }
+
+        /* 激活状态 */
         .sidebar .nav-link.active {
-            background-color: #0BBAF8; /* 激活状态蓝色背景 */
+            color: #ffffff;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.15) 100%);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .sidebar .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 70%;
+            background: linear-gradient(180deg, #6366f1 0%, #a78bfa 100%);
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+
+        /* 图标样式 */
+        .sidebar .nav-link i {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            margin-right: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .sidebar .nav-link:hover i {
+            transform: scale(1.15);
+            color: #a78bfa;
+            text-shadow: 0 0 15px rgba(167, 139, 250, 0.8);
+        }
+
+        .sidebar .nav-link.active i {
+            color: #a78bfa;
+            text-shadow: 0 0 12px rgba(167, 139, 250, 0.6);
+        }
+
+        /* 折叠时图标居中 */
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 14px;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 18px;
+        }
+
+        .sidebar.collapsed .nav-link span {
+            display: none;
+        }
+
+        /* ============================================
+           分类分隔线
+        ============================================ */
+        .nav-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), transparent);
+            margin: 15px 10px;
+        }
+
+        .nav-category {
+            padding: 8px 16px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        .sidebar.collapsed .nav-category {
+            display: none;
+        }
+
+        /* ============================================
+           Care Project 显示区
+        ============================================ */
+        .sidebar-care-box {
+            margin: 8px 10px 15px 10px;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-care-box:hover {
+            border-color: rgba(16, 185, 129, 0.4);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .sidebar-care-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-care-title i {
+            color: #34d399;
+        }
+
+        .sidebar-care-display {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sidebar-care-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #sidebar_care_project_value {
+            font-size: 13px;
+            font-weight: 700;
+            padding: 4px 0;
+        }
+
+        .badge-all {
+            color: #34d399;
+        }
+
+        .badge-project {
+            color: #fbbf24;
+        }
+
+        .sidebar.collapsed .sidebar-care-box {
+            display: none;
+        }
+
+        /* ============================================
+           退出登录按钮特殊样式
+        ============================================ */
+        .nav-item.logout-item .nav-link {
+            color: rgba(239, 68, 68, 0.8);
+        }
+
+        .nav-item.logout-item .nav-link:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .nav-item.logout-item .nav-link:hover::before {
+            background: linear-gradient(180deg, #ef4444 0%, #f87171 100%);
+        }
+
+        .nav-item.logout-item .nav-link:hover i {
+            color: #f87171;
+            text-shadow: 0 0 15px rgba(248, 113, 113, 0.8);
+        }
+
+        /* ============================================
+           折叠按钮
+        ============================================ */
+        .toggle-btn {
+            position: fixed;
+            left: 220px;
+            top: 20px;
+            z-index: 1001;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            transform: translateX(-50%);
         }
 
+        .toggle-btn:hover {
+            transform: translateX(-50%) scale(1.1);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }
+
+        .toggle-btn:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        .toggle-btn.collapsed {
+            left: 70px;
+        }
+
+        .toggle-btn i {
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        /* ============================================
+           主内容区域
+        ============================================ */
         .main-content {
-            margin-left: 180px;
-            transition: all 0.3s ease;  /* 添加过渡效果 */
+            margin-left: 220px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #0f0c29;
+            min-height: 100vh;
         }
-        
+
         .main-content.expanded {
-        margin-left: 50px;
-    }
-
-    .toggle-btn {
-        position: fixed;
-        left: 180px;
-        top: 10px;
-        z-index: 1000;
-        background: #296074;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 0 5px 5px 0;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .toggle-btn.collapsed {
-        left: 50px;
-    }
-
-    .sidebar.collapsed .nav-link span {
-        display: none;
-    }
-
-    .nav-link i {
-        margin-right: 10px;
-        width: 20px;
-        text-align: center;
-    }
-
-
+            margin-left: 70px;
+        }
 
         .main-content iframe {
             width: 100%;
-            height: calc(100vh - 40px);  /* 视窗高度减去padding */
-            padding: 20px;
+            height: 100vh;
             border: none;
             overflow: auto;
         }
 
-        .sidebar .nav-item {
-        padding: 5px 10px;
-        position: relative;
-    }
+        /* ============================================
+           模态框样式
+        ============================================ */
+        .modal-content {
+            background: linear-gradient(135deg, #1e1e3f 0%, #2a2a4a 100%);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 16px;
+            color: #e0e0e0;
+        }
 
-    .sidebar .nav-item:not(:last-child)::after {
-        content: '';
-        position: absolute;
-        bottom: -2px;
-        left: 10%;
-        width: 80%;
-        height: 2px;
-        background: linear-gradient(to right, transparent, #ffffff80, transparent);
-    }
+        .modal-header {
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 20px;
+        }
 
-    .sidebar .nav-link {
-        padding: 8px 15px;
-        transition: all 0.3s ease;
-        font-weight: 500;
-    }
+        .modal-title {
+            color: #ffffff;
+            font-weight: 600;
+        }
 
-    .sidebar .nav-link:hover {
-        transform: translateX(5px);
-        background-color: #1e4d61;
-    }
+        .modal-body {
+            padding: 25px 20px;
+            font-size: 15px;
+        }
 
-    .sidebar-care-box {
-        margin: 8px 10px 14px 10px;
-        padding: 10px 12px;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 8px;
-        color: #cde6f7;
-    }
-    .sidebar-care-title {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 13px;
-        font-weight: 700;
-        margin-bottom: 6px;
-        letter-spacing: 0.3px;
-    }
-    .sidebar-care-display {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        font-size: 12px;
-        line-height: 1.4;
-    }
-    .sidebar-care-label {
-        color: #e0f0ff;
-        opacity: 0.9;
-    }
-    .badge-all {
-        color: #a8f3bf;
-        font-weight: 700;
-    }
-    .badge-project {
-        color: #ffd27f;
-        font-weight: 800;
-    }
+        .modal-footer {
+            border-top: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 15px 20px;
+        }
 
+        .modal-footer .btn-default {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .modal-footer .btn-primary {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            border: none;
+            color: white;
+        }
+
+        .close {
+            color: #a78bfa;
+            opacity: 1;
+            font-size: 24px;
+        }
+
+        .close:hover {
+            color: #ffffff;
+        }
+
+        /* ============================================
+           Tooltip for collapsed mode
+        ============================================ */
+        .sidebar.collapsed .nav-link {
+            position: relative;
+        }
+
+        .sidebar.collapsed .nav-link::after {
+            content: attr(data-title);
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #1e1e3f 0%, #2a2a4a 100%);
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            margin-left: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            z-index: 1002;
+        }
+
+        .sidebar.collapsed .nav-link:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* ============================================
+           响应式设计
+        ============================================ */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .toggle-btn {
+                left: 15px;
+                transform: translateX(0);
+            }
+
+            .toggle-btn.collapsed {
+                left: 15px;
+            }
+        }
     </style>
 </head>
 
 <body>
-        <!-- 添加折叠按钮 -->
-        <button class="toggle-btn">
-            <i class="fa fa-angle-left"></i>
-        </button>
-    
+    <!-- 折叠按钮 -->
+    <button class="toggle-btn" title="折叠/展开侧边栏">
+        <i class="fa fa-angle-left"></i>
+    </button>
+
     <!-- 左侧导航栏 -->
     <div class="sidebar">
+        <!-- Logo 区域 -->
+        <div class="sidebar-logo">
+            <div class="logo-icon">
+                <i class="fa fa-rocket"></i>
+            </div>
+            <div class="logo-text">Funboost</div>
+            <div class="logo-subtitle">Web Manager</div>
+        </div>
+
         <ul class="nav flex-column">
+            <!-- 设置 care_project_name -->
             <li class="nav-item">
-                <a class="nav-link" href="/?page=care_project_name" data-target="/tpl/care_project_name.html">
-                    <i class="fa fa-filter"></i><span>设置care_project_name</span>
+                <a class="nav-link" href="/?page=care_project_name" data-target="/tpl/care_project_name.html" data-title="设置 care_project_name">
+                    <i class="fa fa-filter"></i><span>设置 care_project_name</span>
                 </a>
                 <div class="sidebar-care-box">
                     <div class="sidebar-care-title">
@@ -183,48 +560,63 @@
                     </div>
                 </div>
             </li>
+
+            <div class="nav-divider"></div>
+            <div class="nav-category">数据监控</div>
+
             <li class="nav-item">
-                <a class="nav-link " href="/?page=fun_result_table" data-target="/tpl/fun_result_table.html">
+                <a class="nav-link" href="/?page=fun_result_table" data-target="/tpl/fun_result_table.html" data-title="函数结果表">
                     <i class="fa fa-table"></i><span>函数结果表</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/?page=conusme_speed" data-target="/tpl/conusme_speed.html">
-                    <i class="fa fa-tachometer"></i><span>消费速率图</span>
+                <a class="nav-link" href="/?page=conusme_speed" data-target="/tpl/conusme_speed.html" data-title="消费速率图">
+                    <i class="fa fa-line-chart"></i><span>消费速率图</span>
+                </a>
+            </li>
+
+            <div class="nav-divider"></div>
+            <div class="nav-category">消费者管理</div>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/?page=running_consumer_by_ip" data-target="/tpl/running_consumer_by_ip.html" data-title="运行中消费者(by ip)">
+                    <i class="fa fa-server"></i><span>运行中消费者(by ip)</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/?page=running_consumer_by_ip" data-target="/tpl/running_consumer_by_ip.html">
-                    <i class="fa fa-sitemap"></i><span>运行中消费者(by ip)</span>
+                <a class="nav-link" href="/?page=running_consumer_by_queue_name" data-target="/tpl/running_consumer_by_queue_name.html" data-title="运行中消费者(by queue)">
+                    <i class="fa fa-cubes"></i><span>运行中消费者(by queue)</span>
                 </a>
             </li>
+
+            <div class="nav-divider"></div>
+            <div class="nav-category">队列操作</div>
+
             <li class="nav-item">
-                <a class="nav-link" href="/?page=running_consumer_by_queue_name" data-target="/tpl/running_consumer_by_queue_name.html">
-                    <i class="fa fa-tasks"></i><span>运行中消费者(by queue)</span>
-                </a>
-            </li>
-            <li class="nav-item ">
-                <a class="nav-link active" href="/?page=queue_op" data-target="/tpl/queue_op.html">
+                <a class="nav-link active" href="/?page=queue_op" data-target="/tpl/queue_op.html" data-title="队列操作">
                     <i class="fa fa-sliders"></i><span>队列操作</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/?page=rpc_call" data-target="/tpl/rpc_call.html">
-                    <i class="fa fa-random"></i><span>rpc调用</span>
+                <a class="nav-link" href="/?page=rpc_call" data-target="/tpl/rpc_call.html" data-title="RPC 调用">
+                    <i class="fa fa-exchange"></i><span>RPC 调用</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/?page=timing_jobs_management" data-target="/tpl/timing_jobs_management.html">
-                    <i class="fa fa-clock-o"></i><span>定时任务管理</span>
+                <a class="nav-link" href="/?page=timing_jobs_management" data-target="/tpl/timing_jobs_management.html" data-title="定时任务">
+                    <i class="fa fa-clock-o"></i><span>定时任务</span>
                 </a>
             </li>
+
+            <div class="nav-divider"></div>
+
             <li class="nav-item">
-                <a class="nav-link" href="/?page=about" data-target="/tpl/about.html">
+                <a class="nav-link" href="/?page=about" data-target="/tpl/about.html" data-title="说明">
                     <i class="fa fa-info-circle"></i><span>说明</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="javascript:void(0)" id="logoutBtn">
+            <li class="nav-item logout-item">
+                <a class="nav-link" href="javascript:void(0)" id="logoutBtn" data-title="退出登录">
                     <i class="fa fa-sign-out"></i><span>退出登录</span>
                 </a>
             </li>
@@ -233,84 +625,65 @@
 
     <!-- 右侧内容区域 -->
     <div class="main-content" id="content000">
-        <!-- 初始加载 Home 页面内容 -->
-         <!-- 右侧内容区域 -->
-    <iframe id="content" frameborder="0">
-        <!-- 初始加载 Home 页面内容 -->
-    </iframe >
+        <iframe id="content" frameborder="0"></iframe>
     </div>
 
-    
-
-    <!-- 添加退出确认模态框 -->
+    <!-- 退出确认模态框 -->
     <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel">
-      <div class="modal-dialog modal-sm" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="logoutModalLabel">确认退出</h4>
-          </div>
-          <div class="modal-body">
-            确定要退出登录吗？
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-            <button type="button" class="btn btn-primary" id="confirmLogout">确认退出</button>
-          </div>
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="logoutModalLabel">
+                        <i class="fa fa-sign-out" style="color: #ef4444; margin-right: 10px;"></i>确认退出
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    确定要退出登录吗？
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="confirmLogout">确认退出</button>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
     <script src="{{ url_for('static',filename='js/form-memory.js') }}"></script>
     <script>
-            $(document).ready(function () {
-        // ... 现有代码 ...
-
-        // 添加折叠功能
-        $('.toggle-btn').click(function() {
-            $('.sidebar').toggleClass('collapsed');
-            $('.main-content').toggleClass('expanded');
-            $('.toggle-btn').toggleClass('collapsed');
-            
-            // 切换箭头方向
-            var icon = $(this).find('i');
-            if (icon.hasClass('fa-angle-left')) {
-                icon.removeClass('fa-angle-left').addClass('fa-angle-right');
-            } else {
-                icon.removeClass('fa-angle-right').addClass('fa-angle-left');
-            }
-        });
-    });
-
         $(document).ready(function () {
+            // 折叠功能
+            $('.toggle-btn').click(function() {
+                $('.sidebar').toggleClass('collapsed');
+                $('.main-content').toggleClass('expanded');
+                $('.toggle-btn').toggleClass('collapsed');
+
+                var icon = $(this).find('i');
+                if (icon.hasClass('fa-angle-left')) {
+                    icon.removeClass('fa-angle-left').addClass('fa-angle-right');
+                } else {
+                    icon.removeClass('fa-angle-right').addClass('fa-angle-left');
+                }
+            });
+
             // 检查URL参数是否指定了页面
             var urlParams = new URLSearchParams(window.location.search);
             var pageName = urlParams.get('page');
-            
+
             // 初始加载页面
             if (pageName) {
-                // 根据URL参数加载页面
                 loadPage('/tpl/' + pageName + '.html');
-                // 设置对应导航为active
                 $('.sidebar .nav-link').removeClass('active');
                 $('.sidebar .nav-link[href="/?page=' + pageName + '"]').addClass('active');
             } else {
-                // 默认加载队列操作页面
                 loadPage('/tpl/queue_op.html');
             }
 
             // 导航栏点击事件
             $('.sidebar .nav-link').click(function (e) {
-                // 不阻止默认行为，允许页面跳转
-                // e.preventDefault();
-                
-                // 移除所有导航项的 active 类
                 $('.sidebar .nav-link').removeClass('active');
-                // 为当前点击的导航项添加 active 类
                 $(this).addClass('active');
-                // 获取要加载的页面文件名
                 const targetPage = $(this).data('target');
-                // 加载页面内容
                 loadPage(targetPage);
             });
 
@@ -333,7 +706,7 @@
                 e.preventDefault();
                 $('#logoutModal').modal('show');
             });
-            
+
             $('#confirmLogout').click(function() {
                 window.location.href = '/logout';
             });
@@ -362,8 +735,49 @@
             }
 
             loadSidebarCareProjectName();
+
+            // 为链接添加涟漪效果
+            $('.nav-link').on('click', function(e) {
+                var $this = $(this);
+                var ripple = $('<span class="ripple"></span>');
+                var offset = $this.offset();
+                var x = e.pageX - offset.left;
+                var y = e.pageY - offset.top;
+
+                ripple.css({
+                    left: x,
+                    top: y
+                });
+
+                $this.append(ripple);
+
+                setTimeout(function() {
+                    ripple.remove();
+                }, 600);
+            });
         });
     </script>
+
+    <style>
+        /* 涟漪效果 */
+        .ripple {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: rgba(167, 139, 250, 0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            animation: ripple-effect 0.6s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-effect {
+            to {
+                transform: translate(-50%, -50%) scale(30);
+                opacity: 0;
+            }
+        }
+    </style>
 </body>
 
 </html>

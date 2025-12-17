@@ -5,6 +5,7 @@ import functools
 import os
 import pymongo
 from pymongo.collection import Collection
+from funboost.constant import MongoDbName
 from funboost.utils import decorators
 
 
@@ -13,25 +14,7 @@ def _get_mongo_url():
     from funboost.funboost_config_deafult import BrokerConnConfig
     return BrokerConnConfig.MONGO_CONNECT_URL
 
-class MongoMixin0000:
-    """
-    mixin类被继承，也可以直接实例化。
 
-
-    这种在 linux运行 + pymongo 版本4.xx  + 多进程子进程中操作会报错。
-    /usr/local/lib/python3.8/dist-packages/pymongo/topology.py:172: UserWarning: MongoClient opened before fork. Create MongoClient only after forking.
-    See PyMongo's documentation for details: https://pymongo.readthedocs.io/en/stable/faq.html#is-pymongo-fork-safe
-    """
-
-    @property
-    @decorators.cached_method_result
-    def mongo_client(self):
-        return pymongo.MongoClient(_get_mongo_url(), connect=False)  # connect等于False原因见注释
-
-    @property
-    @decorators.cached_method_result
-    def mongo_db_task_status(self):
-        return self.mongo_client.get_database('task_status')
 
 
 class MongoMixin:
@@ -59,9 +42,9 @@ class MongoMixin:
     @property
     def mongo_db_task_status(self):
         pid = os.getpid()
-        key = (pid, 'task_status')
+        key = (pid, MongoDbName.TASK_STATUS_DB)
         if key not in MongoMixin.processid__db_map:
-            MongoMixin.processid__db_map[key] = self.mongo_client.get_database('task_status')
+            MongoMixin.processid__db_map[key] = self.mongo_client.get_database(MongoDbName.TASK_STATUS_DB)
         return MongoMixin.processid__db_map[key]
 
     def get_mongo_collection(self, database_name, colleciton_name) -> pymongo.collection.Collection:

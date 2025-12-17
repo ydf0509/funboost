@@ -4,6 +4,7 @@
 import os
 
 import json
+from funboost.constant import MongoDbName
 from funboost.utils.dependency_packages.mongomq import MongoQueue
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.utils import time_util
@@ -23,11 +24,10 @@ class MongoMqPublisher(AbstractPublisher, MongoMixin):
     def queue(self):
         ''' 不能提前实例化，mongo fork进程不安全，这样是动态生成queue'''
         pid = os.getpid()
-        key = (pid, 'consume_queues', self._queue_name)
+        key = (pid, MongoDbName.MONGOMQ_DB, self._queue_name)
         if key not in MongoMqPublisher.pid__queue_map:
             queuex = MongoQueue(
-                # self.mongo_client.get_database('consume_queues').get_collection(self._queue_name),
-                self.get_mongo_collection('consume_queues', self._queue_name),
+                self.get_mongo_collection(MongoDbName.MONGOMQ_DB, self._queue_name),
                 consumer_id=f"consumer-{time_util.DatetimeConverter().datetime_str}",
                 timeout=600,
                 max_attempts=3,

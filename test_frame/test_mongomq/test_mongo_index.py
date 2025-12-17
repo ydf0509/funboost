@@ -1,6 +1,7 @@
 import datetime
 
 from funboost.utils.mongo_util import MongoMixin
+from funboost.constant import MongoDbName
 
 
 # col = MongoMixin().get_mongo_collection('task_status','test_ex')
@@ -10,7 +11,7 @@ from funboost.utils.mongo_util import MongoMixin
 # col.create_index([("utime", 1)],
 #                                              expireAfterSeconds=3000)
 
-col = MongoMixin().get_mongo_collection('task_status','test_queue77h6')
+col = MongoMixin().get_mongo_collection(MongoDbName.TASK_STATUS_DB,'test_queue77h6')
 
 index_dict = col.index_information()
 print(index_dict)

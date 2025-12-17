@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>队列操作</title>
+    <!-- Bootstrap CSS -->
+    <link href="{{ url_for('static',filename='css_cdn/twitter-bootstrap/3.3.7/css/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Tabulator CSS -->
+    <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator_bootstrap3.min.css') }}" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="{{ url_for('static',filename='css_cdn/select2/4.0.13/css/select2.min.css') }}" rel="stylesheet">
+
+
+     <!-- jQuery -->
+     <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
+     <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script> -->
+     <!-- Bootstrap JS -->
+     <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
+     <!-- <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script> -->
+     <!-- Tabulator JS -->
+     <script type="text/javascript" src="{{ url_for('static',filename='js_cdn/tabulator-tables@5.5.0/dist/js/tabulator.min.js') }}"></script>
+     <!-- Select2 JS -->
+     <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
+     <script src="{{ url_for('static',filename='js_cdn/chart.js') }}"></script>
+
+    <style>
+        .action-btn {
+            margin: 2px;
+        }
+        .search-container {
+            margin-bottom: 15px;
+        }
+        /* .frozen-column-background { background-color: #FFFFFF !important; } */ /* 移除或注释掉这里 */
+        .tabulator-cell {
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+            padding-top: 10px !important;
+            border: 1px solid #555 !important; 
+            background-color: #000000; /* 移除 !important */
+            color: #FFFFFF; /* 移除 !important */
+        }
+        /* 新增: 自定义超大模态框样式 */
+        .modal-xl-custom {
+            width: 80%; /* 宽度占屏幕的80% */
+            max-width: 1400px; /* 最大宽度限制 */
+        }
+        /* 新增: 开关切换样式 */
+        .toggle-switch-container {
+            display: flex;
+            align-items: center;
+            margin-left: 30px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px; /* 宽度调整 */
+            height: 24px; /* 高度调整 */
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; /* 滑块大小 */
+            width: 18px;  /* 滑块大小 */
+            left: 3px;    /* 滑块位置 */
+            bottom: 3px;  /* 滑块位置 */
+            background-color: white;
+            transition: .4s;
+        }
+        input:checked + .slider { background-color: #4CAF50; }
+        input:focus + .slider { box-shadow: 0 0 1px #4CAF50; }
+        input:checked + .slider:before { transform: translateX(26px); }
+        .slider.round { border-radius: 24px; }
+        .slider.round:before { border-radius: 50%; }
+        
+        /* Select2 下拉框自定义样式 - 应用到所有 Select2 */
+        .select2-results__option {
+            padding: 12px 16px !important;  /* 增加选项内边距 */
+            font-size: 15px !important;  /* 增加字体大小 */
+            line-height: 1.6 !important;  /* 增加行高 */
+        }
+        
+        .select2-container--default .select2-results>.select2-results__options {
+            max-height: 450px !important;  /* 增加结果列表最大高度 */
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid" style="margin-top: 5px;">
+        <div class="search-container" style="display: flex; align-items: center; margin-bottom: 10px;">
+            <!-- 使用 Select2 的队列选择器 -->
+            <select id="queueSearchSelect" class="form-control" style="width: 700px;">
+                <option value="">请选择队列名字...</option>
+            </select>
+            <!-- 美化后的复选框 -->
+            <div class="toggle-switch-container">
+                <label class="switch">
+                    <input type="checkbox" id="showActiveQueuesOnly" onchange="toggleActiveQueuesFilter()">
+                    <span class="slider round"></span>
+                </label>
+                <span style="margin-left: 8px; cursor: pointer;" onclick="document.getElementById('showActiveQueuesOnly').click();">正在消费的队列</span>
+            </div>
+            <button id="refresh-all-msg-counts" class="btn btn-info" style="margin-left: 30px;">更新所有队列的消息数量</button>
+            <button id="toggle-auto-refresh" class="btn btn-success" style="margin-left: 10px;">启动自动刷新</button>
+            <button id="show-explanation-btn" class="btn btn-default" style="margin-left: 10px;">说明</button>
+        </div>
+        <div id="queue-table"></div>
+    </div>
+
+    <!-- Chart Modal -->
+    <div class="modal fade" id="chartModal" tabindex="-1" role="dialog" aria-labelledby="chartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-xl-custom" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="chartModalLabel">队列数据曲线图: <span id="chartQueueName"></span></h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 新增：时间范围筛选控件和采样点数选择 -->
+                    <div style="margin-bottom: 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center;">
+                            <label style="margin-right:5px;">起始时间：</label>
+                            <input type="datetime-local" id="chartStartTime" style="margin-right: 10px;">
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <label style="margin-right:5px;">结束时间：</label>
+                            <input type="datetime-local" id="chartEndTime" style="margin-right: 10px;">
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <label style="margin-right:5px;">采样点数：</label>
+                            <select id="curveSamplesCount" class="form-control" style="width: 100px; margin-right: 10px;" title="推荐使用360-720个采样点以获得最佳显示效果">
+                                <option value="60">60 (粗略)</option>
+                                <option value="120">120 (简单)</option>
+                                <option value="180">180 (清晰)</option>
+                                <option value="360" selected>360 (推荐)</option>
+                                <option value="720">720 (精细)</option>
+                                <option value="1440">1440 (超精细)</option>
+                                <option value="8640">8640 (极精细)</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="reloadQueueChartWithTimeRange()">查询</button>
+                    </div>
+                    <canvas id="queueDataChart" style="height:600px;max-height:600px;"></canvas>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Explanation Modal -->
+    <div class="modal fade" id="explanationModal" tabindex="-1" role="dialog" aria-labelledby="explanationModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="explanationModalLabel">说明</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <ul id="explanation-text">
+                        {# Content will be added by JavaScript #}
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   
+    <script>
+        // 全局错误处理器
+        window.addEventListener('error', function(e) {
+            console.error('全局错误捕获:', e.error);
+            if (e.error && e.error.message && e.error.message.includes('tabulator')) {
+                console.warn('检测到Tabulator相关错误，可能是表格初始化问题');
+            }
+        });
+
+        // 检查Chart.js是否正确加载
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js未正确加载！请检查文件路径。');
+            alert('Chart.js库未正确加载，图表功能可能无法正常使用。');
+        } else {
+            console.log('Chart.js已正确加载，版本:', Chart.version);
+        }
+
+        // 初始化队列选择器（提取为独立函数）
+        function initializeQueueSelector(data) {
+            if (!data || data.length === 0) {
+                return;
+            }
+            
+            // 填充队列选择器 - 显示 consumer_count
+            let html = '<option value="">请选择队列名字...</option>';
+            data.forEach(function(item) {
+                const queueName = item.queue_name;
+                const consumerCount = item.consumer_count || 0;
+                html += `<option value="${queueName}">${queueName}&nbsp;&nbsp;&nbsp;&nbsp;(consumer_count:${consumerCount})</option>`;
+            });
+            
+            // 先销毁已有的 Select2 实例（如果存在）
+            if ($("#queueSearchSelect").hasClass("select2-hidden-accessible")) {
+                $("#queueSearchSelect").select2('destroy');
+            }
+            
+            // 填充选项
+            $("#queueSearchSelect").html(html);
+            
+            // 初始化 Select2
+            $("#queueSearchSelect").select2({
+                placeholder: "请输入队列名称搜索...",
+                allowClear: true,
+                width: '700px',
+                minimumResultsForSearch: 0  // 总是显示搜索框
+            }).on('change', function() {
+                const selectedQueue = $(this).val();
+                // 使用 Tabulator 的过滤功能
+                if (selectedQueue) {
+                    table.setFilter("queue_name", "=", selectedQueue);
+                } else {
+                    table.clearFilter();
+                    updateTableFilters(); // 重新应用其他过滤器
+                }
+            });
+        }
+
+        var table = new Tabulator("#queue-table", {
+            theme: "bootstrap3",
+            ajaxURL: "/queue/params_and_active_consumers",
+            ajaxResponse: function(url, params, response) {
+                console.log("AJAX 响应成功");
+                console.log("URL:", url);
+                console.log("响应数据:", response);
+                return response; // 返回数据给表格
+            },
+            ajaxError: function(xhr, textStatus, errorThrown) {
+                console.error("AJAX 请求失败!");
+                console.error("状态:", textStatus);
+                console.error("错误:", errorThrown);
+                console.error("响应:", xhr);
+                alert("数据加载失败: " + textStatus);
+            },
+            layout: "fitDataFill",
+            responsiveLayout: false,
+            pagination: true,
+            paginationSize: 1000,
+            height: "auto",
+            locale: true,
+            dataLoaded: function(data) {
+                // 调用独立的初始化函数
+                initializeQueueSelector(data);
+                
+                // 在数据加载完成后应用过滤器
+                setTimeout(function() {
+                    updateTableFilters();
+                }, 100);
+            },
+            tableBuilt: function() {
+                this.initialized = true;
+            },
+            rowFormatter: function(row) {
+                var data = row.getData();
+                var cell = row.getCell("queue_name"); 
+
+                if (cell && cell.getElement()) { 
+                    var element = cell.getElement();
+                    if (data.consumer_count > 0) {
+                        element.style.backgroundColor = "#4CAF50"; // 恢复绿色背景
+                        element.style.color = "white";
+                    } else {
+                        element.style.backgroundColor = "#F44336"; // 恢复红色背景
+                        element.style.color = "white";
+                    }
+                }
+            },
+            langs: {
+                "zh-cn": {
+                    "pagination": {
+                        "first": "首页",
+                        "first_title": "首页",
+                        "last": "末页",
+                        "last_title": "末页",
+                        "prev": "上一页",
+                        "prev_title": "上一页",
+                        "next": "下一页",
+                        "next_title": "下一页",
+                    }
+                }
+            },
+            columns: [
+                {
+                    title: "<br><br>队列名字",
+                    field: "queue_name",
+                    sorter: "string",
+                    headerSort: true,
+                    headerHozAlign: "center",
+                    hozAlign: "left",
+                    minWidth: 320, // 增加宽度以容纳按钮
+                    headerWordWrap: true,
+                    frozen: true,
+                    formatter: function(cell, formatterParams, onRendered) {
+                        const queueName = cell.getValue();
+                        // 让按钮始终显示，不再依赖 isAutoRefreshing
+                        return `<div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>${queueName}</span>
+                                    <button class="btn btn-xs btn-info view-chart-btn"
+                                            data-queue-name="${queueName}"
+                                            style="margin-left: 10px; display: inline-block;"
+                                            onclick="showQueueChart('${queueName}')">
+                                        <i class="glyphicon glyphicon-stats"></i> 查看曲线图
+                                    </button>
+                                </div>`;
+                    }
+                },
+                { title: "<br><br>consumer数量", field: "consumer_count", sorter: "number", width: 200,
+                formatter: function(cell) {
+                    const row = cell.getRow().getData();
+                    var consumers = row.active_consumers;
+                    return `
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 10px;">
+                            <span style="min-width: 50px; text-align: right; padding-right: 15px;">${cell.getValue() || ''}</span>
+                            <button class="btn btn-primary btn-sm" onclick='showConsumerDetails(${JSON.stringify(consumers)}, "${row.queue_name}")'>
+                                查看消费者详情
+                            </button>
+                        </div>
+                    `;
+                }
+            },
+                
+                { title: "<br>broker<br>类型", field: "broker_kind", sorter: "string"  },
+                { title: "<br>消费<br>函数", field: "consuming_function_name", sorter: "string"  },
+              
+                { title: "<br><br>消息数量", field: "msg_count", sorter: "number", width: 250,
+                    formatter: function(cell) {
+                        const row = cell.getRow().getData();
+                        const initialCount = cell.getValue() === null ? '' : cell.getValue();
+                        const initialCountStr = initialCount === '' ? '0' : String(initialCount); // Ensure '0' for empty initial
+                        return `
+                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 10px;">
+                                <span id="msg-count-${row.queue_name}" data-last-count="${initialCountStr}" style="min-width: 70px; text-align: right; padding-right: 25px;">${initialCount}</span>
+                                <button class="btn btn-primary btn-sm" onclick="getMessageCount('${row.queue_name}')">获取</button>
+                            </div>
+                        `;
+                    }
+                },
+
+                { title: "<br>历史运<br>行次数", field: "history_run_count", sorter: "number", width: 150 },
+                { title: "<br>历史运<br>行失败<br>次数", field: "history_run_fail_count", sorter: "number", width: 150 },
+                { title: "<br>近10秒<br>完成", field: "all_consumers_last_x_s_execute_count", sorter: "number", width: 100 },
+                { title: "<br>近10秒<br>失败", field: "all_consumers_last_x_s_execute_count_fail", sorter: "number", width: 100 },
+
+                { title: "近10秒<br>函数运行<br>平均耗时", field: "all_consumers_last_x_s_avarage_function_spend_time", sorter: "number", width: 100 },
+                { title: "累计<br>函数运行<br>平均耗时", field: "all_consumers_avarage_function_spend_time_from_start", sorter: "number", width: 100 },
+
+                { 
+                    title: "暂停<br>消费<br>状态",
+                    field: "pause_flag",
+                    width: 100,
+                    formatter: function(cell) {
+                        return cell.getValue()===1 ? '<span style="color: red;">已暂停</span>' : "";
+                    }
+                },
+                {
+                    title: "<br><br>操作",
+                    width: 600,
+                    formatter: function(cell) {
+                        const row = cell.getRow().getData();
+                        const btnId = 'showParamsBtn_' + Math.random().toString(36).substr(2, 9);
+                        setTimeout(() => {
+                            document.getElementById(btnId)?.addEventListener('click', () => showParams(row.queue_params));
+                        }, 0);
+                        return `
+                            <button id="${btnId}" class="btn btn-info btn-sm action-btn">查看消费者配置</button>
+                            <button class="btn btn-danger btn-sm action-btn" onclick="clearQueue('${row.queue_name}')">清空队列消息</button>
+                            <button class="btn btn-warning btn-sm action-btn" onclick="pauseConsume('${row.queue_name}')">暂停消费</button>
+                            <button class="btn btn-success btn-sm action-btn" onclick="resumeConsume('${row.queue_name}')">恢复消费</button>
+                            <button class="btn btn-default btn-sm action-btn" onclick="deprecateQueue('${row.queue_name}')" style="background-color: #d9534f; color: white;">作废队列</button>
+                        `;
+                    }
+                },
+            ],
+            ajaxResponse: function(url, params, response) {
+                // 转换API响应为表格数据
+                const tableData = Object.entries(response).map(([queue_name, data]) => ({
+                    queue_name: queue_name,
+                    
+                    broker_kind: data.queue_params.broker_kind,
+                    consuming_function_name: data.queue_params.consuming_function_name,
+                    history_run_count: data.history_run_count,
+                    history_run_fail_count: data.history_run_fail_count,
+                    all_consumers_last_x_s_execute_count: data.all_consumers_last_x_s_execute_count,
+                    all_consumers_last_x_s_execute_count_fail: data.all_consumers_last_x_s_execute_count_fail,
+                    msg_count: data.msg_num_in_broker, 
+                    consumer_count: data.active_consumers.length,
+                    active_consumers: data.active_consumers,
+                    queue_params: data.queue_params,
+                    pause_flag: data.pause_flag ,
+                    all_consumers_last_x_s_avarage_function_spend_time:data.all_consumers_last_x_s_avarage_function_spend_time,
+                    all_consumers_avarage_function_spend_time_from_start:data.all_consumers_avarage_function_spend_time_from_start
+                }));
+
+                // 初始化 Select2
+                initializeQueueSelector(tableData);
+
+                return tableData;
+            },
+        });
+
+        function updateTableFilters() {
+            // 检查表格是否已经初始化
+            if (!table || !table.initialized) {
+                console.log("表格还未初始化，跳过过滤器更新");
+                return;
+            }
+
+            try {
+                const selectedQueue = $("#queueSearchSelect").val();
+                const showActiveOnly = document.getElementById('showActiveQueuesOnly').checked;
+
+                const filters = [];
+
+                if (selectedQueue && selectedQueue.trim() !== "") {
+                    filters.push({field: "queue_name", type: "=", value: selectedQueue});
+                }
+
+                if (showActiveOnly) {
+                    filters.push({field: "consumer_count", type: ">", value: 0});
+                }
+
+                // 清除现有过滤器并设置新的过滤器
+                table.clearFilter();
+                if (filters.length > 0) {
+                    table.setFilter(filters);
+                }
+            } catch (error) {
+                console.error("更新表格过滤器时出错:", error);
+            }
+        }
+
+        // 显示参数的模态框
+        function showParams(params) {
+            // 如果已存在模态框，先移除
+            if ($("#paramsModal").length) {
+                $("#paramsModal").remove();
+            }
+
+            const modalHtml = `
+                <div class="modal" id="paramsModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">消费者配置详情</h4>
+                            </div>
+                            <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+                                <pre style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #dee2e6; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;">${JSON.stringify(params, null, 2)}</pre>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 添加模态框到body
+            $("body").append(modalHtml);
+            
+            // 初始化并显示模态框
+            $("#paramsModal").modal({
+                backdrop: "static",
+                keyboard: false
+            });
+        }
+        // 操作函数
+        function getMessageCount(queueName) {
+            let countSpan = document.getElementById(`msg-count-${queueName}`);
+            let previous_count_str = countSpan.getAttribute('data-last-count') || '0';
+            let previous_count = parseInt(previous_count_str);
+            if (isNaN(previous_count)) previous_count = 0; // Fallback
+
+            countSpan.innerHTML = '正在获取...'; // Add a loading indicator
+
+            // 使用 Flask 蓝图接口获取消息数量
+            $.get(`/funboost/get_msg_count?queue_name=${encodeURIComponent(queueName)}`, function(response) {
+                if (response.succ) {
+                    const new_count = parseInt(response.data.count);
+                    if (isNaN(new_count)) {
+                        countSpan.innerHTML = 'get_msg_num_error';
+                        countSpan.setAttribute('data-last-count', '0'); // Reset last count on error
+                        return;
+                    } 
+
+                    const difference = new_count - previous_count;
+                    let diff_display_html = '';
+                    if (countSpan.getAttribute('data-last-count') !== '0' || previous_count_str !== '') { // Only show diff if not initial load or previous was not error
+                        if (difference > 0) {
+                            diff_display_html = ` <span style="color: red;">↑ +${difference}</span>`;
+                        } else if (difference < 0) {
+                            diff_display_html = ` <span style="color: green;">↓ ${difference}</span>`;
+                        }
+                    }
+
+                    countSpan.innerHTML = `${new_count}${diff_display_html}`;
+                    countSpan.setAttribute('data-last-count', new_count.toString());
+                } else {
+                    countSpan.innerHTML = 'get_msg_num_error';
+                    countSpan.setAttribute('data-last-count', '0'); // Reset last count on error
+                }
+            }).fail(function() {
+                countSpan.innerHTML = 'get_msg_num_error';
+                countSpan.setAttribute('data-last-count', '0'); // Reset last count on error
+            });
+        }
+
+        function clearQueue(queueName) {
+            if (confirm(`确定要清空队列 ${queueName} 的所有消息吗？`)) {
+                $.ajax({
+                    url: '/funboost/clear_queue',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        queue_name: queueName
+                    }),
+                    success: function(response) {
+                        if (response.succ) {
+                            alert(`清空 ${queueName} 队列成功`);
+                            getMessageCount(queueName); // 自动获取最新的消息数量
+                        } else {
+                            alert(`清空队列失败：${response.msg}`);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert(`清空队列失败：${error}`);
+                    }
+                });
+            }
+        }
+
+        function pauseConsume(queueName) {
+            $.post(`/queue/pause/${queueName}`, function(response) {
+                if (response.success) {
+                    alert("暂停消费成功");
+                    const row = table.getRows().find(row => row.getData().queue_name === queueName);
+                    if (row) {
+                        row.update({pause_flag: 1});
+                    }
+                }
+            });
+        }
+
+        function resumeConsume(queueName) {
+            $.post(`/queue/resume/${queueName}`, function(response) {
+                if (response.success) {
+                    alert("恢复消费成功");
+                    const row = table.getRows().find(row => row.getData().queue_name === queueName);
+                    if (row) {
+                        row.update({pause_flag: 0});
+                    }
+                }
+            });
+        }
+
+        // 作废队列
+        function deprecateQueue(queueName) {
+            if (!confirm(`确定要作废队列 "${queueName}" 吗？\n\n作废后，该队列将从redis元数据的队列set中移除，但不会删除队列中的数据。\n如果需要再次使用，需要重新启动消费者。`)) {
+                return;
+            }
+            
+            $.ajax({
+                url: '/funboost/deprecate_queue',
+                type: 'DELETE',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    queue_name: queueName
+                }),
+                success: function(response) {
+                    if (response.succ) {
+                        alert(`队列 "${queueName}" 已成功作废！`);
+                        // 刷新表格数据
+                        table.replaceData();
+                    } else {
+                        alert(`作废队列失败：${response.msg}`);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert(`作废队列失败：${error}`);
+                }
+            });
+        }
+
+        // 显示消费者详情的模态框
+        function showConsumerDetails(consumers, queueName) {
+            $.ajax({
+                url: '/running_consumer/hearbeat_info_by_queue_name',
+                data: { queue_name: queueName },
+                success: function(consumers) {
+                    let consumerRows = '';
+                    consumers.forEach(consumer => {
+                        consumerRows += `
+                            <tr>
+                                <td>${consumer.computer_ip}</td>
+                                <td>${consumer.computer_name}</td>
+                                <td>${consumer.process_id}</td>
+                                <td>${consumer.hearbeat_datetime_str}</td>
+                                
+                                <td>${consumer.start_datetime_str}</td>
+                                
+                                <td>${consumer.last_x_s_execute_count}</td>
+                                <td>${consumer.last_x_s_execute_count_fail}</td>
+                                <td>${consumer.last_x_s_avarage_function_spend_time}</td>
+                                <td>${consumer.total_consume_count_from_start}</td>
+                                <td>${consumer.total_consume_count_from_start_fail}</td>
+                                <td>${consumer.avarage_function_spend_time_from_start}</td>
+                                <td>${consumer.code_filename}</td>,
+                                <td>${consumer.consumer_uuid}</td>
+                            </tr>
+                        `;
+                    });
+                
+                    const modalHtml = `
+                        <div class="modal" id="consumerDetailsModal" tabindex="-1" role="dialog">
+                            <div class="modal-dialog" style="width: 90%;" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        <h4 class="modal-title">${queueName}队列的消费者详情信息</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>计算机IP</th>
+                                                        <th>计算机名称</th>
+                                                        <th>进程ID</th>
+                                                        <th>最后心跳时间</th>
+                                                        
+                                                        <th>启动时间</th>
+                                                        
+                                                        <th>近10秒<br>运行完成<br>消息个数</th>
+                                                        <th>近10秒<br>运行失败<br>消息个数</th>
+                                                        <th>近10秒<br>函数运行<br>平均耗时</th>
+                                                        <th>累计<br>运行完成<br>消息个数</th>
+                                                        <th>累计<br>运行失败<br>消息个数</th>
+                                                        <th>累计<br>函数运行<br>平均耗时</th>
+                                                        <th>代码文件名</th>
+                                                        <th>消费者UUID</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    ${consumerRows}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                
+                    // 移除已存在的模态框
+                    $('#consumerDetailsModal').remove();
+                    // 添加新的模态框到body
+                    $('body').append(modalHtml);
+                    // 显示模态框
+                    $('#consumerDetailsModal').modal('show');
+                },
+                error: function(xhr, status, error) {
+                    console.error('获取消费者详情失败:', error);
+                    alert('获取消费者详情失败');
+                }
+            });
+        }
+
+        document.getElementById("refresh-all-msg-counts").onclick = function() {
+            table.getRows().forEach(row => {
+                const queueName = row.getData().queue_name;
+                getMessageCount(queueName);
+            });
+        };
+
+        // --- BEGIN NEW SCRIPT LOGIC ---
+        let isAutoRefreshing = false;
+        let autoRefreshIntervalId = null;
+        const AUTO_REFRESH_INTERVAL = 10000; // 10 秒
+        let chartInstance = null; // 用于存储Chart.js的实例
+
+        // 定义需要记录并展示在图表中的列字段及其显示名称
+        const CHARTABLE_FIELDS_MAP = {
+            "history_run_count": "历史运行次数",
+            "history_run_fail_count": "历史运行失败次数",
+            "all_consumers_last_x_s_execute_count": "近10秒完成",
+            "all_consumers_last_x_s_execute_count_fail": "近10秒失败",
+            "all_consumers_last_x_s_avarage_function_spend_time": "近10秒函数运行平均耗时",
+            "all_consumers_avarage_function_spend_time_from_start": "累计函数运行平均耗时",
+            "msg_num_in_broker": "消息数量"
+        };
+        // 预定义颜色
+        const PREDEFINED_COLORS = [
+            '#E60012', '#005AC8', '#00A600', '#FF9900', '#8B28B7', '#9A6324', '#5E8C78', '#F58231', '#42D4F4', '#BF6131', '#3CB44B', '#4363D8', '#F032E6', '#BCF60C', '#FABEBE', '#AAFFC3', '#E6BEFF', '#FFFAC8'
+        ];
+
+        function refreshTableData() {
+            table.replaceData()
+                .then(() => {
+                    console.log("Auto-refresh: table data refreshed successfully.");
+                })
+                .catch(error => {
+                    console.error("Auto-refresh: error refreshing table data:", error);
+                });
+        }
+
+        function toggleAutoRefresh() {
+            const button = document.getElementById("toggle-auto-refresh");
+            if (isAutoRefreshing) {
+                clearInterval(autoRefreshIntervalId);
+                isAutoRefreshing = false;
+                button.textContent = "启动自动刷新";
+                button.classList.remove("btn-danger");
+                button.classList.add("btn-success");
+                if (table) {
+                    table.redraw(true);
+                }
+            } else {
+                isAutoRefreshing = true;
+                button.textContent = "暂停自动刷新";
+                button.classList.remove("btn-success");
+                button.classList.add("btn-danger");
+                refreshTableData();
+                autoRefreshIntervalId = setInterval(refreshTableData, AUTO_REFRESH_INTERVAL);
+            }
+        }
+
+        document.getElementById("toggle-auto-refresh").addEventListener("click", toggleAutoRefresh);
+
+        let currentChartQueueName = null;
+        let endTimeUserChanged = false;
+        document.getElementById("chartEndTime").addEventListener("input", function() {
+            endTimeUserChanged = true;
+        });
+        // 工具函数：将Date对象转为input[type=datetime-local]需要的本地时间字符串
+        function toDatetimeLocalString(date) {
+            const pad = n => n < 10 ? '0' + n : n;
+            return date.getFullYear() + '-' +
+                pad(date.getMonth() + 1) + '-' +
+                pad(date.getDate()) + 'T' +
+                pad(date.getHours()) + ':' +
+                pad(date.getMinutes());
+        }
+        function showQueueChart(queueName) {
+            currentChartQueueName = queueName;
+            document.getElementById("chartQueueName").textContent = queueName;
+            // 设置默认时间范围：最近1小时（本地时区字符串）
+            const now = new Date();
+            const start = new Date(now.getTime() - 60 * 60 * 1000); // 1小时
+            const startStr = toDatetimeLocalString(start);
+            const endStr = toDatetimeLocalString(now);
+            const minStart = toDatetimeLocalString(new Date(now.getTime() - 24 * 60 * 60 * 1000)); // 24小时
+            document.getElementById("chartStartTime").value = startStr;
+            document.getElementById("chartEndTime").value = endStr;
+            document.getElementById("chartStartTime").setAttribute('max', endStr);
+            document.getElementById("chartStartTime").setAttribute('min', minStart);
+            document.getElementById("chartEndTime").removeAttribute('max');
+            document.getElementById("chartEndTime").setAttribute('min', minStart);
+            endTimeUserChanged = false; // 重置
+            loadQueueChartData(queueName, Math.floor(start.getTime() / 1000), Math.floor(now.getTime() / 1000), 360);
+        }
+        function reloadQueueChartWithTimeRange() {
+            const start = document.getElementById("chartStartTime").value;
+            const end = document.getElementById("chartEndTime").value;
+            const curveSamplesCount = document.getElementById("curveSamplesCount").value;
+            let start_ts = start ? (new Date(start).getTime() / 1000) : null;
+            let end_ts = end ? (new Date(end).getTime() / 1000) : null;
+            if (endTimeUserChanged) {
+                console.log('用户手动填写了结束时间:', end);
+            } else {
+                console.log('结束时间为默认值:', end);
+            }
+            loadQueueChartData(currentChartQueueName, start_ts, end_ts, curveSamplesCount);
+        }
+        function loadQueueChartData(queueName, start_ts, end_ts, curveSamplesCount) {
+            if (chartInstance) chartInstance.destroy();
+            const chartCanvas = document.getElementById('queueDataChart');
+            const ctx = chartCanvas.getContext('2d');
+            ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+            ctx.font = "16px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("正在加载数据...", chartCanvas.width / 2, chartCanvas.height / 2);
+            let url = `/queue/get_time_series_data/${queueName}`;
+            let params = [];
+            if (start_ts) params.push(`start_ts=${start_ts}`);
+            if (end_ts) params.push(`end_ts=${end_ts}`);
+            if (curveSamplesCount) params.push(`curve_samples_count=${curveSamplesCount}`);
+            if (params.length > 0) url += '?' + params.join('&');
+            $.get(url, function(response) {
+                console.log('AJAX请求成功，返回数据:', response);
+                console.log('数据类型:', typeof response, '数据长度:', response ? response.length : 'undefined');
+                
+                if (!response || response.length === 0) {
+                    console.log('数据为空，显示暂无数据');
+                    ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+                    ctx.fillText("暂无历史数据", chartCanvas.width / 2, chartCanvas.height / 2);
+                    $('#chartModal').modal('show');
+                    return;
+                }
+                
+                console.log('开始处理', response.length, '个数据点');
+                // 横坐标用本地时间字符串显示
+                const labels = response.map(dp => {
+                    const d = new Date(dp.report_ts * 1000);
+                    return d.toLocaleString('zh-CN', { hour12: false });
+                });
+                console.log('时间标签生成完成，数量:', labels.length);
+                console.log('开始生成数据集，字段映射:', CHARTABLE_FIELDS_MAP);
+                
+                // 在函数作用域中定义dataPointCount，确保在Chart配置中可以访问
+                const dataPointCount = response.length;
+                console.log('数据点数量:', dataPointCount);
+                
+                const datasets = Object.keys(CHARTABLE_FIELDS_MAP).map((fieldKey, index) => {
+                    const displayName = CHARTABLE_FIELDS_MAP[fieldKey];
+                    const isDefaultVisible = fieldKey === 'all_consumers_last_x_s_execute_count' || fieldKey === 'all_consumers_last_x_s_execute_count_fail';
+                    
+                                    // 根据数据点数量动态调整配置 - 优化平滑度
+                let pointRadius, tension, borderWidth;
+                
+                if (dataPointCount > 2000) {
+                    // 超大量数据点：隐藏点，高张力，细线条
+                    pointRadius = 0;
+                    tension = 0.7;
+                    borderWidth = 1.2;
+                } else if (dataPointCount > 800) {
+                    // 大量数据点：隐藏点，较高张力，较细线条
+                    pointRadius = 0;
+                    tension = 0.65;
+                    borderWidth = 1.5;
+                } else if (dataPointCount > 300) {
+                    // 中等数据点：小点，中高张力 - 针对360等常用采样点数优化
+                    pointRadius = 0.3;
+                    tension = 0.6;
+                    borderWidth = 1.8;
+                } else {
+                    // 少量数据点：正常配置，增加平滑度
+                    pointRadius = 1;
+                    tension = 0.5;
+                    borderWidth = 2;
+                }
+                    
+                    return {
+                        label: displayName,
+                        data: response.map(dp => {
+                            let v = dp.report_data[fieldKey];
+                            if (typeof v === 'string') v = parseFloat(v);
+                            return v === undefined || v === null ? NaN : v;
+                        }),
+                        fill: false,
+                        borderColor: PREDEFINED_COLORS[index % PREDEFINED_COLORS.length],
+                        backgroundColor: PREDEFINED_COLORS[index % PREDEFINED_COLORS.length] + '33',
+                        tension: tension,
+                        pointRadius: pointRadius,
+                        pointHoverRadius: Math.max(3, pointRadius + 2),
+                        borderWidth: borderWidth,
+                        hidden: !isDefaultVisible,
+                        cubicInterpolationMode: 'monotone', // 单调插值，更平滑
+                        spanGaps: true, // 跨越空值
+                        segment: {
+                            borderColor: ctx => dataPointCount > 300 ? 
+                                (ctx.p0.parsed.y == null || ctx.p1.parsed.y == null ? 'transparent' : undefined) : undefined
+                        } // 优化大数据量时的线段渲染
+                    };
+                });
+                console.log('数据集生成完成，数量:', datasets.length);
+                console.log('开始创建Chart实例...');
+                try {
+                    chartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: { labels, datasets },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            // 性能优化设置
+                            animation: {
+                                duration: dataPointCount > 800 ? 0 : 1000, // 数据点多时禁用动画
+                                easing: 'easeInOutQuart' // 使用更平滑的缓动函数
+                            },
+                            // 启用数据集动画以获得更平滑的效果
+                            datasets: {
+                                line: {
+                                    pointHoverBackgroundColor: 'rgba(255,255,255,0.8)',
+                                    pointHoverBorderColor: 'rgba(220,220,220,1)',
+                                    pointHoverBorderWidth: 2
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    title: { display: true, text: '时间' },
+                                    ticks: {
+                                        autoSkip: true,
+                                        maxTicksLimit: Math.min(20, Math.max(10, Math.floor(dataPointCount / 50))) // 根据数据点数量动态调整
+                                    }
+                                },
+                                y: { 
+                                    beginAtZero: false, 
+                                    title: { display: true, text: '数值' },
+                                    // 为大量数据点添加性能优化
+                                    ticks: {
+                                        maxTicksLimit: 10
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: { position: 'top' },
+                                title: { 
+                                    display: true, 
+                                    text: `队列 [${queueName}] 各项指标变化趋势 (${dataPointCount}个数据点)` 
+                                },
+                                tooltip: { 
+                                    mode: 'index', 
+                                    intersect: false
+                                }
+                            },
+                            interaction: { 
+                                mode: 'nearest', 
+                                axis: 'x', 
+                                intersect: false
+                            },
+                            // 大量数据点时的额外优化
+                            elements: {
+                                line: {
+                                    borderJoinStyle: 'round', // 更平滑的线条连接
+                                    borderCapStyle: 'round',  // 圆形端点
+                                    fill: false
+                                },
+                                point: {
+                                    hoverRadius: dataPointCount > 800 ? 2 : 4, // 根据数据量调整悬停半径
+                                    hitRadius: dataPointCount > 800 ? 3 : 6    // 根据数据量调整点击半径
+                                }
+                            },
+                            // 针对大数据量的优化配置
+                            parsing: dataPointCount > 1000 ? {
+                                xAxisKey: false, // 禁用x轴解析以提高性能
+                                yAxisKey: false  // 禁用y轴解析以提高性能
+                            } : undefined
+                        }
+                    });
+                    console.log('Chart created successfully with', dataPointCount, 'data points');
+                } catch (error) {
+                    console.error('Error creating chart:', error);
+                    ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+                    ctx.fillText("图表创建失败: " + error.message, chartCanvas.width / 2, chartCanvas.height / 2);
+                }
+                $('#chartModal').modal('show');
+            }).fail(function(xhr, status, error) {
+                console.error('AJAX请求失败:', {
+                    status: status,
+                    error: error,
+                    responseText: xhr.responseText,
+                    url: url
+                });
+                ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+                ctx.fillText("获取数据失败: " + error, chartCanvas.width / 2, chartCanvas.height / 2);
+                $('#chartModal').modal('show');
+            });
+        }
+
+        // 新增：模态框关闭时的处理
+        $('#chartModal').on('hidden.bs.modal', function () {
+            if (chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
+            console.log("Chart modal closed and instance destroyed.");
+        });
+
+        // 新增：显示说明模态框的函数
+        function showExplanationModal() {
+            const explanationTextHtml = `
+                <li>消息队列的各项指标数据是 funboost 消费者每隔10秒周期上报到 redis 的，所以不是毫秒级实时，而是10秒级实时。</li>
+                <li>"更新所有队列消息数量"按钮和表格"消息数量"列的获取按钮，是实时查询 broker 的消息数量，不是基于消费者上报到 redis 的数据。（因为有的队列可能没有启动相应的消费者，也就没有上报方）</li>
+                
+            `;
+            document.getElementById('explanation-text').innerHTML = explanationTextHtml;
+            $('#explanationModal').modal('show');
+        }
+
+        // 绑定说明按钮的点击事件
+        document.getElementById('show-explanation-btn').addEventListener('click', showExplanationModal);
+
+        // 新增：处理复选框状态变化的函数
+        function toggleActiveQueuesFilter() {
+            try {
+                updateTableFilters();
+            } catch (error) {
+                console.error("切换活跃队列过滤器时出错:", error);
+            }
+        }
+
+        // 初始化时不立即设置过滤条件，等待表格完全加载
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM内容加载完成，等待表格初始化...");
+            // 移除立即调用 updateTableFilters()，改为在表格数据加载完成后调用
+        });
+
+    </script>
+</body>
+</html>
+
+
+<!-- 
+ 队列名字  broker_kind  消息数量  consumer数量 消费者参数   是否暂停消费状态     操作(这一列都是按钮)
+                                                                            获取消息数量、清空队列消息、 暂停消费 、恢复消费
+                                                                        
+                                                                            
+     接口   /queue/params_and_active_consumers 返回的是如下字典,字典中的key是队列名字，
+     value是一个字典，字典中有两个key，一个是active_consumers，一个是 queue_params ，
+     queue_params的broker_kind 是队列的类型，active_consumers 数组长度是 consumer数量
+     
+     
+     显示到表格中
+
+     {
+    "queue_test_g01t": {
+        "active_consumers": [
+            {
+                "code_filename": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py",
+                "computer_ip": "10.0.133.57",
+                "computer_name": "LAPTOP-7V78BBO2",
+                "consumer_id": 2642746547464,
+                "consumer_uuid": "5ba1aa04-1067-4173-8ee6-0c1e29f8b015",
+                "consuming_function": "f",
+                "hearbeat_datetime_str": "2025-02-26 20:29:40",
+                "hearbeat_timestamp": 1740572980.216993,
+                "process_id": 51852,
+                "queue_name": "queue_test_g01t",
+                "start_datetime_str": "2025-02-26 20:03:06",
+                "start_timestamp": 1740571386.7500842,
+                 "execute_task_times_every_unit_time_temp": 2
+            }
+        ],
+        "queue_params": {
+            "auto_generate_info": {
+                "where_to_instantiate": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py:10"
+            },
+            "broker_exclusive_config": {
+                "pull_msg_batch_size": 100,
+                "redis_bulk_push": 1
+            },
+            "broker_kind": "REDIS",
+            "concurrent_mode": "threading",
+            "concurrent_num": 50,
+            "consuming_function": "<function f at 0x000002674C8A1708>",
+            "consuming_function_kind": "COMMON_FUNCTION",
+            "consuming_function_raw": "<function f at 0x000002674C8A1708>",
+            "create_logger_file": true,
+            "delay_task_apscheduler_jobstores_kind": "redis",
+            "do_not_run_by_specify_time": [
+                "10:00:00",
+                "22:00:00"
+            ],
+            "do_task_filtering": false,
+            "function_result_status_persistance_conf": {
+                "expire_seconds": 604800,
+                "is_save_result": true,
+                "is_save_status": true,
+                "is_use_bulk_insert": false
+            },
+            "is_auto_start_consuming_message": false,
+            "is_do_not_run_by_specify_time_effect": false,
+            "is_print_detail_exception": true,
+            "is_push_to_dlx_queue_when_retry_max_times": false,
+            "is_send_consumer_hearbeat_to_redis": true,
+            "is_show_message_get_from_broker": false,
+            "is_support_remote_kill_task": false,
+            "is_using_distributed_frequency_control": false,
+            "is_using_rpc_mode": false,
+            "log_level": 10,
+            "logger_name": "",
+            "logger_prefix": "",
+            "max_retry_times": 3,
+            "publish_msg_log_use_full_msg": false,
+            "queue_name": "queue_test_g01t",
+            "retry_interval": 0,
+            "rpc_result_expire_seconds": 600,
+            "schedule_tasks_on_main_thread": false,
+            "should_check_publish_func_params": true,
+            "task_filtering_expire_seconds": 0
+        }
+    },
+    "queue_test_g02t": {
+        "active_consumers": [
+            {
+                "code_filename": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py",
+                "computer_ip": "10.0.133.57",
+                "computer_name": "LAPTOP-7V78BBO2",
+                "consumer_id": 2642746605384,
+                "consumer_uuid": "a5528e66-2949-47ca-9aea-bbf920165c53",
+                "consuming_function": "f2",
+                "hearbeat_datetime_str": "2025-02-26 20:29:40",
+                "hearbeat_timestamp": 1740572980.13895,
+                "process_id": 51852,
+                "queue_name": "queue_test_g02t",
+                "start_datetime_str": "2025-02-26 20:03:06",
+                "start_timestamp": 1740571386.7650468,
+                 "execute_task_times_every_unit_time_temp": 2
+            }
+        ],
+        "queue_params": {
+            "auto_generate_info": {
+                "where_to_instantiate": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py:18"
+            },
+            "broker_exclusive_config": {
+                "pull_msg_batch_size": 100,
+                "redis_bulk_push": 1
+            },
+            "broker_kind": "REDIS",
+            "concurrent_mode": "threading",
+            "concurrent_num": 50,
+            "consuming_function": "<function f2 at 0x000002674FF5DE58>",
+            "consuming_function_kind": "COMMON_FUNCTION",
+            "consuming_function_raw": "<function f2 at 0x000002674FF5DE58>",
+            "create_logger_file": true,
+            "delay_task_apscheduler_jobstores_kind": "redis",
+            "do_not_run_by_specify_time": [
+                "10:00:00",
+                "22:00:00"
+            ],
+            "do_task_filtering": false,
+            "function_result_status_persistance_conf": {
+                "expire_seconds": 604800,
+                "is_save_result": true,
+                "is_save_status": true,
+                "is_use_bulk_insert": false
+            },
+            "is_auto_start_consuming_message": false,
+            "is_do_not_run_by_specify_time_effect": false,
+            "is_print_detail_exception": true,
+            "is_push_to_dlx_queue_when_retry_max_times": false,
+            "is_send_consumer_hearbeat_to_redis": true,
+            "is_show_message_get_from_broker": false,
+            "is_support_remote_kill_task": false,
+            "is_using_distributed_frequency_control": false,
+            "is_using_rpc_mode": false,
+            "log_level": 10,
+            "logger_name": "",
+            "logger_prefix": "",
+            "max_retry_times": 3,
+            "publish_msg_log_use_full_msg": false,
+            "queue_name": "queue_test_g02t",
+            "retry_interval": 0,
+            "rpc_result_expire_seconds": 600,
+            "schedule_tasks_on_main_thread": false,
+            "should_check_publish_func_params": true,
+            "task_filtering_expire_seconds": 0
+        }
+    }
+}

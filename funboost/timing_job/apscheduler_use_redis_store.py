@@ -61,8 +61,9 @@ class FunboostBackgroundSchedulerProcessJobsWithinRedisLock(FunboostBackgroundSc
         try:    
             with RedisDistributedBlockLockContextManager(RedisMixin().redis_db_frame, self.process_jobs_redis_lock_key, ):
                 return super()._process_jobs()
-        except Exception as e: # 这里必须捕获错误，否则一旦RedisDistributedBlockLockContextManager redis 报错断网一次，_main_loop 循环就会退出，导致定时器的扫描任务的while 线程永久不再运行了。
-            flogger.exception(e)
+        except Exception as e:
+             # 这里必须捕获错误，否则一旦RedisDistributedBlockLockContextManager redis 小概率报错断网一次，_main_loop 循环就会退出，导致定时器的扫描任务的while 线程从此不再运行了。
+            flogger.exception(f'FunboostBackgroundSchedulerProcessJobsWithinRedisLock _process_jobs error: {e}')
             return 0.1
 
 

@@ -13,7 +13,7 @@ from funboost.constant import RedisKeys
 from funboost.core.func_params_model import PriorityConsumingControlConfig, PublisherParams
 from funboost.core.msg_result_getter import AsyncResult
 from funboost.core.serialization import Serialization
-from funboost.utils import time_util, decorators, LoggerMixin
+from funboost.utils import time_util, decorators  # LoggerMixin 已废弃，Statistic类不再使用
 from funboost.utils.mongo_util import MongoMixin
 from funboost.utils.redis_manager import RedisMixin
 from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter, SingleQueueConusmerParamsGetter
@@ -92,71 +92,168 @@ def get_speed(col_name, start_time, end_time):
         return {'success_num': success_num, 'fail_num': fail_num, 'qps': round(qps, 1)}
 
 
-class Statistic(LoggerMixin):
-    def __init__(self, col_name):
-        db = MongoMixin().mongo_db_task_status
-        self.col = db.get_collection(col_name)
-        self.result = {'recent_10_days': {'time_arr': [], 'count_arr': []},
-                       'recent_24_hours': {'time_arr': [], 'count_arr': []},
-                       'recent_60_minutes': {'time_arr': [], 'count_arr': []},
-                       'recent_60_seconds': {'time_arr': [], 'count_arr': []}}
-
-    def statistic_by_period(self, t_start: str, t_end: str):
-        condition = {'insert_time': {'$gt': time_util.DatetimeConverter(t_start).datetime_obj,
-                                                         '$lt': time_util.DatetimeConverter(t_end).datetime_obj}}
-        
-        # now = datetime.datetime.now()
-        # start_time = now - datetime.timedelta(hours=1)
-        # end_time = now
-        # condition = {
-        #     'insert_time': {
-        #         '$gt': start_time,
-        #         '$lt': end_time
-        #     }
-        # }
-        count =  self.col.count_documents(condition)
-        print(count,t_start,t_end,time_util.DatetimeConverter(t_start).datetime_obj.timestamp(),condition)
-        return count
-
-    def build_result(self):
-        with decorators.TimerContextManager():
-            for i in range(10):
-                t1 = datetime.datetime.now() + datetime.timedelta(days=-(9 - i))
-                t2 = datetime.datetime.now() + datetime.timedelta(days=-(8 - i))
-                self.result['recent_10_days']['time_arr'].append(time_util.DatetimeConverter(t1).date_str)
-                count = self.statistic_by_period(time_util.DatetimeConverter(t1).date_str + ' 00:00:00',
-                                                 time_util.DatetimeConverter(t2).date_str + ' 00:00:00')
-                self.result['recent_10_days']['count_arr'].append(count)
-
-            for i in range(0, 24):
-                t1 = datetime.datetime.now() + datetime.timedelta(hours=-(23 - i))
-                t2 = datetime.datetime.now() + datetime.timedelta(hours=-(22 - i))
-                self.result['recent_24_hours']['time_arr'].append(t1.strftime('%Y-%m-%d %H:00:00'))
-                # hour1_str = f'0{i}' if i < 10 else i
-                count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:00:00'),
-                                                 t2.strftime('%Y-%m-%d %H:00:00'))
-                self.result['recent_24_hours']['count_arr'].append(count)
-
-            for i in range(0, 60):
-                t1 = datetime.datetime.now() + datetime.timedelta(minutes=-(59 - i))
-                t2 = datetime.datetime.now() + datetime.timedelta(minutes=-(58 - i))
-                self.result['recent_60_minutes']['time_arr'].append(t1.strftime('%Y-%m-%d %H:%M:00'))
-                count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:%M:00'),
-                                                 t2.strftime('%Y-%m-%d %H:%M:00'))
-                self.result['recent_60_minutes']['count_arr'].append(count)
-
-            for i in range(0, 60):
-                t1 = datetime.datetime.now() + datetime.timedelta(seconds=-(59 - i))
-                t2 = datetime.datetime.now() + datetime.timedelta(seconds=-(58 - i))
-                self.result['recent_60_seconds']['time_arr'].append(t1.strftime('%Y-%m-%d %H:%M:%S'))
-                count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:%M:%S'),
-                                                 t2.strftime('%Y-%m-%d %H:%M:%S'))
-                self.result['recent_60_seconds']['count_arr'].append(count)
+# 以下 Statistic 类已废弃，功能已迁移到 get_consume_speed_curve，前端不再使用 speed_statistic_for_echarts 路由
+# class Statistic(LoggerMixin):
+#     def __init__(self, col_name):
+#         db = MongoMixin().mongo_db_task_status
+#         self.col = db.get_collection(col_name)
+#         self.result = {'recent_10_days': {'time_arr': [], 'count_arr': []},
+#                        'recent_24_hours': {'time_arr': [], 'count_arr': []},
+#                        'recent_60_minutes': {'time_arr': [], 'count_arr': []},
+#                        'recent_60_seconds': {'time_arr': [], 'count_arr': []}}
+#
+#     def statistic_by_period(self, t_start: str, t_end: str):
+#         condition = {'insert_time': {'$gt': time_util.DatetimeConverter(t_start).datetime_obj,
+#                                                          '$lt': time_util.DatetimeConverter(t_end).datetime_obj}}
+#         count =  self.col.count_documents(condition)
+#         print(count,t_start,t_end,time_util.DatetimeConverter(t_start).datetime_obj.timestamp(),condition)
+#         return count
+#
+#     def build_result(self):
+#         with decorators.TimerContextManager():
+#             for i in range(10):
+#                 t1 = datetime.datetime.now() + datetime.timedelta(days=-(9 - i))
+#                 t2 = datetime.datetime.now() + datetime.timedelta(days=-(8 - i))
+#                 self.result['recent_10_days']['time_arr'].append(time_util.DatetimeConverter(t1).date_str)
+#                 count = self.statistic_by_period(time_util.DatetimeConverter(t1).date_str + ' 00:00:00',
+#                                                  time_util.DatetimeConverter(t2).date_str + ' 00:00:00')
+#                 self.result['recent_10_days']['count_arr'].append(count)
+#
+#             for i in range(0, 24):
+#                 t1 = datetime.datetime.now() + datetime.timedelta(hours=-(23 - i))
+#                 t2 = datetime.datetime.now() + datetime.timedelta(hours=-(22 - i))
+#                 self.result['recent_24_hours']['time_arr'].append(t1.strftime('%Y-%m-%d %H:00:00'))
+#                 count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:00:00'),
+#                                                  t2.strftime('%Y-%m-%d %H:00:00'))
+#                 self.result['recent_24_hours']['count_arr'].append(count)
+#
+#             for i in range(0, 60):
+#                 t1 = datetime.datetime.now() + datetime.timedelta(minutes=-(59 - i))
+#                 t2 = datetime.datetime.now() + datetime.timedelta(minutes=-(58 - i))
+#                 self.result['recent_60_minutes']['time_arr'].append(t1.strftime('%Y-%m-%d %H:%M:00'))
+#                 count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:%M:00'),
+#                                                  t2.strftime('%Y-%m-%d %H:%M:00'))
+#                 self.result['recent_60_minutes']['count_arr'].append(count)
+#
+#             for i in range(0, 60):
+#                 t1 = datetime.datetime.now() + datetime.timedelta(seconds=-(59 - i))
+#                 t2 = datetime.datetime.now() + datetime.timedelta(seconds=-(58 - i))
+#                 self.result['recent_60_seconds']['time_arr'].append(t1.strftime('%Y-%m-%d %H:%M:%S'))
+#                 count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:%M:%S'),
+#                                                  t2.strftime('%Y-%m-%d %H:%M:%S'))
+#                 self.result['recent_60_seconds']['count_arr'].append(count)
 
 
 
     
      
+
+def get_consume_speed_curve(col_name: str, start_time: str, end_time: str, granularity: str = 'auto'):
+    """
+    获取消费速率曲线数据
+    
+    Args:
+        col_name: 集合名称（队列名）
+        start_time: 开始时间，格式 'YYYY-MM-DD HH:MM:SS'
+        end_time: 结束时间，格式 'YYYY-MM-DD HH:MM:SS'
+        granularity: 时间粒度，'second', 'minute', 'hour', 'day' 或 'auto'
+    
+    Returns:
+        {
+            'time_arr': [...],
+            'success_arr': [...],
+            'fail_arr': [...],
+            'total_success': int,
+            'total_fail': int,
+            'granularity': str
+        }
+    """
+    db = MongoMixin().mongo_db_task_status
+    
+    start_dt = time_util.DatetimeConverter(start_time).datetime_obj
+    end_dt = time_util.DatetimeConverter(end_time).datetime_obj
+    
+    # 计算时间跨度（秒）
+    time_span = (end_dt - start_dt).total_seconds()
+    
+    # 自动选择粒度
+    if granularity == 'auto':
+        if time_span <= 120:  # <= 2分钟
+            granularity = 'second'
+        elif time_span <= 3600:  # <= 1小时
+            granularity = 'minute'
+        elif time_span <= 86400 * 2:  # <= 2天
+            granularity = 'hour'
+        else:
+            granularity = 'day'
+    
+    # 根据粒度设置时间格式和步长
+    if granularity == 'second':
+        time_format = '%Y-%m-%d %H:%M:%S'
+        step = datetime.timedelta(seconds=1)
+        max_points = 120
+    elif granularity == 'minute':
+        time_format = '%Y-%m-%d %H:%M'
+        step = datetime.timedelta(minutes=1)
+        max_points = 120
+    elif granularity == 'hour':
+        time_format = '%Y-%m-%d %H:00'
+        step = datetime.timedelta(hours=1)
+        max_points = 168  # 7天
+    else:  # day
+        time_format = '%Y-%m-%d'
+        step = datetime.timedelta(days=1)
+        max_points = 60
+    
+    # 限制数据点数量，避免太多
+    actual_points = int(time_span / step.total_seconds()) + 1
+    if actual_points > max_points:
+        # 调整步长
+        step = datetime.timedelta(seconds=time_span / max_points)
+        actual_points = max_points
+    
+    time_arr = []
+    success_arr = []
+    fail_arr = []
+    total_success = 0
+    total_fail = 0
+    
+    current = start_dt
+    while current < end_dt:
+        next_time = current + step
+        if next_time > end_dt:
+            next_time = end_dt
+        
+        condition_base = {
+            'insert_time': {'$gte': current, '$lt': next_time}
+        }
+        
+        try:
+            success_count = db.get_collection(col_name).count_documents({**condition_base, 'success': True, 'run_status': 'finish'})
+            fail_count = db.get_collection(col_name).count_documents({**condition_base, 'success': False, 'run_status': 'finish'})
+        except Exception as e:
+            success_count = 0
+            fail_count = 0
+        
+        time_arr.append(current.strftime(time_format))
+        success_arr.append(success_count)
+        fail_arr.append(fail_count)
+        total_success += success_count
+        total_fail += fail_count
+        
+        current = next_time
+    
+    return {
+        'time_arr': time_arr,
+        'success_arr': success_arr,
+        'fail_arr': fail_arr,
+        'total_success': total_success,
+        'total_fail': total_fail,
+        'granularity': granularity,
+        'start_time': start_time,
+        'end_time': end_time
+    }
+
 
 if __name__ == '__main__':
     pass

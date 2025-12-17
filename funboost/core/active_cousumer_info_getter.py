@@ -120,6 +120,17 @@ def _sum_filed_from_active_consumers(active_consumers:typing.List[dict],filed:st
             s+=c[filed]
     return s
 
+
+def _max_filed_from_active_consumers(active_consumers:typing.List[dict],filed:str):
+    """取所有消费者中某个字段的最大值"""
+    max_val = None
+    for c in active_consumers:
+        val = c.get(filed)
+        if val is not None:
+            if max_val is None or val > max_val:
+                max_val = val
+    return max_val
+
 class ActiveCousumerProcessInfoGetter(RedisMixin,RedisReportInfoGetterMixin,FunboostFileLoggerMixin):
     """
 
@@ -296,6 +307,7 @@ class QueuesConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Funboost
             all_consumers_last_x_s_execute_count_fail = _sum_filed_from_active_consumers(active_consumers, 'last_x_s_execute_count_fail')
             all_consumers_last_x_s_total_cost_time = _sum_filed_from_active_consumers(active_consumers, 'last_x_s_total_cost_time')
             all_consumers_last_x_s_avarage_function_spend_time = round( all_consumers_last_x_s_total_cost_time / all_consumers_last_x_s_execute_count,3) if all_consumers_last_x_s_execute_count else None
+            all_consumers_last_execute_task_time = _max_filed_from_active_consumers(active_consumers, 'last_execute_task_time')
             
             all_consumers_total_consume_count_from_start = _sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start')
             all_consumers_total_cost_time_from_start =_sum_filed_from_active_consumers(active_consumers, 'total_cost_time_from_start')
@@ -316,6 +328,7 @@ class QueuesConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Funboost
                 'all_consumers_avarage_function_spend_time_from_start':all_consumers_avarage_function_spend_time_from_start,
                 'all_consumers_total_consume_count_from_start':_sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start'),
                 'all_consumers_total_consume_count_from_start_fail':_sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start_fail'),
+                'all_consumers_last_execute_task_time':all_consumers_last_execute_task_time,
             }
         return queue_params_and_active_consumers
     
@@ -624,6 +637,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
         all_consumers_last_x_s_execute_count_fail = _sum_filed_from_active_consumers(active_consumers, 'last_x_s_execute_count_fail')
         all_consumers_last_x_s_total_cost_time = _sum_filed_from_active_consumers(active_consumers, 'last_x_s_total_cost_time')
         all_consumers_last_x_s_avarage_function_spend_time = round( all_consumers_last_x_s_total_cost_time / all_consumers_last_x_s_execute_count,3) if all_consumers_last_x_s_execute_count else None
+        all_consumers_last_execute_task_time = _max_filed_from_active_consumers(active_consumers, 'last_execute_task_time')
         
         all_consumers_total_consume_count_from_start = _sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start')
         all_consumers_total_cost_time_from_start =_sum_filed_from_active_consumers(active_consumers, 'total_cost_time_from_start')
@@ -644,6 +658,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
             'all_consumers_avarage_function_spend_time_from_start':all_consumers_avarage_function_spend_time_from_start,
             'all_consumers_total_consume_count_from_start':_sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start'),
             'all_consumers_total_consume_count_from_start_fail':_sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start_fail'),
+            'all_consumers_last_execute_task_time':all_consumers_last_execute_task_time,
         }
         return params_and_active_consumers
 

@@ -2,7 +2,7 @@
 
 
 
-class BrokerEnum:
+class   BrokerEnum:
     """
     在funboost中万物皆可为消息队列broker,funboost内置了所有 知名的正经经典消息队列作为broker,
     也支持了基于 内存 各种数据库 文件系统 tcp/udp/http这些socket 模拟作为broker.
@@ -230,4 +230,6 @@ class ConsumingFuncInputParamsCheckerField:
     func_position = 'func_position'
     
 
-    
+class MongoDbName:
+    TASK_STATUS_DB = 'funboost_task_status'
+    MONGOMQ_DB ='funboost_mongomq'

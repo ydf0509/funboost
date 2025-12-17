@@ -5,6 +5,7 @@ import time
 import typing
 import json
 
+from funboost.constant import MongoDbName
 from funboost.core.exceptions import FunboostWaitRpcResultTimeout, FunboostRpcResultError, HasNotAsyncResult
 from funboost.utils.mongo_util import MongoMixin
 
@@ -265,7 +266,7 @@ class ResultFromMongo(MongoMixin):
         self._has_query = False
 
     def query_result(self):
-        col = self.get_mongo_collection('task_status', self.col_name)
+        col = self.get_mongo_collection(MongoDbName.TASK_STATUS_DB, self.col_name)
         self.mongo_row = col.find_one({'_id': self.task_id})
         self._has_query = True
 

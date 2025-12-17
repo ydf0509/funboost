@@ -24,245 +24,668 @@
     <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
 
     <style>
-        .action-btn {
-            margin: 2px;
+        * {
+            box-sizing: border-box;
         }
-        .search-container {
-            margin-bottom: 15px;
+
+        body {
+            background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
         }
-        .tabulator-cell {
-            padding-left: 15px !important;
-            padding-right: 15px !important;
-            padding-top: 8px !important;
-            padding-bottom: 8px !important;
+
+        .main-container {
+            padding: 20px 25px;
+            max-width: 100%;
         }
-        .status-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 3px;
+
+        /* 页面标题区域 */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 20px 25px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(234, 88, 12, 0.1) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(245, 158, 11, 0.4);
+        }
+
+        .header-icon i {
+            font-size: 28px;
+            color: white;
+        }
+
+        .header-title h1 {
+            margin: 0 0 5px 0;
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ffffff 0%, #fcd34d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-title p {
+            margin: 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* 统计卡片 */
+        .stats-cards {
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.8) 0%, rgba(40, 40, 80, 0.6) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 15px 25px;
+            text-align: center;
+            min-width: 100px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
             font-size: 12px;
-            font-weight: bold;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 3px;
         }
-        .status-running {
-            background-color: #4CAF50;
-            color: white;
+
+        /* 控制面板 */
+        .control-panel {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.6) 0%, rgba(40, 40, 80, 0.4) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
         }
-        .status-paused {
-            background-color: #FF9800;
-            color: white;
-        }
-        /* Tabulator 分组样式 */
-        .tabulator .tabulator-row.tabulator-group {
-            background-color: #f0f7ff !important;
-            border-bottom: 2px solid #337ab7 !important;
-            cursor: pointer;
-        }
-        .tabulator .tabulator-row.tabulator-group:hover {
-            background-color: #e3f0ff !important;
-        }
-        .tabulator .tabulator-row.tabulator-group .tabulator-group-toggle {
-            margin-right: 10px;
-        }
-        .tabulator .tabulator-row.tabulator-group span {
-            vertical-align: middle;
-        }
-        /* Select2 下拉框高度调整 */
+
+        /* Select2 样式 */
         .select2-container--default .select2-selection--single {
-            height: 38px !important;
-            padding-top: 4px !important;
+            background: rgba(20, 20, 40, 0.9) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            border-radius: 10px !important;
+            height: 42px !important;
+            padding: 5px 10px !important;
         }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #ffffff !important;
+            line-height: 30px !important;
+        }
+
         .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 36px !important;
+            height: 40px !important;
         }
-        .select2-container--default .select2-results__option {
+
+        .select2-dropdown {
+            background: #1e1e3f !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            border-radius: 10px !important;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            background: rgba(30, 30, 60, 0.9) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
             padding: 8px 12px !important;
         }
-        .select2-dropdown {
-            max-height: 800px !important;
+
+        .select2-results__option {
+            padding: 10px 14px !important;
+            font-size: 13px !important;
+            color: #e0e0e0 !important;
         }
-        .select2-results__options {
-            max-height: 350px !important;
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: linear-gradient(90deg, #f59e0b 0%, #ea580c 100%) !important;
         }
+
+        /* 输入框样式 */
+        .search-input {
+            background: rgba(20, 20, 40, 0.9) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            border-radius: 10px !important;
+            color: #ffffff !important;
+            padding: 10px 15px !important;
+            width: 250px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: rgba(245, 158, 11, 0.6) !important;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* 按钮样式 */
+        .btn-modern {
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-refresh {
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-refresh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-auto-refresh {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-auto-refresh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+        }
+
+        .btn-auto-refresh.active {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-delete-all {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn-delete-all:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
+        }
+
+        .btn-help {
+            background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+        }
+
+        .btn-help:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.5);
+        }
+
+        /* 表格容器 */
+        .table-container {
+            background: linear-gradient(135deg, rgba(20, 20, 40, 0.8) 0%, rgba(30, 30, 60, 0.6) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 16px;
+            padding: 5px;
+            overflow: hidden;
+        }
+
+        /* Tabulator 表格样式 */
+        .tabulator {
+            background: transparent !important;
+            border: none !important;
+            font-size: 13px;
+        }
+
+        .tabulator .tabulator-header {
+            background: linear-gradient(90deg, #2d1b69 0%, #3d2a7a 100%) !important;
+            border-bottom: 2px solid rgba(245, 158, 11, 0.3) !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col {
+            background: transparent !important;
+            border-right: 1px solid rgba(245, 158, 11, 0.2) !important;
+            min-height: 50px !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
+            color: #ffffff !important;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .tabulator-row {
+            background: rgba(15, 15, 35, 0.9) !important;
+            border-bottom: 1px solid rgba(245, 158, 11, 0.1) !important;
+        }
+
+        .tabulator-row:nth-child(even) {
+            background: rgba(25, 25, 50, 0.9) !important;
+        }
+
+        .tabulator-row:hover {
+            background: rgba(245, 158, 11, 0.15) !important;
+        }
+
+        .tabulator-row:hover .tabulator-cell {
+            color: #ffffff !important;
+        }
+
+        .tabulator-row .tabulator-cell {
+            border-right: 1px solid rgba(245, 158, 11, 0.1) !important;
+            color: #ffffff !important;
+            padding: 12px 15px !important;
+            font-weight: 500;
+        }
+
+        /* 分组样式 */
+        .tabulator .tabulator-row.tabulator-group {
+            background: linear-gradient(90deg, #b45309 0%, #d97706 100%) !important;
+            border: none !important;
+            border-left: 4px solid #fbbf24 !important;
+            cursor: pointer;
+        }
+
+        .tabulator .tabulator-row.tabulator-group:hover {
+            background: linear-gradient(90deg, #c2410c 0%, #ea580c 100%) !important;
+        }
+
+        .tabulator .tabulator-row.tabulator-group span {
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+
+        .tabulator .tabulator-footer {
+            background: linear-gradient(90deg, #1e1e3f 0%, #2a2a4a 100%) !important;
+            border-top: 1px solid rgba(245, 158, 11, 0.2) !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page {
+            background: rgba(245, 158, 11, 0.2) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            color: #e0e0e0 !important;
+            border-radius: 6px !important;
+            margin: 0 3px !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page.active {
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%) !important;
+            color: white !important;
+        }
+
+        /* 状态标签 */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-running {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+        }
+
+        .status-paused {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: #1a1a2e;
+        }
+
+        /* 触发器标签 */
+        .trigger-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .trigger-interval {
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            color: white;
+        }
+
+        .trigger-cron {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+        }
+
+        .trigger-date {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: #1a1a2e;
+        }
+
+        /* 操作按钮 */
+        .action-btn {
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            margin: 2px;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-detail {
+            background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);
+            color: white;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+            color: white;
+        }
+
+        .btn-pause {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: #1a1a2e;
+        }
+
+        .btn-resume {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            color: white;
+        }
+
+        /* 调度器控制 */
+        .scheduler-controls-wrapper {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 20px;
+        }
+
+        .scheduler-status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .scheduler-running {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+        }
+
+        .scheduler-paused {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: #1a1a2e;
+        }
+
+        .scheduler-stopped {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            color: white;
+        }
+
+        .scheduler-btn {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* 模态框样式 */
+        .modal-content {
+            background: linear-gradient(135deg, #1e1e3f 0%, #2a2a4a 100%) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            border-radius: 16px !important;
+            color: #e0e0e0;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid rgba(245, 158, 11, 0.2) !important;
+            padding: 20px 25px !important;
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, rgba(234, 88, 12, 0.05) 100%);
+            border-radius: 16px 16px 0 0;
+        }
+
+        .modal-title {
+            color: #ffffff !important;
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .modal-body {
+            padding: 25px !important;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            border-top: 1px solid rgba(245, 158, 11, 0.2) !important;
+            padding: 15px 25px !important;
+            background: rgba(20, 20, 40, 0.5);
+        }
+
+        .close {
+            color: #fbbf24 !important;
+            opacity: 1 !important;
+            font-size: 28px;
+        }
+
+        .close:hover {
+            color: #ffffff !important;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-control {
+            background: rgba(20, 20, 40, 0.9) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            border-radius: 10px !important;
+            color: #ffffff !important;
+            padding: 12px 15px !important;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: rgba(245, 158, 11, 0.6) !important;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* 触发器配置区域 */
         .trigger-section {
             display: none;
-            margin-top: 15px;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            border: 1px solid #ddd;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(20, 20, 40, 0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
         }
+
         .trigger-section.active {
             display: block;
         }
-        .form-inline-group {
-            margin-bottom: 10px;
+
+        .trigger-section h5 {
+            color: #fbbf24;
+            font-weight: 600;
+            margin-bottom: 15px;
         }
-        .form-inline-group label {
-            min-width: 80px;
-            display: inline-block;
-        }
-        .cron-example {
+
+        /* 参数信息框 */
+        .params-info {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 10px;
+            padding: 15px;
             margin-top: 10px;
-            padding: 10px;
-            background-color: #e7f3ff;
-            border-left: 4px solid #2196F3;
-            font-size: 12px;
         }
-        .next-run-preview {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #e8f5e9;
-            border-left: 4px solid #4CAF50;
-            font-weight: bold;
+
+        .params-info i {
+            color: #60a5fa;
+            margin-right: 8px;
         }
-        
-        /* 可搜索队列选择器样式 */
-        .queue-selector {
-            display: inline-block;
-        }
-        .queue-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #ccc;
-            border-top: none;
-            border-radius: 0 0 4px 4px;
-            max-height: 600px; 
-            overflow-y: auto;
-            z-index: 1000;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .queue-option {
-            padding: 10px 15px;  /* 增加内边距，原来是 8px 12px */
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 13px;  /* 增加字体大小 */
-        }
-        .queue-option:hover {
-            background-color: #337ab7;
-            color: white;
-        }
-        .queue-option.selected {
-            background-color: #f0f0f0;
-            font-weight: bold;
-        }
-        .queue-option:last-child {
-            border-bottom: none;
-        }
-        
-        /* 调度器状态标签样式 - 更清晰的颜色 */
-        .scheduler-status {
-            display: inline-block;
-            padding: 4px 10px;
+
+        .params-info code {
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+            padding: 2px 8px;
             border-radius: 4px;
             font-size: 12px;
-            font-weight: bold;
         }
-        .scheduler-status.label-success {
-            background-color: #28a745 !important;
-            color: #fff !important;
+
+        /* Cron 示例 */
+        .cron-example {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid #f59e0b;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
         }
-        .scheduler-status.label-warning {
-            background-color: #ffc107 !important;
-            color: #212529 !important;
+
+        /* Radio 样式 */
+        .radio-inline {
+            color: rgba(255, 255, 255, 0.8);
+            margin-right: 20px;
         }
-        .scheduler-status.label-danger {
-            background-color: #dc3545 !important;
-            color: #fff !important;
+
+        .radio-inline input {
+            margin-right: 6px;
+            accent-color: #f59e0b;
         }
-        .scheduler-status.label-default {
-            background-color: #6c757d !important;
-            color: #fff !important;
+
+        /* 复选框样式 */
+        .checkbox label {
+            color: rgba(255, 255, 255, 0.8);
         }
-        
-        /* 调度器控制按钮样式 */
-        .scheduler-controls .btn-pause {
-            background-color: #f0ad4e !important;
-            border-color: #eea236 !important;
-            color: #fff !important;
+
+        .checkbox input {
+            margin-right: 8px;
+            accent-color: #f59e0b;
         }
-        .scheduler-controls .btn-resume {
-            background-color: #5cb85c !important;
-            border-color: #4cae4c !important;
-            color: #fff !important;
-        }
-        
-        /* 定时任务说明模态框样式 */
-        .help-modal .modal-content {
-            border-radius: 12px;
-            border: none;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-        .help-modal .modal-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-bottom: none;
-            padding: 25px 30px;
-        }
-        .help-modal .modal-title {
-            font-size: 24px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .help-modal .modal-header .close {
-            color: white;
-            opacity: 0.8;
-            font-size: 28px;
-            margin-top: -5px;
-        }
-        .help-modal .modal-header .close:hover {
-            opacity: 1;
-        }
-        .help-modal .modal-body {
-            padding: 30px;
-            max-height: 65vh;
-            overflow-y: auto;
-        }
+
+        /* 帮助模态框 */
         .help-section {
-            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 10px;
-            padding: 20px 25px;
-            margin-bottom: 20px;
+            background: rgba(20, 20, 40, 0.6);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
             border-left: 4px solid;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: all 0.3s ease;
         }
+
         .help-section:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            transform: translateX(5px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
-        .help-section:last-child {
-            margin-bottom: 0;
-        }
-        .help-section.section-scheduler {
-            border-left-color: #f39c12;
-        }
-        .help-section.section-job {
-            border-left-color: #3498db;
-        }
-        .help-section.section-recommend {
-            border-left-color: #27ae60;
-        }
-        .help-section.section-advantage {
-            border-left-color: #9b59b6;
-        }
+
         .help-section.section-learn {
-            border-left-color: #e74c3c;
+            border-left-color: #ef4444;
         }
+
+        .help-section.section-scheduler {
+            border-left-color: #f59e0b;
+        }
+
+        .help-section.section-job {
+            border-left-color: #3b82f6;
+        }
+
+        .help-section.section-recommend {
+            border-left-color: #10b981;
+        }
+
+        .help-section.section-advantage {
+            border-left-color: #8b5cf6;
+        }
+
         .help-section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
+
         .help-section-title .icon {
             width: 32px;
             height: 32px;
@@ -270,144 +693,201 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 14px;
             color: white;
         }
-        .help-section.section-scheduler .icon {
-            background: linear-gradient(135deg, #f39c12, #e74c3c);
-        }
-        .help-section.section-job .icon {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-        }
-        .help-section.section-recommend .icon {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
-        }
-        .help-section.section-advantage .icon {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-        }
+
         .help-section.section-learn .icon {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            background: linear-gradient(135deg, #ef4444, #dc2626);
         }
+
+        .help-section.section-scheduler .icon {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .help-section.section-job .icon {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .help-section.section-recommend .icon {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .help-section.section-advantage .icon {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
         .help-section-content {
-            color: #555;
+            color: rgba(255, 255, 255, 0.7);
             line-height: 1.8;
             font-size: 14px;
         }
-        .help-section-content p {
-            margin-bottom: 10px;
-        }
-        .help-section-content p:last-child {
-            margin-bottom: 0;
-        }
+
         .help-highlight {
-            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            background: linear-gradient(120deg, rgba(245, 158, 11, 0.3) 0%, rgba(234, 88, 12, 0.2) 100%);
             padding: 2px 8px;
             border-radius: 4px;
             font-weight: 500;
+            color: #fcd34d;
         }
+
         .help-code {
-            background-color: #f1f3f5;
+            background: rgba(139, 92, 246, 0.2);
             padding: 3px 8px;
             border-radius: 4px;
             font-family: 'Consolas', 'Monaco', monospace;
             font-size: 13px;
-            color: #e74c3c;
+            color: #c4b5fd;
         }
+
         .help-tip {
-            background: linear-gradient(145deg, #e8f9fd 0%, #d4f1f9 100%);
+            background: rgba(59, 130, 246, 0.1);
             border-radius: 8px;
             padding: 15px;
             margin-top: 12px;
-            border-left: 3px solid #17a2b8;
+            border-left: 3px solid #3b82f6;
         }
+
         .help-tip-title {
             font-weight: 600;
-            color: #17a2b8;
+            color: #60a5fa;
             margin-bottom: 8px;
-            display: flex;
+        }
+
+        /* 自动刷新指示器 */
+        .refresh-indicator {
+            display: none;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 20px;
+            font-size: 12px;
+            color: #a78bfa;
         }
-        .help-modal .modal-footer {
-            border-top: 1px solid #eee;
-            padding: 20px 30px;
-            background: #f8f9fa;
+
+        .refresh-indicator.active {
+            display: inline-flex;
         }
-        .help-modal .btn-close-help {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 10px 30px;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+        .refresh-indicator .dot {
+            width: 8px;
+            height: 8px;
+            background: #a78bfa;
+            border-radius: 50%;
+            animation: blink 1s infinite;
         }
-        .help-modal .btn-close-help:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
-        .btn-help-guide {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            border: none !important;
-            color: white !important;
-            font-weight: 500;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+        /* 状态筛选下拉 */
+        .status-select {
+            background: rgba(20, 20, 40, 0.9) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            border-radius: 10px !important;
+            color: #ffffff !important;
+            padding: 10px 15px !important;
+            width: 130px;
+            cursor: pointer;
         }
-        .btn-help-guide:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+
+        .status-select option {
+            background: #1e1e3f;
+            color: #ffffff;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .page-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .control-panel {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid" style="margin-top: 5px;">
-        <!-- 顶部操作栏 -->
-        <div class="search-container" style="display: flex; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
-            <!-- 队列名称筛选（放在最前面） -->
+    <div class="main-container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fa fa-clock-o"></i>
+                </div>
+                <div class="header-title">
+                    <h1>定时任务管理中心</h1>
+                    <p>管理和监控所有队列的定时任务调度</p>
+                </div>
+            </div>
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-value" id="total_queues">0</div>
+                    <div class="stat-label">队列数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total_jobs">0</div>
+                    <div class="stat-label">定时计划总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="running_jobs">0</div>
+                    <div class="stat-label">运行中</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="control-panel">
             <select id="queueFilter" class="form-control" style="width: 350px;">
-                <option value="">请选择队列名字...</option>
+                <option value="">全部队列</option>
             </select>
             
-            <!-- 调度器状态移回分组头，此处移除 -->
-            
-            <select id="statusFilter" class="form-control" style="width: 150px;" onchange="updateTableFilters()">
+            <select id="statusFilter" class="status-select" onchange="updateTableFilters()">
                 <option value="">所有状态</option>
                 <option value="running">运行中</option>
                 <option value="paused">已暂停</option>
             </select>
             
-            <div class="input-group" style="width: 300px;">
-                <input type="text" id="searchInput" class="form-control" placeholder="搜索队列名或任务ID...">
-                <span class="input-group-btn">
-                    <button class="btn btn-default" type="button" onclick="clearSearch()">
-                        <i class="glyphicon glyphicon-remove"></i>
-                    </button>
-                </span>
-            </div>
-            
-            <button id="addJobBtn" class="btn btn-success" onclick="showAddJobModal()">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索任务ID或队列名...">
+
+            <button class="btn-modern btn-add" onclick="showAddJobModal()">
                 <i class="fa fa-plus"></i> 添加任务
             </button>
             
-            <button id="refreshBtn" class="btn btn-info" onclick="refreshTable()">
+            <button class="btn-modern btn-refresh" onclick="refreshTable()">
                 <i class="fa fa-refresh"></i> 刷新
             </button>
             
-            <button id="toggle-auto-refresh" class="btn btn-primary" onclick="toggleAutoRefresh()">
+            <button id="toggle-auto-refresh" class="btn-modern btn-auto-refresh" onclick="toggleAutoRefresh()">
                 <i class="fa fa-play"></i> 自动刷新
             </button>
             
-            <button id="deleteAllBtn" class="btn btn-danger" onclick="deleteAllJobs()">
-                <i class="fa fa-trash"></i> 删除所有任务
+            <button class="btn-modern btn-delete-all" onclick="deleteAllJobs()">
+                <i class="fa fa-trash"></i> 删除全部
             </button>
             
-            <button id="helpBtn" class="btn btn-help-guide" onclick="showHelpModal()">
-                <i class="fa fa-question-circle"></i> 定时任务说明
+            <button class="btn-modern btn-help" onclick="showHelpModal()">
+                <i class="fa fa-question-circle"></i> 说明
             </button>
+
+            <div class="refresh-indicator" id="refresh-indicator">
+                <div class="dot"></div>
+                <span>每 10 秒自动刷新</span>
+            </div>
         </div>
 
-        <!-- 任务列表表格 -->
+        <!-- 表格容器 -->
+        <div class="table-container">
         <div id="timing-jobs-table"></div>
+        </div>
     </div>
 
     <!-- 添加任务模态框 -->
@@ -416,38 +896,35 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                    <h4 class="modal-title">添加定时任务</h4>
+                    <h4 class="modal-title"><i class="fa fa-plus-circle" style="color: #10b981; margin-right: 10px;"></i>添加定时任务</h4>
                 </div>
                 <div class="modal-body">
                     <form id="addJobForm">
-                        <!-- 基础配置 -->
                         <div class="form-group">
-                            <label>队列名称 <span style="color:red;">*</span></label>
+                            <label><i class="fa fa-list-alt" style="color: #f59e0b; margin-right: 6px;"></i>队列名称 <span style="color:#ef4444;">*</span></label>
                             <select class="form-control" id="job_queue_name" required>
                                 <option value="">-- 请选择队列 --</option>
                             </select>
                         </div>
                         
                         <div class="form-group">
-                            <label>任务ID <small class="text-muted">(可选，留空自动生成)</small></label>
+                            <label><i class="fa fa-tag" style="color: #8b5cf6; margin-right: 6px;"></i>任务ID <small style="color: rgba(255,255,255,0.5);">(可选，留空自动生成)</small></label>
                             <input type="text" class="form-control" id="job_id" placeholder="例如: daily_sync_task">
                         </div>
                         
                         <div class="form-group">
-                            <label>函数参数 (kwargs) <small class="text-muted">(可选，JSON 格式)</small></label>
-                            <textarea class="form-control" id="job_kwargs" rows="8" placeholder='请先选择队列名称'></textarea>
-                            <div id="func_params_info" style="margin-top: 8px; padding: 10px; background-color: #f0f7ff; border-radius: 4px; border-left: 3px solid #337ab7;">
-                                <i class="fa fa-info-circle" style="color: #337ab7;"></i>
+                            <label><i class="fa fa-code" style="color: #3b82f6; margin-right: 6px;"></i>函数参数 (kwargs) <small style="color: rgba(255,255,255,0.5);">(JSON 格式)</small></label>
+                            <textarea class="form-control" id="job_kwargs" rows="6" placeholder='请先选择队列名称' style="font-family: Monaco, Consolas, monospace;"></textarea>
+                            <div class="params-info" id="func_params_info">
+                                <i class="fa fa-info-circle"></i>
                                 <span id="func_params_text">请先选择队列名称，将显示函数所需参数</span>
                             </div>
-                            <div id="kwargs_validation" style="display: none; margin-top: 5px;">
-                                <!-- JSON 验证结果显示区域 -->
-                            </div>
+                            <div id="kwargs_validation" style="display: none; margin-top: 8px;"></div>
                         </div>
                         
                         <div class="form-group">
-                            <label>触发器类型 <span style="color:red;">*</span></label>
-                            <div>
+                            <label><i class="fa fa-calendar" style="color: #10b981; margin-right: 6px;"></i>触发器类型 <span style="color:#ef4444;">*</span></label>
+                            <div style="margin-top: 10px;">
                                 <label class="radio-inline">
                                     <input type="radio" id="trigger_date" name="trigger_type" value="date" onchange="switchTriggerSection('date')"> 一次性任务
                                 </label>
@@ -464,45 +941,43 @@
                         <div id="dateTriggerSection" class="trigger-section">
                             <h5><i class="fa fa-calendar"></i> 一次性任务配置</h5>
                             <div class="form-group">
-                                <label>执行时间 <span style="color:red;">*</span></label>
+                                <label>执行时间 <span style="color:#ef4444;">*</span></label>
                                 <input type="datetime-local" class="form-control" id="run_date">
                             </div>
-                            <p class="text-muted">
+                            <div class="cron-example">
                                 <i class="fa fa-info-circle"></i> 任务将在指定时间执行一次后自动删除
-                            </p>
+                            </div>
                         </div>
 
                         <!-- Interval 触发器配置 -->
                         <div id="intervalTriggerSection" class="trigger-section active">
-                            <h5><i class="fa fa-clock-o"></i> 间隔执行配置 <small class="text-muted">(至少填写一个)</small></h5>
+                            <h5><i class="fa fa-clock-o"></i> 间隔执行配置 <small style="color: rgba(255,255,255,0.5);">(至少填写一个)</small></h5>
                             <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>周</label>
                                         <input type="number" class="form-control" id="interval_weeks" min="0" placeholder="0">
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>天</label>
                                         <input type="number" class="form-control" id="interval_days" min="0" placeholder="0">
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>小时</label>
                                         <input type="number" class="form-control" id="interval_hours" min="0" placeholder="0">
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>分钟</label>
                                         <input type="number" class="form-control" id="interval_minutes" min="0" placeholder="0">
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>秒</label>
                                         <input type="number" class="form-control" id="interval_seconds" min="0" placeholder="0">
@@ -516,49 +991,47 @@
 
                         <!-- Cron 触发器配置 -->
                         <div id="cronTriggerSection" class="trigger-section">
-                            <h5><i class="fa fa-calendar-check-o"></i> Cron 定时配置 <small class="text-muted">(至少填写一个)</small></h5>
+                            <h5><i class="fa fa-calendar-check-o"></i> Cron 定时配置 <small style="color: rgba(255,255,255,0.5);">(至少填写一个)</small></h5>
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>年</label>
                                         <input type="text" class="form-control" id="cron_year" placeholder="* 或 2025">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>月</label>
                                         <input type="text" class="form-control" id="cron_month" placeholder="* 或 1-12">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>日</label>
                                         <input type="text" class="form-control" id="cron_day" placeholder="* 或 1-31">
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>星期</label>
                                         <input type="text" class="form-control" id="cron_day_of_week" placeholder="0-6 (0=周一)">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>时</label>
                                         <input type="text" class="form-control" id="cron_hour" placeholder="0-23">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>分</label>
                                         <input type="text" class="form-control" id="cron_minute" placeholder="0-59">
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>秒</label>
                                         <input type="text" class="form-control" id="cron_second" placeholder="0-59">
@@ -566,28 +1039,24 @@
                                 </div>
                             </div>
                             <div class="cron-example">
-                                <strong>Cron 语法：</strong><br>
-                                • * = 任意值 | */n = 每n个单位 | 1-5 = 范围 | 1,3,5 = 列举<br>
-                                <strong>示例：</strong><br>
-                                • 每天上午9点 → 时:9 分:0 秒:0<br>
-                                • 每2小时 → 时:*/2 分:0<br>
-                                • 工作日上午10点 → 星期:0-4 时:10 分:0
+                                <strong>Cron 语法：</strong> * = 任意值 | */n = 每n个单位 | 1-5 = 范围 | 1,3,5 = 列举<br>
+                                <strong>示例：</strong> 每天上午9点 → 时:9 分:0 秒:0 | 每2小时 → 时:*/2 分:0
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>存储方式</label>
-                            <div>
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label><i class="fa fa-database" style="color: #ec4899; margin-right: 6px;"></i>存储方式</label>
+                            <div style="margin-top: 10px;">
                                 <label class="radio-inline">
                                     <input type="radio" id="job_store_redis" name="job_store_kind" value="redis" checked> Redis (推荐，支持分布式)
                                 </label>
-                                <label class="radio-inline" style="color: #999; cursor: not-allowed;">
+                                <label class="radio-inline" style="color: rgba(255,255,255,0.4); cursor: not-allowed;">
                                     <input type="radio" id="job_store_memory" name="job_store_kind" value="memory" disabled> 内存 (单机，重启丢失)
                                 </label>
                             </div>
                         </div>
 
-                        <div class="checkbox">
+                        <div class="checkbox" style="margin-top: 15px;">
                             <label>
                                 <input type="checkbox" id="replace_existing"> 如果任务ID已存在，则替换
                             </label>
@@ -595,8 +1064,10 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="submitAddJob()">
+                    <button type="button" class="btn-modern" style="background: rgba(255,255,255,0.1); color: #fff;" data-dismiss="modal">
+                        <i class="fa fa-times"></i> 取消
+                    </button>
+                    <button type="button" class="btn-modern btn-add" onclick="submitAddJob()">
                         <i class="fa fa-check"></i> 添加任务
                     </button>
                 </div>
@@ -610,31 +1081,28 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                    <h4 class="modal-title">任务详情</h4>
+                    <h4 class="modal-title"><i class="fa fa-info-circle" style="color: #06b6d4; margin-right: 10px;"></i>任务详情</h4>
                 </div>
-                <div class="modal-body" id="jobDetailContent">
-                    <!-- 动态填充 -->
-                </div>
+                <div class="modal-body" id="jobDetailContent"></div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn-modern" style="background: rgba(255,255,255,0.1); color: #fff;" data-dismiss="modal">
+                        <i class="fa fa-times"></i> 关闭
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 定时任务说明模态框 -->
-    <div class="modal fade help-modal" id="helpModal" tabindex="-1" role="dialog">
+    <!-- 帮助说明模态框 -->
+    <div class="modal fade" id="helpModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                    <h4 class="modal-title">
-                        <i class="fa fa-book"></i>
-                        定时任务使用说明
-                    </h4>
+                    <h4 class="modal-title"><i class="fa fa-book" style="color: #ec4899; margin-right: 10px;"></i>定时任务使用说明</h4>
                 </div>
                 <div class="modal-body">
-                    <!-- 说明0: 学习APScheduler -->
+                    <!-- 学习 APScheduler -->
                     <div class="help-section section-learn">
                         <div class="help-section-title">
                             <span class="icon"><i class="fa fa-graduation-cap"></i></span>
@@ -642,119 +1110,69 @@
                         </div>
                         <div class="help-section-content">
                             <p><strong>Funboost 的定时任务功能是对 <span class="help-highlight">APScheduler</span> 的轻度封装。</strong></p>
-                            <p>APScheduler（Advanced Python Scheduler）是 Python 中最知名的定时任务调度库，Funboost 在其基础上进行了增强，以支持分布式场景和消息队列集成。</p>
-                            <p><strong>要掌握 Funboost 定时任务，您需要先理解以下核心概念：</strong></p>
-                            <div style="margin: 15px 0; padding: 15px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
-                                <p style="margin-bottom: 10px;"><strong>🔹 Scheduler（调度器）</strong></p>
-                                <p style="margin-left: 20px; margin-bottom: 12px;">调度器是定时任务系统的「大脑」，负责管理所有任务、检查触发时间、决定何时执行任务。一个调度器可以管理多个 Job。</p>
-                                <p style="margin-bottom: 10px;"><strong>🔹 Job（任务）</strong></p>
-                                <p style="margin-left: 20px; margin-bottom: 12px;">Job 是具体的「工作单元」，包含要执行的函数、触发规则（如每5分钟执行一次）和相关参数。多个 Job 由 Scheduler 统一管理。</p>
-                                <p style="margin-bottom: 10px;"><strong>🔹 Trigger（触发器）</strong></p>
-                                <p style="margin-left: 20px; margin-bottom: 0;">触发器定义任务「何时执行」：<span class="help-code">date</span>（一次性）、<span class="help-code">interval</span>（间隔执行）、<span class="help-code">cron</span>（定时表达式）。</p>
-                            </div>
+                            <p>APScheduler 是 Python 中最知名的定时任务调度库，Funboost 在其基础上进行了增强，支持分布式场景和消息队列集成。</p>
                             <div class="help-tip">
                                 <div class="help-tip-title"><i class="fa fa-book"></i> 学习资源</div>
-                                <p style="margin-bottom: 8px;">强烈建议您花时间学习 APScheduler 官方文档：</p>
-                                <p style="margin-bottom: 5px;">📖 官方文档：<a href="https://apscheduler.readthedocs.io/" target="_blank" style="color: #3498db;">https://apscheduler.readthedocs.io/</a></p>
-                                <p style="margin-bottom: 0;">📦 PyPI 地址：<a href="https://pypi.org/project/APScheduler/" target="_blank" style="color: #3498db;">https://pypi.org/project/APScheduler/</a></p>
+                                <p>📖 官方文档：<a href="https://apscheduler.readthedocs.io/" target="_blank" style="color: #60a5fa;">https://apscheduler.readthedocs.io/</a></p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 说明1: 暂停定时器 -->
+                    <!-- 暂停定时器 -->
                     <div class="help-section section-scheduler">
                         <div class="help-section-title">
                             <span class="icon"><i class="fa fa-clock-o"></i></span>
                             什么是「暂停 Scheduler（定时器）」？
                         </div>
                         <div class="help-section-content">
-                            <p><span class="help-highlight">Scheduler（定时器/调度器）</span> 是 APScheduler 中用于管理和触发所有定时任务的核心组件。</p>
-                            <p>暂停定时器意味着：<strong>整个调度器停止工作</strong>，该队列下的所有定时任务（Jobs）都将暂时不会被触发执行，但任务配置仍然保留在存储中。</p>
-                            <p>当恢复定时器后，所有任务将根据各自的触发规则继续调度执行。</p>
-                            <p>暂停 Scheduler 是暂停 funboiost web manager后台对应的scheduler， 不会影响你在消费脚本中自己启动的scheduler。</p>
-                            <div class="help-tip">
-                                <div class="help-tip-title"><i class="fa fa-info-circle"></i> 应用场景</div>
-                                适用于需要临时停止某个队列所有定时任务调度的场景，例如系统维护、批量调整任务配置等。
-                            </div>
+                            <p><span class="help-highlight">Scheduler（调度器）</span> 是管理和触发所有定时任务的核心组件。</p>
+                            <p>暂停定时器意味着：<strong>该队列下的所有定时任务暂停调度</strong>，但任务配置保留。恢复后继续执行。</p>
                         </div>
                     </div>
 
-                    <!-- 说明2: 暂停定时Job -->
+                    <!-- 暂停 Job -->
                     <div class="help-section section-job">
                         <div class="help-section-title">
                             <span class="icon"><i class="fa fa-pause-circle"></i></span>
                             什么是「暂停 Job（定时任务）」？
                         </div>
                         <div class="help-section-content">
-                            <p><span class="help-highlight">Job（定时任务）</span> 是具体的一个定时执行单元，包含触发规则、执行参数等信息。</p>
-                            <p>暂停某个 Job 意味着：<strong>仅该任务暂停调度</strong>，其他任务不受影响，该任务的配置仍然保留，可以随时恢复。</p>
-                            <p>与暂停整个定时器不同，暂停 Job 是更细粒度的控制，只影响单个任务。</p>
-                            <div class="help-tip">
-                                <div class="help-tip-title"><i class="fa fa-info-circle"></i> 应用场景</div>
-                                适用于需要临时停止某个特定任务的场景，而不影响其他任务的正常调度。
-                            </div>
+                            <p><span class="help-highlight">Job（定时任务）</span> 是具体的一个定时执行单元。</p>
+                            <p>暂停某个 Job 意味着：<strong>仅该任务暂停</strong>，其他任务不受影响，可随时恢复。</p>
                         </div>
                     </div>
 
-                    <!-- 说明3: 推荐用法 -->
+                    <!-- 推荐用法 -->
                     <div class="help-section section-recommend">
                         <div class="help-section-title">
                             <span class="icon"><i class="fa fa-star"></i></span>
                             推荐使用方式
                         </div>
                         <div class="help-section-content">
-                            <p><strong style="color: #27ae60;">💡 推荐在网页管理后台保持定时器为「暂停」状态！</strong></p>
-                            <p>网页管理后台中的定时器 <span class="help-highlight">专门用于定时任务的增删改查操作</span>，而不是用于实际触发定时任务发送消息到队列。</p>
-                            <p><strong>正确的做法是：</strong></p>
-                            <p style="margin-left: 20px;">1️⃣ 在您的 <span class="help-code">消费脚本</span> 中启动 booster 进行消费</p>
-                            <p style="margin-left: 20px;">2️⃣ 同时在消费脚本中启动相关的 <span class="help-code">非暂停状态</span> 的定时器</p>
-                            <p style="margin-left: 20px;">3️⃣ 保持网页后台的定时器为 <span class="help-code">暂停状态</span></p>
+                            <p><strong style="color: #4ade80;">💡 推荐在网页管理后台保持定时器为「暂停」状态！</strong></p>
+                            <p>网页后台的定位是 <span class="help-highlight">定时任务的管理工具</span>，用于增删改查。</p>
+                            <p><strong>正确做法：</strong>在您的消费脚本中启动 booster 和定时器，网页后台保持暂停状态。</p>
                             <div class="help-tip">
-                                <div class="help-tip-title"><i class="fa fa-lightbulb-o"></i> 为什么这样做？</div>
-                                <div style="margin-top: 8px;">
-                                    <p style="margin-bottom: 8px;"><strong>① 消费脚本优先原则</strong></p>
-                                    <p style="margin-left: 16px; margin-bottom: 10px; color: #555;">建议在您自己的消费脚本中启动定时器，而非依赖网页后台。这样网页后台可以随时关闭，不影响定时任务的正常执行。</p>
-                                    
-                                    <p style="margin-bottom: 8px;"><strong>② 网页后台仅作管理工具</strong></p>
-                                    <p style="margin-left: 16px; margin-bottom: 10px; color: #555;">网页后台的定位是定时任务的「管理工具」，用于增删改查，而非执行触发器。</p>
-                                    
-                                    <p style="margin-bottom: 8px;"><strong>③ 不用担心重复执行！</strong></p>
-                                    <p style="margin-left: 16px; margin-bottom: 10px; color: #555;">
-                                        <span class="help-highlight">特别说明：</span> 推荐这么做<strong>不是因为害怕任务重复执行</strong>。Funboost 的定时任务基于魔改的 APScheduler，在扫描并执行定时任务时使用了 <span class="help-code">Redis 分布式锁</span>，<strong>即使在 100 台机器上部署 Scheduler 也不会重复执行同一个定时任务</strong>！
-                                    </p>
-                                    
-                                    <p style="margin-bottom: 8px;"><strong>④ 完全由网页管理也可以</strong></p>
-                                    <p style="margin-left: 16px; margin-bottom: 0; color: #555;">
-                                        如果您希望完全由 Funboost Web Manager 来决定定时任务是否执行，也可以<strong>不暂停</strong>网页后台的定时器，同时在消费脚本中不启动定时器，让网页后台全权负责调度。
-                                    </p>
-                                </div>
+                                <div class="help-tip-title"><i class="fa fa-shield"></i> 不用担心重复执行！</div>
+                                <p>Funboost 使用 <span class="help-code">Redis 分布式锁</span>，即使 100 台机器部署也不会重复执行任务！</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 说明4: 跨项目管理优势 -->
+                    <!-- 跨项目管理 -->
                     <div class="help-section section-advantage">
                         <div class="help-section-title">
                             <span class="icon"><i class="fa fa-rocket"></i></span>
                             跨项目管理 —— 完爆传统方案！
                         </div>
                         <div class="help-section-content">
-                            <p><strong style="color: #9b59b6;">🚀 Funboost Web Manager 的定时器可以管理任何 Funboost 项目中的定时任务！</strong></p>
-                            <p>您的项目定时任务函数 <span class="help-highlight">可以和 Funboost Web Manager 不在同一个 Git 仓库</span>，管理定时任务 <strong>完全不依赖导入用户的定时任务函数</strong>。</p>
-                            <p><strong>这意味着：</strong></p>
-                            <p style="margin-left: 20px;">✅ 无需在管理后台部署您的业务代码</p>
-                            <p style="margin-left: 20px;">✅ 无需导入用户定义的任务函数</p>
-                            <p style="margin-left: 20px;">✅ 支持跨项目、跨仓库的统一管理</p>
-                            <p style="margin-left: 20px;">✅ 管理后台与业务代码完全解耦</p>
-                            <div class="help-tip">
-                                <div class="help-tip-title"><i class="fa fa-trophy"></i> 对比传统方案</div>
-                                传统的定时任务管理界面（如 Django Admin、Flask-APScheduler 等）通常<strong>必须依赖导入用户的定时任务函数</strong>才能进行管理，这导致管理后台与业务代码紧密耦合。Funboost 通过消息队列的方式彻底解决了这个问题！
-                            </div>
+                            <p><strong style="color: #a78bfa;">🚀 Funboost Web Manager 可以管理任何项目的定时任务！</strong></p>
+                            <p>管理定时任务 <strong>完全不依赖导入用户的任务函数</strong>，支持跨项目、跨仓库统一管理。</p>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-close-help" data-dismiss="modal">
+                    <button type="button" class="btn-modern btn-help" data-dismiss="modal">
                         <i class="fa fa-check"></i> 我知道了
                     </button>
                 </div>
@@ -763,37 +1181,24 @@
     </div>
 
     <script>
-        // 全局变量
         let table;
         let isAutoRefreshing = false;
         let autoRefreshIntervalId = null;
-        const AUTO_REFRESH_INTERVAL = 10000; // 10秒
-        let allQueues = []; // 存储所有队列
-        let selectedQueue = ''; // 当前选中的队列
+        const AUTO_REFRESH_INTERVAL = 10000;
+        let allQueues = [];
+        let selectedQueue = '';
 
-        // 页面加载完成后初始化
         $(document).ready(function() {
             initTable();
             loadQueues();
-            initQueueSelector();
             initSchedulerControls();
         });
 
-        // 初始化调度器控制按钮的事件委托
         function initSchedulerControls() {
-            console.log('initSchedulerControls: initializing native capture event listener');
-            
-            // 使用原生 JS 的捕获阶段侦听器 (第三个参数 true)
-            // 这样可以在 Tabulator 内部处理点击之前先截获事件
             document.addEventListener('click', function(e) {
                 let target = e.target;
-                
-                // 如果点击的是图标 <i>，向上找一级到 <button>
-                if (target.tagName === 'I') {
-                    target = target.parentElement;
-                }
-                
-                // 检查是否是我们的按钮
+                if (target.tagName === 'I') target = target.parentElement;
+
                 if (target && target.classList && target.tagName === 'BUTTON') {
                     let action = null;
                     if (target.classList.contains('btn-pause-group')) action = 'pause';
@@ -801,37 +1206,25 @@
                     else if (target.classList.contains('btn-refresh-group')) action = 'refresh';
                     
                     if (action) {
-                        console.log('Capture phase detected click:', action);
-                        
-                        // 阻止事件继续传播，防止 Tabulator 折叠分组
                         e.stopPropagation();
                         e.preventDefault();
                         
-                        // 获取队列名
-                        // 必须使用 jQuery 的 closest，因为原生 closest 兼容性在这可能不够方便，或者直接用原生
-                        const wrapper = target.closest ? target.closest('.scheduler-controls-group') : $(target).closest('.scheduler-controls-group')[0];
-                        
+                        const wrapper = target.closest('.scheduler-controls-group');
                         if (wrapper) {
                             const queueName = wrapper.getAttribute('data-queue');
-                            console.log('Action:', action, 'Queue:', queueName);
-                            
                             if (action === 'pause') pauseScheduler(queueName);
                             else if (action === 'resume') resumeScheduler(queueName);
                             else if (action === 'refresh') updateSchedulerStatus(queueName);
-                        } else {
-                            console.error('Could not find wrapper .scheduler-controls-group');
                         }
                     }
                 }
-            }, true); // <--- 关键：true 表示捕获阶段
+            }, true);
             
-            // 自动扫描更新机制保持不变
             setInterval(function() {
                 $('.scheduler-controls-group').each(function() {
                     const $el = $(this);
                     const queueName = $el.data('queue');
                     const $status = $el.find('.scheduler-status');
-                    
                     if ($status.text() === '加载中...' && !$el.data('fetching')) {
                         $el.data('fetching', true);
                         updateSchedulerStatus(queueName);
@@ -839,119 +1232,15 @@
                     }
                 });
             }, 1000);
-            
-            console.log('initSchedulerControls: capture listener set up complete');
         }
 
-        // 暂停调度器
-        function pauseScheduler(queueName) {
-            console.log('DEBUG: pauseScheduler called with', queueName);
-            
-            if (!queueName) return;
-            
-            if (!confirm(`确定要暂停队列 "${queueName}" 的所有定时任务调度吗？`)) {
-                console.log('DEBUG: User cancelled pause confirmation');
-                return;
-            }
-            
-            console.log('DEBUG: Sending PAUSE request...');
-            $.ajax({
-                url: '/funboost/pause_scheduler?queue_name=' + encodeURIComponent(queueName),
-                method: 'POST',
-                success: function(response) {
-                    console.log('DEBUG: Pause success', response);
-                    if (response.succ) {
-                        updateSchedulerStatus(queueName);
-                    } else {
-                        alert('暂停失败: ' + response.msg);
-                    }
-                },
-                error: function(xhr) {
-                    console.error('DEBUG: Pause error', xhr);
-                    alert('请求失败');
-                }
-            });
-        }
-
-        // 初始化队列选择器
-        function initQueueSelector() {
-            // 点击页面其他地方关闭下拉框
-            $(document).on('click', function(e) {
-                if (!$(e.target).closest('.queue-selector').length) {
-                    $('#queueDropdown').hide();
-                }
-            });
-            
-            // 输入框失焦后延迟关闭（给点击选项留时间）
-            $('#queueFilterInput').on('blur', function() {
-                setTimeout(function() {
-                    if (!$('#queueDropdown:hover').length) {
-                        $('#queueDropdown').hide();
-                    }
-                }, 200);
-            });
-        }
-
-        // 显示队列下拉框
-        function showQueueDropdown() {
-            $('#queueDropdown').show();
-            filterQueueDropdown();
-        }
-
-        // 过滤队列下拉框
-        function filterQueueDropdown() {
-            const searchValue = $('#queueFilterInput').val().toLowerCase();
-            const dropdown = $('#queueDropdown');
-            
-            // 清空现有选项
-            dropdown.html('<div class="queue-option" data-value="">所有队列</div>');
-            
-            // 过滤并添加队列选项
-            allQueues.forEach(function(queue) {
-                if (queue.toLowerCase().indexOf(searchValue) !== -1) {
-                    const option = $('<div class="queue-option"></div>')
-                        .attr('data-value', queue)
-                        .text(queue)
-                        .on('click', function() {
-                            selectQueue(queue);
-                        });
-                    
-                    if (queue === selectedQueue) {
-                        option.addClass('selected');
-                    }
-                    
-                    dropdown.append(option);
-                }
-            });
-            
-            // 为"所有队列"添加点击事件
-            dropdown.find('.queue-option[data-value=""]').on('click', function() {
-                selectQueue('');
-            });
-            
-            // 如果选中的是"所有队列"
-            if (selectedQueue === '') {
-                dropdown.find('.queue-option[data-value=""]').addClass('selected');
-            }
-        }
-
-        // 选择队列
-        function selectQueue(queueValue) {
-            selectedQueue = queueValue;
-            $('#queueFilterInput').val(queueValue || '所有队列');
-            $('#queueDropdown').hide();
-            updateTableFilters();
-        }
-
-        // 初始化表格
         function initTable() {
             table = new Tabulator("#timing-jobs-table", {
                 layout: "fitDataFill",
-                // 不设置固定高度，让表格自动调整
                 pagination: true,
                 paginationSize: 50,
                 locale: true,
-                placeholder: "暂无定时任务",
+                placeholder: "<div style='padding: 40px; text-align: center; color: rgba(255,255,255,0.5);'><i class='fa fa-inbox' style='font-size: 48px; margin-bottom: 15px; display: block;'></i>暂无定时任务</div>",
                 langs: {
                     "zh-cn": {
                         "pagination": {
@@ -962,70 +1251,60 @@
                         }
                     }
                 },
-                // 按队列名称分组
                 groupBy: "queue_name",
                 groupHeader: function(value, count, data, group) {
-                    // 自定义分组标题样式 - 控制按钮紧跟在标题后面
                     return `<div style="display: flex; align-items: center; width: 100%;">
-                                <!-- 左侧标题区域 -->
                                 <div style="display: flex; align-items: center;">
-                                    <span style="font-size: 16px; font-weight: bold; color: #337ab7;">
-                                        <i class="fa fa-folder-open" style="margin-right: 8px;"></i>
-                                        ${value}
-                                    </span>
-                                    <span style="margin-left: 10px; color: #777; font-size: 13px;">
-                                        (${count} 个定时任务)
-                                    </span>
+                                    <i class="fa fa-folder-open" style="margin-right: 10px; font-size: 16px;"></i>
+                                    <span style="font-size: 15px; font-weight: 700;">${value}</span>
+                                    <span style="margin-left: 12px; opacity: 0.8; font-size: 13px;">(${count} 个任务)</span>
                                 </div>
-                                
-                                <!-- 控制按钮区域 (左对齐，增加一些左边距) -->
-                                <div class="scheduler-controls-group" data-queue="${value}" style="display: flex; align-items: center; margin-left: 30px;">
-                                    <!-- 状态标签 -->
-                                    <span class="scheduler-status label label-default" style="margin-right: 10px; font-size: 12px; padding: 4px 8px;">加载中...</span>
-                                    
-                                    <!-- 控制按钮 (初始隐藏) -->
-                                    <button class="btn btn-warning btn-xs btn-pause-group" style="display:none; margin-right: 5px;" title="暂停此队列调度">
-                                        <i class="fa fa-pause"></i> 暂停 Scheduler
+                                <div class="scheduler-controls-group" data-queue="${value}" style="display: flex; align-items: center; margin-left: 25px;">
+                                    <span class="scheduler-status scheduler-status-badge" style="margin-right: 10px;">加载中...</span>
+                                    <button class="scheduler-btn btn-pause-group" style="display:none; background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); color: #1a1a2e; margin-right: 5px;">
+                                        <i class="fa fa-pause"></i> 暂停
                                     </button>
-                                    <button class="btn btn-success btn-xs btn-resume-group" style="display:none; margin-right: 5px;" title="恢复此队列调度">
-                                        <i class="fa fa-play"></i> 恢复 Scheduler
+                                    <button class="scheduler-btn btn-resume-group" style="display:none; background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: white; margin-right: 5px;">
+                                        <i class="fa fa-play"></i> 恢复
                                     </button>
-                                    <button class="btn btn-default btn-xs btn-refresh-group" title="刷新状态">
+                                    <button class="scheduler-btn btn-refresh-group" style="background: rgba(255,255,255,0.2); color: white;">
                                         <i class="fa fa-refresh"></i>
                                     </button>
                                 </div>
                             </div>`;
                 },
-                groupStartOpen: true,  // 默认展开分组
-                groupToggleElement: "header",  // 点击标题切换展开/折叠
+                groupStartOpen: true,
+                groupToggleElement: "header",
                 columns: [
                     {
                         title: "任务ID",
                         field: "job_id",
                         sorter: "string",
-                        minWidth: 180,
-                        headerSort: true,
-                        tooltip: true
+                        minWidth: 200,
+                        tooltip: true,
+                        formatter: function(cell) {
+                            return '<code style="background: rgba(139,92,246,0.2); color: #c4b5fd; padding: 4px 10px; border-radius: 6px; font-size: 12px;">' + cell.getValue() + '</code>';
+                        }
                     },
                     {
-                        title: "触发器类型",
+                        title: "触发器",
                         field: "trigger",
                         sorter: "string",
-                        minWidth: 320,
+                        minWidth: 350,
                         tooltip: true,
                         formatter: function(cell) {
                             const trigger = cell.getValue();
-                            if (!trigger) return '';
+                            if (!trigger) return '-';
                             
-                            // 解析触发器显示友好的文本
+                            let badge = '';
                             if (trigger.startsWith('interval')) {
-                                return '<span class="label label-info">间隔执行</span> ' + trigger;
+                                badge = '<span class="trigger-badge trigger-interval">间隔</span>';
                             } else if (trigger.startsWith('cron')) {
-                                return '<span class="label label-success">定时执行</span> ' + trigger;
+                                badge = '<span class="trigger-badge trigger-cron">定时</span>';
                             } else if (trigger.startsWith('date')) {
-                                return '<span class="label label-warning">一次性</span> ' + trigger;
+                                badge = '<span class="trigger-badge trigger-date">一次性</span>';
                             }
-                            return trigger;
+                            return badge + '<span style="color: #e0e0e0;">' + trigger + '</span>';
                         }
                     },
                     {
@@ -1033,12 +1312,17 @@
                         field: "next_run_time",
                         sorter: "string",
                         minWidth: 200,
-                        tooltip: true
+                        formatter: function(cell) {
+                            const val = cell.getValue();
+                            if (!val) return '<span style="color: #888;">-</span>';
+                            return '<span style="color: #60a5fa;"><i class="fa fa-clock-o" style="margin-right: 6px;"></i>' + val + '</span>';
+                        }
                     },
                     {
                         title: "状态",
                         field: "status",
                         width: 100,
+                        hozAlign: "center",
                         formatter: function(cell) {
                             const status = cell.getValue();
                             if (status === 'paused') {
@@ -1050,120 +1334,94 @@
                     },
                     {
                         title: "操作",
-                        minWidth: 350,
+                        minWidth: 320,
                         formatter: function(cell) {
                             const row = cell.getRow().getData();
                             const isPaused = row.status === 'paused';
                             const rowIndex = cell.getRow().getPosition();
                             
-                            // 将数据存储到全局变量，避免 JSON 特殊字符问题
-                            if (!window.jobDataCache) {
-                                window.jobDataCache = {};
-                            }
+                            if (!window.jobDataCache) window.jobDataCache = {};
                             window.jobDataCache[rowIndex] = row;
                             
-                            // 根据状态显示不同的按钮
                             const controlBtn = isPaused 
-                                ? `<button class="btn btn-success btn-xs action-btn" onclick="resumeJob('${row.job_id}', '${row.queue_name}')">
-                                     <i class="fa fa-play"></i> 恢复 Job
-                                   </button>`
-                                : `<button class="btn btn-warning btn-xs action-btn" onclick="pauseJob('${row.job_id}', '${row.queue_name}')">
-                                     <i class="fa fa-pause"></i> 暂停 Job
-                                   </button>`;
+                                ? `<button class="action-btn btn-resume" onclick="resumeJob('${row.job_id}', '${row.queue_name}')"><i class="fa fa-play"></i> 恢复</button>`
+                                : `<button class="action-btn btn-pause" onclick="pauseJob('${row.job_id}', '${row.queue_name}')"><i class="fa fa-pause"></i> 暂停</button>`;
                             
                             return `
-                                <button class="btn btn-info btn-xs action-btn" onclick="showJobDetail(window.jobDataCache[${rowIndex}])">
-                                    <i class="fa fa-info-circle"></i> 详情
-                                </button>
-                                <button class="btn btn-primary btn-xs action-btn" onclick="editJob(window.jobDataCache[${rowIndex}])">
-                                    <i class="fa fa-edit"></i> 编辑
-                                </button>
+                                <button class="action-btn btn-detail" onclick="showJobDetail(window.jobDataCache[${rowIndex}])"><i class="fa fa-info-circle"></i> 详情</button>
+                                <button class="action-btn btn-edit" onclick="editJob(window.jobDataCache[${rowIndex}])"><i class="fa fa-edit"></i> 编辑</button>
                                 ${controlBtn}
-                                <button class="btn btn-danger btn-xs action-btn" onclick="deleteJob('${row.job_id}', '${row.queue_name}')">
-                                    <i class="fa fa-trash"></i> 删除
-                                </button>
+                                <button class="action-btn btn-delete" onclick="deleteJob('${row.job_id}', '${row.queue_name}')"><i class="fa fa-trash"></i> 删除</button>
                             `;
                         }
                     }
                 ]
             });
 
-            // 加载数据
             refreshTable();
         }
 
-        // 加载队列列表
         function loadQueues() {
             $.get('/funboost/get_timing_jobs?job_store_kind=redis', function(response) {
                 if (response.succ && response.data.jobs_by_queue) {
                     const jobsByQueue = response.data.jobs_by_queue;
-                    
-                    // 获取所有队列名（排序），包括没有任务的队列
                     allQueues = Object.keys(jobsByQueue).sort();
                     
-                    // 填充筛选下拉框（带任务数）
-                    let filterHtml = '<option value="">请选择队列名字...</option>';
+                    // 更新统计
+                    let totalJobs = 0, runningJobs = 0;
+                    allQueues.forEach(q => {
+                        const jobs = jobsByQueue[q];
+                        totalJobs += jobs.length;
+                        jobs.forEach(j => { if (j.status !== 'paused') runningJobs++; });
+                    });
+                    $('#total_queues').text(allQueues.length);
+                    $('#total_jobs').text(totalJobs);
+                    $('#running_jobs').text(runningJobs);
+
+                    // 筛选下拉框
+                    let filterHtml = '<option value="">全部队列</option>';
                     allQueues.forEach(function(queue) {
                         const jobCount = jobsByQueue[queue].length;
-                        filterHtml += `<option value="${queue}">${queue}&nbsp;&nbsp;&nbsp;&nbsp;(job_count:${jobCount})</option>`;
+                        filterHtml += `<option value="${queue}">${queue} (${jobCount}个任务)</option>`;
                     });
                     
-                    // 如果 queueFilter 的 Select2 已初始化，先销毁
                     if ($("#queueFilter").data('select2')) {
                         $("#queueFilter").select2('destroy');
                     }
                     $("#queueFilter").html(filterHtml);
                     
-                    // 初始化 Select2 for 筛选
                     $("#queueFilter").select2({
-                        placeholder: "请输入队列名称搜索...",
+                        placeholder: "搜索队列...",
                         allowClear: true,
                         width: '350px'
                     });
-                    // 使用命名空间绑定事件
+
                     $("#queueFilter").off('change.queueFilter').on('change.queueFilter', function() {
                         selectedQueue = $(this).val();
                         refreshTable();
-                        // 更新顶部调度器状态
-                        updateTopSchedulerStatus(selectedQueue);
                     });
                     
-                    // 填充添加任务模态框的队列选择（带任务数）
+                    // 添加任务模态框队列选择
                     let modalHtml = '<option value="">-- 请选择队列 --</option>';
                     allQueues.forEach(function(queue) {
-                        const jobCount = jobsByQueue[queue].length;
-                        modalHtml += `<option value="${queue}">${queue}&nbsp;&nbsp;&nbsp;&nbsp;(job_count:${jobCount})</option>`;
+                        modalHtml += `<option value="${queue}">${queue}</option>`;
                     });
                     
-                    // 保存当前选中的值
-                    const currentSelectedQueue = $("#job_queue_name").val();
-                    
-                    // 如果 Select2 已初始化，先销毁
                     if ($("#job_queue_name").data('select2')) {
                         $("#job_queue_name").select2('destroy');
                     }
-                    
                     $("#job_queue_name").html(modalHtml);
                     
-                    // 初始化 Select2 for 添加任务模态框
                     $("#job_queue_name").select2({
-                        placeholder: "请输入队列名称搜索...",
+                        placeholder: "搜索队列...",
                         dropdownParent: $('#addJobModal'),
                         width: '100%'
                     });
                     
-                    // 恢复之前选中的值
-                    if (currentSelectedQueue) {
-                        $("#job_queue_name").val(currentSelectedQueue).trigger('change.select2');
-                    }
-                    
-                    // 使用命名空间绑定 change 事件
                     $("#job_queue_name").off('change.jobQueue').on('change.jobQueue', function() {
-                        // 队列选择变化时，获取函数入参信息
-                        const selectedQueue = $(this).val();
-                        if (selectedQueue) {
-                            loadFuncParamsInfo(selectedQueue);
-                        } else {
+                        const sq = $(this).val();
+                        if (sq) loadFuncParamsInfo(sq);
+                        else {
                             $('#func_params_text').html('请先选择队列名称，将显示函数所需参数');
                             $('#job_kwargs').attr('placeholder', '请先选择队列名称');
                         }
@@ -1172,7 +1430,6 @@
             });
         }
 
-        // 加载队列的函数入参信息
         function loadFuncParamsInfo(queueName) {
             $.get('/funboost/get_one_queue_config?queue_name=' + encodeURIComponent(queueName), function(response) {
                 if (response.succ && response.data && response.data.auto_generate_info) {
@@ -1182,52 +1439,36 @@
                         const mustArgs = paramsInfo.must_arg_name_list || [];
                         const optionalArgs = paramsInfo.optional_arg_name_list || [];
                         
-                        // 生成 JSON 模板并填充到输入框（只在输入框为空时填充）
                         let templateObj = {};
                         mustArgs.forEach(arg => templateObj[arg] = '');
                         optionalArgs.forEach(arg => templateObj[arg] = '');
-                        const templateText = Object.keys(templateObj).length > 0 
-                            ? JSON.stringify(templateObj, null, 2) 
-                            : '{}';
+                        const templateText = Object.keys(templateObj).length > 0 ? JSON.stringify(templateObj, null, 2) : '{}';
                         
-                        // 如果输入框为空，则填充模板
                         if (!$('#job_kwargs').val().trim()) {
                             $('#job_kwargs').val(templateText);
                         }
                         
-                        // 生成提示文本
-                        let html = `<strong>函数: ${funcName}</strong><br>`;
+                        let html = `<strong style="color:#60a5fa;">函数: ${funcName}</strong><br>`;
                         if (mustArgs.length > 0) {
-                            html += `<span style="color: #d9534f;">必填参数:</span> <code>${mustArgs.join('</code>, <code>')}</code>`;
+                            html += `<span style="color: #f87171;">必填参数:</span> <code>${mustArgs.join('</code>, <code>')}</code>`;
                         } else {
-                            html += `<span style="color: #5cb85c;">无必填参数</span>`;
+                            html += `<span style="color: #4ade80;">无必填参数</span>`;
                         }
                         if (optionalArgs.length > 0) {
-                            html += `<br><span style="color: #f0ad4e;">可选参数:</span> <code>${optionalArgs.join('</code>, <code>')}</code>`;
+                            html += `<br><span style="color: #fbbf24;">可选参数:</span> <code>${optionalArgs.join('</code>, <code>')}</code>`;
                         }
                         $('#func_params_text').html(html);
-                    } else {
-                        $('#func_params_text').html('无法获取函数入参信息');
                     }
-                } else {
-                    $('#func_params_text').html('无法获取队列配置信息');
                 }
-            }).fail(function() {
-                $('#func_params_text').html('获取队列配置失败');
             });
         }
 
-        // 刷新表格数据
         function refreshTable() {
-            const queueName = selectedQueue;
             let url = '/funboost/get_timing_jobs?job_store_kind=redis';
-            if (queueName) {
-                url += `&queue_name=${queueName}`;
-            }
+            if (selectedQueue) url += `&queue_name=${selectedQueue}`;
             
             $.get(url, function(response) {
                 if (response.succ && response.data.jobs_by_queue) {
-                    // 将 jobs_by_queue 字典转换为 jobs 数组
                     const jobsByQueue = response.data.jobs_by_queue;
                     const jobsList = [];
                     Object.keys(jobsByQueue).forEach(function(queue) {
@@ -1236,29 +1477,32 @@
                         });
                     });
                     table.setData(jobsList).then(function() {
-                        // 数据加载完成后，获取所有可见队列的调度器状态
-                        // 增加延时以确保 Tabulator 完成 DOM 渲染（特别是分组头）
                         setTimeout(function() {
-                            console.log('refreshTable: updating scheduler status for all queues');
                             Object.keys(jobsByQueue).forEach(function(queue) {
-                                // 尝试更新状态
                                 updateSchedulerStatus(queue);
                             });
                         }, 500); 
                     });
+
+                    // 更新统计
+                    let totalJobs = 0, runningJobs = 0;
+                    Object.keys(jobsByQueue).forEach(q => {
+                        const jobs = jobsByQueue[q];
+                        totalJobs += jobs.length;
+                        jobs.forEach(j => { if (j.status !== 'paused') runningJobs++; });
+                    });
+                    $('#total_queues').text(Object.keys(jobsByQueue).length);
+                    $('#total_jobs').text(totalJobs);
+                    $('#running_jobs').text(runningJobs);
                 } else {
                     table.setData([]);
                 }
-            }).fail(function() {
-                alert('加载任务列表失败');
             });
         }
 
-        // 更新表格过滤器
         function updateTableFilters() {
             const searchValue = $('#searchInput').val();
             const statusFilter = $('#statusFilter').val();
-            
             const filters = [];
             
             if (searchValue && searchValue.trim() !== '') {
@@ -1268,63 +1512,42 @@
                 ]);
             }
             
-            // 状态过滤
             if (statusFilter && statusFilter !== '') {
                 filters.push({field: "status", type: "=", value: statusFilter});
             }
             
             table.clearFilter();
-            if (filters.length > 0) {
-                table.setFilter(filters);
-            }
-            
-            // 队列筛选通过重新加载数据实现
+            if (filters.length > 0) table.setFilter(filters);
             refreshTable();
         }
 
-        // 清除搜索
-        function clearSearch() {
-            $('#searchInput').val('');
-            updateTableFilters();
-        }
-
-        // 搜索框事件
         $('#searchInput').on('keyup', function() {
             updateTableFilters();
         });
 
-        // 切换触发器配置区域
         function switchTriggerSection(type) {
             $('.trigger-section').removeClass('active');
             $(`#${type}TriggerSection`).addClass('active');
-            // 确保对应的 radio button 被选中
             $(`input[name="trigger_type"][value="${type}"]`).prop('checked', true);
         }
 
-        // 显示添加任务模态框
         function showAddJobModal() {
             $('#addJobForm')[0].reset();
             $('#kwargs_validation').hide();
             switchTriggerSection('interval');
-            // 重置标题为添加模式
-            $('#addJobModal .modal-title').text('添加定时任务');
+            $('#addJobModal .modal-title').html('<i class="fa fa-plus-circle" style="color: #10b981; margin-right: 10px;"></i>添加定时任务');
             $('#addJobModal').modal('show');
-            // 强制设置存储方式为 redis
             setTimeout(function() {
                 $('#job_store_redis').prop('checked', true);
             }, 100);
         }
 
-        // JSON 验证函数
         function validateJSON(jsonString) {
-            if (!jsonString || jsonString.trim() === '') {
-                return { valid: true, error: null, data: null };
-            }
-            
+            if (!jsonString || jsonString.trim() === '') return { valid: true, error: null, data: null };
             try {
                 const parsed = JSON.parse(jsonString);
                 if (typeof parsed !== 'object' || Array.isArray(parsed)) {
-                    return { valid: false, error: 'kwargs 必须是一个对象（{}），不能是数组', data: null };
+                    return { valid: false, error: 'kwargs 必须是一个对象', data: null };
                 }
                 return { valid: true, error: null, data: parsed };
             } catch (e) {
@@ -1332,7 +1555,6 @@
             }
         }
 
-        // 实时验证 JSON 输入
         $('#job_kwargs').on('input', function() {
             const jsonString = $(this).val();
             const validation = validateJSON(jsonString);
@@ -1341,38 +1563,27 @@
             if (!jsonString || jsonString.trim() === '') {
                 validationDiv.hide();
             } else if (validation.valid) {
-                validationDiv.html('<span style="color: green;"><i class="fa fa-check-circle"></i> JSON 格式正确</span>');
+                validationDiv.html('<span style="color: #4ade80;"><i class="fa fa-check-circle"></i> JSON 格式正确</span>');
                 validationDiv.show();
             } else {
-                validationDiv.html('<span style="color: red;"><i class="fa fa-exclamation-circle"></i> JSON 格式错误: ' + validation.error + '</span>');
+                validationDiv.html('<span style="color: #f87171;"><i class="fa fa-exclamation-circle"></i> JSON 格式错误: ' + validation.error + '</span>');
                 validationDiv.show();
             }
         });
 
-        // 提交添加任务
         function submitAddJob() {
-            console.log('submitAddJob called');
             const queueName = $('#job_queue_name').val();
             const jobId = $('#job_id').val();
             
-            // 使用 ID 直接判断选中的触发器类型
             let triggerType;
-            if ($('#trigger_date').is(':checked')) {
-                triggerType = 'date';
-            } else if ($('#trigger_interval').is(':checked')) {
-                triggerType = 'interval';
-            } else if ($('#trigger_cron').is(':checked')) {
-                triggerType = 'cron';
-            }
-            console.log('triggerType by ID:', triggerType);
+            if ($('#trigger_date').is(':checked')) triggerType = 'date';
+            else if ($('#trigger_interval').is(':checked')) triggerType = 'interval';
+            else if ($('#trigger_cron').is(':checked')) triggerType = 'cron';
             
             const jobStoreKind = $('#job_store_redis').is(':checked') ? 'redis' : 'memory';
             const replaceExisting = $('#replace_existing').is(':checked');
             
-            if (!queueName) {
-                alert('请选择队列！');
-                return;
-            }
+            if (!queueName) { alert('请选择队列！'); return; }
             
             const jobData = {
                 queue_name: queueName,
@@ -1381,16 +1592,11 @@
                 replace_existing: replaceExisting
             };
             
-            if (jobId) {
-                jobData.job_id = jobId;
-            }
+            if (jobId) jobData.job_id = jobId;
             
-            // 处理函数参数 kwargs
             const kwargsInput = $('#job_kwargs').val().trim();
-            console.log('kwargsInput:', kwargsInput);
             if (kwargsInput) {
                 const validation = validateJSON(kwargsInput);
-                console.log('validation:', validation);
                 if (!validation.valid) {
                     alert('函数参数 JSON 格式错误:\n' + validation.error);
                     return;
@@ -1398,18 +1604,9 @@
                 jobData.kwargs = validation.data;
             }
             
-            console.log('triggerType:', triggerType);
-            console.log('jobData before trigger:', JSON.stringify(jobData));
-            
-            // 根据触发器类型收集参数
             if (triggerType === 'date') {
                 const runDate = $('#run_date').val();
-                console.log('runDate:', runDate);
-                if (!runDate) {
-                    alert('请填写执行时间！');
-                    return;
-                }
-                // datetime-local 格式是 "2025-12-12T14:27"，需要转换为 "2025-12-12 14:27:00"
+                if (!runDate) { alert('请填写执行时间！'); return; }
                 jobData.run_date = runDate.replace('T', ' ') + ':00';
             } else if (triggerType === 'interval') {
                 const weeks = parseInt($('#interval_weeks').val()) || 0;
@@ -1429,7 +1626,6 @@
                 if (minutes > 0) jobData.minutes = minutes;
                 if (seconds > 0) jobData.seconds = seconds;
             } else if (triggerType === 'cron') {
-                // cron 字段取值要做 trim，且不能用 `if(value)` 过滤（0 也应被视为有效输入）
                 const cronFields = {
                     year: ($('#cron_year').val() ?? '').toString().trim(),
                     month: ($('#cron_month').val() ?? '').toString().trim(),
@@ -1440,8 +1636,6 @@
                     second: ($('#cron_second').val() ?? '').toString().trim()
                 };
                 
-                console.log('cronFields:', JSON.stringify(cronFields));
-                
                 let hasField = false;
                 for (const [key, value] of Object.entries(cronFields)) {
                     if (value !== '') {
@@ -1450,67 +1644,11 @@
                     }
                 }
                 
-                console.log('jobData after cron:', JSON.stringify(jobData));
-                
-                if (!hasField) {
-                    alert('请至少填写一个 Cron 参数！');
-                    return;
-                }
+                if (!hasField) { alert('请至少填写一个 Cron 参数！'); return; }
             }
-            
-            console.log('Final jobData before confirm:', JSON.stringify(jobData));
-            // 构建确认信息
-            let confirmMsg = '请确认定时任务配置：\n\n';
-            confirmMsg += '【基本信息】\n';
-            confirmMsg += `  队列名称: ${jobData.queue_name}\n`;
-            if (jobData.job_id) {
-                confirmMsg += `  任务ID: ${jobData.job_id}\n`;
-            }
-            confirmMsg += `  存储方式: ${jobData.job_store_kind}\n`;
-            confirmMsg += `  覆盖已存在: ${jobData.replace_existing ? '是' : '否'}\n\n`;
-            
-            confirmMsg += '【触发器配置】\n';
-            confirmMsg += `  触发器类型: ${jobData.trigger}\n`;
-            
-            if (triggerType === 'date') {
-                confirmMsg += `  执行时间: ${jobData.run_date}\n`;
-            } else if (triggerType === 'interval') {
-                confirmMsg += '  时间间隔: ';
-                const intervalParts = [];
-                if (jobData.weeks) intervalParts.push(`${jobData.weeks}周`);
-                if (jobData.days) intervalParts.push(`${jobData.days}天`);
-                if (jobData.hours) intervalParts.push(`${jobData.hours}小时`);
-                if (jobData.minutes) intervalParts.push(`${jobData.minutes}分钟`);
-                if (jobData.seconds) intervalParts.push(`${jobData.seconds}秒`);
-                confirmMsg += intervalParts.join(' ') + '\n';
-            } else if (triggerType === 'cron') {
-                // 用一行摘要展示 cron，避免原生 confirm 弹窗对缩进/多行展示不稳定导致“看起来是空的”
-                const cronKeys = ['year', 'month', 'day', 'day_of_week', 'hour', 'minute', 'second'];
-                const cronLabels = {'year': '年', 'month': '月', 'day': '日', 'day_of_week': '星期', 'hour': '时', 'minute': '分', 'second': '秒'};
-                const cronParts = [];
-                for (const key of cronKeys) {
-                    const v = jobData[key];
-                    if (v !== undefined && v !== null && v.toString().trim() !== '') {
-                        cronParts.push(`${cronLabels[key]}:${v}`);
-                    }
-                }
-                confirmMsg += `  Cron 表达式: ${cronParts.length ? cronParts.join(' ') : '(无配置)'}\n`;
-            }
-            
-            if (jobData.kwargs && Object.keys(jobData.kwargs).length > 0) {
-                confirmMsg += '\n【函数参数】\n';
-                confirmMsg += JSON.stringify(jobData.kwargs, null, 2);
-            }
-            
-            confirmMsg += '\n\n确定要添加这个定时任务吗？';
-            
-            // 弹窗确认
-            if (!confirm(confirmMsg)) {
-                console.log('用户取消了添加任务');
-                return;
-            }
-            
-            // 发送请求
+
+            if (!confirm('确定要添加这个定时任务吗？')) return;
+
             $.ajax({
                 url: '/funboost/add_timing_job',
                 method: 'POST',
@@ -1518,112 +1656,84 @@
                 data: JSON.stringify(jobData),
                 success: function(response) {
                     if (response.succ) {
-                        alert('任务添加成功！\n任务ID: ' + response.data.job_id);
+                        alert('✅ 任务添加成功！\n任务ID: ' + response.data.job_id);
                         $('#addJobModal').modal('hide');
                         refreshTable();
+                        loadQueues();
                     } else {
-                        alert('添加失败: ' + response.msg);
+                        alert('❌ 添加失败: ' + response.msg);
                     }
                 },
                 error: function(xhr) {
-                    alert('添加失败: ' + xhr.responseText);
+                    alert('❌ 添加失败: ' + xhr.responseText);
                 }
             });
         }
 
-        // 显示任务详情
         function showJobDetail(job) {
-            // 先显示基本内容
             let content = `
-                <div class="form-horizontal">
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">任务ID:</label>
-                        <div class="col-sm-9">
-                            <p class="form-control-static">${job.job_id}</p>
+                <div style="display: grid; gap: 15px;">
+                    <div style="display: flex; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 12px;">
+                        <span style="width: 100px; color: rgba(255,255,255,0.6);">任务ID</span>
+                        <code style="background: rgba(139,92,246,0.2); color: #c4b5fd; padding: 4px 10px; border-radius: 6px;">${job.job_id}</code>
                         </div>
+                    <div style="display: flex; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 12px;">
+                        <span style="width: 100px; color: rgba(255,255,255,0.6);">队列名称</span>
+                        <span style="color: #60a5fa;">${job.queue_name}</span>
                     </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">队列名称:</label>
-                        <div class="col-sm-9">
-                            <p class="form-control-static">${job.queue_name}</p>
+                    <div style="display: flex; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 12px;">
+                        <span style="width: 100px; color: rgba(255,255,255,0.6);">函数名</span>
+                        <span id="detail_func_name" style="color: #4ade80;"><i class="fa fa-spinner fa-spin"></i> 加载中...</span>
                         </div>
+                    <div style="display: flex; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 12px;">
+                        <span style="width: 100px; color: rgba(255,255,255,0.6);">触发器</span>
+                        <span style="color: #fbbf24;">${job.trigger || '-'}</span>
                     </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">函数名:</label>
-                        <div class="col-sm-9">
-                            <p class="form-control-static" id="detail_func_name"><i class="fa fa-spinner fa-spin"></i> 加载中...</p>
+                    <div style="display: flex; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 12px;">
+                        <span style="width: 100px; color: rgba(255,255,255,0.6);">下次执行</span>
+                        <span style="color: #60a5fa;">${job.next_run_time || '-'}</span>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">触发器:</label>
-                        <div class="col-sm-9">
-                            <p class="form-control-static">${job.trigger || '-'}</p>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">下次执行时间:</label>
-                        <div class="col-sm-9">
-                            <p class="form-control-static">${job.next_run_time || '-'}</p>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">函数参数:</label>
-                        <div class="col-sm-9">
-                            <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; max-height: 200px; overflow-y: auto;">${job.kwargs && Object.keys(job.kwargs).length > 0 ? JSON.stringify(job.kwargs, null, 2) : '无参数'}</pre>
-                        </div>
+                    <div>
+                        <span style="color: rgba(255,255,255,0.6); display: block; margin-bottom: 8px;">函数参数</span>
+                        <pre style="background: rgba(20,20,40,0.8); padding: 15px; border-radius: 10px; border: 1px solid rgba(245,158,11,0.2); color: #e0e0e0; font-size: 13px; max-height: 200px; overflow-y: auto;">${job.kwargs && Object.keys(job.kwargs).length > 0 ? JSON.stringify(job.kwargs, null, 2) : '无参数'}</pre>
                     </div>
                 </div>
             `;
             $('#jobDetailContent').html(content);
             $('#jobDetailModal').modal('show');
             
-            // 异步获取函数名
             $.get('/funboost/get_one_queue_config?queue_name=' + encodeURIComponent(job.queue_name), function(response) {
                 if (response.succ && response.data && response.data.auto_generate_info) {
                     const funcName = response.data.auto_generate_info.final_func_input_params_info?.func_name || '-';
-                    $('#detail_func_name').html(`<strong style="color: #337ab7;">${funcName}</strong>`);
+                    $('#detail_func_name').html('<strong>' + funcName + '</strong>');
                 } else {
                     $('#detail_func_name').text('-');
                 }
-            }).fail(function() {
-                $('#detail_func_name').text('-');
             });
         }
 
-        // 编辑定时任务
         function editJob(job) {
-            // 重置表单
             $('#addJobForm')[0].reset();
             $('#kwargs_validation').hide();
             
-            // 填充基本信息
             $('#job_queue_name').val(job.queue_name).trigger('change');
             $('#job_id').val(job.job_id);
-            $('#replace_existing').prop('checked', true); // 编辑时默认替换
+            $('#replace_existing').prop('checked', true);
             
-            // 填充 kwargs
             if (job.kwargs && Object.keys(job.kwargs).length > 0) {
                 $('#job_kwargs').val(JSON.stringify(job.kwargs, null, 2));
             }
             
-            // 解析 trigger 字符串，设置触发器类型和参数
             const triggerStr = job.trigger || '';
             
             if (triggerStr.startsWith('interval')) {
-                // interval 类型
                 $('input[name="trigger_type"][value="interval"]').prop('checked', true);
                 switchTriggerSection('interval');
-                
-                // 解析 interval 参数 (格式: interval[0:00:10] 或 interval[1 day, 2:03:04])
                 const match = triggerStr.match(/interval\[(.+)\]/);
                 if (match) {
                     const intervalPart = match[1];
-                    // 解析 days
                     const dayMatch = intervalPart.match(/(\d+)\s*day/);
-                    if (dayMatch) {
-                        $('#interval_days').val(parseInt(dayMatch[1]));
-                    }
-                    // 解析时间部分 (H:MM:SS)
+                    if (dayMatch) $('#interval_days').val(parseInt(dayMatch[1]));
                     const timeMatch = intervalPart.match(/(\d+):(\d+):(\d+)/);
                     if (timeMatch) {
                         $('#interval_hours').val(parseInt(timeMatch[1]));
@@ -1632,11 +1742,8 @@
                     }
                 }
             } else if (triggerStr.startsWith('cron')) {
-                // cron 类型
                 $('input[name="trigger_type"][value="cron"]').prop('checked', true);
                 switchTriggerSection('cron');
-                
-                // 解析 cron 参数 (格式: cron[...])
                 const match = triggerStr.match(/cron\[(.+)\]/);
                 if (match) {
                     const cronParts = match[1].split(',').map(s => s.trim());
@@ -1648,326 +1755,112 @@
                     });
                 }
             } else if (triggerStr.startsWith('date')) {
-                // date 类型（一次性任务）
                 $('input[name="trigger_type"][value="date"]').prop('checked', true);
                 switchTriggerSection('date');
-                
-                // 解析 date 参数 (格式: date[2024-01-01 12:00:00 ...])
-                const match = triggerStr.match(/date\[(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
-                if (match) {
-                    const datetime = match[1].replace(' ', 'T');
-                    $('#date_run_date').val(datetime);
-                }
             }
-            
-            // 设置存储方式为 redis
+
             $('#job_store_redis').prop('checked', true);
-            
-            // 修改模态框标题为编辑模式
-            $('#addJobModal .modal-title').text('编辑定时任务');
-            
-            // 打开模态框
+            $('#addJobModal .modal-title').html('<i class="fa fa-edit" style="color: #8b5cf6; margin-right: 10px;"></i>编辑定时任务');
             $('#addJobModal').modal('show');
         }
 
-        // 暂停任务
         function pauseJob(jobId, queueName) {
-            if (!confirm(`确定要暂停任务 ${jobId} 吗？`)) {
-                return;
-            }
+            if (!confirm(`确定要暂停任务 ${jobId} 吗？`)) return;
             
             $.ajax({
                 url: '/funboost/pause_timing_job?job_id=' + jobId + '&queue_name=' + queueName,
                 method: 'POST',
                 success: function(response) {
                     if (response.succ) {
-                        alert('暂停成功！');
                         refreshTable();
                     } else {
                         alert('暂停失败: ' + response.msg);
                     }
-                },
-                error: function(xhr) {
-                    alert('暂停失败: ' + xhr.responseText);
                 }
             });
         }
 
-        // 恢复任务
         function resumeJob(jobId, queueName) {
-            if (!confirm(`确定要恢复任务 ${jobId} 吗？`)) {
-                return;
-            }
+            if (!confirm(`确定要恢复任务 ${jobId} 吗？`)) return;
             
             $.ajax({
                 url: '/funboost/resume_timing_job?job_id=' + jobId + '&queue_name=' + queueName,
                 method: 'POST',
                 success: function(response) {
                     if (response.succ) {
-                        alert('恢复成功！');
                         refreshTable();
                     } else {
                         alert('恢复失败: ' + response.msg);
                     }
-                },
-                error: function(xhr) {
-                    alert('恢复失败: ' + xhr.responseText);
                 }
             });
         }
 
-        // 删除任务
         function deleteJob(jobId, queueName) {
-            if (!confirm(`确定要删除任务 ${jobId} 吗？\n此操作不可撤销！`)) {
-                return;
-            }
+            if (!confirm(`确定要删除任务 ${jobId} 吗？\n此操作不可撤销！`)) return;
             
             $.ajax({
                 url: '/funboost/delete_timing_job?job_id=' + jobId + '&queue_name=' + queueName,
                 method: 'DELETE',
                 success: function(response) {
                     if (response.succ) {
-                        alert('删除成功！');
                         refreshTable();
+                        loadQueues();
                     } else {
                         alert('删除失败: ' + response.msg);
                     }
-                },
-                error: function(xhr) {
-                    alert('删除失败: ' + xhr.responseText);
                 }
             });
         }
 
-        // 删除所有任务
         function deleteAllJobs() {
-            const queueName = selectedQueue;
-            const confirmMsg = queueName 
-                ? `确定要删除队列 ${queueName} 的所有任务吗？`
+            const confirmMsg = selectedQueue
+                ? `确定要删除队列 ${selectedQueue} 的所有任务吗？`
                 : '确定要删除所有队列的所有任务吗？';
                 
-            if (!confirm(confirmMsg + '\n此操作不可撤销！')) {
-                return;
-            }
+            if (!confirm(confirmMsg + '\n此操作不可撤销！')) return;
             
             let url = '/funboost/delete_all_timing_jobs?job_store_kind=redis';
-            if (queueName) {
-                url += '&queue_name=' + queueName;
-            }
+            if (selectedQueue) url += '&queue_name=' + selectedQueue;
             
             $.ajax({
                 url: url,
                 method: 'DELETE',
                 success: function(response) {
                     if (response.succ) {
-                        alert(`成功删除 ${response.data.deleted_count} 个任务！`);
+                        alert(`✅ 成功删除 ${response.data.deleted_count} 个任务！`);
                         refreshTable();
+                        loadQueues();
                     } else {
                         alert('删除失败: ' + response.msg);
                     }
-                },
-                error: function(xhr) {
-                    alert('删除失败: ' + xhr.responseText);
                 }
             });
         }
 
-        // 切换自动刷新
         function toggleAutoRefresh() {
             const button = $('#toggle-auto-refresh');
+            const indicator = $('#refresh-indicator');
+
             if (isAutoRefreshing) {
                 clearInterval(autoRefreshIntervalId);
                 isAutoRefreshing = false;
                 button.html('<i class="fa fa-play"></i> 自动刷新');
-                button.removeClass('btn-danger').addClass('btn-primary');
+                button.removeClass('active');
+                indicator.removeClass('active');
             } else {
                 isAutoRefreshing = true;
                 button.html('<i class="fa fa-pause"></i> 暂停刷新');
-                button.removeClass('btn-primary').addClass('btn-danger');
+                button.addClass('active');
+                indicator.addClass('active');
                 refreshTable();
                 autoRefreshIntervalId = setInterval(refreshTable, AUTO_REFRESH_INTERVAL);
             }
         }
 
-        // ==================== 顶部调度器控制函数 ====================
-        
-        // 更新顶部调度器状态显示
-        function updateTopSchedulerStatus(queueName) {
-            const controlArea = $('#schedulerControlArea');
-            const statusSpan = $('#topSchedulerStatus');
-            const pauseBtn = $('#topPauseSchedulerBtn');
-            const resumeBtn = $('#topResumeSchedulerBtn');
-            
-            console.log('updateTopSchedulerStatus: called with', queueName);
-            console.log('updateTopSchedulerStatus: pauseBtn exists:', pauseBtn.length > 0);
-            console.log('updateTopSchedulerStatus: resumeBtn exists:', resumeBtn.length > 0);
-            
-            if (!queueName) {
-                // 没有选择队列，隐藏控制区域
-                controlArea.hide();
-                return;
-            }
-            
-            // 显示控制区域
-            controlArea.css('display', 'flex');
-            
-            // 显示加载状态
-            statusSpan.removeClass('label-success label-warning label-danger').addClass('label-default').text('加载中...');
-            pauseBtn.hide();
-            resumeBtn.hide();
-            
-            console.log('updateTopSchedulerStatus: fetching status for', queueName);
-            
-            $.get('/funboost/get_scheduler_status?queue_name=' + encodeURIComponent(queueName))
-                .done(function(response) {
-                    console.log('updateTopSchedulerStatus: response', response);
-                    console.log('updateTopSchedulerStatus: status_code =', response.data ? response.data.status_code : 'no data');
-                    
-                    if (response.succ && response.data) {
-                        const status = response.data.status_code; // 0: stopped, 1: running, 2: paused
-                        
-                        statusSpan.removeClass('label-success label-warning label-danger label-default');
-                        
-                        if (status === 1) { // Running
-                            console.log('updateTopSchedulerStatus: status is RUNNING, showing pause button');
-                            statusSpan.addClass('label-success').text('调度中');
-                            // 强制显示为 inline-block
-                            // console.log('Showing pause button for', queueName, pauseBtn.length);
-                            pauseBtn.css('display', 'inline-block'); 
-                            resumeBtn.hide();
-                        } else if (status === 2) { // Paused
-                            console.log('updateTopSchedulerStatus: status is PAUSED, showing resume button');
-                            statusSpan.addClass('label-warning').text('已暂停');
-                            pauseBtn.hide(); 
-                            resumeBtn.css('display', 'inline-block');
-                        } else { // Stopped (0) or other
-                            console.log('updateTopSchedulerStatus: status is STOPPED or unknown (' + status + '), showing resume button');
-                            statusSpan.addClass('label-danger').text('已停止');
-                            pauseBtn.hide(); 
-                            resumeBtn.css('display', 'inline-block');
-                        }
-                        
-                        // 验证按钮显示状态
-                        console.log('updateTopSchedulerStatus: pauseBtn visible:', pauseBtn.is(':visible'));
-                        console.log('updateTopSchedulerStatus: resumeBtn visible:', resumeBtn.is(':visible'));
-                    } else {
-                        console.log('updateTopSchedulerStatus: response not successful or no data');
-                        statusSpan.addClass('label-default').text('未知状态');
-                    }
-                })
-                .fail(function(xhr, status, error) {
-                    console.error('updateTopSchedulerStatus: request failed', status, error);
-                    statusSpan.addClass('label-danger').text('获取失败');
-                });
-        }
-        
-        // 暂停选中队列的调度器
-        function pauseSelectedScheduler() {
-            console.log('>>> Entered pauseSelectedScheduler function');
-            try {
-                // 优先从 DOM 获取当前选中的值，作为双重保险
-                const domQueue = $('#queueFilter').val();
-                console.log('Queue from DOM:', domQueue, 'Global selectedQueue:', selectedQueue);
-                
-                const targetQueue = domQueue || selectedQueue;
-
-                if (!targetQueue) {
-                    console.warn('No queue selected!');
-                    alert('请先选择一个队列');
-                    return;
-                }
-                
-                console.log('Ready to confirm pause for:', targetQueue);
-                if (!confirm(`确定要暂停队列 "${targetQueue}" 的所有定时任务调度吗？\n暂停后，该队列的定时任务将不会被触发。`)) {
-                    console.log('User cancelled confirmation');
-                    return;
-                }
-                
-                console.log('Sending AJAX request to pause:', targetQueue);
-                
-                $.ajax({
-                    url: '/funboost/pause_scheduler?queue_name=' + encodeURIComponent(targetQueue),
-                    method: 'POST',
-                    success: function(response) {
-                        console.log('Pause AJAX success:', response);
-                        if (response.succ) {
-                            // alert('暂停成功'); // 可选：是否弹窗提示
-                            updateTopSchedulerStatus(targetQueue);
-                        } else {
-                            alert('暂停失败: ' + response.msg);
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Pause AJAX error:', status, error, xhr.responseText);
-                        alert('暂停请求失败: ' + (xhr.responseText || error));
-                    }
-                });
-            } catch (err) {
-                console.error('CRITICAL ERROR in pauseSelectedScheduler:', err);
-                alert('执行出错: ' + err.message);
-            }
-        }
-        
-        // 恢复选中队列的调度器
-        function resumeSelectedScheduler() {
-            console.log('>>> Entered resumeSelectedScheduler function');
-            try {
-                const domQueue = $('#queueFilter').val();
-                console.log('Queue from DOM:', domQueue, 'Global selectedQueue:', selectedQueue);
-                
-                const targetQueue = domQueue || selectedQueue;
-
-                if (!targetQueue) {
-                    alert('请先选择一个队列');
-                    return;
-                }
-                
-                console.log('Ready to confirm resume for:', targetQueue);
-                if (!confirm(`确定要恢复队列 "${targetQueue}" 的定时任务调度吗？`)) {
-                    console.log('User cancelled confirmation');
-                    return;
-                }
-                
-                console.log('Sending AJAX request to resume:', targetQueue);
-                
-                $.ajax({
-                    url: '/funboost/resume_scheduler?queue_name=' + encodeURIComponent(targetQueue),
-                    method: 'POST',
-                    success: function(response) {
-                        console.log('Resume AJAX success:', response);
-                        if (response.succ) {
-                            // alert('恢复成功');
-                            updateTopSchedulerStatus(targetQueue);
-                        } else {
-                            alert('恢复失败: ' + response.msg);
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Resume AJAX error:', status, error, xhr.responseText);
-                        alert('恢复请求失败: ' + (xhr.responseText || error));
-                    }
-                });
-            } catch (err) {
-                console.error('CRITICAL ERROR in resumeSelectedScheduler:', err);
-                alert('执行出错: ' + err.message);
-            }
-        }
-        
-        // 刷新选中队列的调度器状态
-        function refreshSelectedSchedulerStatus() {
-            if (selectedQueue) {
-                updateTopSchedulerStatus(selectedQueue);
-            }
-        }
-        
-        // 更新调度器状态 (显示在分组头)
         function updateSchedulerStatus(queueName) {
-            // 查找所有对应此队列的控制组
             const controlsDiv = $(`.scheduler-controls-group[data-queue="${queueName}"]`);
-            
-            if (controlsDiv.length === 0) {
-                return;
-            }
+            if (controlsDiv.length === 0) return;
             
             const statusSpan = controlsDiv.find('.scheduler-status');
             const pauseBtn = controlsDiv.find('.btn-pause-group');
@@ -1976,120 +1869,67 @@
             $.get('/funboost/get_scheduler_status?queue_name=' + encodeURIComponent(queueName))
                 .done(function(response) {
                     if (response.succ && response.data) {
-                        const status = response.data.status_code; // 0: stopped, 1: running, 2: paused
+                        const status = response.data.status_code;
                         
-                        statusSpan.removeClass('label-success label-warning label-danger label-default');
+                        statusSpan.removeClass('scheduler-running scheduler-paused scheduler-stopped');
                         
-                        // 强制显式设置 display 属性，防止 .show() 不起作用
-                        if (status === 1) { // Running
-                            statusSpan.addClass('label-success').text('调度中');
+                        if (status === 1) {
+                            statusSpan.addClass('scheduler-running').text('调度中');
                             pauseBtn.css('display', 'inline-block');
                             resumeBtn.hide();
-                        } else if (status === 2) { // Paused
-                            statusSpan.addClass('label-warning').text('已暂停');
+                        } else if (status === 2) {
+                            statusSpan.addClass('scheduler-paused').text('已暂停');
                             pauseBtn.hide();
                             resumeBtn.css('display', 'inline-block');
-                        } else { // Stopped (0)
-                            statusSpan.addClass('label-danger').text('已停止');
+                        } else {
+                            statusSpan.addClass('scheduler-stopped').text('已停止');
                             pauseBtn.hide();
                             resumeBtn.css('display', 'inline-block');
                         }
-                    } else {
-                        statusSpan.addClass('label-default').text('未知');
                     }
-                })
-                .fail(function() {
-                    statusSpan.removeClass('label-success label-warning label-default').addClass('label-danger').text('获取失败');
                 });
         }
 
-        // 暂停调度器
         function pauseScheduler(queueName) {
-            console.log('pauseScheduler called with:', queueName);
-            
-            if (!confirm(`确定要暂停队列 "${queueName}" 的所有定时任务调度吗？\n暂停后，该队列的定时任务将不会被触发。`)) {
-                console.log('pauseScheduler: user cancelled');
-                return;
-            }
-            
-            console.log('pauseScheduler: sending POST request');
+            if (!confirm(`确定要暂停队列 "${queueName}" 的所有定时任务调度吗？`)) return;
             
             $.ajax({
                 url: '/funboost/pause_scheduler?queue_name=' + encodeURIComponent(queueName),
                 method: 'POST',
                 success: function(response) {
-                    console.log('pauseScheduler: success', response);
-                    if (response.succ) {
-                        updateSchedulerStatus(queueName);
-                    } else {
-                        alert('暂停失败: ' + response.msg);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('pauseScheduler: error', status, error, xhr.responseText);
-                    alert('暂停请求失败: ' + (xhr.responseText || error));
+                    if (response.succ) updateSchedulerStatus(queueName);
+                    else alert('暂停失败: ' + response.msg);
                 }
             });
         }
 
-        // 恢复调度器
         function resumeScheduler(queueName) {
-            console.log('resumeScheduler called with:', queueName);
-            
-            if (!confirm(`确定要恢复队列 "${queueName}" 的定时任务调度吗？`)) {
-                console.log('resumeScheduler: user cancelled');
-                return;
-            }
-            
-            console.log('resumeScheduler: sending POST request');
+            if (!confirm(`确定要恢复队列 "${queueName}" 的定时任务调度吗？`)) return;
             
             $.ajax({
                 url: '/funboost/resume_scheduler?queue_name=' + encodeURIComponent(queueName),
                 method: 'POST',
                 success: function(response) {
-                    console.log('resumeScheduler: success', response);
-                    if (response.succ) {
-                        updateSchedulerStatus(queueName);
-                    } else {
-                        alert('恢复失败: ' + response.msg);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('resumeScheduler: error', status, error, xhr.responseText);
-                    alert('请求失败: ' + (xhr.responseText || '网络错误'));
+                    if (response.succ) updateSchedulerStatus(queueName);
+                    else alert('恢复失败: ' + response.msg);
                 }
             });
         }
 
-        // 显示定时任务说明模态框
         function showHelpModal() {
             $('#helpModal').modal('show');
         }
 
-        // ==================== 确保函数全局可访问 ====================
-        // 将所有关键函数显式挂载到 window 对象，防止因作用域问题导致 onclick 失效
-        window.pauseSelectedScheduler = pauseSelectedScheduler;
-        window.resumeSelectedScheduler = resumeSelectedScheduler; // 保留旧的
-        window.refreshSelectedSchedulerStatus = refreshSelectedSchedulerStatus;
-        window.updateTopSchedulerStatus = updateTopSchedulerStatus;
-        
-        // 新的调度器控制函数
+        // 全局函数
         window.pauseScheduler = pauseScheduler;
         window.resumeScheduler = resumeScheduler;
         window.updateSchedulerStatus = updateSchedulerStatus;
-        
-        // 行级任务操作函数
         window.pauseJob = pauseJob;
         window.resumeJob = resumeJob;
         window.deleteJob = deleteJob;
         window.editJob = editJob;
         window.showJobDetail = showJobDetail;
-        
-        // 帮助说明函数
         window.showHelpModal = showHelpModal;
-        
-        console.log('Global functions exposed to window object');
     </script>
 </body>
 </html>
-

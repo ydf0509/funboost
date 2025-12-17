@@ -214,6 +214,7 @@ Funboost 的性能与 Celery 相比，有着**数量级**的优势（基于控�
 | [4. **各种代码示例 (核心)**](https://funboost.readthedocs.io/zh-cn/latest/articles/c4.html) | [11. 集成第三方框架 (Celery/Kombu等)](https://funboost.readthedocs.io/zh-cn/latest/articles/c11.html) | [7. 更新记录](https://funboost.readthedocs.io/zh-cn/latest/articles/c7.html) |
 | [5. 运行时截图展示](https://funboost.readthedocs.io/zh-cn/latest/articles/c5.html) | [12. 命令行控制台支持](https://funboost.readthedocs.io/zh-cn/latest/articles/c12.html) | [20. Gemini AI 生成的框架中心思想](https://funboost.readthedocs.io/zh-cn/latest/articles/c20.html) |
 | | [13. Web Manager 可视化管理](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html) | |
+| | [⚡ **15. FaaS Serverless 微服务 (战略级核心)**](https://funboost.readthedocs.io/zh-cn/latest/articles/c15.html) | |
 
 ---
 

@@ -30,15 +30,15 @@ import nb_log
 from funboost import (
     nb_print,
     ActiveCousumerProcessInfoGetter,
-    BoostersManager,
-    PublisherParams,
-    RedisMixin,
+    # BoostersManager,  # 未使用
+    # PublisherParams,  # 未使用
+    # RedisMixin,  # 已废弃的 pause/resume 路由使用，现已注释
 )
 from funboost.funboost_web_manager.functions import (
     get_cols,
     query_result,
     get_speed,
-    Statistic,
+    # Statistic,  # 已废弃，前端不再使用 speed_statistic_for_echarts 路由
 )
 from funboost.funboost_web_manager import functions as app_functions
 from funboost.core.active_cousumer_info_getter import (
@@ -46,7 +46,7 @@ from funboost.core.active_cousumer_info_getter import (
     SingleQueueConusmerParamsGetter,
     CareProjectNameEnv,
 )
-from funboost.constant import RedisKeys
+# from funboost.constant import RedisKeys  # 已废弃的 pause/resume 路由使用，现已注释
 from funboost.faas import flask_blueprint
 
 app = Flask(__name__)
@@ -170,12 +170,34 @@ def speed_stats():
     return jsonify(get_speed(**request.values.to_dict()))
 
 
-@app.route("/speed_statistic_for_echarts")
+# 以下路由已废弃，功能已迁移到 consume_speed_curve，前端不再使用
+# @app.route("/speed_statistic_for_echarts")
+# @login_required
+# def speed_statistic_for_echarts():
+#     stat = Statistic(request.args.get("col_name"))
+#     stat.build_result()
+#     return jsonify(stat.result)
+
+
+@app.route("/consume_speed_curve")
 @login_required
-def speed_statistic_for_echarts():
-    stat = Statistic(request.args.get("col_name"))
-    stat.build_result()
-    return jsonify(stat.result)
+def consume_speed_curve():
+    """获取消费速率曲线数据"""
+    from funboost.funboost_web_manager.functions import get_consume_speed_curve
+    col_name = request.args.get("col_name")
+    start_time = request.args.get("start_time")
+    end_time = request.args.get("end_time")
+    granularity = request.args.get("granularity", "auto")
+    
+    if not col_name or not start_time or not end_time:
+        return jsonify({"error": "缺少必要参数: col_name, start_time, end_time"})
+    
+    try:
+        result = get_consume_speed_curve(col_name, start_time, end_time, granularity)
+        return jsonify(result)
+    except Exception as e:
+        import traceback
+        return jsonify({"error": str(e), "traceback": traceback.format_exc()})
 
 
 @app.route("/tpl/<template>")
@@ -261,16 +283,17 @@ def get_queues_params_and_active_consumers():
 
 
 
-@app.route("/queue/pause/<queue_name>", methods=["POST"])
-def pause_cousume(queue_name):
-    RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name, "1")
-    return jsonify({"success": True})
+# 以下两个路由已废弃，前端没有使用（暂停/恢复消费功能可能在其他地方实现）
+# @app.route("/queue/pause/<queue_name>", methods=["POST"])
+# def pause_cousume(queue_name):
+#     RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name, "1")
+#     return jsonify({"success": True})
 
 
-@app.route("/queue/resume/<queue_name>", methods=["POST"])
-def resume_consume(queue_name):
-    RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name, "0")
-    return jsonify({"success": True})
+# @app.route("/queue/resume/<queue_name>", methods=["POST"])
+# def resume_consume(queue_name):
+#     RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name, "0")
+#     return jsonify({"success": True})
 
 
 @app.route("/queue/get_msg_num_all_queues", methods=["GET"])

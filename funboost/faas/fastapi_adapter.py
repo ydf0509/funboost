@@ -819,6 +819,7 @@ class QueueParamsAndActiveConsumersData(BaseModel):
     all_consumers_avarage_function_spend_time_from_start: typing.Optional[float]   # 所有消费进程从启动开始的平均耗时
     all_consumers_total_consume_count_from_start: int   # 所有消费进程从启动开始总消费次数
     all_consumers_total_consume_count_from_start_fail: int   # 所有消费进程从启动开始总失败次数
+    all_consumers_last_execute_task_time: typing.Optional[float]   # 所有消费进程中最后一次执行任务的时间戳
 
 
 class QueueConfigData(BaseModel):
@@ -889,6 +890,7 @@ def get_queue_run_info(queue_name: str):
         - all_consumers_avarage_function_spend_time_from_start: 所有消费进程，从启动开始的平均函数耗时
         - all_consumers_total_consume_count_from_start: 所有消费进程，从启动开始的总消费次数
         - all_consumers_total_consume_count_from_start_fail: 所有消费进程，从启动开始的总失败次数
+        - all_consumers_last_execute_task_time: 所有消费进程中，最后一次执行任务的时间戳
     """
     try:
         # 获取单个队列的运行信息

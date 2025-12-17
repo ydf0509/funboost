@@ -5,212 +5,824 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>pytho万能分布式函数调度框架</title>
+    <title>消费速率统计</title>
     <link href="{{ url_for('static',filename='css_cdn/twitter-bootstrap/3.3.7/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
-    <link rel="stylesheet"
-        href="{{ url_for('static',filename='css_cdn/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/jquery.mCustomScrollbar.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/custom.css') }}">
-
-    <!-- 在其他 link 标签后添加 -->
     <link href="{{ url_for('static',filename='css_cdn/select2/4.0.13/css/select2.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static',filename='css/content_page_style.css') }}" rel="stylesheet">
-
 
     <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.0/jquery.min.js"></script> -->
-    <!-- 在其他 script 标签后添加 -->
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/select2/4.0.13/js/select2.min.js"></script> -->
     <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
     <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
-
-
-    <script src="{{ url_for('static',filename='js/moment-with-locales.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='js/bootstrap-datetimepicker.min.js') }}"></script>
-    <!-- <script src="https://cdn.bootcss.com/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script> -->
-    <!-- <script type="text/javascript" src="https://cdn.bootcss.com/echarts/3.3.0/echarts.js"></script> -->
     <script type="text/javascript" src="{{ url_for('static',filename='js/echarts.min.js') }}"></script>
 
-    <script src="{{ url_for('static',filename='assets/js/jquery.mCustomScrollbar.concat.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='assets/js/custom.js') }}"></script>
-
-
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px 25px;
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .card-header i {
+            font-size: 24px;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .control-panel {
+            background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .control-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-control {
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            padding: 10px 15px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+        
+        .btn-query {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-query:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .btn-query:active {
+            transform: translateY(0);
+        }
+        
+        .quick-time-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .btn-time {
+            background: #ffffff;
+            border: 2px solid #dee2e6;
+            color: #495057;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .btn-time:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .btn-time.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            color: white;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 500px;
+            background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .stats-summary {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card.success {
+            border-left: 4px solid #28a745;
+        }
+        
+        .stat-card.fail {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .stat-card.total {
+            border-left: 4px solid #007bff;
+        }
+        
+        .stat-card.qps {
+            border-left: 4px solid #fd7e14;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card.success .stat-value { color: #28a745; }
+        .stat-card.fail .stat-value { color: #dc3545; }
+        .stat-card.total .stat-value { color: #007bff; }
+        .stat-card.qps .stat-value { color: #fd7e14; }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            z-index: 10;
+        }
+        
+        .loading-overlay i {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .loading-overlay span {
+            font-size: 16px;
+            color: #495057;
+        }
+        
+        .no-data {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #adb5bd;
+        }
+        
+        .no-data i {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+        
+        .no-data span {
+            font-size: 18px;
+        }
+        
+        /* Select2 美化 */
+        .select2-container--default .select2-selection--single {
+            height: 44px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 40px;
+            padding-left: 15px;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 42px;
+        }
+        
+        .select2-dropdown {
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .select2-results__option {
+            padding: 10px 15px;
+        }
+        
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .time-range-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .time-range-inputs input {
+            width: 200px;
+        }
+        
+        .time-range-inputs span {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .info-tip {
+            background: linear-gradient(145deg, #e7f3ff 0%, #d0e8ff 100%);
+            border-left: 4px solid #0d6efd;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #0a58ca;
+        }
+        
+        .info-tip i {
+            margin-right: 8px;
+        }
     </style>
 </head>
 
 <body>
-
-
-
-
-
-    <!-- <li><a href="{{url_for('logout')}}">退出</a></li> -->
-
-    <!-- 添加固定导航栏
-    <nav class="navbar navbar-default navbar-fixed-top" style="min-height: 40px;">
-        <div class="container-fluid">
-            <div class="navbar-header pull-right">
-                <a href="{{url_for('logout')}}" class="btn btn-danger" style="margin: 4px 15px;">
-                    <i class="fa fa-sign-out"></i> 退出
-                </a>
+    <div class="main-container">
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span><i class="fa fa-line-chart"></i> 消费速率统计曲线</span>
+                <button type="button" class="btn" onclick="showHelpModal()" style="background: linear-gradient(135deg, #6c757d, #495057); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;">
+                    <i class="fa fa-question-circle"></i> 数据说明
+                </button>
             </div>
-        </div>
-    </nav> -->
-
-    <!-- 删除原来的退出按钮 -->
-    <!-- 调整主容器的上边距 -->
-    <div class="container-fluid" style="margin-top: 5px;">
-        <div style="margin-top: 5px;">
-            <form class="form-inline" role="form" style="float: left">
-                <div class="form-group ">
-                    <label for="col_name_search">队列名称：</label>
-                    <select class="form-control" id="col_name_search">
-                        <option value="">请选择队列...</option>
-                    </select>
+            <div class="card-body">
+                <div class="info-tip">
+                    <i class="fa fa-info-circle"></i>
+                    选择队列后自动生成近60分钟曲线。点击快捷时间按钮立即切换时间范围。如需自定义时间范围，请手动设置后点击查询按钮。
                 </div>
-                <button type="button" class="btn btn-default marginLeft20" onclick="statistic()">生成消费速率统计图</button>
-            </form>
-        </div>
-        <div id=echartsArea style="display: block">
-            <div id="st4" style="width: 100%;height:600px;margin-top:60px;"></div>
-            <div id="st3" style="width: 100%;height:600px;margin-top:60px;"></div>
-            <div id="st2" style="width: 100%;height:600px;margin-top:60px;"></div>
-            <div id="st1" style="width: 100%;height:600px;margin-top:60px;"></div>
+                
+                <!-- 帮助弹窗 -->
+                <div id="helpModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+                    <div style="background: white; border-radius: 12px; max-width: 700px; width: 90%; max-height: 80%; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                        <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px 25px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; font-size: 18px;"><i class="fa fa-info-circle"></i> 数据来源说明</h3>
+                            <button onclick="hideHelpModal()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px;">&times;</button>
+                        </div>
+                        <div style="padding: 25px;">
+                            <div style="background: linear-gradient(145deg, #fff3cd 0%, #ffeeba 100%); border-left: 4px solid #ffc107; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;">
+                                <h4 style="margin: 0 0 10px 0; color: #856404; font-size: 15px;"><i class="fa fa-exclamation-triangle"></i> 重要提示</h4>
+                                <p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.6;">
+                                    此页面的曲线图数据来源于 <strong>funboost 保存到 MongoDB</strong> 中的函数执行状态记录。<br>
+                                    如果您的队列没有数据，请确认已开启 <strong>结果持久化配置</strong>。
+                                </p>
+                            </div>
+                            
+                            <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                                <h4 style="margin: 0 0 15px 0; color: #495057; font-size: 15px;"><i class="fa fa-code"></i> 开启方法示例</h4>
+                                <p style="margin: 0 0 10px 0; color: #6c757d; font-size: 13px;">在您的 booster 参数中添加以下配置：</p>
+                                <pre style="background: #1a1a2e; color: #e9ecef; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; margin: 0;"><code style="color: #7dd3fc;">function_result_status_persistance_conf</code>: <code style="color: #fbbf24;">FunctionResultStatusPersistanceConfig</code>(
+    <code style="color: #a5b4fc;">is_save_result</code>=<code style="color: #4ade80;">True</code>,      <code style="color: #6b7280;"># 保存函数返回结果</code>
+    <code style="color: #a5b4fc;">is_save_status</code>=<code style="color: #4ade80;">True</code>,      <code style="color: #6b7280;"># 保存执行状态（本页面必须开启）</code>
+    <code style="color: #a5b4fc;">expire_seconds</code>=<code style="color: #fb923c;">7 * 24 * 3600</code>,  <code style="color: #6b7280;"># 数据过期时间（秒）</code>
+    <code style="color: #a5b4fc;">is_use_bulk_insert</code>=<code style="color: #f87171;">False</code>  <code style="color: #6b7280;"># 是否批量插入</code>
+)</pre>
+                            </div>
+                            
+                            <div style="background: linear-gradient(145deg, #d1ecf1 0%, #bee5eb 100%); border-left: 4px solid #17a2b8; padding: 15px 20px; border-radius: 8px;">
+                                <h4 style="margin: 0 0 10px 0; color: #0c5460; font-size: 15px;"><i class="fa fa-database"></i> 数据存储位置</h4>
+                                <p style="margin: 0; color: #0c5460; font-size: 14px; line-height: 1.6;">
+                                    数据存储在 MongoDB 的 <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">funboost_task_status</code> 数据库中，<br>
+                                    每个队列对应一个同名的 collection。
+                                </p>
+                            </div>
+                        </div>
+                        <div style="padding: 15px 25px; border-top: 1px solid #e9ecef; text-align: right;">
+                            <button onclick="hideHelpModal()" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                                <i class="fa fa-check"></i> 我知道了
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-panel">
+                    <div class="control-row">
+                        <div class="control-group" style="flex: 1; min-width: 300px;">
+                            <label><i class="fa fa-database"></i> 队列名称</label>
+                            <select class="form-control" id="col_name_search" style="width: 100%;">
+                                <option value="">请选择队列...</option>
+                            </select>
+                        </div>
+                        
+                    </div>
+                    
+                    <div class="quick-time-btns">
+                        <span style="color: #6c757d; font-weight: 500; margin-right: 10px;">快捷选择（点击立即查询）：</span>
+                        <button class="btn-time" data-minutes="1">近1分钟</button>
+                        <button class="btn-time" data-minutes="10">近10分钟</button>
+                        <button class="btn-time active" data-minutes="60">近60分钟</button>
+                        <button class="btn-time" data-minutes="1440">近24小时</button>
+                        <button class="btn-time" data-minutes="10080">近7天</button>
+                        <button class="btn-time" data-minutes="43200">近30天</button>
+                    </div>
+                    
+                    <div class="time-range-inputs" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #dee2e6; display: flex; align-items: center; flex-wrap: wrap; gap: 15px;">
+                        <span style="color: #6c757d; font-weight: 500;"><i class="fa fa-calendar"></i> 自定义时间范围：</span>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="datetime-local" class="form-control" id="start_time" style="width: 200px;">
+                            <span style="color: #6c757d;">至</span>
+                            <input type="datetime-local" class="form-control" id="end_time" style="width: 200px;">
+                            <button type="button" class="btn btn-query" onclick="queryCustomTimeRange()">
+                                <i class="fa fa-search"></i> 查询
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-summary" id="stats_summary" style="display: none;">
+                    <div class="stat-card success">
+                        <div class="stat-value" id="stat_success">0</div>
+                        <div class="stat-label">成功次数</div>
+                    </div>
+                    <div class="stat-card fail">
+                        <div class="stat-value" id="stat_fail">0</div>
+                        <div class="stat-label">失败次数</div>
+                    </div>
+                    <div class="stat-card total">
+                        <div class="stat-value" id="stat_total">0</div>
+                        <div class="stat-label">总次数</div>
+                    </div>
+                    <div class="stat-card qps">
+                        <div class="stat-value" id="stat_qps">0</div>
+                        <div class="stat-label">平均 QPS</div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div id="chart_area" style="width: 100%; height: 100%;"></div>
+                    <div class="loading-overlay" id="loading_overlay" style="display: none;">
+                        <i class="fa fa-spinner fa-spin"></i>
+                        <span>正在加载数据...</span>
+                    </div>
+                    <div class="no-data" id="no_data_tip">
+                        <i class="fa fa-bar-chart"></i>
+                        <span>请选择队列，将自动生成近60分钟曲线</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-
-
-
-
-
     <script>
-
-        // 在现有的变量声明后添加
-        var allQueues = [];  // 存储所有队列数据
-        var currentColName;
-
-        // 页面加载完成后立即获取所有队列
-        $(document).ready(function () {
+        var currentColName = '';
+        var chartInstance = null;
+        
+        // 显示帮助弹窗
+        function showHelpModal() {
+            document.getElementById('helpModal').style.display = 'flex';
+        }
+        
+        // 隐藏帮助弹窗
+        function hideHelpModal() {
+            document.getElementById('helpModal').style.display = 'none';
+        }
+        
+        // 点击弹窗背景关闭
+        document.addEventListener('click', function(e) {
+            var modal = document.getElementById('helpModal');
+            if (e.target === modal) {
+                hideHelpModal();
+            }
+        });
+        
+        // 格式化日期为 datetime-local 格式
+        function formatDatetimeLocal(date) {
+            var pad = function(n) { return n < 10 ? '0' + n : n; };
+            return date.getFullYear() + '-' +
+                pad(date.getMonth() + 1) + '-' +
+                pad(date.getDate()) + 'T' +
+                pad(date.getHours()) + ':' +
+                pad(date.getMinutes());
+        }
+        
+        // 格式化日期为后端接口格式
+        function formatDatetimeForApi(date) {
+            var pad = function(n) { return n < 10 ? '0' + n : n; };
+            return date.getFullYear() + '-' +
+                pad(date.getMonth() + 1) + '-' +
+                pad(date.getDate()) + ' ' +
+                pad(date.getHours()) + ':' +
+                pad(date.getMinutes()) + ':' +
+                pad(date.getSeconds());
+        }
+        
+        // 设置默认时间（近60分钟）
+        function setDefaultTime(minutes) {
+            var now = new Date();
+            var start = new Date(now.getTime() - minutes * 60 * 1000);
+            $('#start_time').val(formatDatetimeLocal(start));
+            $('#end_time').val(formatDatetimeLocal(now));
+        }
+        
+        // 页面加载完成
+        $(document).ready(function() {
+            // 设置默认时间
+            setDefaultTime(60);
+            
+            // 加载队列列表
             $.ajax({
                 url: "{{ url_for('query_cols_view')}}",
                 data: { col_name_search: '' },
                 async: true,
-                success: function (result) {
-                    allQueues = result;
+                success: function(result) {
                     var html = '<option value="">请选择队列...</option>';
                     for (var item of result) {
                         html += '<option value="' + item.collection_name + '">' +
-                            item.collection_name + '&nbsp;&nbsp;&nbsp;&nbsp;(result_count:' + item.count + ')</option>';
+                            item.collection_name + ' (记录数: ' + item.count + ')</option>';
                     }
                     $("#col_name_search").html(html);
-
-                    // 初始化选择框的搜索功能
+                    
+                    // 初始化 Select2
                     $("#col_name_search").select2({
                         placeholder: "请输入队列名称搜索...",
                         allowClear: true,
-                        width: '500px'
+                        width: '100%'
                     });
-
-                    // 监听选择变化
-                    $("#col_name_search").on('change', function () {
-                        var selectedQueue = $(this).val();
-                        console.log("Selected queue:", selectedQueue);
-                        currentColName = selectedQueue;
-                        // if(selectedQueue) {
-                        //     queryResult(selectedQueue, 0, true);
-                        // }
+                    
+                    $("#col_name_search").on('change', function() {
+                        currentColName = $(this).val();
+                        // 切换队列时立即触发生成近60分钟曲线
+                        if (currentColName) {
+                            // 重置快捷按钮到60分钟
+                            $('.btn-time').removeClass('active');
+                            $('.btn-time[data-minutes="60"]').addClass('active');
+                            queryByMinutes(60);
+                        }
                     });
+                }
+            });
+            
+            // 快捷时间按钮 - 点击立即触发查询
+            $('.btn-time').click(function() {
+                $('.btn-time').removeClass('active');
+                $(this).addClass('active');
+                var minutes = parseInt($(this).data('minutes'));
+                setDefaultTime(minutes);
+                // 如果已选择队列，立即查询
+                if (currentColName) {
+                    queryByMinutes(minutes);
+                } else {
+                    alert('请先选择队列名称');
                 }
             });
         });
-
-
-
-
-        function statistic() {
-            if (currentColName === undefined) {
+        
+        // 按分钟数查询（用于快捷按钮和队列切换）
+        function queryByMinutes(minutes) {
+            if (!currentColName) {
+                alert('请先选择队列名称');
                 return;
             }
-
-            $('#echartsInfoTex').html('生成统计表中，需要一段时间。。。。');
-            $("#echartsInfoTex").css('display', 'block');
-            $("#echartsArea").css('display', 'block');
-            // stopRun();
+            
+            var now = new Date();
+            var start = new Date(now.getTime() - minutes * 60 * 1000);
+            
+            doQuery(start, now);
+        }
+        
+        // 自定义时间范围查询（用于查询按钮）
+        function queryCustomTimeRange() {
+            if (!currentColName) {
+                alert('请先选择队列名称');
+                return;
+            }
+            
+            var startTimeVal = $('#start_time').val();
+            var endTimeVal = $('#end_time').val();
+            
+            if (!startTimeVal || !endTimeVal) {
+                alert('请选择开始时间和结束时间');
+                return;
+            }
+            
+            var startDate = new Date(startTimeVal);
+            var endDate = new Date(endTimeVal);
+            
+            if (startDate >= endDate) {
+                alert('开始时间必须小于结束时间');
+                return;
+            }
+            
+            // 清除快捷按钮的active状态
+            $('.btn-time').removeClass('active');
+            
+            doQuery(startDate, endDate);
+        }
+        
+        // 执行查询（通用函数）
+        function doQuery(startDate, endDate) {
+            var startTime = formatDatetimeForApi(startDate);
+            var endTime = formatDatetimeForApi(endDate);
+            
+            // 显示加载中
+            $('#no_data_tip').hide();
+            $('#loading_overlay').show();
+            $('#stats_summary').hide();
+            
             $.ajax({
-                url: "{{ url_for('speed_statistic_for_echarts')}}", data: {
-                    col_name: currentColName
-                }, async: true, success: function (result, status) {
-                    // var msg = '{0}队列,最近一分钟内运行成功了{1}次,失败了{2}次'.format(currentColName, result.success_num, result.fail_num);
-                    console.info(result);
-                    _buildOneChart('st1', '最近10天的消费情况', '运行次数', result['recent_10_days']['time_arr'], result['recent_10_days']['count_arr']);
-                    _buildOneChart('st2', '最近24小时的消费情况', '运行次数', result['recent_24_hours']['time_arr'], result['recent_24_hours']['count_arr']);
-                    _buildOneChart('st3', '最近60分钟的消费情况', '运行次数', result['recent_60_minutes']['time_arr'], result['recent_60_minutes']['count_arr']);
-                    _buildOneChart('st4', '最近60秒的消费情况', '运行次数', result['recent_60_seconds']['time_arr'], result['recent_60_seconds']['count_arr']);
-                    $("#echartsInfoTex").css('display', 'none');
-
-                    // $('#top_text').text(msg);
+                url: "{{ url_for('consume_speed_curve') }}",
+                data: {
+                    col_name: currentColName,
+                    start_time: startTime,
+                    end_time: endTime,
+                    granularity: 'auto'
+                },
+                success: function(result) {
+                    $('#loading_overlay').hide();
+                    
+                    if (result.error) {
+                        alert('查询失败: ' + result.error);
+                        $('#no_data_tip').show();
+                        return;
+                    }
+                    
+                    if (!result.time_arr || result.time_arr.length === 0) {
+                        $('#no_data_tip').html('<i class="fa fa-inbox"></i><span>该时间范围内没有数据</span>').show();
+                        return;
+                    }
+                    
+                    // 更新统计卡片
+                    var totalSuccess = result.total_success || 0;
+                    var totalFail = result.total_fail || 0;
+                    var total = totalSuccess + totalFail;
+                    var timeSpan = (endDate - startDate) / 1000; // 秒
+                    var qps = timeSpan > 0 ? (total / timeSpan).toFixed(2) : 0;
+                    
+                    $('#stat_success').text(totalSuccess.toLocaleString());
+                    $('#stat_fail').text(totalFail.toLocaleString());
+                    $('#stat_total').text(total.toLocaleString());
+                    $('#stat_qps').text(qps);
+                    $('#stats_summary').show();
+                    
+                    // 绘制图表
+                    buildChart(result);
+                },
+                error: function(xhr, status, error) {
+                    $('#loading_overlay').hide();
+                    $('#no_data_tip').show();
+                    alert('请求失败: ' + error);
                 }
             });
-
-
         }
-
-        function _buildOneChart(elementId, titelText, legendData, xData, yData) {
-
-            var myChart = echarts.init(document.getElementById(elementId));
-
-
-
-            // 指定图表的配置项和数据
+        
+        function buildChart(data) {
+            if (chartInstance) {
+                chartInstance.dispose();
+            }
+            
+            chartInstance = echarts.init(document.getElementById('chart_area'));
+            
             var option = {
                 title: {
-                    text: titelText
+                    text: '消费速率趋势 - ' + currentColName,
+                    subtext: data.start_time + ' 至 ' + data.end_time + ' (粒度: ' + data.granularity + ')',
+                    left: 'center',
+                    textStyle: {
+                        fontSize: 18,
+                        fontWeight: 'bold',
+                        color: '#2c3e50'
+                    },
+                    subtextStyle: {
+                        fontSize: 12,
+                        color: '#7f8c8d'
+                    }
                 },
-                tooltip: {},
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross',
+                        label: {
+                            backgroundColor: '#6a7985'
+                        }
+                    },
+                    backgroundColor: 'rgba(50, 50, 50, 0.9)',
+                    borderColor: '#333',
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
                 legend: {
-                    data: [legendData]
+                    data: ['成功', '失败'],
+                    top: 50,
+                    textStyle: {
+                        fontSize: 14
+                    }
                 },
-
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    top: '20%',
+                    containLabel: true
+                },
+                toolbox: {
+                    feature: {
+                        dataZoom: {
+                            yAxisIndex: 'none',
+                            title: {
+                                zoom: '区域缩放',
+                                back: '还原'
+                            }
+                        },
+                        restore: { title: '还原' },
+                        saveAsImage: { title: '保存图片' }
+                    },
+                    right: 20
+                },
+                dataZoom: [
+                    {
+                        type: 'inside',
+                        start: 0,
+                        end: 100
+                    },
+                    {
+                        type: 'slider',
+                        start: 0,
+                        end: 100,
+                        height: 20,
+                        bottom: 10
+                    }
+                ],
                 xAxis: {
                     type: 'category',
-                    data: xData,
+                    boundaryGap: false,
+                    data: data.time_arr,
                     axisLabel: {
-                        rotate: 90,
-
-                        interval: 0,
-
-                        // formatter: function (value) {
-                        //
-                        //     console.info(value);
-                        //     var v =  value.split("").join("\n");
-                        //     console.info(v);
-                        //     return v;
-                        // },
-
-                        // show: true, interval: 'auto', inside: false, rotate: 90, margin: 8, formatter: null, showMinLabel: null, showMaxLabel: null,
-
+                        rotate: 45,
+                        fontSize: 11,
+                        color: '#666'
                     },
-
+                    axisLine: {
+                        lineStyle: {
+                            color: '#ccc'
+                        }
+                    }
                 },
-
-                yAxis: {},
-                series: [{
-                    name: legendData,
-                    type: 'bar',
-                    data: yData
-                }]
+                yAxis: {
+                    type: 'value',
+                    name: '次数',
+                    nameTextStyle: {
+                        fontSize: 13,
+                        color: '#666'
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#ccc'
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            type: 'dashed',
+                            color: '#e9ecef'
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: '成功',
+                        type: 'line',
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        sampling: 'lttb',
+                        itemStyle: {
+                            color: '#28a745'
+                        },
+                        lineStyle: {
+                            width: 3,
+                            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                { offset: 0, color: '#28a745' },
+                                { offset: 1, color: '#20c997' }
+                            ])
+                        },
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(40, 167, 69, 0.4)' },
+                                { offset: 1, color: 'rgba(40, 167, 69, 0.05)' }
+                            ])
+                        },
+                        data: data.success_arr
+                    },
+                    {
+                        name: '失败',
+                        type: 'line',
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        sampling: 'lttb',
+                        itemStyle: {
+                            color: '#dc3545'
+                        },
+                        lineStyle: {
+                            width: 3,
+                            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                { offset: 0, color: '#dc3545' },
+                                { offset: 1, color: '#fd7e14' }
+                            ])
+                        },
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(220, 53, 69, 0.4)' },
+                                { offset: 1, color: 'rgba(220, 53, 69, 0.05)' }
+                            ])
+                        },
+                        data: data.fail_arr
+                    }
+                ]
             };
-
-            // 使用刚指定的配置项和数据显示图表。
-            myChart.setOption(option);
-            console.info(elementId);
-
-
+            
+            chartInstance.setOption(option);
+            
+            // 响应式
+            window.addEventListener('resize', function() {
+                if (chartInstance) {
+                    chartInstance.resize();
+                }
+            });
         }
-
-
     </script>
 </body>
 

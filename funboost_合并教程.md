@@ -39,6 +39,7 @@ This markdown document is structured as follows:
 
 
 - `funboost` 是python 全功能分布式函数调度框架
+- `funboost.faas` 是funboost的战略级核武器。使函数调度框架产生架构质变：从 Worker 到 Service
 
 - 以下一定要记住，最最重要的 类和函数如下：
    - @boost(BoosterParams(...))  任意普通函数加上装饰器，变成分布式函数
@@ -3739,6 +3740,7 @@ Funboost 的性能与 Celery 相比，有着**数量级**的优势（基于控�
 | [4. **各种代码示例 (核心)**](https://funboost.readthedocs.io/zh-cn/latest/articles/c4.html) | [11. 集成第三方框架 (Celery/Kombu等)](https://funboost.readthedocs.io/zh-cn/latest/articles/c11.html) | [7. 更新记录](https://funboost.readthedocs.io/zh-cn/latest/articles/c7.html) |
 | [5. 运行时截图展示](https://funboost.readthedocs.io/zh-cn/latest/articles/c5.html) | [12. 命令行控制台支持](https://funboost.readthedocs.io/zh-cn/latest/articles/c12.html) | [20. Gemini AI 生成的框架中心思想](https://funboost.readthedocs.io/zh-cn/latest/articles/c20.html) |
 | | [13. Web Manager 可视化管理](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html) | |
+| | [⚡ **15. FaaS Serverless 微服务 (战略级核心)**](https://funboost.readthedocs.io/zh-cn/latest/articles/c15.html) | |
 
 ---
 
@@ -5753,14 +5755,198 @@ web里面,天然需要上传文件,而且上传时候就可以控制文件大小
 
 ![1756373743657](image/c6/1756373743657.png)  
 
+#### 14.1.4.2 funboost的ai markdown文档是使用神级别 ai上下文生成工具 nb_ai_context 生成的
+
+为什么 funboost的这个合并单一markdown传给ai后，ai如此强悍无幻觉，一方面是`gemini`很强大，另一方面是因为 `nb_ai_context` 生成的上下文太好了。
+
+[nb_ai_context地址](https://github.com/ydf0509/nb_ai_context)
+
+安装 `nb_ai_context`： `pip install nb_ai_context`
+
+`nb_ai_context` 可以对任何it项目代码打包生成一个单一的markdown，传给ai后，效果非常强，吊打最知名的`repomix`。
+
+
+#### 14.1.4.3 公布 funboost ai上下文 markdown 文档的生成方式
+
+```python
+from nb_ai_context import AiMdGenerator,NbPath
+
+project_name="funboost"
+project_root=fr"D:\codes\{project_name}"
+
+project_summary = """
+- `funboost` 是python 全功能分布式函数调度框架
+- `funboost.faas` 是funboost的战略级核武器。使函数调度框架产生架构质变：从 Worker 到 Service
+
+- 以下一定要记住，最最重要的 类和函数如下：
+   - @boost(BoosterParams(...))  任意普通函数加上装饰器，变成分布式函数
+   - BoosterParams 装饰器入参控制大全，一定要学习这个类的所有入参配置；ai绝对不允许胡编乱造源码api和教程中不存在的BoosterParams字段入参。
+   - BrokerEnum：支持 40+ 种消息队列中间件。
+   - BoostersManager 管理分布式函数，高阶用法可能需要用到，例如启动一组消费函数，启动所有消费函数等。
+   - ApsJobAdder 类， 是定时任务的最重要使用方式的类
+   - ConcurrentModeEnum：funboost支持的并发模式。
+   
+
+"""
+
+
+boost_spider_summary = """
+- **`boost_spider` = `funboost` 的超跑引擎 + 一套为爬虫量身打造的瑞士军刀。所有仿scrapy api爬虫框架都还是处在变花样造一辆马车**
+
+- `boost_spider` 是增加了3个爬虫常用类，RequestClient  和  SpiderResponse  和 DatasetSink, 由funboost 驱动调度和并发。
+"""
+
+
+ai_md_codes = AiMdGenerator(
+    r"D:\codes\nb_ai_context\markdown_gen_files_git_ignore\ai_md_files\funboost_all_codes.md"
+).set_project_propery(project_name=project_name, project_root=project_root)
+
+ai_md_docs = AiMdGenerator(
+    r"D:\codes\nb_ai_context\markdown_gen_files_git_ignore\ai_md_files\funboost_all_docs.md"
+      ).set_project_propery(project_name="funboost_docs", project_root=r'D:\codes\funboost_docs')
+
+
+funboost_most_core_source_code_file_list=[
+        "funboost/__init__.py",
+        "funboost/core/booster.py",
+        "funboost/core/func_params_model.py",
+        "funboost/constant.py",
+        "funboost/timing_job/timing_push.py",
+        "funboost/funboost_config_deafult.py",
+        "funboost/core/current_task.py",
+        "funboost/core/cli/discovery_boosters.py",
+        
+        "funboost/core/msg_result_getter.py",
+        "funboost/publishers/base_publisher.py",
+        "funboost/consumers/base_consumer.py",
+        "funboost/core/active_cousumer_info_getter.py",
+        
+    ]
+
+(
+    ai_md_codes
+    .clear_text()
+    .add_ai_reading_guide()
+    .add_project_summary(
+        project_summary=project_summary, 
+        most_core_source_code_file_list=funboost_most_core_source_code_file_list)
+    .add_project_summary(
+        project_summary=boost_spider_summary, 
+        project_root=r"D:\codes\boost_spider",
+        most_core_source_code_file_list=[
+           "boost_spider/__init__.py",
+           "boost_spider/http/request_client.py",
+           "boost_spider/sink/dataset_sink.py",
+           "boost_spider/sink/json_sink.py",
+        
+    ])
+    .merge_from_dir(
+        relative_dir_name='examples',
+        use_gitignore=True,
+        as_title=f"{project_name} examples",
+        # 只包含 .py 和 .md 文件
+        should_include_suffixes=[".py", ".md", ".html"],
+        # 排除 __pycache__ 目录和特定的测试文件
+        excluded_dir_name_list=[],
+    )
+    .merge_from_dir(
+        relative_dir_name=project_name,
+        use_gitignore=True,
+        as_title=f"{project_name} codes",
+        # 只包含 .py 和 .md 文件
+        should_include_suffixes=[".py", ".md", ".html"],
+        # 排除 __pycache__ 目录和特定的测试文件
+        excluded_dir_name_list=[
+            r"funboost\utils\dependency_packages",
+            r"funboost\utils\dependency_packages_in_pythonpath",
+            r"funboost/utils/func_timeout",
+
+            r"funboost\funboost_web_manager\static",
+            r"funboost/concurrent_pool/backup"
+        ],
+    )
+    .merge_from_dir(
+        project_root=r"D:\codes\boost_spider",
+        relative_dir_name="boost_spider",
+        use_gitignore=True,
+        as_title="boost_spider codes",
+        # 只包含 .py 和 .md 文件
+        should_include_suffixes=[".py", ".md", ".html"],
+        # 排除 __pycache__ 目录和特定的测试文件
+        excluded_dir_name_list=[],
+    )
+    .get_textfile_info(is_show_info=True)
+)
+
+
+(
+    ai_md_docs
+    .clear_text()
+    .add_ai_reading_guide()
+    .add_project_summary(
+        project_summary=project_summary, 
+        project_root=r"D:\codes\funboost",
+        most_core_source_code_file_list=funboost_most_core_source_code_file_list
+    )
+    .add_project_summary(
+        project_summary=boost_spider_summary, 
+        project_root=r"D:\codes\boost_spider",
+        most_core_source_code_file_list=[
+           "boost_spider/__init__.py",
+           "boost_spider/http/request_client.py",
+           "boost_spider/sink/dataset_sink.py",
+           "boost_spider/sink/json_sink.py",
+        
+    ])
+    .merge_from_dir(
+        project_root=r"D:\codes\funboost",
+        relative_dir_name='examples',
+        use_gitignore=True,
+        as_title=f"{project_name} examples",
+        # 只包含 .py 和 .md 文件
+        should_include_suffixes=[".py", ".md", ".html"],
+        # 排除 __pycache__ 目录和特定的测试文件
+        excluded_dir_name_list=[],
+    )
+    .merge_from_dir(
+        project_root=r"D:\codes\funboost_docs",
+        relative_dir_name=r"source\articles",
+        use_gitignore=True,
+        as_title="funboost docs",
+        # 只包含 .py 和 .md 文件
+        should_include_suffixes=[".md"],
+        # 排除 __pycache__ 目录和特定的测试文件
+        excluded_dir_name_list=[],
+    )
+    .merge_from_files(
+        relative_file_name_list=["README.md"],
+        project_root=r"D:\codes\boost_spider",
+        as_title="boost_spider readme",
+    )
+    .get_textfile_info(is_show_info=True)
+)
+
+ai_md_docs_and_codes = NbPath(r'D:\codes\nb_ai_context\markdown_gen_files_git_ignore\ai_md_files','funboost_all_docs_and_codes.md').clear_text().merge_text_from_files([ai_md_docs,ai_md_codes])
+
+```
+
 ### 14.1.5 google ai studio 提问方式截图  
+
+#### 14.1.5.1 对google ai studio 提问： 如何实现分布式控频率？
+
+这个答案在教程中
 
 ![google ai studio 提问方式截图：](image.png)  
 
-`geimini` 的回答非常准确。不仅回答了`how`， 还回答了`why`， `gemini`的原理理解和作者我本人实现 `100%`一模一样。  
+截图显示 `geimini` 的回答非常准确。不仅回答了`how`， 还回答了`why`， `gemini`的原理理解和作者我本人实现 `100%`一模一样。  
 
+#### 14.1.5.2 对google ai studio 提问： funboost 的定时器为什么不怕重复多点部署？
 
+这个答案需要ai高度的分析源码的能力
 
+![alt text](image-1.png)
+
+截图显示 `geimini` 的回答推理能力很强，能准确一阵见血找到funboost的定时器不怕重复部署的本质原因和相关实现的代码片段。
 
 ## 14.2 使用腾讯 ima 知识库 + deepseek v3.1大模型 掌握 funboost
 

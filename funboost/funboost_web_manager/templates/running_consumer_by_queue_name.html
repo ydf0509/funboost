@@ -5,215 +5,542 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>pytho万能分布式函数调度框架</title>
+    <title>运行中消费者 (按队列分组)</title>
     <link href="{{ url_for('static',filename='css_cdn/twitter-bootstrap/3.3.7/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
-    <link rel="stylesheet"
-        href="{{ url_for('static',filename='css_cdn/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/jquery.mCustomScrollbar.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/custom.css') }}">
-
-    <!-- 在其他 link 标签后添加 -->
     <link href="{{ url_for('static',filename='css_cdn/select2/4.0.13/css/select2.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static',filename='css/content_page_style.css') }}" rel="stylesheet">
-
-
-    <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.0/jquery.min.js"></script> -->
-    <!-- 在其他 script 标签后添加 -->
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/select2/4.0.13/js/select2.min.js"></script> -->
-    <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
-
-
-    <script src="{{ url_for('static',filename='js/moment-with-locales.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='js/bootstrap-datetimepicker.min.js') }}"></script>
-    <!-- <script src="https://cdn.bootcss.com/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script> -->
-    <!-- <script type="text/javascript" src="https://cdn.bootcss.com/echarts/3.3.0/echarts.js"></script> -->
-    <script type="text/javascript" src="{{ url_for('static',filename='js/echarts.min.js') }}"></script>
-
-    <script src="{{ url_for('static',filename='assets/js/jquery.mCustomScrollbar.concat.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='assets/js/custom.js') }}"></script>
-
-        
-    <!-- 添加 Tabulator 样式和脚本 -->
     <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator_bootstrap3.min.css') }}" rel="stylesheet">
+
+    <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
+    <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static',filename='js_cdn/tabulator-tables@5.5.0/dist/js/tabulator.min.js') }}"></script>
 
     <style>
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #1e1e2f;
+            min-height: 100vh;
+            color: #d0d0d0;
+            margin: 0;
+            padding: 0;
+        }
 
+        .main-container {
+            padding: 20px;
+        }
+
+        /* 页面标题 */
+        .page-header-custom {
+            background: linear-gradient(135deg, #1a3a2e 0%, #1e2a3a 100%);
+            border: 1px solid #2a5a4a;
+            border-radius: 10px;
+            padding: 16px 24px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-icon i {
+            font-size: 20px;
+            color: #fff;
+        }
+
+        .header-title h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            margin: 0;
+        }
+
+        .header-title p {
+            font-size: 12px;
+            color: #888;
+            margin: 4px 0 0 0;
+        }
+
+        /* 统计卡片 */
+        .stats-cards {
+            display: flex;
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: #1a3a2e;
+            border: 1px solid #2a5a4a;
+            border-radius: 8px;
+            padding: 10px 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #34d399;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #888;
+        }
+
+        /* 查询面板 */
+        .query-panel {
+            background: #252538;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            padding: 14px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .query-panel label {
+            color: #aaa;
+            font-weight: 500;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* Select2 */
+        .select2-container--default .select2-selection--single {
+            background: #1e1e2f !important;
+            border: 1px solid #2a5a4a !important;
+            border-radius: 6px !important;
+            height: 36px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #e0e0e0 !important;
+            line-height: 36px !important;
+            padding-left: 12px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 34px !important;
+        }
+
+        .select2-dropdown {
+            background: #1e1e2f !important;
+            border: 1px solid #2a5a4a !important;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            background: #2a2a4a !important;
+            border: 1px solid #2a5a4a !important;
+            color: #e0e0e0 !important;
+        }
+
+        .select2-container--default .select2-results__option {
+            color: #c0c0c0;
+            padding: 8px 12px;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: #10b981 !important;
+            color: #fff !important;
+        }
+
+        /* 按钮 */
+        .btn-query {
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            border: none;
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-query:hover {
+            opacity: 0.9;
+            color: #fff;
+        }
+
+        .btn-refresh {
+            background: transparent;
+            border: 1px solid #a78bfa;
+            color: #a78bfa;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-refresh:hover {
+            background: rgba(167, 139, 250, 0.15);
+            color: #c4b5fd;
+        }
+
+        .auto-refresh-badge {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 14px;
+            padding: 5px 12px;
+            font-size: 11px;
+            color: #10b981;
+            margin-left: auto;
+        }
+
+        /* 表格容器 */
+        .table-container {
+            background: #252538;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Tabulator 样式 */
+        #result-table {
+            width: 100%;
+        }
+
+        .tabulator {
+            background: transparent !important;
+            border: none !important;
+            font-size: 13px;
+        }
+
+        /* 表头 - 深色背景白色文字 */
+        .tabulator .tabulator-header {
+            background: #1a3a2e !important;
+            border-bottom: 2px solid #10b981 !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col {
+            background: transparent !important;
+            border-right: 1px solid #2a5a4a !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col .tabulator-col-title {
+            color: #ffffff !important;
+            font-weight: 600;
+            font-size: 12px;
+            white-space: normal !important;
+            text-overflow: clip !important;
+            overflow: visible !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+            padding: 10px 8px !important;
+        }
+
+        /* 数据行 - 清晰的深色背景 */
+        .tabulator-row {
+            background: #1e1e2f !important;
+            border-bottom: 1px solid #2a2a4a !important;
+        }
+
+        .tabulator-row:nth-child(even) {
+            background: #232338 !important;
+        }
+
+        .tabulator-row:hover {
+            background: #2d3d4a !important;
+        }
+
+        .tabulator-row .tabulator-cell {
+            border-right: 1px solid #2a2a4a !important;
+            color: #d0d0d0 !important;
+            padding: 10px 8px !important;
+        }
+
+        /* 分组头部 - 绿色渐变 */
+        .tabulator .tabulator-group {
+            background: linear-gradient(90deg, #065f46 0%, #134e4a 100%) !important;
+            border: none !important;
+            border-left: 4px solid #34d399 !important;
+        }
+
+        .tabulator .tabulator-group span {
+            color: #ffffff !important;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .tabulator .tabulator-group .tabulator-arrow {
+            border-left-color: #e0e0e0 !important;
+            border-right-color: #e0e0e0 !important;
+            border-top-color: #e0e0e0 !important;
+            border-bottom-color: #e0e0e0 !important;
+        }
+
+        /* 分页器 */
+        .tabulator .tabulator-footer {
+            background: #252538 !important;
+            border-top: 1px solid #3a3a5a !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page {
+            background: #2a2a4a !important;
+            border: 1px solid #3a3a5a !important;
+            color: #c0c0c0 !important;
+            border-radius: 4px !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page:hover {
+            background: #3a3a5a !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page.active {
+            background: #10b981 !important;
+            border-color: #10b981 !important;
+            color: #fff !important;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 50px 30px;
+            color: #888;
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
     </style>
 </head>
 
 <body>
-
-    <div class="container-fluid" style="margin-top: 5px;">
-        <div style="margin-top: 5px;">
-            <form class="form-inline" role="form" style="">
-                <div class="form-group ">
-                    <label for="col_name_search">队列名字：</label>
-                    <select class="form-control" id="col_name_search">
-                        <option value="">请选择队列名字...</option>
-                    </select>
+    <div class="main-container">
+        <!-- 页面标题 -->
+        <div class="page-header-custom">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fa fa-tasks"></i>
                 </div>
-                <button type="button" class="btn btn-default marginLeft20" onclick="query()">查询</button>
-            </form>
+                <div class="header-title">
+                    <h1>运行中消费者 (按队列分组)</h1>
+                    <p>实时监控各队列上的消费者进程状态</p>
+                </div>
+            </div>
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-value" id="total_queue_count">0</div>
+                    <div class="stat-label">活跃队列</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total_consumer_count">0</div>
+                    <div class="stat-label">消费者总数</div>
+                </div>
+            </div>
         </div>
 
-        <div id="result-table" style="margin-top: 20px;"></div>
+        <!-- 查询面板 -->
+        <div class="query-panel">
+            <label><i class="fa fa-list-alt" style="margin-right: 6px;"></i>选择队列：</label>
+            <select class="form-control" id="col_name_search" style="width: 380px;">
+                <option value="">全部队列</option>
+            </select>
+            <button type="button" class="btn-query" onclick="query()">
+                <i class="fa fa-search"></i> 查询
+            </button>
+            <button type="button" class="btn-refresh" onclick="refreshData()">
+                <i class="fa fa-refresh"></i> 刷新
+            </button>
+            <span class="auto-refresh-badge">● 每30秒自动刷新</span>
+        </div>
 
+        <!-- 表格容器 -->
+        <div class="table-container">
+            <div id="result-table"></div>
+            <div class="empty-state" id="empty_state" style="display: none;">
+                <i class="fa fa-inbox"></i>
+                <h4>暂无运行中的消费者</h4>
+                <p>请确认消费者服务已启动</p>
+            </div>
+        </div>
     </div>
 
-
-
-
-
-
     <script>
+        var allQueues = [];
+        var currentColName = '';
+        var table = null;
 
-        // 在现有的变量声明后添加
-        var allQueues = [];  // 存储所有队列数据
-        var currentColName;
-
-        // 页面加载完成后立即获取所有队列
         $(document).ready(function () {
+            loadQueueList();
+            setInterval(refreshData, 30000);
+        });
+
+        function loadQueueList() {
             $.ajax({
                 url: "{{ url_for('hearbeat_info_partion_by_queue_name')}}",
                 data: { col_name_search: '' },
-                async: true,
                 success: function (result) {
                     allQueues = result;
-                    var html = '<option value="">请选择队列名字...</option>';
+                    
+                    var totalQueues = 0, totalConsumers = 0;
+                    var html = '<option value="">全部队列</option>';
                     for (var item of result) {
-                        html += '<option value="' + item.collection_name + '">' +
-                            item.collection_name + '&nbsp;&nbsp;&nbsp;&nbsp;(consumer_count:' + item.count + ')</option>';
+                        if (item.collection_name !== '所有') {
+                            // 只有有消费者在运行的队列才算活跃
+                            if (item.count > 0) {
+                                totalQueues++;
+                            }
+                            totalConsumers += item.count;
+                            html += '<option value="' + item.collection_name + '">' +
+                                item.collection_name + ' (' + item.count + ' 个)</option>';
+                        }
                     }
+                    
+                    $('#total_queue_count').text(totalQueues);
+                    $('#total_consumer_count').text(totalConsumers);
                     $("#col_name_search").html(html);
 
-                    // 初始化选择框的搜索功能
                     $("#col_name_search").select2({
-                        placeholder: "请输入队列名称搜索...",
+                        placeholder: "搜索队列名...",
                         allowClear: true,
-                        width: '500px'
+                        width: '380px'
                     });
 
-                    // 监听选择变化
                     $("#col_name_search").on('change', function () {
-                        var selectedQueue = $(this).val();
-                        console.log("Selected queue:", selectedQueue);
-                        currentColName = selectedQueue;
-                        // if(selectedQueue) {
-                        //     queryResult(selectedQueue, 0, true);
-                        // }
+                        currentColName = $(this).val();
+                        query();  // 选择变化时自动查询
                     });
+
+                    // 检查浏览器是否记住了上次选择的值
+                    var rememberedValue = $("#col_name_search").val();
+                    if (rememberedValue) {
+                        currentColName = rememberedValue;
+                    }
+
+                    query();
                 }
             });
-        });
+        }
 
-        $(document).ready(function (){
-            query()
-        });
+        function refreshData() { query(); }
 
         function query() {
             $.ajax({
                 url: "{{ url_for('hearbeat_info_by_queue_name')}}",
                 data: { queue_name: currentColName },
-                async: true,
                 success: function (result) {
-                    console.info(result);
+                    if (!result || result.length === 0) {
+                        $('#result-table').hide();
+                        $('#empty_state').show();
+                        return;
+                    }
 
-                                      // 创建表格
-                        var table = new Tabulator("#result-table", {
-                        theme: "bootstrap3",
-                        data: result,
-                     
-                         // layout: "fitColumns",
-                         layout: "fitDataTable",  // 改为 fitDataTable
-        responsiveLayout: false, // 禁用响应式布局
-                        columns: [
-                        {title: "<br><br>队列名称", field: "queue_name"},
-                            {title: "<br><br>消费函数", field: "consuming_function"},
-                            {title: "<br><br>主机名", field: "computer_name"},
-                            {title: "<br><br>IP地址", field: "computer_ip"},
-                            {title: "<br><br>进程ID", field: "process_id"},
-                            {title: "<br><br>启动时间", field: "start_datetime_str","width":200},
-                            {title: "<br><br>最近心跳时间", field: "hearbeat_datetime_str","width":200},
-                            
-                            {title:"近10秒<br>运行完成<br>消息个数",field:"last_x_s_execute_count", formatter:"html","width":100},
-                            {title:"近10秒<br>运行失败<br>消息个数",field:"last_x_s_execute_count_fail", formatter:"html","width":100},
-                            {title:"近10秒<br>函数运行<br>平均耗时",field:"last_x_s_avarage_function_spend_time", formatter:"html","width":100},
-                            
-                            {title:"累计<br>运行完成<br>消息个数",field:"total_consume_count_from_start", formatter:"html","width":100},
-                            {title:"累计<br>运行失败<br>消息个数",field:"total_consume_count_from_start_fail", formatter:"html","width":100},
-                            {title:"累计<br>函数运行<br>平均耗时",field:"avarage_function_spend_time_from_start", formatter:"html","width":100},
+                    $('#result-table').show();
+                    $('#empty_state').hide();
+                    $('#total_consumer_count').text(result.length);
 
-                            {title: "<br><br>代码文件", field: "code_filename"},
-                            // {title: "<br><br>consumer_id", field: "consumer_id"},
-                            {title: "<br><br>consumer_uuid", field: "consumer_uuid"},
-                        ],
-                        pagination: true,
-                        paginationSize: 1000,
-                        locale: true,
-                        langs: {
-                            "zh-cn": {
-                                "pagination": {
-                                    "first": "首页",
-                                    "first_title": "首页",
-                                    "last": "末页",
-                                    "last_title": "末页",
-                                    "prev": "上一页",
-                                    "prev_title": "上一页",
-                                    "next": "下一页",
-                                    "next_title": "下一页",
+                    if (table) {
+                        table.setData(result);
+                    } else {
+                        table = new Tabulator("#result-table", {
+                            data: result,
+                            layout: "fitDataFill",
+                            responsiveLayout: false,
+                            height: "auto",
+                            groupBy: "queue_name",
+                            groupStartOpen: true,
+                            groupHeader: function(value, count) {
+                                return '<i class="fa fa-list-alt" style="margin-right: 10px; color: #6ee7b7;"></i>' +
+                                       '<strong>队列: ' + (value || "未知") + '</strong>' + 
+                                       ' <span style="color: #ccc; margin-left: 16px; font-weight: normal;">(' + count + ' 个消费者)</span>';
+                            },
+                            columns: [
+                                {title: "消费函数", field: "consuming_function", width: 100,
+                                    formatter: function(cell) {
+                                        return '<code style="background: #1a3a2e; color: #6ee7b7; padding: 3px 8px; border-radius: 4px;">' + cell.getValue() + '</code>';
+                                    }
+                                },
+                                {title: "主机名", field: "computer_name", width: 150},
+                                {title: "IP地址", field: "computer_ip", width: 120,
+                                    formatter: function(cell) {
+                                        return '<span style="color: #60a5fa;">' + cell.getValue() + '</span>';
+                                    }
+                                },
+                                {title: "进程ID", field: "process_id", width: 70, hozAlign: "center"},
+                                {title: "启动时间", field: "start_datetime_str", width: 160},
+                                {title: "最近心跳", field: "hearbeat_datetime_str", width: 160,
+                                    formatter: function(cell) {
+                                        return '<span style="color: #34d399;"><i class="fa fa-heartbeat" style="margin-right: 5px;"></i>' + cell.getValue() + '</span>';
+                                    }
+                                },
+                                {title: "近10秒完成", field: "last_x_s_execute_count", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue() || 0;
+                                        var color = val > 0 ? '#34d399' : '#666';
+                                        return '<span style="color: ' + color + '; font-weight: 600;">' + val + '</span>';
+                                    }
+                                },
+                                {title: "近10秒失败", field: "last_x_s_execute_count_fail", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue() || 0;
+                                        var color = val > 0 ? '#f87171' : '#666';
+                                        return '<span style="color: ' + color + '; font-weight: 600;">' + val + '</span>';
+                                    }
+                                },
+                                {title: "近10秒耗时", field: "last_x_s_avarage_function_spend_time", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue();
+                                        if (val === null || val === undefined) return '<span style="color: #666;">-</span>';
+                                        return '<span style="color: #fbbf24;">' + val.toFixed(3) + 's</span>';
+                                    }
+                                },
+                                {title: "累计完成", field: "total_consume_count_from_start", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue() || 0;
+                                        return '<span style="color: #38bdf8; font-weight: 500;">' + val.toLocaleString() + '</span>';
+                                    }
+                                },
+                                {title: "累计失败", field: "total_consume_count_from_start_fail", hozAlign: "center", width: 80,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue() || 0;
+                                        var color = val > 0 ? '#f87171' : '#666';
+                                        return '<span style="color: ' + color + ';">' + val.toLocaleString() + '</span>';
+                                    }
+                                },
+                                {title: "累计耗时", field: "avarage_function_spend_time_from_start", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue();
+                                        if (val === null || val === undefined) return '<span style="color: #666;">-</span>';
+                                        return '<span style="color: #fb923c;">' + val.toFixed(3) + 's</span>';
+                                    }
+                                },
+                            ],
+                            pagination: true,
+                            paginationSize: 100,
+                            locale: true,
+                            langs: {
+                                "zh-cn": {
+                                    "pagination": {
+                                        "first": "首页", "last": "末页",
+                                        "prev": "上一页", "next": "下一页",
+                                    }
                                 }
                             }
-                        }
-                    });
-
-                    /* result 例如 [
-  {
-    "code_filename": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py", 
-    "computer_ip": "10.0.133.57", 
-    "computer_name": "LAPTOP-7V78BBO2", 
-    "consumer_id": 1462882757512, 
-    "consumer_uuid": "88f568f7-9723-48ef-9cac-0370b2333a49", 
-    "consuming_function": "f2", 
-    "hearbeat_datetime_str": "2025-02-25 17:28:36", 
-    "hearbeat_timestamp": 1740475716.783474, 
-    "process_id": 34788, 
-    "queue_name": "queue_test_f02t", 
-    "start_datetime_str": "2025-02-25 16:33:19", 
-    "start_timestamp": 1740472399.4628778
-  }, 
-  {
-    "code_filename": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py", 
-    "computer_ip": "10.0.133.57", 
-    "computer_name": "LAPTOP-7V78BBO2", 
-    "consumer_id": 1462882671944, 
-    "consumer_uuid": "c52a8596-d632-4bac-a797-80375288f381", 
-    "consuming_function": "f", 
-    "hearbeat_datetime_str": "2025-02-25 17:28:36", 
-    "hearbeat_timestamp": 1740475716.783336, 
-    "process_id": 34788, 
-    "queue_name": "queue_test_f01t", 
-    "start_datetime_str": "2025-02-25 16:33:19", 
-    "start_timestamp": 1740472399.4503505
-  }
-]
-  */
-
+                        });
+                    }
                 }
             });
         }
-
-
-
-
-
-
-
-
     </script>
 </body>
 

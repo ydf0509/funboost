@@ -91,6 +91,8 @@ class ConsumingFuncInputParamsChecker(FunboostFileLoggerMixin):
         """
         生成最终的函数参数信息，包括手动输入的参数和默认参数。
         """
+        if consumer_or_publisher_params.consuming_function is None:
+            return
         auto_generate_info = consumer_or_publisher_params.auto_generate_info
         if 'final_func_input_params_info' in auto_generate_info:
             return

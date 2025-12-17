@@ -588,7 +588,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 
 ### 📄 Python File Metadata: `funboost/constant.py`
 
-#### 🏛️ Classes (6)
+#### 🏛️ Classes (7)
 
 ##### 📌 `class BrokerEnum`
 *Line: 5*
@@ -713,6 +713,13 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `optional_arg_name_list = 'optional_arg_name_list'`
 - `func_name = 'func_name'`
 - `func_position = 'func_position'`
+
+##### 📌 `class MongoDbName`
+*Line: 233*
+
+**Class Variables (2):**
+- `TASK_STATUS_DB = 'funboost_task_status'`
+- `MONGOMQ_DB = 'funboost_mongomq'`
 
 
 ---
@@ -1144,6 +1151,7 @@ Funboost vs Celery 的架构差异：
 - `import time`
 - `import typing`
 - `import json`
+- `from funboost.constant import MongoDbName`
 - `from funboost.core.exceptions import FunboostWaitRpcResultTimeout`
 - `from funboost.core.exceptions import FunboostRpcResultError`
 - `from funboost.core.exceptions import HasNotAsyncResult`
@@ -1158,7 +1166,7 @@ Funboost vs Celery 的架构差异：
 #### 🏛️ Classes (4)
 
 ##### 📌 `class AsyncResult(RedisMixin)`
-*Line: 40*
+*Line: 41*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, task_id, timeout = 1800)`
@@ -1200,7 +1208,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class AioAsyncResult(AioRedisMixin)`
-*Line: 143*
+*Line: 144*
 
 **Docstring:**
 `````
@@ -1232,7 +1240,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class ResultFromMongo(MongoMixin)`
-*Line: 248*
+*Line: 249*
 
 **Docstring:**
 `````
@@ -1260,7 +1268,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
   - *以非阻塞等待的方式从funboost的状态结果持久化的mongodb数据库根据taskid获取结果*
 
 ##### 📌 `class FutureStatusResult`
-*Line: 282*
+*Line: 283*
 
 **Docstring:**
 `````
@@ -1740,7 +1748,7 @@ care_project_name 的作用是：
 - `@property all_queue_names`
 
 ##### 📌 `class ActiveCousumerProcessInfoGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 123*
+*Line: 134*
 
 **Docstring:**
 `````
@@ -1789,7 +1797,7 @@ care_project_name 的作用是：
   - *获取所有机器ip对应的活跃消费者进程信息，按机器ip划分,不需要传入机器ip，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对*
 
 ##### 📌 `class QueuesConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 242*
+*Line: 253*
 
 **Docstring:**
 `````
@@ -1814,7 +1822,7 @@ care_project_name 的作用是：
 - `def cycle_get_queues_params_and_active_consumers_and_report(self, daemon = False)`
 
 ##### 📌 `class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 363*
+*Line: 376*
 
 **Docstring:**
 `````
@@ -4083,27 +4091,39 @@ Funboost 的设计哲学是 **“极简主义”**。您无需阅读长篇大论
 
 ---
 
-## 1.6 🤝 Celery 集成模式 (2023.4 新增)
+## 1.6 🥋 funboost施展吸星大法神功，一招汲取 Celery 毕生功力
 
-**Funboost + Celery = 极简 API + 工业级调度核心**
+**Funboost 的极简招式 + Celery 的深厚内力 = 独步武林**
 
-Funboost 现已支持将整个 `Celery` 框架作为底层的 Broker (`BrokerEnum.CELERY`)。这使得 Celery 实际上成为了 Funboost 的一个**子集**。
+> “江湖中人多迷信 Celery 的名门光环，虽 Funboost 身法快过其数十倍，且有演武场（2.6章节）实测为证，奈何部分豪杰固步自封，不愿亲自试剑。
+> Funboost 遂施展 **‘吸星大法’**，将 Celery 纳为己用（作为 Broker）。**既入我门，便由我控**，以此化解众生执念。”
 
-### 核心优势：降维打击
-通过 Funboost 操作 Celery，您可以完全避开 Celery 原生开发的痛点：
+Celery 称霸 Python 异步江湖十数载，内力虽深厚，但其招式繁复、门规森严（配置繁琐），令无数豪杰望而却步。 
+今 Funboost 施展 **“吸星大法”**，只需一招 `BrokerEnum.CELERY`，顷刻间将 Celery 化为 **座下护法**。自此，Celery 竟成 Funboost 之一大 **子集**，听凭号令！ 
 
+### ⚔️ 降维打击：化繁为简的绝世武功
+通过 Funboost 驾驭 Celery，犹如令狐冲习得独孤九剑，破尽天下繁琐招式，直击要害：
 
-| 🔧 核心优势对比 | 🔴 原生 Celery 的痛点 | 🟢 Funboost操作celery的爽点|
+| 🆚 招式对决 | 🛑 原生 Celery (旧派宗门的桎梏) | 🟢 Funboost 御剑术 (新派宗师的洒脱) |
 | :--- | :--- | :--- |
-| **简化部署**：从 CLI 命令到 Python API | 需记忆复杂的命令行启动 Worker/Beat | **全自动**：代码一键启动，无需记忆命令 |
-| **灵活组织**：适应各种项目结构 | 严格且繁琐的目录结构规划 | **零约束**：任意目录，任意文件结构 |
-| **降低门槛**：自动发现与注册任务 | 复杂的 `includes` 和 `task_routes` 配置 | **零配置**：框架自动处理路由与注册 |
-| **提升开发体验**：强类型提示与智能补全 | IDE 无法补全 `@app.task` 参数 | **全补全**：BoosterParams 支持完整代码提示 |
+| **启动法门**<br>(部署) | **念诵咒语**：需死记硬背 `worker/beat` 等冗长命令行，稍有错漏便走火入魔。 | **意念合一**：代码即启动，无需记忆任何咒语，`python xx.py` 一剑破万法。 |
+| **门派规矩**<br>(结构) | **清规戒律**：强行规定目录结构，错置文件即被逐出师门，极其僵化。 | **无招胜有招**：飞花摘叶皆可伤人，任意目录、任意文件皆可为战场，毫无束缚。 |
+| **心法运转**<br>(门槛) | **经脉逆行**：需手动修炼 `includes` 和 `task_routes`，极易气血翻涌（配置报错）。 | **浑然天成**：自动打通任督二脉，框架自动发现并注册任务，行云流水。 |
+| **洞察天地**<br>(体验) | **盲人摸象**：`@app.task` 入参如雾里看花，IDE 无法感知，极易行差踏错。 | **天眼通**：`BoosterParams` 开启全知视角，代码补全如神助，所见即所得。 |
 
-> **🔗 代码示例**
-> 具体用法请参见 **[11.1 章节]**。您只需使用简单的 Funboost 语法，底层复杂的 Celery 调度便会自动运行。
+> **📜 藏经阁 (代码示例)**
+> 欲练此功，请翻阅 **[11.1 章节]**。
+> 您只需施展 Funboost 的极简剑法，底层那拥有万钧之力的 Celery 引擎便会自动为您移山填海，虽有雷霆之威，却无反噬之虞。
 
+```
+有的人觉得celery那么知名，所以celery性能一定顶呱呱，所以打死不信funboost的性能狂秒celery几十倍。
 
+这些懒虫又爱质疑又害怕吃苦，即使我已经写好了benchmark测试对比代码，还是不愿意亲自运行教程2.6章节的使用严格
+控制变量法的 funboost vs celery性能测试对比，所以funboost 干脆直接把celery作为funboost的broker之一。
+
+不是funboost性能太牛，是celery是在太差，不信的话，你自己也可以写个简陋版的 while True:msg=redis.blpop(),
+把msg丢到线程池执行，你会发现你随便写的代码，性能也狂秒celery。
+```
 
 
 [查看分布式函数调度框架完整文档](https://funboost.readthedocs.io/)  
@@ -10364,7 +10384,7 @@ if __name__ == '__main__':
 
 (3) 消费结果状态保存到mongo什么库什么表了？  
 
-是固定保存到名为 task_status 的库，表的名字就是队列名字。每个函数都会使用一个单独的表来保存消费状态结果。  
+是固定保存到名为 funboost_task_status 的库，表的名字就是队列名字。每个函数都会使用一个单独的表来保存消费状态结果。  
 有的人企图在 MONGO_CONNECT_URL 中指定db来决定消费结果保存到什么db  
 
 如下图所示,每次函数运行后，一共保存了37个字段到数据库中。  

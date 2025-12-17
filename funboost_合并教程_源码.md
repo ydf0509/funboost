@@ -588,7 +588,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 
 ### 📄 Python File Metadata: `funboost/constant.py`
 
-#### 🏛️ Classes (6)
+#### 🏛️ Classes (7)
 
 ##### 📌 `class BrokerEnum`
 *Line: 5*
@@ -713,6 +713,13 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `optional_arg_name_list = 'optional_arg_name_list'`
 - `func_name = 'func_name'`
 - `func_position = 'func_position'`
+
+##### 📌 `class MongoDbName`
+*Line: 233*
+
+**Class Variables (2):**
+- `TASK_STATUS_DB = 'funboost_task_status'`
+- `MONGOMQ_DB = 'funboost_mongomq'`
 
 
 ---
@@ -1144,6 +1151,7 @@ Funboost vs Celery 的架构差异：
 - `import time`
 - `import typing`
 - `import json`
+- `from funboost.constant import MongoDbName`
 - `from funboost.core.exceptions import FunboostWaitRpcResultTimeout`
 - `from funboost.core.exceptions import FunboostRpcResultError`
 - `from funboost.core.exceptions import HasNotAsyncResult`
@@ -1158,7 +1166,7 @@ Funboost vs Celery 的架构差异：
 #### 🏛️ Classes (4)
 
 ##### 📌 `class AsyncResult(RedisMixin)`
-*Line: 40*
+*Line: 41*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, task_id, timeout = 1800)`
@@ -1200,7 +1208,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class AioAsyncResult(AioRedisMixin)`
-*Line: 143*
+*Line: 144*
 
 **Docstring:**
 `````
@@ -1232,7 +1240,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class ResultFromMongo(MongoMixin)`
-*Line: 248*
+*Line: 249*
 
 **Docstring:**
 `````
@@ -1260,7 +1268,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
   - *以非阻塞等待的方式从funboost的状态结果持久化的mongodb数据库根据taskid获取结果*
 
 ##### 📌 `class FutureStatusResult`
-*Line: 282*
+*Line: 283*
 
 **Docstring:**
 `````
@@ -1740,7 +1748,7 @@ care_project_name 的作用是：
 - `@property all_queue_names`
 
 ##### 📌 `class ActiveCousumerProcessInfoGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 123*
+*Line: 134*
 
 **Docstring:**
 `````
@@ -1789,7 +1797,7 @@ care_project_name 的作用是：
   - *获取所有机器ip对应的活跃消费者进程信息，按机器ip划分,不需要传入机器ip，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对*
 
 ##### 📌 `class QueuesConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 242*
+*Line: 253*
 
 **Docstring:**
 `````
@@ -1814,7 +1822,7 @@ care_project_name 的作用是：
 - `def cycle_get_queues_params_and_active_consumers_and_report(self, daemon = False)`
 
 ##### 📌 `class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 363*
+*Line: 376*
 
 **Docstring:**
 `````
@@ -4083,27 +4091,39 @@ Funboost 的设计哲学是 **“极简主义”**。您无需阅读长篇大论
 
 ---
 
-## 1.6 🤝 Celery 集成模式 (2023.4 新增)
+## 1.6 🥋 funboost施展吸星大法神功，一招汲取 Celery 毕生功力
 
-**Funboost + Celery = 极简 API + 工业级调度核心**
+**Funboost 的极简招式 + Celery 的深厚内力 = 独步武林**
 
-Funboost 现已支持将整个 `Celery` 框架作为底层的 Broker (`BrokerEnum.CELERY`)。这使得 Celery 实际上成为了 Funboost 的一个**子集**。
+> “江湖中人多迷信 Celery 的名门光环，虽 Funboost 身法快过其数十倍，且有演武场（2.6章节）实测为证，奈何部分豪杰固步自封，不愿亲自试剑。
+> Funboost 遂施展 **‘吸星大法’**，将 Celery 纳为己用（作为 Broker）。**既入我门，便由我控**，以此化解众生执念。”
 
-### 核心优势：降维打击
-通过 Funboost 操作 Celery，您可以完全避开 Celery 原生开发的痛点：
+Celery 称霸 Python 异步江湖十数载，内力虽深厚，但其招式繁复、门规森严（配置繁琐），令无数豪杰望而却步。 
+今 Funboost 施展 **“吸星大法”**，只需一招 `BrokerEnum.CELERY`，顷刻间将 Celery 化为 **座下护法**。自此，Celery 竟成 Funboost 之一大 **子集**，听凭号令！ 
 
+### ⚔️ 降维打击：化繁为简的绝世武功
+通过 Funboost 驾驭 Celery，犹如令狐冲习得独孤九剑，破尽天下繁琐招式，直击要害：
 
-| 🔧 核心优势对比 | 🔴 原生 Celery 的痛点 | 🟢 Funboost操作celery的爽点|
+| 🆚 招式对决 | 🛑 原生 Celery (旧派宗门的桎梏) | 🟢 Funboost 御剑术 (新派宗师的洒脱) |
 | :--- | :--- | :--- |
-| **简化部署**：从 CLI 命令到 Python API | 需记忆复杂的命令行启动 Worker/Beat | **全自动**：代码一键启动，无需记忆命令 |
-| **灵活组织**：适应各种项目结构 | 严格且繁琐的目录结构规划 | **零约束**：任意目录，任意文件结构 |
-| **降低门槛**：自动发现与注册任务 | 复杂的 `includes` 和 `task_routes` 配置 | **零配置**：框架自动处理路由与注册 |
-| **提升开发体验**：强类型提示与智能补全 | IDE 无法补全 `@app.task` 参数 | **全补全**：BoosterParams 支持完整代码提示 |
+| **启动法门**<br>(部署) | **念诵咒语**：需死记硬背 `worker/beat` 等冗长命令行，稍有错漏便走火入魔。 | **意念合一**：代码即启动，无需记忆任何咒语，`python xx.py` 一剑破万法。 |
+| **门派规矩**<br>(结构) | **清规戒律**：强行规定目录结构，错置文件即被逐出师门，极其僵化。 | **无招胜有招**：飞花摘叶皆可伤人，任意目录、任意文件皆可为战场，毫无束缚。 |
+| **心法运转**<br>(门槛) | **经脉逆行**：需手动修炼 `includes` 和 `task_routes`，极易气血翻涌（配置报错）。 | **浑然天成**：自动打通任督二脉，框架自动发现并注册任务，行云流水。 |
+| **洞察天地**<br>(体验) | **盲人摸象**：`@app.task` 入参如雾里看花，IDE 无法感知，极易行差踏错。 | **天眼通**：`BoosterParams` 开启全知视角，代码补全如神助，所见即所得。 |
 
-> **🔗 代码示例**
-> 具体用法请参见 **[11.1 章节]**。您只需使用简单的 Funboost 语法，底层复杂的 Celery 调度便会自动运行。
+> **📜 藏经阁 (代码示例)**
+> 欲练此功，请翻阅 **[11.1 章节]**。
+> 您只需施展 Funboost 的极简剑法，底层那拥有万钧之力的 Celery 引擎便会自动为您移山填海，虽有雷霆之威，却无反噬之虞。
 
+```
+有的人觉得celery那么知名，所以celery性能一定顶呱呱，所以打死不信funboost的性能狂秒celery几十倍。
 
+这些懒虫又爱质疑又害怕吃苦，即使我已经写好了benchmark测试对比代码，还是不愿意亲自运行教程2.6章节的使用严格
+控制变量法的 funboost vs celery性能测试对比，所以funboost 干脆直接把celery作为funboost的broker之一。
+
+不是funboost性能太牛，是celery是在太差，不信的话，你自己也可以写个简陋版的 while True:msg=redis.blpop(),
+把msg丢到线程池执行，你会发现你随便写的代码，性能也狂秒celery。
+```
 
 
 [查看分布式函数调度框架完整文档](https://funboost.readthedocs.io/)  
@@ -10364,7 +10384,7 @@ if __name__ == '__main__':
 
 (3) 消费结果状态保存到mongo什么库什么表了？  
 
-是固定保存到名为 task_status 的库，表的名字就是队列名字。每个函数都会使用一个单独的表来保存消费状态结果。  
+是固定保存到名为 funboost_task_status 的库，表的名字就是队列名字。每个函数都会使用一个单独的表来保存消费状态结果。  
 有的人企图在 MONGO_CONNECT_URL 中指定db来决定消费结果保存到什么db  
 
 如下图所示,每次函数运行后，一共保存了37个字段到数据库中。  
@@ -20690,7 +20710,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 
 ### 📄 Python File Metadata: `funboost/constant.py`
 
-#### 🏛️ Classes (6)
+#### 🏛️ Classes (7)
 
 ##### 📌 `class BrokerEnum`
 *Line: 5*
@@ -20815,6 +20835,13 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `optional_arg_name_list = 'optional_arg_name_list'`
 - `func_name = 'func_name'`
 - `func_position = 'func_position'`
+
+##### 📌 `class MongoDbName`
+*Line: 233*
+
+**Class Variables (2):**
+- `TASK_STATUS_DB = 'funboost_task_status'`
+- `MONGOMQ_DB = 'funboost_mongomq'`
 
 
 ---
@@ -21246,6 +21273,7 @@ Funboost vs Celery 的架构差异：
 - `import time`
 - `import typing`
 - `import json`
+- `from funboost.constant import MongoDbName`
 - `from funboost.core.exceptions import FunboostWaitRpcResultTimeout`
 - `from funboost.core.exceptions import FunboostRpcResultError`
 - `from funboost.core.exceptions import HasNotAsyncResult`
@@ -21260,7 +21288,7 @@ Funboost vs Celery 的架构差异：
 #### 🏛️ Classes (4)
 
 ##### 📌 `class AsyncResult(RedisMixin)`
-*Line: 40*
+*Line: 41*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, task_id, timeout = 1800)`
@@ -21302,7 +21330,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class AioAsyncResult(AioRedisMixin)`
-*Line: 143*
+*Line: 144*
 
 **Docstring:**
 `````
@@ -21334,7 +21362,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class ResultFromMongo(MongoMixin)`
-*Line: 248*
+*Line: 249*
 
 **Docstring:**
 `````
@@ -21362,7 +21390,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
   - *以非阻塞等待的方式从funboost的状态结果持久化的mongodb数据库根据taskid获取结果*
 
 ##### 📌 `class FutureStatusResult`
-*Line: 282*
+*Line: 283*
 
 **Docstring:**
 `````
@@ -21842,7 +21870,7 @@ care_project_name 的作用是：
 - `@property all_queue_names`
 
 ##### 📌 `class ActiveCousumerProcessInfoGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 123*
+*Line: 134*
 
 **Docstring:**
 `````
@@ -21891,7 +21919,7 @@ care_project_name 的作用是：
   - *获取所有机器ip对应的活跃消费者进程信息，按机器ip划分,不需要传入机器ip，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对*
 
 ##### 📌 `class QueuesConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 242*
+*Line: 253*
 
 **Docstring:**
 `````
@@ -21916,7 +21944,7 @@ care_project_name 的作用是：
 - `def cycle_get_queues_params_and_active_consumers_and_report(self, daemon = False)`
 
 ##### 📌 `class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 363*
+*Line: 376*
 
 **Docstring:**
 `````
@@ -22075,7 +22103,7 @@ care_project_name 的作用是：
 `````
 Core Files (imported by other files, sorted by import count):
   ◆ funboost/__init__.py (imported by 10 files)
-  ◆ funboost/constant.py (imported by 7 files)
+  ◆ funboost/constant.py (imported by 8 files)
   ◆ funboost/core/func_params_model.py (imported by 5 files)
   ◆ funboost/funboost_config_deafult.py (imported by 4 files)
   ◆ funboost/core/booster.py (imported by 3 files)
@@ -22124,6 +22152,7 @@ Core Files (imported by other files, sorted by import count):
 - `funboost/core/active_cousumer_info_getter.py`
 - `funboost/core/booster.py`
 - `funboost/core/func_params_model.py`
+- `funboost/core/msg_result_getter.py`
 - `funboost/publishers/base_publisher.py`
 - `funboost/timing_job/timing_push.py`
 
@@ -22200,6 +22229,7 @@ Core Files (imported by other files, sorted by import count):
 
 **Imports from project:**
 - `funboost/__init__.py`
+- `funboost/constant.py`
 
 **Imported by:**
 - `funboost/__init__.py`
@@ -23855,6 +23885,7 @@ def sub(a, b):
     │   ├── functions.py
     │   └── templates
     │       ├── about.html
+    │       ├── app.py中仍在使用的路由.md
     │       ├── care_project_name.html
     │       ├── conusme_speed.html
     │       ├── fun_result_table.html
@@ -23954,7 +23985,7 @@ def sub(a, b):
 ---
 
 
-## funboost (relative dir: `funboost`)  Included Files (total: 228 files)
+## funboost (relative dir: `funboost`)  Included Files (total: 229 files)
 
 
 - `funboost/constant.py`
@@ -24237,6 +24268,8 @@ def sub(a, b):
 
 - `funboost/funboost_web_manager/templates/about.html`
 
+- `funboost/funboost_web_manager/templates/app.py中仍在使用的路由.md`
+
 - `funboost/funboost_web_manager/templates/care_project_name.html`
 
 - `funboost/funboost_web_manager/templates/conusme_speed.html`
@@ -24419,144 +24452,12 @@ def sub(a, b):
 
 --- **start of file: funboost/constant.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/constant.py`
-
-#### 🏛️ Classes (6)
-
-##### 📌 `class BrokerEnum`
-*Line: 5*
-
-**Docstring:**
-`````
-在funboost中万物皆可为消息队列broker,funboost内置了所有 知名的正经经典消息队列作为broker,
-也支持了基于 内存 各种数据库 文件系统 tcp/udp/http这些socket 模拟作为broker.
-funboost也内置支持了各种python三方包和消费框架作为broker,例如 sqlachemy kombu celery rq dramtiq huey nameko 等等
-
-用户也可以按照文档4.21章节,轻松扩展任何物质概念作为funboost的broker.
-`````
-
-**Class Variables (43):**
-- `EMPTY = 'EMPTY'`
-- `RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'`
-- `RABBITMQ = RABBITMQ_AMQPSTORM`
-- `RABBITMQ_COMPLEX_ROUTING = 'RABBITMQ_COMPLEX_ROUTING'`
-- `RABBITMQ_RABBITPY = 'RABBITMQ_RABBITPY'`
-- `REDIS = 'REDIS'`
-- `REDIS_ACK_ABLE = 'REDIS_ACK_ABLE'`
-- `REIDS_ACK_USING_TIMEOUT = 'reids_ack_using_timeout'`
-- `REDIS_PRIORITY = 'REDIS_PRIORITY'`
-- `REDIS_STREAM = 'REDIS_STREAM'`
-- `RedisBrpopLpush = 'RedisBrpopLpush'`
-- `REDIS_PUBSUB = 'REDIS_PUBSUB'`
-- `MEMORY_QUEUE = 'MEMORY_QUEUE'`
-- `LOCAL_PYTHON_QUEUE = MEMORY_QUEUE`
-- `RABBITMQ_PIKA = 'RABBITMQ_PIKA'`
-- `MONGOMQ = 'MONGOMQ'`
-- `SQLITE_QUEUE = 'sqlite3'`
-- `PERSISTQUEUE = SQLITE_QUEUE`
-- `NSQ = 'NSQ'`
-- `KAFKA = 'KAFKA'`
-- `KAFKA_CONFLUENT = 'KAFKA_CONFLUENT'`
-- `CONFLUENT_KAFKA = KAFKA_CONFLUENT`
-- `KAFKA_CONFLUENT_SASlPlAIN = 'KAFKA_CONFLUENT_SASlPlAIN'`
-- `SQLACHEMY = 'SQLACHEMY'`
-- `ROCKETMQ = 'ROCKETMQ'`
-- `ZEROMQ = 'ZEROMQ'`
-- `KOMBU = 'KOMBU'`
-- `MQTT = 'MQTT'`
-- `HTTPSQS = 'HTTPSQS'`
-- `PULSAR = 'PULSAR'`
-- `UDP = 'UDP'`
-- `TCP = 'TCP'`
-- `HTTP = 'HTTP'`
-- `GRPC = 'GRPC'`
-- `NATS = 'NATS'`
-- `TXT_FILE = 'TXT_FILE'`
-- `PEEWEE = 'PEEWEE'`
-- `CELERY = 'CELERY'`
-- `DRAMATIQ = 'DRAMATIQ'`
-- `HUEY = 'HUEY'`
-- `RQ = 'RQ'`
-- `NAMEKO = 'NAMEKO'`
-- `MYSQL_CDC = 'MYSQL_CDC'`
-
-##### 📌 `class ConcurrentModeEnum`
-*Line: 150*
-
-**Class Variables (6):**
-- `THREADING = 'threading'`
-- `GEVENT = 'gevent'`
-- `EVENTLET = 'eventlet'`
-- `ASYNC = 'async'`
-- `SINGLE_THREAD = 'single_thread'`
-- `SOLO = SINGLE_THREAD`
-
-##### 📌 `class FunctionKind`
-*Line: 161*
-
-**Class Variables (4):**
-- `CLASS_METHOD = 'CLASS_METHOD'`
-- `INSTANCE_METHOD = 'INSTANCE_METHOD'`
-- `STATIC_METHOD = 'STATIC_METHOD'`
-- `COMMON_FUNCTION = 'COMMON_FUNCTION'`
-
-##### 📌 `class ConstStrForClassMethod`
-*Line: 168*
-
-**Class Variables (5):**
-- `FIRST_PARAM_NAME = 'first_param_name'`
-- `CLS_NAME = 'cls_name'`
-- `OBJ_INIT_PARAMS = 'obj_init_params'`
-- `CLS_MODULE = 'cls_module'`
-- `CLS_FILE = 'cls_file'`
-
-##### 📌 `class RedisKeys`
-*Line: 176*
-
-**Public Methods (7):**
-- `def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name)` `staticmethod`
-- `def gen_funboost_hearbeat_queue__dict_key_by_queue_name(queue_name)` `staticmethod`
-- `def gen_funboost_hearbeat_server__dict_key_by_ip(ip)` `staticmethod`
-- `def gen_funboost_queue_time_series_data_key_by_queue_name(queue_name)` `staticmethod`
-- `def gen_funboost_redis_apscheduler_jobs_key_by_queue_name(queue_name)` `staticmethod`
-- `def gen_funboost_redis_apscheduler_run_times_key_by_queue_name(queue_name)` `staticmethod`
-- `def gen_funboost_project_name_key(project_name)` `staticmethod`
-
-**Class Variables (12):**
-- `REDIS_KEY_PAUSE_FLAG = 'funboost_pause_flag'`
-- `REDIS_KEY_STOP_FLAG = 'funboost_stop_flag'`
-- `QUEUE__MSG_COUNT_MAP = 'funboost_queue__msg_count_map'`
-- `FUNBOOST_QUEUE__CONSUMER_PARAMS = 'funboost_queue__consumer_parmas'`
-- `FUNBOOST_QUEUE__RUN_COUNT_MAP = 'funboost_queue__run_count_map'`
-- `FUNBOOST_QUEUE__RUN_FAIL_COUNT_MAP = 'funboost_queue__run_fail_count_map'`
-- `FUNBOOST_ALL_QUEUE_NAMES = 'funboost_all_queue_names'`
-- `FUNBOOST_ALL_IPS = 'funboost_all_ips'`
-- `FUNBOOST_ALL_PROJECT_NAMES = 'funboost_all_project_names'`
-- `FUNBOOST_LAST_GET_QUEUES_PARAMS_AND_ACTIVE_CONSUMERS_AND_REPORT__UUID_TS = 'funboost_last_get_queues_params_and_active_consumers_and_report__uuid_ts'`
-- `FUNBOOST_HEARTBEAT_QUEUE__DICT_PREFIX = 'funboost_hearbeat_queue__dict:'`
-- `FUNBOOST_HEARTBEAT_SERVER__DICT_PREFIX = 'funboost_hearbeat_server__dict:'`
-
-##### 📌 `class ConsumingFuncInputParamsCheckerField`
-*Line: 224*
-
-**Class Variables (6):**
-- `is_manual_func_input_params = 'is_manual_func_input_params'`
-- `all_arg_name_list = 'all_arg_name_list'`
-- `must_arg_name_list = 'must_arg_name_list'`
-- `optional_arg_name_list = 'optional_arg_name_list'`
-- `func_name = 'func_name'`
-- `func_position = 'func_position'`
-
-
----
-
 `````python
 # coding= utf-8
 
 
 
-class BrokerEnum:
+class   BrokerEnum:
     """
     在funboost中万物皆可为消息队列broker,funboost内置了所有 知名的正经经典消息队列作为broker,
     也支持了基于 内存 各种数据库 文件系统 tcp/udp/http这些socket 模拟作为broker.
@@ -24784,7 +24685,10 @@ class ConsumingFuncInputParamsCheckerField:
     func_position = 'func_position'
     
 
-    
+class MongoDbName:
+    TASK_STATUS_DB = 'funboost_task_status'
+    MONGOMQ_DB ='funboost_mongomq'
+
 `````
 
 --- **end of file: funboost/constant.py** (project: funboost) --- 
@@ -24793,84 +24697,6 @@ class ConsumingFuncInputParamsCheckerField:
 
 
 --- **start of file: funboost/funboost_config_deafult.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/funboost_config_deafult.py`
-
-#### 📦 Imports
-
-- `import logging`
-- `from pathlib import Path`
-- `from funboost.utils.simple_data_class import DataClassBase`
-- `from nb_log import nb_log_config_default`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class BrokerConnConfig(DataClassBase)`
-*Line: 21*
-
-**Docstring:**
-`````
-中间件连接配置
-此文件按需修改，例如你使用redis中间件作为消息队列，可以不用管rabbitmq mongodb kafka啥的配置。
-但有3个功能例外，如果你需要使用rpc模式或者分布式控频或者任务过滤功能，无论设置使用何种消息队列中间件都需要把redis连接配置好，
-如果@boost装饰器设置is_using_rpc_mode为True或者 is_using_distributed_frequency_control为True或do_task_filtering=True则需要把redis连接配置好，默认是False不强迫用户安装redis。
-`````
-
-**Class Variables (40):**
-- `MONGO_CONNECT_URL = f'mongodb://127.0.0.1:27017'`
-- `RABBITMQ_USER = 'rabbitmq_user'`
-- `RABBITMQ_PASS = 'rabbitmq_pass'`
-- `RABBITMQ_HOST = '127.0.0.1'`
-- `RABBITMQ_PORT = 5672`
-- `RABBITMQ_VIRTUAL_HOST = ''`
-- `RABBITMQ_URL = f'amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VIRTUAL_HOST}'`
-- `REDIS_HOST = '127.0.0.1'`
-- `REDIS_USERNAME = ''`
-- `REDIS_PASSWORD = ''`
-- `REDIS_PORT = 6379`
-- `REDIS_DB = 7`
-- `REDIS_DB_FILTER_AND_RPC_RESULT = 8`
-- `REDIS_SSL = False`
-- `REDIS_URL = f"{('rediss' if REDIS_SSL else 'redis')}://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"`
-- `NSQD_TCP_ADDRESSES = ['127.0.0.1:4150']`
-- `NSQD_HTTP_CLIENT_HOST = '127.0.0.1'`
-- `NSQD_HTTP_CLIENT_PORT = 4151`
-- `KAFKA_BOOTSTRAP_SERVERS = ['127.0.0.1:9092']`
-- `KFFKA_SASL_CONFIG = {'bootstrap_servers': KAFKA_BOOTSTRAP_SERVERS, 'sasl_plain_username': '', 'sasl_plain_password': '', 'sasl_mechanism': 'SCRAM-SHA-256', 'security_protocol': 'SASL_PLAINTEXT'}`
-- `SQLACHEMY_ENGINE_URL = 'sqlite:////sqlachemy_queues/queues.db'`
-- `MYSQL_HOST = '127.0.0.1'`
-- `MYSQL_PORT = 3306`
-- `MYSQL_USER = 'root'`
-- `MYSQL_PASSWORD = '123456'`
-- `MYSQL_DATABASE = 'testdb6'`
-- `SQLLITE_QUEUES_PATH = '/sqllite_queues'`
-- `TXT_FILE_PATH = Path(__file__).parent / 'txt_queues'`
-- `ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'`
-- `MQTT_HOST = '127.0.0.1'`
-- `MQTT_TCP_PORT = 1883`
-- `HTTPSQS_HOST = '127.0.0.1'`
-- `HTTPSQS_PORT = 1218`
-- `HTTPSQS_AUTH = '123456'`
-- `NATS_URL = 'nats://192.168.6.134:4222'`
-- `KOMBU_URL = 'redis://127.0.0.1:6379/9'`
-- `CELERY_BROKER_URL = 'redis://127.0.0.1:6379/12'`
-- `CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/13'`
-- `DRAMATIQ_URL = RABBITMQ_URL`
-- `PULSAR_URL = 'pulsar://192.168.70.128:6650'`
-
-##### 📌 `class FunboostCommonConfig(DataClassBase)`
-*Line: 96*
-
-**Class Variables (5):**
-- `NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = logging.Formatter(f'%(asctime)s-({nb_log_config_default.computer_ip},{nb_log_config_default.computer_name})-[p%(process)d_t%(thread)d] - %(name)s - "%(filename)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(task_id)s - %(message)s', '%Y-%m-%d %H:%M:%S')`
-- `TIMEZONE = 'Asia/Shanghai'`
-- `SHOW_HOW_FUNBOOST_CONFIG_SETTINGS = True`
-- `FUNBOOST_PROMPT_LOG_LEVEL = logging.DEBUG`
-- `KEEPALIVETIMETHREAD_LOG_LEVEL = logging.DEBUG`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -25001,56 +24827,6 @@ class FunboostCommonConfig(DataClassBase):
 
 
 --- **start of file: funboost/set_frame_config.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/set_frame_config.py`
-
-#### 📝 Module Docstring
-
-`````
-使用覆盖的方式，做配置。
-`````
-
-#### 📦 Imports
-
-- `import sys`
-- `import time`
-- `import importlib`
-- `import json`
-- `from pathlib import Path`
-- `from shutil import copyfile`
-- `from funboost.core.funboost_config_getter import _try_get_user_funboost_common_config`
-- `from funboost.core.loggers import flogger`
-- `from funboost.core.loggers import get_funboost_file_logger`
-- `from funboost.core.loggers import logger_prompt`
-- `from nb_log import nb_print`
-- `from nb_log import stderr_write`
-- `from nb_log import stdout_write`
-- `from nb_log.monkey_print import is_main_process`
-- `from nb_log.monkey_print import only_print_on_main_process`
-- `from funboost import funboost_config_deafult`
-
-#### 🔧 Public Functions (4)
-
-- `def show_funboost_flag()`
-  - *Line: 22*
-
-- `def dict2json(dictx: dict, indent = 4)`
-  - *Line: 72*
-
-- `def show_frame_config()`
-  - *Line: 83*
-
-- `def use_config_form_funboost_config_module()`
-  - *Line: 109*
-  - **Docstring:**
-  `````
-  自动读取配置。会优先读取启动脚本的目录的funboost_config.py文件。没有则读取项目根目录下的funboost_config.py
-  :return:
-  `````
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -25252,73 +25028,6 @@ use_config_form_funboost_config_module()
 
 --- **start of file: funboost/__init__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/__init__.py`
-
-#### 📦 Imports
-
-- `import atexit`
-- `import nb_log`
-- `from nb_log import nb_print`
-- `from funboost.set_frame_config import show_frame_config`
-- `from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath as _`
-- `from funboost.utils import monkey_patches as _`
-- `from funboost.core.loggers import get_logger`
-- `from funboost.core.loggers import get_funboost_file_logger`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-- `from funboost.core.loggers import FunboostMetaTypeFileLogger`
-- `from funboost.core.loggers import flogger`
-- `from funboost.core.func_params_model import BoosterParams`
-- `from funboost.core.func_params_model import BoosterParamsComplete`
-- `from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig`
-- `from funboost.core.func_params_model import PriorityConsumingControlConfig`
-- `from funboost.core.func_params_model import PublisherParams`
-- `from funboost.core.func_params_model import BoosterParamsComplete`
-- `from funboost.funboost_config_deafult import FunboostCommonConfig`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.utils.paramiko_util import ParamikoFolderUploader`
-- `from funboost.consumers.base_consumer import wait_for_possible_has_finish_all_tasks_by_conusmer_list`
-- `from funboost.consumers.base_consumer import FunctionResultStatus`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.consumers.empty_consumer import EmptyConsumer`
-- `from funboost.core.exceptions import ExceptionForRetry`
-- `from funboost.core.exceptions import ExceptionForRequeue`
-- `from funboost.core.exceptions import ExceptionForPushToDlxqueue`
-- `from funboost.core.active_cousumer_info_getter import ActiveCousumerProcessInfoGetter`
-- `from funboost.core.msg_result_getter import HasNotAsyncResult`
-- `from funboost.core.msg_result_getter import ResultFromMongo`
-- `from funboost.publishers.base_publisher import PriorityConsumingControlConfig`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.publishers.base_publisher import AsyncResult`
-- `from funboost.publishers.base_publisher import AioAsyncResult`
-- `from funboost.publishers.empty_publisher import EmptyPublisher`
-- `from funboost.factories.broker_kind__publsiher_consumer_type_map import register_custom_broker`
-- `from funboost.factories.publisher_factotry import get_publisher`
-- `from funboost.factories.consumer_factory import get_consumer`
-- `from funboost.timing_job import fsdf_background_scheduler`
-- `from funboost.timing_job import timing_publish_deco`
-- `from funboost.timing_job import funboost_aps_scheduler`
-- `from funboost.timing_job.timing_push import ApsJobAdder`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.constant import ConcurrentModeEnum`
-- `from funboost.core.booster import boost`
-- `from funboost.core.booster import Booster`
-- `from funboost.core.booster import BoostersManager`
-- `from funboost.core.kill_remote_task import RemoteTaskKiller`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.funboost_config_deafult import FunboostCommonConfig`
-- `from funboost.core.cli.discovery_boosters import BoosterDiscovery`
-- `from funboost.core.helper_funs import run_forever`
-- `from funboost.utils.ctrl_c_end import ctrl_c_recv`
-- `from funboost.utils.redis_manager import RedisMixin`
-- `from funboost.concurrent_pool.custom_threadpool_executor import show_current_threads_num`
-- `from funboost.core.current_task import funboost_current_task`
-- `from funboost.core.current_task import fct`
-- `from funboost.core.current_task import get_current_taskid`
-
-
----
-
 `````python
 # noinspection PyUnresolvedReferences
 import atexit
@@ -25335,7 +25044,7 @@ set_frame_config这个模块的 use_config_form_funboost_config_module() 是核�
 这段注释说明和使用的用户无关,只和框架开发人员有关.
 '''
 
-__version__ = "52.5"
+__version__ = "52.6"
 
 from funboost.set_frame_config import show_frame_config
 
@@ -25397,12 +25106,6 @@ from funboost.core.current_task import funboost_current_task,fct,get_current_tas
 
 
 --- **start of file: funboost/__init__old.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/__init__old.py`
-
-
----
 
 `````python
 # # noinspection PyUnresolvedReferences
@@ -25742,24 +25445,6 @@ from funboost.core.current_task import funboost_current_task,fct,get_current_tas
 
 --- **start of file: funboost/__main__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/__main__.py`
-
-#### 📦 Imports
-
-- `import sys`
-- `import fire`
-- `from funboost.core.cli.funboost_fire import BoosterFire`
-- `from funboost.core.cli.funboost_fire import env_dict`
-
-#### 🔧 Public Functions (1)
-
-- `def main()`
-  - *Line: 19*
-
-
----
-
 `````python
 import sys
 
@@ -25806,57 +25491,6 @@ python -m funboost  --project_root_path=/codes/funboost  start_web
 
 
 --- **start of file: funboost/assist/celery_helper.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/assist/celery_helper.py`
-
-#### 📦 Imports
-
-- `import copy`
-- `import json`
-- `import logging`
-- `import os`
-- `import sys`
-- `import threading`
-- `from functools import partial`
-- `import celery`
-- `from celery.app.task import Task`
-- `import nb_log`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.funboost_config_deafult import FunboostCommonConfig`
-- `from funboost import ConcurrentModeEnum`
-- `from funboost.core.loggers import get_funboost_file_logger`
-- `from funboost.core.loggers import get_logger`
-- `from funboost import BoostersManager`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class CeleryHelper`
-*Line: 31*
-
-**Public Methods (7):**
-- `def update_celery_app_conf(celery_app_conf: dict)` `staticmethod`
-  - **Docstring:**
-  `````
-  更新celery app的配置，celery app配置大全见 https://docs.celeryq.dev/en/stable/userguide/configuration.html
-  :param celery_app_conf: celery app 配置，字典
-  :return:
-  `````
-- `def show_celery_app_conf()` `staticmethod`
-- `def celery_start_beat(beat_schedule: dict)` `staticmethod`
-- `def start_flower(port = 5555)` `staticmethod`
-- `def add_start_work_celery_queue_name(cls, queue_name)` `classmethod`
-- `def realy_start_celery_worker(cls, worker_name = None, loglevel = 'INFO', worker_concurrency = 200, start_consume_queue_name_list: list = None, is_start_consume_all_queues: bool = False)` `classmethod`
-- `def use_nb_log_instead_celery_log(log_level: int = logging.INFO, log_filename = 'celery.log', formatter_template = 7)` `staticmethod`
-  - *使用nb_log的日志来取代celery的日志*
-
-**Class Variables (3):**
-- `celery_app = celery_app`
-- `to_be_start_work_celery_queue_name_set = set()`
-- `concurrent_mode = None`
-
-
----
 
 `````python
 import copy
@@ -26006,35 +25640,6 @@ class CeleryHelper:
 
 --- **start of file: funboost/assist/dramatiq_helper.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/assist/dramatiq_helper.py`
-
-#### 📦 Imports
-
-- `import argparse`
-- `from funboost.core.loggers import FunboostMetaTypeFileLogger`
-- `import dramatiq`
-- `from dramatiq.cli import main`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from dramatiq.brokers.redis import RedisBroker`
-- `from dramatiq.brokers.rabbitmq import RabbitmqBroker`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class DramatiqHelper`
-*Line: 22*
-
-**Public Methods (1):**
-- `def realy_start_dramatiq_worker(cls)` `classmethod`
-
-**Class Variables (3):**
-- `broker = dramatiq.get_broker()`
-- `to_be_start_work_celery_queue_name_set = set()`
-- `queue_name__actor_map = {}`
-
-
----
-
 `````python
 import argparse
 from funboost.core.loggers import FunboostMetaTypeFileLogger
@@ -26101,25 +25706,6 @@ python -m dramatiq test_dramatiq_raw -p 1
 
 --- **start of file: funboost/assist/faststream_helper.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/assist/faststream_helper.py`
-
-#### 📦 Imports
-
-- `import asyncio`
-- `from faststream import FastStream`
-- `from faststream.rabbit import RabbitBroker`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.core.loggers import get_funboost_file_logger`
-
-#### 🔧 Public Functions (1)
-
-- `def get_broker(max_consumers = None)`
-  - *Line: 17*
-
-
----
-
 `````python
 import asyncio
 
@@ -26147,34 +25733,6 @@ def get_broker(max_consumers=None):
 
 
 --- **start of file: funboost/assist/huey_helper.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/assist/huey_helper.py`
-
-#### 📦 Imports
-
-- `import multiprocessing`
-- `import threading`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from huey import RedisHuey`
-- `from huey.consumer import Consumer`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class HueyHelper`
-*Line: 10*
-
-**Public Methods (1):**
-- `def realy_start_huey_consume(cls)` `classmethod`
-  - *huey 启动所有函数开始消费*
-
-**Class Variables (3):**
-- `huey_obj = huey_obj`
-- `queue_name__huey_task_fun_map = {}`
-- `to_be_start_huey_queue_name_set = set()`
-
-
----
 
 `````python
 import multiprocessing
@@ -26228,12 +25786,6 @@ class HueyHelper:
 
 --- **start of file: funboost/assist/rocketry_helper.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/assist/rocketry_helper.py`
-
-
----
-
 `````python
 
 `````
@@ -26244,46 +25796,6 @@ class HueyHelper:
 
 
 --- **start of file: funboost/assist/rq_helper.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/assist/rq_helper.py`
-
-#### 📦 Imports
-
-- `import threading`
-- `import os`
-- `import uuid`
-- `from rq.worker import RandomWorker`
-- `from funboost.core.loggers import get_funboost_file_logger`
-- `from redis3 import Redis`
-- `from rq import Worker`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.assist.rq_windows_worker import WindowsWorker`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class RandomWindowsWorker(RandomWorker, WindowsWorker)`
-*Line: 20*
-
-**Docstring:**
-`````
-这个是为了 每个队列都有机会同时拉取，默认是前面的队列先消费完才会消费下一个队列名
-`````
-
-##### 📌 `class RqHelper`
-*Line: 26*
-
-**Public Methods (2):**
-- `def realy_start_rq_worker(cls, threads_num = 50)` `classmethod`
-- `def add_nb_log_handler_to_rq()` `staticmethod`
-
-**Class Variables (3):**
-- `redis_conn = Redis.from_url(BrokerConnConfig.REDIS_URL)`
-- `queue_name__rq_job_map = {}`
-- `to_be_start_work_rq_queue_name_set = set()`
-
-
----
 
 `````python
 import threading
@@ -26345,76 +25857,6 @@ class RqHelper:
 
 
 --- **start of file: funboost/assist/rq_windows_worker.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/assist/rq_windows_worker.py`
-
-#### 📦 Imports
-
-- `import time`
-- `import sys`
-- `import random`
-- `from funboost.utils import times`
-- `import rq`
-- `import rq.job`
-- `import rq.compat`
-- `import rq.worker`
-- `from rq.defaults import DEFAULT_LOGGING_FORMAT`
-- `from rq.defaults import DEFAULT_LOGGING_DATE_FORMAT`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class WindowsWorker(rq.Worker)`
-*Line: 14*
-
-**Docstring:**
-`````
-An extension of the RQ worker class
-that works on Windows.
-
-Does not support task timeouts
-and will probably crash if the task goes badly,
-due to not using fork().
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, *args, **kwargs)`
-  - **Parameters:**
-    - `self`
-    - `*args`
-    - `**kwargs`
-
-**Public Methods (4):**
-- `def work(self, burst = False, logging_level = 'INFO', date_format = DEFAULT_LOGGING_DATE_FORMAT, log_format = DEFAULT_LOGGING_FORMAT, max_jobs = None, with_scheduler = False)`
-  - **Docstring:**
-  `````
-  Starts the work loop.
-  
-  Pops and performs all jobs on the current list of queues.  When all
-  queues are empty, block and wait for new jobs to arrive on any of the
-  queues, unless `burst` mode is enabled.
-  
-  The return value indicates whether any jobs were processed.
-  `````
-- `def execute_job(self, job, queue)`
-  - **Docstring:**
-  `````
-  Spawns a work horse to perform the actual work and passes it a job.
-  The worker will wait for the work horse and make sure it executes
-  within the given timeout bounds, or will end the work horse with
-  SIGALRM.
-  `````
-- `def main_work_horse(self, job, queue)`
-  - *This is the entry point of the newly spawned work horse.*
-- `def perform_job(self, job, queue, heartbeat_ttl = None)`
-  - **Docstring:**
-  `````
-  Performs the actual work of a job.  Will/should only be called
-  inside the work horse's process.
-  `````
-
-
----
 
 `````python
 import time
@@ -26560,12 +26002,6 @@ class WindowsWorker(rq.Worker):
 
 --- **start of file: funboost/assist/taskiq_helper.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/assist/taskiq_helper.py`
-
-
----
-
 `````python
 
 
@@ -26578,12 +26014,6 @@ class WindowsWorker(rq.Worker):
 
 --- **start of file: funboost/assist/__init__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/assist/__init__.py`
-
-
----
-
 `````python
 
 `````
@@ -26594,25 +26024,6 @@ class WindowsWorker(rq.Worker):
 
 
 --- **start of file: funboost/assist/grpc_helper/client_sample.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/assist/grpc_helper/client_sample.py`
-
-#### 📦 Imports
-
-- `import grpc`
-- `import funboost_grpc_pb2`
-- `import funboost_grpc_pb2_grpc`
-- `import time`
-
-#### 🔧 Public Functions (1)
-
-- `def run_client()`
-  - *Line: 11*
-  - *运行 gRPC 客户端*
-
-
----
 
 `````python
 #!/usr/bin/env python3
@@ -26671,25 +26082,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/assist/grpc_helper/funboost_grpc_pb2.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/assist/grpc_helper/funboost_grpc_pb2.py`
-
-#### 📝 Module Docstring
-
-`````
-Generated protocol buffer code.
-`````
-
-#### 📦 Imports
-
-- `from google.protobuf import descriptor as _descriptor`
-- `from google.protobuf import descriptor_pool as _descriptor_pool`
-- `from google.protobuf import symbol_database as _symbol_database`
-- `from google.protobuf.internal import builder as _builder`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # Generated by the protocol buffer compiler.  DO NOT EDIT!
@@ -26730,81 +26122,6 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
 
 --- **start of file: funboost/assist/grpc_helper/funboost_grpc_pb2_grpc.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/assist/grpc_helper/funboost_grpc_pb2_grpc.py`
-
-#### 📝 Module Docstring
-
-`````
-Client and server classes corresponding to protobuf-defined services.
-`````
-
-#### 📦 Imports
-
-- `import grpc`
-- `import funboost.assist.grpc_helper.funboost_grpc_pb2 as funboost__grpc__pb2`
-
-#### 🏛️ Classes (3)
-
-##### 📌 `class FunboostBrokerServiceStub(object)`
-*Line: 8*
-
-**Docstring:**
-`````
-定义服务
-    
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, channel)`
-  - **Docstring:**
-  `````
-  Constructor.
-  
-  Args:
-      channel: A grpc.Channel.
-  `````
-  - **Parameters:**
-    - `self`
-    - `channel`
-
-##### 📌 `class FunboostBrokerServiceServicer(object)`
-*Line: 25*
-
-**Docstring:**
-`````
-定义服务
-    
-`````
-
-**Public Methods (1):**
-- `def Call(self, request, context)`
-  - **Docstring:**
-  `````
-  简单的问候方法
-          
-  `````
-
-##### 📌 `class FunboostBrokerService(object)`
-*Line: 51*
-
-**Docstring:**
-`````
-定义服务
-    
-`````
-
-**Public Methods (1):**
-- `def Call(request, target, options = (), channel_credentials = None, call_credentials = None, insecure = False, compression = None, wait_for_ready = None, timeout = None, metadata = None)` `staticmethod`
-
-#### 🔧 Public Functions (1)
-
-- `def add_FunboostBrokerServiceServicer_to_server(servicer, server)`
-  - *Line: 37*
-
-
----
 
 `````python
 # Generated by the gRPC Python protocol compiler plugin. DO NOT EDIT!
@@ -26887,31 +26204,6 @@ class FunboostBrokerService(object):
 
 --- **start of file: funboost/assist/grpc_helper/generate_pb.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/assist/grpc_helper/generate_pb.py`
-
-#### 📝 Module Docstring
-
-`````
-生成 protobuf 文件的脚本
-运行此脚本来生成 funboost_grpc_pb2.py 和 funboost_grpc_pb2_grpc.py 文件
-`````
-
-#### 📦 Imports
-
-- `import subprocess`
-- `import sys`
-- `import os`
-
-#### 🔧 Public Functions (1)
-
-- `def generate_protobuf()`
-  - *Line: 14*
-  - *生成 protobuf 文件*
-
-
----
-
 `````python
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -26971,44 +26263,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/assist/grpc_helper/server_sample.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/assist/grpc_helper/server_sample.py`
-
-#### 📦 Imports
-
-- `import threading`
-- `import grpc`
-- `from concurrent import futures`
-- `import time`
-- `import funboost_grpc_pb2`
-- `import funboost_grpc_pb2_grpc`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class FunboostGrpcServicer(funboost_grpc_pb2_grpc.FunboostBrokerServiceServicer)`
-*Line: 14*
-
-**Docstring:**
-`````
-HelloService 的实现类
-`````
-
-**Public Methods (1):**
-- `def Call(self, request, context)`
-  - *实现 SayHello 方法*
-
-#### 🔧 Public Functions (2)
-
-- `def process_msg(x, event: threading.Event)`
-  - *Line: 30*
-
-- `def serve()`
-  - *Line: 36*
-  - *启动 gRPC 服务器*
-
-
----
 
 `````python
 #!/usr/bin/env python3
@@ -27083,69 +26337,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/beggar_version_implementation/beggar_redis_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/beggar_version_implementation/beggar_redis_consumer.py`
-
-#### 📝 Module Docstring
-
-`````
-这里是最精简的乞丐版的基于redis的分布式函数执行的实现。相对于完整版，砍掉所有功能，只是演示框架的最精简最本质的实现。
-主要是砍掉很多功能，大大简化代码行数，演示框架思路是如何分布式执行python
-函数的，这个只做精简演示，不要亲自去使用这里，功能太弱。
-
-完整版支持3种并发类型，乞丐版只支持多线程并发。完整版的线程池是有界队列，线程大小动态伸缩，乞丐版线程池的线程数量只会增加不能主动主动缩小。
-
-完整版支持15种函数辅助控制，包括控频、超时杀死、消费确认 等15种功能，
-乞丐版为了简化代码演示，全部不支持。
-
-完整版支持10种消息队列中间件，这里只演示大家喜欢的redis作为中间件。
-`````
-
-#### 📦 Imports
-
-- `import json`
-- `import redis`
-- `from concurrent.futures import ThreadPoolExecutor`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `import time`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class BeggarRedisConsumer`
-*Line: 27*
-
-**Docstring:**
-`````
-保持和完整版差不多的代码形态。如果仅仅是像这里的十分简化的版本，一个函数实现也可以了。例如下面的函数。
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, queue_name, consume_function, threads_num)`
-  - **Parameters:**
-    - `self`
-    - `queue_name`
-    - `consume_function`
-    - `threads_num`
-
-**Public Methods (1):**
-- `def start_consuming_message(self)`
-
-#### 🔧 Public Functions (2)
-
-- `def start_consuming_message(queue_name, consume_function, threads_num = 50)`
-  - *Line: 50*
-  - **Docstring:**
-  `````
-  本例子实现的功能和中间件过于简单，单一函数最好了。
-  看不懂有类的代码，不用看上面那个类，看这个函数就可以，使用一个10行代码的函数实现乞丐版分布式函数执行框架。
-  `````
-
-- `def add(x, y)`
-  - *Line: 74*
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -27267,12 +26458,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/beggar_version_implementation/__init__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/beggar_version_implementation/__init__.py`
-
-
----
-
 `````python
 
 `````
@@ -27283,65 +26468,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/concurrent_pool/async_helper.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/async_helper.py`
-
-#### 📦 Imports
-
-- `from functools import partial`
-- `import asyncio`
-- `from concurrent.futures import Executor`
-- `from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble`
-- `import time`
-- `import requests`
-
-#### 🔧 Public Functions (4)
-
-- `def get_or_create_event_loop()`
-  - *Line: 12*
-  - **Docstring:**
-  `````
-  Python 3.7 风格的 get_event_loop。
-  作用：
-  - 有 running loop → 返回当前 loop
-  - 没有 loop → 自动创建一个新的 loop 并 set
-  python3.10后的get_event_loop和python3.7的区别很大
-  `````
-
-- `async def simple_run_in_executor(f, *args, **kwargs)`
-  - *Line: 34*
-  - **Docstring:**
-  `````
-  一个很强的函数，使任意同步同步函数f，转化成asyncio异步api语法，
-  例如 r = await  simple_run_in_executor(block_fun, 20)，可以不阻塞事件循环。
-  
-  asyncio.run_coroutine_threadsafe 和 run_in_executor 是一对反义词。
-  
-  asyncio.run_coroutine_threadsafe 是在非异步的上下文环境(也就是正常的同步语法的函数里面)下调用异步函数对象（协程），
-  因为当前函数定义没有被async修饰，就不能在函数里面使用await，必须使用这。这个是将asyncio包的future对象转化返回一个concurrent.futures包的future对象。
-  
-  run_in_executor 是在异步环境（被async修饰的异步函数）里面，调用同步函数，将函数放到线程池运行防止阻塞整个事件循环的其他任务。
-  这个是将 一个concurrent.futures包的future对象 转化为 asyncio包的future对象，
-  asyncio包的future对象是一个asyncio包的awaitable对象，所以可以被await，concurrent.futures.Future对象不能被await。
-  
-  
-  :param f:  f是一个同步的阻塞函数，f前面不能是由async定义的。
-  :param args: f函数的位置方式入参
-  :async_executor: 线程池
-  :param async_loop: async的loop对象
-  :param kwargs:f函数的关键字方式入参
-  :return:
-  `````
-
-- `def block_fun(x)`
-  - *Line: 72*
-
-- `async def enter_fun(xx)`
-  - *Line: 78*
-
-
----
 
 `````python
 from functools import partial
@@ -27456,64 +26582,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/concurrent_pool/async_pool_executor.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/async_pool_executor.py`
-
-#### 📦 Imports
-
-- `import sys`
-- `import atexit`
-- `import asyncio`
-- `import threading`
-- `import time`
-- `import traceback`
-- `from threading import Thread`
-- `import traceback`
-- `from funboost.concurrent_pool.base_pool_type import FunboostBaseConcurrentPool`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-- `import selectors`
-- `from funboost.concurrent_pool import CustomThreadPoolExecutor as ThreadPoolExecutor`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class AsyncPoolExecutor(FunboostFileLoggerMixin, FunboostBaseConcurrentPool)`
-*Line: 52*
-
-**Docstring:**
-`````
-使api和线程池一样，最好的性能做法是submit也弄成 async def，生产和消费在同一个线程同一个loop一起运行，但会对调用链路的兼容性产生破坏，从而调用方式不兼容线程池。
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, size, specify_async_loop = None, is_auto_start_specify_async_loop_in_child_thread = True)`
-  - **Docstring:**
-  `````
-  :param size: 同时并发运行的协程任务数量。
-  :param specify_loop: 可以指定loop,异步三方包的连接池发请求不能使用不同的loop去使用连接池.
-  `````
-  - **Parameters:**
-    - `self`
-    - `size`
-    - `specify_async_loop = None`
-    - `is_auto_start_specify_async_loop_in_child_thread = True`
-
-**Public Methods (1):**
-- `def submit(self, func, *args, **kwargs)`
-
-#### 🔧 Public Functions (3)
-
-- `def test_async_pool_executor()`
-  - *Line: 157*
-
-- `async def f(x)`
-  - *Line: 161*
-
-- `def f2(x)`
-  - *Line: 168*
-
-
----
 
 `````python
 import sys
@@ -27719,17 +26787,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/concurrent_pool/base_pool_type.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/base_pool_type.py`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class FunboostBaseConcurrentPool`
-*Line: 3*
-
-
----
-
 `````python
 
 
@@ -27748,57 +26805,6 @@ class FunboostBaseConcurrentPool:
 
 
 --- **start of file: funboost/concurrent_pool/bounded_processpoolexcutor_gt_py37.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/bounded_processpoolexcutor_gt_py37.py`
-
-#### 📦 Imports
-
-- `import multiprocessing`
-- `import concurrent.futures`
-- `import sys`
-- `import threading`
-- `from concurrent.futures import _base`
-- `from concurrent.futures.process import _ExceptionWithTraceback`
-- `from concurrent.futures.process import _ResultItem`
-- `from functools import wraps`
-- `import os`
-- `from funboost.core.loggers import get_funboost_file_logger`
-- `from concurrent.futures.process import _sendback_result`
-
-#### 🏛️ Classes (3)
-
-##### 📌 `class _BoundedPoolExecutor`
-*Line: 102*
-
-**Public Methods (3):**
-- `def acquire(self)`
-- `def release(self, fn)`
-- `def submit(self, fn, *args, **kwargs)`
-
-**Class Variables (1):**
-- `semaphore = None`
-
-##### 📌 `class BoundedProcessPoolExecutor(_BoundedPoolExecutor, concurrent.futures.ProcessPoolExecutor)`
-*Line: 119*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, max_workers = None)`
-  - **Parameters:**
-    - `self`
-    - `max_workers = None`
-
-##### 📌 `class BoundedThreadPoolExecutor(_BoundedPoolExecutor, concurrent.futures.ThreadPoolExecutor)`
-*Line: 132*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, max_workers = None)`
-  - **Parameters:**
-    - `self`
-    - `max_workers = None`
-
-
----
 
 `````python
 import multiprocessing
@@ -27952,61 +26958,6 @@ class BoundedThreadPoolExecutor(_BoundedPoolExecutor, concurrent.futures.ThreadP
 
 --- **start of file: funboost/concurrent_pool/bounded_processpoolexcutor_py36.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/bounded_processpoolexcutor_py36.py`
-
-#### 📦 Imports
-
-- `import multiprocessing`
-- `import concurrent.futures`
-- `import threading`
-- `from concurrent.futures.process import _ExceptionWithTraceback`
-- `from concurrent.futures.process import _ResultItem`
-- `from functools import wraps`
-- `import os`
-- `from funboost.core.loggers import get_funboost_file_logger`
-- `import time`
-- `import nb_log`
-
-#### 🏛️ Classes (3)
-
-##### 📌 `class _BoundedPoolExecutor`
-*Line: 56*
-
-**Public Methods (3):**
-- `def acquire(self)`
-- `def release(self, fn)`
-- `def submit(self, fn, *args, **kwargs)`
-
-**Class Variables (1):**
-- `semaphore = None`
-
-##### 📌 `class BoundedProcessPoolExecutor(_BoundedPoolExecutor, concurrent.futures.ProcessPoolExecutor)`
-*Line: 73*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, max_workers = None)`
-  - **Parameters:**
-    - `self`
-    - `max_workers = None`
-
-##### 📌 `class BoundedThreadPoolExecutor(_BoundedPoolExecutor, concurrent.futures.ThreadPoolExecutor)`
-*Line: 81*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, max_workers = None)`
-  - **Parameters:**
-    - `self`
-    - `max_workers = None`
-
-#### 🔧 Public Functions (1)
-
-- `def test_f(x)`
-  - *Line: 88*
-
-
----
-
 `````python
 import multiprocessing
 import concurrent.futures
@@ -28119,49 +27070,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/concurrent_pool/bounded_threadpoolexcutor.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/bounded_threadpoolexcutor.py`
-
-#### 📝 Module Docstring
-
-`````
-一个有界任务队列的thradpoolexcutor
-直接捕获错误日志
-`````
-
-#### 📦 Imports
-
-- `from functools import wraps`
-- `import queue`
-- `from concurrent.futures import ThreadPoolExecutor`
-- `from concurrent.futures import Future`
-- `from concurrent.futures.thread import _WorkItem`
-- `from funboost.concurrent_pool import FunboostBaseConcurrentPool`
-- `from funboost.core.loggers import get_funboost_file_logger`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class BoundedThreadPoolExecutor(ThreadPoolExecutor, FunboostBaseConcurrentPool)`
-*Line: 29*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, max_workers = None, thread_name_prefix = '')`
-  - **Parameters:**
-    - `self`
-    - `max_workers = None`
-    - `thread_name_prefix = ''`
-
-**Public Methods (1):**
-- `def submit(self, fn, *args, **kwargs)`
-
-#### 🔧 Public Functions (1)
-
-- `def fun()`
-  - *Line: 47*
-
-
----
-
 `````python
 # coding=utf-8
 """
@@ -28225,50 +27133,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/concurrent_pool/concurrent_pool_with_multi_process.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/concurrent_pool_with_multi_process.py`
-
-#### 📦 Imports
-
-- `import time`
-- `import multiprocessing`
-- `import threading`
-- `import asyncio`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-- `import atexit`
-- `import os`
-- `import typing`
-- `from funboost.concurrent_pool.custom_threadpool_executor import CustomThreadpoolExecutor`
-- `from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class ConcurrentPoolWithProcess(FunboostFileLoggerMixin)`
-*Line: 14*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, pool_class: typing.Type = CustomThreadpoolExecutor, max_works = 500, process_num = 1)`
-  - **Parameters:**
-    - `self`
-    - `pool_class: typing.Type = CustomThreadpoolExecutor`
-    - `max_works = 500`
-    - `process_num = 1`
-
-**Public Methods (2):**
-- `def submit(self, func, *args, **kwargs)`
-- `def shutdown(self, wait = True)`
-
-#### 🔧 Public Functions (2)
-
-- `def test_f(x)`
-  - *Line: 38*
-
-- `async def async_f(x)`
-  - *Line: 43*
-
-
----
 
 `````python
 import time
@@ -28335,51 +27199,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/concurrent_pool/custom_evenlet_pool_executor.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/custom_evenlet_pool_executor.py`
-
-#### 📦 Imports
-
-- `import atexit`
-- `import time`
-- `import warnings`
-- `from funboost.concurrent_pool import FunboostBaseConcurrentPool`
-- `from funboost.core.loggers import get_funboost_file_logger`
-- `from funboost.core.lazy_impoter import EventletImporter`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class CustomEventletPoolExecutor(EventletImporter().greenpool.GreenPool, FunboostBaseConcurrentPool)`
-*Line: 55*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, *args, **kwargs)`
-  - **Parameters:**
-    - `self`
-    - `*args`
-    - `**kwargs`
-
-**Public Methods (2):**
-- `def submit(self, *args, **kwargs)`
-- `def shutdown(self)`
-
-#### 🔧 Public Functions (4)
-
-- `def check_evenlet_monkey_patch(raise_exc = True)`
-  - *Line: 15*
-
-- `def evenlet_timeout_deco(timeout_t)`
-  - *Line: 32*
-
-- `def get_eventlet_pool_executor(*args2, **kwargs2)`
-  - *Line: 54*
-
-- `def f2(x)`
-  - *Line: 77*
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -28478,80 +27297,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/concurrent_pool/custom_gevent_pool_executor.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/custom_gevent_pool_executor.py`
-
-#### 📦 Imports
-
-- `import atexit`
-- `import time`
-- `import warnings`
-- `from typing import Callable`
-- `import threading`
-- `from funboost.core.lazy_impoter import GeventImporter`
-- `from funboost.concurrent_pool import FunboostBaseConcurrentPool`
-- `from funboost.core.loggers import get_funboost_file_logger`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-
-#### 🏛️ Classes (3)
-
-##### 📌 `class GeventPoolExecutor2(FunboostFileLoggerMixin, FunboostBaseConcurrentPool)`
-*Line: 74*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, max_works)`
-  - **Parameters:**
-    - `self`
-    - `max_works`
-
-**Public Methods (1):**
-- `def submit(self, fn: Callable, *args, **kwargs)`
-
-##### 📌 `class GeventPoolExecutor3(FunboostFileLoggerMixin, FunboostBaseConcurrentPool)`
-*Line: 102*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, max_works)`
-  - **Parameters:**
-    - `self`
-    - `max_works`
-
-**Public Methods (3):**
-- `def submit(self, fn: Callable, *args, **kwargs)`
-- `def joinall(self)`
-- `def joinall_in_new_thread(self)`
-
-##### 📌 `class GeventPoolExecutor(GeventImporter().gevent_pool.Pool, FunboostBaseConcurrentPool)`
-*Line: 59*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, size2 = None, greenlet_class2 = None)`
-  - **Parameters:**
-    - `self`
-    - `size2 = None`
-    - `greenlet_class2 = None`
-
-**Public Methods (2):**
-- `def submit(self, *args, **kwargs)`
-- `def shutdown(self)`
-
-#### 🔧 Public Functions (4)
-
-- `def check_gevent_monkey_patch(raise_exc = True)`
-  - *Line: 19*
-
-- `def gevent_timeout_deco(timeout_t)`
-  - *Line: 36*
-
-- `def get_gevent_pool_executor(size = None, greenlet_class = None)`
-  - *Line: 58*
-
-- `def f2(x)`
-  - *Line: 136*
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -28712,149 +27457,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/concurrent_pool/custom_threadpool_executor.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/custom_threadpool_executor.py`
-
-#### 📝 Module Docstring
-
-`````
-史上最强的python线程池。
-
-最智能的可自动实时调节线程数量的线程池。此线程池和官方concurrent.futures的线程池 是鸭子类关系，所以可以一键替换类名 或者 import as来替换类名。
-对比官方线程池，有4个创新功能或改进。
-
-1、主要是不仅能扩大，还可自动缩小(官方内置的ThreadpoolExecutor不具备此功能，此概念是什么意思和目的，可以百度java ThreadpoolExecutor的KeepAliveTime参数的介绍)，
-   例如实例化一个1000线程的线程池，上一分钟疯狂高频率的对线程池submit任务，线程池会扩张到最大线程数量火力全开运行，
-   但之后的七八个小时平均每分钟只submit一两个任务，官方线程池会一直维持在1000线程，而此线程池会自动缩小，靠什么来识别预测啥时机可以自动缩小呢，就是KeepAliveTime。
-
-2、非常节制的开启多线程，例如实例化一个最大100线程数目的pool，每隔2秒submit一个函数任务，而函数每次只需要1秒就能完成，实际上只需要调节增加到1个线程就可以，不需要慢慢增加到100个线程
-官方的线程池不够智能，会一直增加到最大线程数目，此线程池则不会。
-
-3、线程池任务的queue队列，修改为有界队列
-
-4、此线程池运行函数出错时候，直接显示线程错误，官方的线程池则不会显示错误，例如函数中写1/0,任然不现实错误。
-
-此实现了submit，还实现future相关的内容，真正的和内置的ThreadpoolExecutor 完全替代。
-
-可以在各种地方加入 time.sleep 来验证 第1条和第2条的自动智能缩放功能。
-`````
-
-#### 📦 Imports
-
-- `import logging`
-- `import os`
-- `import atexit`
-- `import queue`
-- `import sys`
-- `import threading`
-- `import time`
-- `import weakref`
-- `from funboost.concurrent_pool import FunboostBaseConcurrentPool`
-- `from nb_log import LoggerLevelSetterMixin`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-- `from funboost.core.loggers import get_funboost_file_logger`
-- `from concurrent.futures import Executor`
-- `from concurrent.futures import Future`
-- `from funboost.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch`
-- `from funboost.concurrent_pool.custom_gevent_pool_executor import check_gevent_monkey_patch`
-
-#### 🏛️ Classes (4)
-
-##### 📌 `class _WorkItem(FunboostFileLoggerMixin)`
-*Line: 65*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, future, fn, args, kwargs)`
-  - **Parameters:**
-    - `self`
-    - `future`
-    - `fn`
-    - `args`
-    - `kwargs`
-
-**Public Methods (1):**
-- `def run(self)`
-
-##### 📌 `class ThreadPoolExecutorShrinkAble(Executor, FunboostFileLoggerMixin, LoggerLevelSetterMixin, FunboostBaseConcurrentPool)`
-*Line: 95*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, max_workers: int = None, thread_name_prefix = '', work_queue_maxsize = 10)`
-  - **Docstring:**
-  `````
-  最好需要兼容官方concurren.futures.ThreadPoolExecutor 和改版的BoundedThreadPoolExecutor，入参名字和个数保持了一致。
-  :param max_workers:
-  :param thread_name_prefix:
-  `````
-  - **Parameters:**
-    - `self`
-    - `max_workers: int = None`
-    - `thread_name_prefix = ''`
-    - `work_queue_maxsize = 10`
-
-**Public Methods (2):**
-- `def submit(self, func, *args, **kwargs)`
-- `def shutdown(self, wait = True)`
-
-**Class Variables (3):**
-- `MIN_WORKERS = 1`
-- `KEEP_ALIVE_TIME = 60`
-- `THREAD_USE_DAEMON = True`
-
-##### 📌 `class ThreadPoolExecutorShrinkAbleNonDaemon(ThreadPoolExecutorShrinkAble)`
-*Line: 163*
-
-**Docstring:**
-`````
-这个给 apscheduler 的 ThreadPoolExecutorForAps 使用很好，这个线程池里面的线程不是守护线程，
-
-防止代码里面有子线程在运行但是主线程结束，导致这个报错 
-raise RuntimeError('cannot schedule new futures after ' RuntimeError: cannot schedule new futures after interpreter shutdown
-
-之前backgroud scheduler使用得是线程池里面是守护线程，为了避免cannot schedule new futures after ，
-用户需要手动在主线程加个 ctrl_c_recv() 或者 while 1::time.sleep(10) 来阻止主线程结束，这样会麻烦用户。
-`````
-
-**Class Variables (2):**
-- `MIN_WORKERS = 0`
-- `THREAD_USE_DAEMON = False`
-
-##### 📌 `class _CustomThread(threading.Thread, FunboostFileLoggerMixin, LoggerLevelSetterMixin)`
-*Line: 178*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, executorx: ThreadPoolExecutorShrinkAble)`
-  - **Parameters:**
-    - `self`
-    - `executorx: ThreadPoolExecutorShrinkAble`
-
-**Public Methods (1):**
-- `def run(self)`
-
-**Class Variables (1):**
-- `_lock_for_judge_threads_free_count = threading.Lock()`
-
-#### 🔧 Public Functions (5)
-
-- `def check_not_monkey()`
-  - *Line: 43*
-
-- `def set_threadpool_executor_shrinkable(min_works = 1, keep_alive_time = 5)`
-  - *Line: 90*
-
-- `def show_current_threads_num(sleep_time = 600, process_name = '', block = False, daemon = True)`
-  - *Line: 230*
-  - *另起一个线程每隔多少秒打印有多少线程，这个和可缩小线程池的实现没有关系*
-
-- `def get_current_threads_num()`
-  - *Line: 251*
-
-- `def f1(a)`
-  - *Line: 259*
-
-
----
 
 `````python
 """
@@ -29144,111 +27746,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/concurrent_pool/custom_threadpool_executor000.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/custom_threadpool_executor000.py`
-
-#### 📝 Module Docstring
-
-`````
-可自动实时调节线程数量的线程池。
-比官方ThreadpoolExecutor的改进是
-1.有界队列
-2.实时调节线程数量，指的是当任务很少时候会去关闭很多线程。官方ThreadpoolExecurot只能做到忙时候开启很多线程，但不忙时候线程没有关闭线程，
-此线程池实现了java ThreadpoolExecutor线程池的keppaliveTime参数的功能，linux系统能承受的线程总数有限，一般不到2万。
-3.能非常智能节制的开启多线程。比如设置线程池大小为500，线程池的运行函数消耗时间是只需要0.1秒，如果每隔2秒钟来一个任务。1个线程足够了，官方线程池是一直增长到500，然后不增长，官方的太不智能了。
-
-这个线程池是框架的默认线程方式的线程池，如果不设置并发方式就用的这里。
-
-此实现了submit，但没实现future相关的内容。
-`````
-
-#### 📦 Imports
-
-- `import atexit`
-- `import queue`
-- `import sys`
-- `import threading`
-- `import time`
-- `import weakref`
-- `from nb_log import LoggerMixin`
-- `from nb_log import nb_print`
-- `from nb_log import LoggerLevelSetterMixin`
-- `from nb_log import LogManager`
-- `from funboost.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch`
-- `from funboost.concurrent_pool.custom_gevent_pool_executor import check_gevent_monkey_patch`
-- `from funboost.utils import decorators`
-- `from funboost.concurrent_pool.bounded_threadpoolexcutor import BoundedThreadPoolExecutor`
-
-#### 🏛️ Classes (3)
-
-##### 📌 `class _WorkItem(LoggerMixin)`
-*Line: 42*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, fn, args, kwargs)`
-  - **Parameters:**
-    - `self`
-    - `fn`
-    - `args`
-    - `kwargs`
-
-**Public Methods (1):**
-- `def run(self)`
-
-##### 📌 `class CustomThreadPoolExecutor(LoggerMixin, LoggerLevelSetterMixin)`
-*Line: 66*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, max_workers = None, thread_name_prefix = '')`
-  - **Docstring:**
-  `````
-  最好需要兼容官方concurren.futures.ThreadPoolExecutor 和改版的BoundedThreadPoolExecutor，入参名字和个数保持了一致。
-  :param max_workers:
-  :param thread_name_prefix:
-  `````
-  - **Parameters:**
-    - `self`
-    - `max_workers = None`
-    - `thread_name_prefix = ''`
-
-**Public Methods (4):**
-- `def set_min_workers(self, min_workers = 10)`
-- `def change_threads_free_count(self, change_num)`
-- `def submit(self, func, *args, **kwargs)`
-- `def shutdown(self, wait = True)`
-
-##### 📌 `class _CustomThread(threading.Thread, LoggerMixin, LoggerLevelSetterMixin)`
-*Line: 128*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, executorx: CustomThreadPoolExecutor)`
-  - **Parameters:**
-    - `self`
-    - `executorx: CustomThreadPoolExecutor`
-
-**Public Methods (1):**
-- `def run(self)`
-
-**Class Variables (1):**
-- `_lock_for_judge_threads_free_count = threading.Lock()`
-
-#### 🔧 Public Functions (4)
-
-- `def check_not_monkey()`
-  - *Line: 59*
-
-- `def show_current_threads_num(sleep_time = 60, process_name = '', block = False)`
-  - *Line: 177*
-
-- `def get_current_threads_num()`
-  - *Line: 195*
-
-- `def f1(a)`
-  - *Line: 205*
-
-
----
-
 `````python
 """
 可自动实时调节线程数量的线程池。
@@ -29485,47 +27982,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/concurrent_pool/fixed_thread_pool.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/fixed_thread_pool.py`
-
-#### 📝 Module Docstring
-
-`````
-flxed_thread_pool.py 固定大小的非智能线程池, 最简单的粗暴实现线程池方式,任何人都可以写得出来.
-弊端是代码不会自动结束,因为线程池的每个线程 while 1是非守护线程,不能自动判断代码是否需要结束.
-如果有的人的代码是长期运行不需要结束的,可以用这种线程池。
-`````
-
-#### 📦 Imports
-
-- `import threading`
-- `import traceback`
-- `from queue import Queue`
-- `from funboost.concurrent_pool import FunboostBaseConcurrentPool`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class FixedThreadPool(FunboostFileLoggerMixin, FunboostBaseConcurrentPool)`
-*Line: 15*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, max_workers: int = 8)`
-  - **Parameters:**
-    - `self`
-    - `max_workers: int = 8`
-
-**Public Methods (1):**
-- `def submit(self, func, *args, **kwargs)`
-
-#### 🔧 Public Functions (1)
-
-- `def f3(x)`
-  - *Line: 38*
-
-
----
-
 `````python
 """
 flxed_thread_pool.py 固定大小的非智能线程池, 最简单的粗暴实现线程池方式,任何人都可以写得出来.
@@ -29583,95 +28039,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/concurrent_pool/flexible_thread_pool.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/flexible_thread_pool.py`
-
-#### 📝 Module Docstring
-
-`````
-比 ThreadPoolExecutorShrinkAble 更简单的的弹性线程池。完全彻底从头手工开发
-
-这个线程池 submit没有返回值，不返回future对象，不支持map方法。
-
-此线程池性能比concurrent.futures.ThreadPoolExecutor高200%
-
-顺便兼容asyns def的函数并发运行
-`````
-
-#### 📦 Imports
-
-- `import asyncio`
-- `import inspect`
-- `import os`
-- `import queue`
-- `import threading`
-- `from functools import wraps`
-- `from funboost.concurrent_pool import FunboostBaseConcurrentPool`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-- `from funboost.core.loggers import LoggerLevelSetterMixin`
-- `from funboost.core.loggers import FunboostMetaTypeFileLogger`
-- `import time`
-- `from concurrent.futures import ThreadPoolExecutor`
-- `from custom_threadpool_executor import ThreadPoolExecutorShrinkAble`
-
-#### 🏛️ Classes (3)
-
-##### 📌 `class FlexibleThreadPool(FunboostFileLoggerMixin, LoggerLevelSetterMixin, FunboostBaseConcurrentPool)`
-*Line: 22*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, max_workers: int = None, work_queue_maxsize = 10)`
-  - **Parameters:**
-    - `self`
-    - `max_workers: int = None`
-    - `work_queue_maxsize = 10`
-
-**Public Methods (1):**
-- `def submit(self, func, *args, **kwargs)`
-
-**Class Variables (2):**
-- `KEEP_ALIVE_TIME = 10`
-- `MIN_WORKERS = 1`
-
-##### 📌 `class FlexibleThreadPoolMinWorkers0(FlexibleThreadPool)`
-*Line: 53*
-
-**Class Variables (1):**
-- `MIN_WORKERS = 0`
-
-##### 📌 `class _KeepAliveTimeThread(threading.Thread)`
-*Line: 102*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, thread_pool: FlexibleThreadPool)`
-  - **Parameters:**
-    - `self`
-    - `thread_pool: FlexibleThreadPool`
-
-**Public Methods (1):**
-- `def run(self) -> None`
-
-#### 🔧 Public Functions (5)
-
-- `def run_sync_or_async_fun000(func, *args, **kwargs)`
-  - *Line: 57*
-  - *这种方式造成电脑很卡,不行*
-
-- `def run_sync_or_async_fun(func, *args, **kwargs)`
-  - *Line: 80*
-
-- `def sync_or_async_fun_deco(func)`
-  - *Line: 93*
-
-- `def testf(x)`
-  - *Line: 144*
-
-- `async def aiotestf(x)`
-  - *Line: 150*
-
-
----
 
 `````python
 """
@@ -29854,33 +28221,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/concurrent_pool/pool_commons.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/pool_commons.py`
-
-#### 📦 Imports
-
-- `import functools`
-- `import threading`
-- `import typing`
-- `import os`
-- `from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool`
-- `from funboost.concurrent_pool.base_pool_type import FunboostBaseConcurrentPool`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class ConcurrentPoolBuilder`
-*Line: 10*
-
-**Public Methods (1):**
-- `def get_pool(cls, pool_type: typing.Type[FunboostBaseConcurrentPool], max_workers: int = None)` `classmethod`
-
-**Class Variables (2):**
-- `_pid__pool_map = {}`
-- `_lock = threading.Lock()`
-
-
----
-
 `````python
 import functools
 import threading
@@ -29976,32 +28316,6 @@ flxed_thread_pool.py 固定大小的线程池, 最简单的实现线程池方式
 
 --- **start of file: funboost/concurrent_pool/single_thread_executor.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/single_thread_executor.py`
-
-#### 📦 Imports
-
-- `from typing import Callable`
-- `from funboost.concurrent_pool import FunboostBaseConcurrentPool`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class SoloExecutor(FunboostBaseConcurrentPool)`
-*Line: 6*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, max_workers: int = 1)`
-  - **Parameters:**
-    - `self`
-    - `max_workers: int = 1`
-
-**Public Methods (2):**
-- `def submit(self, fn: Callable, *args, **kwargs)`
-- `def shutdown(self, wait = True)`
-
-
----
-
 `````python
 from typing import Callable
 
@@ -30030,33 +28344,6 @@ class SoloExecutor(FunboostBaseConcurrentPool):
 
 --- **start of file: funboost/concurrent_pool/__init__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/concurrent_pool/__init__.py`
-
-#### 📝 Module Docstring
-
-`````
-并发池 包括
-有界队列线程池 加 错误提示
-eventlet协程
-gevent协程
-自定义的有界队列线程池 加 错误提示，同时线程数量在任务数量少的时候可自动减少。项目中默认使用的并发方式是基于这个。
-
-此文件夹包括5种并发池，可以单独用于任何项目，即使没有使用这个函数调度框架。
-`````
-
-#### 📦 Imports
-
-- `from base_pool_type import FunboostBaseConcurrentPool`
-- `from async_pool_executor import AsyncPoolExecutor`
-- `from bounded_threadpoolexcutor import BoundedThreadPoolExecutor`
-- `from custom_threadpool_executor import CustomThreadPoolExecutor`
-- `from flexible_thread_pool import FlexibleThreadPool`
-- `from pool_commons import ConcurrentPoolBuilder`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -30084,254 +28371,6 @@ from .pool_commons import ConcurrentPoolBuilder
 
 
 --- **start of file: funboost/consumers/base_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/base_consumer.py`
-
-#### 📝 Module Docstring
-
-`````
-所有中间件类型消费者的抽象基类。使实现不同中间件的消费者尽可能代码少。
-整个流程最难的都在这里面。因为要实现多种并发模型，和对函数施加20多种运行控制方式，所以代码非常长。
-
-框架做主要的功能都是在这个文件里面实现的.
-`````
-
-#### 📦 Imports
-
-- `import functools`
-- `import sys`
-- `import typing`
-- `import abc`
-- `import copy`
-- `from apscheduler.jobstores.memory import MemoryJobStore`
-- `from funboost.core.broker_kind__exclusive_config_default_define import generate_broker_exclusive_config`
-- `from funboost.core.funboost_time import FunboostTime`
-- `from pathlib import Path`
-- `import datetime`
-- `import pytz`
-- `import json`
-- `import logging`
-- `import atexit`
-- `import os`
-- `import uuid`
-- `import time`
-- `import traceback`
-- `import inspect`
-- `from functools import wraps`
-- `import threading`
-- `from threading import Lock`
-- `import asyncio`
-- `import nb_log`
-- `from funboost.core.current_task import funboost_current_task`
-- `from funboost.core.current_task import FctContext`
-- `from funboost.core.loggers import develop_logger`
-- `from funboost.core.func_params_model import BoosterParams`
-- `from funboost.core.func_params_model import PublisherParams`
-- `from funboost.core.func_params_model import BaseJsonAbleModel`
-- `from funboost.core.serialization import PickleHelper`
-- `from funboost.core.serialization import Serialization`
-- `from funboost.core.task_id_logger import TaskIdLogger`
-- `from funboost.constant import FunctionKind`
-- `from nb_libs.path_helper import PathHelper`
-- `from nb_log import get_logger`
-- `from nb_log import LoggerLevelSetterMixin`
-- `from nb_log import LogManager`
-- `from nb_log import is_main_process`
-- `from nb_log import nb_log_config_default`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-- `from funboost.core.loggers import logger_prompt`
-- `from apscheduler.jobstores.redis import RedisJobStore`
-- `from apscheduler.executors.pool import ThreadPoolExecutor as ApschedulerThreadPoolExecutor`
-- `from funboost.funboost_config_deafult import FunboostCommonConfig`
-- `from funboost.concurrent_pool.single_thread_executor import SoloExecutor`
-- `from funboost.core.function_result_status_saver import ResultPersistenceHelper`
-- `from funboost.core.function_result_status_saver import FunctionResultStatus`
-- `from funboost.core.function_result_status_saver import RunStatus`
-- `from funboost.core.helper_funs import delete_keys_and_return_new_dict`
-- `from funboost.core.helper_funs import get_publish_time`
-- `from funboost.core.helper_funs import MsgGenerater`
-- `from funboost.concurrent_pool.async_helper import get_or_create_event_loop`
-- `from funboost.concurrent_pool.async_helper import simple_run_in_executor`
-- `from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor`
-- `from funboost.concurrent_pool.bounded_threadpoolexcutor import BoundedThreadPoolExecutor`
-- `from funboost.utils.redis_manager import RedisMixin`
-- `from funboost.utils.func_timeout import dafunc`
-- `from funboost.concurrent_pool.custom_threadpool_executor import check_not_monkey`
-- `from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool`
-- `from funboost.concurrent_pool.flexible_thread_pool import sync_or_async_fun_deco`
-- `from funboost.consumers.redis_filter import RedisFilter`
-- `from funboost.consumers.redis_filter import RedisImpermanencyFilter`
-- `from funboost.factories.publisher_factotry import get_publisher`
-- `from funboost.utils import decorators`
-- `from funboost.utils import time_util`
-- `from funboost.utils import redis_manager`
-- `from funboost.constant import ConcurrentModeEnum`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.constant import ConstStrForClassMethod`
-- `from funboost.constant import RedisKeys`
-- `from funboost.core import kill_remote_task`
-- `from funboost.core.exceptions import ExceptionForRequeue`
-- `from funboost.core.exceptions import ExceptionForPushToDlxqueue`
-- `from funboost.core.consuming_func_iniput_params_check import ConsumingFuncInputParamsChecker`
-- `from funboost.core.consuming_func_iniput_params_check import FakeFunGenerator`
-- `from funboost.core.lazy_impoter import funboost_lazy_impoter`
-- `from funboost.timing_job import FsdfBackgroundScheduler`
-- `from funboost.timing_job.apscheduler_use_redis_store import FunboostBackgroundSchedulerProcessJobsWithinRedisLock`
-- `from funboost.concurrent_pool.custom_gevent_pool_executor import check_gevent_monkey_patch`
-- `from funboost.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch`
-- `from funboost.concurrent_pool.custom_gevent_pool_executor import gevent_timeout_deco`
-- `from funboost.concurrent_pool.custom_gevent_pool_executor import get_gevent_pool_executor`
-- `from funboost.concurrent_pool.custom_evenlet_pool_executor import evenlet_timeout_deco`
-- `from funboost.concurrent_pool.custom_evenlet_pool_executor import get_eventlet_pool_executor`
-
-#### 🏛️ Classes (5)
-
-##### 📌 `class GlobalVars`
-*Line: 88*
-
-**Class Variables (2):**
-- `global_concurrent_mode = None`
-- `has_start_a_consumer_flag = False`
-
-##### 📌 `class AbstractConsumer(LoggerLevelSetterMixin)`
-*Line: 94*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, consumer_params: BoosterParams)`
-  - **Docstring:**
-  `````
-          
-  `````
-  - **Parameters:**
-    - `self`
-    - `consumer_params: BoosterParams`
-
-**Public Methods (12):**
-- `def bulid_a_new_publisher_of_same_queue(self)`
-- `def join_shedual_task_thread(cls)` `classmethod`
-  - *:return:*
-- `def custom_init(self)`
-- `def keep_circulating(self, time_sleep = 0.001, exit_if_function_run_sucsess = False, is_display_detail_exception = True, block = True, daemon = False)`
-  - **Docstring:**
-  `````
-  间隔一段时间，一直循环运行某个方法的装饰器
-  :param time_sleep :循环的间隔时间
-  :param is_display_detail_exception
-  :param exit_if_function_run_sucsess :如果成功了就退出循环
-  :param block:是否阻塞在当前主线程运行。
-  :param daemon:是否守护线程
-  `````
-- `def start_consuming_message(self)`
-- `def user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus)`
-- `async def aio_user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus)`
-- `def check_heartbeat_and_message_count(self)`
-- `def pause_consume(self)`
-  - *从远程机器可以设置队列为暂停消费状态，funboost框架会自动停止消费，此功能需要配置好redis*
-- `def continue_consume(self)`
-  - *从远程机器可以设置队列为暂停消费状态，funboost框架会自动继续消费，此功能需要配置好redis*
-- `def wait_for_possible_has_finish_all_tasks(self, minutes: int = 3)`
-  - **Docstring:**
-  `````
-  判断队列所有任务是否消费完成了。
-  由于是异步消费，和存在队列一边被消费，一边在推送，或者还有结尾少量任务还在确认消费者实际还没彻底运行完成。  但有时候需要判断 所有任务，务是否完成，提供一个不精确的判断，要搞清楚原因和场景后再慎用。
-  一般是和celery一样，是永久运行的后台任务，永远无限死循环去任务执行任务，但有的人有判断是否执行完成的需求。
-  :param minutes: 消费者连续多少分钟没执行任务任务 并且 消息队列中间件中没有，就判断为消费完成，为了防止是长耗时任务，一般判断完成是真正提供的minutes的2个周期时间。
-  :return:
-  `````
-- `def clear_filter_tasks(self)`
-
-**Properties (3):**
-- `@property publisher_of_same_queue`
-- `@property publisher_of_dlx_queue`
-- `@property concurrent_pool`
-
-**Class Variables (3):**
-- `time_interval_for_check_do_not_run_time = 60`
-- `BROKER_KIND = None`
-- `logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')`
-
-##### 📌 `class ConcurrentModeDispatcher(FunboostFileLoggerMixin)`
-*Line: 1116*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, consumerx: AbstractConsumer)`
-  - **Parameters:**
-    - `self`
-    - `consumerx: AbstractConsumer`
-
-**Public Methods (3):**
-- `def check_all_concurrent_mode(self)`
-- `def build_pool(self)`
-- `def schedulal_task_with_no_block(self)`
-
-##### 📌 `class MetricCalculation`
-*Line: 1222*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, conusmer: AbstractConsumer)`
-  - **Parameters:**
-    - `self`
-    - `conusmer: AbstractConsumer`
-
-**Public Methods (2):**
-- `def cal(self, t_start_run_fun: float, current_function_result_status: FunctionResultStatus)`
-- `def get_report_hearbeat_info(self) -> dict`
-
-**Class Variables (1):**
-- `UNIT_TIME_FOR_COUNT = 10`
-
-##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1305*
-
-**Docstring:**
-`````
-为了兼容模拟mq的中间件（例如redis，他没有实现amqp协议，redis的list结构和真mq差远了），获取一个队列有几个连接活跃消费者数量。
-分布式环境中的消费者统计。主要目的有3点
-
-1、统计活跃消费者数量用于分布式控频。
-    获取分布式的消费者数量后，用于分布式qps控频。如果不获取全环境中的消费者数量，则只能用于当前进程中的消费控频。
-    即使只有一台机器，例如把xx.py启动3次，xx.py的consumer设置qps为10，如果不使用分布式控频，会1秒钟最终运行30次函数而不是10次。
-
-2、记录分布式环境中的活跃消费者的所有消费者 id，如果消费者id不在此里面说明已掉线或关闭，消息可以重新分发，用于不支持服务端天然消费确认的中间件。
-
-3、从redis中获取停止和暂停状态，以便支持在别的地方发送命令停止或者暂停消费。
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, consumer: AbstractConsumer)`
-  - **Parameters:**
-    - `self`
-    - `consumer: AbstractConsumer`
-
-**Public Methods (3):**
-- `def run(self)`
-- `def send_heartbeat(self)`
-- `def get_queue_heartbeat_ids(self, without_time: bool)`
-
-**Class Variables (3):**
-- `SHOW_CONSUMER_NUM_INTERVAL = 600`
-- `HEARBEAT_EXPIRE_SECOND = 25`
-- `SEND_HEARTBEAT_INTERVAL = 10`
-
-#### 🔧 Public Functions (1)
-
-- `def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3)`
-  - *Line: 1207*
-  - **Docstring:**
-  `````
-  判断多个消费者是否消费完成了。
-  由于是异步消费，和存在队列一边被消费，一边在推送，或者还有结尾少量任务还在确认消费者实际还没彻底运行完成。  但有时候需要判断 所有任务，务是否完成，提供一个不精确的判断，要搞清楚原因和场景后再慎用。
-  一般是和celery一样，是永久运行的后台任务，永远无限死循环去任务执行任务，但有的人有判断是否执行完成的需求。
-  :param consumer_list: 多个消费者列表
-  :param minutes: 消费者连续多少分钟没执行任务任务 并且 消息队列中间件中没有，就判断为消费完成。为了防止是长耗时任务，一般判断完成是真正提供的minutes的2个周期时间。
-  :return:
-  
-   
-  `````
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -31755,34 +29794,6 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
 
 --- **start of file: funboost/consumers/celery_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/celery_consumer.py`
-
-#### 📦 Imports
-
-- `import time`
-- `from funboost.assist.celery_helper import CeleryHelper`
-- `from funboost.assist.celery_helper import celery_app`
-- `from celery import Task as CeleryTask`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class CeleryConsumer(AbstractConsumer)`
-*Line: 11*
-
-**Docstring:**
-`````
-celery作为中间件实现的。
-`````
-
-**Public Methods (2):**
-- `def custom_init(self)`
-- `def start_consuming_message(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -31998,52 +30009,6 @@ class CeleryConsumer(AbstractConsumer):
 
 --- **start of file: funboost/consumers/confirm_mixin.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/confirm_mixin.py`
-
-#### 📦 Imports
-
-- `import json`
-- `import time`
-- `from funboost.utils.redis_manager import RedisMixin`
-- `from funboost.utils import decorators`
-- `from funboost.core.serialization import Serialization`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin)`
-*Line: 15*
-
-**Docstring:**
-`````
-使用redis的zset结构，value为任务，score为时间戳，这样具有良好的按时间范围搜索特性和删除特性。
-把这个抽离出来了。，是因为这个不仅可以给redis做消息确认，也可以给其他不支持消费确认的消息中间件增加消费确认。
-`````
-
-**Public Methods (2):**
-- `def custom_init(self)`
-- `def start_consuming_message(self)`
-
-**Class Variables (1):**
-- `UNCONFIRMED_TIMEOUT = 600`
-
-##### 📌 `class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithTheHelpOfRedis)`
-*Line: 56*
-
-**Docstring:**
-`````
-使用的是根据心跳，判断非活跃消费者，将非活跃消费者对应的unack zset的重新回到消费队列。
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-**Class Variables (1):**
-- `SCAN_COUNT = 2000`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -32151,33 +30116,6 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
 
 --- **start of file: funboost/consumers/dramatiq_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/dramatiq_consumer.py`
-
-#### 📦 Imports
-
-- `import time`
-- `import dramatiq`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.assist.dramatiq_helper import DramatiqHelper`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class DramatiqConsumer(AbstractConsumer)`
-*Line: 9*
-
-**Docstring:**
-`````
-dramatiq作为中间件实现的。
-`````
-
-**Public Methods (2):**
-- `def custom_init(self)`
-- `def start_consuming_message(self)`
-
-
----
-
 `````python
 import time
 
@@ -32233,33 +30171,6 @@ class DramatiqConsumer(AbstractConsumer):
 
 --- **start of file: funboost/consumers/empty_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/empty_consumer.py`
-
-#### 📦 Imports
-
-- `import abc`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class EmptyConsumer(AbstractConsumer)`
-*Line: 9*
-
-**Docstring:**
-`````
-一个空的消费者基类，作为自定义 Broker 的模板。
-
-这个类其实是多余的，因为用户完全可以继承AbstractConsumer，然后实现custom_init方法，然后实现_shedual_task, _confirm_consume, _requeue方法来新增自定义broker。
-这个类是为了清晰明确的告诉你，仅仅需要下面三个方法，就可以实现一个自定义broker，因为AbstractConsumer基类功能太丰富了，基类方法是在太多了，用户不知道需要继承重写哪方法
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-
----
-
 `````python
 ﻿# -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -32307,38 +30218,6 @@ class EmptyConsumer(AbstractConsumer, metaclass=abc.ABCMeta):
 
 
 --- **start of file: funboost/consumers/faststream_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/faststream_consumer.py`
-
-#### 📦 Imports
-
-- `import asyncio`
-- `import json`
-- `import threading`
-- `import time`
-- `from funboost import EmptyConsumer`
-- `from funboost.assist.faststream_helper import broker`
-- `from funboost.assist.faststream_helper import app`
-- `from funboost.assist.faststream_helper import get_broker`
-- `from faststream import FastStream`
-- `from faststream import Context`
-- `from faststream.annotations import Logger`
-- `from funboost.concurrent_pool.async_helper import simple_run_in_executor`
-- `from funboost.core.serialization import Serialization`
-- `from funboost.core.helper_funs import delete_keys_and_return_new_dict`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class FastStreamConsumer(EmptyConsumer)`
-*Line: 16*
-
-**Public Methods (2):**
-- `def custom_init(self)`
-- `def start_consuming_message(self)`
-
-
----
 
 `````python
 import asyncio
@@ -32404,40 +30283,6 @@ class FastStreamConsumer(EmptyConsumer):
 
 
 --- **start of file: funboost/consumers/grpc_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/grpc_consumer.py`
-
-#### 📦 Imports
-
-- `import abc`
-- `import threading`
-- `import grpc`
-- `import time`
-- `from funboost import FunctionResultStatus`
-- `from funboost.assist.grpc_helper import funboost_grpc_pb2_grpc`
-- `from funboost.assist.grpc_helper import funboost_grpc_pb2`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.msg_result_getter import FutureStatusResult`
-- `from funboost.core.serialization import Serialization`
-- `from funboost.core.exceptions import FunboostWaitRpcResultTimeout`
-- `from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class GrpcConsumer(AbstractConsumer)`
-*Line: 22*
-
-**Docstring:**
-`````
-grpc as  broker
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -32535,34 +30380,6 @@ class GrpcConsumer(AbstractConsumer, ):
 
 --- **start of file: funboost/consumers/httpsqs_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/httpsqs_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `import time`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.publishers.httpsqs_publisher import HttpsqsPublisher`
-- `from funboost.core.func_params_model import PublisherParams`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class HttpsqsConsumer(AbstractConsumer)`
-*Line: 11*
-
-**Docstring:**
-`````
-httpsqs作为中间件
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -32612,37 +30429,6 @@ class HttpsqsConsumer(AbstractConsumer):
 
 
 --- **start of file: funboost/consumers/http_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/http_consumer.py`
-
-#### 📦 Imports
-
-- `import logging`
-- `import threading`
-- `from flask import Flask`
-- `from flask import request`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.function_result_status_saver import FunctionResultStatus`
-- `from funboost.core.msg_result_getter import FutureStatusResult`
-- `from funboost.core.serialization import Serialization`
-- `import waitress`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class HTTPConsumer(AbstractConsumer)`
-*Line: 18*
-
-**Docstring:**
-`````
-flask 作为消息队列实现 consumer
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -32793,48 +30579,6 @@ class HTTPConsumer(AbstractConsumer, ):
 
 --- **start of file: funboost/consumers/http_consumer000.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/http_consumer000.py`
-
-#### 📦 Imports
-
-- `import cgi`
-- `import io`
-- `import json`
-- `from http.server import BaseHTTPRequestHandler`
-- `from http.server import HTTPServer`
-- `from urllib import parse`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class HttpHandler(BaseHTTPRequestHandler)`
-*Line: 13*
-
-**Public Methods (2):**
-- `def do_GET(self)`
-- `def do_POST(self)`
-
-**Class Variables (1):**
-- `consumer = None`
-
-##### 📌 `class HTTPConsumer(AbstractConsumer)`
-*Line: 107*
-
-**Docstring:**
-`````
-http 实现消息队列，不支持持久化，但不需要安装软件。
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-**Class Variables (1):**
-- `BROKER_KIND = 23`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -32977,49 +30721,6 @@ class HTTPConsumer(AbstractConsumer, ):
 
 --- **start of file: funboost/consumers/http_consumer_aiohttp_old.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/http_consumer_aiohttp_old.py`
-
-#### 📦 Imports
-
-- `import asyncio`
-- `import json`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.function_result_status_saver import FunctionResultStatus`
-- `from funboost.core.lazy_impoter import AioHttpImporter`
-- `from funboost.core.serialization import Serialization`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class AioFutureStatusResult`
-*Line: 16*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, call_type: str)`
-  - **Parameters:**
-    - `self`
-    - `call_type: str`
-
-**Public Methods (4):**
-- `def set_finish(self)`
-- `async def wait_finish(self, rpc_timeout)`
-- `def set_staus_result_obj(self, staus_result_obj: FunctionResultStatus)`
-- `def get_staus_result_obj(self)`
-
-##### 📌 `class HTTPConsumer(AbstractConsumer)`
-*Line: 34*
-
-**Docstring:**
-`````
-aiohttp 实现消息队列，不支持持久化，但不需要安装软件。
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -33144,34 +30845,6 @@ class HTTPConsumer(AbstractConsumer, ):
 
 --- **start of file: funboost/consumers/huey_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/huey_consumer.py`
-
-#### 📦 Imports
-
-- `import time`
-- `from huey import RedisHuey`
-- `from huey.consumer import Consumer`
-- `from funboost import AbstractConsumer`
-- `from funboost.assist.huey_helper import HueyHelper`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class HueyConsumer(AbstractConsumer)`
-*Line: 10*
-
-**Docstring:**
-`````
-huey作为中间件实现的。
-`````
-
-**Public Methods (2):**
-- `def custom_init(self)`
-- `def start_consuming_message(self)`
-
-
----
-
 `````python
 import time
 
@@ -33227,33 +30900,6 @@ class HueyConsumer(AbstractConsumer):
 
 
 --- **start of file: funboost/consumers/kafka_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/kafka_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.lazy_impoter import KafkaPythonImporter`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.core.loggers import get_funboost_file_logger`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class KafkaConsumer(AbstractConsumer)`
-*Line: 18*
-
-**Docstring:**
-`````
-kafka作为中间件实现的。自动确认消费，最多消费一次，随意重启会丢失正在大批正在运行的任务。推荐使用 confluent_kafka 中间件，kafka_consumer_manually_commit.py。
-
-可以让消费函数内部 sleep60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group funboost 来证实自动确认消费和手动确认消费的区别。
-`````
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -33333,51 +30979,6 @@ class KafkaConsumer(AbstractConsumer):
 
 
 --- **start of file: funboost/consumers/kafka_consumer_manually_commit.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/kafka_consumer_manually_commit.py`
-
-#### 📝 Module Docstring
-
-`````
-这个可以实现kafka topic单分区,但funboost 200线程消费消息,并且随意强制重启消费进程,不丢失消息
-`````
-
-#### 📦 Imports
-
-- `import json`
-- `import threading`
-- `from collections import defaultdict`
-- `from collections import OrderedDict`
-- `import time`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.lazy_impoter import KafkaPythonImporter`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from confluent_kafka.cimpl import TopicPartition`
-- `from confluent_kafka import Consumer as ConfluentConsumer`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class KafkaConsumerManuallyCommit(AbstractConsumer)`
-*Line: 25*
-
-**Docstring:**
-`````
-confluent_kafla作为中间件实现的。操作kafka中间件的速度比kafka-python快10倍。
-这个是自动间隔2秒的手动确认，由于是异步在并发池中并发消费，可以防止强制关闭程序造成正在运行的任务丢失，比自动commit好。
-如果使用kafka，推荐这个。
-
-可以让消费函数内部 sleep 60秒，突然停止消费代码，使用 kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group frame_group 来证实自动确认消费和手动确认消费的区别。
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-##### 📌 `class SaslPlainKafkaConsumer(KafkaConsumerManuallyCommit)`
-*Line: 127*
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -33564,54 +31165,6 @@ class SaslPlainKafkaConsumer(KafkaConsumerManuallyCommit):
 
 --- **start of file: funboost/consumers/kombu_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/kombu_consumer.py`
-
-#### 📦 Imports
-
-- `import os`
-- `import traceback`
-- `from pathlib import Path`
-- `from kombu.entity import Exchange`
-- `from kombu.entity import Queue`
-- `from kombu.connection import Connection`
-- `from kombu.transport.virtual.base import Channel`
-- `from kombu.transport.virtual.base import Message`
-- `from kombu.transport import redis`
-- `from kombu.transport.redis import Empty`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class KombuConsumer(AbstractConsumer)`
-*Line: 79*
-
-**Docstring:**
-`````
-使用kombu作为中间件,这个能直接一次性支持很多种小众中间件，但性能很差，除非是分布式函数调度框架没实现的中间件种类用户才可以用这种，用户也可以自己对比性能。
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-#### 🔧 Public Functions (2)
-
-- `def patch_kombu_redis()`
-  - *Line: 25*
-  - **Docstring:**
-  `````
-  给kombu的redis 模式打猴子补丁
-  kombu有bug，redis中间件 unnacked 中的任务即使客户端掉线了或者突然关闭脚本中正在运行的任务，也永远不会被重新消费。
-  这个很容易验证那个测试，把消费函数写成sleep 100秒，启动20秒后把脚本关掉，取出来的任务在 unacked 队列中那个永远不会被确认消费，也不会被重新消费。
-  `````
-
-- `def monkey_get(self, callback, timeout = None)`
-  - *Line: 36*
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -33752,34 +31305,6 @@ class KombuConsumer(AbstractConsumer, ):
 
 --- **start of file: funboost/consumers/local_python_queue_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/local_python_queue_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from queue import Queue`
-- `from queue import SimpleQueue`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.queues.memory_queues_map import PythonQueues`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class LocalPythonQueueConsumer(AbstractConsumer)`
-*Line: 11*
-
-**Docstring:**
-`````
-python 内置queue对象作为消息队列，这个要求发布和消费必须在同一python解释器内部运行，不支持分布式。
-`````
-
-**Properties (1):**
-- `@property local_python_queue -> Queue`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -33825,33 +31350,6 @@ class LocalPythonQueueConsumer(AbstractConsumer):
 
 --- **start of file: funboost/consumers/memory_deque_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/memory_deque_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from collections import deque`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.publishers import meomory_deque_publisher`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class LocalPythonQueueConsumer(AbstractConsumer)`
-*Line: 12*
-
-**Docstring:**
-`````
-python 内置queue对象作为消息队列，这个要求发布和消费必须在同一python解释器内部运行，不支持分布式。
-`````
-
-**Properties (1):**
-- `@property local_python_queue -> deque`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -33895,31 +31393,6 @@ class LocalPythonQueueConsumer(AbstractConsumer):
 
 --- **start of file: funboost/consumers/mongomq_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/mongomq_consumer.py`
-
-#### 📦 Imports
-
-- `import time`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.publishers.mongomq_publisher import MongoMixin`
-- `from funboost.publishers.mongomq_publisher import MongoMqPublisher`
-- `from funboost.core.func_params_model import PublisherParams`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class MongoMqConsumer(AbstractConsumer, MongoMixin)`
-*Line: 10*
-
-**Docstring:**
-`````
-Mongo queue包实现的基于mongo的消息队列，支持消费确认。
-`````
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -33961,33 +31434,6 @@ class MongoMqConsumer(AbstractConsumer, MongoMixin):
 
 
 --- **start of file: funboost/consumers/mqtt_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/mqtt_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.lazy_impoter import PahoMqttImporter`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class MqttConsumer(AbstractConsumer)`
-*Line: 13*
-
-**Docstring:**
-`````
-emq 作为中间件 实现的消费者 ，使用共享订阅。
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -34057,38 +31503,6 @@ class MqttConsumer(AbstractConsumer):
 
 
 --- **start of file: funboost/consumers/mysql_cdc_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/mysql_cdc_consumer.py`
-
-#### 📦 Imports
-
-- `import time`
-- `import typing`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.loggers import develop_logger`
-- `from pymysqlreplication import BinLogStreamReader`
-- `from pymysqlreplication.row_event import DeleteRowsEvent`
-- `from pymysqlreplication.row_event import UpdateRowsEvent`
-- `from pymysqlreplication.row_event import WriteRowsEvent`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class MysqlCdcConsumer(AbstractConsumer)`
-*Line: 18*
-
-**Docstring:**
-`````
-A consumer that listens to MySQL binlog events (CDC) and treats them as tasks.
-This broker is consumer-driven; it automatically generates tasks from database changes.
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-  - *Validates the essential configuration.*
-
-
----
 
 `````python
 # funboost/consumers/cdc_consumer.py
@@ -34193,49 +31607,6 @@ class MysqlCdcConsumer(AbstractConsumer):
 
 --- **start of file: funboost/consumers/nameko_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/nameko_consumer.py`
-
-#### 📦 Imports
-
-- `from multiprocessing import Process`
-- `import threading`
-- `import typing`
-- `from funboost.constant import BrokerEnum`
-- `from nameko.containers import ServiceContainer`
-- `from nameko.rpc import rpc`
-- `from nameko.runners import ServiceRunner`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.publishers.nameko_publisher import get_nameko_config`
-- `from funboost.concurrent_pool.custom_evenlet_pool_executor import check_evenlet_monkey_patch`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class NamekoConsumer(AbstractConsumer)`
-*Line: 22*
-
-**Docstring:**
-`````
-nameko作为中间件实现的。
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-#### 🔧 Public Functions (3)
-
-- `def batch_start_nameko_consumers(boost_fun_list: typing.List)`
-  - *Line: 58*
-
-- `def batch_start_nameko_service_in_new_thread(boost_fun_list: typing.List)`
-  - *Line: 66*
-
-- `def batch_start_nameko_service_in_new_process(boost_fun_list: typing.List, process_num = 1)`
-  - *Line: 70*
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -34319,29 +31690,6 @@ def batch_start_nameko_service_in_new_process(boost_fun_list: typing.List, proce
 
 --- **start of file: funboost/consumers/nats_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/nats_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.lazy_impoter import NatsImporter`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class NatsConsumer(AbstractConsumer)`
-*Line: 9*
-
-**Docstring:**
-`````
-nats作为中间件实现的。
-`````
-
-
----
-
 `````python
 ﻿import json
 # from pynats import NATSClient, NATSMessage  # noqa
@@ -34386,30 +31734,6 @@ class NatsConsumer(AbstractConsumer):
 
 
 --- **start of file: funboost/consumers/nsq_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/nsq_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from funboost.core.lazy_impoter import GnsqImporter`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.loggers import get_funboost_file_logger`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class NsqConsumer(AbstractConsumer)`
-*Line: 17*
-
-**Docstring:**
-`````
-nsq作为中间件实现的。
-`````
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -34463,31 +31787,6 @@ class NsqConsumer(AbstractConsumer):
 
 --- **start of file: funboost/consumers/peewee_conusmer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/peewee_conusmer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.queues.peewee_queue import PeeweeQueue`
-- `from funboost.queues.peewee_queue import TaskStatus`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class PeeweeConsumer(AbstractConsumer)`
-*Line: 11*
-
-**Docstring:**
-`````
-peewee实现的操作5种数据库模拟消息队列，支持消费确认。
-`````
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -34532,30 +31831,6 @@ class PeeweeConsumer(AbstractConsumer):
 
 --- **start of file: funboost/consumers/persist_queue_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/persist_queue_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.publishers.persist_queue_publisher import PersistQueuePublisher`
-- `from funboost.core.func_params_model import PublisherParams`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class PersistQueueConsumer(AbstractConsumer)`
-*Line: 10*
-
-**Docstring:**
-`````
-persist queue包实现的本地持久化消息队列。
-`````
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -34593,53 +31868,6 @@ class PersistQueueConsumer(AbstractConsumer):
 
 
 --- **start of file: funboost/consumers/pulsar_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/pulsar_consumer.py`
-
-#### 📝 Module Docstring
-
-`````
-import pulsar
-
-client = pulsar.Client('pulsar://localhost:6650')
-consumer = client.subscribe('my-topic',
-                            subscription_name='my-sub')
-
-while True:
-    msg = consumer.receive()
-    print("Received message: '%s'" % msg.data())
-    consumer.acknowledge(msg)
-
-client.close()
-`````
-
-#### 📦 Imports
-
-- `import os`
-- `import json`
-- `from _pulsar import ConsumerType`
-- `from pulsar.schema import schema`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `import pulsar`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class PulsarConsumer(AbstractConsumer)`
-*Line: 30*
-
-**Docstring:**
-`````
-pulsar作为中间件实现的。
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-
----
 
 `````python
 '''
@@ -34720,28 +31948,6 @@ class PulsarConsumer(AbstractConsumer, ):
 
 --- **start of file: funboost/consumers/rabbitmq_amqpstorm_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/rabbitmq_amqpstorm_consumer.py`
-
-#### 📦 Imports
-
-- `import amqpstorm`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RabbitmqConsumerAmqpStorm(AbstractConsumer)`
-*Line: 10*
-
-**Docstring:**
-`````
-使用AmqpStorm实现的，多线程安全的，不用加锁。
-funboost 强烈推荐使用这个做消息队列中间件。
-`````
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -34802,32 +32008,6 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
 
 
 --- **start of file: funboost/consumers/rabbitmq_complex_routing_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/rabbitmq_complex_routing_consumer.py`
-
-#### 📦 Imports
-
-- `import amqpstorm`
-- `from funboost.consumers.rabbitmq_amqpstorm_consumer import RabbitmqConsumerAmqpStorm`
-- `from amqpstorm.queue import Queue as AmqpStormQueue`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RabbitmqComplexRoutingConsumer(RabbitmqConsumerAmqpStorm)`
-*Line: 9*
-
-**Docstring:**
-`````
-    
-    
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -34893,38 +32073,6 @@ class RabbitmqComplexRoutingConsumer(RabbitmqConsumerAmqpStorm):
 
 
 --- **start of file: funboost/consumers/rabbitmq_pika_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/rabbitmq_pika_consumer.py`
-
-#### 📦 Imports
-
-- `import os`
-- `import functools`
-- `import json`
-- `from threading import Lock`
-- `from funboost.core.loggers import get_funboost_file_logger`
-- `import pikav1.exceptions`
-- `from pikav1.exceptions import AMQPError`
-- `import pikav1`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RabbitmqConsumer(AbstractConsumer)`
-*Line: 21*
-
-**Docstring:**
-`````
-使用pika包实现的。
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -35051,39 +32199,6 @@ class RabbitmqConsumer(AbstractConsumer):
 
 --- **start of file: funboost/consumers/rabbitmq_pika_consumerv0.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/rabbitmq_pika_consumerv0.py`
-
-#### 📦 Imports
-
-- `import functools`
-- `import json`
-- `from threading import Lock`
-- `from funboost.publishers.base_publisher import deco_mq_conn_error`
-- `import pikav0.exceptions`
-- `from pikav0.exceptions import AMQPError`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from nb_log import LogManager`
-- `from nb_log import get_logger`
-- `from funboost.utils.rabbitmq_factory import RabbitMqFactory`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RabbitmqConsumer(AbstractConsumer)`
-*Line: 19*
-
-**Docstring:**
-`````
-使用pika包实现的。
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -35201,33 +32316,6 @@ class RabbitmqConsumer(AbstractConsumer):
 
 --- **start of file: funboost/consumers/rabbitmq_rabbitpy_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/rabbitmq_rabbitpy_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `import rabbitpy`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.utils.rabbitmq_factory import RabbitMqFactory`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RabbitmqConsumerRabbitpy(AbstractConsumer)`
-*Line: 11*
-
-**Docstring:**
-`````
-使用rabbitpy实现的
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -35271,33 +32359,6 @@ class RabbitmqConsumerRabbitpy(AbstractConsumer):
 
 
 --- **start of file: funboost/consumers/redis_brpoplpush_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/redis_brpoplpush_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.utils import decorators`
-- `from funboost.utils.redis_manager import RedisMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RedisBrpopLpushConsumer(AbstractConsumer, RedisMixin)`
-*Line: 12*
-
-**Docstring:**
-`````
-redis作为中间件实现的，使用redis brpoplpush 实现的，并且使用心跳来解决 关闭/掉线 重新分发问题。
-`````
-
-**Public Methods (1):**
-- `def start_consuming_message(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -35363,34 +32424,6 @@ class RedisBrpopLpushConsumer(AbstractConsumer, RedisMixin):
 
 
 --- **start of file: funboost/consumers/redis_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/redis_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `import time`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.utils.redis_manager import RedisMixin`
-- `from funboost.core.serialization import Serialization`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RedisConsumer(AbstractConsumer, RedisMixin)`
-*Line: 15*
-
-**Docstring:**
-`````
-redis作为中间件实现的，使用redis list 结构实现的。
-这个如果消费脚本在运行时候随意反复重启或者非正常关闭或者消费宕机，会丢失大批任务。高可靠需要用rabbitmq或者redis_ack_able或者redis_stream的中间件方式。
-
-这个是复杂版，一次性拉取100个,减少和redis的交互，简单版在 funboost/consumers/redis_consumer_simple.py
-`````
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -35462,83 +32495,6 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
 
 
 --- **start of file: funboost/consumers/redis_consumer_ack_able.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/redis_consumer_ack_able.py`
-
-#### 📝 Module Docstring
-
-`````
-这个是加强版的可确认消费的redis消费实现，所以比redis_conusmer实现复杂很多。
-这个可以确保随意反复多次停止重启脚本，任务永不丢失
-`````
-
-#### 📦 Imports
-
-- `import json`
-- `import time`
-- `from deprecated.sphinx import deprecated`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.consumers.confirm_mixin import ConsumerConfirmMixinWithTheHelpOfRedis`
-- `from funboost.consumers.confirm_mixin import ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat`
-
-#### 🏛️ Classes (3)
-
-##### 📌 `class RedisConsumerAckAble000(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractConsumer)`
-*Line: 18*
-
-**Docstring:**
-`````
-随意重启代码会极小概率丢失1个任务。
-redis作为中间件实现的。将取出来的消息同时放入一个set中，代表unack消费状态。以支持对机器和python进程的随意关闭和断电。
-和celery的配置  task_reject_on_worker_lost = True task_acks_late = True后，处理逻辑几乎不约而同相似。
-`````
-
-##### 📌 `class RedisConsumerAckAble111(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractConsumer)`
-*Line: 43*
-
-**Docstring:**
-`````
- 随意重启代码不会丢失任务，使用的是超时10分钟没有确认消费就认为是已经断开了，重新回到代消费队列。
- redis作为中间件实现的。将取出来的消息同时放入一个set中，代表unack消费状态。以支持对机器和python进程的随意关闭和断电。
- 和celery的配置  task_reject_on_worker_lost = True task_acks_late = True后，处理逻辑几乎不约而同相似。
-
- lua_4 = '''
-local v = redis.call("lpop", KEYS[1])
-if v then
-redis.call('rpush',KEYS[2],v)
- end
-return v'''
- # script_4 = r.register_script(lua_4)
- #
- # print(script_4(keys=["text_pipelien1","text_pipelien1b"]))
- 
-`````
-
-##### 📌 `class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, AbstractConsumer)`
-*Line: 85*
-
-**Docstring:**
-`````
- 随意重启代码不会丢失任务，采用的是配合redis心跳，将心跳过期的未确认的队列，全部重回消费队列。这种不需要等待10分钟，判断更精确。
- redis作为中间件实现的。将取出来的消息同时放入一个set中，代表unack消费状态。以支持对机器和python进程的随意关闭和断电。
- 和celery的配置  task_reject_on_worker_lost = True task_acks_late = True后，处理逻辑几乎不约而同相似。
-
- lua_4 = '''
-local v = redis.call("lpop", KEYS[1])
-if v then
-redis.call('rpush',KEYS[2],v)
- end
-return v'''
- # script_4 = r.register_script(lua_4)
- #
- # print(script_4(keys=["text_pipelien1","text_pipelien1b"]))
- 
-`````
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -35710,36 +32666,6 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
 
 --- **start of file: funboost/consumers/redis_consumer_ack_using_timeout.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/redis_consumer_ack_using_timeout.py`
-
-#### 📦 Imports
-
-- `import json`
-- `import time`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.serialization import Serialization`
-- `from funboost.utils.decorators import RedisDistributedLockContextManager`
-- `from funboost.utils.redis_manager import RedisMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RedisConsumerAckUsingTimeout(AbstractConsumer, RedisMixin)`
-*Line: 12*
-
-**Docstring:**
-`````
-redis作为中间件实现的。
-使用超时未能ack就自动重入消息队列，例如消息取出后，由于突然断电或重启或其他原因，导致消息以后再也不能主动ack了，超过一定时间就重新放入消息队列
-`````
-
-**Public Methods (2):**
-- `def custom_init(self)`
-- `def start_consuming_message(self)`
-
-
----
-
 `````python
 ﻿# -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -35823,45 +32749,6 @@ class RedisConsumerAckUsingTimeout(AbstractConsumer, RedisMixin):
 
 
 --- **start of file: funboost/consumers/redis_consumer_priority.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/redis_consumer_priority.py`
-
-#### 📝 Module Docstring
-
-`````
-这个是加强版的可确认消费的redis消费实现，所以比redis_conusmer实现复杂很多。
-这个可以确保随意反复多次停止重启脚本，任务不丢失，没人采用lua，随意反复重启代码极小概率丢失一个任务。
-
-这个是支持任务优先级的redis队列实现。
-`````
-
-#### 📦 Imports
-
-- `import json`
-- `import time`
-- `import redis5`
-- `from funboost.consumers.redis_consumer_ack_able import RedisConsumerAckAble`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RedisPriorityConsumer(RedisConsumerAckAble)`
-*Line: 19*
-
-**Docstring:**
-`````
-使用多个redis list来实现redis支持队列优先级。brpop可以支持监听多个redis键。
-根据消息的 priroty 来决定发送到哪个队列。我这个想法和celery依赖的kombu实现的redis具有队列优先级是一样的。
-
-注意：  rabbitmq、celery队列优先级都指的是同一个队列中的每个消息具有不同的优先级，消息可以不遵守先进先出，而是优先级越高的消息越先取出来。
-       队列优先级其实是某个队列中的消息的优先级，这是队列的 x-max-priority 的原生概念。
-
-       队列优先级有的人错误的以为是 queuexx 和queueyy两个队列，以为是优先消费queuexx的消息，这是大错特错的想法。
-       队列优先级是指某个队列中的每个消息可以具有不同的优先级，不是在不同队列名之间来比较哪个队列名具有更高的优先级。
-`````
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -35967,30 +32854,6 @@ class RedisPriorityConsumer(RedisConsumerAckAble):
 
 --- **start of file: funboost/consumers/redis_consumer_simple.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/redis_consumer_simple.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.serialization import Serialization`
-- `from funboost.utils.redis_manager import RedisMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RedisConsumer(AbstractConsumer, RedisMixin)`
-*Line: 11*
-
-**Docstring:**
-`````
-redis作为中间件实现的。
-`````
-
-
----
-
 `````python
 ﻿# -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -36031,111 +32894,6 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
 
 
 --- **start of file: funboost/consumers/redis_filter.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/redis_filter.py`
-
-#### 📝 Module Docstring
-
-`````
-任务消费完成后，如果重复发布则过滤。分别实现永久性过滤重复任务和过滤有效期内的重复任务。
-任务过滤 = 函数参数过滤 = 字典过滤 = 排序后的键值对json字符串过滤。
-`````
-
-#### 📦 Imports
-
-- `import json`
-- `import time`
-- `from collections import OrderedDict`
-- `import typing`
-- `from funboost.core.serialization import Serialization`
-- `from funboost.utils import decorators`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-- `from funboost.utils.redis_manager import RedisMixin`
-
-#### 🏛️ Classes (3)
-
-##### 📌 `class RedisFilter(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 21*
-
-**Docstring:**
-`````
-使用set结构，
-基于函数参数的任务过滤。这个是永久性的过滤，除非自己手动删除这个键。
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, redis_key_name, redis_filter_task_expire_seconds)`
-  - **Docstring:**
-  `````
-  :param redis_key_name: 任务过滤键
-  :param redis_filter_task_expire_seconds: 任务过滤的过期时间
-  `````
-  - **Parameters:**
-    - `self`
-    - `redis_key_name`
-    - `redis_filter_task_expire_seconds`
-
-**Public Methods (5):**
-- `def generate_filter_str(value: typing.Union[str, dict], filter_str: typing.Optional[str] = None)` `staticmethod`
-  - *对json的键值对在redis中进行过滤，需要先把键值对排序，否则过滤会不准确如 {"a":1,"b":2} 和 {"b":2,"a":1}*
-- `def add_a_value(self, value: typing.Union[str, dict], filter_str: typing.Optional[str] = None)`
-- `def manual_delete_a_value(self, value: typing.Union[str, dict], filter_str: typing.Optional[str] = None)`
-- `def check_value_exists(self, value, filter_str: typing.Optional[str] = None)`
-- `def delete_expire_filter_task_cycle(self)`
-
-##### 📌 `class RedisImpermanencyFilter(RedisFilter)`
-*Line: 70*
-
-**Docstring:**
-`````
-使用zset结构
-基于函数参数的任务过滤。这个是非永久性的过滤，例如设置过滤过期时间是1800秒 ，30分钟前发布过1 + 2 的任务，现在仍然执行，
-如果是30分钟内发布过这个任务，则不执行1 + 2，现在把这个逻辑集成到框架，一般用于接口缓存。
-`````
-
-**Public Methods (5):**
-- `def add_a_value(self, value: typing.Union[str, dict], filter_str: typing.Optional[str] = None)`
-- `def manual_delete_a_value(self, value: typing.Union[str, dict], filter_str: typing.Optional[str] = None)`
-- `def check_value_exists(self, value, filter_str: typing.Optional[str] = None)`
-- `def delete_expire_filter_task_cycle000(self)` `decorators.keep_circulating(60, block=False)`
-  - **Docstring:**
-  `````
-  一直循环删除过期的过滤任务。
-  # REMIND 任务过滤过期时间最好不要小于60秒，否则删除会不及时,导致发布的新任务由于命中了任务过滤，而不能触发执行。一般实时价格接口是缓存5分钟或30分钟没有问题。
-  :return:
-  `````
-- `def delete_expire_filter_task_cycle(self)` `decorators.keep_circulating(60, block=False)`
-  - **Docstring:**
-  `````
-  一直循环删除过期的过滤任务。任务过滤过期时间最好不要小于60秒，否则删除会不及时,导致发布的新任务不能触发执行。一般实时价格接口是缓存5分钟或30分钟。
-  :return:
-  `````
-
-##### 📌 `class RedisImpermanencyFilterUsingRedisKey(RedisFilter)`
-*Line: 114*
-
-**Docstring:**
-`````
-直接把任务当做redis的key，使用redis自带的过期机制删除过期的过滤任务。
-基于函数参数的任务过滤。这个是非永久性的过滤，例如设置过滤过期时间是1800秒 ，30分钟前发布过1 + 2 的任务，现在仍然执行，
-如果是30分钟内发布过这个任务，则不执行1 + 2，现在把这个逻辑集成到框架，一般用于接口缓存。
-这种过滤模式键太多了，很难看，固定放到 redis_db_filter_and_rpc_result ，不放到消息队列的db里面。
-`````
-
-**Public Methods (4):**
-- `def add_a_value(self, value: typing.Union[str, dict], filter_str: typing.Optional[str] = None)`
-- `def manual_delete_a_value(self, value: typing.Union[str, dict], filter_str: typing.Optional[str] = None)`
-- `def check_value_exists(self, value, filter_str: typing.Optional[str] = None)`
-- `def delete_expire_filter_task_cycle(self)`
-  - **Docstring:**
-  `````
-  redis服务端会自动删除过期的过滤任务键。不用在客户端管理。
-  :return:
-  `````
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -36310,29 +33068,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/consumers/redis_pubsub_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/redis_pubsub_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.utils.redis_manager import RedisMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RedisPbSubConsumer(AbstractConsumer, RedisMixin)`
-*Line: 10*
-
-**Docstring:**
-`````
-redis作为中间件实现的。
-`````
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -36384,35 +33119,6 @@ class RedisPbSubConsumer(AbstractConsumer, RedisMixin):
 
 
 --- **start of file: funboost/consumers/redis_stream_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/redis_stream_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `import redis5`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.utils import decorators`
-- `from funboost.utils.redis_manager import RedisMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RedisStreamConsumer(AbstractConsumer, RedisMixin)`
-*Line: 12*
-
-**Docstring:**
-`````
-redis 的 stream 结构 作为中间件实现的。需要redis 5.0以上，redis stream结构 是redis的消息队列，概念类似kafka，功能远超 list结构。
-`````
-
-**Public Methods (2):**
-- `def custom_init(self)`
-- `def start_consuming_message(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -36519,36 +33225,6 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
 
 --- **start of file: funboost/consumers/rocketmq_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/rocketmq_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `import time`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.publishers.rocketmq_publisher import RocketmqPublisher`
-- `from funboost.core.func_params_model import PublisherParams`
-- `from rocketmq.client import PushConsumer`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RocketmqConsumer(AbstractConsumer)`
-*Line: 12*
-
-**Docstring:**
-`````
-安装
-`````
-
-**Class Variables (1):**
-- `GROUP_ID = 'g_funboost'`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -36608,33 +33284,6 @@ class RocketmqConsumer(AbstractConsumer):
 
 --- **start of file: funboost/consumers/rq_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/rq_consumer.py`
-
-#### 📦 Imports
-
-- `import time`
-- `from funboost.assist.rq_helper import RqHelper`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from rq.decorators import job`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RqConsumer(AbstractConsumer)`
-*Line: 11*
-
-**Docstring:**
-`````
-redis作为中间件实现的。
-`````
-
-**Public Methods (2):**
-- `def custom_init(self)`
-- `def start_consuming_message(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -36678,30 +33327,6 @@ class RqConsumer(AbstractConsumer):
 
 --- **start of file: funboost/consumers/sqlachemy_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/sqlachemy_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.queues import sqla_queue`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class SqlachemyConsumer(AbstractConsumer)`
-*Line: 11*
-
-**Docstring:**
-`````
-sqlachemy实现的操作5种数据库模拟消息队列，支持消费确认。
-`````
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -36743,33 +33368,6 @@ class SqlachemyConsumer(AbstractConsumer):
 
 
 --- **start of file: funboost/consumers/tcp_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/tcp_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from threading import Thread`
-- `import socket`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class TCPConsumer(AbstractConsumer)`
-*Line: 11*
-
-**Docstring:**
-`````
-socket 实现消息队列，不支持持久化，但不需要安装软件。
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -36842,34 +33440,6 @@ class TCPConsumer(AbstractConsumer, ):
 
 --- **start of file: funboost/consumers/txt_file_consumer.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/txt_file_consumer.py`
-
-#### 📦 Imports
-
-- `from pathlib import Path`
-- `from nb_filelock import FileLock`
-- `from persistqueue import Queue`
-- `import json`
-- `from persistqueue.serializers import json as json_serializer`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class TxtFileConsumer(AbstractConsumer)`
-*Line: 12*
-
-**Docstring:**
-`````
-txt文件作为消息队列
-这个不想做消费确认了,要消费确认请选 SQLITE_QUEUE 、PERSISTQUEUE中间件
-`````
-
-
----
-
 `````python
 ﻿from pathlib import Path
 
@@ -36915,32 +33485,6 @@ class TxtFileConsumer(AbstractConsumer, ):
 
 
 --- **start of file: funboost/consumers/udp_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/udp_consumer.py`
-
-#### 📦 Imports
-
-- `import json`
-- `import socket`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class UDPConsumer(AbstractConsumer)`
-*Line: 10*
-
-**Docstring:**
-`````
-socket 实现消息队列，不支持持久化，但不需要安装软件。
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -36999,44 +33543,6 @@ class UDPConsumer(AbstractConsumer, ):
 
 
 --- **start of file: funboost/consumers/zeromq_consumer.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/consumers/zeromq_consumer.py`
-
-#### 📦 Imports
-
-- `import os`
-- `import socket`
-- `import json`
-- `import multiprocessing`
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.lazy_impoter import ZmqImporter`
-- `from funboost.core.loggers import get_funboost_file_logger`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class ZeroMqConsumer(AbstractConsumer)`
-*Line: 65*
-
-**Docstring:**
-`````
-zeromq 中间件的消费者，zeromq基于socket代码，不会持久化，且不需要安装软件。
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-#### 🔧 Public Functions (2)
-
-- `def check_port_is_used(ip, port)`
-  - *Line: 17*
-
-- `def start_broker(port_router: int, port_dealer: int)`
-  - *Line: 34*
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -37162,18 +33668,6 @@ class ZeroMqConsumer(AbstractConsumer):
 
 --- **start of file: funboost/consumers/__init__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/consumers/__init__.py`
-
-#### 📝 Module Docstring
-
-`````
-实现基于各种中间件的消费者
-`````
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -37189,58 +33683,6 @@ class ZeroMqConsumer(AbstractConsumer):
 
 
 --- **start of file: funboost/contrib/api_publish_msg.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/contrib/api_publish_msg.py`
-
-#### 📝 Module Docstring
-
-`````
-这是个简单例子，演示web中如何发布和获取结果。
-
-更建议使用  from funboost.fass ,见教程第15章节。
-因为是一键开箱即用，还能更好的和你的fastapi 融合成一个服务端口，而且支持的url路由更多
-`````
-
-#### 📦 Imports
-
-- `import traceback`
-- `import typing`
-- `from funboost import AioAsyncResult`
-- `from funboost import AsyncResult`
-- `from funboost import PriorityConsumingControlConfig`
-- `from funboost.core.cli.discovery_boosters import BoosterDiscovery`
-- `from funboost import BoostersManager`
-- `from fastapi import FastAPI`
-- `from pydantic import BaseModel`
-- `import uvicorn`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class MsgItem(BaseModel)`
-*Line: 20*
-
-**Class Variables (4):**
-- `queue_name: str`
-- `msg_body: dict`
-- `need_result: bool = False`
-- `timeout: int = 60`
-
-##### 📌 `class PublishResponse(BaseModel)`
-*Line: 27*
-
-**Class Variables (3):**
-- `succ: bool`
-- `msg: str`
-- `status_and_result: typing.Optional[dict] = None`
-
-#### 🔧 Public Functions (1)
-
-- `async def publish_msg(msg_item: MsgItem)` `app.post('/funboost_publish_msg')`
-  - *Line: 43*
-
-
----
 
 `````python
 """
@@ -37323,31 +33765,6 @@ if __name__ == "__main__":
 
 --- **start of file: funboost/contrib/django_db_deco.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/contrib/django_db_deco.py`
-
-#### 📦 Imports
-
-- `from django.db import close_old_connections`
-
-#### 🔧 Public Functions (1)
-
-- `def close_old_connections_deco(f)`
-  - *Line: 4*
-  - **Docstring:**
-  `````
-  如果是消费函数里面需要操作django orm,那么请写上 consumin_function_decorator=close_old_connections_deco
-  @boost(BoosterParams(queue_name='create_student_queue',
-                       broker_kind=BrokerEnum.REDIS_ACK_ABLE,
-                       consumin_function_decorator=close_old_connections_deco, # 如果gone away 一直好不了,可以加这个装饰器. django_celery django-apschrduler 这些源码中 也是调用了 close_old_connections_deco方法.
-  
-                       )
-         )
-  `````
-
-
----
-
 `````python
 from django.db import close_old_connections
 
@@ -37396,45 +33813,6 @@ def close_old_connections_deco(f):
 
 
 --- **start of file: funboost/contrib/queue2queue.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/contrib/queue2queue.py`
-
-#### 📦 Imports
-
-- `import os`
-- `import time`
-- `import typing`
-- `from multiprocessing import Process`
-- `import logging`
-- `import threading`
-- `from funboost import get_publisher`
-- `from funboost import get_consumer`
-- `from funboost import BrokerEnum`
-- `from funboost import wait_for_possible_has_finish_all_tasks_by_conusmer_list`
-- `from funboost.core.func_params_model import PublisherParams`
-- `from funboost.core.func_params_model import BoosterParams`
-
-#### 🔧 Public Functions (2)
-
-- `def consume_and_push_to_another_queue(source_queue_name: str, source_broker_kind: str, target_queue_name: str, target_broker_kind: str, log_level: int = logging.DEBUG, exit_script_when_finish = False)`
-  - *Line: 14*
-  - *将队列中的消息移到另一个队列名中，例如把死信队列的消息移到正常队列。*
-
-- `def multi_prcocess_queue2queue(source_target_list: typing.List[typing.List], log_level: int = logging.DEBUG, exit_script_when_finish = False, n = 1)`
-  - *Line: 51*
-  - **Docstring:**
-  `````
-  转移多个队列，并使用多进程。
-  :param source_target_list:  入参例如  [['test_queue77h5', BrokerEnum.RABBITMQ_AMQPSTORM, 'test_queue77h4', BrokerEnum.RABBITMQ_AMQPSTORM],['test_queue77h6', BrokerEnum.RABBITMQ_AMQPSTORM, 'test_queue77h7', BrokerEnum.REDIS]]
-  :param log_level:
-  :param exit_script_when_finish:
-  :param n:
-  :return:
-  `````
-
-
----
 
 `````python
 import os
@@ -37535,37 +33913,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/contrib/redis_consume_latest_msg_broker.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/contrib/redis_consume_latest_msg_broker.py`
-
-#### 📦 Imports
-
-- `from funboost import register_custom_broker`
-- `from funboost import boost`
-- `from funboost import FunctionResultStatus`
-- `from funboost import BoosterParams`
-- `from funboost.consumers.redis_consumer_simple import RedisConsumer`
-- `from funboost.publishers.redis_publisher_simple import RedisPublisher`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class RedisConsumeLatestPublisher(RedisPublisher)`
-*Line: 16*
-
-**Public Methods (1):**
-- `def concrete_realization_of_publish(self, msg)`
-
-##### 📌 `class RedisConsumeLatestConsumer(RedisConsumer)`
-*Line: 21*
-
-#### 🔧 Public Functions (1)
-
-- `def f(x)` `boost(boost_params=BoosterParams(queue_name='test_list_queue2', broker_kind=BROKER_KIND_REDIS_CONSUME_LATEST, qps=10))`
-  - *Line: 30*
-
-
----
-
 `````python
 from funboost import register_custom_broker
 from funboost import boost, FunctionResultStatus, BoosterParams
@@ -37615,12 +33962,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/contrib/__init__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/contrib/__init__.py`
-
-
----
-
 `````python
 
 `````
@@ -37631,42 +33972,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/contrib/cdc/mysql2mysql.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/contrib/cdc/mysql2mysql.py`
-
-#### 📦 Imports
-
-- `import dataset`
-- `from typing import Dict`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class MySql2Mysql`
-*Line: 4*
-
-**Docstring:**
-`````
-使用dataset封装的mysql binlog消息数据,保存到目标库中
-有了这个贡献类, 用户只需要一行代码就能通过cdc 实现 mysql2mysql,非常方便把数据库实例1的源表a,自动实时同步到数据库实例2的目标表a
-
-这个只是贡献类,用户想怎么插入表,想怎么清洗都可以,可以参考这个例子,dataset把一个字典保存到mysql的一行,真的很方便.
-用户还可以自定义批量插入目标表,都可以. 这个类不是必须使用,是做个示范.
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, primary_key: str, target_table_name: str, target_sink_db: dataset.Database)`
-  - **Parameters:**
-    - `self`
-    - `primary_key: str`
-    - `target_table_name: str`
-    - `target_sink_db: dataset.Database`
-
-**Public Methods (1):**
-- `def sync_data(self, event_type: str, schema: str, table: str, timestamp: int, row_data: Dict)`
-
-
----
 
 `````python
 import dataset
@@ -37721,12 +34026,6 @@ class MySql2Mysql:
 
 
 --- **start of file: funboost/contrib/cdc/__init__.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/contrib/cdc/__init__.py`
-
-
----
 
 `````python
 
@@ -37798,46 +34097,6 @@ CREATE TABLE funboost_consume_results
 
 
 --- **start of file: funboost/contrib/save_function_result_status/save_result_status_to_sqldb.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/contrib/save_function_result_status/save_result_status_to_sqldb.py`
-
-#### 📝 Module Docstring
-
-`````
-一个贡献,保存函数结果状态到 mysql postgre 等等,因为默认是使用mongo保存.
-
-可以在 @boost里面指定 user_custom_record_process_info_func= save_result_status_to_sqlalchemy
-`````
-
-#### 📦 Imports
-
-- `import copy`
-- `import functools`
-- `import json`
-- `from db_libs.sqla_lib import SqlaReflectHelper`
-- `from sqlalchemy import create_engine`
-- `from funboost import boost`
-- `from funboost import FunctionResultStatus`
-- `from funboost import funboost_config_deafult`
-
-#### 🔧 Public Functions (2)
-
-- `def get_sqla_helper()` `functools.lru_cache()`
-  - *Line: 52*
-
-- `def save_result_status_to_sqlalchemy(function_result_status: FunctionResultStatus)`
-  - *Line: 65*
-  - **Docstring:**
-  `````
-  function_result_status变量上有各种丰富的信息 ,用户可以使用其中的信息
-  用户自定义记录函数消费信息的钩子函数
-  
-  例如  @boost('test_user_custom', user_custom_record_process_info_func=save_result_status_to_sqlalchemy)
-  `````
-
-
----
 
 `````python
 
@@ -37931,50 +34190,6 @@ def save_result_status_to_sqlalchemy(function_result_status: FunctionResultStatu
 
 --- **start of file: funboost/contrib/save_function_result_status/save_result_status_use_dataset.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/contrib/save_function_result_status/save_result_status_use_dataset.py`
-
-#### 📝 Module Docstring
-
-`````
-一个贡献,保存函数结果状态到 mysql postgre 等等,因为默认是使用mongo保存.
-
-可以在 @boost里面指定 user_custom_record_process_info_func= save_result_status_to_sqlalchemy
-`````
-
-#### 📦 Imports
-
-- `import os`
-- `import copy`
-- `import functools`
-- `import json`
-- `import threading`
-- `import dataset`
-- `from funboost import boost`
-- `from funboost import FunctionResultStatus`
-- `from funboost import funboost_config_deafult`
-- `from funboost import AbstractConsumer`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class ResultStatusUseDatasetMixin(AbstractConsumer)`
-*Line: 42*
-
-**Public Methods (1):**
-- `def user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus)`
-
-#### 🔧 Public Functions (2)
-
-- `def get_db(connect_url) -> dataset.Database`
-  - *Line: 22*
-  - *封装一个函数，判断pid*
-
-- `def save_result_status_use_dataset(result_status: FunctionResultStatus)`
-  - *Line: 36*
-
-
----
-
 `````python
 
 """
@@ -38032,12 +34247,6 @@ class ResultStatusUseDatasetMixin(AbstractConsumer):
 
 --- **start of file: funboost/contrib/save_function_result_status/__init__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/contrib/save_function_result_status/__init__.py`
-
-
----
-
 `````python
 
 `````
@@ -38048,301 +34257,6 @@ class ResultStatusUseDatasetMixin(AbstractConsumer):
 
 
 --- **start of file: funboost/core/active_cousumer_info_getter.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/core/active_cousumer_info_getter.py`
-
-#### 📝 Module Docstring
-
-`````
-此模块的功能非常适合拿来开发对funboost的监控面板，或者管理后台。
-    - ActiveCousumerProcessInfoGetter  获取队列的活跃消费进程信息
-    - QueuesConusmerParamsGetter  获取所有队列配置参数 和 运行信息
-    - SingleQueueConusmerParamsGetter  获取单个队列配置参数 和 运行信息
-
-
-下面3个python文件的web接口中，funboost.faas 主要就是使用了此模块的功能。
- 
-
-
-
-care_project_name 的作用是：
-    - None : 关心所有redis中存储的队列信息
-    - str : 只关心指定project_name的队列信息
-   
-`````
-
-#### 📦 Imports
-
-- `import json`
-- `import threading`
-- `import time`
-- `import typing`
-- `import uuid`
-- `import os`
-- `from funboost.factories.publisher_factotry import get_publisher`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.utils.redis_manager import RedisMixin`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-- `from funboost.core.loggers import nb_log_config_default`
-- `from funboost.core.serialization import Serialization`
-- `from funboost.constant import RedisKeys`
-- `from funboost.core.booster import BoostersManager`
-- `from funboost.core.booster import Booster`
-- `from funboost.core.func_params_model import PublisherParams`
-- `from funboost.core.func_params_model import BoosterParams`
-- `from funboost.core.func_params_model import BaseJsonAbleModel`
-- `from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig`
-- `from funboost.core.consuming_func_iniput_params_check import FakeFunGenerator`
-- `from funboost.core.exceptions import QueueNameNotExists`
-- `from funboost.timing_job.timing_push import ApsJobAdder`
-
-#### 🏛️ Classes (5)
-
-##### 📌 `class CareProjectNameEnv`
-*Line: 41*
-
-**Public Methods (2):**
-- `def set(cls, care_project_name: str)` `classmethod`
-- `def get(cls) -> typing.Optional[bool]` `classmethod`
-
-**Class Variables (1):**
-- `env_name = 'funboost.care_project_name'`
-
-##### 📌 `class RedisReportInfoGetterMixin`
-*Line: 56*
-
-**Public Methods (4):**
-- `def get_all_queue_names(self) -> list`
-- `def get_queue_names_by_project_name(self, project_name: str) -> list`
-- `def hmget_many_by_all_queue_names(self, key)`
-- `def get_all_project_names(self)`
-
-**Properties (1):**
-- `@property all_queue_names`
-
-##### 📌 `class ActiveCousumerProcessInfoGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 123*
-
-**Docstring:**
-`````
-获取分布式环境中的消费进程信息。
-使用这里面的4个方法需要相应函数的@boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
-要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, care_project_name: typing.Optional[str] = None)`
-  - **Parameters:**
-    - `self`
-    - `care_project_name: typing.Optional[str] = None`
-
-**Public Methods (5):**
-- `def get_all_hearbeat_info_by_queue_name(self, queue_name) -> typing.List[typing.Dict]`
-  - **Docstring:**
-  `````
-  根据队列名查询有哪些活跃的消费者进程
-  返回结果例子：
-  [{
-          "code_filename": "/codes/funboost/test_frame/my/test_consume.py",
-          "computer_ip": "172.16.0.9",
-          "computer_name": "VM_0_9_centos",
-          "consumer_id": 140477437684048,
-          "consumer_uuid": "79473629-b417-4115-b516-4365b3cdf383",
-          "consuming_function": "f2",
-          "hearbeat_datetime_str": "2021-12-27 19:22:04",
-          "hearbeat_timestamp": 1640604124.4643965,
-          "process_id": 9665,
-          "queue_name": "test_queue72c",
-          "start_datetime_str": "2021-12-27 19:21:24",
-          "start_timestamp": 1640604084.0780013
-      }, ...............]
-  `````
-- `def get_all_hearbeat_info_by_ip(self, ip = None) -> typing.List[typing.Dict]`
-  - **Docstring:**
-  `````
-  根据机器的ip查询有哪些活跃的消费者进程，ip不传参就查本机ip使用funboost框架运行了哪些消费进程，传参则查询任意机器的消费者进程信息。
-  返回结果的格式和上面的 get_all_hearbeat_dict_by_queue_name 方法相同。
-  `````
-- `def get_all_ips(self)`
-- `def get_all_hearbeat_info_partition_by_queue_name(self) -> typing.Dict[typing.AnyStr, typing.List[typing.Dict]]`
-  - *获取所有队列对应的活跃消费者进程信息，按队列名划分,不需要传入队列名，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对*
-- `def get_all_hearbeat_info_partition_by_ip(self) -> typing.Dict[typing.AnyStr, typing.List[typing.Dict]]`
-  - *获取所有机器ip对应的活跃消费者进程信息，按机器ip划分,不需要传入机器ip，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对*
-
-##### 📌 `class QueuesConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 242*
-
-**Docstring:**
-`````
-获取所有队列的运行信息，
-方法 get_queues_params_and_active_consumers 返回信息最丰富
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, care_project_name: typing.Optional[str] = None)`
-  - **Parameters:**
-    - `self`
-    - `care_project_name: typing.Optional[str] = None`
-
-**Public Methods (7):**
-- `def get_queues_params(self) -> dict`
-- `def get_pause_flag(self)`
-- `def get_msg_num(self, ignore_report_ts = False)`
-- `def get_queues_history_run_count(self)`
-- `def get_queues_history_run_fail_count(self)`
-- `def get_queues_params_and_active_consumers(self)`
-  - *获取所有队列的参数和活跃消费者*
-- `def cycle_get_queues_params_and_active_consumers_and_report(self, daemon = False)`
-
-##### 📌 `class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 363*
-
-**Docstring:**
-`````
-获取单个队列的运行信息，
-方法 get_one_queue_params_and_active_consumers 返回信息最丰富
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, queue_name: str, care_project_name: typing.Optional[str] = None)`
-  - **Parameters:**
-    - `self`
-    - `queue_name: str`
-    - `care_project_name: typing.Optional[str] = None`
-
-**Public Methods (13):**
-- `def get_one_queue_params(self) -> dict`
-  - **Docstring:**
-  `````
-          类似于这样，就是booster_params的字符串json序列化
-  
-          ```json
-          {
-    "queue_name": "test_funboost_faas_queue2",
-    "broker_kind": "REDIS",
-    "project_name": "test_project1",
-    "concurrent_mode": "threading",
-    "concurrent_num": 50,
-    "specify_concurrent_pool": null,
-    "specify_async_loop": null,
-    "is_auto_start_specify_async_loop_in_child_thread": true,
-    "qps": null,
-    "is_using_distributed_frequency_control": false,
-    "is_send_consumer_hearbeat_to_redis": true,
-    "max_retry_times": 3,
-    "retry_interval": 0,
-    "is_push_to_dlx_queue_when_retry_max_times": false,
-    "consumin_function_decorator": null,
-    "function_timeout": null,
-    "is_support_remote_kill_task": false,
-    "log_level": 10,
-    "logger_prefix": "",
-    "create_logger_file": true,
-    "logger_name": "",
-    "log_filename": null,
-    "is_show_message_get_from_broker": false,
-    "is_print_detail_exception": true,
-    "publish_msg_log_use_full_msg": false,
-    "msg_expire_senconds": null,
-    "do_task_filtering": false,
-    "task_filtering_expire_seconds": 0,
-    "function_result_status_persistance_conf": {
-      "is_save_status": false,
-      "is_save_result": false,
-      "expire_seconds": 604800,
-      "is_use_bulk_insert": false
-    },
-    "user_custom_record_process_info_func": null,
-    "is_using_rpc_mode": true,
-    "rpc_result_expire_seconds": 1800,
-    "rpc_timeout": 1800,
-    "delay_task_apscheduler_jobstores_kind": "redis",
-    "is_do_not_run_by_specify_time_effect": false,
-    "do_not_run_by_specify_time": [
-      "10:00:00",
-      "22:00:00"
-    ],
-    "schedule_tasks_on_main_thread": false,
-    "is_auto_start_consuming_message": false,
-    "booster_group": "test_group1",
-    "consuming_function": "<function sub at 0x00000272649BBA60>",
-    "consuming_function_raw": "<function sub at 0x00000272649BBA60>",
-    "consuming_function_name": "sub",
-    "broker_exclusive_config": {
-      "redis_bulk_push": 1,
-      "pull_msg_batch_size": 100
-    },
-    "should_check_publish_func_params": true,
-    "manual_func_input_params": {
-      "is_manual_func_input_params": false,
-      "must_arg_name_list": [],
-      "optional_arg_name_list": []
-    },
-    "consumer_override_cls": null,
-    "publisher_override_cls": null,
-    "consuming_function_kind": "COMMON_FUNCTION",
-    "user_options": {
-      
-    },
-    "auto_generate_info": {
-      "where_to_instantiate": "D:\codes\funboost\examples\example_faas\task_funs_dir\sub.py:5",
-      "final_func_input_params_info": {
-        "func_name": "sub",
-        "func_position": "<function sub at 0x00000272649BBA60>",
-        "is_manual_func_input_params": false,
-        "all_arg_name_list": [
-          "a",
-          "b"
-        ],
-        "must_arg_name_list": [
-          "a",
-          "b"
-        ],
-        "optional_arg_name_list": []
-      }
-    }
-  }
-  
-  
-          ```
-          
-  `````
-- `def get_one_queue_params_use_cache(self) -> dict`
-- `def generate_publisher_by_funboost_redis_info(self) -> AbstractPublisher`
-- `def generate_booster_by_funboost_redis_info_for_timing_push(self) -> Booster`
-- `def generate_aps_job_adder(self, job_store_kind = 'redis', is_auto_start = True, is_auto_paused = True) -> ApsJobAdder`
-- `def get_one_queue_pause_flag(self) -> int`
-  - *返回队列的暂停状态，-1 表示队列不存在，0 表示队列未暂停，1 表示队列已暂停*
-- `def get_one_queue_history_run_count(self) -> int`
-- `def get_one_queue_history_run_fail_count(self) -> int`
-- `def get_one_queue_msg_num(self, ignore_report_ts = False) -> int`
-  - **Docstring:**
-  `````
-  从上报到redis的心跳信息中获取的消息数量，
-  如果 ignore_report_ts 为 True 并且最近一次上报时间是很久之前的，消息数量就不准
-  上报线程是随着消费一起自动运行的，如果没有启动消息，就会停止心跳信息上报。
-  `````
-- `def get_one_queue_msg_num_realtime(self) -> int`
-  - *实时从broker获取的消息数量，*
-- `def get_one_queue_params_and_active_consumers(self) -> dict`
-- `def get_one_queue_time_series_data(self, start_ts = None, end_ts = None, curve_samples_count = None)`
-- `def deprecate_queue(self)`
-  - **Docstring:**
-  `````
-  废弃队列 - 从 Redis 中移除队列名
-  1. 从 funboost_all_queue_names set 中移除
-  2. 从 funboost.project_name:{project_name} set 中移除
-  `````
-
-**Class Variables (4):**
-- `queue__booster_params_cache: dict = {}`
-- `_pid_broker_kind_queue_name__booster_map = {}`
-- `_pid_broker_kind_queue_name__publisher_map = {}`
-- `_lock_for_generate_publisher_booster = threading.Lock()`
-
-
----
 
 `````python
 """
@@ -38466,6 +34380,17 @@ def _sum_filed_from_active_consumers(active_consumers:typing.List[dict],filed:st
             # print(c[filed])
             s+=c[filed]
     return s
+
+
+def _max_filed_from_active_consumers(active_consumers:typing.List[dict],filed:str):
+    """取所有消费者中某个字段的最大值"""
+    max_val = None
+    for c in active_consumers:
+        val = c.get(filed)
+        if val is not None:
+            if max_val is None or val > max_val:
+                max_val = val
+    return max_val
 
 class ActiveCousumerProcessInfoGetter(RedisMixin,RedisReportInfoGetterMixin,FunboostFileLoggerMixin):
     """
@@ -38643,6 +34568,7 @@ class QueuesConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Funboost
             all_consumers_last_x_s_execute_count_fail = _sum_filed_from_active_consumers(active_consumers, 'last_x_s_execute_count_fail')
             all_consumers_last_x_s_total_cost_time = _sum_filed_from_active_consumers(active_consumers, 'last_x_s_total_cost_time')
             all_consumers_last_x_s_avarage_function_spend_time = round( all_consumers_last_x_s_total_cost_time / all_consumers_last_x_s_execute_count,3) if all_consumers_last_x_s_execute_count else None
+            all_consumers_last_execute_task_time = _max_filed_from_active_consumers(active_consumers, 'last_execute_task_time')
             
             all_consumers_total_consume_count_from_start = _sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start')
             all_consumers_total_cost_time_from_start =_sum_filed_from_active_consumers(active_consumers, 'total_cost_time_from_start')
@@ -38663,6 +34589,7 @@ class QueuesConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Funboost
                 'all_consumers_avarage_function_spend_time_from_start':all_consumers_avarage_function_spend_time_from_start,
                 'all_consumers_total_consume_count_from_start':_sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start'),
                 'all_consumers_total_consume_count_from_start_fail':_sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start_fail'),
+                'all_consumers_last_execute_task_time':all_consumers_last_execute_task_time,
             }
         return queue_params_and_active_consumers
     
@@ -38971,6 +34898,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
         all_consumers_last_x_s_execute_count_fail = _sum_filed_from_active_consumers(active_consumers, 'last_x_s_execute_count_fail')
         all_consumers_last_x_s_total_cost_time = _sum_filed_from_active_consumers(active_consumers, 'last_x_s_total_cost_time')
         all_consumers_last_x_s_avarage_function_spend_time = round( all_consumers_last_x_s_total_cost_time / all_consumers_last_x_s_execute_count,3) if all_consumers_last_x_s_execute_count else None
+        all_consumers_last_execute_task_time = _max_filed_from_active_consumers(active_consumers, 'last_execute_task_time')
         
         all_consumers_total_consume_count_from_start = _sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start')
         all_consumers_total_cost_time_from_start =_sum_filed_from_active_consumers(active_consumers, 'total_cost_time_from_start')
@@ -38991,6 +34919,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
             'all_consumers_avarage_function_spend_time_from_start':all_consumers_avarage_function_spend_time_from_start,
             'all_consumers_total_consume_count_from_start':_sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start'),
             'all_consumers_total_consume_count_from_start_fail':_sum_filed_from_active_consumers(active_consumers, 'total_consume_count_from_start_fail'),
+            'all_consumers_last_execute_task_time':all_consumers_last_execute_task_time,
         }
         return params_and_active_consumers
 
@@ -39058,242 +34987,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/core/booster.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/core/booster.py`
-
-#### 📦 Imports
-
-- `from __future__ import annotations`
-- `import copy`
-- `import inspect`
-- `from multiprocessing import Process`
-- `import os`
-- `import sys`
-- `import types`
-- `import typing`
-- `from funboost.concurrent_pool import FlexibleThreadPool`
-- `from funboost.concurrent_pool.async_helper import simple_run_in_executor`
-- `from funboost.constant import FunctionKind`
-- `from funboost.utils.class_utils import ClsHelper`
-- `from funboost.utils.ctrl_c_end import ctrl_c_recv`
-- `from funboost.core.loggers import flogger`
-- `from funboost.core.loggers import develop_logger`
-- `from funboost.core.loggers import logger_prompt`
-- `from functools import wraps`
-- `from funboost.core.exceptions import BoostDecoParamsIsOldVersion`
-- `from funboost.core.func_params_model import BoosterParams`
-- `from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig`
-- `from funboost.core.func_params_model import PriorityConsumingControlConfig`
-- `from funboost.core.func_params_model import PublisherParams`
-- `from funboost.factories.consumer_factory import get_consumer`
-- `from funboost.factories.publisher_factotry import get_publisher`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.core.msg_result_getter import AsyncResult`
-- `from funboost.core.msg_result_getter import AioAsyncResult`
-- `from funboost.core.muliti_process_enhance import run_consumer_with_multi_process`
-- `from funboost.core.muliti_process_enhance import multi_process_pub_params_list`
-- `from funboost.core.fabric_deploy_helper import fabric_deploy`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class Booster`
-*Line: 31*
-
-**Docstring:**
-`````
-funboost极其重视代码能在pycharm下自动补全。元编程经常造成在pycharm下代码无法自动补全提示，主要是实现代码补全难。
-这种__call__写法在pycahrm下 不仅能补全消费函数的 push consume等方法，也能补全函数本身的入参，一举两得。代码能自动补全很重要。
-一个函数fun被 boost装饰器装饰后， isinstance(fun,Booster) 为True.
-
-pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
-
-Booster 是把Consumer 和 Publisher的方法集为一体。
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, queue_name: typing.Union[BoosterParams, str] = None, **kwargs)`
-  - **Docstring:**
-  `````
-  @boost 这是funboost框架最重要的一个函数，必须看懂BoosterParams里面的入参有哪些。
-  建议永远使用 @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, )) 这种传参方式。
-  
-  
-  pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
-  (高版本的pycharm pydantic是内置支持代码补全的,由此可见,pydantic太好了,pycharm官方都来支持)
-  
-  强烈建议所有入参放在 BoosterParams() 中,不要直接在BoosterParams之外传参.现在是兼容老的直接在@boost中传参方式.
-  建议不要给第一个入参queue_name传递字符串，而是永远传递BoosterParams类型， 例如 @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, ))
-  
-  
-  ```python
-  # @boost('queue_test_f01', qps=0.2, ) # 老的入参方式
-  @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, )) # 新的入参方式,所有入参放在 最流行的三方包 pydantic model BoosterParams 里面.
-  def f(a, b):
-      print(a + b)
-  
-  for i in range(10, 20):
-      f.pub(dict(a=i, b=i * 2))
-      f.push(i, i * 2)
-  f.consume()
-  # f.multi_process_conusme(8)             # # 这个是新加的方法，细粒度 线程 协程并发 同时叠加8个进程，速度炸裂。
-  ```
-  
-  
-  @boost('queue_test_f01', qps=0.2, ) 
-  @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, ))
-  @Booster(BoosterParams(queue_name='queue_test_f01', qps=0.2, ))
-  @BoosterParams(queue_name='queue_test_f01', qps=0.2, )
-  以上4种写法等效。 
-  `````
-  - **Parameters:**
-    - `self`
-    - `queue_name: typing.Union[BoosterParams, str] = None`
-    - `**kwargs`
-
-**Public Methods (5):**
-- `async def aio_push(self, *func_args, **func_kwargs) -> AioAsyncResult`
-  - **Docstring:**
-  `````
-  asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
-  但为了更好的防止网络波动(例如发布消息到外网的消息队列耗时达到10毫秒),可以使用aio_push
-  `````
-- `async def aio_publish(self, msg: typing.Union[str, dict], task_id = None, priority_control_config: PriorityConsumingControlConfig = None) -> AioAsyncResult`
-  - **Docstring:**
-  `````
-  asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
-  但为了更好的防止网络波动(例如发布消息到外网的消息队列耗时达到10毫秒),可以使用aio_push
-  `````
-- `def multi_process_consume(self, process_num = 1)`
-  - *超高速多进程消费*
-- `def multi_process_pub_params_list(self, params_list, process_num = 16)`
-  - *超高速多进程发布，例如先快速发布1000万个任务到中间件，以后慢慢消费*
-- `def fabric_deploy(self, host, port, user, password, path_pattern_exluded_tuple = ('/.git/', '/.idea/', '/dist/', '/build/'), file_suffix_tuple_exluded = ('.pyc', '.log', '.gz'), only_upload_within_the_last_modify_time = 3650 * 24 * 60 * 60, file_volume_limit = 1000 * 1000, sftp_log_level = 20, extra_shell_str = '', invoke_runner_kwargs = {'hide': None, 'pty': True, 'warn': False}, python_interpreter = 'python3', process_num = 1, pkey_file_path = None)`
-  - *入参见 fabric_deploy 函数。这里重复入参是为了代码在pycharm补全提示。*
-
-**Class Variables (2):**
-- `multi_process_start = multi_process_consume`
-- `mp_consume = multi_process_consume`
-
-##### 📌 `class BoostersManager`
-*Line: 243*
-
-**Docstring:**
-`````
-这个BoostersManager类是后来加的不是一开始就规划了的.
-
-消费函数生成Booster对象时候,会自动调用BoostersManager.regist_booster方法,把队列名和入参信息保存到pid_queue_name__booster_map字典中.
-使用这个类,可以创建booster对象,达到无需使用装饰器的目的.
-
-如果你想一次性启动所有函数消费,不想 f1.consume()  f2.consume() f3.consume() 一个个的启动.
-可以  BoostersManager.consume_all_queues()
-`````
-
-**Public Methods (17):**
-- `def regist_booster(cls, queue_name: str, booster: Booster)` `classmethod`
-  - *这个是框架在@boost时候自动调用的,无需用户亲自调用*
-- `def show_all_boosters(cls)` `classmethod`
-- `def get_all_queues(cls) -> list` `classmethod`
-- `def get_all_queue_name__boost_params_unstrict_dict(cls)` `classmethod`
-  - **Docstring:**
-  `````
-  主要用来给前端或可视化观看的。
-  
-  返回一个字典,键是队列名,值是@boost的 BoosterParams 入参字典,
-  因为 BoosterParams 有的入参是复杂对象类型,不能json序列化
-  `````
-- `def get_booster(cls, queue_name: str) -> Booster` `classmethod`
-  - **Docstring:**
-  `````
-  当前进程获得booster对象。注意和下面的get_or_create_booster_by_queue_name方法的区别,主要是开了多进程时候有区别.
-  :param queue_name:
-  :return:
-  `````
-- `def get_or_create_booster_by_queue_name(cls, queue_name) -> Booster` `classmethod`
-  - **Docstring:**
-  `````
-  当前进程获得booster对象，如果是多进程,会在新的进程内部创建一个新的booster对象,因为多进程操作有些中间件的同一个conn不行.
-  :param queue_name: 就是 @boost的入参。
-  :return:
-  `````
-- `def get_boost_params(cls, queue_name: str) -> (dict, typing.Callable)` `classmethod`
-  - **Docstring:**
-  `````
-  这个函数是为了在别的进程实例化 booster，consumer和publisher,获取queue_name队列对应的booster的当时的入参。
-  有些中间件python包的对中间件连接对象不是多进程安全的，不要在进程2中去操作进程1中生成的booster consumer publisher等对象。
-  `````
-- `def build_booster(cls, boost_params: BoosterParams) -> Booster` `classmethod`
-  - **Docstring:**
-  `````
-  当前进程获得或者创建booster对象。方便有的人需要在函数内部临时动态根据队列名创建booster,不会无数次临时生成消费者、生产者、创建消息队列连接。
-  :param boost_params: 就是 @boost的入参。
-  :param consuming_function: 消费函数
-  :return:
-  `````
-- `def get_cross_project_publisher(cls, publisher_params: PublisherParams) -> AbstractPublisher` `classmethod`
-  - **Docstring:**
-  `````
-  跨不同的项目，发布消息。例如proj1中定义有fun1消费函数，但proj2无法直接到日proj1的函数，无法直接 fun1.push 来发布消息
-  可以使用这个方法，获取一个publisher。
-  
-  publisher = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name='proj1_queue', broker_kind=publisher_params.broker_kind))
-  publisher.publish({'x': aaa})
-  `````
-- `def push(cls, queue_name, *args, **kwargs)` `classmethod`
-  - **Docstring:**
-  `````
-  push发布消息到消息队列 ;
-          
-  `````
-- `def publish(cls, queue_name, msg)` `classmethod`
-  - **Docstring:**
-  `````
-  publish发布消息到消息队列;
-          
-  `````
-- `def consume_queues(cls, *queue_names)` `classmethod`
-  - **Docstring:**
-  `````
-  启动多个消息队列名的消费,多个函数队列在当前同一个进程内启动消费.
-  这种方式节约总的内存,但无法利用多核cpu
-  `````
-- `def consume_all_queues(cls, block = True)` `classmethod`
-  - **Docstring:**
-  `````
-  启动所有消息队列名的消费,无需一个一个函数亲自 funxx.consume()来启动,多个函数队列在当前同一个进程内启动消费.
-  这种方式节约总的内存,但无法利用多核cpu
-  `````
-- `def multi_process_consume_queues(cls, **queue_name__process_num)` `classmethod`
-  - **Docstring:**
-  `````
-  启动多个消息队列名的消费,传递队列名和进程数,每个队列启动n个单独的消费进程;
-  这种方式总的内存使用高,但充分利用多核cpu
-  例如 multi_process_consume_queues(queue1=2,queue2=3) 表示启动2个进程消费queue1,启动3个进程消费queue2
-  `````
-- `def consume_group(cls, booster_group: str, block = False)` `classmethod`
-  - *根据@boost装饰器的 booster_group消费分组名字,启动多个消费函数;*
-- `def multi_process_consume_group(cls, booster_group: str, process_num = 1)` `classmethod`
-  - *根据@boost装饰器的 booster_group消费分组名字,启动多个消费函数;*
-- `def multi_process_consume_all_queues(cls, process_num = 1)` `classmethod`
-  - **Docstring:**
-  `````
-  启动所有消息队列名的消费,无需指定队列名,每个队列启动n个单独的消费进程;
-  这种方式总的内存使用高,但充分利用多核cpu
-  `````
-
-**Class Variables (9):**
-- `pid_queue_name__booster_map: typing.Dict[typing.Tuple[int, str], Booster] = {}`
-- `queue_name__boost_params_map: typing.Dict[str, BoosterParams] = {}`
-- `pid_queue_name__has_start_consume_set = set()`
-- `queue_name__cross_project_publisher_map = {}`
-- `consume = consume_queues`
-- `consume_all = consume_all_queues`
-- `mp_consume = multi_process_consume_queues`
-- `mp_consume_group = multi_process_consume_group`
-- `mp_consume_all = multi_process_consume_all_queues`
-
-
----
 
 `````python
 from __future__ import annotations
@@ -39761,25 +35454,6 @@ class BoostersManager:
 
 --- **start of file: funboost/core/broker_kind__exclusive_config_default_define.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/broker_kind__exclusive_config_default_define.py`
-
-#### 📦 Imports
-
-- `from logging import Logger`
-- `from funboost.constant import BrokerEnum`
-
-#### 🔧 Public Functions (2)
-
-- `def register_broker_exclusive_config_default(broker_kind: str, broker_exclusive_config_default: dict)`
-  - *Line: 13*
-
-- `def generate_broker_exclusive_config(broker_kind: str, user_broker_exclusive_config: dict, logger: Logger)`
-  - *Line: 20*
-
-
----
-
 `````python
 # from __future__ import annotations
 # import typing
@@ -40020,93 +35694,6 @@ register_broker_exclusive_config_default(BrokerEnum.ZEROMQ, {"port": None})
 
 --- **start of file: funboost/core/consuming_func_iniput_params_check.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/consuming_func_iniput_params_check.py`
-
-#### 📦 Imports
-
-- `import typing`
-- `import inspect`
-- `import copy`
-- `from funboost.core.func_params_model import BoosterParams`
-- `from funboost.core.func_params_model import PublisherParams`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-- `from funboost.constant import ConsumingFuncInputParamsCheckerField`
-- `from funboost.core.exceptions import FuncParamsError`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class ConsumingFuncInputParamsChecker(FunboostFileLoggerMixin)`
-*Line: 10*
-
-**Docstring:**
-`````
-发布的任务的函数参数检查，使发布的任务在消费时候不会出现低级错误。
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, final_func_input_params_list_info: typing.Dict)`
-  - **Parameters:**
-    - `self`
-    - `final_func_input_params_list_info: typing.Dict`
-
-**Public Methods (4):**
-- `def update_check_params(self, final_func_input_params_list_info)`
-  - **Docstring:**
-  `````
-  这个是供动态热更新校验参数，funboost.faas 不重启就能动态变更函数修改后的校验规则
-        因为 funboost.faas 完全不需要依赖真正的消费函数对象，
-        是把保存到redis元数据的booster_params的 auto_generate_info.final_func_input_params_info 更新到ConsumingFuncInputParamsChecker实例中
-        
-        redis中的 auto_generate_info 例子如下
-        "auto_generate_info": {
-    "where_to_instantiate": "D:\codes\funboost\examples\example_faas\task_funs_dir\sub.py:5",
-    "final_func_input_params_info": {
-      "func_name": "sub",
-      "func_position": "<function sub at 0x00000272649BBA60>",
-      "is_manual_func_input_params": false,
-      "all_arg_name_list": [
-        "a",
-        "b"
-      ],
-      "must_arg_name_list": [
-        "a",
-        "b"
-      ],
-      "optional_arg_name_list": []
-    }
-  }
-        
-  `````
-- `def gen_func_params_info_by_func(func: typing.Callable)` `staticmethod`
-- `def check_func_msg_dict(self, publish_params: dict)`
-- `def gen_final_func_input_params_info(cls, consumer_or_publisher_params: typing.Union[BoosterParams, PublisherParams])` `classmethod`
-  - *生成最终的函数参数信息，包括手动输入的参数和默认参数。*
-
-##### 📌 `class FakeFunGenerator`
-*Line: 115*
-
-**Docstring:**
-`````
-动态函数生成器：根据参数元数据生成具有正确签名的伪函数
-用途：funboost.faas 可以从 redis 元数据动态生成函数对象，无需真正的函数定义
-`````
-
-**Public Methods (3):**
-- `def gen_fake_fun_by_params(final_func_input_params_info: dict)` `staticmethod`
-  - **Docstring:**
-  `````
-  根据必需参数和可选参数列表动态生成函数
-  你可以理解是为了欺骗 inspect 模块，让 inspect 模块返回的函数参数信息和实际的函数参数信息一致。
-  函数名、参数列表、默认值和原函数一模一样
-  `````
-- `def gen_fake_fun()` `staticmethod`
-  - *随便生成的假的函数，这种需要 update_check_params去更新*
-- `def is_fake_fun(func)` `staticmethod`
-
-
----
-
 `````python
 import typing
 import inspect
@@ -40201,6 +35788,8 @@ class ConsumingFuncInputParamsChecker(FunboostFileLoggerMixin):
         """
         生成最终的函数参数信息，包括手动输入的参数和默认参数。
         """
+        if consumer_or_publisher_params.consuming_function is None:
+            return
         auto_generate_info = consumer_or_publisher_params.auto_generate_info
         if 'final_func_input_params_info' in auto_generate_info:
             return
@@ -40293,130 +35882,6 @@ def {func_name}({all_params}):
 
 
 --- **start of file: funboost/core/current_task.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/core/current_task.py`
-
-#### 📦 Imports
-
-- `import abc`
-- `import typing`
-- `import contextvars`
-- `from dataclasses import dataclass`
-- `import logging`
-- `import threading`
-- `import asyncio`
-- `from funboost.core.function_result_status_saver import FunctionResultStatus`
-
-#### 🏛️ Classes (6)
-
-##### 📌 `class FctContext`
-*Line: 56*
-
-**Docstring:**
-`````
-fct 是 funboost current task 的简写
-`````
-
-**Class Variables (6):**
-- `function_params: dict`
-- `full_msg: dict`
-- `function_result_status: FunctionResultStatus`
-- `logger: logging.Logger`
-- `queue_name: str`
-- `asyncio_use_thread_concurrent_mode: bool = False`
-
-##### 📌 `class _BaseCurrentTask`
-*Line: 86*
-
-**Public Methods (2):**
-- `def set_fct_context(self, fct_context: FctContext)` `abc.abstractmethod`
-- `def get_fct_context(self) -> FctContext` `abc.abstractmethod`
-
-**Properties (6):**
-- `@property function_params`
-- `@property full_msg -> dict`
-- `@property function_result_status -> FunctionResultStatus`
-- `@property task_id -> FunctionResultStatus`
-- `@property logger -> logging.Logger`
-- `@property queue_name -> str`
-
-##### 📌 `class __ThreadCurrentTask(_BaseCurrentTask)`
-*Line: 124*
-
-**Docstring:**
-`````
-用于在用户自己函数内部去获取 消息的完整体,当前重试次数等.
-`````
-
-**Public Methods (2):**
-- `def set_fct_context(self, fct_context: FctContext)`
-- `def get_fct_context(self) -> FctContext`
-
-**Class Variables (1):**
-- `_fct_local_data = threading.local()`
-
-##### 📌 `class __AsyncioCurrentTask(_BaseCurrentTask)`
-*Line: 138*
-
-**Public Methods (2):**
-- `def set_fct_context(self, fct_context: FctContext)`
-- `def get_fct_context(self) -> FctContext`
-
-**Class Variables (1):**
-- `_fct_context = contextvars.ContextVar('fct_context')`
-
-##### 📌 `class _FctProxy`
-*Line: 170*
-
-**Docstring:**
-`````
-后来多新增这个类了，
-`````
-
-**Properties (7):**
-- `@property fct_context -> FctContext`
-- `@property function_params`
-- `@property full_msg -> dict`
-- `@property function_result_status -> FunctionResultStatus`
-- `@property task_id -> FunctionResultStatus`
-- `@property logger -> logging.Logger`
-- `@property queue_name -> str`
-
-##### 📌 `class FctContextThread(threading.Thread)`
-*Line: 225*
-
-**Docstring:**
-`````
-这个类自动把当前线程的 线程上下文 自动传递给新开的线程。
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, group = None, target = None, name = None, args = (), kwargs = None)`
-  - **Parameters:**
-    - `self`
-    - `group = None`
-    - `target = None`
-    - `name = None`
-    - `args = ()`
-    - `kwargs = None`
-
-**Public Methods (1):**
-- `def run(self)`
-
-#### 🔧 Public Functions (3)
-
-- `def is_asyncio_environment()`
-  - *Line: 152*
-
-- `def funboost_current_task()`
-  - *Line: 160*
-
-- `def get_current_taskid()`
-  - *Line: 215*
-
-
----
 
 `````python
 import abc
@@ -40675,152 +36140,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/core/exceptions.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/exceptions.py`
-
-#### 📦 Imports
-
-- `import uuid`
-- `import datetime`
-- `import time`
-- `import json`
-- `from fastapi.responses import JSONResponse`
-
-#### 🏛️ Classes (10)
-
-##### 📌 `class FunboostException(Exception)`
-*Line: 8*
-
-**Docstring:**
-`````
-企业级通用异常基类。
-支持子类默认 message / code / error_data。
-自动生成 trace_id（可用于分布式日志）。
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, message = None, code = None, error_data: dict = None, trace_id = None)`
-  - **Parameters:**
-    - `self`
-    - `message = None`
-    - `code = None`
-    - `error_data: dict = None`
-    - `trace_id = None`
-
-**Public Methods (3):**
-- `def to_dict(self)`
-- `def to_json(self, pretty = False)`
-- `def to_fastapi_response(self, http_status = 200)`
-  - **Docstring:**
-  `````
-  返回fastapi的JSONResponse,让异常和fastapi的接口model保持一致，复用
-  
-  
-  pydantic model建议明确这样写：（或者allow_extra）
-  
-  ```pyhton
-  T = typing.TypeVar('T')
-  
-  class BaseResponse(BaseModel, typing.Generic[T]):
-      '''
-      统一的泛型响应模型
-      
-      字段说明:
-          succ: 请求是否成功，True表示成功，False表示失败
-          msg: 消息描述
-          data: 返回的数据，使用泛型T
-          code: 业务状态码，200表示成功，其他表示各种错误
-          error: 错误类型名称（可选），如 "QueueNameNotExists", "ValueError"
-          traceback: 异常堆栈信息（可选），仅在出错时返回
-          trace_id: 追踪ID（可选），用于分布式追踪
-      '''
-      succ: bool
-      msg: str
-      data: typing.Optional[T] = None
-      error_data: typing.Optional[typing.Dict] = None
-      code: typing.Optional[int] = 200
-      error: typing.Optional[str] = None
-      traceback: typing.Optional[str] = None
-      trace_id: typing.Optional[str] = None
-  ```
-  
-  
-  可以参考  funboost/faas/fastapi_adapter.py 的 
-  register_funboost_exception_handlers 和 handle_funboost_exceptions 进行自动捕获转化。
-  `````
-
-**Class Variables (4):**
-- `default_message = 'An error occurred'`
-- `default_code = None`
-- `default_error_data = None`
-- `enable_trace_id = False`
-
-##### 📌 `class ExceptionForRetry(FunboostException)`
-*Line: 140*
-
-**Docstring:**
-`````
-为了重试的，抛出错误。只是定义了一个子类，用不用都可以，函数出任何类型错误了框架都会自动重试
-`````
-
-##### 📌 `class ExceptionForRequeue(FunboostException)`
-*Line: 144*
-
-**Docstring:**
-`````
-框架检测到此错误，重新放回当前队列中
-`````
-
-##### 📌 `class FunboostWaitRpcResultTimeout(FunboostException)`
-*Line: 147*
-
-**Docstring:**
-`````
-等待rpc结果超过了指定时间
-`````
-
-##### 📌 `class FunboostRpcResultError(FunboostException)`
-*Line: 150*
-
-**Docstring:**
-`````
-rpc结果是错误状态
-`````
-
-##### 📌 `class HasNotAsyncResult(FunboostException)`
-*Line: 153*
-
-##### 📌 `class ExceptionForPushToDlxqueue(FunboostException)`
-*Line: 156*
-
-**Docstring:**
-`````
-框架检测到ExceptionForPushToDlxqueue错误，发布到死信队列
-`````
-
-##### 📌 `class BoostDecoParamsIsOldVersion(FunboostException)`
-*Line: 160*
-
-**Class Variables (1):**
-- `default_message = "\n你的@boost入参是老的方式,建议用新的入参方式,老入参方式不再支持函数入参代码自动补全了。\n\n老版本的@boost装饰器方式是:\n@boost('queue_name_xx',qps=3)\ndef f(x):\n    pass\n    \n\n用户需要做的改变如下:\n@boost(BoosterParams(queue_name='queue_name_xx',qps=3))\ndef f(x):\n    pass\n\n就是把原来函数入参的加个 BoosterParams 就可以了.\n\n@boost这个最重要的funboost核心方法作出改变的原因是:\n1/由于开发框架时候,Booster和Consumer多处需要重复声明入参,\n2/入参个数较多,需要locals转化,麻烦\n    "`
-
-##### 📌 `class QueueNameNotExists(FunboostException)`
-*Line: 183*
-
-**Class Variables (2):**
-- `default_message = 'queue name not exists'`
-- `default_code = 4001`
-
-##### 📌 `class FuncParamsError(FunboostException)`
-*Line: 187*
-
-**Class Variables (2):**
-- `default_message = 'consuming function input params error'`
-- `default_code = 5001`
-
-
----
-
 `````python
 
 
@@ -41036,75 +36355,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/core/fabric_deploy_helper.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/fabric_deploy_helper.py`
-
-#### 📦 Imports
-
-- `import sys`
-- `import threading`
-- `import time`
-- `from pathlib import Path`
-- `from fabric2 import Connection`
-- `from nb_libs.path_helper import PathHelper`
-- `from funboost.utils.paramiko_util import ParamikoFolderUploader`
-- `from funboost.core.loggers import get_funboost_file_logger`
-- `from funboost.core.booster import Booster`
-
-#### 🔧 Public Functions (2)
-
-- `def fabric_deploy(booster: Booster, host, port, user, password, path_pattern_exluded_tuple = ('/.git/', '/.idea/', '/dist/', '/build/'), file_suffix_tuple_exluded = ('.pyc', '.log', '.gz'), only_upload_within_the_last_modify_time = 3650 * 24 * 60 * 60, file_volume_limit = 1000 * 1000, sftp_log_level = 20, extra_shell_str = '', invoke_runner_kwargs = {'hide': None, 'pty': True, 'warn': False}, python_interpreter = 'python3', process_num = 1, pkey_file_path = None)`
-  - *Line: 17*
-  - **Docstring:**
-  `````
-  不依赖阿里云codepipeline 和任何运维发布管理工具，只需要在python代码层面就能实现多机器远程部署。
-  这实现了函数级别的精确部署，而非是部署一个 .py的代码，远程部署一个函数实现难度比远程部署一个脚本更高一点，部署更灵活。
-  
-  之前有人问怎么方便的部署在多台机器，一般用阿里云codepipeline  k8s自动部署。被部署的远程机器必须是linux，不能是windwos。
-  但是有的人是直接操作多台物理机，有些不方便，现在直接加一个利用python代码本身实现的跨机器自动部署并运行函数任务。
-  
-  自动根据任务函数所在文件，转化成python模块路径，实现函数级别的精确部署，比脚本级别的部署更精确到函数。
-  例如 test_frame/test_fabric_deploy/test_deploy1.py的fun2函数 自动转化成 from test_frame.test_fabric_deploy.test_deploy1 import f2
-  从而自动生成部署语句
-  export PYTHONPATH=/home/ydf/codes/distributed_framework:$PYTHONPATH ;cd /home/ydf/codes/distributed_framework;
-  python3 -c "from test_frame.test_fabric_deploy.test_deploy1 import f2;f2.multi_process_consume(2)"  -funboostmark funboost_fabric_mark_queue_test30
-  
-  这个是可以直接在远程机器上运行函数任务。无需用户亲自部署代码和启动代码。自动上传代码，自动设置环境变量，自动导入函数，自动运行。
-  这个原理是使用python -c 实现的精确到函数级别的部署，不是python脚本级别的部署。
-  可以很灵活的指定在哪台机器运行什么函数，开几个进程。这个比celery更为强大，celery需要登录到每台机器，手动下载代码并部署在多台机器，celery不支持代码自动运行在别的机器上
-  
-  
-  :param booster:被@boost 装饰的函数
-  :param host: 需要部署的远程linux机器的 ip
-  :param port:需要部署的远程linux机器的 port
-  :param user: 需要部署的远程linux机器的用户名
-  :param password:需要部署的远程linux机器的密码
-  :param path_pattern_exluded_tuple:排除的文件夹或文件路径
-  :param file_suffix_tuple_exluded:排除的后缀
-  :param only_upload_within_the_last_modify_time:只上传多少秒以内的文件，如果完整运行上传过一次后，之后可以把值改小，避免每次全量上传。
-  :param file_volume_limit:大于这个体积的不上传，因为python代码文件很少超过1M
-  :param sftp_log_level: 文件上传日志级别  10为logging.DEBUG 20为logging.INFO  30 为logging.WARNING
-  :param extra_shell_str :自动部署前额外执行的命令，例如可以设置环境变量什么的
-  :param python_interpreter: python解释器路径，如果linux安装了多个python环境可以指定绝对路径。
-  :param invoke_runner_kwargs : invoke包的runner.py 模块的 run()方法的所有一切入参,例子只写了几个入参，实际可以传入十几个入参，大家可以自己琢磨fabric包的run方法，按需传入。
-                               hide 是否隐藏远程机器的输出，值可以为 False不隐藏远程主机的输出  “out”为只隐藏远程机器的正常输出，“err”为只隐藏远程机器的错误输出，True，隐藏远程主机的一切输出
-                               pty 的意思是，远程机器的部署的代码进程是否随着当前脚本的结束而结束。如果为True，本机代码结束远程进程就会结束。如果为False，即使本机代码被关闭结束，远程机器还在运行代码。
-                               warn 的意思是如果远程机器控制台返回了异常码本机代码是否立即退出。warn为True这只是警告一下，warn为False,远程机器返回异常code码则本机代码直接终止退出。
-  :param process_num:启动几个进程，要达到最大cpu性能就开启cpu核数个进程就可以了。每个进程内部都有任务函数本身指定的并发方式和并发数量，所以是多进程+线程/协程。
-  :param pkey_file_path: 私钥文件路径，如果设置了这个参数，则使用ssh私钥登录远程机器，如果没设置，则使用密码登录。
-  :return:
-  
-  
-  task_fun.fabric_deploy('192.168.6.133', 22, 'ydf', '123456', process_num=2) 只需要这样就可以自动部署在远程机器运行，无需任何额外操作。
-  `````
-
-- `def kill_all_remote_tasks(host, port, user, password)`
-  - *Line: 123*
-  - *这个要小心用，杀死所有的远程部署的任务,一般不需要使用到*
-
-
----
-
 `````python
 # noinspection PyDefaultArgument
 import sys
@@ -41246,16 +36496,6 @@ def kill_all_remote_tasks(host, port, user, password):
 
 --- **start of file: funboost/core/funboost_config_getter.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/funboost_config_getter.py`
-
-#### 📦 Imports
-
-- `import funboost_config`
-
-
----
-
 `````python
 def _try_get_user_funboost_common_config(funboost_common_conf_field:str):
     try:
@@ -41272,42 +36512,6 @@ def _try_get_user_funboost_common_config(funboost_common_conf_field:str):
 
 
 --- **start of file: funboost/core/funboost_time.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/core/funboost_time.py`
-
-#### 📦 Imports
-
-- `import pytz`
-- `import time`
-- `import sys`
-- `import datetime`
-- `import typing`
-- `import threading`
-- `from nb_time import NbTime`
-- `from nb_time import NowTimeStrCache`
-- `from funboost.funboost_config_deafult import FunboostCommonConfig`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class FunboostTime(NbTime)`
-*Line: 12*
-
-**Public Methods (3):**
-- `def get_time_zone_str(self, time_zone: typing.Union[str, datetime.tzinfo, None] = None)`
-- `def get_str(self, formatter = None)`
-- `def get_str_fast(self)`
-
-**Class Variables (1):**
-- `default_formatter = NbTime.FORMATTER_DATETIME_NO_ZONE`
-
-#### 🔧 Public Functions (1)
-
-- `def fast_get_now_time_str() -> str`
-  - *Line: 32*
-
-
----
 
 `````python
 import pytz
@@ -41371,12 +36575,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/core/function_result_status_config.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/function_result_status_config.py`
-
-
----
-
 `````python
 # from pydantic import BaseModel, validator, root_validator
 #
@@ -41422,84 +36620,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/core/function_result_status_saver.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/function_result_status_saver.py`
-
-#### 📦 Imports
-
-- `import copy`
-- `import datetime`
-- `import json`
-- `import os`
-- `import socket`
-- `import threading`
-- `import time`
-- `import uuid`
-- `import pymongo`
-- `import pymongo.errors`
-- `import sys`
-- `from pymongo import IndexModel`
-- `from pymongo import ReplaceOne`
-- `from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig`
-- `from funboost.core.helper_funs import get_publish_time`
-- `from funboost.core.helper_funs import delete_keys_and_return_new_dict`
-- `from funboost.core.helper_funs import get_publish_time_format`
-- `from funboost.core.serialization import Serialization`
-- `from funboost.utils import time_util`
-- `from funboost.utils import decorators`
-- `from funboost.utils.mongo_util import MongoMixin`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-
-#### 🏛️ Classes (3)
-
-##### 📌 `class RunStatus`
-*Line: 24*
-
-**Class Variables (2):**
-- `running = 'running'`
-- `finish = 'finish'`
-
-##### 📌 `class FunctionResultStatus`
-*Line: 28*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, queue_name: str, fucntion_name: str, msg_dict: dict)`
-  - **Parameters:**
-    - `self`
-    - `queue_name: str`
-    - `fucntion_name: str`
-    - `msg_dict: dict`
-
-**Public Methods (3):**
-- `def parse_status_and_result_to_obj(cls, status_dict: dict)` `classmethod`
-- `def get_status_dict(self, without_datetime_obj = False)`
-- `def to_pretty_json_str(self)`
-
-**Class Variables (4):**
-- `host_name = socket.gethostname()`
-- `script_name_long = sys.argv[0]`
-- `script_name = script_name_long.split('/')[-1].split('\\')[-1]`
-- `FUNC_RUN_ERROR = 'FUNC_RUN_ERROR'`
-
-##### 📌 `class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin)`
-*Line: 121*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig, queue_name)`
-  - **Parameters:**
-    - `self`
-    - `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig`
-    - `queue_name`
-
-**Public Methods (1):**
-- `def save_function_result_to_mongo(self, function_result_status: FunctionResultStatus)`
-
-**Class Variables (1):**
-- `TASK_STATUS_DB = 'task_status'`
-
-
----
-
 `````python
 import copy
 import datetime
@@ -41523,7 +36643,7 @@ from funboost.utils import time_util, decorators
 from funboost.utils.mongo_util import MongoMixin
 # from nb_log import LoggerMixin
 from funboost.core.loggers import FunboostFileLoggerMixin
-
+from funboost.constant import MongoDbName
 class RunStatus:
     running = 'running'
     finish = 'finish'
@@ -41622,7 +36742,7 @@ class FunctionResultStatus():
 
 
 class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):
-    TASK_STATUS_DB = 'task_status'
+ 
 
     def __init__(self, function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig, queue_name):
         self.function_result_status_persistance_conf = function_result_status_persistance_conf
@@ -41634,10 +36754,10 @@ class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):
         if self.function_result_status_persistance_conf.is_save_status:
             self._create_indexes()
             # self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
-            self.logger.debug(f"函数运行状态结果将保存至mongo的 {self.TASK_STATUS_DB} 库的 {queue_name} 集合中，请确认 funboost.py文件中配置的 MONGO_CONNECT_URL")
+            self.logger.debug(f"函数运行状态结果将保存至mongo的 {MongoDbName.TASK_STATUS_DB} 库的 {queue_name} 集合中，请确认 funboost.py文件中配置的 MONGO_CONNECT_URL")
 
     def _create_indexes(self):
-        task_status_col = self.get_mongo_collection(self.TASK_STATUS_DB, self._queue_name)
+        task_status_col = self.get_mongo_collection(MongoDbName.TASK_STATUS_DB, self._queue_name)
         try:
             has_creat_index = False
             index_dict = task_status_col.index_information()
@@ -41650,7 +36770,8 @@ class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):
             if has_creat_index is False:
                 # params_str 如果很长，必须使用TEXt或HASHED索引。
                 task_status_col.create_indexes([IndexModel([("insert_time_str", -1)]), IndexModel([("insert_time", -1)]),
-                                                IndexModel([("params_str", pymongo.TEXT)]), IndexModel([("success", 1)])
+                                                IndexModel([("params_str", pymongo.TEXT)]), IndexModel([("success", 1)]),
+                                                IndexModel([("time_cost", -1)]),  # 用于按耗时查询
                                                 ], )
                 task_status_col.create_index([("utime", 1)],  # 这个是过期时间索引。
                                              expireAfterSeconds=self.function_result_status_persistance_conf.expire_seconds)  # 只保留7天(用户自定义的)。
@@ -41665,7 +36786,7 @@ class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):
 
     def save_function_result_to_mongo(self, function_result_status: FunctionResultStatus):
         if self.function_result_status_persistance_conf.is_save_status:
-            task_status_col = self.get_mongo_collection(self.TASK_STATUS_DB, self._queue_name)  # type: pymongo.collection.Collection
+            task_status_col = self.get_mongo_collection(MongoDbName.TASK_STATUS_DB, self._queue_name)  # type: pymongo.collection.Collection
             item = function_result_status.get_status_dict()
             item2 = copy.copy(item)
             if not self.function_result_status_persistance_conf.is_save_result:
@@ -41693,7 +36814,7 @@ class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):
     def _bulk_insert(self):
         with self._bulk_list_lock:
             if time.time() - self._last_bulk_insert_time > 0.5 and self._bulk_list:
-                task_status_col = self.get_mongo_collection(self.TASK_STATUS_DB, self._queue_name)
+                task_status_col = self.get_mongo_collection(MongoDbName.TASK_STATUS_DB, self._queue_name)
                 task_status_col.bulk_write(self._bulk_list, ordered=False)
                 self._bulk_list.clear()
                 self._last_bulk_insert_time = time.time()
@@ -41706,209 +36827,6 @@ class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):
 
 
 --- **start of file: funboost/core/func_params_model.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/core/func_params_model.py`
-
-#### 📦 Imports
-
-- `from typing import Any`
-- `import asyncio`
-- `import datetime`
-- `import functools`
-- `import json`
-- `import logging`
-- `import typing`
-- `from typing_extensions import Literal`
-- `from collections import OrderedDict`
-- `from funboost.concurrent_pool import FunboostBaseConcurrentPool`
-- `from funboost.concurrent_pool import FlexibleThreadPool`
-- `from funboost.concurrent_pool import ConcurrentPoolBuilder`
-- `from funboost.constant import ConcurrentModeEnum`
-- `from funboost.constant import BrokerEnum`
-- `from pydantic import BaseModel`
-- `from pydantic import validator`
-- `from pydantic import root_validator`
-- `from pydantic import BaseConfig`
-- `from pydantic import Field`
-- `from funboost.core.lazy_impoter import funboost_lazy_impoter`
-- `from concurrent.futures import ThreadPoolExecutor`
-- `from asyncio import AbstractEventLoop`
-- `from funboost.concurrent_pool import FlexibleThreadPool`
-- `from funboost.core.loggers import flogger`
-
-#### 🏛️ Classes (6)
-
-##### 📌 `class BaseJsonAbleModel(BaseModel)`
-*Line: 40*
-
-**Docstring:**
-`````
-因为model字段包括了 函数和自定义类型的对象,无法直接json序列化,需要自定义json序列化
-`````
-
-**Public Methods (7):**
-- `def get_str_dict(self)`
-- `def json_str_value(self)`
-- `def json_pre(self)`
-- `def update_from_dict(self, dictx: dict)`
-- `def update_from_kwargs(self, **kwargs)`
-- `def update_from_model(self, modelx: BaseModel)`
-- `def init_by_another_model(model_type: typing.Type[BaseModel], modelx: BaseModel)` `staticmethod`
-
-##### 📌 `class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel)`
-*Line: 99*
-
-**Public Methods (2):**
-- `def check_expire_seconds(cls, value)` `validator('expire_seconds', allow_reuse=True)`
-- `def check_values(cls, values: dict)` `root_validator(skip_on_failure=True)`
-
-**Class Variables (4):**
-- `is_save_status: bool`
-- `is_save_result: bool`
-- `expire_seconds: int = 7 * 24 * 3600`
-- `is_use_bulk_insert: bool = False`
-
-##### 📌 `class BoosterParams(BaseJsonAbleModel)`
-*Line: 122*
-
-**Docstring:**
-`````
-pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
-
-@boost的传参必须是此类或者继承此类,如果你不想每个装饰器入参都很多,你可以写一个子类继承BoosterParams, 传参这个子类,例如下面的 BoosterParamsComplete
-`````
-
-**Public Methods (1):**
-- `def check_values(cls, values: dict)` `root_validator(skip_on_failure=True)`
-
-**Class Variables (51):**
-- `queue_name: str`
-- `broker_kind: str = BrokerEnum.SQLITE_QUEUE`
-- `project_name: typing.Optional[str] = None`
-- `concurrent_mode: str = ConcurrentModeEnum.THREADING`
-- `concurrent_num: int = 50`
-- `specify_concurrent_pool: typing.Optional[FunboostBaseConcurrentPool] = None`
-- `specify_async_loop: typing.Optional[asyncio.AbstractEventLoop] = None`
-- `is_auto_start_specify_async_loop_in_child_thread: bool = True`
-- `qps: typing.Union[float, int, None] = None`
-- `is_using_distributed_frequency_control: bool = False`
-- `is_send_consumer_hearbeat_to_redis: bool = False`
-- `max_retry_times: int = 3`
-- `retry_interval: typing.Union[float, int] = 0`
-- `is_push_to_dlx_queue_when_retry_max_times: bool = False`
-- `consumin_function_decorator: typing.Optional[typing.Callable] = None`
-- `function_timeout: typing.Union[int, float, None] = None`
-- `is_support_remote_kill_task: bool = False`
-- `log_level: int = logging.DEBUG`
-- `logger_prefix: str = ''`
-- `create_logger_file: bool = True`
-- `logger_name: typing.Union[str, None] = ''`
-- `log_filename: typing.Union[str, None] = None`
-- `is_show_message_get_from_broker: bool = False`
-- `is_print_detail_exception: bool = True`
-- `publish_msg_log_use_full_msg: bool = False`
-- `msg_expire_senconds: typing.Union[float, int, None] = None`
-- `do_task_filtering: bool = False`
-- `task_filtering_expire_seconds: int = 0`
-- `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=False, is_save_status=False, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)`
-- `user_custom_record_process_info_func: typing.Optional[typing.Callable] = None`
-- `is_using_rpc_mode: bool = False`
-- `rpc_result_expire_seconds: int = 1800`
-- `rpc_timeout: int = 1800`
-- `delay_task_apscheduler_jobstores_kind: Literal['redis', 'memory'] = 'redis'`
-- `is_do_not_run_by_specify_time_effect: bool = False`
-- `do_not_run_by_specify_time: list = ['10:00:00', '22:00:00']`
-- `schedule_tasks_on_main_thread: bool = False`
-- `is_auto_start_consuming_message: bool = False`
-- `booster_group: typing.Union[str, None] = None`
-- `consuming_function: typing.Optional[typing.Callable] = None`
-- `consuming_function_raw: typing.Optional[typing.Callable] = None`
-- `consuming_function_name: str = ''`
-- `broker_exclusive_config: dict = {}`
-- `should_check_publish_func_params: bool = True`
-- `manual_func_input_params: dict = {'is_manual_func_input_params': False, 'must_arg_name_list': [], 'optional_arg_name_list': []}`
-- `consumer_override_cls: typing.Optional[typing.Type] = None`
-- `publisher_override_cls: typing.Optional[typing.Type] = None`
-- `consuming_function_kind: typing.Optional[str] = None`
-- `user_options: dict = {}`
-- `auto_generate_info: dict = {}`
-- `is_fake_booster: bool = False`
-
-##### 📌 `class BoosterParamsComplete(BoosterParams)`
-*Line: 332*
-
-**Docstring:**
-`````
-例如一个子类,这个BoosterParams的子类可以作为@booot的传参,每个@boost可以少写一些这些重复的入参字段.
-
-function_result_status_persistance_conf 永远支持函数消费状态 结果状态持久化
-is_send_consumer_hearbeat_to_redis 永远支持发送消费者的心跳到redis,便于统计分布式环境的活跃消费者
-is_using_rpc_mode  永远支持rpc模式
-broker_kind 永远是使用 amqpstorm包 操作 rabbbitmq作为消息队列.
-specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程池,线程资源利用更高.
-`````
-
-**Class Variables (6):**
-- `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=True)`
-- `is_send_consumer_hearbeat_to_redis: bool = True`
-- `is_using_rpc_mode: bool = True`
-- `rpc_result_expire_seconds: int = 3600`
-- `broker_kind: str = BrokerEnum.RABBITMQ_AMQPSTORM`
-- `specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))`
-
-##### 📌 `class PriorityConsumingControlConfig(BaseJsonAbleModel)`
-*Line: 352*
-
-**Docstring:**
-`````
-为每个独立的任务设置控制参数，和函数参数一起发布到中间件。可能有少数时候有这种需求。
-例如消费为add函数，可以每个独立的任务设置不同的超时时间，不同的重试次数，是否使用rpc模式。这里的配置优先，可以覆盖生成消费者时候的配置。
-`````
-
-**Public Methods (1):**
-- `def cehck_values(cls, values: dict)` `root_validator(skip_on_failure=True)`
-
-**Class Variables (11):**
-- `function_timeout: typing.Union[float, int, None] = None`
-- `max_retry_times: typing.Union[int, None] = None`
-- `is_print_detail_exception: typing.Union[bool, None] = None`
-- `msg_expire_senconds: typing.Union[float, int, None] = None`
-- `is_using_rpc_mode: typing.Union[bool, None] = None`
-- `countdown: typing.Union[float, int, None] = None`
-- `eta: typing.Union[datetime.datetime, str, None] = None`
-- `misfire_grace_time: typing.Union[int, None] = None`
-- `other_extra_params: typing.Optional[dict] = None`
-- `filter_str: typing.Optional[str] = None`
-- `can_not_json_serializable_keys: typing.List[str] = None`
-
-##### 📌 `class PublisherParams(BaseJsonAbleModel)`
-*Line: 400*
-
-**Class Variables (20):**
-- `queue_name: str`
-- `broker_kind: typing.Optional[str] = None`
-- `project_name: typing.Optional[str] = None`
-- `log_level: int = logging.DEBUG`
-- `logger_prefix: str = ''`
-- `create_logger_file: bool = True`
-- `logger_name: str = ''`
-- `log_filename: typing.Optional[str] = None`
-- `clear_queue_within_init: bool = False`
-- `consuming_function: typing.Optional[typing.Callable] = None`
-- `broker_exclusive_config: dict = {}`
-- `should_check_publish_func_params: bool = True`
-- `manual_func_input_params: dict = {'is_manual_func_input_params': False, 'must_arg_name_list': [], 'optional_arg_name_list': []}`
-- `publisher_override_cls: typing.Optional[typing.Type] = None`
-- `publish_msg_log_use_full_msg: bool = False`
-- `consuming_function_kind: typing.Optional[str] = None`
-- `rpc_timeout: int = 1800`
-- `user_options: dict = {}`
-- `auto_generate_info: dict = {}`
-- `is_fake_booster: bool = False`
-
-
----
 
 `````python
 from typing import Any
@@ -42362,65 +37280,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/core/helper_funs.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/helper_funs.py`
-
-#### 📦 Imports
-
-- `import copy`
-- `import pytz`
-- `import time`
-- `import uuid`
-- `import datetime`
-- `from funboost.core.funboost_time import FunboostTime`
-- `from funboost.core.funboost_time import fast_get_now_time_str`
-- `from funboost import FunboostCommonConfig`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class MsgGenerater`
-*Line: 51*
-
-**Public Methods (4):**
-- `def generate_task_id(queue_name: str) -> str` `staticmethod`
-- `def generate_publish_time() -> float` `staticmethod`
-- `def generate_publish_time_format() -> str` `staticmethod`
-- `def generate_pulish_time_and_task_id(cls, queue_name: str, task_id = None)` `classmethod`
-
-#### 🔧 Public Functions (4)
-
-- `def get_publish_time(paramsx: dict)`
-  - *Line: 9*
-  - **Docstring:**
-  `````
-  :param paramsx:
-  :return:
-  `````
-
-- `def get_publish_time_format(paramsx: dict)`
-  - *Line: 17*
-  - **Docstring:**
-  `````
-  :param paramsx:
-  :return:
-  `````
-
-- `def delete_keys_and_return_new_dict(dictx: dict, keys: list = None)`
-  - *Line: 25*
-
-- `def block_python_main_thread_exit()`
-  - *Line: 36*
-  - **Docstring:**
-  `````
-  https://funboost.readthedocs.io/zh-cn/latest/articles/c10.html#runtimeerror-cannot-schedule-new-futures-after-interpreter-shutdown
-  
-  主要是用于 python3.9以上 定时任务报错，  定时任务报错 RuntimeError: cannot schedule new futures after interpreter shutdown
-  如果主线程结束了，apscheduler就会报这个错，加上这个while 1 ： time.sleep(100) 目的就是阻止主线程退出。
-  `````
-
-
----
-
 `````python
 import copy
 import pytz
@@ -42519,96 +37378,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/core/kill_remote_task.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/core/kill_remote_task.py`
-
-#### 📦 Imports
-
-- `import ctypes`
-- `import threading`
-- `import time`
-- `from funboost.utils.time_util import DatetimeConverter`
-- `from funboost.utils.redis_manager import RedisMixin`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-- `from funboost.core.current_task import FctContextThread`
-
-#### 🏛️ Classes (4)
-
-##### 📌 `class ThreadKillAble(FctContextThread)`
-*Line: 10*
-
-**Class Variables (3):**
-- `task_id = None`
-- `killed = False`
-- `event_kill = threading.Event()`
-
-##### 📌 `class TaskHasKilledError(Exception)`
-*Line: 20*
-
-##### 📌 `class RemoteTaskKillerZset(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 66*
-
-**Docstring:**
-`````
-zset实现的，需要zrank 多次。
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, queue_name, task_id)`
-  - **Parameters:**
-    - `self`
-    - `queue_name`
-    - `task_id`
-
-**Public Methods (4):**
-- `def send_remote_task_comd(self)`
-- `def judge_need_revoke_run(self)`
-- `def kill_local_task(self)`
-- `def start_cycle_kill_task(self)`
-
-##### 📌 `class RemoteTaskKiller(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 110*
-
-**Docstring:**
-`````
-hash实现的，只需要 hmget 一次
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, queue_name, task_id)`
-  - **Parameters:**
-    - `self`
-    - `queue_name`
-    - `task_id`
-
-**Public Methods (4):**
-- `def send_kill_remote_task_comd(self)`
-- `def judge_need_revoke_run(self)`
-- `def kill_local_task(self)`
-- `def start_cycle_kill_task(self)`
-
-#### 🔧 Public Functions (5)
-
-- `def kill_thread(thread_id)`
-  - *Line: 16*
-
-- `def kill_fun_deco(task_id)`
-  - *Line: 24*
-
-- `def kill_thread_by_task_id(task_id)`
-  - *Line: 53*
-
-- `def my_fun(x)`
-  - *Line: 173*
-  - *使用lock.acquire(),强行杀死会一直无法释放锁*
-
-- `def my_fun2(x)`
-  - *Line: 188*
-  - *使用with lock,强行杀死会不会出现一直无法释放锁*
-
-
----
 
 `````python
 import ctypes
@@ -42844,212 +37613,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/core/lazy_impoter.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/lazy_impoter.py`
-
-#### 📦 Imports
-
-- `import abc`
-- `from funboost.utils.decorators import cached_method_result`
-- `from funboost.utils.decorators import singleton`
-- `from funboost.utils.decorators import SingletonBaseNew`
-- `from funboost.utils.decorators import SingletonBaseCustomInit`
-- `from funboost.utils.decorators import singleton_no_lock`
-- `from funboost.core import booster`
-- `from funboost.core import booster`
-- `from funboost.core import booster`
-- `import gevent`
-- `from gevent import pool as gevent_pool`
-- `from gevent import monkey`
-- `from gevent.queue import JoinableQueue`
-- `from eventlet import greenpool`
-- `from eventlet import monkey_patch`
-- `from eventlet import patcher`
-- `from eventlet import Timeout`
-- `from peewee import ModelSelect`
-- `from peewee import Model`
-- `from peewee import BigAutoField`
-- `from peewee import CharField`
-- `from peewee import DateTimeField`
-- `from peewee import MySQLDatabase`
-- `from playhouse.shortcuts import model_to_dict`
-- `from playhouse.shortcuts import dict_to_model`
-- `from aiohttp import web`
-- `from aiohttp.web_request import Request`
-- `from pynats import NATSClient`
-- `from pynats import NATSMessage`
-- `from gnsq import Consumer`
-- `from gnsq import Message`
-- `from gnsq import Producer`
-- `from gnsq import NsqdHTTPClient`
-- `from gnsq.errors import NSQHttpError`
-- `from elasticsearch import helpers`
-- `import psutil`
-- `import paho.mqtt.client as mqtt`
-- `import zmq`
-- `from kafka import KafkaConsumer as OfficialKafkaConsumer`
-- `from kafka import KafkaProducer`
-- `from kafka import KafkaAdminClient`
-- `from kafka.admin import NewTopic`
-- `from kafka.errors import TopicAlreadyExistsError`
-
-#### 🏛️ Classes (12)
-
-##### 📌 `class FunboostLazyImpoter(SingletonBaseNew)`
-*Line: 11*
-
-**Docstring:**
-`````
-延迟导入,避免需要互相导入.
-`````
-
-**Properties (3):**
-- `@property BoostersManager`
-- `@property boost`
-- `@property Booster`
-
-##### 📌 `class GeventImporter`
-*Line: 48*
-
-**Docstring:**
-`````
-避免提前导入
-import gevent
-from gevent import pool as gevent_pool
-from gevent import monkey
-from gevent.queue import JoinableQueue
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self)`
-  - **Parameters:**
-    - `self`
-
-##### 📌 `class EventletImporter`
-*Line: 70*
-
-**Docstring:**
-`````
-避免提前导入
-from eventlet import greenpool, monkey_patch, patcher, Timeout
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self)`
-  - **Parameters:**
-    - `self`
-
-##### 📌 `class PeeweeImporter`
-*Line: 86*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self)`
-  - **Docstring:**
-  `````
-  pip install peewee == 3.17
-  `````
-  - **Parameters:**
-    - `self`
-
-##### 📌 `class AioHttpImporter`
-*Line: 102*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self)`
-  - **Docstring:**
-  `````
-  pip install aiohttp==3.8.3
-  `````
-  - **Parameters:**
-    - `self`
-
-##### 📌 `class NatsImporter`
-*Line: 113*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self)`
-  - **Docstring:**
-  `````
-  pip install nats-python 
-  `````
-  - **Parameters:**
-    - `self`
-
-##### 📌 `class GnsqImporter`
-*Line: 122*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self)`
-  - **Docstring:**
-  `````
-  pip install  gnsq==1.0.1
-  `````
-  - **Parameters:**
-    - `self`
-
-##### 📌 `class ElasticsearchImporter`
-*Line: 136*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self)`
-  - **Docstring:**
-  `````
-  pip install elasticsearch 
-  `````
-  - **Parameters:**
-    - `self`
-
-##### 📌 `class PsutilImporter`
-*Line: 144*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self)`
-  - **Docstring:**
-  `````
-  pip install  psutil
-  `````
-  - **Parameters:**
-    - `self`
-
-##### 📌 `class PahoMqttImporter`
-*Line: 152*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self)`
-  - **Docstring:**
-  `````
-  pip install paho-mqtt
-  `````
-  - **Parameters:**
-    - `self`
-
-##### 📌 `class ZmqImporter`
-*Line: 160*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self)`
-  - **Docstring:**
-  `````
-  pip install zmq pyzmq
-  `````
-  - **Parameters:**
-    - `self`
-
-##### 📌 `class KafkaPythonImporter`
-*Line: 168*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self)`
-  - **Docstring:**
-  `````
-  pip install kafka-python==2.0.2
-  `````
-  - **Parameters:**
-    - `self`
-
-
----
-
 `````python
 import abc
 
@@ -43251,59 +37814,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/core/loggers.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/loggers.py`
-
-#### 📦 Imports
-
-- `import nb_log`
-- `from funboost.core.funboost_config_getter import _try_get_user_funboost_common_config`
-- `from nb_log import get_logger`
-- `from nb_log import LoggerLevelSetterMixin`
-- `from nb_log import nb_log_config_default`
-- `import logging`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class FunboostFileLoggerMixin(nb_log.LoggerMixin)`
-*Line: 18*
-
-**Docstring:**
-`````
-给对象添加一个logger树形命名空间是类本身,写入funboost.log
-`````
-
-**Properties (1):**
-- `@property logger -> logging.Logger`
-
-**Class Variables (1):**
-- `subclass_logger_dict = {}`
-
-##### 📌 `class FunboostMetaTypeFileLogger(type)`
-*Line: 33*
-
-**Docstring:**
-`````
-给类添加一个属性.名空间是类本身,写入funboost.log
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(cls, name, bases, attrs)`
-  - **Parameters:**
-    - `cls`
-    - `name`
-    - `bases`
-    - `attrs`
-
-#### 🔧 Public Functions (1)
-
-- `def get_funboost_file_logger(name, **kwargs) -> logging.Logger`
-  - *Line: 11*
-  - *日志自动写入 funboost.log文件中,不需要亲自指定文件名*
-
-
----
-
 `````python
 import nb_log
 from funboost.core.funboost_config_getter import _try_get_user_funboost_common_config
@@ -43370,159 +37880,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/core/msg_result_getter.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/msg_result_getter.py`
-
-#### 📦 Imports
-
-- `import asyncio`
-- `import threading`
-- `import time`
-- `import typing`
-- `import json`
-- `from funboost.core.exceptions import FunboostWaitRpcResultTimeout`
-- `from funboost.core.exceptions import FunboostRpcResultError`
-- `from funboost.core.exceptions import HasNotAsyncResult`
-- `from funboost.utils.mongo_util import MongoMixin`
-- `from funboost.concurrent_pool import CustomThreadPoolExecutor`
-- `from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPoolMinWorkers0`
-- `from funboost.utils.redis_manager import RedisMixin`
-- `from funboost.utils.redis_manager import AioRedisMixin`
-- `from funboost.core.serialization import Serialization`
-- `from funboost.core.function_result_status_saver import FunctionResultStatus`
-
-#### 🏛️ Classes (4)
-
-##### 📌 `class AsyncResult(RedisMixin)`
-*Line: 40*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, task_id, timeout = 1800)`
-  - **Parameters:**
-    - `self`
-    - `task_id`
-    - `timeout = 1800`
-
-**Public Methods (8):**
-- `def callback_run_executor(self, thread_pool_executor)` `callback_run_executor.setter`
-  - **Docstring:**
-  `````
-  用户可以 async_result.callback_run_executor = 你自己的线程池
-  thread_pool_executor 用户可以传递 FlexibleThreadPool或者 ThreadPoolExecutorShrinkAble 或者官方的 concurrent.futures.ThreadPoolExecutor 类型的对象都可以，任意线程池只要实现了submit方法即可。
-  :param thread_pool_executor:
-  :return:
-  `````
-- `def set_timeout(self, timeout = 1800)`
-- `def is_pending(self)`
-- `def get(self)`
-- `def is_success(self)`
-- `def set_callback(self, callback_func: typing.Callable)`
-  - **Docstring:**
-  `````
-  :param callback_func: 函数结果回调函数，使回调函数自动在线程池中并发运行。
-  :return:
-  `````
-- `def wait_rpc_data_or_raise(self, raise_exception: bool = True) -> FunctionResultStatus`
-- `def batch_wait_rpc_data_or_raise(cls, r_list: typing.List['AsyncResult'], raise_exception: bool = True) -> typing.List[FunctionResultStatus]` `classmethod`
-
-**Properties (4):**
-- `@property callback_run_executor`
-- `@property status_and_result`
-- `@property status_and_result_obj -> FunctionResultStatus`
-- `@property result`
-
-**Class Variables (2):**
-- `default_callback_run_executor = FlexibleThreadPoolMinWorkers0(200, work_queue_maxsize=50)`
-- `rpc_data = status_and_result_obj`
-
-##### 📌 `class AioAsyncResult(AioRedisMixin)`
-*Line: 143*
-
-**Docstring:**
-`````
-这个是可以用于asyncio的语法环境中。
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, task_id, timeout = 1800)`
-  - **Parameters:**
-    - `self`
-    - `task_id`
-    - `timeout = 1800`
-
-**Public Methods (7):**
-- `def set_timeout(self, timeout = 1800)`
-- `async def is_pending(self)`
-- `async def get(self)`
-- `async def is_success(self)`
-- `async def set_callback(self, aio_callback_func: typing.Callable)`
-- `async def wait_rpc_data_or_raise(self, raise_exception: bool = True) -> FunctionResultStatus`
-- `async def batch_wait_rpc_data_or_raise(cls, r_list: typing.List['AioAsyncResult'], raise_exception: bool = True) -> typing.List[FunctionResultStatus]` `classmethod`
-
-**Properties (3):**
-- `@property status_and_result`
-- `@property status_and_result_obj -> FunctionResultStatus`
-- `@property result`
-
-**Class Variables (1):**
-- `rpc_data = status_and_result_obj`
-
-##### 📌 `class ResultFromMongo(MongoMixin)`
-*Line: 248*
-
-**Docstring:**
-`````
-以非阻塞等待的方式从funboost的状态结果持久化的mongodb数据库根据taskid获取结果
-
-async_result = add.push(i, i * 2)
-task_id=async_result.task_id
-print(ResultFromMongo(task_id).get_status_and_result())
-
-
-print(ResultFromMongo('test_queue77h6_result:764a1ba2-14eb-49e2-9209-ac83fc5db1e8').get_status_and_result())
-print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c1').get_result())
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, task_id: str)`
-  - **Parameters:**
-    - `self`
-    - `task_id: str`
-
-**Public Methods (3):**
-- `def query_result(self)`
-- `def get_status_and_result(self)`
-- `def get_result(self)`
-  - *以非阻塞等待的方式从funboost的状态结果持久化的mongodb数据库根据taskid获取结果*
-
-##### 📌 `class FutureStatusResult`
-*Line: 282*
-
-**Docstring:**
-`````
-用于sync_call模式的结果等待和通知
-使用threading.Event实现同步等待
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, call_type: str)`
-  - **Parameters:**
-    - `self`
-    - `call_type: str`
-
-**Public Methods (4):**
-- `def set_finish(self)`
-  - *标记任务完成*
-- `def wait_finish(self, rpc_timeout)`
-  - *等待任务完成，带超时*
-- `def set_staus_result_obj(self, staus_result_obj: FunctionResultStatus)`
-  - *设置任务执行结果*
-- `def get_staus_result_obj(self)`
-  - *获取任务执行结果*
-
-
----
-
 `````python
 import asyncio
 import threading
@@ -43531,6 +37888,7 @@ import time
 import typing
 import json
 
+from funboost.constant import MongoDbName
 from funboost.core.exceptions import FunboostWaitRpcResultTimeout, FunboostRpcResultError, HasNotAsyncResult
 from funboost.utils.mongo_util import MongoMixin
 
@@ -43791,7 +38149,7 @@ class ResultFromMongo(MongoMixin):
         self._has_query = False
 
     def query_result(self):
-        col = self.get_mongo_collection('task_status', self.col_name)
+        col = self.get_mongo_collection(MongoDbName.TASK_STATUS_DB, self.col_name)
         self.mongo_row = col.find_one({'_id': self.task_id})
         self._has_query = True
 
@@ -43843,40 +38201,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/core/muliti_process_enhance.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/core/muliti_process_enhance.py`
-
-#### 📦 Imports
-
-- `import os`
-- `import signal`
-- `from multiprocessing import Process`
-- `import time`
-- `from typing import List`
-- `from concurrent.futures import ProcessPoolExecutor`
-- `from funboost.core.booster import Booster`
-- `from funboost.core.helper_funs import run_forever`
-- `from funboost.core.loggers import flogger`
-- `from funboost.core.lazy_impoter import funboost_lazy_impoter`
-
-#### 🔧 Public Functions (2)
-
-- `def run_consumer_with_multi_process(booster: Booster, process_num = 1)`
-  - *Line: 21*
-  - **Docstring:**
-  `````
-  :param booster:被 boost 装饰器装饰的消费函数
-  :param process_num:开启多个进程。  主要是 多进程并发  + 4种细粒度并发(threading gevent eventlet asyncio)。叠加并发。
-  这种是多进程方式，一次编写能够兼容win和linux的运行。一次性启动6个进程 叠加 多线程 并发。
-  `````
-
-- `def multi_process_pub_params_list(booster: Booster, params_list, process_num = 16)`
-  - *Line: 59*
-  - *超高速多进程发布任务，充分利用多核*
-
-
----
 
 `````python
 import os
@@ -43963,37 +38287,6 @@ def multi_process_pub_params_list(booster: Booster, params_list, process_num=16)
 
 --- **start of file: funboost/core/serialization.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/serialization.py`
-
-#### 📦 Imports
-
-- `import typing`
-- `import json`
-- `import orjson`
-- `import pickle`
-- `import ast`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class Serialization`
-*Line: 7*
-
-**Public Methods (3):**
-- `def to_json_str(dic: typing.Union[dict, str])` `staticmethod`
-- `def to_dict(strx: typing.Union[str, dict])` `staticmethod`
-- `def find_can_not_json_serializable_keys(dic: dict) -> typing.List[str]` `staticmethod`
-
-##### 📌 `class PickleHelper`
-*Line: 34*
-
-**Public Methods (2):**
-- `def to_str(obj_x: typing.Any)` `staticmethod`
-- `def to_obj(str_x: str)` `staticmethod`
-
-
----
-
 `````python
 import typing
 import json
@@ -44048,31 +38341,6 @@ class PickleHelper:
 
 --- **start of file: funboost/core/task_id_logger.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/task_id_logger.py`
-
-#### 📦 Imports
-
-- `import functools`
-- `from nb_log import CompatibleLogger`
-- `from funboost.core.current_task import get_current_taskid`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class TaskIdLogger(CompatibleLogger)`
-*Line: 7*
-
-**Docstring:**
-`````
-如果你要使用带taskid的日志模板,一定要使用
- LogManager('namexx',logger_cls=TaskIdLogger).get_logger_and_add_handlers(....)
- 的方式来创建logger, 就是需要指定logger_cls=TaskIdLogger ,否则的话你需要在打印日志时候 手动传递extra logger.info(msg,extra={'task_id':task_idxxx})
- 
-`````
-
-
----
-
 `````python
 import functools
 
@@ -44103,12 +38371,6 @@ class TaskIdLogger(CompatibleLogger):
 
 --- **start of file: funboost/core/__init__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/__init__.py`
-
-
----
-
 `````python
 
 `````
@@ -44119,110 +38381,6 @@ class TaskIdLogger(CompatibleLogger):
 
 
 --- **start of file: funboost/core/cli/discovery_boosters.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/core/cli/discovery_boosters.py`
-
-#### 📝 Module Docstring
-
-`````
-【⚠️ 安全警示 & 最佳实践】
-
-1. 关于 BoosterDiscovery 自动扫描的风险提示
--------------------------------------------------------
-BoosterDiscovery(....).auto_discovery() 请务必谨慎使用，强烈建议实例化时传入精确的过滤参数。
-
-原因：
-    部分开发者的编程习惯可能不严谨，对于包含执行动作的脚本，未添加 `if __name__ == '__main__':` 保护，
-    或者不理解 `__main__` 的作用。Python 的 import 机制意味着“导入即执行模块顶层代码”。
-
-危险场景假设：
-    假设项目中存在一个临时的脏数据清理脚本 `my_temp_dangerous_delete_mysql_script.py`：
-
-    ```python
-    # ❌ 危险写法：写在模块顶层，不在函数内，也无 main 保护
-    import db_client
-    db_client.execute("DROP TABLE users") 
-    ```
-
-后果：
-    如果你使用了无限制的 `auto_discovery()`，即使项目上线2年后，一旦扫描并 import 到这个脚本，
-    数据库表会在瞬间被删除。这绝对是生产事故级别的灾难。
-
-✅ 正确用法（精确传参）：
-    BoosterDiscovery(
-        project_root_path='/path/to/your_project', 
-        booster_dirs=['your_booster_dir'],
-        max_depth=1,
-        py_file_re_str='tasks'  # 强烈建议：只扫描包含 'tasks' 的文件，避开临时脚本
-    ).auto_discovery()
-
-
-2. 为什么推荐“显式 Import”而非“自动扫描”？BoosterDiscovery不是funboost的必需品！
--------------------------------------------------------
-其实不建议过度依赖 `auto_discovery()`，更推荐的最佳实践是：
-👉 手动明确 import 包含 @boost 的模块。需要用到哪些消费函数，就导入哪些模块。
-
-Funboost vs Celery 的架构差异：
-    * Funboost：
-      没有中央 `app` 实例，不需要像 Celery 那样有一个单独的 `celery_app.py` 模块。
-      架构上天然不存在“互相依赖导入”的死结。因此，要用什么消费函数，直接导入即可，简单直观。
-
-    * Celery：
-      必须手写 `includes` 配置或调用 `autodiscover_tasks()`。
-      根本原因是：Celery 的 `xx_tasks.py` 需要导入 `celery_app.py` 中的 `app` 对象；
-      而 `celery worker` 启动 `app` 时又需要导入 `xx_tasks.py` 来注册任务。
-      这种设计导致双方陷入“循环导入”的死结，迫使 Celery 发明了一套复杂的导入机制，
-      也让新手在规划目录结构时小心翼翼、非常纠结。
-`````
-
-#### 📦 Imports
-
-- `import re`
-- `import sys`
-- `import typing`
-- `from os import PathLike`
-- `from pathlib import Path`
-- `import importlib.util`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-- `from funboost.utils.decorators import flyweight`
-- `from funboost.core.lazy_impoter import funboost_lazy_impoter`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class BoosterDiscovery(FunboostFileLoggerMixin)`
-*Line: 64*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, project_root_path: typing.Union[PathLike, str], booster_dirs: typing.List[typing.Union[PathLike, str]], max_depth = 1, py_file_re_str: str = None)`
-  - **Docstring:**
-  `````
-  :param project_root_path 项目根目录
-  :param booster_dirs: @boost装饰器函数所在的模块的文件夹,不用包含项目根目录长路径
-  :param max_depth: 查找多少深层级子目录
-  :param py_file_re_str: 文件名匹配过滤. 例如你所有的消费函数都在xxx_task.py yyy_task.py这样的,  你可以传参 task.py , 避免自动import了不需要导入的模块
-  
-  BoosterDiscovery(....).auto_discovery() 需要谨慎使用，谨慎传参，原因见上面模块注释。
-  `````
-  - **Parameters:**
-    - `self`
-    - `project_root_path: typing.Union[PathLike, str]`
-    - `booster_dirs: typing.List[typing.Union[PathLike, str]]`
-    - `max_depth = 1`
-    - `py_file_re_str: str = None`
-
-**Public Methods (2):**
-- `def get_py_files_recursively(self, current_folder_path: Path, current_depth = 0)`
-  - *先找到所有py文件*
-- `def auto_discovery(self)`
-  - **Docstring:**
-  `````
-  把所有py文件自动执行import,主要是把 所有的@boost函数装饰器注册到 pid_queue_name__booster_map 中
-  这个auto_discovery方法最好放到main里面,如果要扫描自身文件夹,没写正则排除文件本身,会无限懵逼死循环导入,无无限懵逼死循环导入
-  `````
-
-
----
 
 `````python
 """
@@ -44369,27 +38527,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/core/cli/funboost_cli_user_templ.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/cli/funboost_cli_user_templ.py`
-
-#### 📝 Module Docstring
-
-`````
-funboost现在 新增 命令行启动消费 发布  和清空消息
-`````
-
-#### 📦 Imports
-
-- `import sys`
-- `from pathlib import Path`
-- `import fire`
-- `from funboost.core.cli.funboost_fire import BoosterFire`
-- `from funboost.core.cli.funboost_fire import env_dict`
-- `from funboost.core.cli.discovery_boosters import BoosterDiscovery`
-
-
----
-
 `````python
 """
 funboost现在 新增 命令行启动消费 发布  和清空消息
@@ -44445,118 +38582,6 @@ python /codes/funboost/funboost_cli_user.py   --booster_dirs_str=test_frame/test
 
 
 --- **start of file: funboost/core/cli/funboost_fire.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/core/cli/funboost_fire.py`
-
-#### 📦 Imports
-
-- `import copy`
-- `import importlib`
-- `import sys`
-- `import typing`
-- `from os import PathLike`
-- `from funboost.core.booster import BoostersManager`
-- `from funboost.core.cli.discovery_boosters import BoosterDiscovery`
-- `from funboost.utils.ctrl_c_end import ctrl_c_recv`
-- `from funboost.funboost_web_manager.app import start_funboost_web_manager`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class BoosterFire(object)`
-*Line: 15*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, import_modules_str: str = None, booster_dirs_str: str = None, max_depth = 1, py_file_re_str: str = None, project_root_path = None)`
-  - **Docstring:**
-  `````
-  :param project_root_path : 用户项目根目录
-  :param import_modules_str:
-  :param booster_dirs_str: 扫描@boost函数所在的目录，如果多个目录用,隔开
-  :param max_depth: 扫描目录代码层级
-  :param py_file_re_str: python文件的正则， 例如  tasks.py那么就不自动import其他名字的python模块
-  `````
-  - **Parameters:**
-    - `self`
-    - `import_modules_str: str = None`
-    - `booster_dirs_str: str = None`
-    - `max_depth = 1`
-    - `py_file_re_str: str = None`
-    - `project_root_path = None`
-
-**Public Methods (11):**
-- `def show_all_queues(self)`
-  - *显示扫描到的所有queue name*
-- `def clear(self, *queue_names: str)`
-  - *清空多个queue ; 例子: clear test_cli1_queue1  test_cli1_queue2   # 清空2个消息队列消息队列*
-- `def push(self, queue_name, *args, **kwargs)`
-  - **Docstring:**
-  `````
-  push发布消息到消息队列 ;
-  例子: 假设函数是 def  add(x,y)  队列名是 add_queue , 发布 1 + 2求和;
-  push add_queue 1 2;
-  或者 push add_queue --x=1 --y=2;
-  或者 push add_queue -x 1 -y 2;
-  `````
-- `def publish(self, queue_name, msg)`
-  - **Docstring:**
-  `````
-  publish发布消息到消息队列;
-  假设函数是 def  add(x,y)  队列名是 add_queue , 发布 1 + 2求和;
-  publish add_queue "{'x':1,'y':2}"
-  `````
-- `def consume_queues(self, *queue_names: str)`
-  - **Docstring:**
-  `````
-  启动多个消息队列名的消费;
-  例子: consume queue1 queue2
-  `````
-- `def consume_all_queues(self)`
-  - **Docstring:**
-  `````
-  启动所有消息队列名的消费,无需指定队列名;
-  例子: consume_all_queues
-  `````
-- `def multi_process_consume_queues(self, **queue_name__process_num)`
-  - **Docstring:**
-  `````
-  使用多进程启动消费,每个队列开启多个单独的进程消费;
-  例子:  mp_consume --queue1=2 --queue2=3    # queue1启动两个单独进程消费  queue2 启动3个单独进程消费
-  `````
-- `def multi_process_consume_all_queues(self, process_num = 1)`
-  - **Docstring:**
-  `````
-  启动所有消息队列名的消费,无需指定队列名,每个队列启动n个单独的消费进程;
-  例子: multi_process_consume_all_queues 2
-  `````
-- `def pause(self, *queue_names: str)`
-  - **Docstring:**
-  `````
-  暂停多个消息队列名的消费;
-  例子: pause queue1 queue2
-  `````
-- `def continue_consume(self, *queue_names: str)`
-  - **Docstring:**
-  `````
-  继续多个消息队列名的消费;
-  例子: continue_consume queue1 queue2
-  `````
-- `def start_funboost_web_manager(self)`
-  - **Docstring:**
-  `````
-  启动funboost web管理器;
-  例子: start_funboost_web_manager
-  `````
-
-**Class Variables (5):**
-- `consume = consume_queues`
-- `consume_all = consume_all_queues`
-- `mp_consume = multi_process_consume_queues`
-- `mp_consume_all = multi_process_consume_all_queues`
-- `start_web = start_funboost_web_manager`
-
-
----
 
 `````python
 import copy
@@ -44708,12 +38733,6 @@ class BoosterFire(object):
 
 --- **start of file: funboost/core/cli/__init__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/core/cli/__init__.py`
-
-
----
-
 `````python
 
 `````
@@ -44724,138 +38743,6 @@ class BoosterFire(object):
 
 
 --- **start of file: funboost/faas/django_adapter.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/faas/django_adapter.py`
-
-#### 📝 Module Docstring
-
-`````
-django 开箱即用， 用户使用
-
-
-
-
-使用说明：
-Django-Ninja 开箱即用 Router
-要求: 
-1. pip install django-ninja
-2. Django >= 3.1 (支持 async)
-
-使用方法:
-在你的 Django 项目的 api.py (或 urls.py) 中:
-
-from ninja import NinjaAPI
-
-api = NinjaAPI()
-api.add_router("/funboost", django_router)
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    # 挂载 NinjaAPI
-    path("api/", api.urls),
-]
-`````
-
-#### 📦 Imports
-
-- `import traceback`
-- `import typing`
-- `from ninja import Router`
-- `from ninja import Schema`
-- `from pydantic import Field`
-- `from funboost import AioAsyncResult`
-- `from funboost import PriorityConsumingControlConfig`
-- `from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter`
-- `from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter`
-- `from funboost.core.loggers import get_funboost_file_logger`
-
-#### 🏛️ Classes (8)
-
-##### 📌 `class MsgItemSchema(Schema)`
-*Line: 49*
-
-**Class Variables (4):**
-- `queue_name: str = Field(..., description='目标队列名称')`
-- `msg_body: dict = Field(..., description='任务参数字典')`
-- `need_result: bool = Field(False, description='是否需要等待并返回结果(RPC模式)')`
-- `timeout: int = Field(60, description='RPC模式下的等待超时时间(秒)')`
-
-##### 📌 `class PublishData(Schema)`
-*Line: 57*
-
-**Class Variables (2):**
-- `task_id: typing.Optional[str] = None`
-- `status_and_result: typing.Optional[dict] = None`
-
-##### 📌 `class CountData(Schema)`
-*Line: 62*
-
-**Class Variables (2):**
-- `queue_name: str`
-- `count: int = -1`
-
-##### 📌 `class AllQueuesData(Schema)`
-*Line: 67*
-
-**Class Variables (2):**
-- `queues: typing.List[str] = []`
-- `count: int = 0`
-
-##### 📌 `class BaseResponse(Schema)`
-*Line: 73*
-
-**Class Variables (2):**
-- `succ: bool`
-- `msg: str`
-
-##### 📌 `class PublishResponse(BaseResponse)`
-*Line: 78*
-
-**Class Variables (1):**
-- `data: typing.Optional[PublishData] = None`
-
-##### 📌 `class CountResponse(BaseResponse)`
-*Line: 82*
-
-**Class Variables (1):**
-- `data: typing.Optional[CountData] = None`
-
-##### 📌 `class AllQueuesResponse(BaseResponse)`
-*Line: 86*
-
-**Class Variables (1):**
-- `data: typing.Optional[AllQueuesData] = None`
-
-#### 🔧 Public Functions (4)
-
-- `async def publish_msg(request, payload: MsgItemSchema)` `django_router.post('/publish', response=PublishResponse, summary='发布消息')`
-  - *Line: 93*
-  - **Docstring:**
-  `````
-  发布消息到 Funboost 队列。
-  如果 need_result=True，将挂起等待任务执行完成并返回结果。
-  `````
-
-- `async def get_result(request, task_id: str, timeout: int = 5)` `django_router.get('/get_result', response=PublishResponse, summary='获取任务结果')`
-  - *Line: 147*
-  - *根据 Task ID 主动轮询获取任务执行结果*
-
-- `def get_msg_count(request, queue_name: str)` `django_router.get('/get_msg_count', response=CountResponse, summary='获取队列堆积数量')`
-  - *Line: 185*
-  - *获取指定队列当前堆积的消息数量 (同步接口)*
-
-- `def get_all_queues(request)` `django_router.get('/get_all_queues', response=AllQueuesResponse, summary='获取所有队列名称')`
-  - *Line: 214*
-  - **Docstring:**
-  `````
-  获取所有已注册的队列名称
-  
-  返回所有通过 @boost 装饰器注册的队列名称列表
-  `````
-
-
----
 
 `````python
 """
@@ -45107,21 +38994,6 @@ def get_all_queues(request):
 
 --- **start of file: funboost/faas/faas_util.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/faas/faas_util.py`
-
-#### 📦 Imports
-
-- `from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter`
-
-#### 🔧 Public Functions (1)
-
-- `def gen_aps_job_adder(queue_name, job_store_kind)`
-  - *Line: 7*
-
-
----
-
 `````python
 
 from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter
@@ -45140,882 +39012,6 @@ def gen_aps_job_adder(queue_name, job_store_kind):
 
 
 --- **start of file: funboost/faas/fastapi_adapter.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/faas/fastapi_adapter.py`
-
-#### 📝 Module Docstring
-
-`````
-fastapi 开箱即用，只需要用户的 app.include_router(fastapi_router) ,即可自动给用户的fastapi添加常用路由，实现faas
-
-
-
-
-使用说明:
-    在用户自己的 FastAPI 项目中
-       app.include_router(fastapi_router)
-    
-
-
-如果fastapi_router集成到你自己的fastapi app时候，你觉得需要加上权限鉴权，可以这样： 
-app.include_router(
-    fastapi_router,
-    dependencies=[
-        Depends(your_authenticate),
-    ]
-)
-`````
-
-#### 📦 Imports
-
-- `import traceback`
-- `import typing`
-- `import asyncio`
-- `from funboost import AioAsyncResult`
-- `from funboost import AsyncResult`
-- `from funboost import PriorityConsumingControlConfig`
-- `from funboost import BoosterParams`
-- `from funboost import Booster`
-- `from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter`
-- `from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter`
-- `from funboost.core.active_cousumer_info_getter import CareProjectNameEnv`
-- `from funboost.core.exceptions import FunboostException`
-- `from fastapi import FastAPI`
-- `from fastapi import APIRouter`
-- `from fastapi import Query`
-- `from fastapi import Request`
-- `from fastapi.responses import JSONResponse`
-- `from funboost.core.loggers import get_funboost_file_logger`
-- `from funboost.utils.redis_manager import RedisMixin`
-- `from funboost.constant import RedisKeys`
-- `from funboost.faas.faas_util import gen_aps_job_adder`
-- `from pydantic import BaseModel`
-- `from pydantic import ConfigDict`
-- `import functools`
-- `import uvicorn`
-- `from pydantic import BaseModel`
-
-#### 🏛️ Classes (26)
-
-##### 📌 `class BaseAllowExtraModel(BaseModel)`
-*Line: 216*
-
-##### 📌 `class BaseResponse(BaseModel, typing.Generic[T])`
-*Line: 232*
-
-**Docstring:**
-`````
-统一的泛型响应模型
-
-字段说明:
-    succ: 请求是否成功，True表示成功，False表示失败
-    msg: 消息描述
-    data: 返回的数据，使用泛型T
-    code: 业务状态码，200表示成功，其他表示各种错误
-    error: 错误类型名称（可选），如 "QueueNameNotExists", "ValueError"
-    traceback: 异常堆栈信息（可选），仅在出错时返回
-    trace_id: 追踪ID（可选），用于分布式追踪
-`````
-
-**Class Variables (8):**
-- `succ: bool`
-- `msg: str`
-- `data: typing.Optional[T] = None`
-- `error_data: typing.Optional[typing.Dict] = None`
-- `code: typing.Optional[int] = 200`
-- `error: typing.Optional[str] = None`
-- `traceback: typing.Optional[str] = None`
-- `trace_id: typing.Optional[str] = None`
-
-##### 📌 `class MsgItem(BaseModel)`
-*Line: 255*
-
-**Class Variables (4):**
-- `queue_name: str`
-- `msg_body: dict`
-- `need_result: bool = False`
-- `timeout: int = 60`
-
-##### 📌 `class FunctionResultStatusModel(BaseModel)`
-*Line: 265*
-
-**Docstring:**
-`````
-函数执行结果状态模型
-对应 FunctionResultStatus.get_status_dict() 的返回值结构
-`````
-
-**Class Variables (30):**
-- `host_process: str`
-- `queue_name: str`
-- `function: str`
-- `msg_dict: dict`
-- `task_id: str`
-- `process_id: int`
-- `thread_id: int`
-- `total_thread: int`
-- `publish_time: float`
-- `publish_time_format: str`
-- `time_start: float`
-- `time_cost: typing.Optional[float]`
-- `time_end: float`
-- `insert_time_str: str`
-- `insert_minutes: str`
-- `params: dict`
-- `params_str: str`
-- `result: typing.Any`
-- `run_times: int`
-- `success: bool`
-- `run_status: str`
-- `exception: typing.Optional[str]`
-- `exception_type: typing.Optional[str]`
-- `exception_msg: typing.Optional[str]`
-- `rpc_chain_error_msg_dict: typing.Optional[dict]`
-- `rpc_result_expire_seconds: typing.Optional[int]`
-- `host_name: str`
-- `script_name: str`
-- `script_name_long: str`
-- `_id: str`
-
-##### 📌 `class RpcRespData(BaseAllowExtraModel)`
-*Line: 325*
-
-**Class Variables (2):**
-- `task_id: typing.Optional[str] = None`
-- `status_and_result: typing.Optional[FunctionResultStatusModel] = None`
-
-##### 📌 `class CountData(BaseModel)`
-*Line: 330*
-
-**Class Variables (2):**
-- `queue_name: str`
-- `count: int = -1`
-
-##### 📌 `class AllQueuesData(BaseModel)`
-*Line: 335*
-
-**Class Variables (2):**
-- `queues: typing.List[str] = []`
-- `count: int = 0`
-
-##### 📌 `class DeprecateQueueRequest(BaseModel)`
-*Line: 340*
-
-**Docstring:**
-`````
-废弃队列请求模型
-`````
-
-**Class Variables (1):**
-- `queue_name: str`
-
-##### 📌 `class DeprecateQueueData(BaseModel)`
-*Line: 345*
-
-**Docstring:**
-`````
-废弃队列响应数据模型
-`````
-
-**Class Variables (2):**
-- `queue_name: str`
-- `removed: bool`
-
-##### 📌 `class QueueNameRequest(BaseModel)`
-*Line: 452*
-
-**Docstring:**
-`````
-队列名称请求模型
-`````
-
-**Class Variables (1):**
-- `queue_name: str`
-
-##### 📌 `class QueueControlData(BaseModel)`
-*Line: 457*
-
-**Docstring:**
-`````
-队列控制操作的响应数据
-`````
-
-**Class Variables (2):**
-- `queue_name: str`
-- `success: bool`
-
-##### 📌 `class ClearQueueData(BaseModel)`
-*Line: 571*
-
-**Docstring:**
-`````
-清空队列响应数据
-`````
-
-**Class Variables (2):**
-- `queue_name: str`
-- `success: bool`
-
-##### 📌 `class QueueParams(BaseAllowExtraModel)`
-*Line: 658*
-
-**Docstring:**
-`````
-队列的完整配置参数，
-和BoosterParams不同的是，这里是完全版可json序列化的
-这里的数据是从redis获取的，redis只能存json序列化的数据。
-`````
-
-**Class Variables (50):**
-- `queue_name: str`
-- `broker_kind: str`
-- `project_name: typing.Optional[str] = None`
-- `concurrent_mode: str`
-- `concurrent_num: int`
-- `specify_concurrent_pool: typing.Optional[typing.Any]`
-- `specify_async_loop: typing.Optional[typing.Any]`
-- `is_auto_start_specify_async_loop_in_child_thread: bool`
-- `qps: typing.Optional[float]`
-- `is_using_distributed_frequency_control: bool`
-- `is_send_consumer_hearbeat_to_redis: bool`
-- `max_retry_times: int`
-- `retry_interval: typing.Union[float, int]`
-- `is_push_to_dlx_queue_when_retry_max_times: bool`
-- `consumin_function_decorator: typing.Optional[typing.Any]`
-- `function_timeout: typing.Optional[float]`
-- `is_support_remote_kill_task: bool`
-- `log_level: int`
-- `logger_prefix: str`
-- `create_logger_file: bool`
-- `logger_name: str`
-- `log_filename: typing.Optional[str]`
-- `is_show_message_get_from_broker: bool`
-- `is_print_detail_exception: bool`
-- `publish_msg_log_use_full_msg: bool`
-- `msg_expire_senconds: typing.Optional[float]`
-- `do_task_filtering: bool`
-- `task_filtering_expire_seconds: int`
-- `function_result_status_persistance_conf: typing.Dict[str, typing.Any]`
-- `user_custom_record_process_info_func: typing.Optional[typing.Any]`
-- `is_using_rpc_mode: bool`
-- `rpc_result_expire_seconds: int`
-- `rpc_timeout: int`
-- `delay_task_apscheduler_jobstores_kind: str`
-- `is_do_not_run_by_specify_time_effect: bool`
-- `do_not_run_by_specify_time: typing.Tuple[str, str]`
-- `schedule_tasks_on_main_thread: bool`
-- `is_auto_start_consuming_message: bool`
-- `booster_group: typing.Optional[str]`
-- `consuming_function: typing.Any`
-- `consuming_function_raw: typing.Any`
-- `consuming_function_name: str`
-- `broker_exclusive_config: typing.Dict[str, typing.Any]`
-- `should_check_publish_func_params: bool`
-- `manual_func_input_params: typing.Optional[typing.Dict[str, typing.Any]] = None`
-- `consumer_override_cls: typing.Optional[typing.Any]`
-- `publisher_override_cls: typing.Optional[typing.Any]`
-- `consuming_function_kind: typing.Optional[str]`
-- `user_options: typing.Dict[str, typing.Any]`
-- `auto_generate_info: typing.Dict[str, typing.Any]`
-
-##### 📌 `class ActiveConsumerRunInfo(BaseAllowExtraModel)`
-*Line: 762*
-
-**Docstring:**
-`````
-单个活跃消费者的详细信息
-这些数据是从redis中的心跳信息获取的
-`````
-
-**Class Variables (25):**
-- `queue_name: str`
-- `computer_name: str`
-- `computer_ip: str`
-- `process_id: int`
-- `consumer_id: int`
-- `consumer_uuid: str`
-- `start_datetime_str: str`
-- `start_timestamp: float`
-- `hearbeat_datetime_str: str`
-- `hearbeat_timestamp: float`
-- `consuming_function: str`
-- `code_filename: str`
-- `unit_time_for_count: int`
-- `last_x_s_execute_count: int`
-- `last_x_s_execute_count_fail: int`
-- `last_execute_task_time: float`
-- `last_x_s_avarage_function_spend_time: typing.Optional[float]`
-- `last_x_s_total_cost_time: typing.Optional[float]`
-- `msg_num_in_broker: int`
-- `current_time_for_execute_task_times_every_unit_time: float`
-- `last_timestamp_when_has_task_in_queue: float`
-- `total_consume_count_from_start: int`
-- `total_consume_count_from_start_fail: int`
-- `total_cost_time_from_start: float`
-- `avarage_function_spend_time_from_start: typing.Optional[float]`
-
-##### 📌 `class QueueParamsAndActiveConsumersData(BaseModel)`
-*Line: 808*
-
-**Docstring:**
-`````
-队列参数和活跃消费者数据
-`````
-
-**Class Variables (12):**
-- `queue_params: QueueParams`
-- `active_consumers: typing.List[ActiveConsumerRunInfo]`
-- `pause_flag: int`
-- `msg_num_in_broker: int`
-- `history_run_count: typing.Optional[int]`
-- `history_run_fail_count: typing.Optional[int]`
-- `all_consumers_last_x_s_execute_count: int`
-- `all_consumers_last_x_s_execute_count_fail: int`
-- `all_consumers_last_x_s_avarage_function_spend_time: typing.Optional[float]`
-- `all_consumers_avarage_function_spend_time_from_start: typing.Optional[float]`
-- `all_consumers_total_consume_count_from_start: int`
-- `all_consumers_total_consume_count_from_start_fail: int`
-
-##### 📌 `class QueueConfigData(BaseModel)`
-*Line: 824*
-
-**Docstring:**
-`````
-队列配置数据
-`````
-
-**Class Variables (2):**
-- `queues_config: typing.Dict[str, QueueParams] = {}`
-- `count: int = 0`
-
-##### 📌 `class AllQueuesRunInfoData(BaseModel)`
-*Line: 913*
-
-**Docstring:**
-`````
-所有队列的运行信息
-`````
-
-**Class Variables (2):**
-- `queues: typing.Dict[str, QueueParamsAndActiveConsumersData]`
-- `total_count: int`
-
-##### 📌 `class TimingJobRequest(BaseModel)`
-*Line: 965*
-
-**Docstring:**
-`````
-添加定时任务请求
-`````
-
-**Class Variables (21):**
-- `queue_name: str`
-- `trigger: str`
-- `job_id: typing.Optional[str] = None`
-- `job_store_kind: str = 'redis'`
-- `replace_existing: bool = False`
-- `args: typing.Optional[typing.List] = None`
-- `kwargs: typing.Optional[typing.Dict] = None`
-- `run_date: typing.Optional[str] = None`
-- `weeks: typing.Optional[int] = None`
-- `days: typing.Optional[int] = None`
-- `hours: typing.Optional[int] = None`
-- `minutes: typing.Optional[int] = None`
-- `seconds: typing.Optional[int] = None`
-- `year: typing.Optional[str] = None`
-- `month: typing.Optional[str] = None`
-- `day: typing.Optional[str] = None`
-- `week: typing.Optional[str] = None`
-- `day_of_week: typing.Optional[str] = None`
-- `hour: typing.Optional[str] = None`
-- `minute: typing.Optional[str] = None`
-- `second: typing.Optional[str] = None`
-
-##### 📌 `class TimingJobData(BaseModel)`
-*Line: 998*
-
-**Docstring:**
-`````
-定时任务数据
-`````
-
-**Class Variables (6):**
-- `job_id: str`
-- `queue_name: typing.Optional[str] = None`
-- `trigger: typing.Optional[str] = None`
-- `next_run_time: typing.Optional[str] = None`
-- `status: typing.Optional[str] = None`
-- `kwargs: typing.Optional[typing.Dict] = None`
-
-##### 📌 `class TimingJobListData(BaseModel)`
-*Line: 1008*
-
-**Docstring:**
-`````
-定时任务列表数据
-`````
-
-**Class Variables (2):**
-- `jobs_by_queue: typing.Dict[str, typing.List[TimingJobData]] = {}`
-- `total_count: int = 0`
-
-##### 📌 `class DeleteAllJobsData(BaseModel)`
-*Line: 1299*
-
-**Docstring:**
-`````
-删除所有任务的结果数据
-`````
-
-**Class Variables (2):**
-- `deleted_count: int = 0`
-- `failed_jobs: typing.List[str] = []`
-
-##### 📌 `class SchedulerStatusData(BaseModel)`
-*Line: 1487*
-
-**Class Variables (3):**
-- `queue_name: str`
-- `status_code: int`
-- `status_str: str`
-
-##### 📌 `class SchedulerControlData(BaseModel)`
-*Line: 1492*
-
-**Class Variables (2):**
-- `queue_name: str`
-- `status_str: str`
-
-##### 📌 `class CareProjectNameData(BaseModel)`
-*Line: 1569*
-
-**Docstring:**
-`````
-care_project_name 响应数据
-`````
-
-**Class Variables (1):**
-- `care_project_name: typing.Optional[str] = None`
-
-##### 📌 `class SetCareProjectNameRequest(BaseModel)`
-*Line: 1574*
-
-**Docstring:**
-`````
-设置 care_project_name 请求模型
-`````
-
-**Class Variables (1):**
-- `care_project_name: str = ''`
-
-##### 📌 `class AllProjectNamesData(BaseModel)`
-*Line: 1579*
-
-**Docstring:**
-`````
-所有项目名称响应数据
-`````
-
-**Class Variables (2):**
-- `project_names: typing.List[str] = []`
-- `count: int = 0`
-
-#### 🔧 Public Functions (31)
-
-- `async def funboost_exception_handler(request: Request, exc: FunboostException) -> JSONResponse`
-  - *Line: 65*
-  - **Docstring:**
-  `````
-  统一处理 FunboostException 类型的异常
-  自动提取异常的 code、message、data 等信息返回给前端
-  `````
-
-- `async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse`
-  - *Line: 87*
-  - **Docstring:**
-  `````
-  统一处理所有其他异常
-  返回固定code 5555,并包含完整的异常堆栈信息
-  `````
-
-- `def register_funboost_exception_handlers(app: FastAPI)`
-  - *Line: 108*
-  - **Docstring:**
-  `````
-  注册 Funboost 的全局异常处理器到 FastAPI app
-  
-  使用示例:
-      from funboost.faas.fastapi_adapter import fastapi_router, register_funboost_exception_handlers
-      
-      app = FastAPI()
-      app.include_router(fastapi_router)
-      register_funboost_exception_handlers(app)  # 注册全局异常处理
-  `````
-
-- `def handle_funboost_exceptions(func)`
-  - *Line: 128*
-  - **Docstring:**
-  `````
-  装饰器：统一处理 funboost router 接口的异常
-  只在 funboost 的接口中使用，不会影响用户自己的 FastAPI app
-  
-  使用方法:
-      @fastapi_router.get("/some_endpoint")
-      @handle_funboost_exceptions
-      async def some_endpoint():
-          # 直接写业务逻辑，不需要 try-except
-          return BaseResponse(...)
-  
-  异常处理规则:
-      - FunboostException: 返回异常的 code、message、data、trace_id
-      - 其他异常: 返回 code 5555，包含完整堆栈信息
-  `````
-
-- `async def publish_msg(msg_item: MsgItem)` `fastapi_router.post('/publish', response_model=BaseResponse[RpcRespData])`
-  - *Line: 352*
-  - **Docstring:**
-  `````
-  发布消息接口，支持RPC模式。
-  支持queue_name是否存在的校验，支持校验消息内容是否正确。所以不用担心跨部门用户使用了错误的queue_name，或者消息内容不正确。
-  
-  用户可以先通过 /get_queues_config 接口获取所有队列的配置信息，就知道有哪些队列，以及每个队列支持的消费函数的消息内容需要包括哪些入参字段了。
-  # 发布消息时候会立即校验入参是否正确，使用了redis中的 booster配置的 auto_generate_info.final_func_input_params_info 信息来校验入参名字和个数是否正确
-  `````
-
-- `async def get_result(task_id: str, timeout: int = 5)` `fastapi_router.get('/get_result', response_model=BaseResponse[RpcRespData])`
-  - *Line: 409*
-  - *根据 task_id 获取任务执行结果*
-
-- `def pause_consume(request: QueueNameRequest)` `fastapi_router.post('/pause_consume', response_model=BaseResponse[QueueControlData])`
-  - *Line: 464*
-  - **Docstring:**
-  `````
-  暂停队列消费
-  
-  请求体:
-      {
-          "queue_name": "队列名称"
-      }
-  
-  返回:
-      暂停操作的结果
-      
-  说明:
-      此接口会在 Redis 中设置暂停标志为 '1'，消费者会定期检查此标志并暂停消费。
-      暂停不会立即生效，需要等待消费者检查标志的时间间隔。
-  `````
-
-- `def resume_consume(request: QueueNameRequest)` `fastapi_router.post('/resume_consume', response_model=BaseResponse[QueueControlData])`
-  - *Line: 506*
-  - **Docstring:**
-  `````
-  恢复队列消费
-  
-  请求体:
-      {
-          "queue_name": "队列名称"
-      }
-  
-  返回:
-      恢复操作的结果
-      
-  说明:
-      此接口会在 Redis 中设置暂停标志为 '0'，消费者会定期检查此标志并恢复消费。
-      恢复不会立即生效，需要等待消费者检查标志的时间间隔。
-  `````
-
-- `def get_msg_count(queue_name: str)` `fastapi_router.get('/get_msg_count', response_model=BaseResponse[CountData])` `handle_funboost_exceptions`
-  - *Line: 550*
-  - **Docstring:**
-  `````
-  根据 queue_name 获取消息数量
-  
-  注意：此接口使用了 @handle_funboost_exceptions 装饰器
-  所以不需要写 try-except，异常会自动被捕获并返回统一格式
-  `````
-
-- `def clear_queue(request: QueueNameRequest)` `fastapi_router.post('/clear_queue', response_model=BaseResponse[ClearQueueData])`
-  - *Line: 578*
-  - **Docstring:**
-  `````
-  清空队列中的所有消息
-  
-  请求体:
-      {
-          "queue_name": "队列名称"
-      }
-  
-  返回:
-      清空操作的结果
-      
-  说明:
-      此接口会清空指定队列中的所有待消费消息。
-      ⚠️ 此操作不可逆，请谨慎使用！
-      
-  注意:
-      broker_kind 会自动从已注册的 booster 中获取，无需手动指定。
-  `````
-
-- `def get_all_queues()` `fastapi_router.get('/get_all_queues', response_model=BaseResponse[AllQueuesData])`
-  - *Line: 625*
-  - **Docstring:**
-  `````
-  获取所有已注册的队列名称
-  
-  返回所有通过 @boost 装饰器注册的队列名称列表
-  `````
-
-- `def get_queues_config()` `fastapi_router.get('/get_queues_config', response_model=BaseResponse[QueueConfigData])`
-  - *Line: 831*
-  - **Docstring:**
-  `````
-  获取所有队列的配置信息
-  
-  返回所有已注册队列的详细配置参数，包括：
-  - 队列名称
-  - broker 类型
-  - 并发数量
-  - QPS 限制
-  - 是否启用 RPC 模式
-  - ！！！重要，消费函数的入参名字列表在 auto_generate_info.final_func_input_params_info 中 ，用于发布消息时校验入参是否正确，不正确的消息格式立刻从接口返回报错消息内容不正确。
-    前端或跨部门可以先获取所有队列名字以及队列对应的配置，就知道rpc publish发布接口可以传哪些queue_name以及对应的消息应该包含哪些字段。
-    auto_generate_info.final_func_input_params_info ，相当于是funboost能自动根据消费函数的def定义，对外提供消费函数的接口文档字段，就类似fastapi自动对接口函数入参生成了文档，避免需要重复手动一个个的编辑接口文档字段。
-  - 等等其他 @boost 装饰器的所有参数
-  
-  主要用于前端可视化展示和管理
-  `````
-
-- `def get_queue_run_info(queue_name: str)` `fastapi_router.get('/get_queue_run_info', response_model=BaseResponse[QueueParamsAndActiveConsumersData])`
-  - *Line: 871*
-  - **Docstring:**
-  `````
-  获取单个队列的运行信息
-  
-  参数:
-      queue_name: 队列名称（必填）
-  
-  返回:
-      队列的详细运行信息，包括：
-      - queue_params: 队列配置参数
-      - active_consumers: 活跃的消费者列表
-      - pause_flag: 暂停标志（-1,0表示未暂停，1表示已暂停）
-      - msg_num_in_broker: broker中的消息数量（实时）
-      - history_run_count: 历史运行总次数
-      - history_run_fail_count: 历史失败总次数
-      - all_consumers_last_x_s_execute_count: 所有消费进程，最近X秒所有消费者的执行次数
-      - all_consumers_last_x_s_execute_count_fail: 所有消费进程，最近X秒所有消费者的失败次数
-      - all_consumers_last_x_s_avarage_function_spend_time: 所有消费进程，最近X秒的平均函数耗时
-      - all_consumers_avarage_function_spend_time_from_start: 所有消费进程，从启动开始的平均函数耗时
-      - all_consumers_total_consume_count_from_start: 所有消费进程，从启动开始的总消费次数
-      - all_consumers_total_consume_count_from_start_fail: 所有消费进程，从启动开始的总失败次数
-  `````
-
-- `def get_all_queue_run_info()` `fastapi_router.get('/get_all_queue_run_info', response_model=BaseResponse[AllQueuesRunInfoData])`
-  - *Line: 920*
-  - **Docstring:**
-  `````
-  获取所有队列的运行信息
-  
-  返回:
-      所有队列的详细运行信息，包括每个队列的：
-      - queue_params: 队列配置参数
-      - active_consumers: 活跃的消费者列表
-      - pause_flag: 暂停标志
-      - msg_num_in_broker: broker中的消息数量
-      - history_run_count: 历史运行总次数
-      - history_run_fail_count: 历史失败总次数
-      - 以及各种统计信息
-  `````
-
-- `def get_one_queue_config(queue_name: str)` `fastapi_router.get('/get_one_queue_config', response_model=BaseResponse)` `handle_funboost_exceptions`
-  - *Line: 1016*
-  - **Docstring:**
-  `````
-  获取单个队列的配置信息
-  
-  参数:
-      queue_name: 队列名称（必填）
-  
-  返回:
-      队列的配置信息，包括函数入参信息 (auto_generate_info.final_func_input_params_info)
-  `````
-
-- `def add_timing_job(job_request: TimingJobRequest)` `fastapi_router.post('/add_timing_job', response_model=BaseResponse[TimingJobData])`
-  - *Line: 1036*
-  - **Docstring:**
-  `````
-  添加定时任务
-  
-  支持三种触发方式:
-  1. date: 在指定日期时间执行一次
-     - 需要提供: run_date
-     - 示例: {"trigger": "date", "run_date": "2025-12-03 15:00:00"}
-  
-  2. interval: 按固定时间间隔执行
-     - 需要提供: weeks, days, hours, minutes, seconds 中的至少一个
-     - 示例: {"trigger": "interval", "seconds": 10}
-  
-  3. cron: 按cron表达式执行
-     - 需要提供: year, month, day, week, day_of_week, hour, minute, second 中的至少一个
-     - 示例: {"trigger": "cron", "hour": "*/2", "minute": "30"}
-  `````
-
-- `def get_timing_jobs(queue_name: typing.Optional[str] = None, job_store_kind: str = 'redis')` `fastapi_router.get('/get_timing_jobs', response_model=BaseResponse[TimingJobListData])`
-  - *Line: 1127*
-  - **Docstring:**
-  `````
-  获取定时任务列表
-  
-  参数:
-      queue_name: 队列名称（可选，如果不提供则获取所有队列的任务）
-      job_store_kind: 任务存储方式，'redis' 或 'memory'
-  
-  返回格式:
-      jobs_by_queue: {queue_name: [jobs]}，按队列分组的任务
-      total_count: 总任务数
-  `````
-
-- `def get_timing_job(job_id: str, queue_name: str, job_store_kind: str = 'redis')` `fastapi_router.get('/get_timing_job', response_model=BaseResponse[TimingJobData])`
-  - *Line: 1213*
-  - **Docstring:**
-  `````
-  获取单个定时任务的详细信息
-  
-  参数:
-      job_id: 任务ID（必填）
-      queue_name: 队列名称（必填）
-      job_store_kind: 任务存储方式，'redis' 或 'memory'
-  
-  返回:
-      任务的详细信息，包括任务ID、队列名、触发器类型、下次运行时间等
-  `````
-
-- `def delete_timing_job(job_id: str, queue_name: str, job_store_kind: str = 'redis')` `fastapi_router.delete('/delete_timing_job', response_model=BaseResponse)`
-  - *Line: 1267*
-  - **Docstring:**
-  `````
-  删除定时任务
-  
-  参数:
-      job_id: 任务ID
-      queue_name: 队列名称
-      job_store_kind: 任务存储方式，'redis' 或 'memory'
-  `````
-
-- `def delete_all_timing_jobs(queue_name: typing.Optional[str] = None, job_store_kind: str = 'redis')` `fastapi_router.delete('/delete_all_timing_jobs', response_model=BaseResponse[DeleteAllJobsData])`
-  - *Line: 1306*
-  - **Docstring:**
-  `````
-  删除所有定时任务
-  
-  参数:
-      queue_name: 队列名称（可选，如果不提供则删除所有队列的所有任务）
-      job_store_kind: 任务存储方式，'redis' 或 'memory'
-  
-  返回:
-      deleted_count: 成功删除的任务数量
-      failed_jobs: 删除失败的任务ID列表
-  `````
-
-- `def pause_timing_job(job_id: str, queue_name: str, job_store_kind: str = 'redis')` `fastapi_router.post('/pause_timing_job', response_model=BaseResponse)`
-  - *Line: 1389*
-  - **Docstring:**
-  `````
-  暂停定时任务
-  
-  参数:
-      job_id: 任务ID
-      queue_name: 队列名称
-      job_store_kind: 任务存储方式，'redis' 或 'memory'
-  `````
-
-- `def resume_timing_job(job_id: str, queue_name: str, job_store_kind: str = 'redis')` `fastapi_router.post('/resume_timing_job', response_model=BaseResponse)`
-  - *Line: 1422*
-  - **Docstring:**
-  `````
-  恢复定时任务
-  
-  参数:
-      job_id: 任务ID
-      queue_name: 队列名称
-      job_store_kind: 任务存储方式，'redis' 或 'memory'
-  `````
-
-- `async def deprecate_queue(request: DeprecateQueueRequest)` `fastapi_router.delete('/deprecate_queue', response_model=BaseResponse[DeprecateQueueData])` `handle_funboost_exceptions`
-  - *Line: 1456*
-  - **Docstring:**
-  `````
-  废弃队列 - 从 Redis 的 funboost_all_queue_names set 中移除队列名
-  
-  Args:
-      request: 包含要废弃的队列名称
-      
-  Returns:
-      BaseResponse[DeprecateQueueData]: 包含废弃结果
-      
-  使用场景:
-      当队列改名或不再使用时，可以调用此接口将其从队列列表中移除
-  `````
-
-- `def get_scheduler_status(queue_name: str = Query(..., description='队列名称'), job_store_kind: str = Query('redis', description="任务存储方式，'redis' 或 'memory'，默认 'redis'"))` `fastapi_router.get('/get_scheduler_status', response_model=BaseResponse[SchedulerStatusData])` `handle_funboost_exceptions`
-  - *Line: 1498*
-  - *获取定时器调度器状态*
-
-- `def pause_scheduler(queue_name: str = Query(..., description='队列名称'), job_store_kind: str = Query('redis', description="任务存储方式，'redis' 或 'memory'，默认 'redis'"))` `fastapi_router.post('/pause_scheduler', response_model=BaseResponse[SchedulerControlData])` `handle_funboost_exceptions`
-  - *Line: 1524*
-  - **Docstring:**
-  `````
-  暂停定时器调度器
-  注意：这只会暂停当前进程中的调度器实例。如果部署了多实例，可能需要单独控制。
-  `````
-
-- `def resume_scheduler(queue_name: str = Query(..., description='队列名称'), job_store_kind: str = Query('redis', description="任务存储方式，'redis' 或 'memory'，默认 'redis'"))` `fastapi_router.post('/resume_scheduler', response_model=BaseResponse[SchedulerControlData])` `handle_funboost_exceptions`
-  - *Line: 1547*
-  - *恢复运行定时器调度器*
-
-- `def get_care_project_name()` `fastapi_router.get('/get_care_project_name', response_model=BaseResponse[CareProjectNameData])` `handle_funboost_exceptions`
-  - *Line: 1587*
-  - **Docstring:**
-  `````
-  获取当前的 care_project_name 设置
-  
-  返回:
-      care_project_name: 当前设置的项目名称，None 表示不限制（显示全部）
-  `````
-
-- `def set_care_project_name(request: SetCareProjectNameRequest)` `fastapi_router.post('/set_care_project_name', response_model=BaseResponse[CareProjectNameData])` `handle_funboost_exceptions`
-  - *Line: 1607*
-  - **Docstring:**
-  `````
-  设置 care_project_name
-  
-  请求体:
-      care_project_name: 项目名称，空字符串表示不限制（显示全部项目）
-  
-  说明:
-      设置后会影响本次会话的所有页面（队列操作、消费者信息等）
-  `````
-
-- `def get_all_project_names()` `fastapi_router.get('/get_all_project_names', response_model=BaseResponse[AllProjectNamesData])` `handle_funboost_exceptions`
-  - *Line: 1637*
-  - **Docstring:**
-  `````
-  获取所有已注册的项目名称列表
-  
-  返回:
-      project_names: 项目名称列表（按字母排序）
-      count: 项目数量
-  `````
-
-- `async def async_wrapper(*args, **kwargs)` `functools.wraps(func)`
-  - *Line: 147*
-
-- `def sync_wrapper(*args, **kwargs)` `functools.wraps(func)`
-  - *Line: 180*
-
-
----
 
 `````python
 
@@ -46839,6 +39835,7 @@ class QueueParamsAndActiveConsumersData(BaseModel):
     all_consumers_avarage_function_spend_time_from_start: typing.Optional[float]   # 所有消费进程从启动开始的平均耗时
     all_consumers_total_consume_count_from_start: int   # 所有消费进程从启动开始总消费次数
     all_consumers_total_consume_count_from_start_fail: int   # 所有消费进程从启动开始总失败次数
+    all_consumers_last_execute_task_time: typing.Optional[float]   # 所有消费进程中最后一次执行任务的时间戳
 
 
 class QueueConfigData(BaseModel):
@@ -46909,6 +39906,7 @@ def get_queue_run_info(queue_name: str):
         - all_consumers_avarage_function_spend_time_from_start: 所有消费进程，从启动开始的平均函数耗时
         - all_consumers_total_consume_count_from_start: 所有消费进程，从启动开始的总消费次数
         - all_consumers_total_consume_count_from_start_fail: 所有消费进程，从启动开始的总失败次数
+        - all_consumers_last_execute_task_time: 所有消费进程中，最后一次执行任务的时间戳
     """
     try:
         # 获取单个队列的运行信息
@@ -47699,354 +40697,6 @@ if __name__ == "__main__":
 
 
 --- **start of file: funboost/faas/flask_adapter.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/faas/flask_adapter.py`
-
-#### 📝 Module Docstring
-
-`````
-Flask 开箱即用，作者自带贡献，只需要用户的 app.register_blueprint(flask_blueprint)
-即可自动给用户的Flask应用添加常用路由
-包括发布消息， 根据task_id获取结果， 获取队列消息数量
-
-
-
-使用说明:
-    在用户自己的 Flask 项目中:
-       app.register_blueprint(flask_blueprint)
-    
-`````
-
-#### 📦 Imports
-
-- `import traceback`
-- `from flask import Blueprint`
-- `from flask import request`
-- `from flask import jsonify`
-- `from funboost import AsyncResult`
-- `from funboost import PriorityConsumingControlConfig`
-- `from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter`
-- `from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter`
-- `from funboost.core.active_cousumer_info_getter import CareProjectNameEnv`
-- `from funboost.faas.faas_util import gen_aps_job_adder`
-- `from funboost.core.loggers import get_funboost_file_logger`
-- `from flask import Flask`
-
-#### 🔧 Public Functions (21)
-
-- `def publish_msg()` `flask_blueprint.route('/publish', methods=['POST'])`
-  - *Line: 34*
-  - **Docstring:**
-  `````
-  发布消息接口
-  
-  请求体示例:
-  {
-      "queue_name": "test_queue",
-      "msg_body": {"x": 1, "y": 2},
-      "need_result": true,
-      "timeout": 60
-  }
-  `````
-
-- `def get_result()` `flask_blueprint.route('/get_result', methods=['GET'])`
-  - *Line: 133*
-  - **Docstring:**
-  `````
-  根据 task_id 获取任务执行结果
-  
-  查询参数:
-      task_id: str - 任务ID（必填）
-      timeout: int - 超时时间，默认5秒
-  `````
-
-- `def get_msg_count()` `flask_blueprint.route('/get_msg_count', methods=['GET'])`
-  - *Line: 191*
-  - **Docstring:**
-  `````
-  根据 queue_name 获取消息数量
-  
-  查询参数:
-      queue_name: str - 队列名称（必填）
-  `````
-
-- `def get_all_queues()` `flask_blueprint.route('/get_all_queues', methods=['GET'])`
-  - *Line: 237*
-  - **Docstring:**
-  `````
-  获取所有已注册的队列名称
-  
-  返回所有通过 @boost 装饰器注册的队列名称列表
-  `````
-
-- `def clear_queue()` `flask_blueprint.route('/clear_queue', methods=['POST'])`
-  - *Line: 270*
-  - **Docstring:**
-  `````
-  清空队列中的所有消息
-  
-  请求体 (JSON):
-      {
-          "queue_name": "队列名称"
-      }
-  
-  返回:
-      清空操作的结果
-      
-  说明:
-      此接口会清空指定队列中的所有待消费消息。
-      ⚠️ 此操作不可逆，请谨慎使用！
-      
-  注意:
-      broker_kind 会自动从已注册的 booster 中获取，无需手动指定。
-  `````
-
-- `def get_one_queue_config()` `flask_blueprint.route('/get_one_queue_config', methods=['GET'])`
-  - *Line: 331*
-  - **Docstring:**
-  `````
-  获取单个队列的配置信息
-  
-  查询参数:
-      queue_name: 队列名称（必填）
-  
-  返回:
-      队列的配置信息，包括函数入参信息 (final_func_input_params_info)
-  `````
-
-- `def add_timing_job()` `flask_blueprint.route('/add_timing_job', methods=['POST'])`
-  - *Line: 369*
-  - **Docstring:**
-  `````
-  添加定时任务
-  
-  支持三种触发方式:
-  1. date: 在指定日期时间执行一次
-     - 需要提供: run_date
-     - 示例: {"trigger": "date", "run_date": "2025-12-03 15:00:00"}
-  
-  2. interval: 按固定时间间隔执行
-     - 需要提供: weeks, days, hours, minutes, seconds 中的至少一个
-     - 示例: {"trigger": "interval", "seconds": 10}
-  
-  3. cron: 按cron表达式执行
-     - 需要提供: year, month, day, week, day_of_week, hour, minute, second 中的至少一个
-     - 示例: {"trigger": "cron", "hour": "*/2", "minute": "30"}
-  
-  请求体示例:
-  {
-      "queue_name": "test_queue",
-      "trigger": "interval",
-      "seconds": 10,
-      "job_id": "my_job_001",
-      "job_store_kind": "redis",
-      "replace_existing": false
-  }
-  `````
-
-- `def get_timing_jobs()` `flask_blueprint.route('/get_timing_jobs', methods=['GET'])`
-  - *Line: 500*
-  - **Docstring:**
-  `````
-  获取定时任务列表
-  
-  查询参数:
-      queue_name: 队列名称（可选，如果不提供则获取所有队列的任务）
-      job_store_kind: 任务存储方式，'redis' 或 'memory'，默认 'redis'
-  
-  返回格式:
-      {
-          "succ": True,
-          "msg": "获取成功",
-          "data": {
-              "jobs_by_queue": {
-                  "queue_name1": [job1, job2, ...],
-                  "queue_name2": [job3, ...],
-                  ...
-              },
-              "total_count": 总任务数
-          }
-      }
-  `````
-
-- `def get_timing_job()` `flask_blueprint.route('/get_timing_job', methods=['GET'])`
-  - *Line: 603*
-  - **Docstring:**
-  `````
-  获取单个定时任务的详细信息
-  
-  查询参数:
-      job_id: 任务ID（必填）
-      queue_name: 队列名称（必填）
-      job_store_kind: 任务存储方式，'redis' 或 'memory'，默认 'redis'
-  `````
-
-- `def delete_timing_job()` `flask_blueprint.route('/delete_timing_job', methods=['DELETE'])`
-  - *Line: 661*
-  - **Docstring:**
-  `````
-  删除定时任务
-  
-  查询参数:
-      job_id: 任务ID（必填）
-      queue_name: 队列名称（必填）
-      job_store_kind: 任务存储方式，'redis' 或 'memory'，默认 'redis'
-  `````
-
-- `def delete_all_timing_jobs()` `flask_blueprint.route('/delete_all_timing_jobs', methods=['DELETE'])`
-  - *Line: 701*
-  - **Docstring:**
-  `````
-  删除所有定时任务
-  
-  查询参数:
-      queue_name: 队列名称（可选，如果不提供则删除所有队列的所有任务）
-      job_store_kind: 任务存储方式，'redis' 或 'memory'，默认 'redis'
-  `````
-
-- `def pause_timing_job()` `flask_blueprint.route('/pause_timing_job', methods=['POST'])`
-  - *Line: 778*
-  - **Docstring:**
-  `````
-  暂停定时任务
-  
-  查询参数:
-      job_id: 任务ID（必填）
-      queue_name: 队列名称（必填）
-      job_store_kind: 任务存储方式，'redis' 或 'memory'，默认 'redis'
-  `````
-
-- `def resume_timing_job()` `flask_blueprint.route('/resume_timing_job', methods=['POST'])`
-  - *Line: 818*
-  - **Docstring:**
-  `````
-  恢复定时任务
-  
-  查询参数:
-      job_id: 任务ID（必填）
-      queue_name: 队列名称（必填）
-      job_store_kind: 任务存储方式，'redis' 或 'memory'，默认 'redis'
-  `````
-
-- `def get_scheduler_status()` `flask_blueprint.route('/get_scheduler_status', methods=['GET'])`
-  - *Line: 873*
-  - **Docstring:**
-  `````
-  获取定时器调度器状态
-  
-  查询参数:
-      queue_name: 队列名称（必填）
-      job_store_kind: 任务存储方式，'redis' 或 'memory'，默认 'redis'
-      
-  返回:
-      status: 0(已停止), 1(运行中), 2(已暂停)
-  `````
-
-- `def pause_scheduler()` `flask_blueprint.route('/pause_scheduler', methods=['POST'])`
-  - *Line: 920*
-  - **Docstring:**
-  `````
-  暂停定时器调度器
-  注意：这只会暂停当前进程中的调度器实例。如果部署了多实例，可能需要单独控制。
-  
-  查询参数:
-      queue_name: 队列名称（必填）
-      job_store_kind: 任务存储方式，'redis' 或 'memory'，默认 'redis'
-  `````
-
-- `def resume_scheduler()` `flask_blueprint.route('/resume_scheduler', methods=['POST'])`
-  - *Line: 962*
-  - **Docstring:**
-  `````
-  恢复运行定时器调度器
-  
-  查询参数:
-      queue_name: 队列名称（必填）
-      job_store_kind: 任务存储方式，'redis' 或 'memory'，默认 'redis'
-  `````
-
-- `def deprecate_queue()` `flask_blueprint.route('/deprecate_queue', methods=['DELETE'])`
-  - *Line: 1003*
-  - **Docstring:**
-  `````
-  废弃队列 - 从 Redis 的 funboost_all_queue_names set 和 项目的队列名下 移除队列名
-  
-  请求体 (JSON):
-      {
-          "queue_name": "要废弃的队列名称"
-      }
-  
-  返回:
-      {
-          "succ": True/False,
-          "msg": "提示信息",
-          "data": {
-              "queue_name": "队列名称",
-              "removed": True/False
-          }
-      }
-  `````
-
-- `def get_care_project_name()` `flask_blueprint.route('/get_care_project_name', methods=['GET'])`
-  - *Line: 1058*
-  - **Docstring:**
-  `````
-  获取当前的 care_project_name 设置
-  
-  返回:
-      {
-          "succ": True,
-          "msg": "获取成功",
-          "data": {
-              "care_project_name": "项目名称或None"
-          }
-      }
-  `````
-
-- `def set_care_project_name()` `flask_blueprint.route('/set_care_project_name', methods=['POST'])`
-  - *Line: 1092*
-  - **Docstring:**
-  `````
-  设置 care_project_name
-  
-  请求体 (JSON):
-      {
-          "care_project_name": "项目名称" 或 "" (空字符串表示不限制)
-      }
-  
-  返回:
-      {
-          "succ": True,
-          "msg": "设置成功",
-          "data": {
-              "care_project_name": "设置后的值"
-          }
-      }
-  `````
-
-- `def get_all_project_names()` `flask_blueprint.route('/get_all_project_names', methods=['GET'])`
-  - *Line: 1139*
-  - **Docstring:**
-  `````
-  获取所有已注册的项目名称列表
-  
-  返回:
-      {
-          "succ": True,
-          "msg": "获取成功",
-          "data": {
-              "project_names": ["project1", "project2", ...],
-              "count": 数量
-          }
-      }
-  `````
-
-- `def index()` `app.route('/')`
-  - *Line: 1189*
-
-
----
 
 `````python
 """
@@ -49297,30 +41947,6 @@ app.include_router(fastapi_router)
 
 --- **start of file: funboost/faas/__init__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/faas/__init__.py`
-
-#### 📝 Module Docstring
-
-`````
-惰性导入机制：只在用户实际访问时才导入对应的 router
-这样用户只使用 fastapi 时不会因为 flask/django 未安装而报错
-`````
-
-#### 📦 Imports
-
-- `import typing`
-- `from funboost.core.active_cousumer_info_getter import ActiveCousumerProcessInfoGetter`
-- `from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter`
-- `from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter`
-- `from funboost.core.active_cousumer_info_getter import CareProjectNameEnv`
-- `from fastapi_adapter import fastapi_router`
-- `from flask_adapter import flask_blueprint`
-- `from django_adapter import django_router`
-
-
----
-
 `````python
 # funboost/faas/__init__.py
 
@@ -49421,118 +42047,6 @@ if typing.TYPE_CHECKING:
 
 
 --- **start of file: funboost/factories/broker_kind__publsiher_consumer_type_map.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/factories/broker_kind__publsiher_consumer_type_map.py`
-
-#### 📦 Imports
-
-- `import typing`
-- `from funboost.publishers.empty_publisher import EmptyPublisher`
-- `from funboost.publishers.nats_publisher import NatsPublisher`
-- `from funboost.publishers.peewee_publisher import PeeweePublisher`
-- `from funboost.publishers.redis_publisher_lpush import RedisPublisherLpush`
-- `from funboost.publishers.redis_publisher_priority import RedisPriorityPublisher`
-- `from funboost.publishers.redis_pubsub_publisher import RedisPubSubPublisher`
-- `from funboost.publishers.tcp_publisher import TCPPublisher`
-- `from funboost.publishers.txt_file_publisher import TxtFilePublisher`
-- `from funboost.publishers.udp_publisher import UDPPublisher`
-- `from funboost.publishers.zeromq_publisher import ZeroMqPublisher`
-- `from funboost.publishers.kafka_publisher import KafkaPublisher`
-- `from funboost.publishers.local_python_queue_publisher import LocalPythonQueuePublisher`
-- `from funboost.publishers.mongomq_publisher import MongoMqPublisher`
-- `from funboost.publishers.persist_queue_publisher import PersistQueuePublisher`
-- `from funboost.publishers.rabbitmq_pika_publisher import RabbitmqPublisher`
-- `from funboost.publishers.redis_publisher import RedisPublisher`
-- `from funboost.publishers.rocketmq_publisher import RocketmqPublisher`
-- `from funboost.publishers.redis_stream_publisher import RedisStreamPublisher`
-- `from funboost.publishers.mqtt_publisher import MqttPublisher`
-- `from funboost.publishers.httpsqs_publisher import HttpsqsPublisher`
-- `from funboost.consumers.empty_consumer import EmptyConsumer`
-- `from funboost.consumers.redis_consumer_priority import RedisPriorityConsumer`
-- `from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer`
-- `from funboost.consumers.kafka_consumer import KafkaConsumer`
-- `from funboost.consumers.local_python_queue_consumer import LocalPythonQueueConsumer`
-- `from funboost.consumers.mongomq_consumer import MongoMqConsumer`
-- `from funboost.consumers.nats_consumer import NatsConsumer`
-- `from funboost.consumers.peewee_conusmer import PeeweeConsumer`
-- `from funboost.consumers.persist_queue_consumer import PersistQueueConsumer`
-- `from funboost.consumers.rabbitmq_pika_consumer import RabbitmqConsumer`
-- `from funboost.consumers.redis_brpoplpush_consumer import RedisBrpopLpushConsumer`
-- `from funboost.consumers.redis_consumer import RedisConsumer`
-- `from funboost.consumers.redis_consumer_ack_able import RedisConsumerAckAble`
-- `from funboost.consumers.rocketmq_consumer import RocketmqConsumer`
-- `from funboost.consumers.redis_stream_consumer import RedisStreamConsumer`
-- `from funboost.consumers.tcp_consumer import TCPConsumer`
-- `from funboost.consumers.txt_file_consumer import TxtFileConsumer`
-- `from funboost.consumers.udp_consumer import UDPConsumer`
-- `from funboost.consumers.zeromq_consumer import ZeroMqConsumer`
-- `from funboost.consumers.mqtt_consumer import MqttConsumer`
-- `from funboost.consumers.httpsqs_consumer import HttpsqsConsumer`
-- `from funboost.consumers.redis_consumer_ack_using_timeout import RedisConsumerAckUsingTimeout`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.constant import BrokerEnum`
-- `import sys`
-- `from funboost.publishers.rabbitmq_amqpstorm_publisher import RabbitmqPublisherUsingAmqpStorm`
-- `from funboost.consumers.rabbitmq_amqpstorm_consumer import RabbitmqConsumerAmqpStorm`
-- `from funboost.publishers.rabbitmq_complex_routing_publisher import RabbitmqComplexRoutingPublisher`
-- `from funboost.consumers.rabbitmq_complex_routing_consumer import RabbitmqComplexRoutingConsumer`
-- `from funboost.publishers.rabbitmq_rabbitpy_publisher import RabbitmqPublisherUsingRabbitpy`
-- `from funboost.consumers.rabbitmq_rabbitpy_consumer import RabbitmqConsumerRabbitpy`
-- `from funboost.consumers.pulsar_consumer import PulsarConsumer`
-- `from funboost.publishers.pulsar_publisher import PulsarPublisher`
-- `from funboost.consumers.celery_consumer import CeleryConsumer`
-- `from funboost.publishers.celery_publisher import CeleryPublisher`
-- `from funboost.consumers.nameko_consumer import NamekoConsumer`
-- `from funboost.publishers.nameko_publisher import NamekoPublisher`
-- `from funboost.consumers.sqlachemy_consumer import SqlachemyConsumer`
-- `from funboost.publishers.sqla_queue_publisher import SqlachemyQueuePublisher`
-- `from funboost.consumers.dramatiq_consumer import DramatiqConsumer`
-- `from funboost.publishers.dramatiq_publisher import DramatiqPublisher`
-- `from funboost.consumers.huey_consumer import HueyConsumer`
-- `from funboost.publishers.huey_publisher import HueyPublisher`
-- `from funboost.consumers.kafka_consumer_manually_commit import KafkaConsumerManuallyCommit`
-- `from funboost.publishers.confluent_kafka_publisher import ConfluentKafkaPublisher`
-- `from funboost.consumers.kafka_consumer_manually_commit import SaslPlainKafkaConsumer`
-- `from funboost.publishers.confluent_kafka_publisher import SaslPlainKafkaPublisher`
-- `from funboost.consumers.rq_consumer import RqConsumer`
-- `from funboost.publishers.rq_publisher import RqPublisher`
-- `from funboost.consumers.kombu_consumer import KombuConsumer`
-- `from funboost.publishers.kombu_publisher import KombuPublisher`
-- `from funboost.publishers.nsq_publisher import NsqPublisher`
-- `from funboost.consumers.nsq_consumer import NsqConsumer`
-- `from funboost.consumers.grpc_consumer import GrpcConsumer`
-- `from funboost.publishers.grpc_publisher import GrpcPublisher`
-- `from funboost.consumers.mysql_cdc_consumer import MysqlCdcConsumer`
-- `from funboost.publishers.mysql_cdc_publisher import MysqlCdcPublisher`
-- `from funboost.consumers.http_consumer import HTTPConsumer`
-- `from funboost.publishers.http_publisher import HTTPPublisher`
-
-#### 🔧 Public Functions (2)
-
-- `def register_custom_broker(broker_kind, publisher_class: typing.Type[AbstractPublisher], consumer_class: typing.Type[AbstractConsumer])`
-  - *Line: 91*
-  - **Docstring:**
-  `````
-  动态注册中间件到框架中， 方便的增加中间件类型或者修改是自定义消费者逻辑。
-  :param broker_kind:
-  :param publisher_class:
-  :param consumer_class:
-  :return:
-  `````
-
-- `def regist_to_funboost(broker_kind: str)`
-  - *Line: 107*
-  - **Docstring:**
-  `````
-  不直接定义在broker_kind__publsiher_consumer_type_map, 延迟导入是因为funboost没有pip自动安装这些三方包，防止一启动就报错。
-  这样当用户需要使用某些三方包中间件作为消息队列时候，按照import报错信息，用户自己去pip安装好。或者 pip install funboost[all] 一次性安装所有中间件。
-  建议按照 https://github.com/ydf0509/funboost/blob/master/setup.py 中的 extra_brokers 和 install_requires 里面的版本号来安装三方包版本.
-  `````
-
-
----
 
 `````python
 import typing
@@ -49746,32 +42260,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/factories/consumer_factory.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/factories/consumer_factory.py`
-
-#### 📦 Imports
-
-- `from funboost.constant import BrokerEnum`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.func_params_model import BoosterParams`
-- `from funboost.factories.broker_kind__publsiher_consumer_type_map import broker_kind__publsiher_consumer_type_map`
-- `from funboost.factories.broker_kind__publsiher_consumer_type_map import regist_to_funboost`
-
-#### 🔧 Public Functions (1)
-
-- `def get_consumer(boost_params: BoosterParams) -> AbstractConsumer`
-  - *Line: 11*
-  - **Docstring:**
-  `````
-  :param args: 入参是AbstractConsumer的入参
-  :param broker_kind:
-  :param kwargs:
-  :return:
-  `````
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -49813,42 +42301,6 @@ def get_consumer(boost_params: BoosterParams) -> AbstractConsumer:
 
 
 --- **start of file: funboost/factories/publisher_factotry.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/factories/publisher_factotry.py`
-
-#### 📦 Imports
-
-- `import copy`
-- `from typing import Callable`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.core.func_params_model import PublisherParams`
-- `from funboost.factories.broker_kind__publsiher_consumer_type_map import broker_kind__publsiher_consumer_type_map`
-- `from funboost.factories.broker_kind__publsiher_consumer_type_map import regist_to_funboost`
-
-#### 🔧 Public Functions (1)
-
-- `def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher`
-  - *Line: 13*
-  - **Docstring:**
-  `````
-  :param queue_name:
-  :param log_level_int:
-  :param logger_prefix:
-  :param is_add_file_handler:
-  :param clear_queue_within_init:
-  :param is_add_publish_time:是否添加发布时间，以后废弃，都添加。
-  :param consuming_function:消费函数，为了做发布时候的函数入参校验用的，如果不传则不做发布任务的校验，
-             例如add 函数接收x，y入参，你推送{"x":1,"z":3}就是不正确的，函数不接受z参数。
-  :param broker_kind: 中间件或使用包的种类。
-  :param broker_exclusive_config 加上一个不同种类中间件非通用的配置,不同中间件自身独有的配置，不是所有中间件都兼容的配置，因为框架支持30种消息队列，消息队列不仅仅是一般的先进先出queue这么简单的概念，
-         例如kafka支持消费者组，rabbitmq也支持各种独特概念例如各种ack机制 复杂路由机制，每一种消息队列都有独特的配置参数意义，可以通过这里传递。
-  
-  :return:
-  `````
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -49905,18 +42357,6 @@ def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher:
 
 --- **start of file: funboost/factories/__init__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/factories/__init__.py`
-
-#### 📝 Module Docstring
-
-`````
-工厂模式，通过broker_kind来生成不同中间件类型的消费者和发布者。
-`````
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -49933,147 +42373,6 @@ def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher:
 
 
 --- **start of file: funboost/funboost_web_manager/app.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/funboost_web_manager/app.py`
-
-#### 📦 Imports
-
-- `import threading`
-- `import sys`
-- `import os`
-- `import datetime`
-- `import json`
-- `import traceback`
-- `import typing`
-- `from funboost.core.func_params_model import PriorityConsumingControlConfig`
-- `from flask import render_template`
-- `from flask import Flask`
-- `from flask import request`
-- `from flask import url_for`
-- `from flask import jsonify`
-- `from flask import flash`
-- `from flask import redirect`
-- `from flask_bootstrap import Bootstrap`
-- `from flask_wtf import FlaskForm`
-- `from wtforms import StringField`
-- `from wtforms import PasswordField`
-- `from wtforms import BooleanField`
-- `from wtforms import SubmitField`
-- `from wtforms.validators import DataRequired`
-- `from wtforms.validators import Length`
-- `from flask_login import login_user`
-- `from flask_login import logout_user`
-- `from flask_login import login_required`
-- `from flask_login import LoginManager`
-- `from flask_login import UserMixin`
-- `import nb_log`
-- `from funboost import nb_print`
-- `from funboost import ActiveCousumerProcessInfoGetter`
-- `from funboost import BoostersManager`
-- `from funboost import PublisherParams`
-- `from funboost import RedisMixin`
-- `from funboost.funboost_web_manager.functions import get_cols`
-- `from funboost.funboost_web_manager.functions import query_result`
-- `from funboost.funboost_web_manager.functions import get_speed`
-- `from funboost.funboost_web_manager.functions import Statistic`
-- `from funboost.funboost_web_manager import functions as app_functions`
-- `from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter`
-- `from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter`
-- `from funboost.core.active_cousumer_info_getter import CareProjectNameEnv`
-- `from funboost.constant import RedisKeys`
-- `from funboost.faas import flask_blueprint`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class User(UserMixin)`
-*Line: 68*
-
-##### 📌 `class LoginForm(FlaskForm)`
-*Line: 97*
-
-**Class Variables (3):**
-- `user_name = StringField('用户名', validators=[DataRequired(), Length(3, 64)])`
-- `password = PasswordField('密码', validators=[DataRequired(), Length(3, 64)])`
-- `remember_me = BooleanField('记住我')`
-
-#### 🔧 Public Functions (20)
-
-- `def query_user(user_name)`
-  - *Line: 83*
-
-- `def load_user(user_id)` `login_manager.user_loader`
-  - *Line: 90*
-
-- `def login()` `app.route('/login', methods=['GET', 'POST'])`
-  - *Line: 104*
-
-- `def logout()` `app.route('/logout')` `login_required`
-  - *Line: 142*
-
-- `def index()` `app.route('/')` `login_required`
-  - *Line: 149*
-
-- `def query_cols_view()` `app.route('/query_cols')` `login_required`
-  - *Line: 156*
-
-- `def query_result_view()` `app.route('/query_result')` `login_required`
-  - *Line: 163*
-
-- `def speed_stats()` `app.route('/speed_stats')` `login_required`
-  - *Line: 169*
-
-- `def speed_statistic_for_echarts()` `app.route('/speed_statistic_for_echarts')` `login_required`
-  - *Line: 175*
-
-- `def serve_template(template)` `app.route('/tpl/<template>')` `login_required`
-  - *Line: 183*
-
-- `def hearbeat_info_by_queue_name()` `app.route('/running_consumer/hearbeat_info_by_queue_name')`
-  - *Line: 194*
-
-- `def hearbeat_info_by_ip()` `app.route('/running_consumer/hearbeat_info_by_ip')`
-  - *Line: 210*
-
-- `def hearbeat_info_partion_by_queue_name()` `app.route('/running_consumer/hearbeat_info_partion_by_queue_name')`
-  - *Line: 228*
-
-- `def hearbeat_info_partion_by_ip()` `app.route('/running_consumer/hearbeat_info_partion_by_ip')`
-  - *Line: 241*
-
-- `def get_queues_params_and_active_consumers()` `app.route('/queue/params_and_active_consumers')`
-  - *Line: 255*
-
-- `def pause_cousume(queue_name)` `app.route('/queue/pause/<queue_name>', methods=['POST'])`
-  - *Line: 265*
-
-- `def resume_consume(queue_name)` `app.route('/queue/resume/<queue_name>', methods=['POST'])`
-  - *Line: 271*
-
-- `def get_msg_num_all_queues()` `app.route('/queue/get_msg_num_all_queues', methods=['GET'])`
-  - *Line: 277*
-  - *这个是通过消费者周期每隔10秒上报到redis的，性能好。不需要实时获取每个消息队列，直接从redis读取所有队列的消息数量*
-
-- `def get_time_series_data_by_queue_name(queue_name)` `app.route('/queue/get_time_series_data/<queue_name>', methods=['GET'])`
-  - *Line: 284*
-  - **Docstring:**
-  `````
-  _summary_
-  
-  Args:
-      queue_name (_type_): _description_
-  
-  Returns:
-      _type_: _description_
-  
-  返回例如  [{'report_data': {'pause_flag': -1, 'msg_num_in_broker': 936748, 'history_run_count': '150180', 'history_run_fail_count': '46511', 'all_consumers_last_x_s_execute_count': 7, 'all_consumers_last_x_s_execute_count_fail': 0, 'all_consumers_last_x_s_avarage_function_spend_time': 3.441, 'all_consumers_avarage_function_spend_time_from_start': 4.598, 'all_consumers_total_consume_count_from_start': 1296, 'all_consumers_total_consume_count_from_start_fail': 314, 'report_ts': 1749617360.597841}, 'report_ts': 1749617360.597841}, {'report_data': {'pause_flag': -1, 'msg_num_in_broker': 936748, 'history_run_count': '150184', 'history_run_fail_count': '46514', 'all_consumers_last_x_s_execute_count': 7, 'all_consumers_last_x_s_execute_count_fail': 0, 'all_consumers_last_x_s_avarage_function_spend_time': 3.441, 'all_consumers_avarage_function_spend_time_from_start': 4.599, 'all_consumers_total_consume_count_from_start': 1299, 'all_consumers_total_consume_count_from_start_fail': 316, 'report_ts': 1749617370.628166}, 'report_ts': 1749617370.628166}]
-  `````
-
-- `def start_funboost_web_manager(host = '0.0.0.0', port = 27018, block = False, debug = False, care_project_name: typing.Optional[str] = None)`
-  - *Line: 325*
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -50108,15 +42407,15 @@ import nb_log
 from funboost import (
     nb_print,
     ActiveCousumerProcessInfoGetter,
-    BoostersManager,
-    PublisherParams,
-    RedisMixin,
+    # BoostersManager,  # 未使用
+    # PublisherParams,  # 未使用
+    # RedisMixin,  # 已废弃的 pause/resume 路由使用，现已注释
 )
 from funboost.funboost_web_manager.functions import (
     get_cols,
     query_result,
     get_speed,
-    Statistic,
+    # Statistic,  # 已废弃，前端不再使用 speed_statistic_for_echarts 路由
 )
 from funboost.funboost_web_manager import functions as app_functions
 from funboost.core.active_cousumer_info_getter import (
@@ -50124,7 +42423,7 @@ from funboost.core.active_cousumer_info_getter import (
     SingleQueueConusmerParamsGetter,
     CareProjectNameEnv,
 )
-from funboost.constant import RedisKeys
+# from funboost.constant import RedisKeys  # 已废弃的 pause/resume 路由使用，现已注释
 from funboost.faas import flask_blueprint
 
 app = Flask(__name__)
@@ -50248,12 +42547,34 @@ def speed_stats():
     return jsonify(get_speed(**request.values.to_dict()))
 
 
-@app.route("/speed_statistic_for_echarts")
+# 以下路由已废弃，功能已迁移到 consume_speed_curve，前端不再使用
+# @app.route("/speed_statistic_for_echarts")
+# @login_required
+# def speed_statistic_for_echarts():
+#     stat = Statistic(request.args.get("col_name"))
+#     stat.build_result()
+#     return jsonify(stat.result)
+
+
+@app.route("/consume_speed_curve")
 @login_required
-def speed_statistic_for_echarts():
-    stat = Statistic(request.args.get("col_name"))
-    stat.build_result()
-    return jsonify(stat.result)
+def consume_speed_curve():
+    """获取消费速率曲线数据"""
+    from funboost.funboost_web_manager.functions import get_consume_speed_curve
+    col_name = request.args.get("col_name")
+    start_time = request.args.get("start_time")
+    end_time = request.args.get("end_time")
+    granularity = request.args.get("granularity", "auto")
+    
+    if not col_name or not start_time or not end_time:
+        return jsonify({"error": "缺少必要参数: col_name, start_time, end_time"})
+    
+    try:
+        result = get_consume_speed_curve(col_name, start_time, end_time, granularity)
+        return jsonify(result)
+    except Exception as e:
+        import traceback
+        return jsonify({"error": str(e), "traceback": traceback.format_exc()})
 
 
 @app.route("/tpl/<template>")
@@ -50339,16 +42660,17 @@ def get_queues_params_and_active_consumers():
 
 
 
-@app.route("/queue/pause/<queue_name>", methods=["POST"])
-def pause_cousume(queue_name):
-    RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name, "1")
-    return jsonify({"success": True})
+# 以下两个路由已废弃，前端没有使用（暂停/恢复消费功能可能在其他地方实现）
+# @app.route("/queue/pause/<queue_name>", methods=["POST"])
+# def pause_cousume(queue_name):
+#     RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name, "1")
+#     return jsonify({"success": True})
 
 
-@app.route("/queue/resume/<queue_name>", methods=["POST"])
-def resume_consume(queue_name):
-    RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name, "0")
-    return jsonify({"success": True})
+# @app.route("/queue/resume/<queue_name>", methods=["POST"])
+# def resume_consume(queue_name):
+#     RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name, "0")
+#     return jsonify({"success": True})
 
 
 @app.route("/queue/get_msg_num_all_queues", methods=["GET"])
@@ -50468,16 +42790,6 @@ if __name__ == "__main__":
 
 --- **start of file: funboost/funboost_web_manager/app_debug_start.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/funboost_web_manager/app_debug_start.py`
-
-#### 📦 Imports
-
-- `from funboost.funboost_web_manager.app import start_funboost_web_manager`
-
-
----
-
 `````python
 
 
@@ -50502,60 +42814,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/funboost_web_manager/functions.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/funboost_web_manager/functions.py`
-
-#### 📦 Imports
-
-- `import datetime`
-- `import json`
-- `from pprint import pprint`
-- `import time`
-- `import copy`
-- `import traceback`
-- `from funboost import nb_print`
-- `from funboost.constant import RedisKeys`
-- `from funboost.core.func_params_model import PriorityConsumingControlConfig`
-- `from funboost.core.func_params_model import PublisherParams`
-- `from funboost.core.msg_result_getter import AsyncResult`
-- `from funboost.core.serialization import Serialization`
-- `from funboost.utils import time_util`
-- `from funboost.utils import decorators`
-- `from funboost.utils import LoggerMixin`
-- `from funboost.utils.mongo_util import MongoMixin`
-- `from funboost.utils.redis_manager import RedisMixin`
-- `from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter`
-- `from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class Statistic(LoggerMixin)`
-*Line: 95*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, col_name)`
-  - **Parameters:**
-    - `self`
-    - `col_name`
-
-**Public Methods (2):**
-- `def statistic_by_period(self, t_start: str, t_end: str)`
-- `def build_result(self)`
-
-#### 🔧 Public Functions (3)
-
-- `def get_cols(col_name_search: str)`
-  - *Line: 32*
-
-- `def query_result(col_name, start_time, end_time, is_success, function_params: str, page)`
-  - *Line: 46*
-
-- `def get_speed(col_name, start_time, end_time)`
-  - *Line: 76*
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -50572,7 +42830,7 @@ from funboost.constant import RedisKeys
 from funboost.core.func_params_model import PriorityConsumingControlConfig, PublisherParams
 from funboost.core.msg_result_getter import AsyncResult
 from funboost.core.serialization import Serialization
-from funboost.utils import time_util, decorators, LoggerMixin
+from funboost.utils import time_util, decorators  # LoggerMixin 已废弃，Statistic类不再使用
 from funboost.utils.mongo_util import MongoMixin
 from funboost.utils.redis_manager import RedisMixin
 from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter, SingleQueueConusmerParamsGetter
@@ -50651,71 +42909,168 @@ def get_speed(col_name, start_time, end_time):
         return {'success_num': success_num, 'fail_num': fail_num, 'qps': round(qps, 1)}
 
 
-class Statistic(LoggerMixin):
-    def __init__(self, col_name):
-        db = MongoMixin().mongo_db_task_status
-        self.col = db.get_collection(col_name)
-        self.result = {'recent_10_days': {'time_arr': [], 'count_arr': []},
-                       'recent_24_hours': {'time_arr': [], 'count_arr': []},
-                       'recent_60_minutes': {'time_arr': [], 'count_arr': []},
-                       'recent_60_seconds': {'time_arr': [], 'count_arr': []}}
-
-    def statistic_by_period(self, t_start: str, t_end: str):
-        condition = {'insert_time': {'$gt': time_util.DatetimeConverter(t_start).datetime_obj,
-                                                         '$lt': time_util.DatetimeConverter(t_end).datetime_obj}}
-        
-        # now = datetime.datetime.now()
-        # start_time = now - datetime.timedelta(hours=1)
-        # end_time = now
-        # condition = {
-        #     'insert_time': {
-        #         '$gt': start_time,
-        #         '$lt': end_time
-        #     }
-        # }
-        count =  self.col.count_documents(condition)
-        print(count,t_start,t_end,time_util.DatetimeConverter(t_start).datetime_obj.timestamp(),condition)
-        return count
-
-    def build_result(self):
-        with decorators.TimerContextManager():
-            for i in range(10):
-                t1 = datetime.datetime.now() + datetime.timedelta(days=-(9 - i))
-                t2 = datetime.datetime.now() + datetime.timedelta(days=-(8 - i))
-                self.result['recent_10_days']['time_arr'].append(time_util.DatetimeConverter(t1).date_str)
-                count = self.statistic_by_period(time_util.DatetimeConverter(t1).date_str + ' 00:00:00',
-                                                 time_util.DatetimeConverter(t2).date_str + ' 00:00:00')
-                self.result['recent_10_days']['count_arr'].append(count)
-
-            for i in range(0, 24):
-                t1 = datetime.datetime.now() + datetime.timedelta(hours=-(23 - i))
-                t2 = datetime.datetime.now() + datetime.timedelta(hours=-(22 - i))
-                self.result['recent_24_hours']['time_arr'].append(t1.strftime('%Y-%m-%d %H:00:00'))
-                # hour1_str = f'0{i}' if i < 10 else i
-                count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:00:00'),
-                                                 t2.strftime('%Y-%m-%d %H:00:00'))
-                self.result['recent_24_hours']['count_arr'].append(count)
-
-            for i in range(0, 60):
-                t1 = datetime.datetime.now() + datetime.timedelta(minutes=-(59 - i))
-                t2 = datetime.datetime.now() + datetime.timedelta(minutes=-(58 - i))
-                self.result['recent_60_minutes']['time_arr'].append(t1.strftime('%Y-%m-%d %H:%M:00'))
-                count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:%M:00'),
-                                                 t2.strftime('%Y-%m-%d %H:%M:00'))
-                self.result['recent_60_minutes']['count_arr'].append(count)
-
-            for i in range(0, 60):
-                t1 = datetime.datetime.now() + datetime.timedelta(seconds=-(59 - i))
-                t2 = datetime.datetime.now() + datetime.timedelta(seconds=-(58 - i))
-                self.result['recent_60_seconds']['time_arr'].append(t1.strftime('%Y-%m-%d %H:%M:%S'))
-                count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:%M:%S'),
-                                                 t2.strftime('%Y-%m-%d %H:%M:%S'))
-                self.result['recent_60_seconds']['count_arr'].append(count)
+# 以下 Statistic 类已废弃，功能已迁移到 get_consume_speed_curve，前端不再使用 speed_statistic_for_echarts 路由
+# class Statistic(LoggerMixin):
+#     def __init__(self, col_name):
+#         db = MongoMixin().mongo_db_task_status
+#         self.col = db.get_collection(col_name)
+#         self.result = {'recent_10_days': {'time_arr': [], 'count_arr': []},
+#                        'recent_24_hours': {'time_arr': [], 'count_arr': []},
+#                        'recent_60_minutes': {'time_arr': [], 'count_arr': []},
+#                        'recent_60_seconds': {'time_arr': [], 'count_arr': []}}
+#
+#     def statistic_by_period(self, t_start: str, t_end: str):
+#         condition = {'insert_time': {'$gt': time_util.DatetimeConverter(t_start).datetime_obj,
+#                                                          '$lt': time_util.DatetimeConverter(t_end).datetime_obj}}
+#         count =  self.col.count_documents(condition)
+#         print(count,t_start,t_end,time_util.DatetimeConverter(t_start).datetime_obj.timestamp(),condition)
+#         return count
+#
+#     def build_result(self):
+#         with decorators.TimerContextManager():
+#             for i in range(10):
+#                 t1 = datetime.datetime.now() + datetime.timedelta(days=-(9 - i))
+#                 t2 = datetime.datetime.now() + datetime.timedelta(days=-(8 - i))
+#                 self.result['recent_10_days']['time_arr'].append(time_util.DatetimeConverter(t1).date_str)
+#                 count = self.statistic_by_period(time_util.DatetimeConverter(t1).date_str + ' 00:00:00',
+#                                                  time_util.DatetimeConverter(t2).date_str + ' 00:00:00')
+#                 self.result['recent_10_days']['count_arr'].append(count)
+#
+#             for i in range(0, 24):
+#                 t1 = datetime.datetime.now() + datetime.timedelta(hours=-(23 - i))
+#                 t2 = datetime.datetime.now() + datetime.timedelta(hours=-(22 - i))
+#                 self.result['recent_24_hours']['time_arr'].append(t1.strftime('%Y-%m-%d %H:00:00'))
+#                 count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:00:00'),
+#                                                  t2.strftime('%Y-%m-%d %H:00:00'))
+#                 self.result['recent_24_hours']['count_arr'].append(count)
+#
+#             for i in range(0, 60):
+#                 t1 = datetime.datetime.now() + datetime.timedelta(minutes=-(59 - i))
+#                 t2 = datetime.datetime.now() + datetime.timedelta(minutes=-(58 - i))
+#                 self.result['recent_60_minutes']['time_arr'].append(t1.strftime('%Y-%m-%d %H:%M:00'))
+#                 count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:%M:00'),
+#                                                  t2.strftime('%Y-%m-%d %H:%M:00'))
+#                 self.result['recent_60_minutes']['count_arr'].append(count)
+#
+#             for i in range(0, 60):
+#                 t1 = datetime.datetime.now() + datetime.timedelta(seconds=-(59 - i))
+#                 t2 = datetime.datetime.now() + datetime.timedelta(seconds=-(58 - i))
+#                 self.result['recent_60_seconds']['time_arr'].append(t1.strftime('%Y-%m-%d %H:%M:%S'))
+#                 count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:%M:%S'),
+#                                                  t2.strftime('%Y-%m-%d %H:%M:%S'))
+#                 self.result['recent_60_seconds']['count_arr'].append(count)
 
 
 
     
      
+
+def get_consume_speed_curve(col_name: str, start_time: str, end_time: str, granularity: str = 'auto'):
+    """
+    获取消费速率曲线数据
+    
+    Args:
+        col_name: 集合名称（队列名）
+        start_time: 开始时间，格式 'YYYY-MM-DD HH:MM:SS'
+        end_time: 结束时间，格式 'YYYY-MM-DD HH:MM:SS'
+        granularity: 时间粒度，'second', 'minute', 'hour', 'day' 或 'auto'
+    
+    Returns:
+        {
+            'time_arr': [...],
+            'success_arr': [...],
+            'fail_arr': [...],
+            'total_success': int,
+            'total_fail': int,
+            'granularity': str
+        }
+    """
+    db = MongoMixin().mongo_db_task_status
+    
+    start_dt = time_util.DatetimeConverter(start_time).datetime_obj
+    end_dt = time_util.DatetimeConverter(end_time).datetime_obj
+    
+    # 计算时间跨度（秒）
+    time_span = (end_dt - start_dt).total_seconds()
+    
+    # 自动选择粒度
+    if granularity == 'auto':
+        if time_span <= 120:  # <= 2分钟
+            granularity = 'second'
+        elif time_span <= 3600:  # <= 1小时
+            granularity = 'minute'
+        elif time_span <= 86400 * 2:  # <= 2天
+            granularity = 'hour'
+        else:
+            granularity = 'day'
+    
+    # 根据粒度设置时间格式和步长
+    if granularity == 'second':
+        time_format = '%Y-%m-%d %H:%M:%S'
+        step = datetime.timedelta(seconds=1)
+        max_points = 120
+    elif granularity == 'minute':
+        time_format = '%Y-%m-%d %H:%M'
+        step = datetime.timedelta(minutes=1)
+        max_points = 120
+    elif granularity == 'hour':
+        time_format = '%Y-%m-%d %H:00'
+        step = datetime.timedelta(hours=1)
+        max_points = 168  # 7天
+    else:  # day
+        time_format = '%Y-%m-%d'
+        step = datetime.timedelta(days=1)
+        max_points = 60
+    
+    # 限制数据点数量，避免太多
+    actual_points = int(time_span / step.total_seconds()) + 1
+    if actual_points > max_points:
+        # 调整步长
+        step = datetime.timedelta(seconds=time_span / max_points)
+        actual_points = max_points
+    
+    time_arr = []
+    success_arr = []
+    fail_arr = []
+    total_success = 0
+    total_fail = 0
+    
+    current = start_dt
+    while current < end_dt:
+        next_time = current + step
+        if next_time > end_dt:
+            next_time = end_dt
+        
+        condition_base = {
+            'insert_time': {'$gte': current, '$lt': next_time}
+        }
+        
+        try:
+            success_count = db.get_collection(col_name).count_documents({**condition_base, 'success': True, 'run_status': 'finish'})
+            fail_count = db.get_collection(col_name).count_documents({**condition_base, 'success': False, 'run_status': 'finish'})
+        except Exception as e:
+            success_count = 0
+            fail_count = 0
+        
+        time_arr.append(current.strftime(time_format))
+        success_arr.append(success_count)
+        fail_arr.append(fail_count)
+        total_success += success_count
+        total_fail += fail_count
+        
+        current = next_time
+    
+    return {
+        'time_arr': time_arr,
+        'success_arr': success_arr,
+        'fail_arr': fail_arr,
+        'total_success': total_success,
+        'total_fail': total_fail,
+        'granularity': granularity,
+        'start_time': start_time,
+        'end_time': end_time
+    }
+
 
 if __name__ == '__main__':
     pass
@@ -50804,6 +43159,32 @@ if __name__ == '__main__':
 `````
 
 --- **end of file: funboost/funboost_web_manager/templates/about.html** (project: funboost) --- 
+
+---
+
+
+--- **start of file: funboost/funboost_web_manager/templates/app.py中仍在使用的路由.md** (project: funboost) --- 
+
+`````markdown
+
+
+### 后续希望funboost web manager的后端都优先使用 faas 里面的接口。
+
+### 保留的路由（前端正在使用）
+
+| 路由 | 使用的模板 |
+|------|-----------|
+| `query_cols_view` | conusme_speed.html, fun_result_table.html |
+| `query_result_view` | fun_result_table.html |
+| `speed_stats` | fun_result_table.html |
+| `consume_speed_curve` | conusme_speed.html |
+| `get_msg_num_all_queues` | rpc_call.html |
+| `hearbeat_info_*` | running_consumer_by_*.html |
+| `get_queues_params_and_active_consumers` | queue_op.html |
+| `get_time_series_data_by_queue_name` | queue_op.html (曲线图) |
+`````
+
+--- **end of file: funboost/funboost_web_manager/templates/app.py中仍在使用的路由.md** (project: funboost) --- 
 
 ---
 
@@ -51247,216 +43628,829 @@ if __name__ == '__main__':
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>pytho万能分布式函数调度框架</title>
+    <title>消费速率统计</title>
     <link href="{{ url_for('static',filename='css_cdn/twitter-bootstrap/3.3.7/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
-    <link rel="stylesheet"
-        href="{{ url_for('static',filename='css_cdn/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/jquery.mCustomScrollbar.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/custom.css') }}">
-
-    <!-- 在其他 link 标签后添加 -->
     <link href="{{ url_for('static',filename='css_cdn/select2/4.0.13/css/select2.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static',filename='css/content_page_style.css') }}" rel="stylesheet">
-
 
     <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.0/jquery.min.js"></script> -->
-    <!-- 在其他 script 标签后添加 -->
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/select2/4.0.13/js/select2.min.js"></script> -->
     <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
     <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
-
-
-    <script src="{{ url_for('static',filename='js/moment-with-locales.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='js/bootstrap-datetimepicker.min.js') }}"></script>
-    <!-- <script src="https://cdn.bootcss.com/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script> -->
-    <!-- <script type="text/javascript" src="https://cdn.bootcss.com/echarts/3.3.0/echarts.js"></script> -->
     <script type="text/javascript" src="{{ url_for('static',filename='js/echarts.min.js') }}"></script>
 
-    <script src="{{ url_for('static',filename='assets/js/jquery.mCustomScrollbar.concat.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='assets/js/custom.js') }}"></script>
-
-
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px 25px;
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .card-header i {
+            font-size: 24px;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .control-panel {
+            background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .control-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-control {
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            padding: 10px 15px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+        
+        .btn-query {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-query:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .btn-query:active {
+            transform: translateY(0);
+        }
+        
+        .quick-time-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .btn-time {
+            background: #ffffff;
+            border: 2px solid #dee2e6;
+            color: #495057;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .btn-time:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .btn-time.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            color: white;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 500px;
+            background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .stats-summary {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card.success {
+            border-left: 4px solid #28a745;
+        }
+        
+        .stat-card.fail {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .stat-card.total {
+            border-left: 4px solid #007bff;
+        }
+        
+        .stat-card.qps {
+            border-left: 4px solid #fd7e14;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card.success .stat-value { color: #28a745; }
+        .stat-card.fail .stat-value { color: #dc3545; }
+        .stat-card.total .stat-value { color: #007bff; }
+        .stat-card.qps .stat-value { color: #fd7e14; }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            z-index: 10;
+        }
+        
+        .loading-overlay i {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .loading-overlay span {
+            font-size: 16px;
+            color: #495057;
+        }
+        
+        .no-data {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #adb5bd;
+        }
+        
+        .no-data i {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+        
+        .no-data span {
+            font-size: 18px;
+        }
+        
+        /* Select2 美化 */
+        .select2-container--default .select2-selection--single {
+            height: 44px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 40px;
+            padding-left: 15px;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 42px;
+        }
+        
+        .select2-dropdown {
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .select2-results__option {
+            padding: 10px 15px;
+        }
+        
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .time-range-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .time-range-inputs input {
+            width: 200px;
+        }
+        
+        .time-range-inputs span {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .info-tip {
+            background: linear-gradient(145deg, #e7f3ff 0%, #d0e8ff 100%);
+            border-left: 4px solid #0d6efd;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #0a58ca;
+        }
+        
+        .info-tip i {
+            margin-right: 8px;
+        }
     </style>
 </head>
 
 <body>
-
-
-
-
-
-    <!-- <li><a href="{{url_for('logout')}}">退出</a></li> -->
-
-    <!-- 添加固定导航栏
-    <nav class="navbar navbar-default navbar-fixed-top" style="min-height: 40px;">
-        <div class="container-fluid">
-            <div class="navbar-header pull-right">
-                <a href="{{url_for('logout')}}" class="btn btn-danger" style="margin: 4px 15px;">
-                    <i class="fa fa-sign-out"></i> 退出
-                </a>
+    <div class="main-container">
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span><i class="fa fa-line-chart"></i> 消费速率统计曲线</span>
+                <button type="button" class="btn" onclick="showHelpModal()" style="background: linear-gradient(135deg, #6c757d, #495057); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;">
+                    <i class="fa fa-question-circle"></i> 数据说明
+                </button>
             </div>
-        </div>
-    </nav> -->
-
-    <!-- 删除原来的退出按钮 -->
-    <!-- 调整主容器的上边距 -->
-    <div class="container-fluid" style="margin-top: 5px;">
-        <div style="margin-top: 5px;">
-            <form class="form-inline" role="form" style="float: left">
-                <div class="form-group ">
-                    <label for="col_name_search">队列名称：</label>
-                    <select class="form-control" id="col_name_search">
-                        <option value="">请选择队列...</option>
-                    </select>
+            <div class="card-body">
+                <div class="info-tip">
+                    <i class="fa fa-info-circle"></i>
+                    选择队列后自动生成近60分钟曲线。点击快捷时间按钮立即切换时间范围。如需自定义时间范围，请手动设置后点击查询按钮。
                 </div>
-                <button type="button" class="btn btn-default marginLeft20" onclick="statistic()">生成消费速率统计图</button>
-            </form>
-        </div>
-        <div id=echartsArea style="display: block">
-            <div id="st4" style="width: 100%;height:600px;margin-top:60px;"></div>
-            <div id="st3" style="width: 100%;height:600px;margin-top:60px;"></div>
-            <div id="st2" style="width: 100%;height:600px;margin-top:60px;"></div>
-            <div id="st1" style="width: 100%;height:600px;margin-top:60px;"></div>
+                
+                <!-- 帮助弹窗 -->
+                <div id="helpModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+                    <div style="background: white; border-radius: 12px; max-width: 700px; width: 90%; max-height: 80%; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                        <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px 25px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; font-size: 18px;"><i class="fa fa-info-circle"></i> 数据来源说明</h3>
+                            <button onclick="hideHelpModal()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px;">&times;</button>
+                        </div>
+                        <div style="padding: 25px;">
+                            <div style="background: linear-gradient(145deg, #fff3cd 0%, #ffeeba 100%); border-left: 4px solid #ffc107; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;">
+                                <h4 style="margin: 0 0 10px 0; color: #856404; font-size: 15px;"><i class="fa fa-exclamation-triangle"></i> 重要提示</h4>
+                                <p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.6;">
+                                    此页面的曲线图数据来源于 <strong>funboost 保存到 MongoDB</strong> 中的函数执行状态记录。<br>
+                                    如果您的队列没有数据，请确认已开启 <strong>结果持久化配置</strong>。
+                                </p>
+                            </div>
+                            
+                            <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                                <h4 style="margin: 0 0 15px 0; color: #495057; font-size: 15px;"><i class="fa fa-code"></i> 开启方法示例</h4>
+                                <p style="margin: 0 0 10px 0; color: #6c757d; font-size: 13px;">在您的 booster 参数中添加以下配置：</p>
+                                <pre style="background: #1a1a2e; color: #e9ecef; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; margin: 0;"><code style="color: #7dd3fc;">function_result_status_persistance_conf</code>: <code style="color: #fbbf24;">FunctionResultStatusPersistanceConfig</code>(
+    <code style="color: #a5b4fc;">is_save_result</code>=<code style="color: #4ade80;">True</code>,      <code style="color: #6b7280;"># 保存函数返回结果</code>
+    <code style="color: #a5b4fc;">is_save_status</code>=<code style="color: #4ade80;">True</code>,      <code style="color: #6b7280;"># 保存执行状态（本页面必须开启）</code>
+    <code style="color: #a5b4fc;">expire_seconds</code>=<code style="color: #fb923c;">7 * 24 * 3600</code>,  <code style="color: #6b7280;"># 数据过期时间（秒）</code>
+    <code style="color: #a5b4fc;">is_use_bulk_insert</code>=<code style="color: #f87171;">False</code>  <code style="color: #6b7280;"># 是否批量插入</code>
+)</pre>
+                            </div>
+                            
+                            <div style="background: linear-gradient(145deg, #d1ecf1 0%, #bee5eb 100%); border-left: 4px solid #17a2b8; padding: 15px 20px; border-radius: 8px;">
+                                <h4 style="margin: 0 0 10px 0; color: #0c5460; font-size: 15px;"><i class="fa fa-database"></i> 数据存储位置</h4>
+                                <p style="margin: 0; color: #0c5460; font-size: 14px; line-height: 1.6;">
+                                    数据存储在 MongoDB 的 <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">funboost_task_status</code> 数据库中，<br>
+                                    每个队列对应一个同名的 collection。
+                                </p>
+                            </div>
+                        </div>
+                        <div style="padding: 15px 25px; border-top: 1px solid #e9ecef; text-align: right;">
+                            <button onclick="hideHelpModal()" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                                <i class="fa fa-check"></i> 我知道了
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-panel">
+                    <div class="control-row">
+                        <div class="control-group" style="flex: 1; min-width: 300px;">
+                            <label><i class="fa fa-database"></i> 队列名称</label>
+                            <select class="form-control" id="col_name_search" style="width: 100%;">
+                                <option value="">请选择队列...</option>
+                            </select>
+                        </div>
+                        
+                    </div>
+                    
+                    <div class="quick-time-btns">
+                        <span style="color: #6c757d; font-weight: 500; margin-right: 10px;">快捷选择（点击立即查询）：</span>
+                        <button class="btn-time" data-minutes="1">近1分钟</button>
+                        <button class="btn-time" data-minutes="10">近10分钟</button>
+                        <button class="btn-time active" data-minutes="60">近60分钟</button>
+                        <button class="btn-time" data-minutes="1440">近24小时</button>
+                        <button class="btn-time" data-minutes="10080">近7天</button>
+                        <button class="btn-time" data-minutes="43200">近30天</button>
+                    </div>
+                    
+                    <div class="time-range-inputs" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #dee2e6; display: flex; align-items: center; flex-wrap: wrap; gap: 15px;">
+                        <span style="color: #6c757d; font-weight: 500;"><i class="fa fa-calendar"></i> 自定义时间范围：</span>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="datetime-local" class="form-control" id="start_time" style="width: 200px;">
+                            <span style="color: #6c757d;">至</span>
+                            <input type="datetime-local" class="form-control" id="end_time" style="width: 200px;">
+                            <button type="button" class="btn btn-query" onclick="queryCustomTimeRange()">
+                                <i class="fa fa-search"></i> 查询
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-summary" id="stats_summary" style="display: none;">
+                    <div class="stat-card success">
+                        <div class="stat-value" id="stat_success">0</div>
+                        <div class="stat-label">成功次数</div>
+                    </div>
+                    <div class="stat-card fail">
+                        <div class="stat-value" id="stat_fail">0</div>
+                        <div class="stat-label">失败次数</div>
+                    </div>
+                    <div class="stat-card total">
+                        <div class="stat-value" id="stat_total">0</div>
+                        <div class="stat-label">总次数</div>
+                    </div>
+                    <div class="stat-card qps">
+                        <div class="stat-value" id="stat_qps">0</div>
+                        <div class="stat-label">平均 QPS</div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div id="chart_area" style="width: 100%; height: 100%;"></div>
+                    <div class="loading-overlay" id="loading_overlay" style="display: none;">
+                        <i class="fa fa-spinner fa-spin"></i>
+                        <span>正在加载数据...</span>
+                    </div>
+                    <div class="no-data" id="no_data_tip">
+                        <i class="fa fa-bar-chart"></i>
+                        <span>请选择队列，将自动生成近60分钟曲线</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-
-
-
-
-
     <script>
-
-        // 在现有的变量声明后添加
-        var allQueues = [];  // 存储所有队列数据
-        var currentColName;
-
-        // 页面加载完成后立即获取所有队列
-        $(document).ready(function () {
+        var currentColName = '';
+        var chartInstance = null;
+        
+        // 显示帮助弹窗
+        function showHelpModal() {
+            document.getElementById('helpModal').style.display = 'flex';
+        }
+        
+        // 隐藏帮助弹窗
+        function hideHelpModal() {
+            document.getElementById('helpModal').style.display = 'none';
+        }
+        
+        // 点击弹窗背景关闭
+        document.addEventListener('click', function(e) {
+            var modal = document.getElementById('helpModal');
+            if (e.target === modal) {
+                hideHelpModal();
+            }
+        });
+        
+        // 格式化日期为 datetime-local 格式
+        function formatDatetimeLocal(date) {
+            var pad = function(n) { return n < 10 ? '0' + n : n; };
+            return date.getFullYear() + '-' +
+                pad(date.getMonth() + 1) + '-' +
+                pad(date.getDate()) + 'T' +
+                pad(date.getHours()) + ':' +
+                pad(date.getMinutes());
+        }
+        
+        // 格式化日期为后端接口格式
+        function formatDatetimeForApi(date) {
+            var pad = function(n) { return n < 10 ? '0' + n : n; };
+            return date.getFullYear() + '-' +
+                pad(date.getMonth() + 1) + '-' +
+                pad(date.getDate()) + ' ' +
+                pad(date.getHours()) + ':' +
+                pad(date.getMinutes()) + ':' +
+                pad(date.getSeconds());
+        }
+        
+        // 设置默认时间（近60分钟）
+        function setDefaultTime(minutes) {
+            var now = new Date();
+            var start = new Date(now.getTime() - minutes * 60 * 1000);
+            $('#start_time').val(formatDatetimeLocal(start));
+            $('#end_time').val(formatDatetimeLocal(now));
+        }
+        
+        // 页面加载完成
+        $(document).ready(function() {
+            // 设置默认时间
+            setDefaultTime(60);
+            
+            // 加载队列列表
             $.ajax({
                 url: "{{ url_for('query_cols_view')}}",
                 data: { col_name_search: '' },
                 async: true,
-                success: function (result) {
-                    allQueues = result;
+                success: function(result) {
                     var html = '<option value="">请选择队列...</option>';
                     for (var item of result) {
                         html += '<option value="' + item.collection_name + '">' +
-                            item.collection_name + '&nbsp;&nbsp;&nbsp;&nbsp;(result_count:' + item.count + ')</option>';
+                            item.collection_name + ' (记录数: ' + item.count + ')</option>';
                     }
                     $("#col_name_search").html(html);
-
-                    // 初始化选择框的搜索功能
+                    
+                    // 初始化 Select2
                     $("#col_name_search").select2({
                         placeholder: "请输入队列名称搜索...",
                         allowClear: true,
-                        width: '500px'
+                        width: '100%'
                     });
-
-                    // 监听选择变化
-                    $("#col_name_search").on('change', function () {
-                        var selectedQueue = $(this).val();
-                        console.log("Selected queue:", selectedQueue);
-                        currentColName = selectedQueue;
-                        // if(selectedQueue) {
-                        //     queryResult(selectedQueue, 0, true);
-                        // }
+                    
+                    $("#col_name_search").on('change', function() {
+                        currentColName = $(this).val();
+                        // 切换队列时立即触发生成近60分钟曲线
+                        if (currentColName) {
+                            // 重置快捷按钮到60分钟
+                            $('.btn-time').removeClass('active');
+                            $('.btn-time[data-minutes="60"]').addClass('active');
+                            queryByMinutes(60);
+                        }
                     });
+                }
+            });
+            
+            // 快捷时间按钮 - 点击立即触发查询
+            $('.btn-time').click(function() {
+                $('.btn-time').removeClass('active');
+                $(this).addClass('active');
+                var minutes = parseInt($(this).data('minutes'));
+                setDefaultTime(minutes);
+                // 如果已选择队列，立即查询
+                if (currentColName) {
+                    queryByMinutes(minutes);
+                } else {
+                    alert('请先选择队列名称');
                 }
             });
         });
-
-
-
-
-        function statistic() {
-            if (currentColName === undefined) {
+        
+        // 按分钟数查询（用于快捷按钮和队列切换）
+        function queryByMinutes(minutes) {
+            if (!currentColName) {
+                alert('请先选择队列名称');
                 return;
             }
-
-            $('#echartsInfoTex').html('生成统计表中，需要一段时间。。。。');
-            $("#echartsInfoTex").css('display', 'block');
-            $("#echartsArea").css('display', 'block');
-            // stopRun();
+            
+            var now = new Date();
+            var start = new Date(now.getTime() - minutes * 60 * 1000);
+            
+            doQuery(start, now);
+        }
+        
+        // 自定义时间范围查询（用于查询按钮）
+        function queryCustomTimeRange() {
+            if (!currentColName) {
+                alert('请先选择队列名称');
+                return;
+            }
+            
+            var startTimeVal = $('#start_time').val();
+            var endTimeVal = $('#end_time').val();
+            
+            if (!startTimeVal || !endTimeVal) {
+                alert('请选择开始时间和结束时间');
+                return;
+            }
+            
+            var startDate = new Date(startTimeVal);
+            var endDate = new Date(endTimeVal);
+            
+            if (startDate >= endDate) {
+                alert('开始时间必须小于结束时间');
+                return;
+            }
+            
+            // 清除快捷按钮的active状态
+            $('.btn-time').removeClass('active');
+            
+            doQuery(startDate, endDate);
+        }
+        
+        // 执行查询（通用函数）
+        function doQuery(startDate, endDate) {
+            var startTime = formatDatetimeForApi(startDate);
+            var endTime = formatDatetimeForApi(endDate);
+            
+            // 显示加载中
+            $('#no_data_tip').hide();
+            $('#loading_overlay').show();
+            $('#stats_summary').hide();
+            
             $.ajax({
-                url: "{{ url_for('speed_statistic_for_echarts')}}", data: {
-                    col_name: currentColName
-                }, async: true, success: function (result, status) {
-                    // var msg = '{0}队列,最近一分钟内运行成功了{1}次,失败了{2}次'.format(currentColName, result.success_num, result.fail_num);
-                    console.info(result);
-                    _buildOneChart('st1', '最近10天的消费情况', '运行次数', result['recent_10_days']['time_arr'], result['recent_10_days']['count_arr']);
-                    _buildOneChart('st2', '最近24小时的消费情况', '运行次数', result['recent_24_hours']['time_arr'], result['recent_24_hours']['count_arr']);
-                    _buildOneChart('st3', '最近60分钟的消费情况', '运行次数', result['recent_60_minutes']['time_arr'], result['recent_60_minutes']['count_arr']);
-                    _buildOneChart('st4', '最近60秒的消费情况', '运行次数', result['recent_60_seconds']['time_arr'], result['recent_60_seconds']['count_arr']);
-                    $("#echartsInfoTex").css('display', 'none');
-
-                    // $('#top_text').text(msg);
+                url: "{{ url_for('consume_speed_curve') }}",
+                data: {
+                    col_name: currentColName,
+                    start_time: startTime,
+                    end_time: endTime,
+                    granularity: 'auto'
+                },
+                success: function(result) {
+                    $('#loading_overlay').hide();
+                    
+                    if (result.error) {
+                        alert('查询失败: ' + result.error);
+                        $('#no_data_tip').show();
+                        return;
+                    }
+                    
+                    if (!result.time_arr || result.time_arr.length === 0) {
+                        $('#no_data_tip').html('<i class="fa fa-inbox"></i><span>该时间范围内没有数据</span>').show();
+                        return;
+                    }
+                    
+                    // 更新统计卡片
+                    var totalSuccess = result.total_success || 0;
+                    var totalFail = result.total_fail || 0;
+                    var total = totalSuccess + totalFail;
+                    var timeSpan = (endDate - startDate) / 1000; // 秒
+                    var qps = timeSpan > 0 ? (total / timeSpan).toFixed(2) : 0;
+                    
+                    $('#stat_success').text(totalSuccess.toLocaleString());
+                    $('#stat_fail').text(totalFail.toLocaleString());
+                    $('#stat_total').text(total.toLocaleString());
+                    $('#stat_qps').text(qps);
+                    $('#stats_summary').show();
+                    
+                    // 绘制图表
+                    buildChart(result);
+                },
+                error: function(xhr, status, error) {
+                    $('#loading_overlay').hide();
+                    $('#no_data_tip').show();
+                    alert('请求失败: ' + error);
                 }
             });
-
-
         }
-
-        function _buildOneChart(elementId, titelText, legendData, xData, yData) {
-
-            var myChart = echarts.init(document.getElementById(elementId));
-
-
-
-            // 指定图表的配置项和数据
+        
+        function buildChart(data) {
+            if (chartInstance) {
+                chartInstance.dispose();
+            }
+            
+            chartInstance = echarts.init(document.getElementById('chart_area'));
+            
             var option = {
                 title: {
-                    text: titelText
+                    text: '消费速率趋势 - ' + currentColName,
+                    subtext: data.start_time + ' 至 ' + data.end_time + ' (粒度: ' + data.granularity + ')',
+                    left: 'center',
+                    textStyle: {
+                        fontSize: 18,
+                        fontWeight: 'bold',
+                        color: '#2c3e50'
+                    },
+                    subtextStyle: {
+                        fontSize: 12,
+                        color: '#7f8c8d'
+                    }
                 },
-                tooltip: {},
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross',
+                        label: {
+                            backgroundColor: '#6a7985'
+                        }
+                    },
+                    backgroundColor: 'rgba(50, 50, 50, 0.9)',
+                    borderColor: '#333',
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
                 legend: {
-                    data: [legendData]
+                    data: ['成功', '失败'],
+                    top: 50,
+                    textStyle: {
+                        fontSize: 14
+                    }
                 },
-
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    top: '20%',
+                    containLabel: true
+                },
+                toolbox: {
+                    feature: {
+                        dataZoom: {
+                            yAxisIndex: 'none',
+                            title: {
+                                zoom: '区域缩放',
+                                back: '还原'
+                            }
+                        },
+                        restore: { title: '还原' },
+                        saveAsImage: { title: '保存图片' }
+                    },
+                    right: 20
+                },
+                dataZoom: [
+                    {
+                        type: 'inside',
+                        start: 0,
+                        end: 100
+                    },
+                    {
+                        type: 'slider',
+                        start: 0,
+                        end: 100,
+                        height: 20,
+                        bottom: 10
+                    }
+                ],
                 xAxis: {
                     type: 'category',
-                    data: xData,
+                    boundaryGap: false,
+                    data: data.time_arr,
                     axisLabel: {
-                        rotate: 90,
-
-                        interval: 0,
-
-                        // formatter: function (value) {
-                        //
-                        //     console.info(value);
-                        //     var v =  value.split("").join("\n");
-                        //     console.info(v);
-                        //     return v;
-                        // },
-
-                        // show: true, interval: 'auto', inside: false, rotate: 90, margin: 8, formatter: null, showMinLabel: null, showMaxLabel: null,
-
+                        rotate: 45,
+                        fontSize: 11,
+                        color: '#666'
                     },
-
+                    axisLine: {
+                        lineStyle: {
+                            color: '#ccc'
+                        }
+                    }
                 },
-
-                yAxis: {},
-                series: [{
-                    name: legendData,
-                    type: 'bar',
-                    data: yData
-                }]
+                yAxis: {
+                    type: 'value',
+                    name: '次数',
+                    nameTextStyle: {
+                        fontSize: 13,
+                        color: '#666'
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#ccc'
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            type: 'dashed',
+                            color: '#e9ecef'
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: '成功',
+                        type: 'line',
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        sampling: 'lttb',
+                        itemStyle: {
+                            color: '#28a745'
+                        },
+                        lineStyle: {
+                            width: 3,
+                            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                { offset: 0, color: '#28a745' },
+                                { offset: 1, color: '#20c997' }
+                            ])
+                        },
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(40, 167, 69, 0.4)' },
+                                { offset: 1, color: 'rgba(40, 167, 69, 0.05)' }
+                            ])
+                        },
+                        data: data.success_arr
+                    },
+                    {
+                        name: '失败',
+                        type: 'line',
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        sampling: 'lttb',
+                        itemStyle: {
+                            color: '#dc3545'
+                        },
+                        lineStyle: {
+                            width: 3,
+                            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                { offset: 0, color: '#dc3545' },
+                                { offset: 1, color: '#fd7e14' }
+                            ])
+                        },
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(220, 53, 69, 0.4)' },
+                                { offset: 1, color: 'rgba(220, 53, 69, 0.05)' }
+                            ])
+                        },
+                        data: data.fail_arr
+                    }
+                ]
             };
-
-            // 使用刚指定的配置项和数据显示图表。
-            myChart.setOption(option);
-            console.info(elementId);
-
-
+            
+            chartInstance.setOption(option);
+            
+            // 响应式
+            window.addEventListener('resize', function() {
+                if (chartInstance) {
+                    chartInstance.resize();
+                }
+            });
         }
-
-
     </script>
 </body>
 
 </html>
+
 `````
 
 --- **end of file: funboost/funboost_web_manager/templates/conusme_speed.html** (project: funboost) --- 
@@ -51474,209 +44468,1137 @@ if __name__ == '__main__':
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>pytho万能分布式函数调度框架</title>
+    <title>函数执行结果查询 - Funboost</title>
     <link href="{{ url_for('static',filename='css_cdn/twitter-bootstrap/3.3.7/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
-    <link rel="stylesheet"
-        href="{{ url_for('static',filename='css_cdn/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css_cdn/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/jquery.mCustomScrollbar.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/custom.css') }}">
-    <!-- 在其他 link 标签后添加 -->
     <link href="{{ url_for('static',filename='css_cdn/select2/4.0.13/css/select2.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static',filename='css/content_page_style.css') }}" rel="stylesheet">
-
 
     <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.0/jquery.min.js"></script> -->
-    <!-- 在其他 script 标签后添加 -->
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/select2/4.0.13/js/select2.min.js"></script> -->
     <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
     <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
-
-
     <script src="{{ url_for('static',filename='js/moment-with-locales.min.js') }}"></script>
     <script src="{{ url_for('static',filename='js/bootstrap-datetimepicker.min.js') }}"></script>
-    <!-- <script src="https://cdn.bootcss.com/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script> -->
-    <!-- <script type="text/javascript" src="https://cdn.bootcss.com/echarts/3.3.0/echarts.js"></script> -->
     <script type="text/javascript" src="{{ url_for('static',filename='js/echarts.min.js') }}"></script>
-
     <script src="{{ url_for('static',filename='assets/js/jquery.mCustomScrollbar.concat.min.js') }}"></script>
     <script src="{{ url_for('static',filename='assets/js/custom.js') }}"></script>
-    <style>
 
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px 35px;
+            margin-bottom: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .page-title i {
+            font-size: 32px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-title h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin: 0;
+        }
+
+        .page-title p {
+            font-size: 14px;
+            color: #6c757d;
+            margin: 5px 0 0 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .refresh-interval-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(102, 126, 234, 0.08);
+            padding: 8px 15px;
+            border-radius: 12px;
+        }
+
+        .interval-label {
+            font-size: 13px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .interval-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-interval {
+            padding: 6px 12px;
+            border: 2px solid #e9ecef;
+            background: white;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-interval:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .btn-interval.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-refresh {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-refresh.active {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-refresh.paused {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            color: white;
+            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-refresh:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-refresh i.fa-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 查询面板 */
+        .query-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .query-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        .query-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .query-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .query-group label i {
+            color: #667eea;
+        }
+
+        .query-group input,
+        .query-group select {
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .query-group input:focus,
+        .query-group select:focus {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+
+        .query-group.queue-select {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .query-group.time-input input {
+            width: 200px;
+        }
+
+        .query-group.status-select select#sucess_status {
+            width: 130px;
+            height: 46px;
+            -webkit-appearance: menulist !important;
+            -moz-appearance: menulist !important;
+            appearance: menulist !important;
+            color: #495057 !important;
+            cursor: pointer;
+            font-size: 14px !important;
+            padding: 10px 12px !important;
+            background-color: #f8f9fa !important;
+            border: 2px solid #e9ecef !important;
+            border-radius: 10px !important;
+        }
+        
+        .query-group.status-select select#sucess_status option {
+            color: #495057 !important;
+            background: white !important;
+            padding: 8px;
+            font-size: 14px;
+        }
+        
+        .query-group.status-select select#sucess_status:focus {
+            border-color: #667eea !important;
+            background-color: white !important;
+            outline: none;
+        }
+
+        .query-group.params-input input {
+            width: 200px;
+        }
+
+        .query-group.time-cost-input input {
+            width: 100px;
+        }
+
+        .btn-query {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-query:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-query:active {
+            transform: translateY(0);
+        }
+
+        /* 快捷时间按钮 */
+        .quick-time-row {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .quick-time-row span {
+            font-size: 13px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .btn-quick-time {
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-quick-time:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .btn-quick-time.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+        }
+
+        /* 统计卡片 */
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+        }
+
+        .stat-card.success::before {
+            background: linear-gradient(90deg, #28a745, #20c997);
+        }
+
+        .stat-card.fail::before {
+            background: linear-gradient(90deg, #dc3545, #fd7e14);
+        }
+
+        .stat-card.recent::before {
+            background: linear-gradient(90deg, #17a2b8, #6610f2);
+        }
+
+        .stat-card.queue::before {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card.success .stat-icon {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .stat-card.fail .stat-icon {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .stat-card.recent .stat-icon {
+            background: rgba(23, 162, 184, 0.1);
+            color: #17a2b8;
+        }
+
+        .stat-card.queue .stat-icon {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .stat-card.success .stat-value {
+            color: #28a745;
+        }
+
+        .stat-card.fail .stat-value {
+            color: #dc3545;
+        }
+
+        /* 结果表格 */
+        .table-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .table-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-title i {
+            color: #667eea;
+        }
+
+        .table-info {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .result-table thead th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: left;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .result-table thead th:first-child {
+            border-radius: 10px 0 0 0;
+        }
+
+        .result-table thead th:last-child {
+            border-radius: 0 10px 0 0;
+        }
+
+        .result-table tbody tr {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .result-table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.18) !important;
+            box-shadow: 0 2px 12px rgba(102, 126, 234, 0.25);
+            transform: scale(1.002);
+        }
+        
+        .result-table tbody tr:hover td {
+            color: #1a1a2e !important;
+            background: transparent !important;
+        }
+        
+        /* 确保带状态的行悬停时也有效果 */
+        .result-table tbody tr.row-success:hover,
+        .result-table tbody tr.row-fail:hover,
+        .result-table tbody tr.row-warning:hover,
+        .result-table tbody tr.row-running:hover {
+            background: rgba(102, 126, 234, 0.22) !important;
+        }
+
+        .result-table tbody td {
+            padding: 14px 12px;
+            font-size: 13px;
+            color: #495057;
+            border-bottom: 1px solid #f0f0f0;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .result-table tbody td:hover {
+            white-space: normal;
+            word-break: break-all;
+        }
+
+        /* 状态徽章 */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.success {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .status-badge.fail {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .status-badge.running {
+            background: rgba(23, 162, 184, 0.1);
+            color: #17a2b8;
+        }
+
+        .status-badge.warning {
+            background: rgba(255, 193, 7, 0.15);
+            color: #d39e00;
+        }
+
+        /* 行状态样式 */
+        .result-table tbody tr.row-success {
+            background: rgba(40, 167, 69, 0.03);
+        }
+
+        .result-table tbody tr.row-fail {
+            background: rgba(220, 53, 69, 0.03);
+        }
+
+        .result-table tbody tr.row-warning {
+            background: rgba(255, 193, 7, 0.05);
+        }
+
+        .result-table tbody tr.row-running {
+            background: rgba(23, 162, 184, 0.05);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 60px;
+            color: #dee2e6;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* Select2 自定义样式 */
+        .select2-container--default .select2-selection--single {
+            height: 46px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 42px;
+            padding-left: 16px;
+            color: #495057;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 44px;
+            right: 10px;
+        }
+
+        .select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .select2-dropdown {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .select2-results__option--highlighted {
+            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+        }
+
+        /* 滚动条样式 */
+        .table-scroll {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .table-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .table-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 4px;
+        }
+
+        /* 日期时间选择器样式优化 */
+        .bootstrap-datetimepicker-widget {
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .query-row {
+                gap: 15px;
+            }
+            .query-group.time-input input {
+                width: 180px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            .query-row {
+                flex-direction: column;
+            }
+            .query-group {
+                width: 100%;
+            }
+            .query-group input,
+            .query-group select {
+                width: 100% !important;
+            }
+        }
+
+        /* 加载动画 */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            z-index: 100;
+            border-radius: 20px;
+        }
+
+        .loading-overlay i {
+            font-size: 40px;
+            color: #667eea;
+        }
+
+        .loading-overlay span {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        /* 可展开单元格 */
+        .expandable-cell {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .expandable-cell::after {
+            content: '...';
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .cell-expanded {
+            white-space: normal !important;
+            word-break: break-all;
+            background: #f8f9fa;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 5;
+        }
+
+        .cell-expanded::after {
+            display: none;
+        }
+
+        /* 提示信息 */
+        .info-banner {
+            background: linear-gradient(145deg, #e7f3ff 0%, #d0e8ff 100%);
+            border-left: 4px solid #667eea;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .info-banner i {
+            font-size: 20px;
+            color: #667eea;
+        }
+
+        .info-banner span {
+            font-size: 14px;
+            color: #495057;
+        }
+
+        /* 数据说明按钮样式 */
+        .btn-help-guide {
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #6c757d, #495057);
+            color: white;
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-help-guide:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(108, 117, 125, 0.4);
+        }
+
+        /* 帮助模态框 */
+        .help-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .help-modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .help-modal-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .help-modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .help-modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .help-modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .help-modal-body {
+            padding: 25px;
+        }
+
+        .help-section-warning {
+            background: linear-gradient(145deg, #fff3cd 0%, #ffeeba 100%);
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .help-section-warning h4 {
+            margin: 0 0 10px 0;
+            color: #856404;
+            font-size: 15px;
+        }
+
+        .help-section-warning p {
+            margin: 0;
+            color: #856404;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .help-section-code {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .help-section-code h4 {
+            margin: 0 0 15px 0;
+            color: #495057;
+            font-size: 15px;
+        }
+
+        .help-section-code p {
+            margin: 0 0 10px 0;
+            color: #6c757d;
+            font-size: 13px;
+        }
+
+        .help-code-block {
+            background: #1a1a2e;
+            color: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .help-section-info {
+            background: linear-gradient(145deg, #d1ecf1 0%, #bee5eb 100%);
+            border-left: 4px solid #17a2b8;
+            padding: 15px 20px;
+            border-radius: 8px;
+        }
+
+        .help-section-info h4 {
+            margin: 0 0 10px 0;
+            color: #0c5460;
+            font-size: 15px;
+        }
+
+        .help-section-info p {
+            margin: 0;
+            color: #0c5460;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .help-section-info code {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .help-modal-footer {
+            padding: 15px 25px;
+            border-top: 1px solid #e9ecef;
+            text-align: right;
+        }
+
+        .btn-help-confirm {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-help-confirm:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
     </style>
 </head>
 
 <body>
-
-
-
-
-
-    <!-- <li><a href="{{url_for('logout')}}">退出</a></li> -->
-
-    <!-- 添加固定导航栏
-    <nav class="navbar navbar-default navbar-fixed-top" style="min-height: 40px;">
-        <div class="container-fluid">
-            <div class="navbar-header pull-right">
-                <a href="{{url_for('logout')}}" class="btn btn-danger" style="margin: 4px 15px;">
-                    <i class="fa fa-sign-out"></i> 退出
-                </a>
+    <div class="main-container">
+        <!-- 页面标题 -->
+        <div class="page-header fade-in">
+            <div class="page-title">
+                <i class="fa fa-table"></i>
+                <div>
+                    <h1>函数执行结果查询</h1>
+                    <p>查看和分析函数执行的详细记录</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button type="button" class="btn-help-guide" onclick="showHelpModal()">
+                    <i class="fa fa-question-circle"></i> 数据说明
+                </button>
+                <div class="refresh-interval-selector">
+                    <span class="interval-label">刷新间隔：</span>
+                    <div class="interval-btns">
+                        <button class="btn-interval" data-seconds="5">5秒</button>
+                        <button class="btn-interval" data-seconds="10">10秒</button>
+                        <button class="btn-interval active" data-seconds="30">30秒</button>
+                        <button class="btn-interval" data-seconds="60">60秒</button>
+                    </div>
+                </div>
+                <button id="autoFresh" class="btn-refresh active" onclick="startOrStop()">
+                    <i class="fa fa-refresh fa-spin"></i>
+                    <span>自动刷新中</span>
+                </button>
             </div>
         </div>
-    </nav> -->
 
-    <!-- 删除原来的退出按钮 -->
-    <!-- 调整主容器的上边距 -->
-    <div class="container-fluid" style="margin-top: 5px;">
-        <div style="margin-top: 5px;">
-            <!-- {# <h1 style="text-align:center;">Pro sidebar template</h1>#} -->
-
-
-            <form class="form-inline" role="form" style="float: left">
-                <div class="form-group ">
-                    <label for="col_name_search">队列名称：</label>
+        <!-- 查询面板 -->
+        <div class="query-panel fade-in" style="animation-delay: 0.1s;">
+            <div class="query-row">
+                <div class="query-group queue-select">
+                    <label><i class="fa fa-database"></i> 队列名称</label>
                     <select class="form-control" id="col_name_search">
                         <option value="">请选择队列...</option>
                     </select>
                 </div>
-                <div class="form-group marginLeft20">
-                    <label for="start_time">起始时间：</label>
-                    <input type="text" class="form-control" id="start_time">
+
+                <div class="query-group time-input">
+                    <label><i class="fa fa-calendar"></i> 起始时间</label>
+                    <input type="text" class="form-control" id="start_time" placeholder="选择起始时间">
                 </div>
-                <div class="form-group marginLeft20">
-                    <label for="end_time">截止时间：</label>
-                    <input type="text" class="form-control" id="end_time">
+
+                <div class="query-group time-input">
+                    <label><i class="fa fa-calendar-check-o"></i> 截止时间</label>
+                    <input type="text" class="form-control" id="end_time" placeholder="选择截止时间">
                 </div>
-                <label for="sucess_status" class="marginLeft20">函数运行状态：</label>
-                <select class="form-control" id="sucess_status">
-                    <option value="1">全部</option>
+
+                <div class="query-group status-select">
+                    <label><i class="fa fa-check-circle"></i> 运行状态</label>
+                    <select class="form-control" id="sucess_status" style="height: 46px;">
+                        <option value="1" selected>全部</option>
                     <option value="2">成功</option>
                     <option value="3">失败</option>
-
                 </select>
-                <div class="form-group marginLeft20">
-                    <label for="params">函数参数：</label>
-                    <input type="text" class="form-control" id="params" placeholder="请输入参数。。">
                 </div>
-                <button type="button" class="btn btn-default marginLeft20"
-                    onclick="document.getElementById('table').style.display = 'block';$('#echartsArea').css('display','none');startRun();queryResult(currentColName,0,true)">查询</button>
-            </form>
 
-            <!-- <button id="statistic" type="button" class="btn btn-info btn-sm marginLeft20" onclick="statistic()">生成统计表</button> -->
+                <div class="query-group params-input">
+                    <label><i class="fa fa-code"></i> 函数参数</label>
+                    <input type="text" class="form-control" id="params" placeholder="输入参数搜索...">
+                </div>
 
-            <button id="autoFresh" type="button" class="btn btn-success btn-sm marginLeft20" style="float2: right"
-                onclick="startOrStop()">自动刷新中</button>
-            <!-- <p id="echartsInfoTex" style="clear: both;margin-top: 30px;background-color:yellowgreen ;width:600px;color: white;text-shadow: 0 0 10px black;font-size: 16px;display: none"></p>
-            <p id="Last1minInfoTex" style="clear: both;margin-top: 10px;background-color:#00ccff;width:600px;color: white;text-shadow: 0 0 10px black;font-size: 16px;"></p>
-            <p id="resultInfoTex" style="clear: both;margin-top: 10px;background-color:green;width:600px;color: white;text-shadow: 0 0 10px black;font-size: 16px;"></p>
-             -->
-            <p id="echartsInfoTex"
-                style="clear: both;margin-top: 30px;background-color:yellowgreen ;width:600px;color: white;text-shadow: 0 0 10px black;font-size: 16px;display: none">
-            </p>
-            <div style="display: flex; gap: 20px; margin-top: 10px;">
-                <p id="resultInfoTex"
-                    style="margin: 0; background-color:green;width:600px;color: white;text-shadow: 0 0 10px black;font-size: 16px;">
-                </p>
-                <p id="Last1minInfoTex"
-                    style="margin: 0; background-color:#00ccff;width:600px;color: white;text-shadow: 0 0 10px black;font-size: 16px;">
-                </p>
+                <div class="query-group time-cost-input">
+                    <label><i class="fa fa-clock-o"></i> 最小耗时(秒)</label>
+                    <input type="number" class="form-control" id="min_time_cost" placeholder="如: 1" min="0" step="0.1" style="width: 100px;">
             </div>
 
+                <div class="query-group">
+                    <label>&nbsp;</label>
+                    <button type="button" class="btn-query" onclick="doQuery()">
+                        <i class="fa fa-search"></i> 查询
+                    </button>
+                </div>
+            </div>
 
-            <div class="table-responsive" style="margin-top: 10px;">
-                <table id="table" class="table table-striped">
+            <div class="quick-time-row">
+                <span><i class="fa fa-clock-o"></i> 快捷时间：</span>
+                <button class="btn-quick-time" data-minutes="1">近1分钟</button>
+                <button class="btn-quick-time" data-minutes="10">近10分钟</button>
+                <button class="btn-quick-time" data-minutes="60">近1小时</button>
+                <button class="btn-quick-time" data-minutes="360">近6小时</button>
+                <button class="btn-quick-time" data-minutes="1440">近24小时</button>
+                <button class="btn-quick-time active" data-minutes="2880">近2天</button>
+                <button class="btn-quick-time" data-minutes="10080">近7天</button>
+                <button class="btn-quick-time" data-minutes="43200">近30天</button>
+            </div>
+        </div>
 
+        <!-- 统计面板 -->
+        <div class="stats-panel fade-in" style="animation-delay: 0.2s;">
+            <div class="stat-card queue">
+                <div class="stat-icon"><i class="fa fa-database"></i></div>
+                <div class="stat-label">当前队列</div>
+                <div class="stat-value" id="stat_queue" style="font-size: 16px; word-break: break-all;">未选择</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-icon"><i class="fa fa-check"></i></div>
+                <div class="stat-label">查询范围成功次数</div>
+                <div class="stat-value" id="stat_success">0</div>
+            </div>
+            <div class="stat-card fail">
+                <div class="stat-icon"><i class="fa fa-times"></i></div>
+                <div class="stat-label">查询范围失败次数</div>
+                <div class="stat-value" id="stat_fail">0</div>
+            </div>
+            <div class="stat-card recent">
+                <div class="stat-icon"><i class="fa fa-bolt"></i></div>
+                <div class="stat-label">最近1分钟</div>
+                <div class="stat-value" id="stat_recent">成功: 0 / 失败: 0</div>
+        </div>
+    </div>
+
+        <!-- 结果表格 -->
+        <div class="table-panel fade-in" style="animation-delay: 0.3s; position: relative;">
+            <div class="table-header">
+                <div class="table-title">
+                    <i class="fa fa-list-alt"></i>
+                    执行记录列表
+                </div>
+                <div class="table-info" id="table_info">
+                    请选择队列并点击查询
+                </div>
+            </div>
+
+            <div id="loading_overlay" class="loading-overlay" style="display: none;">
+                <i class="fa fa-spinner fa-spin"></i>
+                <span>正在加载数据...</span>
+            </div>
+
+            <div id="empty_state" class="empty-state">
+                <i class="fa fa-inbox"></i>
+                <h3>暂无数据</h3>
+                <p>请选择队列和时间范围后点击查询按钮</p>
+            </div>
+
+            <div class="table-scroll" id="table_container" style="display: none;">
+                <table class="result-table" id="table">
+                    <thead>
+                        <tr>
+                            <th>执行机器</th>
+                            <th>函数名称</th>
+                            <th>函数入参</th>
+                            <th>函数结果</th>
+                            <th>发布时间</th>
+                            <th>开始时间</th>
+                            <th>耗时(秒)</th>
+                            <th>执行次数</th>
+                            <th>运行状态</th>
+                            <th>是否成功</th>
+                            <th>错误原因</th>
+                            <th>线程数</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table_body">
+                    </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-
-
-
-
     <script>
-
-        // 在现有的变量声明后添加
-        var allQueues = [];  // 存储所有队列数据
+        var allQueues = [];
         var currentColName;
         var runStatus = 1;
+        var iid;
+        var refreshInterval = 30000; // 默认30秒
 
-        $(document).ready(function () {
-            // ... 现有的代码 ...
-
-            // 初始化日期时间选择器
-            $('#start_time, #end_time').datetimepicker({
-                format: 'YYYY-MM-DD HH:mm:ss',
-                locale: 'zh-cn',
-                sideBySide: true,  // 日期和时间选择器并排显示
-                showClear: true,   // 显示清除按钮
-                showClose: true,   // 显示关闭按钮
-                showTodayButton: true,  // 显示今天按钮
-                icons: {
-                    time: 'fa fa-clock-o',
-                    date: 'fa fa-calendar',
-                    up: 'fa fa-chevron-up',
-                    down: 'fa fa-chevron-down',
-                    previous: 'fa fa-chevron-left',
-                    next: 'fa fa-chevron-right',
-                    today: 'fa fa-crosshairs',
-                    clear: 'fa fa-trash',
-                    close: 'fa fa-times'
-                }
-            });
-
-            // ... 现有的代码 ...
-        });
-
-        // 页面加载完成后立即获取所有队列
-        $(document).ready(function () {
-            $.ajax({
-                url: "{{ url_for('query_cols_view')}}",
-                data: { col_name_search: '' },
-                async: true,
-                success: function (result) {
-                    allQueues = result;
-                    var html = '<option value="">请选择队列...</option>';
-                    for (var item of result) {
-                        html += '<option value="' + item.collection_name + '">' +
-                            item.collection_name + '&nbsp;&nbsp;&nbsp;&nbsp;(result_count:' + item.count + ')</option>';
-                    }
-                    $("#col_name_search").html(html);
-
-                    // 初始化选择框的搜索功能
-                    $("#col_name_search").select2({
-                        placeholder: "请输入队列名称搜索...",
-                        allowClear: true,
-                        width: '300px'
-                    });
-
-                    // 监听选择变化
-                    $("#col_name_search").on('change', function () {
-                        var selectedQueue = $(this).val();
-                        console.log("Selected queue:", selectedQueue);
-                        currentColName = selectedQueue;
-                        // if(selectedQueue) {
-                        //     queryResult(selectedQueue, 0, true);
-                        // }
-                    });
-                }
-            });
-        });
-
-
-        String.prototype.format = function () {
-            var values = arguments;
-            return this.replace(/\{(\d+)\}/g, function (match, index) {
-                if (values.length > index) {
-                    return values[index];
-                } else {
-                    return "";
-                }
-            });
-        };
-
+        // 格式化日期
         function dateToString(date) {
             const year = date.getFullYear();
             let month = date.getMonth() + 1;
@@ -51692,32 +45614,150 @@ if __name__ == '__main__':
             return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
         }
 
+        // 设置快捷时间（分钟）
+        function setQuickTime(minutes) {
+            var now = new Date();
+            var start = new Date(now.getTime() - minutes * 60 * 1000);
+            $('#start_time').val(dateToString(start));
+            $('#end_time').val(dateToString(now));
+        }
 
-        //昨天的时间
-        var day1 = new Date();
-        day1.setDate(day1.getDate() - 2);
+        // 执行查询
+        function doQuery() {
+            if (!currentColName) {
+                alert('请先选择队列名称');
+                return;
+            }
+            $('#table_container').show();
+            $('#empty_state').hide();
+            startRun();
+            queryResult(currentColName, 0, true);
+        }
 
-        //明天的时间
-        var day2 = new Date();
-        day2.setDate(day2.getDate() + 1);
+        // 初始化
+        $(document).ready(function() {
+            // 设置默认时间（近2天 = 2880分钟）
+            setQuickTime(2880);
 
-        $("#start_time").val(dateToString(day1));
-        $("#end_time").val(dateToString(day2));
-        useAsync = false;
+            // 确保运行状态下拉框正确初始化
+            $('#sucess_status').val('1');
 
+            // 初始化日期时间选择器
+            $('#start_time, #end_time').datetimepicker({
+                format: 'YYYY-MM-DD HH:mm:ss',
+                locale: 'zh-cn',
+                sideBySide: true,
+                showClear: true,
+                showClose: true,
+                showTodayButton: true,
+                icons: {
+                    time: 'fa fa-clock-o',
+                    date: 'fa fa-calendar',
+                    up: 'fa fa-chevron-up',
+                    down: 'fa fa-chevron-down',
+                    previous: 'fa fa-chevron-left',
+                    next: 'fa fa-chevron-right',
+                    today: 'fa fa-crosshairs',
+                    clear: 'fa fa-trash',
+                    close: 'fa fa-times'
+                }
+            });
 
-        //searchCols();
-        useAsync = true;
+            // 从 localStorage 获取上次选择的队列
+            var savedQueue = localStorage.getItem('funboost_last_queue') || '';
 
+            // 加载队列列表
+            $.ajax({
+                url: "{{ url_for('query_cols_view')}}",
+                data: { col_name_search: '' },
+                async: true,
+                success: function(result) {
+                    allQueues = result;
+                    var html = '<option value="">请选择队列...</option>';
+                    var queueNames = [];
+                    for (var item of result) {
+                        queueNames.push(item.collection_name);
+                        html += '<option value="' + item.collection_name + '">' +
+                            item.collection_name + ' (记录数: ' + item.count + ')</option>';
+                    }
+                    $("#col_name_search").html(html);
+
+                    // 如果有保存的队列且存在于列表中，恢复选择
+                    if (savedQueue && queueNames.indexOf(savedQueue) !== -1) {
+                        $("#col_name_search").val(savedQueue);
+                    }
+
+                    // 初始化 Select2
+                    $("#col_name_search").select2({
+                        placeholder: "请输入队列名称搜索...",
+                        allowClear: true,
+                        width: '100%'
+                    });
+
+                    // 监听选择变化，同时保存到 localStorage
+                    $("#col_name_search").on('change', function() {
+                        currentColName = $(this).val();
+                        $('#stat_queue').text(currentColName || '未选择');
+                        // 保存到 localStorage
+                        if (currentColName) {
+                            localStorage.setItem('funboost_last_queue', currentColName);
+                        }
+                    });
+
+                    // 如果有已选择的队列，自动触发查询
+                    var initialQueue = $("#col_name_search").val();
+                    if (initialQueue) {
+                        currentColName = initialQueue;
+                        $('#stat_queue').text(currentColName);
+                        // 自动触发查询
+                        $('#table_container').show();
+                        $('#empty_state').hide();
+                        queryResult(currentColName, 0, true);
+                    }
+                }
+            });
+
+            // 快捷时间按钮 - 点击立即触发查询
+            $('.btn-quick-time').click(function() {
+                $('.btn-quick-time').removeClass('active');
+                $(this).addClass('active');
+                var minutes = parseInt($(this).data('minutes'));
+                setQuickTime(minutes);
+                // 如果已选择队列，立即触发查询
+                if (currentColName) {
+                    $('#table_container').show();
+                    $('#empty_state').hide();
+                    queryResult(currentColName, 0, true);
+                }
+            });
+
+            // 刷新间隔按钮
+            $('.btn-interval').click(function() {
+                $('.btn-interval').removeClass('active');
+                $(this).addClass('active');
+                var seconds = parseInt($(this).data('seconds'));
+                refreshInterval = seconds * 1000;
+                // 如果正在自动刷新，重新设置定时器
+                if (runStatus === 1) {
+                    clearInterval(iid);
+                    iid = setInterval(autoFreshResult, refreshInterval);
+                }
+            });
+
+            // 自动刷新（默认30秒）
+            iid = setInterval(autoFreshResult, refreshInterval);
+            setInterval(updateQueryText, 30000);
+            setInterval(updateTopText, 30000);
+        });
+
+        // 查询结果
         function queryResult(col_name, page, manualOperate) {
-            if (currentColName === undefined) {
+            if (currentColName === undefined || !currentColName) {
                 return;
             }
 
-            $('#echartsArea').css('display', 'none');
-            // currentColName = col_name;
             if (manualOperate === true) {
-                document.getElementById('table').style.display = 'block';
+                $('#loading_overlay').show();
                 updateTopText();
                 updateQueryText();
             }
@@ -51726,66 +45766,71 @@ if __name__ == '__main__':
                 return;
             }
 
-
             $.ajax({
-                url: "{{ url_for('query_result_view')}}", data: {
-                    col_name: col_name, start_time: $("#start_time").val(),
-                    end_time: $("#end_time").val(), is_success: $("#sucess_status").val(), function_params: $("#params").val(), page: page
-                }, async: useAsync, success: function (result, status) {
-                    // console.info(result);
+                url: "{{ url_for('query_result_view')}}",
+                data: {
+                    col_name: col_name,
+                    start_time: $("#start_time").val(),
+                    end_time: $("#end_time").val(),
+                    is_success: $("#sucess_status").val(),
+                    function_params: $("#params").val(),
+                    page: page
+                },
+                success: function(result, status) {
+                    $('#loading_overlay').hide();
+                    
+                    if (!result || result.length === 0) {
+                        $('#table_container').hide();
+                        $('#empty_state').show();
+                        $('#table_info').text('暂无匹配的记录');
+                        return;
+                    }
 
-                    var html = '  <thead>\n' +
-                        '                    <tr>\n' +
-                        '                        <th>执行机器-进程-脚本</th>\n' +
+                    // 前端根据耗时筛选
+                    var minTimeCost = parseFloat($('#min_time_cost').val()) || 0;
+                    if (minTimeCost > 0) {
+                        result = result.filter(function(item) {
+                            return item.time_cost && item.time_cost >= minTimeCost;
+                        });
+                    }
+                    
+                    if (result.length === 0) {
+                        $('#table_container').hide();
+                        $('#empty_state').show();
+                        $('#table_info').text('暂无匹配的记录（耗时 >= ' + minTimeCost + '秒）');
+                        return;
+                    }
 
-                        '                        <th>函数名称</th>\n' +
-                        '                        <th>函数入参</th>\n' +
-                        '                        <th>函数结果</th>\n' +
-                        '                        <th>消息发布时间</th>\n' +
-                        '                        <th>开始执行时间</th>\n' +
-                        '                        <th>消耗时间(秒)</th>\n' +
-                        '                        <th>执行次数(重试)</th>\n' +
-                        '                        <th>运行状态</th>\n' +
-                        '                        <th>是否成功</th>\n' +
-                        '                        <th>错误原因</th>\n' +
+                    $('#table_container').show();
+                    $('#empty_state').hide();
+                    var infoText = '共 ' + result.length + ' 条记录';
+                    if (minTimeCost > 0) {
+                        infoText += '（耗时 >= ' + minTimeCost + '秒）';
+                    }
+                    $('#table_info').text(infoText);
 
-
-                        '                        <th>线程(协程)数</th>\n' +
-                        '                    </tr>\n' +
-                        '                    </thead>' +
-                        '<tbody>';
+                    var html = '';
                     for (var item of result) {
-                        // console.info(item);
-                        var displayLevel = "success";
+                        var rowClass = 'row-success';
+                        var statusBadgeClass = 'success';
+                        var successText = '成功';
+
                         if (item.run_times > 1) {
-                            displayLevel = "warning";
+                            rowClass = 'row-warning';
+                            statusBadgeClass = 'warning';
                         }
 
                         if (item.success === false) {
-                            displayLevel = "danger";
+                            rowClass = 'row-fail';
+                            statusBadgeClass = 'fail';
+                            successText = '失败';
                         }
-                        var tr = ' <tr class="{0}">\n' +
 
-                            '                        <td>{1}</td>\n' +
-                            '                        <td>{2}</td>\n' +
-                            '                        <td>{3}</td>\n' +
-                            '                        <td>{4}</td>\n' +
-                            '                        <td>{5}</td>\n' +
-                            '                        <td>{6}</td>\n' +
-                            '                        <td>{7}</td>\n' +
-                            '                        <td>{8}</td>\n' +
-                            '                        <td>{9}</td>\n' +
-                            '                        <td>{10}</td>\n' +
-                            '                        <td>{11}</td>\n' +
-                            '                        <td>{12}</td>\n' +
-
-                            '                    </tr>';
-                        var successText = item.success === true ? "成功" : "失败";
-                        <!--                    console.info(item.run_status);-->
                         var run_status_text = item.run_status;
                         if (item.run_status === "running") {
-                            successText = "未完成";
-                            displayLevel = "info";
+                            rowClass = 'row-running';
+                            statusBadgeClass = 'running';
+                            successText = '运行中';
                             if (Date.now() / 1000 - item.time_start > 600) {
                                 run_status_text = "running?";
                             }
@@ -51794,93 +45839,113 @@ if __name__ == '__main__':
                         var time_start_obj = new Date(item.time_start * 1000);
                         var time_start_str = dateToString(time_start_obj);
 
-                        tr = tr.format(displayLevel, item.host_process + ' - ' + item.script_name, item.function, item.params_str, item.result, item.publish_time_format,
-                            time_start_str, item.time_cost, item.run_times, run_status_text, successText, item.exception, item.total_thread);
-                        html += tr;
+                        html += '<tr class="' + rowClass + '">' +
+                            '<td title="' + escapeHtml(item.host_process + ' - ' + item.script_name) + '">' + escapeHtml(item.host_process) + '</td>' +
+                            '<td>' + escapeHtml(item.function) + '</td>' +
+                            '<td title="' + escapeHtml(item.params_str) + '">' + escapeHtml(truncate(item.params_str, 30)) + '</td>' +
+                            '<td title="' + escapeHtml(String(item.result)) + '">' + escapeHtml(truncate(String(item.result), 30)) + '</td>' +
+                            '<td>' + escapeHtml(item.publish_time_format) + '</td>' +
+                            '<td>' + time_start_str + '</td>' +
+                            '<td>' + (item.time_cost ? item.time_cost.toFixed(3) : '-') + '</td>' +
+                            '<td>' + item.run_times + '</td>' +
+                            '<td><span class="status-badge ' + statusBadgeClass + '">' + run_status_text + '</span></td>' +
+                            '<td><span class="status-badge ' + statusBadgeClass + '"><i class="fa fa-' + (item.success ? 'check' : 'times') + '"></i> ' + successText + '</span></td>' +
+                            '<td title="' + escapeHtml(item.exception || '') + '">' + escapeHtml(truncate(item.exception || '-', 30)) + '</td>' +
+                            '<td>' + (item.total_thread || '-') + '</td>' +
+                            '</tr>';
                     }
-                    html += '</tbody>';
-                    $("#table").html(html);
-
-                    // document.getElementById('echartsArea').style.display = 'none';
-
-
+                    $("#table_body").html(html);
+                },
+                error: function() {
+                    $('#loading_overlay').hide();
                 }
             });
-            // if (manualOperate === true) {
-            //     updateQueryText()
-            // }
         }
 
+        // 辅助函数：HTML转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+
+        // 辅助函数：截断文本
+        function truncate(text, maxLen) {
+            if (!text) return '';
+            text = String(text);
+            return text.length > maxLen ? text.substring(0, maxLen) + '...' : text;
+        }
+
+        // 更新统计文本
         function updateQueryText() {
-            if (currentColName === undefined) {
+            if (currentColName === undefined || !currentColName) {
                 return;
             }
 
             $.ajax({
-                url: "{{ url_for('speed_stats')}}", data: {
-                    col_name: currentColName, start_time: $("#start_time").val(),
+                url: "{{ url_for('speed_stats')}}",
+                data: {
+                    col_name: currentColName,
+                    start_time: $("#start_time").val(),
                     end_time: $("#end_time").val()
-                }, async: useAsync, success: function (result, status) {
-                    var msg = ' {0} 队列,所选查询时间范围内运行成功了{1}次,失败了{2}次'.format(currentColName, result.success_num, result.fail_num);
-                    console.info(msg);
-                    $('#resultInfoTex').html(msg);
+                },
+                success: function(result, status) {
+                    $('#stat_success').text(result.success_num.toLocaleString());
+                    $('#stat_fail').text(result.fail_num.toLocaleString());
                 }
-            })
+            });
         }
 
-        // queryResult(currentColName, 0, true);
-
-
+        // 更新最近1分钟统计
         function updateTopText() {
-            if (currentColName === undefined) {
+            if (currentColName === undefined || !currentColName) {
                 return;
             }
             var t1 = new Date(new Date().getTime() - 60000);
             var t2 = new Date();
             $.ajax({
-                url: "{{ url_for('speed_stats')}}", data: {
-                    col_name: currentColName, start_time: dateToString(t1), end_time: dateToString(t2)
-                }, async: useAsync, success: function (result, status) {
-                    var msg = ' {0} 队列,最近一分钟内运行成功了{1}次,失败了{2}次'.format(currentColName, result.success_num, result.fail_num);
-                    console.info(msg);
-                    $('#Last1minInfoTex').text(msg);
+                url: "{{ url_for('speed_stats')}}",
+                data: {
+                    col_name: currentColName,
+                    start_time: dateToString(t1),
+                    end_time: dateToString(t2)
+                },
+                success: function(result, status) {
+                    $('#stat_recent').html('成功: <strong>' + result.success_num + '</strong> / 失败: <strong>' + result.fail_num + '</strong>');
                 }
-            })
+            });
         }
 
-        updateTopText();
-        updateQueryText();
-        setInterval(updateQueryText, 30000);
-        setInterval(updateTopText, 30000);
-
+        // 自动刷新
         function autoFreshResult() {
-            if (currentColName === undefined) {
+            if (currentColName === undefined || !currentColName) {
                 return;
             }
+            // 更新截止时间为当前时间，确保能获取最新数据
+            var now = new Date();
+            $('#end_time').val(dateToString(now));
             queryResult(currentColName, 0, false);
         }
 
-        // setInterval(autoFreshResult, 30000);
-
-        iid = setInterval(autoFreshResult, 5000);
-        
-
+        // 开始刷新
         function startRun() {
-            $("#autoFresh").text("自动刷新中");
-            $("#autoFresh").removeClass("btn-danger");
-            $("#autoFresh").addClass("btn-success");
-            iid = setInterval(autoFreshResult, 5000);
+            $("#autoFresh").removeClass("paused").addClass("active");
+            $("#autoFresh").html('<i class="fa fa-refresh fa-spin"></i> <span>自动刷新中</span>');
+            if (iid) clearInterval(iid);
+            iid = setInterval(autoFreshResult, refreshInterval);
             runStatus = 1;
         }
 
+        // 停止刷新
         function stopRun() {
-            $("#autoFresh").text("暂停刷新了");
-            $("#autoFresh").removeClass("btn-success");
-            $("#autoFresh").addClass("btn-danger");
+            $("#autoFresh").removeClass("active").addClass("paused");
+            $("#autoFresh").html('<i class="fa fa-pause"></i> <span>已暂停刷新</span>');
             clearInterval(iid);
             runStatus = 0;
         }
 
+        // 切换刷新状态
         function startOrStop() {
             if (runStatus === 1) {
                 stopRun();
@@ -51889,17 +45954,71 @@ if __name__ == '__main__':
             }
         }
 
-       
+        // 显示帮助弹窗
+        function showHelpModal() {
+            document.getElementById('helpModal').style.display = 'flex';
+        }
 
-        
+        // 隐藏帮助弹窗
+        function hideHelpModal() {
+            document.getElementById('helpModal').style.display = 'none';
+        }
 
-       
-
-
+        // 点击弹窗背景关闭
+        document.addEventListener('click', function(e) {
+            var modal = document.getElementById('helpModal');
+            if (e.target === modal) {
+                hideHelpModal();
+            }
+        });
     </script>
+
+    <!-- 数据说明帮助弹窗 -->
+    <div id="helpModal" class="help-modal-overlay">
+        <div class="help-modal-content">
+            <div class="help-modal-header">
+                <h3><i class="fa fa-info-circle"></i> 数据来源说明</h3>
+                <button class="help-modal-close" onclick="hideHelpModal()">&times;</button>
+            </div>
+            <div class="help-modal-body">
+                <div class="help-section-warning">
+                    <h4><i class="fa fa-exclamation-triangle"></i> 重要提示</h4>
+                    <p>
+                        此页面的数据来源于 <strong>funboost 保存到 MongoDB</strong> 中的函数执行状态记录。<br>
+                        如果您的队列没有数据，请确认已开启 <strong>结果持久化配置</strong>。
+                    </p>
+                </div>
+
+                <div class="help-section-code">
+                    <h4><i class="fa fa-code"></i> 开启方法示例</h4>
+                    <p>在您的 booster 参数中添加以下配置：</p>
+                    <pre class="help-code-block"><code style="color: #7dd3fc;">function_result_status_persistance_conf</code>: <code style="color: #fbbf24;">FunctionResultStatusPersistanceConfig</code>(
+    <code style="color: #a5b4fc;">is_save_result</code>=<code style="color: #4ade80;">True</code>,      <code style="color: #6b7280;"># 保存函数返回结果</code>
+    <code style="color: #a5b4fc;">is_save_status</code>=<code style="color: #4ade80;">True</code>,      <code style="color: #6b7280;"># 保存执行状态（本页面必须开启）</code>
+    <code style="color: #a5b4fc;">expire_seconds</code>=<code style="color: #fb923c;">7 * 24 * 3600</code>,  <code style="color: #6b7280;"># 数据过期时间（秒）</code>
+    <code style="color: #a5b4fc;">is_use_bulk_insert</code>=<code style="color: #f87171;">False</code>  <code style="color: #6b7280;"># 是否批量插入</code>
+)</pre>
+                </div>
+
+                <div class="help-section-info">
+                    <h4><i class="fa fa-database"></i> 数据存储位置</h4>
+                    <p>
+                        数据存储在 MongoDB 的 <code>funboost_task_status</code> 数据库中，<br>
+                        每个队列对应一个同名的 collection。
+                    </p>
+                </div>
+            </div>
+            <div class="help-modal-footer">
+                <button class="btn-help-confirm" onclick="hideHelpModal()">
+                    <i class="fa fa-check"></i> 我知道了
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
+
 `````
 
 --- **end of file: funboost/funboost_web_manager/templates/fun_result_table.html** (project: funboost) --- 
@@ -51924,166 +46043,543 @@ if __name__ == '__main__':
     <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
     <!-- 引入 Bootstrap JS -->
     <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
-     <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
-    <title>funboost web manager</title>
+    <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
+    <title>Funboost Web Manager</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             overflow-x: hidden;
+            background: #0f0c29;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         }
 
+        /* ============================================
+           侧边栏主体
+        ============================================ */
         .sidebar {
             position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 180px;
-        background-color: #296074;
-        padding-top: 20px;
-        overflow-y: auto;
-        transition: all 0.3s ease;  /* 添加过渡效果 */
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 220px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f0c29 100%);
+            padding-top: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-right: 1px solid rgba(99, 102, 241, 0.2);
+            box-shadow: 4px 0 30px rgba(99, 102, 241, 0.15);
+            z-index: 1000;
         }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+        }
+
         .sidebar.collapsed {
-        width: 50px;
-    }
+            width: 70px;
+        }
 
+        /* ============================================
+           Logo 区域
+        ============================================ */
+        .sidebar-logo {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+        }
 
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+            }
+            50% {
+                box-shadow: 0 8px 40px rgba(139, 92, 246, 0.6);
+            }
+        }
+
+        .logo-text {
+            font-size: 16px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ffffff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-subtitle {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 4px;
+        }
+
+        .sidebar.collapsed .logo-text,
+        .sidebar.collapsed .logo-subtitle {
+            display: none;
+        }
+
+        .sidebar.collapsed .logo-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            margin-bottom: 0;
+        }
+
+        /* ============================================
+           导航列表
+        ============================================ */
+        .sidebar .nav {
+            padding: 0 10px;
+        }
+
+        .sidebar .nav-item {
+            margin-bottom: 4px;
+            position: relative;
+        }
+
+        /* ============================================
+           导航链接样式
+        ============================================ */
         .sidebar .nav-link {
-            color: white;
-            background-color: #296074; /* 导航栏链接默认灰色背景 */
-            margin-bottom: 5px;
-            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.7);
+            background: transparent;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            font-size: 14px;
+            font-weight: 500;
         }
 
+        /* 链接悬浮效果 */
+        .sidebar .nav-link:hover {
+            color: #ffffff;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%);
+            transform: translateX(5px);
+        }
+
+        .sidebar .nav-link:hover::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 60%;
+            background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 0 3px 3px 0;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                height: 0;
+                opacity: 0;
+            }
+            to {
+                height: 60%;
+                opacity: 1;
+            }
+        }
+
+        /* 激活状态 */
         .sidebar .nav-link.active {
-            background-color: #0BBAF8; /* 激活状态蓝色背景 */
+            color: #ffffff;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.15) 100%);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .sidebar .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 70%;
+            background: linear-gradient(180deg, #6366f1 0%, #a78bfa 100%);
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+
+        /* 图标样式 */
+        .sidebar .nav-link i {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            margin-right: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .sidebar .nav-link:hover i {
+            transform: scale(1.15);
+            color: #a78bfa;
+            text-shadow: 0 0 15px rgba(167, 139, 250, 0.8);
+        }
+
+        .sidebar .nav-link.active i {
+            color: #a78bfa;
+            text-shadow: 0 0 12px rgba(167, 139, 250, 0.6);
+        }
+
+        /* 折叠时图标居中 */
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 14px;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 18px;
+        }
+
+        .sidebar.collapsed .nav-link span {
+            display: none;
+        }
+
+        /* ============================================
+           分类分隔线
+        ============================================ */
+        .nav-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), transparent);
+            margin: 15px 10px;
+        }
+
+        .nav-category {
+            padding: 8px 16px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        .sidebar.collapsed .nav-category {
+            display: none;
+        }
+
+        /* ============================================
+           Care Project 显示区
+        ============================================ */
+        .sidebar-care-box {
+            margin: 8px 10px 15px 10px;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-care-box:hover {
+            border-color: rgba(16, 185, 129, 0.4);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .sidebar-care-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-care-title i {
+            color: #34d399;
+        }
+
+        .sidebar-care-display {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sidebar-care-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #sidebar_care_project_value {
+            font-size: 13px;
+            font-weight: 700;
+            padding: 4px 0;
+        }
+
+        .badge-all {
+            color: #34d399;
+        }
+
+        .badge-project {
+            color: #fbbf24;
+        }
+
+        .sidebar.collapsed .sidebar-care-box {
+            display: none;
+        }
+
+        /* ============================================
+           退出登录按钮特殊样式
+        ============================================ */
+        .nav-item.logout-item .nav-link {
+            color: rgba(239, 68, 68, 0.8);
+        }
+
+        .nav-item.logout-item .nav-link:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .nav-item.logout-item .nav-link:hover::before {
+            background: linear-gradient(180deg, #ef4444 0%, #f87171 100%);
+        }
+
+        .nav-item.logout-item .nav-link:hover i {
+            color: #f87171;
+            text-shadow: 0 0 15px rgba(248, 113, 113, 0.8);
+        }
+
+        /* ============================================
+           折叠按钮
+        ============================================ */
+        .toggle-btn {
+            position: fixed;
+            left: 220px;
+            top: 20px;
+            z-index: 1001;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            transform: translateX(-50%);
         }
 
+        .toggle-btn:hover {
+            transform: translateX(-50%) scale(1.1);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }
+
+        .toggle-btn:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        .toggle-btn.collapsed {
+            left: 70px;
+        }
+
+        .toggle-btn i {
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        /* ============================================
+           主内容区域
+        ============================================ */
         .main-content {
-            margin-left: 180px;
-            transition: all 0.3s ease;  /* 添加过渡效果 */
+            margin-left: 220px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #0f0c29;
+            min-height: 100vh;
         }
-        
+
         .main-content.expanded {
-        margin-left: 50px;
-    }
-
-    .toggle-btn {
-        position: fixed;
-        left: 180px;
-        top: 10px;
-        z-index: 1000;
-        background: #296074;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 0 5px 5px 0;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .toggle-btn.collapsed {
-        left: 50px;
-    }
-
-    .sidebar.collapsed .nav-link span {
-        display: none;
-    }
-
-    .nav-link i {
-        margin-right: 10px;
-        width: 20px;
-        text-align: center;
-    }
-
-
+            margin-left: 70px;
+        }
 
         .main-content iframe {
             width: 100%;
-            height: calc(100vh - 40px);  /* 视窗高度减去padding */
-            padding: 20px;
+            height: 100vh;
             border: none;
             overflow: auto;
         }
 
-        .sidebar .nav-item {
-        padding: 5px 10px;
-        position: relative;
-    }
+        /* ============================================
+           模态框样式
+        ============================================ */
+        .modal-content {
+            background: linear-gradient(135deg, #1e1e3f 0%, #2a2a4a 100%);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 16px;
+            color: #e0e0e0;
+        }
 
-    .sidebar .nav-item:not(:last-child)::after {
-        content: '';
-        position: absolute;
-        bottom: -2px;
-        left: 10%;
-        width: 80%;
-        height: 2px;
-        background: linear-gradient(to right, transparent, #ffffff80, transparent);
-    }
+        .modal-header {
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 20px;
+        }
 
-    .sidebar .nav-link {
-        padding: 8px 15px;
-        transition: all 0.3s ease;
-        font-weight: 500;
-    }
+        .modal-title {
+            color: #ffffff;
+            font-weight: 600;
+        }
 
-    .sidebar .nav-link:hover {
-        transform: translateX(5px);
-        background-color: #1e4d61;
-    }
+        .modal-body {
+            padding: 25px 20px;
+            font-size: 15px;
+        }
 
-    .sidebar-care-box {
-        margin: 8px 10px 14px 10px;
-        padding: 10px 12px;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 8px;
-        color: #cde6f7;
-    }
-    .sidebar-care-title {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 13px;
-        font-weight: 700;
-        margin-bottom: 6px;
-        letter-spacing: 0.3px;
-    }
-    .sidebar-care-display {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        font-size: 12px;
-        line-height: 1.4;
-    }
-    .sidebar-care-label {
-        color: #e0f0ff;
-        opacity: 0.9;
-    }
-    .badge-all {
-        color: #a8f3bf;
-        font-weight: 700;
-    }
-    .badge-project {
-        color: #ffd27f;
-        font-weight: 800;
-    }
+        .modal-footer {
+            border-top: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 15px 20px;
+        }
 
+        .modal-footer .btn-default {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .modal-footer .btn-primary {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            border: none;
+            color: white;
+        }
+
+        .close {
+            color: #a78bfa;
+            opacity: 1;
+            font-size: 24px;
+        }
+
+        .close:hover {
+            color: #ffffff;
+        }
+
+        /* ============================================
+           Tooltip for collapsed mode
+        ============================================ */
+        .sidebar.collapsed .nav-link {
+            position: relative;
+        }
+
+        .sidebar.collapsed .nav-link::after {
+            content: attr(data-title);
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #1e1e3f 0%, #2a2a4a 100%);
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            margin-left: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            z-index: 1002;
+        }
+
+        .sidebar.collapsed .nav-link:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* ============================================
+           响应式设计
+        ============================================ */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .toggle-btn {
+                left: 15px;
+                transform: translateX(0);
+            }
+
+            .toggle-btn.collapsed {
+                left: 15px;
+            }
+        }
     </style>
 </head>
 
 <body>
-        <!-- 添加折叠按钮 -->
-        <button class="toggle-btn">
-            <i class="fa fa-angle-left"></i>
-        </button>
-    
+    <!-- 折叠按钮 -->
+    <button class="toggle-btn" title="折叠/展开侧边栏">
+        <i class="fa fa-angle-left"></i>
+    </button>
+
     <!-- 左侧导航栏 -->
     <div class="sidebar">
+        <!-- Logo 区域 -->
+        <div class="sidebar-logo">
+            <div class="logo-icon">
+                <i class="fa fa-rocket"></i>
+            </div>
+            <div class="logo-text">Funboost</div>
+            <div class="logo-subtitle">Web Manager</div>
+        </div>
+
         <ul class="nav flex-column">
+            <!-- 设置 care_project_name -->
             <li class="nav-item">
-                <a class="nav-link" href="/?page=care_project_name" data-target="/tpl/care_project_name.html">
-                    <i class="fa fa-filter"></i><span>设置care_project_name</span>
+                <a class="nav-link" href="/?page=care_project_name" data-target="/tpl/care_project_name.html" data-title="设置 care_project_name">
+                    <i class="fa fa-filter"></i><span>设置 care_project_name</span>
                 </a>
                 <div class="sidebar-care-box">
                     <div class="sidebar-care-title">
@@ -52095,48 +46591,63 @@ if __name__ == '__main__':
                     </div>
                 </div>
             </li>
+
+            <div class="nav-divider"></div>
+            <div class="nav-category">数据监控</div>
+
             <li class="nav-item">
-                <a class="nav-link " href="/?page=fun_result_table" data-target="/tpl/fun_result_table.html">
+                <a class="nav-link" href="/?page=fun_result_table" data-target="/tpl/fun_result_table.html" data-title="函数结果表">
                     <i class="fa fa-table"></i><span>函数结果表</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/?page=conusme_speed" data-target="/tpl/conusme_speed.html">
-                    <i class="fa fa-tachometer"></i><span>消费速率图</span>
+                <a class="nav-link" href="/?page=conusme_speed" data-target="/tpl/conusme_speed.html" data-title="消费速率图">
+                    <i class="fa fa-line-chart"></i><span>消费速率图</span>
+                </a>
+            </li>
+
+            <div class="nav-divider"></div>
+            <div class="nav-category">消费者管理</div>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/?page=running_consumer_by_ip" data-target="/tpl/running_consumer_by_ip.html" data-title="运行中消费者(by ip)">
+                    <i class="fa fa-server"></i><span>运行中消费者(by ip)</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/?page=running_consumer_by_ip" data-target="/tpl/running_consumer_by_ip.html">
-                    <i class="fa fa-sitemap"></i><span>运行中消费者(by ip)</span>
+                <a class="nav-link" href="/?page=running_consumer_by_queue_name" data-target="/tpl/running_consumer_by_queue_name.html" data-title="运行中消费者(by queue)">
+                    <i class="fa fa-cubes"></i><span>运行中消费者(by queue)</span>
                 </a>
             </li>
+
+            <div class="nav-divider"></div>
+            <div class="nav-category">队列操作</div>
+
             <li class="nav-item">
-                <a class="nav-link" href="/?page=running_consumer_by_queue_name" data-target="/tpl/running_consumer_by_queue_name.html">
-                    <i class="fa fa-tasks"></i><span>运行中消费者(by queue)</span>
-                </a>
-            </li>
-            <li class="nav-item ">
-                <a class="nav-link active" href="/?page=queue_op" data-target="/tpl/queue_op.html">
+                <a class="nav-link active" href="/?page=queue_op" data-target="/tpl/queue_op.html" data-title="队列操作">
                     <i class="fa fa-sliders"></i><span>队列操作</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/?page=rpc_call" data-target="/tpl/rpc_call.html">
-                    <i class="fa fa-random"></i><span>rpc调用</span>
+                <a class="nav-link" href="/?page=rpc_call" data-target="/tpl/rpc_call.html" data-title="RPC 调用">
+                    <i class="fa fa-exchange"></i><span>RPC 调用</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/?page=timing_jobs_management" data-target="/tpl/timing_jobs_management.html">
-                    <i class="fa fa-clock-o"></i><span>定时任务管理</span>
+                <a class="nav-link" href="/?page=timing_jobs_management" data-target="/tpl/timing_jobs_management.html" data-title="定时任务">
+                    <i class="fa fa-clock-o"></i><span>定时任务</span>
                 </a>
             </li>
+
+            <div class="nav-divider"></div>
+
             <li class="nav-item">
-                <a class="nav-link" href="/?page=about" data-target="/tpl/about.html">
+                <a class="nav-link" href="/?page=about" data-target="/tpl/about.html" data-title="说明">
                     <i class="fa fa-info-circle"></i><span>说明</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="javascript:void(0)" id="logoutBtn">
+            <li class="nav-item logout-item">
+                <a class="nav-link" href="javascript:void(0)" id="logoutBtn" data-title="退出登录">
                     <i class="fa fa-sign-out"></i><span>退出登录</span>
                 </a>
             </li>
@@ -52145,84 +46656,65 @@ if __name__ == '__main__':
 
     <!-- 右侧内容区域 -->
     <div class="main-content" id="content000">
-        <!-- 初始加载 Home 页面内容 -->
-         <!-- 右侧内容区域 -->
-    <iframe id="content" frameborder="0">
-        <!-- 初始加载 Home 页面内容 -->
-    </iframe >
+        <iframe id="content" frameborder="0"></iframe>
     </div>
 
-    
-
-    <!-- 添加退出确认模态框 -->
+    <!-- 退出确认模态框 -->
     <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel">
-      <div class="modal-dialog modal-sm" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="logoutModalLabel">确认退出</h4>
-          </div>
-          <div class="modal-body">
-            确定要退出登录吗？
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-            <button type="button" class="btn btn-primary" id="confirmLogout">确认退出</button>
-          </div>
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="logoutModalLabel">
+                        <i class="fa fa-sign-out" style="color: #ef4444; margin-right: 10px;"></i>确认退出
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    确定要退出登录吗？
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="confirmLogout">确认退出</button>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
     <script src="{{ url_for('static',filename='js/form-memory.js') }}"></script>
     <script>
-            $(document).ready(function () {
-        // ... 现有代码 ...
-
-        // 添加折叠功能
-        $('.toggle-btn').click(function() {
-            $('.sidebar').toggleClass('collapsed');
-            $('.main-content').toggleClass('expanded');
-            $('.toggle-btn').toggleClass('collapsed');
-            
-            // 切换箭头方向
-            var icon = $(this).find('i');
-            if (icon.hasClass('fa-angle-left')) {
-                icon.removeClass('fa-angle-left').addClass('fa-angle-right');
-            } else {
-                icon.removeClass('fa-angle-right').addClass('fa-angle-left');
-            }
-        });
-    });
-
         $(document).ready(function () {
+            // 折叠功能
+            $('.toggle-btn').click(function() {
+                $('.sidebar').toggleClass('collapsed');
+                $('.main-content').toggleClass('expanded');
+                $('.toggle-btn').toggleClass('collapsed');
+
+                var icon = $(this).find('i');
+                if (icon.hasClass('fa-angle-left')) {
+                    icon.removeClass('fa-angle-left').addClass('fa-angle-right');
+                } else {
+                    icon.removeClass('fa-angle-right').addClass('fa-angle-left');
+                }
+            });
+
             // 检查URL参数是否指定了页面
             var urlParams = new URLSearchParams(window.location.search);
             var pageName = urlParams.get('page');
-            
+
             // 初始加载页面
             if (pageName) {
-                // 根据URL参数加载页面
                 loadPage('/tpl/' + pageName + '.html');
-                // 设置对应导航为active
                 $('.sidebar .nav-link').removeClass('active');
                 $('.sidebar .nav-link[href="/?page=' + pageName + '"]').addClass('active');
             } else {
-                // 默认加载队列操作页面
                 loadPage('/tpl/queue_op.html');
             }
 
             // 导航栏点击事件
             $('.sidebar .nav-link').click(function (e) {
-                // 不阻止默认行为，允许页面跳转
-                // e.preventDefault();
-                
-                // 移除所有导航项的 active 类
                 $('.sidebar .nav-link').removeClass('active');
-                // 为当前点击的导航项添加 active 类
                 $(this).addClass('active');
-                // 获取要加载的页面文件名
                 const targetPage = $(this).data('target');
-                // 加载页面内容
                 loadPage(targetPage);
             });
 
@@ -52245,7 +46737,7 @@ if __name__ == '__main__':
                 e.preventDefault();
                 $('#logoutModal').modal('show');
             });
-            
+
             $('#confirmLogout').click(function() {
                 window.location.href = '/logout';
             });
@@ -52274,11 +46766,53 @@ if __name__ == '__main__':
             }
 
             loadSidebarCareProjectName();
+
+            // 为链接添加涟漪效果
+            $('.nav-link').on('click', function(e) {
+                var $this = $(this);
+                var ripple = $('<span class="ripple"></span>');
+                var offset = $this.offset();
+                var x = e.pageX - offset.left;
+                var y = e.pageY - offset.top;
+
+                ripple.css({
+                    left: x,
+                    top: y
+                });
+
+                $this.append(ripple);
+
+                setTimeout(function() {
+                    ripple.remove();
+                }, 600);
+            });
         });
     </script>
+
+    <style>
+        /* 涟漪效果 */
+        .ripple {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: rgba(167, 139, 250, 0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            animation: ripple-effect 0.6s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-effect {
+            to {
+                transform: translate(-50%, -50%) scale(30);
+                opacity: 0;
+            }
+        }
+    </style>
 </body>
 
 </html>
+
 `````
 
 --- **end of file: funboost/funboost_web_manager/templates/index.html** (project: funboost) --- 
@@ -52850,58 +47384,238 @@ if __name__ == '__main__':
     <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator_bootstrap3.min.css') }}" rel="stylesheet">
     <!-- Select2 CSS -->
     <link href="{{ url_for('static',filename='css_cdn/select2/4.0.13/css/select2.min.css') }}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
 
-
-     <!-- jQuery -->
-     <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
-     <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script> -->
-     <!-- Bootstrap JS -->
-     <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
-     <!-- <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script> -->
-     <!-- Tabulator JS -->
-     <script type="text/javascript" src="{{ url_for('static',filename='js_cdn/tabulator-tables@5.5.0/dist/js/tabulator.min.js') }}"></script>
-     <!-- Select2 JS -->
-     <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
-     <script src="{{ url_for('static',filename='js_cdn/chart.js') }}"></script>
+    <!-- jQuery -->
+    <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
+    <!-- Tabulator JS -->
+    <script type="text/javascript" src="{{ url_for('static',filename='js_cdn/tabulator-tables@5.5.0/dist/js/tabulator.min.js') }}"></script>
+    <!-- Select2 JS -->
+    <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js_cdn/chart.js') }}"></script>
 
     <style>
-        .action-btn {
-            margin: 2px;
+        * {
+            box-sizing: border-box;
         }
-        .search-container {
-            margin-bottom: 15px;
+        
+        body {
+            background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
         }
-        /* .frozen-column-background { background-color: #FFFFFF !important; } */ /* 移除或注释掉这里 */
-        .tabulator-cell {
-            padding-left: 20px !important;
-            padding-right: 20px !important;
-            padding-top: 10px !important;
-            border: 1px solid #555 !important; 
-            background-color: #000000; /* 移除 !important */
-            color: #FFFFFF; /* 移除 !important */
+
+        /* 页面主容器 */
+        .main-container {
+            padding: 20px 25px;
+            max-width: 100%;
         }
-        /* 新增: 自定义超大模态框样式 */
-        .modal-xl-custom {
-            width: 80%; /* 宽度占屏幕的80% */
-            max-width: 1400px; /* 最大宽度限制 */
+
+        /* 页面标题区域 */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding: 20px 25px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            backdrop-filter: blur(10px);
         }
-        /* 新增: 开关切换样式 */
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4);
+        }
+
+        .header-icon i {
+            font-size: 28px;
+            color: white;
+        }
+
+        .header-title h1 {
+            margin: 0 0 5px 0;
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ffffff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-title p {
+            margin: 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* 统计卡片 */
+        .stats-cards {
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.8) 0%, rgba(40, 40, 80, 0.6) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 15px 25px;
+            text-align: center;
+            min-width: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        .stat-card.active {
+            border-color: #10b981;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
+        }
+
+        .stat-card.inactive {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card.inactive .stat-value {
+            background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 3px;
+        }
+
+        /* 控制面板 */
+        .control-panel {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.6) 0%, rgba(40, 40, 80, 0.4) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-group label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        /* Select2 自定义样式 */
+        .select2-container--default .select2-selection--single {
+            background: rgba(30, 30, 60, 0.8) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            border-radius: 10px !important;
+            height: 42px !important;
+            padding: 5px 10px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #e0e0e0 !important;
+            line-height: 30px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px !important;
+        }
+
+        .select2-dropdown {
+            background: #1e1e3f !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            border-radius: 10px !important;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            background: rgba(30, 30, 60, 0.8) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            color: #e0e0e0 !important;
+            border-radius: 8px !important;
+            padding: 8px 12px !important;
+        }
+
+        .select2-results__option {
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+            color: #e0e0e0 !important;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%) !important;
+        }
+
+        .select2-container--default .select2-results>.select2-results__options {
+            max-height: 400px !important;
+        }
+
+        /* 开关样式 */
         .toggle-switch-container {
             display: flex;
             align-items: center;
-            margin-left: 30px;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(30, 30, 60, 0.5);
+            border-radius: 10px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
         }
+
         .switch {
             position: relative;
             display: inline-block;
-            width: 50px; /* 宽度调整 */
-            height: 24px; /* 高度调整 */
+            width: 52px;
+            height: 28px;
         }
+
         .switch input {
             opacity: 0;
             width: 0;
             height: 0;
         }
+
         .slider {
             position: absolute;
             cursor: pointer;
@@ -52909,81 +47623,622 @@ if __name__ == '__main__':
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ccc;
+            background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
             transition: .4s;
+            border-radius: 28px;
         }
+
         .slider:before {
             position: absolute;
             content: "";
-            height: 18px; /* 滑块大小 */
-            width: 18px;  /* 滑块大小 */
-            left: 3px;    /* 滑块位置 */
-            bottom: 3px;  /* 滑块位置 */
-            background-color: white;
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
             transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
-        input:checked + .slider { background-color: #4CAF50; }
-        input:focus + .slider { box-shadow: 0 0 1px #4CAF50; }
-        input:checked + .slider:before { transform: translateX(26px); }
-        .slider.round { border-radius: 24px; }
-        .slider.round:before { border-radius: 50%; }
-        
-        /* Select2 下拉框自定义样式 - 应用到所有 Select2 */
-        .select2-results__option {
-            padding: 12px 16px !important;  /* 增加选项内边距 */
-            font-size: 15px !important;  /* 增加字体大小 */
-            line-height: 1.6 !important;  /* 增加行高 */
+
+        input:checked + .slider {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .toggle-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* 按钮样式 */
+        .btn-modern {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary-modern {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-success-modern {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-success-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-danger-modern {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-danger-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-info-modern {
+            background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+        }
+
+        .btn-info-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5);
+        }
+
+        .btn-outline-modern {
+            background: transparent;
+            border: 1px solid rgba(139, 92, 246, 0.5);
+            color: #a5b4fc;
+        }
+
+        .btn-outline-modern:hover {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: rgba(139, 92, 246, 0.8);
+        }
+
+        /* 表格容器 */
+        .table-container {
+            background: linear-gradient(135deg, rgba(20, 20, 40, 0.8) 0%, rgba(30, 30, 60, 0.6) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 5px;
+            overflow: hidden;
+        }
+
+        /* Tabulator 表格样式 */
+        .tabulator {
+            background: transparent !important;
+            border: none !important;
+            font-size: 13px;
+        }
+
+        .tabulator .tabulator-header {
+            background: linear-gradient(90deg, #2d1b69 0%, #3d2a7a 100%) !important;
+            border-bottom: 2px solid rgba(167, 139, 250, 0.5) !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col {
+            background: transparent !important;
+            border-right: 1px solid rgba(167, 139, 250, 0.25) !important;
+            min-height: 55px !important;
+            padding: 8px 5px !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
+            color: #ffffff !important;
+            font-weight: 700;
+            font-size: 12px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            white-space: normal !important;
+            line-height: 1.5 !important;
+            word-break: break-word !important;
+        }
+
+        .tabulator-row {
+            background: rgba(15, 15, 35, 0.9) !important;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.15) !important;
+        }
+
+        .tabulator-row:nth-child(even) {
+            background: rgba(25, 25, 50, 0.9) !important;
+        }
+
+        .tabulator-row:hover {
+            background: rgba(99, 102, 241, 0.35) !important;
         }
         
-        .select2-container--default .select2-results>.select2-results__options {
-            max-height: 450px !important;  /* 增加结果列表最大高度 */
+        .tabulator-row:hover .tabulator-cell {
+            color: #ffffff !important;
+            text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
+        }
+
+        .tabulator-row .tabulator-cell {
+            border-right: 1px solid rgba(139, 92, 246, 0.15) !important;
+            color: #ffffff !important;
+            padding: 12px 15px !important;
+            font-weight: 500;
+        }
+
+        .tabulator .tabulator-footer {
+            background: linear-gradient(90deg, #1e1e3f 0%, #2a2a4a 100%) !important;
+            border-top: 1px solid rgba(139, 92, 246, 0.2) !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page {
+            background: rgba(99, 102, 241, 0.2) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            color: #e0e0e0 !important;
+            border-radius: 6px !important;
+            margin: 0 3px !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page.active {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+            color: white !important;
+        }
+
+        /* 队列名称单元格样式 */
+        .queue-cell {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .queue-name {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .queue-active {
+            color: #4ade80;
+            text-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
+        }
+
+        .queue-inactive {
+            color: #fcd34d;
+            text-shadow: 0 0 8px rgba(252, 211, 77, 0.3);
+        }
+
+        .queue-badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-active {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+        }
+
+        .badge-inactive {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: #1a1a2e;
+        }
+
+        /* 表格内按钮 */
+        .table-btn {
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 2px;
+        }
+
+        .table-btn-chart {
+            background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+            color: white;
+        }
+
+        .table-btn-chart:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
+        }
+
+        .table-btn-info {
+            background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+            color: white;
+        }
+
+        .table-btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            color: white;
+        }
+
+        .table-btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: #1a1a2e;
+        }
+
+        .table-btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+        }
+
+        .table-btn-deprecate {
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+            color: white;
+        }
+
+        .table-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* 消息数量显示 */
+        .msg-count-cell {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .msg-count-value {
+            font-weight: 700;
+            font-size: 15px;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .msg-diff-up {
+            color: #f87171;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .msg-diff-down {
+            color: #4ade80;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* 模态框样式 */
+        .modal-content {
+            background: linear-gradient(135deg, #1e1e3f 0%, #2a2a4a 100%) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            border-radius: 16px !important;
+            color: #e0e0e0;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid rgba(139, 92, 246, 0.2) !important;
+            padding: 20px 25px !important;
+        }
+
+        .modal-title {
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 25px !important;
+        }
+
+        .modal-footer {
+            border-top: 1px solid rgba(139, 92, 246, 0.2) !important;
+            padding: 15px 25px !important;
+        }
+
+        .close {
+            color: #a5b4fc !important;
+            opacity: 1 !important;
+            font-size: 28px;
+        }
+
+        .close:hover {
+            color: #ffffff !important;
+        }
+
+        /* 图表模态框 */
+        .modal-xl-custom {
+            width: 90%;
+            max-width: 1600px;
+        }
+
+        .chart-controls {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(30, 30, 60, 0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .chart-control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-control-group label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .chart-control-group input,
+        .chart-control-group select {
+            background: rgba(30, 30, 60, 0.8) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            color: #e0e0e0 !important;
+            border-radius: 8px !important;
+            padding: 8px 12px !important;
+        }
+
+        .chart-canvas-container {
+            background: rgba(20, 20, 40, 0.5);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(139, 92, 246, 0.1);
+        }
+
+        /* 消费者详情表格 */
+        .consumer-detail-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .consumer-detail-table th {
+            background: linear-gradient(90deg, #1e1e3f 0%, #2a2a4a 100%);
+            color: #ffffff;
+            padding: 12px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .consumer-detail-table td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+            font-size: 13px;
+        }
+
+        .consumer-detail-table tr:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* JSON 显示 */
+        .json-display {
+            background: #0d0d1a;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 13px;
+            color: #a5b4fc;
+            max-height: 60vh;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* 暂停状态 */
+        .pause-badge {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* 自动刷新指示器 */
+        .refresh-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            color: #34d399;
+        }
+
+        .refresh-indicator.active .refresh-dot {
+            animation: blink 1s infinite;
+        }
+
+        .refresh-dot {
+            width: 8px;
+            height: 8px;
+            background: #34d399;
+            border-radius: 50%;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .page-header {
+                flex-direction: column;
+                gap: 20px;
+                align-items: flex-start;
+            }
+            
+            .stats-cards {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            
+            .control-panel {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* 加载动画 */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 操作按钮组 */
+        .action-btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid" style="margin-top: 5px;">
-        <div class="search-container" style="display: flex; align-items: center; margin-bottom: 10px;">
-            <!-- 使用 Select2 的队列选择器 -->
-            <select id="queueSearchSelect" class="form-control" style="width: 700px;">
-                <option value="">请选择队列名字...</option>
-            </select>
-            <!-- 美化后的复选框 -->
+    <div class="main-container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fa fa-sliders"></i>
+                </div>
+                <div class="header-title">
+                    <h1>队列操作中心</h1>
+                    <p>实时监控和管理所有消息队列的状态与配置</p>
+                </div>
+            </div>
+            <div class="stats-cards">
+                <div class="stat-card active">
+                    <div class="stat-value" id="active_queue_count">0</div>
+                    <div class="stat-label">活跃队列</div>
+                </div>
+                <div class="stat-card inactive">
+                    <div class="stat-value" id="inactive_queue_count">0</div>
+                    <div class="stat-label">闲置队列</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total_consumer_count">0</div>
+                    <div class="stat-label">消费者总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total_msg_count">-</div>
+                    <div class="stat-label">消息总数</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="control-panel">
+            <div class="search-group">
+                <label><i class="fa fa-search"></i> 队列搜索</label>
+                <select id="queueSearchSelect" class="form-control" style="width: 500px;">
+                    <option value="">请选择队列名字...</option>
+                </select>
+            </div>
+
             <div class="toggle-switch-container">
                 <label class="switch">
                     <input type="checkbox" id="showActiveQueuesOnly" onchange="toggleActiveQueuesFilter()">
                     <span class="slider round"></span>
                 </label>
-                <span style="margin-left: 8px; cursor: pointer;" onclick="document.getElementById('showActiveQueuesOnly').click();">正在消费的队列</span>
+                <span class="toggle-label" onclick="document.getElementById('showActiveQueuesOnly').click();">
+                    <i class="fa fa-filter"></i> 仅显示活跃队列
+                </span>
             </div>
-            <button id="refresh-all-msg-counts" class="btn btn-info" style="margin-left: 30px;">更新所有队列的消息数量</button>
-            <button id="toggle-auto-refresh" class="btn btn-success" style="margin-left: 10px;">启动自动刷新</button>
-            <button id="show-explanation-btn" class="btn btn-default" style="margin-left: 10px;">说明</button>
+
+            <button id="refresh-all-msg-counts" class="btn-modern btn-primary-modern">
+                <i class="fa fa-refresh"></i> 刷新所有消息数量
+            </button>
+
+            <button id="toggle-auto-refresh" class="btn-modern btn-success-modern">
+                <i class="fa fa-play"></i> 启动自动刷新
+            </button>
+
+            <button id="show-explanation-btn" class="btn-modern btn-outline-modern">
+                <i class="fa fa-info-circle"></i> 说明
+            </button>
+
+            <div class="refresh-indicator" id="refresh-indicator" style="display: none;">
+                <div class="refresh-dot"></div>
+                <span>每 10 秒自动刷新</span>
+            </div>
         </div>
-        <div id="queue-table"></div>
+
+        <!-- 表格容器 -->
+        <div class="table-container">
+            <div id="queue-table"></div>
+        </div>
     </div>
 
     <!-- Chart Modal -->
     <div class="modal fade" id="chartModal" tabindex="-1" role="dialog" aria-labelledby="chartModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-xl-custom" role="document">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title" id="chartModalLabel">队列数据曲线图: <span id="chartQueueName"></span></h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h4 class="modal-title" style="margin: 0;">
+                        <i class="fa fa-line-chart" style="color: #ec4899; margin-right: 10px;"></i>
+                        队列数据曲线图: <span id="chartQueueName" style="color: #a5b4fc;"></span>
+                    </h4>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <button type="button" class="btn-modern btn-outline-modern" onclick="showChartDataExplanation()" style="padding: 6px 14px; font-size: 12px;">
+                            <i class="fa fa-question-circle"></i> 数据说明
+                        </button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="margin: 0;"><span aria-hidden="true">&times;</span></button>
+                    </div>
                 </div>
                 <div class="modal-body">
-                    <!-- 新增：时间范围筛选控件和采样点数选择 -->
-                    <div style="margin-bottom: 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
-                        <div style="display: flex; align-items: center;">
-                            <label style="margin-right:5px;">起始时间：</label>
-                            <input type="datetime-local" id="chartStartTime" style="margin-right: 10px;">
+                    <div class="chart-controls">
+                        <div class="chart-control-group">
+                            <label><i class="fa fa-calendar"></i> 起始时间</label>
+                            <input type="datetime-local" id="chartStartTime">
                         </div>
-                        <div style="display: flex; align-items: center;">
-                            <label style="margin-right:5px;">结束时间：</label>
-                            <input type="datetime-local" id="chartEndTime" style="margin-right: 10px;">
+                        <div class="chart-control-group">
+                            <label><i class="fa fa-calendar"></i> 结束时间</label>
+                            <input type="datetime-local" id="chartEndTime">
                         </div>
-                        <div style="display: flex; align-items: center;">
-                            <label style="margin-right:5px;">采样点数：</label>
-                            <select id="curveSamplesCount" class="form-control" style="width: 100px; margin-right: 10px;" title="推荐使用360-720个采样点以获得最佳显示效果">
+                        <div class="chart-control-group">
+                            <label><i class="fa fa-cog"></i> 采样点数</label>
+                            <select id="curveSamplesCount" class="form-control" title="推荐使用360-720个采样点以获得最佳显示效果">
                                 <option value="60">60 (粗略)</option>
                                 <option value="120">120 (简单)</option>
                                 <option value="180">180 (清晰)</option>
@@ -52993,12 +48248,66 @@ if __name__ == '__main__':
                                 <option value="8640">8640 (极精细)</option>
                             </select>
                         </div>
-                        <button class="btn btn-primary btn-sm" onclick="reloadQueueChartWithTimeRange()">查询</button>
+                        <button class="btn-modern btn-primary-modern" onclick="reloadQueueChartWithTimeRange()">
+                            <i class="fa fa-search"></i> 查询
+                        </button>
                     </div>
-                    <canvas id="queueDataChart" style="height:600px;max-height:600px;"></canvas>
+                    <div class="chart-canvas-container">
+                        <canvas id="queueDataChart" style="height:550px;max-height:550px;"></canvas>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn-modern btn-outline-modern" data-dismiss="modal">
+                        <i class="fa fa-times"></i> 关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Data Explanation Modal -->
+    <div class="modal fade" id="chartDataExplanationModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">
+                        <i class="fa fa-info-circle" style="color: #ec4899; margin-right: 10px;"></i>
+                        曲线图数据来源说明
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <div style="background: linear-gradient(145deg, rgba(236,72,153,0.1) 0%, rgba(168,85,247,0.05) 100%); border-left: 4px solid #ec4899; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h5 style="margin: 0 0 10px 0; color: #f9a8d4; font-size: 15px;"><i class="fa fa-heartbeat"></i> 数据来源</h5>
+                        <p style="margin: 0; color: #e0e0e0; font-size: 14px; line-height: 1.8;">
+                            此曲线图的数据来源于 <strong style="color: #f472b6;">funboost 消费者心跳上报到 Redis</strong> 的统计数据。<br>
+                            每个消费者每隔 <strong style="color: #a78bfa;">10 秒</strong> 会向 Redis 上报一次自身的运行状态数据。
+                        </p>
+                    </div>
+                    
+                    <div style="background: rgba(30, 30, 60, 0.5); border-radius: 8px; padding: 15px 20px; margin-bottom: 15px;">
+                        <h5 style="margin: 0 0 12px 0; color: #a5b4fc; font-size: 14px;"><i class="fa fa-list-ul"></i> 可查看的指标</h5>
+                        <ul style="margin: 0; padding-left: 20px; color: #c4b5fd; line-height: 2;">
+                            <li><span style="color: #f87171;">历史运行次数</span> / <span style="color: #60a5fa;">历史失败次数</span></li>
+                            <li><span style="color: #4ade80;">近10秒完成数</span> / <span style="color: #fb923c;">近10秒失败数</span></li>
+                            <li><span style="color: #fde047;">近10秒平均耗时</span> / <span style="color: #f0abfc;">累计平均耗时</span></li>
+                            <li><span style="color: #67e8f9;">消息数量</span>（Broker 中待消费的消息数）</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: linear-gradient(145deg, rgba(59,130,246,0.1) 0%, rgba(99,102,241,0.05) 100%); border-left: 4px solid #3b82f6; padding: 15px 20px; border-radius: 8px;">
+                        <h5 style="margin: 0 0 10px 0; color: #93c5fd; font-size: 14px;"><i class="fa fa-lightbulb-o"></i> 提示</h5>
+                        <p style="margin: 0; color: #e0e0e0; font-size: 13px; line-height: 1.7;">
+                            • 数据精度为 <strong style="color: #60a5fa;">10 秒级</strong>，不是毫秒级实时<br>
+                            • 如果队列没有启动消费者，则不会有心跳上报数据<br>
+                            • 可通过调整"采样点数"控制图表精细程度
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modern btn-outline-modern" data-dismiss="modal">
+                        <i class="fa fa-check"></i> 知道了
+                    </button>
                 </div>
             </div>
         </div>
@@ -53009,16 +48318,19 @@ if __name__ == '__main__':
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="explanationModalLabel">说明</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">
+                        <i class="fa fa-info-circle" style="color: #6366f1; margin-right: 10px;"></i>
+                        功能说明
+                    </h4>
                 </div>
                 <div class="modal-body">
-                    <ul id="explanation-text">
-                        {# Content will be added by JavaScript #}
-                    </ul>
+                    <ul id="explanation-text" style="line-height: 2; padding-left: 20px;"></ul>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn-modern btn-outline-modern" data-dismiss="modal">
+                        <i class="fa fa-check"></i> 知道了
+                    </button>
                 </div>
             </div>
         </div>
@@ -53029,86 +48341,106 @@ if __name__ == '__main__':
         // 全局错误处理器
         window.addEventListener('error', function(e) {
             console.error('全局错误捕获:', e.error);
-            if (e.error && e.error.message && e.error.message.includes('tabulator')) {
-                console.warn('检测到Tabulator相关错误，可能是表格初始化问题');
-            }
         });
 
         // 检查Chart.js是否正确加载
         if (typeof Chart === 'undefined') {
-            console.error('Chart.js未正确加载！请检查文件路径。');
-            alert('Chart.js库未正确加载，图表功能可能无法正常使用。');
+            console.error('Chart.js未正确加载！');
         } else {
             console.log('Chart.js已正确加载，版本:', Chart.version);
         }
 
-        // 初始化队列选择器（提取为独立函数）
+        // 初始化队列选择器
         function initializeQueueSelector(data) {
-            if (!data || data.length === 0) {
-                return;
-            }
+            if (!data || data.length === 0) return;
             
-            // 填充队列选择器 - 显示 consumer_count
             let html = '<option value="">请选择队列名字...</option>';
             data.forEach(function(item) {
                 const queueName = item.queue_name;
                 const consumerCount = item.consumer_count || 0;
-                html += `<option value="${queueName}">${queueName}&nbsp;&nbsp;&nbsp;&nbsp;(consumer_count:${consumerCount})</option>`;
+                const statusIcon = consumerCount > 0 ? '🟢' : '🟡';
+                html += `<option value="${queueName}">${statusIcon} ${queueName} (${consumerCount}个消费者)</option>`;
             });
             
-            // 先销毁已有的 Select2 实例（如果存在）
             if ($("#queueSearchSelect").hasClass("select2-hidden-accessible")) {
                 $("#queueSearchSelect").select2('destroy');
             }
             
-            // 填充选项
             $("#queueSearchSelect").html(html);
             
-            // 初始化 Select2
             $("#queueSearchSelect").select2({
                 placeholder: "请输入队列名称搜索...",
                 allowClear: true,
-                width: '700px',
-                minimumResultsForSearch: 0  // 总是显示搜索框
+                width: '500px',
+                minimumResultsForSearch: 0
             }).on('change', function() {
                 const selectedQueue = $(this).val();
-                // 使用 Tabulator 的过滤功能
                 if (selectedQueue) {
                     table.setFilter("queue_name", "=", selectedQueue);
                 } else {
                     table.clearFilter();
-                    updateTableFilters(); // 重新应用其他过滤器
+                    updateTableFilters();
                 }
             });
         }
 
+        // 更新统计信息
+        function updateStats(data) {
+            let activeCount = 0, inactiveCount = 0, totalConsumers = 0, totalMsg = 0;
+            let hasMsgData = false;
+            
+            data.forEach(item => {
+                if (item.consumer_count > 0) {
+                    activeCount++;
+                } else {
+                    inactiveCount++;
+                }
+                totalConsumers += item.consumer_count || 0;
+                if (item.msg_count !== null && item.msg_count !== undefined) {
+                    totalMsg += item.msg_count;
+                    hasMsgData = true;
+                }
+            });
+            
+            $('#active_queue_count').text(activeCount);
+            $('#inactive_queue_count').text(inactiveCount);
+            $('#total_consumer_count').text(totalConsumers);
+            $('#total_msg_count').text(hasMsgData ? totalMsg.toLocaleString() : '-');
+        }
+
         var table = new Tabulator("#queue-table", {
-            theme: "bootstrap3",
             ajaxURL: "/queue/params_and_active_consumers",
             ajaxResponse: function(url, params, response) {
-                console.log("AJAX 响应成功");
-                console.log("URL:", url);
-                console.log("响应数据:", response);
-                return response; // 返回数据给表格
-            },
-            ajaxError: function(xhr, textStatus, errorThrown) {
-                console.error("AJAX 请求失败!");
-                console.error("状态:", textStatus);
-                console.error("错误:", errorThrown);
-                console.error("响应:", xhr);
-                alert("数据加载失败: " + textStatus);
+                const tableData = Object.entries(response).map(([queue_name, data]) => ({
+                    queue_name: queue_name,
+                    broker_kind: data.queue_params.broker_kind,
+                    consuming_function_name: data.queue_params.consuming_function_name,
+                    history_run_count: data.history_run_count,
+                    history_run_fail_count: data.history_run_fail_count,
+                    all_consumers_last_x_s_execute_count: data.all_consumers_last_x_s_execute_count,
+                    all_consumers_last_x_s_execute_count_fail: data.all_consumers_last_x_s_execute_count_fail,
+                    all_consumers_last_execute_task_time: data.all_consumers_last_execute_task_time,
+                    msg_count: data.msg_num_in_broker, 
+                    consumer_count: data.active_consumers.length,
+                    active_consumers: data.active_consumers,
+                    queue_params: data.queue_params,
+                    pause_flag: data.pause_flag,
+                    all_consumers_last_x_s_avarage_function_spend_time: data.all_consumers_last_x_s_avarage_function_spend_time,
+                    all_consumers_avarage_function_spend_time_from_start: data.all_consumers_avarage_function_spend_time_from_start
+                }));
+
+                initializeQueueSelector(tableData);
+                updateStats(tableData);
+
+                return tableData;
             },
             layout: "fitDataFill",
             responsiveLayout: false,
             pagination: true,
-            paginationSize: 1000,
+            paginationSize: 100,
             height: "auto",
             locale: true,
             dataLoaded: function(data) {
-                // 调用独立的初始化函数
-                initializeQueueSelector(data);
-                
-                // 在数据加载完成后应用过滤器
                 setTimeout(function() {
                     updateTableFilters();
                 }, 100);
@@ -53116,165 +48448,245 @@ if __name__ == '__main__':
             tableBuilt: function() {
                 this.initialized = true;
             },
-            rowFormatter: function(row) {
-                var data = row.getData();
-                var cell = row.getCell("queue_name"); 
-
-                if (cell && cell.getElement()) { 
-                    var element = cell.getElement();
-                    if (data.consumer_count > 0) {
-                        element.style.backgroundColor = "#4CAF50"; // 恢复绿色背景
-                        element.style.color = "white";
-                    } else {
-                        element.style.backgroundColor = "#F44336"; // 恢复红色背景
-                        element.style.color = "white";
-                    }
-                }
-            },
             langs: {
                 "zh-cn": {
                     "pagination": {
                         "first": "首页",
-                        "first_title": "首页",
                         "last": "末页",
-                        "last_title": "末页",
                         "prev": "上一页",
-                        "prev_title": "上一页",
                         "next": "下一页",
-                        "next_title": "下一页",
                     }
                 }
             },
             columns: [
                 {
-                    title: "<br><br>队列名字",
+                    title: "队列名称",
                     field: "queue_name",
                     sorter: "string",
                     headerSort: true,
-                    headerHozAlign: "center",
                     hozAlign: "left",
-                    minWidth: 320, // 增加宽度以容纳按钮
-                    headerWordWrap: true,
+                    width: 380,
                     frozen: true,
-                    formatter: function(cell, formatterParams, onRendered) {
+                    formatter: function(cell) {
                         const queueName = cell.getValue();
-                        // 让按钮始终显示，不再依赖 isAutoRefreshing
-                        return `<div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span>${queueName}</span>
-                                    <button class="btn btn-xs btn-info view-chart-btn"
-                                            data-queue-name="${queueName}"
-                                            style="margin-left: 10px; display: inline-block;"
-                                            onclick="showQueueChart('${queueName}')">
-                                        <i class="glyphicon glyphicon-stats"></i> 查看曲线图
+                        const rowData = cell.getRow().getData();
+                        const isActive = rowData.consumer_count > 0;
+                        const statusClass = isActive ? 'queue-active' : 'queue-inactive';
+                        const badgeClass = isActive ? 'badge-active' : 'badge-inactive';
+                        const badgeText = isActive ? '活跃' : '闲置';
+                        
+                        return `<div class="queue-cell">
+                                    <span class="queue-name ${statusClass}">${queueName}</span>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <span class="queue-badge ${badgeClass}">${badgeText}</span>
+                                        <button class="table-btn table-btn-chart" onclick="showQueueChart('${queueName}')">
+                                            <i class="fa fa-line-chart"></i> 曲线图
+                                        </button>
+                                    </div>
+                                </div>`;
+                    }
+                },
+                {
+                    title: "消费者数量",
+                    field: "consumer_count",
+                    sorter: "number",
+                    width: 180,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const row = cell.getRow().getData();
+                        const count = cell.getValue() || 0;
+                        const color = count > 0 ? '#86efac' : '#fcd34d';
+                        const shadow = count > 0 ? 'rgba(134, 239, 172, 0.4)' : 'rgba(252, 211, 77, 0.4)';
+                        return `<div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                    <span style="color: ${color}; font-weight: 700; font-size: 18px; text-shadow: 0 0 10px ${shadow};">${count}</span>
+                                    <button class="table-btn table-btn-info" onclick='showConsumerDetails(${JSON.stringify(row.active_consumers)}, "${row.queue_name}")'>
+                                        <i class="fa fa-eye"></i> 详情
                                     </button>
                                 </div>`;
                     }
                 },
-                { title: "<br><br>consumer数量", field: "consumer_count", sorter: "number", width: 200,
-                formatter: function(cell) {
-                    const row = cell.getRow().getData();
-                    var consumers = row.active_consumers;
-                    return `
-                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 10px;">
-                            <span style="min-width: 50px; text-align: right; padding-right: 15px;">${cell.getValue() || ''}</span>
-                            <button class="btn btn-primary btn-sm" onclick='showConsumerDetails(${JSON.stringify(consumers)}, "${row.queue_name}")'>
-                                查看消费者详情
-                            </button>
-                        </div>
-                    `;
-                }
-            },
-                
-                { title: "<br>broker<br>类型", field: "broker_kind", sorter: "string"  },
-                { title: "<br>消费<br>函数", field: "consuming_function_name", sorter: "string"  },
-              
-                { title: "<br><br>消息数量", field: "msg_count", sorter: "number", width: 250,
+                {
+                    title: "Broker类型",
+                    field: "broker_kind",
+                    sorter: "string",
+                    width: 130,
+                    hozAlign: "center",
                     formatter: function(cell) {
-                        const row = cell.getRow().getData();
-                        const initialCount = cell.getValue() === null ? '' : cell.getValue();
-                        const initialCountStr = initialCount === '' ? '0' : String(initialCount); // Ensure '0' for empty initial
-                        return `
-                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 10px;">
-                                <span id="msg-count-${row.queue_name}" data-last-count="${initialCountStr}" style="min-width: 70px; text-align: right; padding-right: 25px;">${initialCount}</span>
-                                <button class="btn btn-primary btn-sm" onclick="getMessageCount('${row.queue_name}')">获取</button>
-                            </div>
-                        `;
-                    }
-                },
-
-                { title: "<br>历史运<br>行次数", field: "history_run_count", sorter: "number", width: 150 },
-                { title: "<br>历史运<br>行失败<br>次数", field: "history_run_fail_count", sorter: "number", width: 150 },
-                { title: "<br>近10秒<br>完成", field: "all_consumers_last_x_s_execute_count", sorter: "number", width: 100 },
-                { title: "<br>近10秒<br>失败", field: "all_consumers_last_x_s_execute_count_fail", sorter: "number", width: 100 },
-
-                { title: "近10秒<br>函数运行<br>平均耗时", field: "all_consumers_last_x_s_avarage_function_spend_time", sorter: "number", width: 100 },
-                { title: "累计<br>函数运行<br>平均耗时", field: "all_consumers_avarage_function_spend_time_from_start", sorter: "number", width: 100 },
-
-                { 
-                    title: "暂停<br>消费<br>状态",
-                    field: "pause_flag",
-                    width: 100,
-                    formatter: function(cell) {
-                        return cell.getValue()===1 ? '<span style="color: red;">已暂停</span>' : "";
+                        const value = cell.getValue();
+                        const colors = {
+                            'REDIS': '#f87171',
+                            'RABBITMQ_AMQPSTORM': '#fbbf24',
+                            'KAFKA': '#4ade80',
+                            'MONGODB': '#60a5fa'
+                        };
+                        const color = colors[value] || '#a78bfa';
+                        return `<span style="background: ${color}33; color: ${color}; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; text-shadow: 0 0 8px ${color}44;">${value}</span>`;
                     }
                 },
                 {
-                    title: "<br><br>操作",
-                    width: 600,
+                    title: "消费函数",
+                    field: "consuming_function_name",
+                    sorter: "string",
+                    width: 140,
+                    formatter: function(cell) {
+                        return `<code style="background: rgba(167,139,250,0.25); color: #e0d4ff; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">${cell.getValue()}</code>`;
+                    }
+                },
+                {
+                    title: "最后执行时间",
+                    field: "all_consumers_last_execute_task_time",
+                    sorter: "number",
+                    width: 160,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const val = cell.getValue();
+                        if (val === null || val === undefined) return '<span style="color: #888;">-</span>';
+                        const d = new Date(val * 1000);
+                        const timeStr = d.toLocaleString('zh-CN', { hour12: false, month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        // 计算距今多久
+                        const now = Date.now() / 1000;
+                        const diffSec = Math.floor(now - val);
+                        let agoStr = '';
+                        if (diffSec < 60) {
+                            agoStr = `${diffSec}秒前`;
+                        } else if (diffSec < 3600) {
+                            agoStr = `${Math.floor(diffSec / 60)}分钟前`;
+                        } else if (diffSec < 86400) {
+                            agoStr = `${Math.floor(diffSec / 3600)}小时前`;
+                        } else {
+                            agoStr = `${Math.floor(diffSec / 86400)}天前`;
+                        }
+                        const color = diffSec < 60 ? '#4ade80' : (diffSec < 300 ? '#fbbf24' : '#f87171');
+                        return `<div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                                    <span style="color: ${color}; font-weight: 600; font-size: 11px;">${agoStr}</span>
+                                    <span style="color: #888; font-size: 10px;">${timeStr}</span>
+                                </div>`;
+                    }
+                },
+                {
+                    title: "消息数量",
+                    field: "msg_count",
+                    sorter: "number",
+                    width: 200,
+                    formatter: function(cell) {
+                        const row = cell.getRow().getData();
+                        const initialCount = cell.getValue() === null ? '' : cell.getValue();
+                        const initialCountStr = initialCount === '' ? '0' : String(initialCount);
+                        return `<div class="msg-count-cell">
+                                    <span id="msg-count-${row.queue_name}" data-last-count="${initialCountStr}" class="msg-count-value" style="color: #93c5fd;">${initialCount}</span>
+                                    <button class="table-btn table-btn-info" onclick="getMessageCount('${row.queue_name}')">
+                                        <i class="fa fa-refresh"></i> 获取
+                                    </button>
+                                </div>`;
+                    }
+                },
+                {
+                    title: "历史运行次数",
+                    field: "history_run_count",
+                    sorter: "number",
+                    width: 120,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const val = cell.getValue() || 0;
+                        return `<span style="color: #67e8f9; font-weight: 700; text-shadow: 0 0 8px rgba(103, 232, 249, 0.3);">${val.toLocaleString()}</span>`;
+                    }
+                },
+                {
+                    title: "历史失败次数",
+                    field: "history_run_fail_count",
+                    sorter: "number",
+                    width: 120,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const val = cell.getValue() || 0;
+                        const color = val > 0 ? '#fca5a5' : '#888';
+                        return `<span style="color: ${color}; font-weight: 700;">${val.toLocaleString()}</span>`;
+                    }
+                },
+                {
+                    title: "近10秒完成",
+                    field: "all_consumers_last_x_s_execute_count",
+                    sorter: "number",
+                    width: 100,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const val = cell.getValue() || 0;
+                        const color = val > 0 ? '#86efac' : '#888';
+                        return `<span style="color: ${color}; font-weight: 700;">${val}</span>`;
+                    }
+                },
+                {
+                    title: "近10秒失败",
+                    field: "all_consumers_last_x_s_execute_count_fail",
+                    sorter: "number",
+                    width: 100,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const val = cell.getValue() || 0;
+                        const color = val > 0 ? '#fca5a5' : '#888';
+                        return `<span style="color: ${color}; font-weight: 700;">${val}</span>`;
+                    }
+                },
+                {
+                    title: "近10秒平均耗时",
+                    field: "all_consumers_last_x_s_avarage_function_spend_time",
+                    sorter: "number",
+                    width: 120,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const val = cell.getValue();
+                        if (val === null || val === undefined) return '<span style="color: #888;">-</span>';
+                        return `<span style="color: #fde047; font-weight: 600;">${val.toFixed(3)}s</span>`;
+                    }
+                },
+                {
+                    title: "累计平均耗时",
+                    field: "all_consumers_avarage_function_spend_time_from_start",
+                    sorter: "number",
+                    width: 120,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const val = cell.getValue();
+                        if (val === null || val === undefined) return '<span style="color: #888;">-</span>';
+                        return `<span style="color: #fdba74; font-weight: 600;">${val.toFixed(3)}s</span>`;
+                    }
+                },
+                {
+                    title: "状态",
+                    field: "pause_flag",
+                    width: 80,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        return cell.getValue() === 1 ? '<span class="pause-badge">已暂停</span>' : '';
+                    }
+                },
+                {
+                    title: "操作",
+                    width: 450,
                     formatter: function(cell) {
                         const row = cell.getRow().getData();
                         const btnId = 'showParamsBtn_' + Math.random().toString(36).substr(2, 9);
                         setTimeout(() => {
                             document.getElementById(btnId)?.addEventListener('click', () => showParams(row.queue_params));
                         }, 0);
-                        return `
-                            <button id="${btnId}" class="btn btn-info btn-sm action-btn">查看消费者配置</button>
-                            <button class="btn btn-danger btn-sm action-btn" onclick="clearQueue('${row.queue_name}')">清空队列消息</button>
-                            <button class="btn btn-warning btn-sm action-btn" onclick="pauseConsume('${row.queue_name}')">暂停消费</button>
-                            <button class="btn btn-success btn-sm action-btn" onclick="resumeConsume('${row.queue_name}')">恢复消费</button>
-                            <button class="btn btn-default btn-sm action-btn" onclick="deprecateQueue('${row.queue_name}')" style="background-color: #d9534f; color: white;">作废队列</button>
-                        `;
+                        return `<div class="action-btn-group">
+                                    <button id="${btnId}" class="table-btn table-btn-info"><i class="fa fa-cog"></i> 配置</button>
+                                    <button class="table-btn table-btn-danger" onclick="clearQueue('${row.queue_name}')"><i class="fa fa-trash"></i> 清空</button>
+                                    <button class="table-btn table-btn-warning" onclick="pauseConsume('${row.queue_name}')"><i class="fa fa-pause"></i> 暂停</button>
+                                    <button class="table-btn table-btn-success" onclick="resumeConsume('${row.queue_name}')"><i class="fa fa-play"></i> 恢复</button>
+                                    <button class="table-btn table-btn-deprecate" onclick="deprecateQueue('${row.queue_name}')"><i class="fa fa-ban"></i> 作废</button>
+                                </div>`;
                     }
                 },
             ],
-            ajaxResponse: function(url, params, response) {
-                // 转换API响应为表格数据
-                const tableData = Object.entries(response).map(([queue_name, data]) => ({
-                    queue_name: queue_name,
-                    
-                    broker_kind: data.queue_params.broker_kind,
-                    consuming_function_name: data.queue_params.consuming_function_name,
-                    history_run_count: data.history_run_count,
-                    history_run_fail_count: data.history_run_fail_count,
-                    all_consumers_last_x_s_execute_count: data.all_consumers_last_x_s_execute_count,
-                    all_consumers_last_x_s_execute_count_fail: data.all_consumers_last_x_s_execute_count_fail,
-                    msg_count: data.msg_num_in_broker, 
-                    consumer_count: data.active_consumers.length,
-                    active_consumers: data.active_consumers,
-                    queue_params: data.queue_params,
-                    pause_flag: data.pause_flag ,
-                    all_consumers_last_x_s_avarage_function_spend_time:data.all_consumers_last_x_s_avarage_function_spend_time,
-                    all_consumers_avarage_function_spend_time_from_start:data.all_consumers_avarage_function_spend_time_from_start
-                }));
-
-                // 初始化 Select2
-                initializeQueueSelector(tableData);
-
-                return tableData;
-            },
         });
 
         function updateTableFilters() {
-            // 检查表格是否已经初始化
-            if (!table || !table.initialized) {
-                console.log("表格还未初始化，跳过过滤器更新");
-                return;
-            }
+            if (!table || !table.initialized) return;
 
             try {
                 const selectedQueue = $("#queueSearchSelect").val();
                 const showActiveOnly = document.getElementById('showActiveQueuesOnly').checked;
-
                 const filters = [];
 
                 if (selectedQueue && selectedQueue.trim() !== "") {
@@ -53285,7 +48697,6 @@ if __name__ == '__main__':
                     filters.push({field: "consumer_count", type: ">", value: 0});
                 }
 
-                // 清除现有过滤器并设置新的过滤器
                 table.clearFilter();
                 if (filters.length > 0) {
                     table.setFilter(filters);
@@ -53295,101 +48706,90 @@ if __name__ == '__main__':
             }
         }
 
-        // 显示参数的模态框
         function showParams(params) {
-            // 如果已存在模态框，先移除
             if ($("#paramsModal").length) {
                 $("#paramsModal").remove();
             }
 
             const modalHtml = `
                 <div class="modal" id="paramsModal" tabindex="-1" role="dialog">
-                    <div class="modal-dialog" role="document">
+                    <div class="modal-dialog modal-lg" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                <h4 class="modal-title">消费者配置详情</h4>
+                                <h4 class="modal-title"><i class="fa fa-cog" style="color: #6366f1; margin-right: 10px;"></i>消费者配置详情</h4>
                             </div>
-                            <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
-                                <pre style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #dee2e6; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;">${JSON.stringify(params, null, 2)}</pre>
+                            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                                <pre class="json-display">${JSON.stringify(params, null, 2)}</pre>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                <button type="button" class="btn-modern btn-outline-modern" data-dismiss="modal"><i class="fa fa-times"></i> 关闭</button>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
 
-            // 添加模态框到body
             $("body").append(modalHtml);
-            
-            // 初始化并显示模态框
-            $("#paramsModal").modal({
-                backdrop: "static",
-                keyboard: false
-            });
+            $("#paramsModal").modal({ backdrop: "static", keyboard: false });
         }
-        // 操作函数
+
         function getMessageCount(queueName) {
             let countSpan = document.getElementById(`msg-count-${queueName}`);
             let previous_count_str = countSpan.getAttribute('data-last-count') || '0';
             let previous_count = parseInt(previous_count_str);
-            if (isNaN(previous_count)) previous_count = 0; // Fallback
+            if (isNaN(previous_count)) previous_count = 0;
 
-            countSpan.innerHTML = '正在获取...'; // Add a loading indicator
+            countSpan.innerHTML = '<span class="loading-spinner"></span>';
 
-            // 使用 Flask 蓝图接口获取消息数量
             $.get(`/funboost/get_msg_count?queue_name=${encodeURIComponent(queueName)}`, function(response) {
                 if (response.succ) {
                     const new_count = parseInt(response.data.count);
                     if (isNaN(new_count)) {
-                        countSpan.innerHTML = 'get_msg_num_error';
-                        countSpan.setAttribute('data-last-count', '0'); // Reset last count on error
+                        countSpan.innerHTML = '<span style="color: #ef4444;">错误</span>';
+                        countSpan.setAttribute('data-last-count', '0');
                         return;
                     } 
 
                     const difference = new_count - previous_count;
                     let diff_display_html = '';
-                    if (countSpan.getAttribute('data-last-count') !== '0' || previous_count_str !== '') { // Only show diff if not initial load or previous was not error
+                    if (countSpan.getAttribute('data-last-count') !== '0' || previous_count_str !== '') {
                         if (difference > 0) {
-                            diff_display_html = ` <span style="color: red;">↑ +${difference}</span>`;
+                            diff_display_html = ` <span class="msg-diff-up">↑ +${difference}</span>`;
                         } else if (difference < 0) {
-                            diff_display_html = ` <span style="color: green;">↓ ${difference}</span>`;
+                            diff_display_html = ` <span class="msg-diff-down">↓ ${difference}</span>`;
                         }
                     }
 
-                    countSpan.innerHTML = `${new_count}${diff_display_html}`;
+                    countSpan.innerHTML = `${new_count.toLocaleString()}${diff_display_html}`;
                     countSpan.setAttribute('data-last-count', new_count.toString());
                 } else {
-                    countSpan.innerHTML = 'get_msg_num_error';
-                    countSpan.setAttribute('data-last-count', '0'); // Reset last count on error
+                    countSpan.innerHTML = '<span style="color: #ef4444;">错误</span>';
+                    countSpan.setAttribute('data-last-count', '0');
                 }
             }).fail(function() {
-                countSpan.innerHTML = 'get_msg_num_error';
-                countSpan.setAttribute('data-last-count', '0'); // Reset last count on error
+                countSpan.innerHTML = '<span style="color: #ef4444;">错误</span>';
+                countSpan.setAttribute('data-last-count', '0');
             });
         }
 
         function clearQueue(queueName) {
-            if (confirm(`确定要清空队列 ${queueName} 的所有消息吗？`)) {
+            if (confirm(`确定要清空队列 "${queueName}" 的所有消息吗？\n\n此操作不可撤销！`)) {
                 $.ajax({
                     url: '/funboost/clear_queue',
                     type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({
-                        queue_name: queueName
-                    }),
+                    data: JSON.stringify({ queue_name: queueName }),
                     success: function(response) {
                         if (response.succ) {
-                            alert(`清空 ${queueName} 队列成功`);
-                            getMessageCount(queueName); // 自动获取最新的消息数量
+                            alert(`✅ 清空 "${queueName}" 队列成功`);
+                            getMessageCount(queueName);
                         } else {
-                            alert(`清空队列失败：${response.msg}`);
+                            alert(`❌ 清空队列失败：${response.msg}`);
                         }
                     },
                     error: function(xhr, status, error) {
-                        alert(`清空队列失败：${error}`);
+                        alert(`❌ 清空队列失败：${error}`);
                     }
                 });
             }
@@ -53398,11 +48798,9 @@ if __name__ == '__main__':
         function pauseConsume(queueName) {
             $.post(`/queue/pause/${queueName}`, function(response) {
                 if (response.success) {
-                    alert("暂停消费成功");
+                    alert("✅ 暂停消费成功");
                     const row = table.getRows().find(row => row.getData().queue_name === queueName);
-                    if (row) {
-                        row.update({pause_flag: 1});
-                    }
+                    if (row) row.update({pause_flag: 1});
                 }
             });
         }
@@ -53410,18 +48808,15 @@ if __name__ == '__main__':
         function resumeConsume(queueName) {
             $.post(`/queue/resume/${queueName}`, function(response) {
                 if (response.success) {
-                    alert("恢复消费成功");
+                    alert("✅ 恢复消费成功");
                     const row = table.getRows().find(row => row.getData().queue_name === queueName);
-                    if (row) {
-                        row.update({pause_flag: 0});
-                    }
+                    if (row) row.update({pause_flag: 0});
                 }
             });
         }
 
-        // 作废队列
         function deprecateQueue(queueName) {
-            if (!confirm(`确定要作废队列 "${queueName}" 吗？\n\n作废后，该队列将从redis元数据的队列set中移除，但不会删除队列中的数据。\n如果需要再次使用，需要重新启动消费者。`)) {
+            if (!confirm(`确定要作废队列 "${queueName}" 吗？\n\n作废后，该队列将从Redis元数据中移除。\n如需再次使用，需要重新启动消费者。`)) {
                 return;
             }
             
@@ -53429,25 +48824,21 @@ if __name__ == '__main__':
                 url: '/funboost/deprecate_queue',
                 type: 'DELETE',
                 contentType: 'application/json',
-                data: JSON.stringify({
-                    queue_name: queueName
-                }),
+                data: JSON.stringify({ queue_name: queueName }),
                 success: function(response) {
                     if (response.succ) {
-                        alert(`队列 "${queueName}" 已成功作废！`);
-                        // 刷新表格数据
+                        alert(`✅ 队列 "${queueName}" 已成功作废！`);
                         table.replaceData();
                     } else {
-                        alert(`作废队列失败：${response.msg}`);
+                        alert(`❌ 作废队列失败：${response.msg}`);
                     }
                 },
                 error: function(xhr, status, error) {
-                    alert(`作废队列失败：${error}`);
+                    alert(`❌ 作废队列失败：${error}`);
                 }
             });
         }
 
-        // 显示消费者详情的模态框
         function showConsumerDetails(consumers, queueName) {
             $.ajax({
                 url: '/running_consumer/hearbeat_info_by_queue_name',
@@ -53457,78 +48848,71 @@ if __name__ == '__main__':
                     consumers.forEach(consumer => {
                         consumerRows += `
                             <tr>
-                                <td>${consumer.computer_ip}</td>
+                                <td style="color: #60a5fa;">${consumer.computer_ip}</td>
                                 <td>${consumer.computer_name}</td>
-                                <td>${consumer.process_id}</td>
-                                <td>${consumer.hearbeat_datetime_str}</td>
-                                
+                                <td style="color: #a5b4fc;">${consumer.process_id}</td>
+                                <td style="color: #8b5cf6;">${consumer.hearbeat_datetime_str}</td>
                                 <td>${consumer.start_datetime_str}</td>
-                                
-                                <td>${consumer.last_x_s_execute_count}</td>
-                                <td>${consumer.last_x_s_execute_count_fail}</td>
-                                <td>${consumer.last_x_s_avarage_function_spend_time}</td>
-                                <td>${consumer.total_consume_count_from_start}</td>
-                                <td>${consumer.total_consume_count_from_start_fail}</td>
-                                <td>${consumer.avarage_function_spend_time_from_start}</td>
-                                <td>${consumer.code_filename}</td>,
-                                <td>${consumer.consumer_uuid}</td>
+                                <td style="color: #34d399; font-weight: 600;">${consumer.last_x_s_execute_count}</td>
+                                <td style="color: ${consumer.last_x_s_execute_count_fail > 0 ? '#f87171' : '#666'}; font-weight: 600;">${consumer.last_x_s_execute_count_fail}</td>
+                                <td style="color: #fbbf24;">${consumer.last_x_s_avarage_function_spend_time?.toFixed(3) || '-'}s</td>
+                                <td style="color: #22d3ee;">${consumer.total_consume_count_from_start?.toLocaleString() || 0}</td>
+                                <td style="color: ${consumer.total_consume_count_from_start_fail > 0 ? '#f87171' : '#666'};">${consumer.total_consume_count_from_start_fail?.toLocaleString() || 0}</td>
+                                <td style="color: #fb923c;">${consumer.avarage_function_spend_time_from_start?.toFixed(3) || '-'}s</td>
+                                <td style="font-size: 11px; color: #888;" title="${consumer.code_filename}">${consumer.code_filename.split(/[\\/]/).pop()}</td>
+                                <td style="font-size: 10px; color: #666;">${consumer.consumer_uuid}</td>
                             </tr>
                         `;
                     });
                 
                     const modalHtml = `
                         <div class="modal" id="consumerDetailsModal" tabindex="-1" role="dialog">
-                            <div class="modal-dialog" style="width: 90%;" role="document">
+                            <div class="modal-dialog" style="width: 95%;" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                        <h4 class="modal-title">${queueName}队列的消费者详情信息</h4>
+                                        <h4 class="modal-title">
+                                            <i class="fa fa-users" style="color: #10b981; margin-right: 10px;"></i>
+                                            队列 <span style="color: #a5b4fc;">${queueName}</span> 的消费者详情
+                                        </h4>
                                     </div>
-                                    <div class="modal-body">
-                                        <div class="table-responsive">
-                                            <table class="table table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th>计算机IP</th>
-                                                        <th>计算机名称</th>
-                                                        <th>进程ID</th>
-                                                        <th>最后心跳时间</th>
-                                                        
-                                                        <th>启动时间</th>
-                                                        
-                                                        <th>近10秒<br>运行完成<br>消息个数</th>
-                                                        <th>近10秒<br>运行失败<br>消息个数</th>
-                                                        <th>近10秒<br>函数运行<br>平均耗时</th>
-                                                        <th>累计<br>运行完成<br>消息个数</th>
-                                                        <th>累计<br>运行失败<br>消息个数</th>
-                                                        <th>累计<br>函数运行<br>平均耗时</th>
-                                                        <th>代码文件名</th>
-                                                        <th>消费者UUID</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    ${consumerRows}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                    <div class="modal-body" style="overflow-x: auto;">
+                                        <table class="consumer-detail-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>IP地址</th>
+                                                    <th>主机名</th>
+                                                    <th>进程ID</th>
+                                                    <th>最后心跳</th>
+                                                    <th>启动时间</th>
+                                                    <th>近10秒完成</th>
+                                                    <th>近10秒失败</th>
+                                                    <th>近10秒耗时</th>
+                                                    <th>累计完成</th>
+                                                    <th>累计失败</th>
+                                                    <th>累计耗时</th>
+                                                    <th>代码文件</th>
+                                                    <th>消费者UUID</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${consumerRows}
+                                            </tbody>
+                                        </table>
                                     </div>
                                     <div class="modal-footer">
-                                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                        <button type="button" class="btn-modern btn-outline-modern" data-dismiss="modal"><i class="fa fa-times"></i> 关闭</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     `;
                 
-                    // 移除已存在的模态框
                     $('#consumerDetailsModal').remove();
-                    // 添加新的模态框到body
                     $('body').append(modalHtml);
-                    // 显示模态框
                     $('#consumerDetailsModal').modal('show');
                 },
-                error: function(xhr, status, error) {
-                    console.error('获取消费者详情失败:', error);
+                error: function() {
                     alert('获取消费者详情失败');
                 }
             });
@@ -53541,13 +48925,12 @@ if __name__ == '__main__':
             });
         };
 
-        // --- BEGIN NEW SCRIPT LOGIC ---
+        // 自动刷新逻辑
         let isAutoRefreshing = false;
         let autoRefreshIntervalId = null;
-        const AUTO_REFRESH_INTERVAL = 10000; // 10 秒
-        let chartInstance = null; // 用于存储Chart.js的实例
+        const AUTO_REFRESH_INTERVAL = 10000;
+        let chartInstance = null;
 
-        // 定义需要记录并展示在图表中的列字段及其显示名称
         const CHARTABLE_FIELDS_MAP = {
             "history_run_count": "历史运行次数",
             "history_run_fail_count": "历史运行失败次数",
@@ -53557,37 +48940,36 @@ if __name__ == '__main__':
             "all_consumers_avarage_function_spend_time_from_start": "累计函数运行平均耗时",
             "msg_num_in_broker": "消息数量"
         };
-        // 预定义颜色
+
         const PREDEFINED_COLORS = [
             '#E60012', '#005AC8', '#00A600', '#FF9900', '#8B28B7', '#9A6324', '#5E8C78', '#F58231', '#42D4F4', '#BF6131', '#3CB44B', '#4363D8', '#F032E6', '#BCF60C', '#FABEBE', '#AAFFC3', '#E6BEFF', '#FFFAC8'
         ];
 
         function refreshTableData() {
             table.replaceData()
-                .then(() => {
-                    console.log("Auto-refresh: table data refreshed successfully.");
-                })
-                .catch(error => {
-                    console.error("Auto-refresh: error refreshing table data:", error);
-                });
+                .then(() => console.log("Auto-refresh: 数据刷新成功"))
+                .catch(error => console.error("Auto-refresh: 刷新失败:", error));
         }
 
         function toggleAutoRefresh() {
             const button = document.getElementById("toggle-auto-refresh");
+            const indicator = document.getElementById("refresh-indicator");
+            
             if (isAutoRefreshing) {
                 clearInterval(autoRefreshIntervalId);
                 isAutoRefreshing = false;
-                button.textContent = "启动自动刷新";
-                button.classList.remove("btn-danger");
-                button.classList.add("btn-success");
-                if (table) {
-                    table.redraw(true);
-                }
+                button.innerHTML = '<i class="fa fa-play"></i> 启动自动刷新';
+                button.classList.remove("btn-danger-modern");
+                button.classList.add("btn-success-modern");
+                indicator.style.display = 'none';
+                indicator.classList.remove('active');
             } else {
                 isAutoRefreshing = true;
-                button.textContent = "暂停自动刷新";
-                button.classList.remove("btn-success");
-                button.classList.add("btn-danger");
+                button.innerHTML = '<i class="fa fa-pause"></i> 暂停自动刷新';
+                button.classList.remove("btn-success-modern");
+                button.classList.add("btn-danger-modern");
+                indicator.style.display = 'flex';
+                indicator.classList.add('active');
                 refreshTableData();
                 autoRefreshIntervalId = setInterval(refreshTableData, AUTO_REFRESH_INTERVAL);
             }
@@ -53597,10 +48979,11 @@ if __name__ == '__main__':
 
         let currentChartQueueName = null;
         let endTimeUserChanged = false;
+        
         document.getElementById("chartEndTime").addEventListener("input", function() {
             endTimeUserChanged = true;
         });
-        // 工具函数：将Date对象转为input[type=datetime-local]需要的本地时间字符串
+
         function toDatetimeLocalString(date) {
             const pad = n => n < 10 ? '0' + n : n;
             return date.getFullYear() + '-' +
@@ -53609,104 +48992,79 @@ if __name__ == '__main__':
                 pad(date.getHours()) + ':' +
                 pad(date.getMinutes());
         }
+
         function showQueueChart(queueName) {
             currentChartQueueName = queueName;
             document.getElementById("chartQueueName").textContent = queueName;
-            // 设置默认时间范围：最近1小时（本地时区字符串）
+            
             const now = new Date();
-            const start = new Date(now.getTime() - 60 * 60 * 1000); // 1小时
-            const startStr = toDatetimeLocalString(start);
-            const endStr = toDatetimeLocalString(now);
-            const minStart = toDatetimeLocalString(new Date(now.getTime() - 24 * 60 * 60 * 1000)); // 24小时
-            document.getElementById("chartStartTime").value = startStr;
-            document.getElementById("chartEndTime").value = endStr;
-            document.getElementById("chartStartTime").setAttribute('max', endStr);
-            document.getElementById("chartStartTime").setAttribute('min', minStart);
-            document.getElementById("chartEndTime").removeAttribute('max');
-            document.getElementById("chartEndTime").setAttribute('min', minStart);
-            endTimeUserChanged = false; // 重置
+            const start = new Date(now.getTime() - 60 * 60 * 1000);
+            document.getElementById("chartStartTime").value = toDatetimeLocalString(start);
+            document.getElementById("chartEndTime").value = toDatetimeLocalString(now);
+            endTimeUserChanged = false;
+            
             loadQueueChartData(queueName, Math.floor(start.getTime() / 1000), Math.floor(now.getTime() / 1000), 360);
         }
+
         function reloadQueueChartWithTimeRange() {
             const start = document.getElementById("chartStartTime").value;
             const end = document.getElementById("chartEndTime").value;
             const curveSamplesCount = document.getElementById("curveSamplesCount").value;
             let start_ts = start ? (new Date(start).getTime() / 1000) : null;
             let end_ts = end ? (new Date(end).getTime() / 1000) : null;
-            if (endTimeUserChanged) {
-                console.log('用户手动填写了结束时间:', end);
-            } else {
-                console.log('结束时间为默认值:', end);
-            }
             loadQueueChartData(currentChartQueueName, start_ts, end_ts, curveSamplesCount);
         }
+
         function loadQueueChartData(queueName, start_ts, end_ts, curveSamplesCount) {
             if (chartInstance) chartInstance.destroy();
+            
             const chartCanvas = document.getElementById('queueDataChart');
             const ctx = chartCanvas.getContext('2d');
             ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
-            ctx.font = "16px Arial";
+            ctx.font = "16px 'Segoe UI'";
+            ctx.fillStyle = "#a5b4fc";
             ctx.textAlign = "center";
-            ctx.fillText("正在加载数据...", chartCanvas.width / 2, chartCanvas.height / 2);
+            ctx.fillText("⏳ 正在加载数据...", chartCanvas.width / 2, chartCanvas.height / 2);
+            
             let url = `/queue/get_time_series_data/${queueName}`;
             let params = [];
             if (start_ts) params.push(`start_ts=${start_ts}`);
             if (end_ts) params.push(`end_ts=${end_ts}`);
             if (curveSamplesCount) params.push(`curve_samples_count=${curveSamplesCount}`);
             if (params.length > 0) url += '?' + params.join('&');
+            
             $.get(url, function(response) {
-                console.log('AJAX请求成功，返回数据:', response);
-                console.log('数据类型:', typeof response, '数据长度:', response ? response.length : 'undefined');
-                
                 if (!response || response.length === 0) {
-                    console.log('数据为空，显示暂无数据');
                     ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
-                    ctx.fillText("暂无历史数据", chartCanvas.width / 2, chartCanvas.height / 2);
+                    ctx.fillText("📭 暂无历史数据", chartCanvas.width / 2, chartCanvas.height / 2);
                     $('#chartModal').modal('show');
                     return;
                 }
                 
-                console.log('开始处理', response.length, '个数据点');
-                // 横坐标用本地时间字符串显示
+                const dataPointCount = response.length;
                 const labels = response.map(dp => {
                     const d = new Date(dp.report_ts * 1000);
                     return d.toLocaleString('zh-CN', { hour12: false });
                 });
-                console.log('时间标签生成完成，数量:', labels.length);
-                console.log('开始生成数据集，字段映射:', CHARTABLE_FIELDS_MAP);
-                
-                // 在函数作用域中定义dataPointCount，确保在Chart配置中可以访问
-                const dataPointCount = response.length;
-                console.log('数据点数量:', dataPointCount);
                 
                 const datasets = Object.keys(CHARTABLE_FIELDS_MAP).map((fieldKey, index) => {
                     const displayName = CHARTABLE_FIELDS_MAP[fieldKey];
                     const isDefaultVisible = fieldKey === 'all_consumers_last_x_s_execute_count' || fieldKey === 'all_consumers_last_x_s_execute_count_fail';
                     
-                                    // 根据数据点数量动态调整配置 - 优化平滑度
-                let pointRadius, tension, borderWidth;
-                
-                if (dataPointCount > 2000) {
-                    // 超大量数据点：隐藏点，高张力，细线条
-                    pointRadius = 0;
-                    tension = 0.7;
-                    borderWidth = 1.2;
-                } else if (dataPointCount > 800) {
-                    // 大量数据点：隐藏点，较高张力，较细线条
-                    pointRadius = 0;
-                    tension = 0.65;
-                    borderWidth = 1.5;
-                } else if (dataPointCount > 300) {
-                    // 中等数据点：小点，中高张力 - 针对360等常用采样点数优化
-                    pointRadius = 0.3;
-                    tension = 0.6;
-                    borderWidth = 1.8;
-                } else {
-                    // 少量数据点：正常配置，增加平滑度
-                    pointRadius = 1;
-                    tension = 0.5;
-                    borderWidth = 2;
-                }
+                    let pointRadius, tension, borderWidth;
+                    if (dataPointCount > 800) {
+                        pointRadius = 0;
+                        tension = 0.65;
+                        borderWidth = 1.5;
+                    } else if (dataPointCount > 300) {
+                        pointRadius = 0.3;
+                        tension = 0.6;
+                        borderWidth = 1.8;
+                    } else {
+                        pointRadius = 1;
+                        tension = 0.5;
+                        borderWidth = 2;
+                    }
                     
                     return {
                         label: displayName,
@@ -53723,132 +49081,81 @@ if __name__ == '__main__':
                         pointHoverRadius: Math.max(3, pointRadius + 2),
                         borderWidth: borderWidth,
                         hidden: !isDefaultVisible,
-                        cubicInterpolationMode: 'monotone', // 单调插值，更平滑
-                        spanGaps: true, // 跨越空值
-                        segment: {
-                            borderColor: ctx => dataPointCount > 300 ? 
-                                (ctx.p0.parsed.y == null || ctx.p1.parsed.y == null ? 'transparent' : undefined) : undefined
-                        } // 优化大数据量时的线段渲染
+                        cubicInterpolationMode: 'monotone',
+                        spanGaps: true
                     };
                 });
-                console.log('数据集生成完成，数量:', datasets.length);
-                console.log('开始创建Chart实例...');
-                try {
-                    chartInstance = new Chart(ctx, {
-                        type: 'line',
-                        data: { labels, datasets },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            // 性能优化设置
-                            animation: {
-                                duration: dataPointCount > 800 ? 0 : 1000, // 数据点多时禁用动画
-                                easing: 'easeInOutQuart' // 使用更平滑的缓动函数
-                            },
-                            // 启用数据集动画以获得更平滑的效果
-                            datasets: {
-                                line: {
-                                    pointHoverBackgroundColor: 'rgba(255,255,255,0.8)',
-                                    pointHoverBorderColor: 'rgba(220,220,220,1)',
-                                    pointHoverBorderWidth: 2
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    title: { display: true, text: '时间' },
-                                    ticks: {
-                                        autoSkip: true,
-                                        maxTicksLimit: Math.min(20, Math.max(10, Math.floor(dataPointCount / 50))) // 根据数据点数量动态调整
-                                    }
+                
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: dataPointCount > 800 ? 0 : 1000,
+                            easing: 'easeInOutQuart'
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: '时间', color: '#a5b4fc' },
+                                ticks: {
+                                    autoSkip: true,
+                                    maxTicksLimit: Math.min(20, Math.max(10, Math.floor(dataPointCount / 50))),
+                                    color: '#888'
                                 },
-                                y: { 
-                                    beginAtZero: false, 
-                                    title: { display: true, text: '数值' },
-                                    // 为大量数据点添加性能优化
-                                    ticks: {
-                                        maxTicksLimit: 10
-                                    }
-                                }
+                                grid: { color: 'rgba(139, 92, 246, 0.1)' }
                             },
-                            plugins: {
-                                legend: { position: 'top' },
-                                title: { 
-                                    display: true, 
-                                    text: `队列 [${queueName}] 各项指标变化趋势 (${dataPointCount}个数据点)` 
-                                },
-                                tooltip: { 
-                                    mode: 'index', 
-                                    intersect: false
-                                }
+                            y: { 
+                                beginAtZero: false, 
+                                title: { display: true, text: '数值', color: '#a5b4fc' },
+                                ticks: { maxTicksLimit: 10, color: '#888' },
+                                grid: { color: 'rgba(139, 92, 246, 0.1)' }
+                            }
+                        },
+                        plugins: {
+                            legend: { 
+                                position: 'top',
+                                labels: { color: '#e0e0e0' }
                             },
-                            interaction: { 
-                                mode: 'nearest', 
-                                axis: 'x', 
-                                intersect: false
+                            title: { 
+                                display: true, 
+                                text: `队列 [${queueName}] 各项指标变化趋势 (${dataPointCount}个数据点)`,
+                                color: '#ffffff'
                             },
-                            // 大量数据点时的额外优化
-                            elements: {
-                                line: {
-                                    borderJoinStyle: 'round', // 更平滑的线条连接
-                                    borderCapStyle: 'round',  // 圆形端点
-                                    fill: false
-                                },
-                                point: {
-                                    hoverRadius: dataPointCount > 800 ? 2 : 4, // 根据数据量调整悬停半径
-                                    hitRadius: dataPointCount > 800 ? 3 : 6    // 根据数据量调整点击半径
-                                }
-                            },
-                            // 针对大数据量的优化配置
-                            parsing: dataPointCount > 1000 ? {
-                                xAxisKey: false, // 禁用x轴解析以提高性能
-                                yAxisKey: false  // 禁用y轴解析以提高性能
-                            } : undefined
-                        }
-                    });
-                    console.log('Chart created successfully with', dataPointCount, 'data points');
-                } catch (error) {
-                    console.error('Error creating chart:', error);
-                    ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
-                    ctx.fillText("图表创建失败: " + error.message, chartCanvas.width / 2, chartCanvas.height / 2);
-                }
+                            tooltip: { mode: 'index', intersect: false }
+                        },
+                        interaction: { mode: 'nearest', axis: 'x', intersect: false }
+                    }
+                });
+                
                 $('#chartModal').modal('show');
             }).fail(function(xhr, status, error) {
-                console.error('AJAX请求失败:', {
-                    status: status,
-                    error: error,
-                    responseText: xhr.responseText,
-                    url: url
-                });
                 ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
-                ctx.fillText("获取数据失败: " + error, chartCanvas.width / 2, chartCanvas.height / 2);
+                ctx.fillText("❌ 获取数据失败: " + error, chartCanvas.width / 2, chartCanvas.height / 2);
                 $('#chartModal').modal('show');
             });
         }
 
-        // 新增：模态框关闭时的处理
         $('#chartModal').on('hidden.bs.modal', function () {
             if (chartInstance) {
                 chartInstance.destroy();
                 chartInstance = null;
             }
-            console.log("Chart modal closed and instance destroyed.");
         });
 
-        // 新增：显示说明模态框的函数
         function showExplanationModal() {
             const explanationTextHtml = `
-                <li>消息队列的各项指标数据是 funboost 消费者每隔10秒周期上报到 redis 的，所以不是毫秒级实时，而是10秒级实时。</li>
-                <li>"更新所有队列消息数量"按钮和表格"消息数量"列的获取按钮，是实时查询 broker 的消息数量，不是基于消费者上报到 redis 的数据。（因为有的队列可能没有启动相应的消费者，也就没有上报方）</li>
-                
+                <li style="margin-bottom: 12px;"><i class="fa fa-clock-o" style="color: #6366f1; margin-right: 8px;"></i>消息队列的各项指标数据是 funboost 消费者每隔10秒周期上报到 redis 的，所以不是毫秒级实时，而是10秒级实时。</li>
+                <li style="margin-bottom: 12px;"><i class="fa fa-refresh" style="color: #10b981; margin-right: 8px;"></i>"刷新所有消息数量"按钮和表格"消息数量"列的获取按钮，是实时查询 broker 的消息数量，不是基于消费者上报到 redis 的数据。</li>
+                <li><i class="fa fa-info-circle" style="color: #f59e0b; margin-right: 8px;"></i>因为有的队列可能没有启动相应的消费者，也就没有上报方，所以需要单独获取消息数量。</li>
             `;
             document.getElementById('explanation-text').innerHTML = explanationTextHtml;
             $('#explanationModal').modal('show');
         }
 
-        // 绑定说明按钮的点击事件
         document.getElementById('show-explanation-btn').addEventListener('click', showExplanationModal);
 
-        // 新增：处理复选框状态变化的函数
         function toggleActiveQueuesFilter() {
             try {
                 updateTableFilters();
@@ -53857,165 +49164,13 @@ if __name__ == '__main__':
             }
         }
 
-        // 初始化时不立即设置过滤条件，等待表格完全加载
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM内容加载完成，等待表格初始化...");
-            // 移除立即调用 updateTableFilters()，改为在表格数据加载完成后调用
-        });
-
+        // 显示曲线图数据来源说明
+        function showChartDataExplanation() {
+            $('#chartDataExplanationModal').modal('show');
+        }
     </script>
 </body>
 </html>
-
-
-<!-- 
- 队列名字  broker_kind  消息数量  consumer数量 消费者参数   是否暂停消费状态     操作(这一列都是按钮)
-                                                                            获取消息数量、清空队列消息、 暂停消费 、恢复消费
-                                                                        
-                                                                            
-     接口   /queue/params_and_active_consumers 返回的是如下字典,字典中的key是队列名字，
-     value是一个字典，字典中有两个key，一个是active_consumers，一个是 queue_params ，
-     queue_params的broker_kind 是队列的类型，active_consumers 数组长度是 consumer数量
-     
-     
-     显示到表格中
-
-     {
-    "queue_test_g01t": {
-        "active_consumers": [
-            {
-                "code_filename": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py",
-                "computer_ip": "10.0.133.57",
-                "computer_name": "LAPTOP-7V78BBO2",
-                "consumer_id": 2642746547464,
-                "consumer_uuid": "5ba1aa04-1067-4173-8ee6-0c1e29f8b015",
-                "consuming_function": "f",
-                "hearbeat_datetime_str": "2025-02-26 20:29:40",
-                "hearbeat_timestamp": 1740572980.216993,
-                "process_id": 51852,
-                "queue_name": "queue_test_g01t",
-                "start_datetime_str": "2025-02-26 20:03:06",
-                "start_timestamp": 1740571386.7500842,
-                 "execute_task_times_every_unit_time_temp": 2
-            }
-        ],
-        "queue_params": {
-            "auto_generate_info": {
-                "where_to_instantiate": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py:10"
-            },
-            "broker_exclusive_config": {
-                "pull_msg_batch_size": 100,
-                "redis_bulk_push": 1
-            },
-            "broker_kind": "REDIS",
-            "concurrent_mode": "threading",
-            "concurrent_num": 50,
-            "consuming_function": "<function f at 0x000002674C8A1708>",
-            "consuming_function_kind": "COMMON_FUNCTION",
-            "consuming_function_raw": "<function f at 0x000002674C8A1708>",
-            "create_logger_file": true,
-            "delay_task_apscheduler_jobstores_kind": "redis",
-            "do_not_run_by_specify_time": [
-                "10:00:00",
-                "22:00:00"
-            ],
-            "do_task_filtering": false,
-            "function_result_status_persistance_conf": {
-                "expire_seconds": 604800,
-                "is_save_result": true,
-                "is_save_status": true,
-                "is_use_bulk_insert": false
-            },
-            "is_auto_start_consuming_message": false,
-            "is_do_not_run_by_specify_time_effect": false,
-            "is_print_detail_exception": true,
-            "is_push_to_dlx_queue_when_retry_max_times": false,
-            "is_send_consumer_hearbeat_to_redis": true,
-            "is_show_message_get_from_broker": false,
-            "is_support_remote_kill_task": false,
-            "is_using_distributed_frequency_control": false,
-            "is_using_rpc_mode": false,
-            "log_level": 10,
-            "logger_name": "",
-            "logger_prefix": "",
-            "max_retry_times": 3,
-            "publish_msg_log_use_full_msg": false,
-            "queue_name": "queue_test_g01t",
-            "retry_interval": 0,
-            "rpc_result_expire_seconds": 600,
-            "schedule_tasks_on_main_thread": false,
-            "should_check_publish_func_params": true,
-            "task_filtering_expire_seconds": 0
-        }
-    },
-    "queue_test_g02t": {
-        "active_consumers": [
-            {
-                "code_filename": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py",
-                "computer_ip": "10.0.133.57",
-                "computer_name": "LAPTOP-7V78BBO2",
-                "consumer_id": 2642746605384,
-                "consumer_uuid": "a5528e66-2949-47ca-9aea-bbf920165c53",
-                "consuming_function": "f2",
-                "hearbeat_datetime_str": "2025-02-26 20:29:40",
-                "hearbeat_timestamp": 1740572980.13895,
-                "process_id": 51852,
-                "queue_name": "queue_test_g02t",
-                "start_datetime_str": "2025-02-26 20:03:06",
-                "start_timestamp": 1740571386.7650468,
-                 "execute_task_times_every_unit_time_temp": 2
-            }
-        ],
-        "queue_params": {
-            "auto_generate_info": {
-                "where_to_instantiate": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py:18"
-            },
-            "broker_exclusive_config": {
-                "pull_msg_batch_size": 100,
-                "redis_bulk_push": 1
-            },
-            "broker_kind": "REDIS",
-            "concurrent_mode": "threading",
-            "concurrent_num": 50,
-            "consuming_function": "<function f2 at 0x000002674FF5DE58>",
-            "consuming_function_kind": "COMMON_FUNCTION",
-            "consuming_function_raw": "<function f2 at 0x000002674FF5DE58>",
-            "create_logger_file": true,
-            "delay_task_apscheduler_jobstores_kind": "redis",
-            "do_not_run_by_specify_time": [
-                "10:00:00",
-                "22:00:00"
-            ],
-            "do_task_filtering": false,
-            "function_result_status_persistance_conf": {
-                "expire_seconds": 604800,
-                "is_save_result": true,
-                "is_save_status": true,
-                "is_use_bulk_insert": false
-            },
-            "is_auto_start_consuming_message": false,
-            "is_do_not_run_by_specify_time_effect": false,
-            "is_print_detail_exception": true,
-            "is_push_to_dlx_queue_when_retry_max_times": false,
-            "is_send_consumer_hearbeat_to_redis": true,
-            "is_show_message_get_from_broker": false,
-            "is_support_remote_kill_task": false,
-            "is_using_distributed_frequency_control": false,
-            "is_using_rpc_mode": false,
-            "log_level": 10,
-            "logger_name": "",
-            "logger_prefix": "",
-            "max_retry_times": 3,
-            "publish_msg_log_use_full_msg": false,
-            "queue_name": "queue_test_g02t",
-            "retry_interval": 0,
-            "rpc_result_expire_seconds": 600,
-            "schedule_tasks_on_main_thread": false,
-            "should_check_publish_func_params": true,
-            "task_filtering_expire_seconds": 0
-        }
-    }
-}
 
 `````
 
@@ -54034,197 +49189,812 @@ if __name__ == '__main__':
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>pytho万能分布式函数调度框架</title>
+    <title>RPC 远程调用 - Funboost</title>
     <link href="{{ url_for('static',filename='css_cdn/twitter-bootstrap/3.3.7/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
-    <link rel="stylesheet"
-        href="{{ url_for('static',filename='css_cdn/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/jquery.mCustomScrollbar.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/custom.css') }}">
-
-    <!-- 在其他 link 标签后添加 -->
     <link href="{{ url_for('static',filename='css_cdn/select2/4.0.13/css/select2.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static',filename='css/content_page_style.css') }}" rel="stylesheet">
-
 
     <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.0/jquery.min.js"></script> -->
-    <!-- 在其他 script 标签后添加 -->
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/select2/4.0.13/js/select2.min.js"></script> -->
     <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
     <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
 
-
-    <script src="{{ url_for('static',filename='js/moment-with-locales.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='js/bootstrap-datetimepicker.min.js') }}"></script>
-    <!-- <script src="https://cdn.bootcss.com/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script> -->
-    <!-- <script type="text/javascript" src="https://cdn.bootcss.com/echarts/3.3.0/echarts.js"></script> -->
-    <script type="text/javascript" src="{{ url_for('static',filename='js/echarts.min.js') }}"></script>
-
-    <script src="{{ url_for('static',filename='assets/js/jquery.mCustomScrollbar.concat.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='assets/js/custom.js') }}"></script>
-
-        
-    <!-- 添加 Tabulator 样式和脚本 -->
-    <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator_bootstrap3.min.css') }}" rel="stylesheet">
-    <script type="text/javascript" src="{{ url_for('static',filename='js_cdn/tabulator-tables@5.5.0/dist/js/tabulator.min.js') }}"></script>
-
     <style>
+        * {
+            box-sizing: border-box;
+        }
 
+        body {
+            background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-container {
+            padding: 20px 30px;
+            max-width: 100%;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 20px 25px;
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(236, 72, 153, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(236, 72, 153, 0.4);
+            margin-right: 20px;
+        }
+
+        .header-icon i {
+            font-size: 28px;
+            color: white;
+        }
+
+        .header-title h1 {
+            margin: 0 0 5px 0;
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ffffff 0%, #f0abfc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-title p {
+            margin: 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* 主内容区域 */
+        .content-row {
+            display: flex;
+            gap: 25px;
+        }
+
+        .left-panel, .right-panel {
+            flex: 1;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.8) 0%, rgba(40, 40, 80, 0.6) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
+        }
+
+        .card-send {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .card-query {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .card-result {
+            border-left: 4px solid #10b981;
+        }
+
+        .card-json {
+            border-left: 4px solid #8b5cf6;
+        }
+
+        /* 卡片标题 */
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .card-title-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+        }
+
+        .card-title-icon.blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+        }
+
+        .card-title-icon.orange {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+        }
+
+        .card-title-icon.green {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+        }
+
+        .card-title-icon.purple {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+        }
+
+        .card-title h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .card-title p {
+            margin: 3px 0 0 0;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-label i {
+            margin-right: 6px;
+            color: #a78bfa;
+        }
+
+        /* Select2 样式 */
+        .select2-container--default .select2-selection--single {
+            background: rgba(20, 20, 40, 0.9) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            border-radius: 10px !important;
+            height: 45px !important;
+            padding: 6px 12px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #ffffff !important;
+            line-height: 32px !important;
+            font-size: 14px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 43px !important;
+        }
+
+        .select2-dropdown {
+            background: #1e1e3f !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            border-radius: 10px !important;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            background: rgba(30, 30, 60, 0.9) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            padding: 10px 12px !important;
+        }
+
+        .select2-results__option {
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+            color: #e0e0e0 !important;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%) !important;
+        }
+
+        /* 输入框样式 */
+        .form-input {
+            width: 100%;
+            background: rgba(20, 20, 40, 0.9) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            border-radius: 10px !important;
+            color: #ffffff !important;
+            padding: 12px 15px !important;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: rgba(139, 92, 246, 0.6) !important;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* 代码输入框 */
+        .code-textarea {
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        /* 参数信息框 */
+        .params-info {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .params-info i {
+            color: #60a5fa;
+            margin-right: 8px;
+        }
+
+        .params-info code {
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* 选项行 */
+        .options-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 复选框样式 */
+        .checkbox-modern {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-modern input {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            accent-color: #8b5cf6;
+        }
+
+        .checkbox-modern span {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        /* 数字输入框 */
+        .number-input {
+            width: 80px;
+            background: rgba(20, 20, 40, 0.9) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            border-radius: 8px !important;
+            color: #ffffff !important;
+            padding: 8px 12px !important;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .number-input:focus {
+            outline: none;
+            border-color: rgba(139, 92, 246, 0.6) !important;
+        }
+
+        /* 按钮样式 */
+        .btn-modern {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary-modern {
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-orange-modern {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: #1a1a2e;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-orange-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+        }
+
+        .btn-copy {
+            padding: 6px 12px;
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 6px;
+            color: #a78bfa;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-copy:hover {
+            background: rgba(139, 92, 246, 0.3);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        /* 状态提示 */
+        .status-box {
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-info {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+
+        .status-success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+        }
+
+        .status-error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .status-warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fcd34d;
+        }
+
+        /* 关键结果区域 */
+        .result-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            background: rgba(20, 20, 40, 0.6);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            border-radius: 10px;
+            padding: 12px 15px;
+            transition: all 0.2s ease;
+        }
+
+        .result-item:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            background: rgba(30, 30, 60, 0.6);
+        }
+
+        .result-item-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .result-item-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            word-break: break-all;
+        }
+
+        .result-item-value code {
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .result-item-value.success {
+            color: #4ade80;
+        }
+
+        .result-item-value.error {
+            color: #f87171;
+        }
+
+        .result-item-value.warning {
+            color: #fbbf24;
+        }
+
+        .result-item-value.info {
+            color: #60a5fa;
+        }
+
+        /* 成功/失败徽章 */
+        .success-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .badge-success {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .badge-error {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .badge-pending {
+            background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+            color: white;
+        }
+
+        .badge-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        /* 结果文本框 */
+        .result-textarea {
+            width: 100%;
+            background: rgba(10, 10, 25, 0.9);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 10px;
+            color: #e0e0e0;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            padding: 15px;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .result-textarea:focus {
+            outline: none;
+            border-color: rgba(139, 92, 246, 0.4);
+        }
+
+        /* 成功状态 - 鲜艳绿色背景 */
+        .result-textarea.result-success {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+            border-color: #34d399 !important;
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 失败状态 - 鲜艳红色背景 */
+        .result-textarea.result-error {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+            border-color: #f87171 !important;
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 复制反馈 */
+        .copy-feedback {
+            display: none;
+            color: #4ade80;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        /* 分隔线 */
+        .divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent 0%, rgba(139, 92, 246, 0.3) 50%, transparent 100%);
+            margin: 25px 0;
+        }
+
+        /* 标签带操作 */
+        .label-with-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .label-with-action .form-label {
+            margin-bottom: 0;
+        }
+
+        /* 动画 */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .content-row {
+                flex-direction: column;
+            }
+            
+            .result-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .result-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .options-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
     </style>
 </head>
 
 <body>
-
-    <div class="container-fluid" style="margin-top: 5px;">
-        <!-- 添加发布消息和RPC结果区域 -->
-        <div class="row" style="margin-top: 20px;">
-            <div class="col-md-6">
-                <div style="background-color: #f9f9f9; border-radius: 8px; padding: 20px; border-left: 5px solid #3498db; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    <h1 style="margin-bottom: 20px;color: red;">发送rpc请求:</h1>
-                    <div class="form-group">
-                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                         
-                            <label for="col_name_search" style="margin-right: 5px; white-space: nowrap;">队列名字:</label>
-                            <select class="form-control" id="col_name_search" style="width: 500px;">
-                                <option value="">请选择队列名字...</option>
-                            </select>
-                        </div>
-                        <textarea class="form-control" id="message_content" rows="7" placeholder="请先选择队列名称，将自动生成消息体 JSON 模板"></textarea>
-                        <div id="rpc_func_params_info" style="margin-top: 8px; padding: 10px; background-color: #f0f7ff; border-radius: 4px; border-left: 3px solid #337ab7;">
-                            <i class="fa fa-info-circle" style="color: #337ab7;"></i>
-                            <span id="rpc_func_params_text">请先选择队列名称，将显示函数所需参数</span>
-                        </div>
-                    </div>
-                    <div class="form-inline" style="margin-bottom: 15px;">
-                        <div class="checkbox" style="margin-right: 20px;">
-                            <label>
-                                <input type="checkbox" id="need_result" checked> 需要返回结果
-                            </label>
-                        </div>
-                        <div class="form-group" style="margin-right: 20px;">
-                            <label for="timeout" style="margin-right: 5px;">超时时间(秒)：</label>
-                            <input type="number" class="form-control" id="timeout" value="60" style="width: 80px;">
-                        </div>
-                        <button type="button" class="btn btn-primary" id="send_btn">发送RPC请求</button>
-                    </div>
-                    <div class="alert alert-info" id="status_display" style="margin-top: 10px;">
-                        准备发送RPC请求，请选择队列名称并输入消息内容
-                    </div>
-                </div>
-
-                <hr style="border-top: 2px dashed #3498db; margin: 40px 0;">
-
-                <div style="background-color: #f9f9f9; border-radius: 8px; padding: 20px; border-left: 5px solid #e74c3c; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    <h1 style="margin-bottom: 20px;color: red;">获取task_id结果:</h1>
-                    <div class="form-group">
-                        <div style="display: flex; align-items: center;">
-                            <label for="task_id" style="margin-right: 5px; white-space: nowrap;">task_id:</label>
-                            <input type="text" class="form-control" id="task_id" style="width: 500px; margin-right: 15px;">
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                        <div style="margin-right: 20px; display: flex; align-items: center;">
-                            <label for="task_timeout" style="margin-right: 5px; white-space: nowrap;">超时时间(秒):</label>
-                            <input type="number" class="form-control" id="task_timeout" value="30" style="width: 80px;">
-                        </div>
-                        <button type="button" class="btn btn-primary" id="get_result_btn">获取结果</button>
-                    </div>
-                    <div class="alert alert-info" id="task_status_display" style="margin-top: 10px;">
-                        准备获取结果，请输入task_id
-                    </div>
-                </div>
-                    
-
+    <div class="main-container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <div class="header-icon">
+                <i class="fa fa-random"></i>
             </div>
-
-
-            <div class="col-md-6">
-                <!-- 关键结果汇总区域（方便一眼看到结果/耗时/是否成功等） -->
-                <div id="rpc_summary_area" style="background-color: #f9f9f9; border-radius: 8px; padding: 15px; border-left: 5px solid #2ecc71; box-shadow: 0 2px 5px rgba(0,0,0,0.08); margin-bottom: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <strong style="font-size: 15px;">关键结果</strong>
-                        <span id="rpc_summary_success_badge" class="label label-default rpc-success-badge">-</span>
-                    </div>
-
-                    <div style="display: flex; flex-wrap: wrap;">
-                        <div class="rpc-key-box">
-                            <div class="rpc-key-title">task_id</div>
-                            <div class="rpc-key-value">
-                                <code id="rpc_summary_task_id">-</code>
-                                <button type="button" class="btn btn-default btn-xs rpc-copy-btn" id="copy_task_id_btn" title="复制 task_id">
-                                    <i class="fa fa-copy"></i>
-                                </button>
-                                <span id="copy_task_id_feedback" class="rpc-copy-feedback"><i class="fa fa-check"></i> 已复制</span>
-                            </div>
-                        </div>
-                        <div class="rpc-key-box">
-                            <div class="rpc-key-title">queue</div>
-                            <div class="rpc-key-value" id="rpc_summary_queue">-</div>
-                        </div>
-                        <div class="rpc-key-box">
-                            <div class="rpc-key-title">function</div>
-                            <div class="rpc-key-value" id="rpc_summary_function">-</div>
-                        </div>
-                        <div class="rpc-key-box">
-                            <div class="rpc-key-title">run_status</div>
-                            <div class="rpc-key-value" id="rpc_summary_run_status">-</div>
-                        </div>
-                        <div class="rpc-key-box">
-                            <div class="rpc-key-title">耗时(秒)</div>
-                            <div class="rpc-key-value" id="rpc_summary_time_cost">-</div>
-                        </div>
-                        <div class="rpc-key-box">
-                            <div class="rpc-key-title">host_process</div>
-                            <div class="rpc-key-value" id="rpc_summary_host_process">-</div>
-                        </div>
-                    </div>
-
-                    <div class="form-group" style="margin-top: 10px; margin-bottom: 10px;">
-                        <label style="margin-bottom: 6px;">函数结果 result：</label>
-                        <textarea class="form-control" id="rpc_summary_result" rows="6" readonly style="background-color: #1e1e1e; color: #ffffff; font-family: Consolas, Monaco, 'Courier New', monospace; border: 1px solid #333;"></textarea>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label style="margin-bottom: 6px;">异常 exception：</label>
-                        <textarea class="form-control" id="rpc_summary_exception" rows="4" readonly style="background-color: #1e1e1e; color: #ffffff; font-family: Consolas, Monaco, 'Courier New', monospace; border: 1px solid #333;"></textarea>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="rpc_result">RPC status_and_result：
-                        <button type="button" class="btn btn-default btn-xs" id="copy_rpc_result_btn" style="margin-left: 10px;" title="复制JSON">
-                            <i class="fa fa-copy"></i> 复制
-                        </button>
-                        <span id="copy_rpc_result_feedback" style="margin-left: 8px; color: #5cb85c; display: none;"><i class="fa fa-check"></i> 已复制</span>
-                    </label>
-                    <textarea class="form-control" id="rpc_result" rows="24" readonly style="background-color: #1e1e1e; color: #ffffff; font-family: Consolas, Monaco, 'Courier New', monospace; border: 1px solid #333;"></textarea>
-                </div>
+            <div class="header-title">
+                <h1>RPC 远程调用</h1>
+                <p>向消息队列发送任务请求并获取执行结果</p>
             </div>
         </div>
 
+        <div class="content-row">
+            <!-- 左侧面板 -->
+            <div class="left-panel">
+                <!-- 发送RPC请求卡片 -->
+                <div class="card card-send">
+                    <div class="card-title">
+                        <div class="card-title-icon blue">
+                            <i class="fa fa-paper-plane"></i>
+                        </div>
+                        <div>
+                            <h2>发送 RPC 请求</h2>
+                            <p>选择队列并发送消息到消费者</p>
+                        </div>
+                    </div>
 
-        <div id="result-table" style="margin-top: 20px;"></div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fa fa-list-alt"></i>选择队列</label>
+                        <select class="form-control" id="col_name_search" style="width: 100%;">
+                            <option value="">请选择队列名字...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><i class="fa fa-code"></i>消息体 (JSON)</label>
+                        <textarea class="form-input code-textarea" id="message_content" rows="8" 
+                            placeholder="请先选择队列名称，将自动生成消息体 JSON 模板"></textarea>
+                    </div>
+
+                    <div class="params-info" id="rpc_func_params_info">
+                        <i class="fa fa-info-circle"></i>
+                        <span id="rpc_func_params_text">请先选择队列名称，将显示函数所需参数</span>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="options-row">
+                        <label class="checkbox-modern">
+                            <input type="checkbox" id="need_result" checked>
+                            <span><i class="fa fa-check-circle"></i> 需要返回结果</span>
+                        </label>
+                        
+                        <div class="option-group">
+                            <span style="color: rgba(255,255,255,0.6); font-size: 14px;">
+                                <i class="fa fa-clock-o"></i> 超时时间
+                            </span>
+                            <input type="number" class="number-input" id="timeout" value="60">
+                            <span style="color: rgba(255,255,255,0.5); font-size: 12px;">秒</span>
+                        </div>
+
+                        <button type="button" class="btn-modern btn-primary-modern" id="send_btn">
+                            <i class="fa fa-send"></i> 发送请求
+                        </button>
+                    </div>
+
+                    <div class="status-box status-info" id="status_display">
+                        <i class="fa fa-info-circle"></i>
+                        <span>准备发送RPC请求，请选择队列名称并输入消息内容</span>
+                    </div>
+                </div>
+
+                <!-- 获取结果卡片 -->
+                <div class="card card-query">
+                    <div class="card-title">
+                        <div class="card-title-icon orange">
+                            <i class="fa fa-search"></i>
+                        </div>
+                        <div>
+                            <h2>查询任务结果</h2>
+                            <p>通过 task_id 获取执行结果</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><i class="fa fa-tag"></i>Task ID</label>
+                        <input type="text" class="form-input" id="task_id" placeholder="请输入 task_id">
+                    </div>
+
+                    <div class="options-row">
+                        <div class="option-group">
+                            <span style="color: rgba(255,255,255,0.6); font-size: 14px;">
+                                <i class="fa fa-clock-o"></i> 超时时间
+                            </span>
+                            <input type="number" class="number-input" id="task_timeout" value="30">
+                            <span style="color: rgba(255,255,255,0.5); font-size: 12px;">秒</span>
+                        </div>
+
+                        <button type="button" class="btn-modern btn-orange-modern" id="get_result_btn">
+                            <i class="fa fa-download"></i> 获取结果
+                        </button>
+                    </div>
+
+                    <div class="status-box status-info" id="task_status_display">
+                        <i class="fa fa-info-circle"></i>
+                        <span>准备获取结果，请输入 task_id</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧面板 -->
+            <div class="right-panel">
+                <!-- 关键结果卡片 -->
+                <div class="card card-result">
+                    <div class="card-title">
+                        <div class="card-title-icon green">
+                            <i class="fa fa-trophy"></i>
+                        </div>
+                        <div>
+                            <h2>执行结果</h2>
+                            <p>任务执行的关键信息</p>
+                        </div>
+                        <div style="margin-left: auto;">
+                            <span id="rpc_summary_success_badge" class="success-badge badge-pending">等待执行</span>
+                        </div>
+                    </div>
+
+                    <div class="result-summary">
+                        <div class="result-item">
+                            <div class="result-item-label">Task ID</div>
+                            <div class="result-item-value">
+                                <code id="rpc_summary_task_id">-</code>
+                                <button type="button" class="btn-copy" id="copy_task_id_btn" title="复制">
+                                    <i class="fa fa-copy"></i>
+                                </button>
+                                <span id="copy_task_id_feedback" class="copy-feedback"><i class="fa fa-check"></i> 已复制</span>
+                            </div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-item-label">队列名称</div>
+                            <div class="result-item-value info" id="rpc_summary_queue">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-item-label">函数名</div>
+                            <div class="result-item-value" id="rpc_summary_function">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-item-label">运行状态</div>
+                            <div class="result-item-value" id="rpc_summary_run_status">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-item-label">执行耗时</div>
+                            <div class="result-item-value warning" id="rpc_summary_time_cost">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-item-label">执行主机</div>
+                            <div class="result-item-value" id="rpc_summary_host_process">-</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><i class="fa fa-check-circle" style="color: #4ade80;"></i>函数返回值 (Result)</label>
+                        <textarea class="result-textarea" id="rpc_summary_result" rows="6" readonly 
+                            placeholder="函数执行结果将显示在这里..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><i class="fa fa-exclamation-triangle" style="color: #f87171;"></i>异常信息 (Exception)</label>
+                        <textarea class="result-textarea" id="rpc_summary_exception" rows="4" readonly 
+                            placeholder="如果执行出错，异常信息将显示在这里..." style="border-color: rgba(239, 68, 68, 0.2) !important;"></textarea>
+                    </div>
+                </div>
+
+                <!-- 完整JSON卡片 -->
+                <div class="card card-json">
+                    <div class="label-with-action">
+                        <label class="form-label" style="margin: 0;"><i class="fa fa-file-code-o"></i>完整响应 (status_and_result)</label>
+                        <div>
+                            <button type="button" class="btn-copy" id="copy_rpc_result_btn">
+                                <i class="fa fa-copy"></i> 复制 JSON
+                            </button>
+                            <span id="copy_rpc_result_feedback" class="copy-feedback"><i class="fa fa-check"></i> 已复制</span>
+                        </div>
+                    </div>
+                    <textarea class="result-textarea" id="rpc_result" rows="16" readonly 
+                        placeholder="完整的 JSON 响应将显示在这里..."></textarea>
+                </div>
+            </div>
+        </div>
     </div>
 
-    
-
-
-
-
-
-
     <script>
-
-        // 在现有的变量声明后添加
-        var allQueues = [];  // 存储所有队列数据
+        var allQueues = [];
         var currentColName;
-        var rpc_last_auto_filled_template = "";  // 上一次自动生成并填充的 JSON 模板
-        var rpc_is_auto_filled = false;  // 当前 message_content 是否仍然是“自动生成内容”（用户未修改）
-        var rpc_last_selected_queue = "";  // 上一次选择的队列（用于判断是否需要覆盖）
-        var rpc_template_cache_by_queue = {};  // queue_name -> templateText（用于比较/覆盖）
-        var rpc_latest_request_queue = "";  // 用于丢弃过期回包，避免快速切换队列导致覆盖错乱
+        var rpc_last_auto_filled_template = "";
+        var rpc_is_auto_filled = false;
+        var rpc_last_selected_queue = "";
+        var rpc_template_cache_by_queue = {};
+        var rpc_latest_request_queue = "";
 
         function resetRpcFuncParamsUI() {
             $("#rpc_func_params_text").html("请先选择队列名称，将显示函数所需参数");
@@ -54233,43 +50003,28 @@ if __name__ == '__main__':
 
         function normalizeJsonText(text) {
             var s = (text || "").trim();
-            if (!s) {
-                return "";
-            }
+            if (!s) return "";
             try {
                 var obj = JSON.parse(s);
-                // 模板应该是 object（kwargs），不是数组
                 if (obj && typeof obj === "object" && !Array.isArray(obj)) {
                     return JSON.stringify(obj, null, 2);
                 }
-            } catch (e) {
-                // ignore
-            }
+            } catch (e) {}
             return s;
         }
 
         function rpcStringifyAny(v) {
-            if (v === undefined || v === null) {
-                return "";
-            }
-            if (typeof v === "string") {
-                return v;
-            }
+            if (v === undefined || v === null) return "";
+            if (typeof v === "string") return v;
             try {
                 return JSON.stringify(v, null, 2);
             } catch (e) {
-                try {
-                    return String(v);
-                } catch (e2) {
-                    return "";
-                }
+                try { return String(v); } catch (e2) { return ""; }
             }
         }
 
         function rpcCopyTextWithFeedback(text, feedbackSelector) {
-            if (!text) {
-                return;
-            }
+            if (!text) return;
             var $fb = feedbackSelector ? $(feedbackSelector) : null;
             var showFeedback = function () {
                 if ($fb && $fb.length) {
@@ -54283,9 +50038,7 @@ if __name__ == '__main__':
                 try {
                     document.execCommand("copy");
                     showFeedback();
-                } catch (e) {
-                    alert("复制失败，请手动复制");
-                }
+                } catch (e) { alert("复制失败，请手动复制"); }
                 $temp.remove();
             };
             if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -54295,35 +50048,49 @@ if __name__ == '__main__':
             }
         }
 
+        function updateStatusBox(selector, type, message) {
+            var $box = $(selector);
+            $box.removeClass("status-info status-success status-error status-warning");
+            var icon = "fa-info-circle";
+            if (type === "success") { $box.addClass("status-success"); icon = "fa-check-circle"; }
+            else if (type === "error") { $box.addClass("status-error"); icon = "fa-times-circle"; }
+            else if (type === "warning") { $box.addClass("status-warning"); icon = "fa-spinner fa-spin"; }
+            else { $box.addClass("status-info"); }
+            $box.html('<i class="fa ' + icon + '"></i><span>' + message + '</span>');
+        }
+
         function rpcResetSummaryUI() {
-            $("#rpc_summary_success_badge").removeClass("label-success label-danger label-warning label-info").addClass("label-default").text("-");
+            $("#rpc_summary_success_badge").removeClass("badge-success badge-error badge-info").addClass("badge-pending").text("等待执行");
             $("#rpc_summary_task_id").text("-");
             $("#rpc_summary_queue").text("-");
             $("#rpc_summary_function").text("-");
             $("#rpc_summary_run_status").text("-");
             $("#rpc_summary_time_cost").text("-");
             $("#rpc_summary_host_process").text("-");
-            $("#rpc_summary_result").val("");
-            $("#rpc_summary_exception").val("");
+            $("#rpc_summary_result").val("").removeClass("result-success result-error");
+            $("#rpc_summary_exception").val("").removeClass("result-success result-error");
+            $("#rpc_result").val("").removeClass("result-success result-error");
+        }
+
+        function setResultBoxesStatus(isSuccess) {
+            var $boxes = $("#rpc_summary_result, #rpc_summary_exception, #rpc_result");
+            $boxes.removeClass("result-success result-error");
+            if (isSuccess === true) {
+                $boxes.addClass("result-success");
+            } else if (isSuccess === false) {
+                $boxes.addClass("result-error");
+            }
         }
 
         function rpcExtractTaskId(resp) {
-            if (resp && resp.data && resp.data.task_id) {
-                return resp.data.task_id;
-            }
-            if (resp && resp.task_id) {
-                return resp.task_id;
-            }
+            if (resp && resp.data && resp.data.task_id) return resp.data.task_id;
+            if (resp && resp.task_id) return resp.task_id;
             return "";
         }
 
         function rpcExtractStatusAndResult(resp) {
-            if (resp && resp.data && resp.data.hasOwnProperty("status_and_result")) {
-                return resp.data.status_and_result;
-            }
-            if (resp && resp.hasOwnProperty("status_and_result")) {
-                return resp.status_and_result;
-            }
+            if (resp && resp.data && resp.data.hasOwnProperty("status_and_result")) return resp.data.status_and_result;
+            if (resp && resp.hasOwnProperty("status_and_result")) return resp.status_and_result;
             return null;
         }
 
@@ -54342,56 +50109,43 @@ if __name__ == '__main__':
 
         function rpcUpdateSummaryFromResponse(resp) {
             var taskId = rpcExtractTaskId(resp);
-            if (taskId) {
-                $("#rpc_summary_task_id").text(taskId);
-            } else {
-                $("#rpc_summary_task_id").text("-");
-            }
+            $("#rpc_summary_task_id").text(taskId || "-");
 
             var statusAndResult = rpcExtractStatusAndResult(resp);
 
-            // 没有结果（例如 need_result=false 或结果未返回）
             if (!statusAndResult) {
                 var publishSucc = !!(resp && resp.succ);
                 if (publishSucc) {
-                    $("#rpc_summary_success_badge").removeClass("label-default label-danger label-warning").addClass("label-info").text("已发布(无结果)");
+                    $("#rpc_summary_success_badge").removeClass("badge-pending badge-error badge-success").addClass("badge-info").text("已发布");
                 } else {
-                    $("#rpc_summary_success_badge").removeClass("label-default label-success label-info").addClass("label-danger").text("失败");
+                    $("#rpc_summary_success_badge").removeClass("badge-pending badge-success badge-info").addClass("badge-error").text("失败");
                 }
                 $("#rpc_summary_result").val("");
                 $("#rpc_summary_exception").val(resp && resp.msg ? String(resp.msg) : "");
                 return;
             }
 
-            // 基本字段
             $("#rpc_summary_queue").text(statusAndResult.queue_name || "-");
             $("#rpc_summary_function").text(statusAndResult.function || "-");
             $("#rpc_summary_run_status").text(statusAndResult.run_status || "-");
             $("#rpc_summary_host_process").text(statusAndResult.host_process || "-");
 
-            // 耗时
             if (statusAndResult.time_cost !== undefined && statusAndResult.time_cost !== null && statusAndResult.time_cost !== "") {
                 var tc = statusAndResult.time_cost;
-                if (typeof tc === "number") {
-                    $("#rpc_summary_time_cost").text(tc.toFixed(6));
-                } else {
-                    $("#rpc_summary_time_cost").text(String(tc));
-                }
+                $("#rpc_summary_time_cost").text(typeof tc === "number" ? tc.toFixed(4) + " 秒" : String(tc));
             } else {
                 $("#rpc_summary_time_cost").text("-");
             }
 
-            // 成功/失败
             var sVal = rpcIsSuccessValue(statusAndResult.success);
             if (sVal === true) {
-                $("#rpc_summary_success_badge").removeClass("label-default label-danger label-warning label-info").addClass("label-success").text("成功");
+                $("#rpc_summary_success_badge").removeClass("badge-pending badge-error badge-info").addClass("badge-success").text("执行成功");
             } else if (sVal === false) {
-                $("#rpc_summary_success_badge").removeClass("label-default label-success label-warning label-info").addClass("label-danger").text("失败");
+                $("#rpc_summary_success_badge").removeClass("badge-pending badge-success badge-info").addClass("badge-error").text("执行失败");
             } else {
-                $("#rpc_summary_success_badge").removeClass("label-success label-danger label-warning label-info").addClass("label-default").text("-");
+                $("#rpc_summary_success_badge").removeClass("badge-success badge-error badge-info").addClass("badge-pending").text("-");
             }
 
-            // result / exception
             $("#rpc_summary_result").val(rpcStringifyAny(statusAndResult.result));
 
             var exText = "";
@@ -54408,25 +50162,16 @@ if __name__ == '__main__':
         }
 
         function buildRpcTemplateText(paramsInfo) {
-            if (!paramsInfo) {
-                return "{}";
-            }
+            if (!paramsInfo) return "{}";
             var mustArgs = paramsInfo.must_arg_name_list || [];
             var optionalArgs = paramsInfo.optional_arg_name_list || [];
             var templateObj = {};
-
-            for (var i = 0; i < mustArgs.length; i++) {
-                templateObj[mustArgs[i]] = "";
-            }
+            for (var i = 0; i < mustArgs.length; i++) templateObj[mustArgs[i]] = "";
             for (var j = 0; j < optionalArgs.length; j++) {
                 var k = optionalArgs[j];
-                if (!(k in templateObj)) {
-                    templateObj[k] = "";
-                }
+                if (!(k in templateObj)) templateObj[k] = "";
             }
-            if (Object.keys(templateObj).length === 0) {
-                return "{}";
-            }
+            if (Object.keys(templateObj).length === 0) return "{}";
             return JSON.stringify(templateObj, null, 2);
         }
 
@@ -54439,14 +50184,14 @@ if __name__ == '__main__':
             var mustArgs = paramsInfo.must_arg_name_list || [];
             var optionalArgs = paramsInfo.optional_arg_name_list || [];
 
-            var html = "<strong>函数: " + funcName + "</strong><br>";
+            var html = "<strong style='color:#60a5fa;'>函数: " + funcName + "</strong><br>";
             if (mustArgs.length > 0) {
-                html += '<span style="color: #d9534f;">必填参数:</span> <code>' + mustArgs.join("</code>, <code>") + "</code>";
+                html += '<span style="color: #f87171;">必填参数:</span> <code>' + mustArgs.join("</code>, <code>") + "</code>";
             } else {
-                html += '<span style="color: #5cb85c;">无必填参数</span>';
+                html += '<span style="color: #4ade80;">无必填参数</span>';
             }
             if (optionalArgs.length > 0) {
-                html += '<br><span style="color: #f0ad4e;">可选参数:</span> <code>' + optionalArgs.join("</code>, <code>") + "</code>";
+                html += '<br><span style="color: #fbbf24;">可选参数:</span> <code>' + optionalArgs.join("</code>, <code>") + "</code>";
             }
             $("#rpc_func_params_text").html(html);
         }
@@ -54460,10 +50205,7 @@ if __name__ == '__main__':
             rpc_latest_request_queue = queueName;
             $("#rpc_func_params_text").html('<i class="fa fa-spinner fa-spin"></i> 加载中...');
             $.get("/funboost/get_one_queue_config?queue_name=" + encodeURIComponent(queueName), function (response) {
-                // 如果用户快速切换队列，丢弃旧回包
-                if (queueName !== rpc_latest_request_queue || queueName !== rpc_last_selected_queue) {
-                    return;
-                }
+                if (queueName !== rpc_latest_request_queue || queueName !== rpc_last_selected_queue) return;
                 if (response && response.succ && response.data && response.data.auto_generate_info) {
                     var paramsInfo = response.data.auto_generate_info.final_func_input_params_info;
                     renderRpcFuncParamsInfo(paramsInfo);
@@ -54476,18 +50218,10 @@ if __name__ == '__main__':
                     var prevTemplate = prevQueueName ? rpc_template_cache_by_queue[prevQueueName] : null;
                     var prevTemplateNorm = prevTemplate ? normalizeJsonText(prevTemplate) : null;
 
-                    // 覆盖判定（更可靠）
-                    // - 输入框为空
-                    // - 输入框内容等于“上一次队列的默认模板”（忽略空白/缩进）
-                    // - 或者仍被标记为自动生成内容（用户未改）
                     var shouldOverwrite = false;
-                    if (!currentNorm) {
-                        shouldOverwrite = true;
-                    } else if (prevTemplateNorm && currentNorm === prevTemplateNorm) {
-                        shouldOverwrite = true;
-                    } else if (rpc_is_auto_filled === true) {
-                        shouldOverwrite = true;
-                    }
+                    if (!currentNorm) shouldOverwrite = true;
+                    else if (prevTemplateNorm && currentNorm === prevTemplateNorm) shouldOverwrite = true;
+                    else if (rpc_is_auto_filled === true) shouldOverwrite = true;
 
                     if (shouldOverwrite) {
                         $("#message_content").val(templateText);
@@ -54504,16 +50238,10 @@ if __name__ == '__main__':
             });
         }
 
-        // 页面加载完成后立即获取所有队列
         $(document).ready(function () {
-            // 监听用户修改消息内容，用于判断是否需要自动覆盖模板
             $("#message_content").on("input propertychange", function () {
                 var currentVal = $(this).val();
-                if (normalizeJsonText(currentVal) === normalizeJsonText(rpc_last_auto_filled_template)) {
-                    rpc_is_auto_filled = true;
-                } else {
-                    rpc_is_auto_filled = false;
-                }
+                rpc_is_auto_filled = (normalizeJsonText(currentVal) === normalizeJsonText(rpc_last_auto_filled_template));
             });
             resetRpcFuncParamsUI();
 
@@ -54525,76 +50253,43 @@ if __name__ == '__main__':
                     var html = '<option value="">请选择队列名字...</option>';
                     for (var queueName in result) {
                         var msgCount = result[queueName];
-                        html += '<option value="' + queueName + '">' +
-                            queueName + '&nbsp;&nbsp;&nbsp;&nbsp;(msg_count:' + msgCount + ')</option>';
+                        html += '<option value="' + queueName + '">' + queueName + ' (消息数:' + msgCount + ')</option>';
                     }
                     $("#col_name_search").html(html);
 
-                    // 初始化选择框的搜索功能
                     $("#col_name_search").select2({
                         placeholder: "请输入队列名称搜索...",
                         allowClear: true,
-                        width: '500px',
+                        width: '100%',
                         minimumResultsForSearch: 0
                     });
 
-                    // 监听选择变化
                     $("#col_name_search").on('change', function () {
                         var selectedQueue = $(this).val();
-                        console.log("Selected queue:", selectedQueue);
                         currentColName = selectedQueue;
                         var prevQueue = rpc_last_selected_queue;
                         rpc_last_selected_queue = selectedQueue || "";
                         loadRpcTemplateAndParamsInfo(selectedQueue, prevQueue);
-                        // if(selectedQueue) {
-                        //     queryResult(selectedQueue, 0, true);
-                        // }
                     });
                 }
             });
         });
 
-        // 添加发送RPC请求的功能
         $(document).ready(function() {
-            // 已有的队列加载代码...
-            
-            // 发送RPC请求按钮点击事件
             $("#send_btn").click(function() {
                 var queueName = $("#col_name_search").val();
                 var messageContent = $("#message_content").val();
                 
-                if (!queueName) {
-                    alert("请先选择队列名称");
-                    return;
-                }
+                if (!queueName) { alert("请先选择队列名称"); return; }
+                if (!messageContent) { alert("请输入消息内容"); return; }
                 
-                if (!messageContent) {
-                    alert("请输入消息内容");
-                    return;
-                }
+                try { JSON.parse(messageContent); } catch (e) { alert("消息内容必须是有效的JSON格式"); return; }
                 
-                try {
-                    // 尝试解析JSON，确保内容有效
-                    JSON.parse(messageContent);
-                } catch (e) {
-                    alert("消息内容必须是有效的JSON格式");
-                    return;
-                }
-                
-                // 更新状态显示
-                $("#status_display").removeClass("alert-info alert-success alert-danger").addClass("alert-warning");
-                $("#status_display").text("正在发送RPC请求，请稍候...");
-
-                // 重置关键结果显示
+                updateStatusBox("#status_display", "warning", "正在发送RPC请求，请稍候...");
                 rpcResetSummaryUI();
-                
-                // 清空结果框
                 $("#rpc_result").val("");
-                $("#rpc_result").css({"background-color": "#1e1e1e", "color": "#ffffff"});
                 
-                // 发送RPC请求
                 $.ajax({
-                    // 使用 funboost faas 的接口（flask_blueprint）
                     url: "/funboost/publish",
                     type: "POST",
                     contentType: "application/json",
@@ -54605,82 +50300,66 @@ if __name__ == '__main__':
                         timeout: parseInt($("#timeout").val())
                     }),
                     success: function(result) {
-                       
-                        console.log(result)
-
-                        // 优先显示 status_and_result，便于阅读；没有则显示原始返回
                         var statusAndResult = (result && result.data && result.data.status_and_result) ? result.data.status_and_result : null;
                         var displayObj = statusAndResult ? statusAndResult : result;
                         $("#rpc_result").val(JSON.stringify(displayObj, null, 2));
 
-                        // 更新关键结果
                         rpcUpdateSummaryFromResponse(result);
 
-                        // 自动回填 task_id，方便继续查询
                         try {
                             if (result && result.data && result.data.task_id) {
                                 $("#task_id").val(result.data.task_id);
                             }
                         } catch (e) {}
 
-                        // 兼容 publish 成功但函数执行失败的情况
                         var bizSucc = !!(result && result.succ);
-                        statusAndResult = (result && result.data && result.data.status_and_result) ? result.data.status_and_result : null;
                         if (statusAndResult && (statusAndResult.success === false || statusAndResult.success === 'false' || statusAndResult.success === 0)) {
                             bizSucc = false;
                         }
                         
-                        // 更新状态显示
+                        // 设置结果框颜色
+                        setResultBoxesStatus(bizSucc);
+                        
                         if (bizSucc) {
-                            $("#status_display").removeClass("alert-warning alert-danger").addClass("alert-success");
-                            $("#status_display").text("RPC请求成功: " + result.msg);
-                            $("#rpc_result").css({"background-color": "#5cb85c", "color": "#ffffff"});
+                            updateStatusBox("#status_display", "success", "RPC请求成功: " + result.msg);
                         } else {
-                            $("#status_display").removeClass("alert-warning alert-success").addClass("alert-danger");
                             var failMsg = (result && result.msg) ? result.msg : "未知错误";
                             if (statusAndResult && (statusAndResult.success === false || statusAndResult.success === 'false' || statusAndResult.success === 0)) {
-                                failMsg = failMsg + "（函数执行失败）";
+                                failMsg += "（函数执行失败）";
                             }
-                            $("#status_display").text("RPC请求失败: " + failMsg);
-                            $("#rpc_result").css({"background-color": "#d9534f", "color": "#ffffff"});
+                            updateStatusBox("#status_display", "error", "RPC请求失败: " + failMsg);
                         }
                     },
                     error: function(xhr, status, error) {
-                        // 尝试解析后端返回的 JSON 错误
                         var errText = "";
                         try {
                             var errJson = xhr.responseJSON ? xhr.responseJSON : JSON.parse(xhr.responseText);
                             $("#rpc_result").val(JSON.stringify(errJson, null, 2));
-                            if (errJson && errJson.msg) {
-                                errText = errJson.msg;
-                            }
+                            if (errJson && errJson.msg) errText = errJson.msg;
                         } catch (e) {
                             $("#rpc_result").val("请求失败: " + (xhr.responseText || error));
                             errText = xhr.responseText || error;
                         }
-                        $("#rpc_result").css({"background-color": "#d9534f", "color": "#ffffff"});
 
-                        // 失败时也展示错误到关键结果区
                         rpcResetSummaryUI();
-                        $("#rpc_summary_success_badge").removeClass("label-default label-success label-info").addClass("label-danger").text("失败");
+                        $("#rpc_summary_success_badge").removeClass("badge-pending badge-success badge-info").addClass("badge-error").text("失败");
                         $("#rpc_summary_exception").val(errText || error || "");
                         
-                        // 更新状态显示
-                        $("#status_display").removeClass("alert-warning alert-success").addClass("alert-danger");
-                        $("#status_display").text("RPC请求发送失败: " + (errText || error));
+                        // 设置结果框为红色
+                        setResultBoxesStatus(false);
+                        
+                        updateStatusBox("#status_display", "error", "RPC请求发送失败: " + (errText || error));
                     }
                 });
             });
         });
 
-        // 复制 RPC status_and_result 到剪贴板
         $(document).ready(function() {
             $("#copy_rpc_result_btn").click(function() {
                 rpcCopyTextWithFeedback($("#rpc_result").val(), "#copy_rpc_result_feedback");
             });
         });
 
-        // 复制关键结果中的 task_id
         $(document).ready(function() {
             $("#copy_task_id_btn").click(function() {
                 var tid = $("#rpc_summary_task_id").text().trim();
@@ -54690,31 +50369,17 @@ if __name__ == '__main__':
             });
         });
 
-        // 添加获取结果功能
         $(document).ready(function() {
-            // 获取结果按钮点击事件
             $("#get_result_btn").click(function() {
                 var taskId = $("#task_id").val();
                 
-                if (!taskId) {
-                    alert("请先输入task_id");
-                    return;
-                }
+                if (!taskId) { alert("请先输入task_id"); return; }
                 
-                // 更新状态显示
-                $("#task_status_display").removeClass("alert-info alert-success alert-danger").addClass("alert-warning");
-                $("#task_status_display").text("正在获取结果，请稍候...");
-
-                // 重置关键结果显示
+                updateStatusBox("#task_status_display", "warning", "正在获取结果，请稍候...");
                 rpcResetSummaryUI();
-                
-                // 清空结果框
                 $("#rpc_result").val("");
-                $("#rpc_result").css({"background-color": "#1e1e1e", "color": "#ffffff"});
                 
-                // 获取结果
                 $.ajax({
-                    // 使用 funboost faas 的接口（flask_blueprint）
                     url: "/funboost/get_result",
                     type: "GET",
                     data: {
@@ -54722,33 +50387,28 @@ if __name__ == '__main__':
                         timeout: parseInt($("#task_timeout").val())
                     },
                     success: function(result) {
-                        console.log(result);
                         var statusAndResult = (result && result.data && result.data.status_and_result) ? result.data.status_and_result : null;
                         var displayObj = statusAndResult ? statusAndResult : result;
                         $("#rpc_result").val(JSON.stringify(displayObj, null, 2));
 
-                        // 更新关键结果
                         rpcUpdateSummaryFromResponse(result);
 
                         var bizSucc = !!(result && result.succ);
-                        statusAndResult = (result && result.data && result.data.status_and_result) ? result.data.status_and_result : null;
                         if (statusAndResult && (statusAndResult.success === false || statusAndResult.success === 'false' || statusAndResult.success === 0)) {
                             bizSucc = false;
                         }
                         
-                        // 更新状态显示
+                        // 设置结果框颜色
+                        setResultBoxesStatus(bizSucc);
+                        
                         if (bizSucc) {
-                            $("#task_status_display").removeClass("alert-warning alert-danger").addClass("alert-success");
-                            $("#task_status_display").text("获取结果成功");
-                            $("#rpc_result").css({"background-color": "#5cb85c", "color": "#ffffff"});
+                            updateStatusBox("#task_status_display", "success", "获取结果成功");
                         } else {
-                            $("#task_status_display").removeClass("alert-warning alert-success").addClass("alert-danger");
                             var failMsg = (result && result.msg) ? result.msg : "未知错误";
                             if (statusAndResult && (statusAndResult.success === false || statusAndResult.success === 'false' || statusAndResult.success === 0)) {
-                                failMsg = failMsg + "（函数执行失败）";
+                                failMsg += "（函数执行失败）";
                             }
-                            $("#task_status_display").text("获取结果失败: " + failMsg);
-                            $("#rpc_result").css({"background-color": "#d9534f", "color": "#ffffff"});
+                            updateStatusBox("#task_status_display", "error", "获取结果失败: " + failMsg);
                         }
                     },
                     error: function(xhr, status, error) {
@@ -54756,79 +50416,29 @@ if __name__ == '__main__':
                         try {
                             var errJson = xhr.responseJSON ? xhr.responseJSON : JSON.parse(xhr.responseText);
                             $("#rpc_result").val(JSON.stringify(errJson, null, 2));
-                            if (errJson && errJson.msg) {
-                                errText = errJson.msg;
-                            }
+                            if (errJson && errJson.msg) errText = errJson.msg;
                         } catch (e) {
                             $("#rpc_result").val("请求失败: " + (xhr.responseText || error));
                             errText = xhr.responseText || error;
                         }
-                        $("#rpc_result").css({"background-color": "#d9534f", "color": "#ffffff"});
 
                         rpcResetSummaryUI();
-                        $("#rpc_summary_success_badge").removeClass("label-default label-success label-info").addClass("label-danger").text("失败");
+                        $("#rpc_summary_success_badge").removeClass("badge-pending badge-success badge-info").addClass("badge-error").text("失败");
                         $("#rpc_summary_exception").val(errText || error || "");
                         
-                        // 更新状态显示
-                        $("#task_status_display").removeClass("alert-warning alert-success").addClass("alert-danger");
-                        $("#task_status_display").text("获取结果失败: " + (errText || error));
+                        // 设置结果框为红色
+                        setResultBoxesStatus(false);
+                        
+                        updateStatusBox("#task_status_display", "error", "获取结果失败: " + (errText || error));
                     }
                 });
             });
         });
-
-            
-
-
-
-
-
-
-
-
     </script>
-
-    <style>
-        .rpc-key-box {
-            display: inline-block;
-            vertical-align: top;
-            margin: 0 10px 10px 0;
-            padding: 10px 12px;
-            background-color: #ffffff;
-            border: 1px solid #e1e1e1;
-            border-radius: 6px;
-            min-width: 180px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-        .rpc-key-title {
-            color: #777;
-            font-size: 12px;
-            margin-bottom: 4px;
-        }
-        .rpc-key-value {
-            font-size: 13px;
-            font-weight: bold;
-            word-break: break-all;
-        }
-        .rpc-copy-btn {
-            margin-left: 6px;
-            padding: 2px 6px;
-        }
-        .rpc-copy-feedback {
-            margin-left: 6px;
-            color: #5cb85c;
-            display: none;
-        }
-        .rpc-success-badge {
-            font-size: 16px;
-            padding: 6px 12px;
-            border-radius: 12px;
-            letter-spacing: 1px;
-        }
-    </style>
 </body>
 
 </html>
+
 `````
 
 --- **end of file: funboost/funboost_web_manager/templates/rpc_call.html** (project: funboost) --- 
@@ -54846,218 +50456,548 @@ if __name__ == '__main__':
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>pytho万能分布式函数调度框架</title>
+    <title>运行中消费者 (按IP分组)</title>
     <link href="{{ url_for('static',filename='css_cdn/twitter-bootstrap/3.3.7/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
-    <link rel="stylesheet"
-        href="{{ url_for('static',filename='css_cdn/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/jquery.mCustomScrollbar.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/custom.css') }}">
-
-    <!-- 在其他 link 标签后添加 -->
     <link href="{{ url_for('static',filename='css_cdn/select2/4.0.13/css/select2.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static',filename='css/content_page_style.css') }}" rel="stylesheet">
-
-
-    <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.0/jquery.min.js"></script> -->
-    <!-- 在其他 script 标签后添加 -->
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/select2/4.0.13/js/select2.min.js"></script> -->
-    <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
-
-
-    <script src="{{ url_for('static',filename='js/moment-with-locales.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='js/bootstrap-datetimepicker.min.js') }}"></script>
-    <!-- <script src="https://cdn.bootcss.com/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script> -->
-    <!-- <script type="text/javascript" src="https://cdn.bootcss.com/echarts/3.3.0/echarts.js"></script> -->
-    <script type="text/javascript" src="{{ url_for('static',filename='js/echarts.min.js') }}"></script>
-
-    <script src="{{ url_for('static',filename='assets/js/jquery.mCustomScrollbar.concat.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='assets/js/custom.js') }}"></script>
-
-        
-    <!-- 添加 Tabulator 样式和脚本 -->
     <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator_bootstrap3.min.css') }}" rel="stylesheet">
+
+    <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
+    <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static',filename='js_cdn/tabulator-tables@5.5.0/dist/js/tabulator.min.js') }}"></script>
 
     <style>
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #1e1e2f;
+            min-height: 100vh;
+            color: #d0d0d0;
+            margin: 0;
+            padding: 0;
+        }
 
+        .main-container {
+            padding: 20px;
+        }
+
+        /* 页面标题 */
+        .page-header-custom {
+            background: linear-gradient(135deg, #2a2a4a 0%, #1e2a3a 100%);
+            border: 1px solid #3a3a5a;
+            border-radius: 10px;
+            padding: 16px 24px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-icon i {
+            font-size: 20px;
+            color: #fff;
+        }
+
+        .header-title h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            margin: 0;
+        }
+
+        .header-title p {
+            font-size: 12px;
+            color: #888;
+            margin: 4px 0 0 0;
+        }
+
+        /* 统计卡片 */
+        .stats-cards {
+            display: flex;
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: #2a2a4a;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            padding: 10px 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #a78bfa;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #888;
+        }
+
+        /* 查询面板 */
+        .query-panel {
+            background: #252538;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            padding: 14px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .query-panel label {
+            color: #aaa;
+            font-weight: 500;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* Select2 */
+        .select2-container--default .select2-selection--single {
+            background: #1e1e2f !important;
+            border: 1px solid #4a4a6a !important;
+            border-radius: 6px !important;
+            height: 36px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #e0e0e0 !important;
+            line-height: 36px !important;
+            padding-left: 12px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 34px !important;
+        }
+
+        .select2-dropdown {
+            background: #1e1e2f !important;
+            border: 1px solid #4a4a6a !important;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            background: #2a2a4a !important;
+            border: 1px solid #4a4a6a !important;
+            color: #e0e0e0 !important;
+        }
+
+        .select2-container--default .select2-results__option {
+            color: #c0c0c0;
+            padding: 8px 12px;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: #6366f1 !important;
+            color: #fff !important;
+        }
+
+        /* 按钮 */
+        .btn-query {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-query:hover {
+            opacity: 0.9;
+            color: #fff;
+        }
+
+        .btn-refresh {
+            background: transparent;
+            border: 1px solid #10b981;
+            color: #10b981;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-refresh:hover {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+        }
+
+        .auto-refresh-badge {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 14px;
+            padding: 5px 12px;
+            font-size: 11px;
+            color: #10b981;
+            margin-left: auto;
+        }
+
+        /* 表格容器 */
+        .table-container {
+            background: #252538;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Tabulator 样式 */
+        #result-table {
+            width: 100%;
+        }
+
+        .tabulator {
+            background: transparent !important;
+            border: none !important;
+            font-size: 13px;
+        }
+
+        /* 表头 - 深色背景白色文字 */
+        .tabulator .tabulator-header {
+            background: #2a2a4a !important;
+            border-bottom: 2px solid #6366f1 !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col {
+            background: transparent !important;
+            border-right: 1px solid #3a3a5a !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col .tabulator-col-title {
+            color: #ffffff !important;
+            font-weight: 600;
+            font-size: 12px;
+            white-space: normal !important;
+            text-overflow: clip !important;
+            overflow: visible !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+            padding: 10px 8px !important;
+        }
+
+        /* 数据行 - 清晰的深色背景 */
+        .tabulator-row {
+            background: #1e1e2f !important;
+            border-bottom: 1px solid #2a2a4a !important;
+        }
+
+        .tabulator-row:nth-child(even) {
+            background: #232338 !important;
+        }
+
+        .tabulator-row:hover {
+            background: rgba(99, 102, 241, 0.15) !important;
+        }
+
+        .tabulator-row .tabulator-cell {
+            border-right: 1px solid #2a2a4a !important;
+            color: #d0d0d0 !important;
+            padding: 10px 8px !important;
+        }
+
+        /* 分组头部 - 紫色渐变 */
+        .tabulator .tabulator-group {
+            background: linear-gradient(90deg, #4c1d95 0%, #2e1065 100%) !important;
+            border: none !important;
+            border-left: 4px solid #a78bfa !important;
+        }
+
+        .tabulator .tabulator-group span {
+            color: #ffffff !important;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .tabulator .tabulator-group .tabulator-arrow {
+            border-left-color: #e0e0e0 !important;
+            border-right-color: #e0e0e0 !important;
+            border-top-color: #e0e0e0 !important;
+            border-bottom-color: #e0e0e0 !important;
+        }
+
+        /* 分页器 */
+        .tabulator .tabulator-footer {
+            background: #252538 !important;
+            border-top: 1px solid #3a3a5a !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page {
+            background: #2a2a4a !important;
+            border: 1px solid #3a3a5a !important;
+            color: #c0c0c0 !important;
+            border-radius: 4px !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page:hover {
+            background: #3a3a5a !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page.active {
+            background: #6366f1 !important;
+            border-color: #6366f1 !important;
+            color: #fff !important;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 50px 30px;
+            color: #888;
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
     </style>
 </head>
 
 <body>
-
-    <div class="container-fluid" style="margin-top: 5px;">
-        <div style="margin-top: 5px;">
-            <form class="form-inline" role="form" style="">
-                <div class="form-group ">
-                    <label for="col_name_search">host：</label>
-                    <select class="form-control" id="col_name_search">
-                        <option value="">请选择ip...</option>
-                    </select>
+    <div class="main-container">
+        <!-- 页面标题 -->
+        <div class="page-header-custom">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fa fa-sitemap"></i>
                 </div>
-                <button type="button" class="btn btn-default marginLeft20" onclick="query()">查询</button>
-            </form>
+                <div class="header-title">
+                    <h1>运行中消费者 (按 IP 分组)</h1>
+                    <p>实时监控各服务器上的消费者进程状态</p>
+                </div>
+            </div>
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-value" id="total_ip_count">0</div>
+                    <div class="stat-label">活跃服务器</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total_consumer_count">0</div>
+                    <div class="stat-label">消费者总数</div>
+                </div>
+            </div>
         </div>
 
-        <div id="result-table" style="margin-top: 20px;"></div>
+        <!-- 查询面板 -->
+        <div class="query-panel">
+            <label><i class="fa fa-server" style="margin-right: 6px;"></i>选择 IP：</label>
+            <select class="form-control" id="col_name_search" style="width: 320px;">
+                <option value="">全部服务器</option>
+            </select>
+            <button type="button" class="btn-query" onclick="query()">
+                <i class="fa fa-search"></i> 查询
+            </button>
+            <button type="button" class="btn-refresh" onclick="refreshData()">
+                <i class="fa fa-refresh"></i> 刷新
+            </button>
+            <span class="auto-refresh-badge">● 每30秒自动刷新</span>
+        </div>
 
+        <!-- 表格容器 -->
+        <div class="table-container">
+            <div id="result-table"></div>
+            <div class="empty-state" id="empty_state" style="display: none;">
+                <i class="fa fa-inbox"></i>
+                <h4>暂无运行中的消费者</h4>
+                <p>请确认消费者服务已启动</p>
+            </div>
+        </div>
     </div>
 
-
-
-
-
-
     <script>
+        var allQueues = [];
+        var currentColName = '';
+        var table = null;
 
-        // 在现有的变量声明后添加
-        var allQueues = [];  // 存储所有队列数据
-        var currentColName;
-
-        // 页面加载完成后立即获取所有队列
         $(document).ready(function () {
+            loadIpList();
+            setInterval(refreshData, 30000);
+        });
+
+        function loadIpList() {
             $.ajax({
                 url: "{{ url_for('hearbeat_info_partion_by_ip')}}",
                 data: { col_name_search: '' },
-                async: true,
                 success: function (result) {
                     allQueues = result;
-                    var html = '<option value="">请选择ip...</option>';
+                    
+                    var totalIps = 0, totalConsumers = 0;
+                    var html = '<option value="">全部服务器</option>';
                     for (var item of result) {
-                        html += '<option value="' + item.collection_name + '">' +
-                            item.collection_name + '&nbsp;&nbsp;&nbsp;&nbsp;(consumer_count:' + item.count + ')</option>';
+                        if (item.collection_name !== '所有') {
+                            // 只有有消费者在运行的服务器才算活跃
+                            if (item.count > 0) {
+                                totalIps++;
+                            }
+                            totalConsumers += item.count;
+                            html += '<option value="' + item.collection_name + '">' +
+                                item.collection_name + ' (' + item.count + ' 个)</option>';
+                        }
                     }
+                    
+                    $('#total_ip_count').text(totalIps);
+                    $('#total_consumer_count').text(totalConsumers);
                     $("#col_name_search").html(html);
 
-                    // 初始化选择框的搜索功能
                     $("#col_name_search").select2({
-                        placeholder: "请输入ip名称搜索...",
+                        placeholder: "搜索 IP...",
                         allowClear: true,
-                        width: '500px'
+                        width: '320px'
                     });
 
-                    // 监听选择变化
                     $("#col_name_search").on('change', function () {
-                        var selectedQueue = $(this).val();
-                        console.log("Selected queue:", selectedQueue);
-                        currentColName = selectedQueue;
-                        // if(selectedQueue) {
-                        //     queryResult(selectedQueue, 0, true);
-                        // }
+                        currentColName = $(this).val();
+                        query();  // 选择变化时自动查询
                     });
+
+                    // 检查浏览器是否记住了上次选择的值
+                    var rememberedValue = $("#col_name_search").val();
+                    if (rememberedValue) {
+                        currentColName = rememberedValue;
+                    }
+
+                    query();
                 }
             });
-        });
+        }
 
-        $(document).ready(function (){
-            query()
-        });
-
+        function refreshData() { query(); }
 
         function query() {
             $.ajax({
                 url: "{{ url_for('hearbeat_info_by_ip')}}",
                 data: { ip: currentColName },
-                async: true,
                 success: function (result) {
-                    console.info(result);
+                    if (!result || result.length === 0) {
+                        $('#result-table').hide();
+                        $('#empty_state').show();
+                        return;
+                    }
 
-                                      // 创建表格
-                        var table = new Tabulator("#result-table", {
-                        theme: "bootstrap3",
-                        data: result,
-                        // layout: "fitColumns",
-                        layout: "fitDataTable",  // 改为 fitDataTable
-        responsiveLayout: false, // 禁用响应式布局
-                        columns: [
-                        {title: "<br><br>队列名称", field: "queue_name"},
-                            {title: "<br><br>消费函数", field: "consuming_function"},
-                            {title: "<br><br>主机名", field: "computer_name"},
-                            {title: "<br><br>IP地址", field: "computer_ip"},
-                            {title: "<br><br>进程ID", field: "process_id"},
-                            {title: "<br><br>启动时间", field: "start_datetime_str","width":200},
-                            {title: "<br><br>最近心跳时间", field: "hearbeat_datetime_str","width":200},
-                           
-                            {title:"近10秒<br>运行完成<br>消息个数",field:"last_x_s_execute_count", formatter:"html","width":100},
-                            {title:"近10秒<br>运行失败<br>消息个数",field:"last_x_s_execute_count_fail", formatter:"html","width":100},
-                            {title:"近10秒<br>函数运行<br>平均耗时",field:"last_x_s_avarage_function_spend_time", formatter:"html","width":100},
-                            
-                            {title:"累计<br>运行完成<br>消息个数",field:"total_consume_count_from_start", formatter:"html","width":100},
-                            {title:"累计<br>运行失败<br>消息个数",field:"total_consume_count_from_start_fail", formatter:"html","width":100},
-                            {title:"累计<br>函数运行<br>平均耗时",field:"avarage_function_spend_time_from_start", formatter:"html","width":100},
-                             
-                            {title: "<br><br>代码文件", field: "code_filename"},
-                            // {title: "<br><br>consumer_id", field: "consumer_id"},
-                            {title: "<br><br>consumer_uuid", field: "consumer_uuid"},
-                        ],
-                        pagination: true,
-                        paginationSize: 1000,
-                        locale: true,
-                        langs: {
-                            "zh-cn": {
-                                "pagination": {
-                                    "first": "首页",
-                                    "first_title": "首页",
-                                    "last": "末页",
-                                    "last_title": "末页",
-                                    "prev": "上一页",
-                                    "prev_title": "上一页",
-                                    "next": "下一页",
-                                    "next_title": "下一页",
+                    $('#result-table').show();
+                    $('#empty_state').hide();
+                    $('#total_consumer_count').text(result.length);
+
+                    if (table) {
+                        table.setData(result);
+                    } else {
+                        table = new Tabulator("#result-table", {
+                            data: result,
+                            layout: "fitDataFill",
+                            responsiveLayout: false,
+                            height: "auto",
+                            groupBy: "computer_ip",
+                            groupStartOpen: true,
+                            groupHeader: function(value, count) {
+                                return '<i class="fa fa-server" style="margin-right: 10px; color: #c4b5fd;"></i>' +
+                                       '<strong>IP: ' + (value || "未知") + '</strong>' + 
+                                       ' <span style="color: #ccc; margin-left: 16px; font-weight: normal;">(' + count + ' 个消费者)</span>';
+                            },
+                            columns: [
+                                {title: "队列名称", field: "queue_name", width: 220,
+                                    formatter: function(cell) {
+                                        return '<span style="color: #60a5fa; font-weight: 500;">' + cell.getValue() + '</span>';
+                                    }
+                                },
+                                {title: "函数", field: "consuming_function", width: 80,
+                                    formatter: function(cell) {
+                                        return '<code style="background: #3a3a5a; color: #c4b5fd; padding: 3px 8px; border-radius: 4px;">' + cell.getValue() + '</code>';
+                                    }
+                                },
+                                {title: "主机名", field: "computer_name", width: 150},
+                                {title: "IP地址", field: "computer_ip", width: 120},
+                                {title: "进程ID", field: "process_id", width: 70, hozAlign: "center"},
+                                {title: "启动时间", field: "start_datetime_str", width: 160},
+                                {title: "最近心跳", field: "hearbeat_datetime_str", width: 160,
+                                    formatter: function(cell) {
+                                        return '<span style="color: #34d399;"><i class="fa fa-heartbeat" style="margin-right: 5px;"></i>' + cell.getValue() + '</span>';
+                                    }
+                                },
+                                {title: "近10秒完成", field: "last_x_s_execute_count", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue() || 0;
+                                        var color = val > 0 ? '#34d399' : '#666';
+                                        return '<span style="color: ' + color + '; font-weight: 600;">' + val + '</span>';
+                                    }
+                                },
+                                {title: "近10秒失败", field: "last_x_s_execute_count_fail", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue() || 0;
+                                        var color = val > 0 ? '#f87171' : '#666';
+                                        return '<span style="color: ' + color + '; font-weight: 600;">' + val + '</span>';
+                                    }
+                                },
+                                {title: "近10秒耗时", field: "last_x_s_avarage_function_spend_time", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue();
+                                        if (val === null || val === undefined) return '<span style="color: #666;">-</span>';
+                                        return '<span style="color: #fbbf24;">' + val.toFixed(3) + 's</span>';
+                                    }
+                                },
+                                {title: "累计完成", field: "total_consume_count_from_start", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue() || 0;
+                                        return '<span style="color: #38bdf8; font-weight: 500;">' + val.toLocaleString() + '</span>';
+                                    }
+                                },
+                                {title: "累计失败", field: "total_consume_count_from_start_fail", hozAlign: "center", width: 80,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue() || 0;
+                                        var color = val > 0 ? '#f87171' : '#666';
+                                        return '<span style="color: ' + color + ';">' + val.toLocaleString() + '</span>';
+                                    }
+                                },
+                                {title: "累计耗时", field: "avarage_function_spend_time_from_start", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue();
+                                        if (val === null || val === undefined) return '<span style="color: #666;">-</span>';
+                                        return '<span style="color: #fb923c;">' + val.toFixed(3) + 's</span>';
+                                    }
+                                },
+                            ],
+                            pagination: true,
+                            paginationSize: 100,
+                            locale: true,
+                            langs: {
+                                "zh-cn": {
+                                    "pagination": {
+                                        "first": "首页", "last": "末页",
+                                        "prev": "上一页", "next": "下一页",
+                                    }
                                 }
                             }
-                        }
-                    });
-                    /* result 例如 [
-  {
-    "code_filename": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py", 
-    "computer_ip": "10.0.133.57", 
-    "computer_name": "LAPTOP-7V78BBO2", 
-    "consumer_id": 1462882757512, 
-    "consumer_uuid": "88f568f7-9723-48ef-9cac-0370b2333a49", 
-    "consuming_function": "f2", 
-    "hearbeat_datetime_str": "2025-02-25 17:28:36", 
-    "hearbeat_timestamp": 1740475716.783474, 
-    "process_id": 34788, 
-    "queue_name": "queue_test_f02t", 
-    "start_datetime_str": "2025-02-25 16:33:19", 
-    "start_timestamp": 1740472399.4628778
-  }, 
-  {
-    "code_filename": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py", 
-    "computer_ip": "10.0.133.57", 
-    "computer_name": "LAPTOP-7V78BBO2", 
-    "consumer_id": 1462882671944, 
-    "consumer_uuid": "c52a8596-d632-4bac-a797-80375288f381", 
-    "consuming_function": "f", 
-    "hearbeat_datetime_str": "2025-02-25 17:28:36", 
-    "hearbeat_timestamp": 1740475716.783336, 
-    "process_id": 34788, 
-    "queue_name": "queue_test_f01t", 
-    "start_datetime_str": "2025-02-25 16:33:19", 
-    "start_timestamp": 1740472399.4503505
-  }
-]
-  */
-
+                        });
+                    }
                 }
             });
         }
-
-
-
-
-
-
-
-
     </script>
 </body>
 
 </html>
+
 `````
 
 --- **end of file: funboost/funboost_web_manager/templates/running_consumer_by_ip.html** (project: funboost) --- 
@@ -55075,219 +51015,547 @@ if __name__ == '__main__':
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>pytho万能分布式函数调度框架</title>
+    <title>运行中消费者 (按队列分组)</title>
     <link href="{{ url_for('static',filename='css_cdn/twitter-bootstrap/3.3.7/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
-    <link rel="stylesheet"
-        href="{{ url_for('static',filename='css_cdn/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/jquery.mCustomScrollbar.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='assets/css/custom.css') }}">
-
-    <!-- 在其他 link 标签后添加 -->
     <link href="{{ url_for('static',filename='css_cdn/select2/4.0.13/css/select2.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static',filename='css/content_page_style.css') }}" rel="stylesheet">
-
-
-    <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.11.0/jquery.min.js"></script> -->
-    <!-- 在其他 script 标签后添加 -->
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/select2/4.0.13/js/select2.min.js"></script> -->
-    <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
-
-
-    <script src="{{ url_for('static',filename='js/moment-with-locales.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='js/bootstrap-datetimepicker.min.js') }}"></script>
-    <!-- <script src="https://cdn.bootcss.com/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script> -->
-    <!-- <script type="text/javascript" src="https://cdn.bootcss.com/echarts/3.3.0/echarts.js"></script> -->
-    <script type="text/javascript" src="{{ url_for('static',filename='js/echarts.min.js') }}"></script>
-
-    <script src="{{ url_for('static',filename='assets/js/jquery.mCustomScrollbar.concat.min.js') }}"></script>
-    <script src="{{ url_for('static',filename='assets/js/custom.js') }}"></script>
-
-        
-    <!-- 添加 Tabulator 样式和脚本 -->
     <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css_cdn/tabulator-tables@5.5.0/tabulator_bootstrap3.min.css') }}" rel="stylesheet">
+
+    <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}" type="text/javascript"></script>
+    <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static',filename='js_cdn/tabulator-tables@5.5.0/dist/js/tabulator.min.js') }}"></script>
 
     <style>
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #1e1e2f;
+            min-height: 100vh;
+            color: #d0d0d0;
+            margin: 0;
+            padding: 0;
+        }
 
+        .main-container {
+            padding: 20px;
+        }
+
+        /* 页面标题 */
+        .page-header-custom {
+            background: linear-gradient(135deg, #1a3a2e 0%, #1e2a3a 100%);
+            border: 1px solid #2a5a4a;
+            border-radius: 10px;
+            padding: 16px 24px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-icon i {
+            font-size: 20px;
+            color: #fff;
+        }
+
+        .header-title h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            margin: 0;
+        }
+
+        .header-title p {
+            font-size: 12px;
+            color: #888;
+            margin: 4px 0 0 0;
+        }
+
+        /* 统计卡片 */
+        .stats-cards {
+            display: flex;
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: #1a3a2e;
+            border: 1px solid #2a5a4a;
+            border-radius: 8px;
+            padding: 10px 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #34d399;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #888;
+        }
+
+        /* 查询面板 */
+        .query-panel {
+            background: #252538;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            padding: 14px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .query-panel label {
+            color: #aaa;
+            font-weight: 500;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* Select2 */
+        .select2-container--default .select2-selection--single {
+            background: #1e1e2f !important;
+            border: 1px solid #2a5a4a !important;
+            border-radius: 6px !important;
+            height: 36px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #e0e0e0 !important;
+            line-height: 36px !important;
+            padding-left: 12px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 34px !important;
+        }
+
+        .select2-dropdown {
+            background: #1e1e2f !important;
+            border: 1px solid #2a5a4a !important;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            background: #2a2a4a !important;
+            border: 1px solid #2a5a4a !important;
+            color: #e0e0e0 !important;
+        }
+
+        .select2-container--default .select2-results__option {
+            color: #c0c0c0;
+            padding: 8px 12px;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: #10b981 !important;
+            color: #fff !important;
+        }
+
+        /* 按钮 */
+        .btn-query {
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            border: none;
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-query:hover {
+            opacity: 0.9;
+            color: #fff;
+        }
+
+        .btn-refresh {
+            background: transparent;
+            border: 1px solid #a78bfa;
+            color: #a78bfa;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-refresh:hover {
+            background: rgba(167, 139, 250, 0.15);
+            color: #c4b5fd;
+        }
+
+        .auto-refresh-badge {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 14px;
+            padding: 5px 12px;
+            font-size: 11px;
+            color: #10b981;
+            margin-left: auto;
+        }
+
+        /* 表格容器 */
+        .table-container {
+            background: #252538;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Tabulator 样式 */
+        #result-table {
+            width: 100%;
+        }
+
+        .tabulator {
+            background: transparent !important;
+            border: none !important;
+            font-size: 13px;
+        }
+
+        /* 表头 - 深色背景白色文字 */
+        .tabulator .tabulator-header {
+            background: #1a3a2e !important;
+            border-bottom: 2px solid #10b981 !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col {
+            background: transparent !important;
+            border-right: 1px solid #2a5a4a !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col .tabulator-col-title {
+            color: #ffffff !important;
+            font-weight: 600;
+            font-size: 12px;
+            white-space: normal !important;
+            text-overflow: clip !important;
+            overflow: visible !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+            padding: 10px 8px !important;
+        }
+
+        /* 数据行 - 清晰的深色背景 */
+        .tabulator-row {
+            background: #1e1e2f !important;
+            border-bottom: 1px solid #2a2a4a !important;
+        }
+
+        .tabulator-row:nth-child(even) {
+            background: #232338 !important;
+        }
+
+        .tabulator-row:hover {
+            background: #2d3d4a !important;
+        }
+
+        .tabulator-row .tabulator-cell {
+            border-right: 1px solid #2a2a4a !important;
+            color: #d0d0d0 !important;
+            padding: 10px 8px !important;
+        }
+
+        /* 分组头部 - 绿色渐变 */
+        .tabulator .tabulator-group {
+            background: linear-gradient(90deg, #065f46 0%, #134e4a 100%) !important;
+            border: none !important;
+            border-left: 4px solid #34d399 !important;
+        }
+
+        .tabulator .tabulator-group span {
+            color: #ffffff !important;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .tabulator .tabulator-group .tabulator-arrow {
+            border-left-color: #e0e0e0 !important;
+            border-right-color: #e0e0e0 !important;
+            border-top-color: #e0e0e0 !important;
+            border-bottom-color: #e0e0e0 !important;
+        }
+
+        /* 分页器 */
+        .tabulator .tabulator-footer {
+            background: #252538 !important;
+            border-top: 1px solid #3a3a5a !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page {
+            background: #2a2a4a !important;
+            border: 1px solid #3a3a5a !important;
+            color: #c0c0c0 !important;
+            border-radius: 4px !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page:hover {
+            background: #3a3a5a !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page.active {
+            background: #10b981 !important;
+            border-color: #10b981 !important;
+            color: #fff !important;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 50px 30px;
+            color: #888;
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
     </style>
 </head>
 
 <body>
-
-    <div class="container-fluid" style="margin-top: 5px;">
-        <div style="margin-top: 5px;">
-            <form class="form-inline" role="form" style="">
-                <div class="form-group ">
-                    <label for="col_name_search">队列名字：</label>
-                    <select class="form-control" id="col_name_search">
-                        <option value="">请选择队列名字...</option>
-                    </select>
+    <div class="main-container">
+        <!-- 页面标题 -->
+        <div class="page-header-custom">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fa fa-tasks"></i>
                 </div>
-                <button type="button" class="btn btn-default marginLeft20" onclick="query()">查询</button>
-            </form>
+                <div class="header-title">
+                    <h1>运行中消费者 (按队列分组)</h1>
+                    <p>实时监控各队列上的消费者进程状态</p>
+                </div>
+            </div>
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-value" id="total_queue_count">0</div>
+                    <div class="stat-label">活跃队列</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total_consumer_count">0</div>
+                    <div class="stat-label">消费者总数</div>
+                </div>
+            </div>
         </div>
 
-        <div id="result-table" style="margin-top: 20px;"></div>
+        <!-- 查询面板 -->
+        <div class="query-panel">
+            <label><i class="fa fa-list-alt" style="margin-right: 6px;"></i>选择队列：</label>
+            <select class="form-control" id="col_name_search" style="width: 380px;">
+                <option value="">全部队列</option>
+            </select>
+            <button type="button" class="btn-query" onclick="query()">
+                <i class="fa fa-search"></i> 查询
+            </button>
+            <button type="button" class="btn-refresh" onclick="refreshData()">
+                <i class="fa fa-refresh"></i> 刷新
+            </button>
+            <span class="auto-refresh-badge">● 每30秒自动刷新</span>
+        </div>
 
+        <!-- 表格容器 -->
+        <div class="table-container">
+            <div id="result-table"></div>
+            <div class="empty-state" id="empty_state" style="display: none;">
+                <i class="fa fa-inbox"></i>
+                <h4>暂无运行中的消费者</h4>
+                <p>请确认消费者服务已启动</p>
+            </div>
+        </div>
     </div>
 
-
-
-
-
-
     <script>
+        var allQueues = [];
+        var currentColName = '';
+        var table = null;
 
-        // 在现有的变量声明后添加
-        var allQueues = [];  // 存储所有队列数据
-        var currentColName;
-
-        // 页面加载完成后立即获取所有队列
         $(document).ready(function () {
+            loadQueueList();
+            setInterval(refreshData, 30000);
+        });
+
+        function loadQueueList() {
             $.ajax({
                 url: "{{ url_for('hearbeat_info_partion_by_queue_name')}}",
                 data: { col_name_search: '' },
-                async: true,
                 success: function (result) {
                     allQueues = result;
-                    var html = '<option value="">请选择队列名字...</option>';
+                    
+                    var totalQueues = 0, totalConsumers = 0;
+                    var html = '<option value="">全部队列</option>';
                     for (var item of result) {
-                        html += '<option value="' + item.collection_name + '">' +
-                            item.collection_name + '&nbsp;&nbsp;&nbsp;&nbsp;(consumer_count:' + item.count + ')</option>';
+                        if (item.collection_name !== '所有') {
+                            // 只有有消费者在运行的队列才算活跃
+                            if (item.count > 0) {
+                                totalQueues++;
+                            }
+                            totalConsumers += item.count;
+                            html += '<option value="' + item.collection_name + '">' +
+                                item.collection_name + ' (' + item.count + ' 个)</option>';
+                        }
                     }
+                    
+                    $('#total_queue_count').text(totalQueues);
+                    $('#total_consumer_count').text(totalConsumers);
                     $("#col_name_search").html(html);
 
-                    // 初始化选择框的搜索功能
                     $("#col_name_search").select2({
-                        placeholder: "请输入队列名称搜索...",
+                        placeholder: "搜索队列名...",
                         allowClear: true,
-                        width: '500px'
+                        width: '380px'
                     });
 
-                    // 监听选择变化
                     $("#col_name_search").on('change', function () {
-                        var selectedQueue = $(this).val();
-                        console.log("Selected queue:", selectedQueue);
-                        currentColName = selectedQueue;
-                        // if(selectedQueue) {
-                        //     queryResult(selectedQueue, 0, true);
-                        // }
+                        currentColName = $(this).val();
+                        query();  // 选择变化时自动查询
                     });
+
+                    // 检查浏览器是否记住了上次选择的值
+                    var rememberedValue = $("#col_name_search").val();
+                    if (rememberedValue) {
+                        currentColName = rememberedValue;
+                    }
+
+                    query();
                 }
             });
-        });
+        }
 
-        $(document).ready(function (){
-            query()
-        });
+        function refreshData() { query(); }
 
         function query() {
             $.ajax({
                 url: "{{ url_for('hearbeat_info_by_queue_name')}}",
                 data: { queue_name: currentColName },
-                async: true,
                 success: function (result) {
-                    console.info(result);
+                    if (!result || result.length === 0) {
+                        $('#result-table').hide();
+                        $('#empty_state').show();
+                        return;
+                    }
 
-                                      // 创建表格
-                        var table = new Tabulator("#result-table", {
-                        theme: "bootstrap3",
-                        data: result,
-                     
-                         // layout: "fitColumns",
-                         layout: "fitDataTable",  // 改为 fitDataTable
-        responsiveLayout: false, // 禁用响应式布局
-                        columns: [
-                        {title: "<br><br>队列名称", field: "queue_name"},
-                            {title: "<br><br>消费函数", field: "consuming_function"},
-                            {title: "<br><br>主机名", field: "computer_name"},
-                            {title: "<br><br>IP地址", field: "computer_ip"},
-                            {title: "<br><br>进程ID", field: "process_id"},
-                            {title: "<br><br>启动时间", field: "start_datetime_str","width":200},
-                            {title: "<br><br>最近心跳时间", field: "hearbeat_datetime_str","width":200},
-                            
-                            {title:"近10秒<br>运行完成<br>消息个数",field:"last_x_s_execute_count", formatter:"html","width":100},
-                            {title:"近10秒<br>运行失败<br>消息个数",field:"last_x_s_execute_count_fail", formatter:"html","width":100},
-                            {title:"近10秒<br>函数运行<br>平均耗时",field:"last_x_s_avarage_function_spend_time", formatter:"html","width":100},
-                            
-                            {title:"累计<br>运行完成<br>消息个数",field:"total_consume_count_from_start", formatter:"html","width":100},
-                            {title:"累计<br>运行失败<br>消息个数",field:"total_consume_count_from_start_fail", formatter:"html","width":100},
-                            {title:"累计<br>函数运行<br>平均耗时",field:"avarage_function_spend_time_from_start", formatter:"html","width":100},
+                    $('#result-table').show();
+                    $('#empty_state').hide();
+                    $('#total_consumer_count').text(result.length);
 
-                            {title: "<br><br>代码文件", field: "code_filename"},
-                            // {title: "<br><br>consumer_id", field: "consumer_id"},
-                            {title: "<br><br>consumer_uuid", field: "consumer_uuid"},
-                        ],
-                        pagination: true,
-                        paginationSize: 1000,
-                        locale: true,
-                        langs: {
-                            "zh-cn": {
-                                "pagination": {
-                                    "first": "首页",
-                                    "first_title": "首页",
-                                    "last": "末页",
-                                    "last_title": "末页",
-                                    "prev": "上一页",
-                                    "prev_title": "上一页",
-                                    "next": "下一页",
-                                    "next_title": "下一页",
+                    if (table) {
+                        table.setData(result);
+                    } else {
+                        table = new Tabulator("#result-table", {
+                            data: result,
+                            layout: "fitDataFill",
+                            responsiveLayout: false,
+                            height: "auto",
+                            groupBy: "queue_name",
+                            groupStartOpen: true,
+                            groupHeader: function(value, count) {
+                                return '<i class="fa fa-list-alt" style="margin-right: 10px; color: #6ee7b7;"></i>' +
+                                       '<strong>队列: ' + (value || "未知") + '</strong>' + 
+                                       ' <span style="color: #ccc; margin-left: 16px; font-weight: normal;">(' + count + ' 个消费者)</span>';
+                            },
+                            columns: [
+                                {title: "消费函数", field: "consuming_function", width: 100,
+                                    formatter: function(cell) {
+                                        return '<code style="background: #1a3a2e; color: #6ee7b7; padding: 3px 8px; border-radius: 4px;">' + cell.getValue() + '</code>';
+                                    }
+                                },
+                                {title: "主机名", field: "computer_name", width: 150},
+                                {title: "IP地址", field: "computer_ip", width: 120,
+                                    formatter: function(cell) {
+                                        return '<span style="color: #60a5fa;">' + cell.getValue() + '</span>';
+                                    }
+                                },
+                                {title: "进程ID", field: "process_id", width: 70, hozAlign: "center"},
+                                {title: "启动时间", field: "start_datetime_str", width: 160},
+                                {title: "最近心跳", field: "hearbeat_datetime_str", width: 160,
+                                    formatter: function(cell) {
+                                        return '<span style="color: #34d399;"><i class="fa fa-heartbeat" style="margin-right: 5px;"></i>' + cell.getValue() + '</span>';
+                                    }
+                                },
+                                {title: "近10秒完成", field: "last_x_s_execute_count", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue() || 0;
+                                        var color = val > 0 ? '#34d399' : '#666';
+                                        return '<span style="color: ' + color + '; font-weight: 600;">' + val + '</span>';
+                                    }
+                                },
+                                {title: "近10秒失败", field: "last_x_s_execute_count_fail", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue() || 0;
+                                        var color = val > 0 ? '#f87171' : '#666';
+                                        return '<span style="color: ' + color + '; font-weight: 600;">' + val + '</span>';
+                                    }
+                                },
+                                {title: "近10秒耗时", field: "last_x_s_avarage_function_spend_time", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue();
+                                        if (val === null || val === undefined) return '<span style="color: #666;">-</span>';
+                                        return '<span style="color: #fbbf24;">' + val.toFixed(3) + 's</span>';
+                                    }
+                                },
+                                {title: "累计完成", field: "total_consume_count_from_start", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue() || 0;
+                                        return '<span style="color: #38bdf8; font-weight: 500;">' + val.toLocaleString() + '</span>';
+                                    }
+                                },
+                                {title: "累计失败", field: "total_consume_count_from_start_fail", hozAlign: "center", width: 80,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue() || 0;
+                                        var color = val > 0 ? '#f87171' : '#666';
+                                        return '<span style="color: ' + color + ';">' + val.toLocaleString() + '</span>';
+                                    }
+                                },
+                                {title: "累计耗时", field: "avarage_function_spend_time_from_start", hozAlign: "center", width: 90,
+                                    formatter: function(cell) {
+                                        var val = cell.getValue();
+                                        if (val === null || val === undefined) return '<span style="color: #666;">-</span>';
+                                        return '<span style="color: #fb923c;">' + val.toFixed(3) + 's</span>';
+                                    }
+                                },
+                            ],
+                            pagination: true,
+                            paginationSize: 100,
+                            locale: true,
+                            langs: {
+                                "zh-cn": {
+                                    "pagination": {
+                                        "first": "首页", "last": "末页",
+                                        "prev": "上一页", "next": "下一页",
+                                    }
                                 }
                             }
-                        }
-                    });
-
-                    /* result 例如 [
-  {
-    "code_filename": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py", 
-    "computer_ip": "10.0.133.57", 
-    "computer_name": "LAPTOP-7V78BBO2", 
-    "consumer_id": 1462882757512, 
-    "consumer_uuid": "88f568f7-9723-48ef-9cac-0370b2333a49", 
-    "consuming_function": "f2", 
-    "hearbeat_datetime_str": "2025-02-25 17:28:36", 
-    "hearbeat_timestamp": 1740475716.783474, 
-    "process_id": 34788, 
-    "queue_name": "queue_test_f02t", 
-    "start_datetime_str": "2025-02-25 16:33:19", 
-    "start_timestamp": 1740472399.4628778
-  }, 
-  {
-    "code_filename": "d:/codes/funboost/test_frame/test_function_status_result_persist/test_persist.py", 
-    "computer_ip": "10.0.133.57", 
-    "computer_name": "LAPTOP-7V78BBO2", 
-    "consumer_id": 1462882671944, 
-    "consumer_uuid": "c52a8596-d632-4bac-a797-80375288f381", 
-    "consuming_function": "f", 
-    "hearbeat_datetime_str": "2025-02-25 17:28:36", 
-    "hearbeat_timestamp": 1740475716.783336, 
-    "process_id": 34788, 
-    "queue_name": "queue_test_f01t", 
-    "start_datetime_str": "2025-02-25 16:33:19", 
-    "start_timestamp": 1740472399.4503505
-  }
-]
-  */
-
+                        });
+                    }
                 }
             });
         }
-
-
-
-
-
-
-
-
     </script>
 </body>
 
 </html>
+
 `````
 
 --- **end of file: funboost/funboost_web_manager/templates/running_consumer_by_queue_name.html** (project: funboost) --- 
@@ -55324,245 +51592,668 @@ if __name__ == '__main__':
     <script src="{{ url_for('static',filename='/js/select2.min.js') }}"></script>
 
     <style>
-        .action-btn {
-            margin: 2px;
+        * {
+            box-sizing: border-box;
         }
-        .search-container {
-            margin-bottom: 15px;
+
+        body {
+            background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
         }
-        .tabulator-cell {
-            padding-left: 15px !important;
-            padding-right: 15px !important;
-            padding-top: 8px !important;
-            padding-bottom: 8px !important;
+
+        .main-container {
+            padding: 20px 25px;
+            max-width: 100%;
         }
-        .status-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 3px;
+
+        /* 页面标题区域 */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 20px 25px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(234, 88, 12, 0.1) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(245, 158, 11, 0.4);
+        }
+
+        .header-icon i {
+            font-size: 28px;
+            color: white;
+        }
+
+        .header-title h1 {
+            margin: 0 0 5px 0;
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ffffff 0%, #fcd34d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-title p {
+            margin: 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* 统计卡片 */
+        .stats-cards {
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.8) 0%, rgba(40, 40, 80, 0.6) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 15px 25px;
+            text-align: center;
+            min-width: 100px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
             font-size: 12px;
-            font-weight: bold;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 3px;
         }
-        .status-running {
-            background-color: #4CAF50;
-            color: white;
+
+        /* 控制面板 */
+        .control-panel {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.6) 0%, rgba(40, 40, 80, 0.4) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
         }
-        .status-paused {
-            background-color: #FF9800;
-            color: white;
-        }
-        /* Tabulator 分组样式 */
-        .tabulator .tabulator-row.tabulator-group {
-            background-color: #f0f7ff !important;
-            border-bottom: 2px solid #337ab7 !important;
-            cursor: pointer;
-        }
-        .tabulator .tabulator-row.tabulator-group:hover {
-            background-color: #e3f0ff !important;
-        }
-        .tabulator .tabulator-row.tabulator-group .tabulator-group-toggle {
-            margin-right: 10px;
-        }
-        .tabulator .tabulator-row.tabulator-group span {
-            vertical-align: middle;
-        }
-        /* Select2 下拉框高度调整 */
+
+        /* Select2 样式 */
         .select2-container--default .select2-selection--single {
-            height: 38px !important;
-            padding-top: 4px !important;
+            background: rgba(20, 20, 40, 0.9) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            border-radius: 10px !important;
+            height: 42px !important;
+            padding: 5px 10px !important;
         }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #ffffff !important;
+            line-height: 30px !important;
+        }
+
         .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 36px !important;
+            height: 40px !important;
         }
-        .select2-container--default .select2-results__option {
+
+        .select2-dropdown {
+            background: #1e1e3f !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            border-radius: 10px !important;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            background: rgba(30, 30, 60, 0.9) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
             padding: 8px 12px !important;
         }
-        .select2-dropdown {
-            max-height: 800px !important;
+
+        .select2-results__option {
+            padding: 10px 14px !important;
+            font-size: 13px !important;
+            color: #e0e0e0 !important;
         }
-        .select2-results__options {
-            max-height: 350px !important;
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: linear-gradient(90deg, #f59e0b 0%, #ea580c 100%) !important;
         }
+
+        /* 输入框样式 */
+        .search-input {
+            background: rgba(20, 20, 40, 0.9) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            border-radius: 10px !important;
+            color: #ffffff !important;
+            padding: 10px 15px !important;
+            width: 250px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: rgba(245, 158, 11, 0.6) !important;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* 按钮样式 */
+        .btn-modern {
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-refresh {
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-refresh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-auto-refresh {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-auto-refresh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+        }
+
+        .btn-auto-refresh.active {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-delete-all {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn-delete-all:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
+        }
+
+        .btn-help {
+            background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+        }
+
+        .btn-help:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.5);
+        }
+
+        /* 表格容器 */
+        .table-container {
+            background: linear-gradient(135deg, rgba(20, 20, 40, 0.8) 0%, rgba(30, 30, 60, 0.6) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 16px;
+            padding: 5px;
+            overflow: hidden;
+        }
+
+        /* Tabulator 表格样式 */
+        .tabulator {
+            background: transparent !important;
+            border: none !important;
+            font-size: 13px;
+        }
+
+        .tabulator .tabulator-header {
+            background: linear-gradient(90deg, #2d1b69 0%, #3d2a7a 100%) !important;
+            border-bottom: 2px solid rgba(245, 158, 11, 0.3) !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col {
+            background: transparent !important;
+            border-right: 1px solid rgba(245, 158, 11, 0.2) !important;
+            min-height: 50px !important;
+        }
+
+        .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
+            color: #ffffff !important;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .tabulator-row {
+            background: rgba(15, 15, 35, 0.9) !important;
+            border-bottom: 1px solid rgba(245, 158, 11, 0.1) !important;
+        }
+
+        .tabulator-row:nth-child(even) {
+            background: rgba(25, 25, 50, 0.9) !important;
+        }
+
+        .tabulator-row:hover {
+            background: rgba(245, 158, 11, 0.15) !important;
+        }
+
+        .tabulator-row:hover .tabulator-cell {
+            color: #ffffff !important;
+        }
+
+        .tabulator-row .tabulator-cell {
+            border-right: 1px solid rgba(245, 158, 11, 0.1) !important;
+            color: #ffffff !important;
+            padding: 12px 15px !important;
+            font-weight: 500;
+        }
+
+        /* 分组样式 */
+        .tabulator .tabulator-row.tabulator-group {
+            background: linear-gradient(90deg, #b45309 0%, #d97706 100%) !important;
+            border: none !important;
+            border-left: 4px solid #fbbf24 !important;
+            cursor: pointer;
+        }
+
+        .tabulator .tabulator-row.tabulator-group:hover {
+            background: linear-gradient(90deg, #c2410c 0%, #ea580c 100%) !important;
+        }
+
+        .tabulator .tabulator-row.tabulator-group span {
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+
+        .tabulator .tabulator-footer {
+            background: linear-gradient(90deg, #1e1e3f 0%, #2a2a4a 100%) !important;
+            border-top: 1px solid rgba(245, 158, 11, 0.2) !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page {
+            background: rgba(245, 158, 11, 0.2) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            color: #e0e0e0 !important;
+            border-radius: 6px !important;
+            margin: 0 3px !important;
+        }
+
+        .tabulator .tabulator-footer .tabulator-page.active {
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%) !important;
+            color: white !important;
+        }
+
+        /* 状态标签 */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-running {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+        }
+
+        .status-paused {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: #1a1a2e;
+        }
+
+        /* 触发器标签 */
+        .trigger-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .trigger-interval {
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            color: white;
+        }
+
+        .trigger-cron {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+        }
+
+        .trigger-date {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: #1a1a2e;
+        }
+
+        /* 操作按钮 */
+        .action-btn {
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            margin: 2px;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-detail {
+            background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);
+            color: white;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+            color: white;
+        }
+
+        .btn-pause {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: #1a1a2e;
+        }
+
+        .btn-resume {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            color: white;
+        }
+
+        /* 调度器控制 */
+        .scheduler-controls-wrapper {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 20px;
+        }
+
+        .scheduler-status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .scheduler-running {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+        }
+
+        .scheduler-paused {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: #1a1a2e;
+        }
+
+        .scheduler-stopped {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            color: white;
+        }
+
+        .scheduler-btn {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* 模态框样式 */
+        .modal-content {
+            background: linear-gradient(135deg, #1e1e3f 0%, #2a2a4a 100%) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            border-radius: 16px !important;
+            color: #e0e0e0;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid rgba(245, 158, 11, 0.2) !important;
+            padding: 20px 25px !important;
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, rgba(234, 88, 12, 0.05) 100%);
+            border-radius: 16px 16px 0 0;
+        }
+
+        .modal-title {
+            color: #ffffff !important;
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .modal-body {
+            padding: 25px !important;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            border-top: 1px solid rgba(245, 158, 11, 0.2) !important;
+            padding: 15px 25px !important;
+            background: rgba(20, 20, 40, 0.5);
+        }
+
+        .close {
+            color: #fbbf24 !important;
+            opacity: 1 !important;
+            font-size: 28px;
+        }
+
+        .close:hover {
+            color: #ffffff !important;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-control {
+            background: rgba(20, 20, 40, 0.9) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            border-radius: 10px !important;
+            color: #ffffff !important;
+            padding: 12px 15px !important;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: rgba(245, 158, 11, 0.6) !important;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* 触发器配置区域 */
         .trigger-section {
             display: none;
-            margin-top: 15px;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            border: 1px solid #ddd;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(20, 20, 40, 0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
         }
+
         .trigger-section.active {
             display: block;
         }
-        .form-inline-group {
-            margin-bottom: 10px;
+
+        .trigger-section h5 {
+            color: #fbbf24;
+            font-weight: 600;
+            margin-bottom: 15px;
         }
-        .form-inline-group label {
-            min-width: 80px;
-            display: inline-block;
-        }
-        .cron-example {
+
+        /* 参数信息框 */
+        .params-info {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 10px;
+            padding: 15px;
             margin-top: 10px;
-            padding: 10px;
-            background-color: #e7f3ff;
-            border-left: 4px solid #2196F3;
-            font-size: 12px;
         }
-        .next-run-preview {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #e8f5e9;
-            border-left: 4px solid #4CAF50;
-            font-weight: bold;
+
+        .params-info i {
+            color: #60a5fa;
+            margin-right: 8px;
         }
-        
-        /* 可搜索队列选择器样式 */
-        .queue-selector {
-            display: inline-block;
-        }
-        .queue-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #ccc;
-            border-top: none;
-            border-radius: 0 0 4px 4px;
-            max-height: 600px; 
-            overflow-y: auto;
-            z-index: 1000;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .queue-option {
-            padding: 10px 15px;  /* 增加内边距，原来是 8px 12px */
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 13px;  /* 增加字体大小 */
-        }
-        .queue-option:hover {
-            background-color: #337ab7;
-            color: white;
-        }
-        .queue-option.selected {
-            background-color: #f0f0f0;
-            font-weight: bold;
-        }
-        .queue-option:last-child {
-            border-bottom: none;
-        }
-        
-        /* 调度器状态标签样式 - 更清晰的颜色 */
-        .scheduler-status {
-            display: inline-block;
-            padding: 4px 10px;
+
+        .params-info code {
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+            padding: 2px 8px;
             border-radius: 4px;
             font-size: 12px;
-            font-weight: bold;
         }
-        .scheduler-status.label-success {
-            background-color: #28a745 !important;
-            color: #fff !important;
+
+        /* Cron 示例 */
+        .cron-example {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid #f59e0b;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
         }
-        .scheduler-status.label-warning {
-            background-color: #ffc107 !important;
-            color: #212529 !important;
+
+        /* Radio 样式 */
+        .radio-inline {
+            color: rgba(255, 255, 255, 0.8);
+            margin-right: 20px;
         }
-        .scheduler-status.label-danger {
-            background-color: #dc3545 !important;
-            color: #fff !important;
+
+        .radio-inline input {
+            margin-right: 6px;
+            accent-color: #f59e0b;
         }
-        .scheduler-status.label-default {
-            background-color: #6c757d !important;
-            color: #fff !important;
+
+        /* 复选框样式 */
+        .checkbox label {
+            color: rgba(255, 255, 255, 0.8);
         }
-        
-        /* 调度器控制按钮样式 */
-        .scheduler-controls .btn-pause {
-            background-color: #f0ad4e !important;
-            border-color: #eea236 !important;
-            color: #fff !important;
+
+        .checkbox input {
+            margin-right: 8px;
+            accent-color: #f59e0b;
         }
-        .scheduler-controls .btn-resume {
-            background-color: #5cb85c !important;
-            border-color: #4cae4c !important;
-            color: #fff !important;
-        }
-        
-        /* 定时任务说明模态框样式 */
-        .help-modal .modal-content {
-            border-radius: 12px;
-            border: none;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-        .help-modal .modal-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-bottom: none;
-            padding: 25px 30px;
-        }
-        .help-modal .modal-title {
-            font-size: 24px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .help-modal .modal-header .close {
-            color: white;
-            opacity: 0.8;
-            font-size: 28px;
-            margin-top: -5px;
-        }
-        .help-modal .modal-header .close:hover {
-            opacity: 1;
-        }
-        .help-modal .modal-body {
-            padding: 30px;
-            max-height: 65vh;
-            overflow-y: auto;
-        }
+
+        /* 帮助模态框 */
         .help-section {
-            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 10px;
-            padding: 20px 25px;
-            margin-bottom: 20px;
+            background: rgba(20, 20, 40, 0.6);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
             border-left: 4px solid;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: all 0.3s ease;
         }
+
         .help-section:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            transform: translateX(5px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
-        .help-section:last-child {
-            margin-bottom: 0;
-        }
-        .help-section.section-scheduler {
-            border-left-color: #f39c12;
-        }
-        .help-section.section-job {
-            border-left-color: #3498db;
-        }
-        .help-section.section-recommend {
-            border-left-color: #27ae60;
-        }
-        .help-section.section-advantage {
-            border-left-color: #9b59b6;
-        }
+
         .help-section.section-learn {
-            border-left-color: #e74c3c;
+            border-left-color: #ef4444;
         }
+
+        .help-section.section-scheduler {
+            border-left-color: #f59e0b;
+        }
+
+        .help-section.section-job {
+            border-left-color: #3b82f6;
+        }
+
+        .help-section.section-recommend {
+            border-left-color: #10b981;
+        }
+
+        .help-section.section-advantage {
+            border-left-color: #8b5cf6;
+        }
+
         .help-section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
+
         .help-section-title .icon {
             width: 32px;
             height: 32px;
@@ -55570,144 +52261,201 @@ if __name__ == '__main__':
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 14px;
             color: white;
         }
-        .help-section.section-scheduler .icon {
-            background: linear-gradient(135deg, #f39c12, #e74c3c);
-        }
-        .help-section.section-job .icon {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-        }
-        .help-section.section-recommend .icon {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
-        }
-        .help-section.section-advantage .icon {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-        }
+
         .help-section.section-learn .icon {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            background: linear-gradient(135deg, #ef4444, #dc2626);
         }
+
+        .help-section.section-scheduler .icon {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .help-section.section-job .icon {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .help-section.section-recommend .icon {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .help-section.section-advantage .icon {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
         .help-section-content {
-            color: #555;
+            color: rgba(255, 255, 255, 0.7);
             line-height: 1.8;
             font-size: 14px;
         }
-        .help-section-content p {
-            margin-bottom: 10px;
-        }
-        .help-section-content p:last-child {
-            margin-bottom: 0;
-        }
+
         .help-highlight {
-            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            background: linear-gradient(120deg, rgba(245, 158, 11, 0.3) 0%, rgba(234, 88, 12, 0.2) 100%);
             padding: 2px 8px;
             border-radius: 4px;
             font-weight: 500;
+            color: #fcd34d;
         }
+
         .help-code {
-            background-color: #f1f3f5;
+            background: rgba(139, 92, 246, 0.2);
             padding: 3px 8px;
             border-radius: 4px;
             font-family: 'Consolas', 'Monaco', monospace;
             font-size: 13px;
-            color: #e74c3c;
+            color: #c4b5fd;
         }
+
         .help-tip {
-            background: linear-gradient(145deg, #e8f9fd 0%, #d4f1f9 100%);
+            background: rgba(59, 130, 246, 0.1);
             border-radius: 8px;
             padding: 15px;
             margin-top: 12px;
-            border-left: 3px solid #17a2b8;
+            border-left: 3px solid #3b82f6;
         }
+
         .help-tip-title {
             font-weight: 600;
-            color: #17a2b8;
+            color: #60a5fa;
             margin-bottom: 8px;
-            display: flex;
+        }
+
+        /* 自动刷新指示器 */
+        .refresh-indicator {
+            display: none;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 20px;
+            font-size: 12px;
+            color: #a78bfa;
         }
-        .help-modal .modal-footer {
-            border-top: 1px solid #eee;
-            padding: 20px 30px;
-            background: #f8f9fa;
+
+        .refresh-indicator.active {
+            display: inline-flex;
         }
-        .help-modal .btn-close-help {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 10px 30px;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+        .refresh-indicator .dot {
+            width: 8px;
+            height: 8px;
+            background: #a78bfa;
+            border-radius: 50%;
+            animation: blink 1s infinite;
         }
-        .help-modal .btn-close-help:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
-        .btn-help-guide {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            border: none !important;
-            color: white !important;
-            font-weight: 500;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+        /* 状态筛选下拉 */
+        .status-select {
+            background: rgba(20, 20, 40, 0.9) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            border-radius: 10px !important;
+            color: #ffffff !important;
+            padding: 10px 15px !important;
+            width: 130px;
+            cursor: pointer;
         }
-        .btn-help-guide:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+
+        .status-select option {
+            background: #1e1e3f;
+            color: #ffffff;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .page-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .control-panel {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid" style="margin-top: 5px;">
-        <!-- 顶部操作栏 -->
-        <div class="search-container" style="display: flex; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
-            <!-- 队列名称筛选（放在最前面） -->
+    <div class="main-container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fa fa-clock-o"></i>
+                </div>
+                <div class="header-title">
+                    <h1>定时任务管理中心</h1>
+                    <p>管理和监控所有队列的定时任务调度</p>
+                </div>
+            </div>
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-value" id="total_queues">0</div>
+                    <div class="stat-label">队列数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total_jobs">0</div>
+                    <div class="stat-label">定时计划总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="running_jobs">0</div>
+                    <div class="stat-label">运行中</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="control-panel">
             <select id="queueFilter" class="form-control" style="width: 350px;">
-                <option value="">请选择队列名字...</option>
+                <option value="">全部队列</option>
             </select>
             
-            <!-- 调度器状态移回分组头，此处移除 -->
-            
-            <select id="statusFilter" class="form-control" style="width: 150px;" onchange="updateTableFilters()">
+            <select id="statusFilter" class="status-select" onchange="updateTableFilters()">
                 <option value="">所有状态</option>
                 <option value="running">运行中</option>
                 <option value="paused">已暂停</option>
             </select>
             
-            <div class="input-group" style="width: 300px;">
-                <input type="text" id="searchInput" class="form-control" placeholder="搜索队列名或任务ID...">
-                <span class="input-group-btn">
-                    <button class="btn btn-default" type="button" onclick="clearSearch()">
-                        <i class="glyphicon glyphicon-remove"></i>
-                    </button>
-                </span>
-            </div>
-            
-            <button id="addJobBtn" class="btn btn-success" onclick="showAddJobModal()">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索任务ID或队列名...">
+
+            <button class="btn-modern btn-add" onclick="showAddJobModal()">
                 <i class="fa fa-plus"></i> 添加任务
             </button>
             
-            <button id="refreshBtn" class="btn btn-info" onclick="refreshTable()">
+            <button class="btn-modern btn-refresh" onclick="refreshTable()">
                 <i class="fa fa-refresh"></i> 刷新
             </button>
             
-            <button id="toggle-auto-refresh" class="btn btn-primary" onclick="toggleAutoRefresh()">
+            <button id="toggle-auto-refresh" class="btn-modern btn-auto-refresh" onclick="toggleAutoRefresh()">
                 <i class="fa fa-play"></i> 自动刷新
             </button>
             
-            <button id="deleteAllBtn" class="btn btn-danger" onclick="deleteAllJobs()">
-                <i class="fa fa-trash"></i> 删除所有任务
+            <button class="btn-modern btn-delete-all" onclick="deleteAllJobs()">
+                <i class="fa fa-trash"></i> 删除全部
             </button>
             
-            <button id="helpBtn" class="btn btn-help-guide" onclick="showHelpModal()">
-                <i class="fa fa-question-circle"></i> 定时任务说明
+            <button class="btn-modern btn-help" onclick="showHelpModal()">
+                <i class="fa fa-question-circle"></i> 说明
             </button>
+
+            <div class="refresh-indicator" id="refresh-indicator">
+                <div class="dot"></div>
+                <span>每 10 秒自动刷新</span>
+            </div>
         </div>
 
-        <!-- 任务列表表格 -->
+        <!-- 表格容器 -->
+        <div class="table-container">
         <div id="timing-jobs-table"></div>
+        </div>
     </div>
 
     <!-- 添加任务模态框 -->
@@ -55716,38 +52464,35 @@ if __name__ == '__main__':
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                    <h4 class="modal-title">添加定时任务</h4>
+                    <h4 class="modal-title"><i class="fa fa-plus-circle" style="color: #10b981; margin-right: 10px;"></i>添加定时任务</h4>
                 </div>
                 <div class="modal-body">
                     <form id="addJobForm">
-                        <!-- 基础配置 -->
                         <div class="form-group">
-                            <label>队列名称 <span style="color:red;">*</span></label>
+                            <label><i class="fa fa-list-alt" style="color: #f59e0b; margin-right: 6px;"></i>队列名称 <span style="color:#ef4444;">*</span></label>
                             <select class="form-control" id="job_queue_name" required>
                                 <option value="">-- 请选择队列 --</option>
                             </select>
                         </div>
                         
                         <div class="form-group">
-                            <label>任务ID <small class="text-muted">(可选，留空自动生成)</small></label>
+                            <label><i class="fa fa-tag" style="color: #8b5cf6; margin-right: 6px;"></i>任务ID <small style="color: rgba(255,255,255,0.5);">(可选，留空自动生成)</small></label>
                             <input type="text" class="form-control" id="job_id" placeholder="例如: daily_sync_task">
                         </div>
                         
                         <div class="form-group">
-                            <label>函数参数 (kwargs) <small class="text-muted">(可选，JSON 格式)</small></label>
-                            <textarea class="form-control" id="job_kwargs" rows="8" placeholder='请先选择队列名称'></textarea>
-                            <div id="func_params_info" style="margin-top: 8px; padding: 10px; background-color: #f0f7ff; border-radius: 4px; border-left: 3px solid #337ab7;">
-                                <i class="fa fa-info-circle" style="color: #337ab7;"></i>
+                            <label><i class="fa fa-code" style="color: #3b82f6; margin-right: 6px;"></i>函数参数 (kwargs) <small style="color: rgba(255,255,255,0.5);">(JSON 格式)</small></label>
+                            <textarea class="form-control" id="job_kwargs" rows="6" placeholder='请先选择队列名称' style="font-family: Monaco, Consolas, monospace;"></textarea>
+                            <div class="params-info" id="func_params_info">
+                                <i class="fa fa-info-circle"></i>
                                 <span id="func_params_text">请先选择队列名称，将显示函数所需参数</span>
                             </div>
-                            <div id="kwargs_validation" style="display: none; margin-top: 5px;">
-                                <!-- JSON 验证结果显示区域 -->
-                            </div>
+                            <div id="kwargs_validation" style="display: none; margin-top: 8px;"></div>
                         </div>
                         
                         <div class="form-group">
-                            <label>触发器类型 <span style="color:red;">*</span></label>
-                            <div>
+                            <label><i class="fa fa-calendar" style="color: #10b981; margin-right: 6px;"></i>触发器类型 <span style="color:#ef4444;">*</span></label>
+                            <div style="margin-top: 10px;">
                                 <label class="radio-inline">
                                     <input type="radio" id="trigger_date" name="trigger_type" value="date" onchange="switchTriggerSection('date')"> 一次性任务
                                 </label>
@@ -55764,45 +52509,43 @@ if __name__ == '__main__':
                         <div id="dateTriggerSection" class="trigger-section">
                             <h5><i class="fa fa-calendar"></i> 一次性任务配置</h5>
                             <div class="form-group">
-                                <label>执行时间 <span style="color:red;">*</span></label>
+                                <label>执行时间 <span style="color:#ef4444;">*</span></label>
                                 <input type="datetime-local" class="form-control" id="run_date">
                             </div>
-                            <p class="text-muted">
+                            <div class="cron-example">
                                 <i class="fa fa-info-circle"></i> 任务将在指定时间执行一次后自动删除
-                            </p>
+                            </div>
                         </div>
 
                         <!-- Interval 触发器配置 -->
                         <div id="intervalTriggerSection" class="trigger-section active">
-                            <h5><i class="fa fa-clock-o"></i> 间隔执行配置 <small class="text-muted">(至少填写一个)</small></h5>
+                            <h5><i class="fa fa-clock-o"></i> 间隔执行配置 <small style="color: rgba(255,255,255,0.5);">(至少填写一个)</small></h5>
                             <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>周</label>
                                         <input type="number" class="form-control" id="interval_weeks" min="0" placeholder="0">
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>天</label>
                                         <input type="number" class="form-control" id="interval_days" min="0" placeholder="0">
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>小时</label>
                                         <input type="number" class="form-control" id="interval_hours" min="0" placeholder="0">
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>分钟</label>
                                         <input type="number" class="form-control" id="interval_minutes" min="0" placeholder="0">
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label>秒</label>
                                         <input type="number" class="form-control" id="interval_seconds" min="0" placeholder="0">
@@ -55816,49 +52559,47 @@ if __name__ == '__main__':
 
                         <!-- Cron 触发器配置 -->
                         <div id="cronTriggerSection" class="trigger-section">
-                            <h5><i class="fa fa-calendar-check-o"></i> Cron 定时配置 <small class="text-muted">(至少填写一个)</small></h5>
+                            <h5><i class="fa fa-calendar-check-o"></i> Cron 定时配置 <small style="color: rgba(255,255,255,0.5);">(至少填写一个)</small></h5>
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>年</label>
                                         <input type="text" class="form-control" id="cron_year" placeholder="* 或 2025">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>月</label>
                                         <input type="text" class="form-control" id="cron_month" placeholder="* 或 1-12">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>日</label>
                                         <input type="text" class="form-control" id="cron_day" placeholder="* 或 1-31">
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>星期</label>
                                         <input type="text" class="form-control" id="cron_day_of_week" placeholder="0-6 (0=周一)">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>时</label>
                                         <input type="text" class="form-control" id="cron_hour" placeholder="0-23">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>分</label>
                                         <input type="text" class="form-control" id="cron_minute" placeholder="0-59">
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>秒</label>
                                         <input type="text" class="form-control" id="cron_second" placeholder="0-59">
@@ -55866,28 +52607,24 @@ if __name__ == '__main__':
                                 </div>
                             </div>
                             <div class="cron-example">
-                                <strong>Cron 语法：</strong><br>
-                                • * = 任意值 | */n = 每n个单位 | 1-5 = 范围 | 1,3,5 = 列举<br>
-                                <strong>示例：</strong><br>
-                                • 每天上午9点 → 时:9 分:0 秒:0<br>
-                                • 每2小时 → 时:*/2 分:0<br>
-                                • 工作日上午10点 → 星期:0-4 时:10 分:0
+                                <strong>Cron 语法：</strong> * = 任意值 | */n = 每n个单位 | 1-5 = 范围 | 1,3,5 = 列举<br>
+                                <strong>示例：</strong> 每天上午9点 → 时:9 分:0 秒:0 | 每2小时 → 时:*/2 分:0
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>存储方式</label>
-                            <div>
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label><i class="fa fa-database" style="color: #ec4899; margin-right: 6px;"></i>存储方式</label>
+                            <div style="margin-top: 10px;">
                                 <label class="radio-inline">
                                     <input type="radio" id="job_store_redis" name="job_store_kind" value="redis" checked> Redis (推荐，支持分布式)
                                 </label>
-                                <label class="radio-inline" style="color: #999; cursor: not-allowed;">
+                                <label class="radio-inline" style="color: rgba(255,255,255,0.4); cursor: not-allowed;">
                                     <input type="radio" id="job_store_memory" name="job_store_kind" value="memory" disabled> 内存 (单机，重启丢失)
                                 </label>
                             </div>
                         </div>
 
-                        <div class="checkbox">
+                        <div class="checkbox" style="margin-top: 15px;">
                             <label>
                                 <input type="checkbox" id="replace_existing"> 如果任务ID已存在，则替换
                             </label>
@@ -55895,8 +52632,10 @@ if __name__ == '__main__':
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="submitAddJob()">
+                    <button type="button" class="btn-modern" style="background: rgba(255,255,255,0.1); color: #fff;" data-dismiss="modal">
+                        <i class="fa fa-times"></i> 取消
+                    </button>
+                    <button type="button" class="btn-modern btn-add" onclick="submitAddJob()">
                         <i class="fa fa-check"></i> 添加任务
                     </button>
                 </div>
@@ -55910,31 +52649,28 @@ if __name__ == '__main__':
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                    <h4 class="modal-title">任务详情</h4>
+                    <h4 class="modal-title"><i class="fa fa-info-circle" style="color: #06b6d4; margin-right: 10px;"></i>任务详情</h4>
                 </div>
-                <div class="modal-body" id="jobDetailContent">
-                    <!-- 动态填充 -->
-                </div>
+                <div class="modal-body" id="jobDetailContent"></div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn-modern" style="background: rgba(255,255,255,0.1); color: #fff;" data-dismiss="modal">
+                        <i class="fa fa-times"></i> 关闭
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 定时任务说明模态框 -->
-    <div class="modal fade help-modal" id="helpModal" tabindex="-1" role="dialog">
+    <!-- 帮助说明模态框 -->
+    <div class="modal fade" id="helpModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                    <h4 class="modal-title">
-                        <i class="fa fa-book"></i>
-                        定时任务使用说明
-                    </h4>
+                    <h4 class="modal-title"><i class="fa fa-book" style="color: #ec4899; margin-right: 10px;"></i>定时任务使用说明</h4>
                 </div>
                 <div class="modal-body">
-                    <!-- 说明0: 学习APScheduler -->
+                    <!-- 学习 APScheduler -->
                     <div class="help-section section-learn">
                         <div class="help-section-title">
                             <span class="icon"><i class="fa fa-graduation-cap"></i></span>
@@ -55942,119 +52678,69 @@ if __name__ == '__main__':
                         </div>
                         <div class="help-section-content">
                             <p><strong>Funboost 的定时任务功能是对 <span class="help-highlight">APScheduler</span> 的轻度封装。</strong></p>
-                            <p>APScheduler（Advanced Python Scheduler）是 Python 中最知名的定时任务调度库，Funboost 在其基础上进行了增强，以支持分布式场景和消息队列集成。</p>
-                            <p><strong>要掌握 Funboost 定时任务，您需要先理解以下核心概念：</strong></p>
-                            <div style="margin: 15px 0; padding: 15px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
-                                <p style="margin-bottom: 10px;"><strong>🔹 Scheduler（调度器）</strong></p>
-                                <p style="margin-left: 20px; margin-bottom: 12px;">调度器是定时任务系统的「大脑」，负责管理所有任务、检查触发时间、决定何时执行任务。一个调度器可以管理多个 Job。</p>
-                                <p style="margin-bottom: 10px;"><strong>🔹 Job（任务）</strong></p>
-                                <p style="margin-left: 20px; margin-bottom: 12px;">Job 是具体的「工作单元」，包含要执行的函数、触发规则（如每5分钟执行一次）和相关参数。多个 Job 由 Scheduler 统一管理。</p>
-                                <p style="margin-bottom: 10px;"><strong>🔹 Trigger（触发器）</strong></p>
-                                <p style="margin-left: 20px; margin-bottom: 0;">触发器定义任务「何时执行」：<span class="help-code">date</span>（一次性）、<span class="help-code">interval</span>（间隔执行）、<span class="help-code">cron</span>（定时表达式）。</p>
-                            </div>
+                            <p>APScheduler 是 Python 中最知名的定时任务调度库，Funboost 在其基础上进行了增强，支持分布式场景和消息队列集成。</p>
                             <div class="help-tip">
                                 <div class="help-tip-title"><i class="fa fa-book"></i> 学习资源</div>
-                                <p style="margin-bottom: 8px;">强烈建议您花时间学习 APScheduler 官方文档：</p>
-                                <p style="margin-bottom: 5px;">📖 官方文档：<a href="https://apscheduler.readthedocs.io/" target="_blank" style="color: #3498db;">https://apscheduler.readthedocs.io/</a></p>
-                                <p style="margin-bottom: 0;">📦 PyPI 地址：<a href="https://pypi.org/project/APScheduler/" target="_blank" style="color: #3498db;">https://pypi.org/project/APScheduler/</a></p>
+                                <p>📖 官方文档：<a href="https://apscheduler.readthedocs.io/" target="_blank" style="color: #60a5fa;">https://apscheduler.readthedocs.io/</a></p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 说明1: 暂停定时器 -->
+                    <!-- 暂停定时器 -->
                     <div class="help-section section-scheduler">
                         <div class="help-section-title">
                             <span class="icon"><i class="fa fa-clock-o"></i></span>
                             什么是「暂停 Scheduler（定时器）」？
                         </div>
                         <div class="help-section-content">
-                            <p><span class="help-highlight">Scheduler（定时器/调度器）</span> 是 APScheduler 中用于管理和触发所有定时任务的核心组件。</p>
-                            <p>暂停定时器意味着：<strong>整个调度器停止工作</strong>，该队列下的所有定时任务（Jobs）都将暂时不会被触发执行，但任务配置仍然保留在存储中。</p>
-                            <p>当恢复定时器后，所有任务将根据各自的触发规则继续调度执行。</p>
-                            <p>暂停 Scheduler 是暂停 funboiost web manager后台对应的scheduler， 不会影响你在消费脚本中自己启动的scheduler。</p>
-                            <div class="help-tip">
-                                <div class="help-tip-title"><i class="fa fa-info-circle"></i> 应用场景</div>
-                                适用于需要临时停止某个队列所有定时任务调度的场景，例如系统维护、批量调整任务配置等。
-                            </div>
+                            <p><span class="help-highlight">Scheduler（调度器）</span> 是管理和触发所有定时任务的核心组件。</p>
+                            <p>暂停定时器意味着：<strong>该队列下的所有定时任务暂停调度</strong>，但任务配置保留。恢复后继续执行。</p>
                         </div>
                     </div>
 
-                    <!-- 说明2: 暂停定时Job -->
+                    <!-- 暂停 Job -->
                     <div class="help-section section-job">
                         <div class="help-section-title">
                             <span class="icon"><i class="fa fa-pause-circle"></i></span>
                             什么是「暂停 Job（定时任务）」？
                         </div>
                         <div class="help-section-content">
-                            <p><span class="help-highlight">Job（定时任务）</span> 是具体的一个定时执行单元，包含触发规则、执行参数等信息。</p>
-                            <p>暂停某个 Job 意味着：<strong>仅该任务暂停调度</strong>，其他任务不受影响，该任务的配置仍然保留，可以随时恢复。</p>
-                            <p>与暂停整个定时器不同，暂停 Job 是更细粒度的控制，只影响单个任务。</p>
-                            <div class="help-tip">
-                                <div class="help-tip-title"><i class="fa fa-info-circle"></i> 应用场景</div>
-                                适用于需要临时停止某个特定任务的场景，而不影响其他任务的正常调度。
-                            </div>
+                            <p><span class="help-highlight">Job（定时任务）</span> 是具体的一个定时执行单元。</p>
+                            <p>暂停某个 Job 意味着：<strong>仅该任务暂停</strong>，其他任务不受影响，可随时恢复。</p>
                         </div>
                     </div>
 
-                    <!-- 说明3: 推荐用法 -->
+                    <!-- 推荐用法 -->
                     <div class="help-section section-recommend">
                         <div class="help-section-title">
                             <span class="icon"><i class="fa fa-star"></i></span>
                             推荐使用方式
                         </div>
                         <div class="help-section-content">
-                            <p><strong style="color: #27ae60;">💡 推荐在网页管理后台保持定时器为「暂停」状态！</strong></p>
-                            <p>网页管理后台中的定时器 <span class="help-highlight">专门用于定时任务的增删改查操作</span>，而不是用于实际触发定时任务发送消息到队列。</p>
-                            <p><strong>正确的做法是：</strong></p>
-                            <p style="margin-left: 20px;">1️⃣ 在您的 <span class="help-code">消费脚本</span> 中启动 booster 进行消费</p>
-                            <p style="margin-left: 20px;">2️⃣ 同时在消费脚本中启动相关的 <span class="help-code">非暂停状态</span> 的定时器</p>
-                            <p style="margin-left: 20px;">3️⃣ 保持网页后台的定时器为 <span class="help-code">暂停状态</span></p>
+                            <p><strong style="color: #4ade80;">💡 推荐在网页管理后台保持定时器为「暂停」状态！</strong></p>
+                            <p>网页后台的定位是 <span class="help-highlight">定时任务的管理工具</span>，用于增删改查。</p>
+                            <p><strong>正确做法：</strong>在您的消费脚本中启动 booster 和定时器，网页后台保持暂停状态。</p>
                             <div class="help-tip">
-                                <div class="help-tip-title"><i class="fa fa-lightbulb-o"></i> 为什么这样做？</div>
-                                <div style="margin-top: 8px;">
-                                    <p style="margin-bottom: 8px;"><strong>① 消费脚本优先原则</strong></p>
-                                    <p style="margin-left: 16px; margin-bottom: 10px; color: #555;">建议在您自己的消费脚本中启动定时器，而非依赖网页后台。这样网页后台可以随时关闭，不影响定时任务的正常执行。</p>
-                                    
-                                    <p style="margin-bottom: 8px;"><strong>② 网页后台仅作管理工具</strong></p>
-                                    <p style="margin-left: 16px; margin-bottom: 10px; color: #555;">网页后台的定位是定时任务的「管理工具」，用于增删改查，而非执行触发器。</p>
-                                    
-                                    <p style="margin-bottom: 8px;"><strong>③ 不用担心重复执行！</strong></p>
-                                    <p style="margin-left: 16px; margin-bottom: 10px; color: #555;">
-                                        <span class="help-highlight">特别说明：</span> 推荐这么做<strong>不是因为害怕任务重复执行</strong>。Funboost 的定时任务基于魔改的 APScheduler，在扫描并执行定时任务时使用了 <span class="help-code">Redis 分布式锁</span>，<strong>即使在 100 台机器上部署 Scheduler 也不会重复执行同一个定时任务</strong>！
-                                    </p>
-                                    
-                                    <p style="margin-bottom: 8px;"><strong>④ 完全由网页管理也可以</strong></p>
-                                    <p style="margin-left: 16px; margin-bottom: 0; color: #555;">
-                                        如果您希望完全由 Funboost Web Manager 来决定定时任务是否执行，也可以<strong>不暂停</strong>网页后台的定时器，同时在消费脚本中不启动定时器，让网页后台全权负责调度。
-                                    </p>
-                                </div>
+                                <div class="help-tip-title"><i class="fa fa-shield"></i> 不用担心重复执行！</div>
+                                <p>Funboost 使用 <span class="help-code">Redis 分布式锁</span>，即使 100 台机器部署也不会重复执行任务！</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 说明4: 跨项目管理优势 -->
+                    <!-- 跨项目管理 -->
                     <div class="help-section section-advantage">
                         <div class="help-section-title">
                             <span class="icon"><i class="fa fa-rocket"></i></span>
                             跨项目管理 —— 完爆传统方案！
                         </div>
                         <div class="help-section-content">
-                            <p><strong style="color: #9b59b6;">🚀 Funboost Web Manager 的定时器可以管理任何 Funboost 项目中的定时任务！</strong></p>
-                            <p>您的项目定时任务函数 <span class="help-highlight">可以和 Funboost Web Manager 不在同一个 Git 仓库</span>，管理定时任务 <strong>完全不依赖导入用户的定时任务函数</strong>。</p>
-                            <p><strong>这意味着：</strong></p>
-                            <p style="margin-left: 20px;">✅ 无需在管理后台部署您的业务代码</p>
-                            <p style="margin-left: 20px;">✅ 无需导入用户定义的任务函数</p>
-                            <p style="margin-left: 20px;">✅ 支持跨项目、跨仓库的统一管理</p>
-                            <p style="margin-left: 20px;">✅ 管理后台与业务代码完全解耦</p>
-                            <div class="help-tip">
-                                <div class="help-tip-title"><i class="fa fa-trophy"></i> 对比传统方案</div>
-                                传统的定时任务管理界面（如 Django Admin、Flask-APScheduler 等）通常<strong>必须依赖导入用户的定时任务函数</strong>才能进行管理，这导致管理后台与业务代码紧密耦合。Funboost 通过消息队列的方式彻底解决了这个问题！
-                            </div>
+                            <p><strong style="color: #a78bfa;">🚀 Funboost Web Manager 可以管理任何项目的定时任务！</strong></p>
+                            <p>管理定时任务 <strong>完全不依赖导入用户的任务函数</strong>，支持跨项目、跨仓库统一管理。</p>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-close-help" data-dismiss="modal">
+                    <button type="button" class="btn-modern btn-help" data-dismiss="modal">
                         <i class="fa fa-check"></i> 我知道了
                     </button>
                 </div>
@@ -56063,37 +52749,24 @@ if __name__ == '__main__':
     </div>
 
     <script>
-        // 全局变量
         let table;
         let isAutoRefreshing = false;
         let autoRefreshIntervalId = null;
-        const AUTO_REFRESH_INTERVAL = 10000; // 10秒
-        let allQueues = []; // 存储所有队列
-        let selectedQueue = ''; // 当前选中的队列
+        const AUTO_REFRESH_INTERVAL = 10000;
+        let allQueues = [];
+        let selectedQueue = '';
 
-        // 页面加载完成后初始化
         $(document).ready(function() {
             initTable();
             loadQueues();
-            initQueueSelector();
             initSchedulerControls();
         });
 
-        // 初始化调度器控制按钮的事件委托
         function initSchedulerControls() {
-            console.log('initSchedulerControls: initializing native capture event listener');
-            
-            // 使用原生 JS 的捕获阶段侦听器 (第三个参数 true)
-            // 这样可以在 Tabulator 内部处理点击之前先截获事件
             document.addEventListener('click', function(e) {
                 let target = e.target;
-                
-                // 如果点击的是图标 <i>，向上找一级到 <button>
-                if (target.tagName === 'I') {
-                    target = target.parentElement;
-                }
-                
-                // 检查是否是我们的按钮
+                if (target.tagName === 'I') target = target.parentElement;
+
                 if (target && target.classList && target.tagName === 'BUTTON') {
                     let action = null;
                     if (target.classList.contains('btn-pause-group')) action = 'pause';
@@ -56101,37 +52774,25 @@ if __name__ == '__main__':
                     else if (target.classList.contains('btn-refresh-group')) action = 'refresh';
                     
                     if (action) {
-                        console.log('Capture phase detected click:', action);
-                        
-                        // 阻止事件继续传播，防止 Tabulator 折叠分组
                         e.stopPropagation();
                         e.preventDefault();
                         
-                        // 获取队列名
-                        // 必须使用 jQuery 的 closest，因为原生 closest 兼容性在这可能不够方便，或者直接用原生
-                        const wrapper = target.closest ? target.closest('.scheduler-controls-group') : $(target).closest('.scheduler-controls-group')[0];
-                        
+                        const wrapper = target.closest('.scheduler-controls-group');
                         if (wrapper) {
                             const queueName = wrapper.getAttribute('data-queue');
-                            console.log('Action:', action, 'Queue:', queueName);
-                            
                             if (action === 'pause') pauseScheduler(queueName);
                             else if (action === 'resume') resumeScheduler(queueName);
                             else if (action === 'refresh') updateSchedulerStatus(queueName);
-                        } else {
-                            console.error('Could not find wrapper .scheduler-controls-group');
                         }
                     }
                 }
-            }, true); // <--- 关键：true 表示捕获阶段
+            }, true);
             
-            // 自动扫描更新机制保持不变
             setInterval(function() {
                 $('.scheduler-controls-group').each(function() {
                     const $el = $(this);
                     const queueName = $el.data('queue');
                     const $status = $el.find('.scheduler-status');
-                    
                     if ($status.text() === '加载中...' && !$el.data('fetching')) {
                         $el.data('fetching', true);
                         updateSchedulerStatus(queueName);
@@ -56139,119 +52800,15 @@ if __name__ == '__main__':
                     }
                 });
             }, 1000);
-            
-            console.log('initSchedulerControls: capture listener set up complete');
         }
 
-        // 暂停调度器
-        function pauseScheduler(queueName) {
-            console.log('DEBUG: pauseScheduler called with', queueName);
-            
-            if (!queueName) return;
-            
-            if (!confirm(`确定要暂停队列 "${queueName}" 的所有定时任务调度吗？`)) {
-                console.log('DEBUG: User cancelled pause confirmation');
-                return;
-            }
-            
-            console.log('DEBUG: Sending PAUSE request...');
-            $.ajax({
-                url: '/funboost/pause_scheduler?queue_name=' + encodeURIComponent(queueName),
-                method: 'POST',
-                success: function(response) {
-                    console.log('DEBUG: Pause success', response);
-                    if (response.succ) {
-                        updateSchedulerStatus(queueName);
-                    } else {
-                        alert('暂停失败: ' + response.msg);
-                    }
-                },
-                error: function(xhr) {
-                    console.error('DEBUG: Pause error', xhr);
-                    alert('请求失败');
-                }
-            });
-        }
-
-        // 初始化队列选择器
-        function initQueueSelector() {
-            // 点击页面其他地方关闭下拉框
-            $(document).on('click', function(e) {
-                if (!$(e.target).closest('.queue-selector').length) {
-                    $('#queueDropdown').hide();
-                }
-            });
-            
-            // 输入框失焦后延迟关闭（给点击选项留时间）
-            $('#queueFilterInput').on('blur', function() {
-                setTimeout(function() {
-                    if (!$('#queueDropdown:hover').length) {
-                        $('#queueDropdown').hide();
-                    }
-                }, 200);
-            });
-        }
-
-        // 显示队列下拉框
-        function showQueueDropdown() {
-            $('#queueDropdown').show();
-            filterQueueDropdown();
-        }
-
-        // 过滤队列下拉框
-        function filterQueueDropdown() {
-            const searchValue = $('#queueFilterInput').val().toLowerCase();
-            const dropdown = $('#queueDropdown');
-            
-            // 清空现有选项
-            dropdown.html('<div class="queue-option" data-value="">所有队列</div>');
-            
-            // 过滤并添加队列选项
-            allQueues.forEach(function(queue) {
-                if (queue.toLowerCase().indexOf(searchValue) !== -1) {
-                    const option = $('<div class="queue-option"></div>')
-                        .attr('data-value', queue)
-                        .text(queue)
-                        .on('click', function() {
-                            selectQueue(queue);
-                        });
-                    
-                    if (queue === selectedQueue) {
-                        option.addClass('selected');
-                    }
-                    
-                    dropdown.append(option);
-                }
-            });
-            
-            // 为"所有队列"添加点击事件
-            dropdown.find('.queue-option[data-value=""]').on('click', function() {
-                selectQueue('');
-            });
-            
-            // 如果选中的是"所有队列"
-            if (selectedQueue === '') {
-                dropdown.find('.queue-option[data-value=""]').addClass('selected');
-            }
-        }
-
-        // 选择队列
-        function selectQueue(queueValue) {
-            selectedQueue = queueValue;
-            $('#queueFilterInput').val(queueValue || '所有队列');
-            $('#queueDropdown').hide();
-            updateTableFilters();
-        }
-
-        // 初始化表格
         function initTable() {
             table = new Tabulator("#timing-jobs-table", {
                 layout: "fitDataFill",
-                // 不设置固定高度，让表格自动调整
                 pagination: true,
                 paginationSize: 50,
                 locale: true,
-                placeholder: "暂无定时任务",
+                placeholder: "<div style='padding: 40px; text-align: center; color: rgba(255,255,255,0.5);'><i class='fa fa-inbox' style='font-size: 48px; margin-bottom: 15px; display: block;'></i>暂无定时任务</div>",
                 langs: {
                     "zh-cn": {
                         "pagination": {
@@ -56262,70 +52819,60 @@ if __name__ == '__main__':
                         }
                     }
                 },
-                // 按队列名称分组
                 groupBy: "queue_name",
                 groupHeader: function(value, count, data, group) {
-                    // 自定义分组标题样式 - 控制按钮紧跟在标题后面
                     return `<div style="display: flex; align-items: center; width: 100%;">
-                                <!-- 左侧标题区域 -->
                                 <div style="display: flex; align-items: center;">
-                                    <span style="font-size: 16px; font-weight: bold; color: #337ab7;">
-                                        <i class="fa fa-folder-open" style="margin-right: 8px;"></i>
-                                        ${value}
-                                    </span>
-                                    <span style="margin-left: 10px; color: #777; font-size: 13px;">
-                                        (${count} 个定时任务)
-                                    </span>
+                                    <i class="fa fa-folder-open" style="margin-right: 10px; font-size: 16px;"></i>
+                                    <span style="font-size: 15px; font-weight: 700;">${value}</span>
+                                    <span style="margin-left: 12px; opacity: 0.8; font-size: 13px;">(${count} 个任务)</span>
                                 </div>
-                                
-                                <!-- 控制按钮区域 (左对齐，增加一些左边距) -->
-                                <div class="scheduler-controls-group" data-queue="${value}" style="display: flex; align-items: center; margin-left: 30px;">
-                                    <!-- 状态标签 -->
-                                    <span class="scheduler-status label label-default" style="margin-right: 10px; font-size: 12px; padding: 4px 8px;">加载中...</span>
-                                    
-                                    <!-- 控制按钮 (初始隐藏) -->
-                                    <button class="btn btn-warning btn-xs btn-pause-group" style="display:none; margin-right: 5px;" title="暂停此队列调度">
-                                        <i class="fa fa-pause"></i> 暂停 Scheduler
+                                <div class="scheduler-controls-group" data-queue="${value}" style="display: flex; align-items: center; margin-left: 25px;">
+                                    <span class="scheduler-status scheduler-status-badge" style="margin-right: 10px;">加载中...</span>
+                                    <button class="scheduler-btn btn-pause-group" style="display:none; background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); color: #1a1a2e; margin-right: 5px;">
+                                        <i class="fa fa-pause"></i> 暂停
                                     </button>
-                                    <button class="btn btn-success btn-xs btn-resume-group" style="display:none; margin-right: 5px;" title="恢复此队列调度">
-                                        <i class="fa fa-play"></i> 恢复 Scheduler
+                                    <button class="scheduler-btn btn-resume-group" style="display:none; background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: white; margin-right: 5px;">
+                                        <i class="fa fa-play"></i> 恢复
                                     </button>
-                                    <button class="btn btn-default btn-xs btn-refresh-group" title="刷新状态">
+                                    <button class="scheduler-btn btn-refresh-group" style="background: rgba(255,255,255,0.2); color: white;">
                                         <i class="fa fa-refresh"></i>
                                     </button>
                                 </div>
                             </div>`;
                 },
-                groupStartOpen: true,  // 默认展开分组
-                groupToggleElement: "header",  // 点击标题切换展开/折叠
+                groupStartOpen: true,
+                groupToggleElement: "header",
                 columns: [
                     {
                         title: "任务ID",
                         field: "job_id",
                         sorter: "string",
-                        minWidth: 180,
-                        headerSort: true,
-                        tooltip: true
+                        minWidth: 200,
+                        tooltip: true,
+                        formatter: function(cell) {
+                            return '<code style="background: rgba(139,92,246,0.2); color: #c4b5fd; padding: 4px 10px; border-radius: 6px; font-size: 12px;">' + cell.getValue() + '</code>';
+                        }
                     },
                     {
-                        title: "触发器类型",
+                        title: "触发器",
                         field: "trigger",
                         sorter: "string",
-                        minWidth: 320,
+                        minWidth: 350,
                         tooltip: true,
                         formatter: function(cell) {
                             const trigger = cell.getValue();
-                            if (!trigger) return '';
+                            if (!trigger) return '-';
                             
-                            // 解析触发器显示友好的文本
+                            let badge = '';
                             if (trigger.startsWith('interval')) {
-                                return '<span class="label label-info">间隔执行</span> ' + trigger;
+                                badge = '<span class="trigger-badge trigger-interval">间隔</span>';
                             } else if (trigger.startsWith('cron')) {
-                                return '<span class="label label-success">定时执行</span> ' + trigger;
+                                badge = '<span class="trigger-badge trigger-cron">定时</span>';
                             } else if (trigger.startsWith('date')) {
-                                return '<span class="label label-warning">一次性</span> ' + trigger;
+                                badge = '<span class="trigger-badge trigger-date">一次性</span>';
                             }
-                            return trigger;
+                            return badge + '<span style="color: #e0e0e0;">' + trigger + '</span>';
                         }
                     },
                     {
@@ -56333,12 +52880,17 @@ if __name__ == '__main__':
                         field: "next_run_time",
                         sorter: "string",
                         minWidth: 200,
-                        tooltip: true
+                        formatter: function(cell) {
+                            const val = cell.getValue();
+                            if (!val) return '<span style="color: #888;">-</span>';
+                            return '<span style="color: #60a5fa;"><i class="fa fa-clock-o" style="margin-right: 6px;"></i>' + val + '</span>';
+                        }
                     },
                     {
                         title: "状态",
                         field: "status",
                         width: 100,
+                        hozAlign: "center",
                         formatter: function(cell) {
                             const status = cell.getValue();
                             if (status === 'paused') {
@@ -56350,120 +52902,94 @@ if __name__ == '__main__':
                     },
                     {
                         title: "操作",
-                        minWidth: 350,
+                        minWidth: 320,
                         formatter: function(cell) {
                             const row = cell.getRow().getData();
                             const isPaused = row.status === 'paused';
                             const rowIndex = cell.getRow().getPosition();
                             
-                            // 将数据存储到全局变量，避免 JSON 特殊字符问题
-                            if (!window.jobDataCache) {
-                                window.jobDataCache = {};
-                            }
+                            if (!window.jobDataCache) window.jobDataCache = {};
                             window.jobDataCache[rowIndex] = row;
                             
-                            // 根据状态显示不同的按钮
                             const controlBtn = isPaused 
-                                ? `<button class="btn btn-success btn-xs action-btn" onclick="resumeJob('${row.job_id}', '${row.queue_name}')">
-                                     <i class="fa fa-play"></i> 恢复 Job
-                                   </button>`
-                                : `<button class="btn btn-warning btn-xs action-btn" onclick="pauseJob('${row.job_id}', '${row.queue_name}')">
-                                     <i class="fa fa-pause"></i> 暂停 Job
-                                   </button>`;
+                                ? `<button class="action-btn btn-resume" onclick="resumeJob('${row.job_id}', '${row.queue_name}')"><i class="fa fa-play"></i> 恢复</button>`
+                                : `<button class="action-btn btn-pause" onclick="pauseJob('${row.job_id}', '${row.queue_name}')"><i class="fa fa-pause"></i> 暂停</button>`;
                             
                             return `
-                                <button class="btn btn-info btn-xs action-btn" onclick="showJobDetail(window.jobDataCache[${rowIndex}])">
-                                    <i class="fa fa-info-circle"></i> 详情
-                                </button>
-                                <button class="btn btn-primary btn-xs action-btn" onclick="editJob(window.jobDataCache[${rowIndex}])">
-                                    <i class="fa fa-edit"></i> 编辑
-                                </button>
+                                <button class="action-btn btn-detail" onclick="showJobDetail(window.jobDataCache[${rowIndex}])"><i class="fa fa-info-circle"></i> 详情</button>
+                                <button class="action-btn btn-edit" onclick="editJob(window.jobDataCache[${rowIndex}])"><i class="fa fa-edit"></i> 编辑</button>
                                 ${controlBtn}
-                                <button class="btn btn-danger btn-xs action-btn" onclick="deleteJob('${row.job_id}', '${row.queue_name}')">
-                                    <i class="fa fa-trash"></i> 删除
-                                </button>
+                                <button class="action-btn btn-delete" onclick="deleteJob('${row.job_id}', '${row.queue_name}')"><i class="fa fa-trash"></i> 删除</button>
                             `;
                         }
                     }
                 ]
             });
 
-            // 加载数据
             refreshTable();
         }
 
-        // 加载队列列表
         function loadQueues() {
             $.get('/funboost/get_timing_jobs?job_store_kind=redis', function(response) {
                 if (response.succ && response.data.jobs_by_queue) {
                     const jobsByQueue = response.data.jobs_by_queue;
-                    
-                    // 获取所有队列名（排序），包括没有任务的队列
                     allQueues = Object.keys(jobsByQueue).sort();
                     
-                    // 填充筛选下拉框（带任务数）
-                    let filterHtml = '<option value="">请选择队列名字...</option>';
+                    // 更新统计
+                    let totalJobs = 0, runningJobs = 0;
+                    allQueues.forEach(q => {
+                        const jobs = jobsByQueue[q];
+                        totalJobs += jobs.length;
+                        jobs.forEach(j => { if (j.status !== 'paused') runningJobs++; });
+                    });
+                    $('#total_queues').text(allQueues.length);
+                    $('#total_jobs').text(totalJobs);
+                    $('#running_jobs').text(runningJobs);
+
+                    // 筛选下拉框
+                    let filterHtml = '<option value="">全部队列</option>';
                     allQueues.forEach(function(queue) {
                         const jobCount = jobsByQueue[queue].length;
-                        filterHtml += `<option value="${queue}">${queue}&nbsp;&nbsp;&nbsp;&nbsp;(job_count:${jobCount})</option>`;
+                        filterHtml += `<option value="${queue}">${queue} (${jobCount}个任务)</option>`;
                     });
                     
-                    // 如果 queueFilter 的 Select2 已初始化，先销毁
                     if ($("#queueFilter").data('select2')) {
                         $("#queueFilter").select2('destroy');
                     }
                     $("#queueFilter").html(filterHtml);
                     
-                    // 初始化 Select2 for 筛选
                     $("#queueFilter").select2({
-                        placeholder: "请输入队列名称搜索...",
+                        placeholder: "搜索队列...",
                         allowClear: true,
                         width: '350px'
                     });
-                    // 使用命名空间绑定事件
+
                     $("#queueFilter").off('change.queueFilter').on('change.queueFilter', function() {
                         selectedQueue = $(this).val();
                         refreshTable();
-                        // 更新顶部调度器状态
-                        updateTopSchedulerStatus(selectedQueue);
                     });
                     
-                    // 填充添加任务模态框的队列选择（带任务数）
+                    // 添加任务模态框队列选择
                     let modalHtml = '<option value="">-- 请选择队列 --</option>';
                     allQueues.forEach(function(queue) {
-                        const jobCount = jobsByQueue[queue].length;
-                        modalHtml += `<option value="${queue}">${queue}&nbsp;&nbsp;&nbsp;&nbsp;(job_count:${jobCount})</option>`;
+                        modalHtml += `<option value="${queue}">${queue}</option>`;
                     });
                     
-                    // 保存当前选中的值
-                    const currentSelectedQueue = $("#job_queue_name").val();
-                    
-                    // 如果 Select2 已初始化，先销毁
                     if ($("#job_queue_name").data('select2')) {
                         $("#job_queue_name").select2('destroy');
                     }
-                    
                     $("#job_queue_name").html(modalHtml);
                     
-                    // 初始化 Select2 for 添加任务模态框
                     $("#job_queue_name").select2({
-                        placeholder: "请输入队列名称搜索...",
+                        placeholder: "搜索队列...",
                         dropdownParent: $('#addJobModal'),
                         width: '100%'
                     });
                     
-                    // 恢复之前选中的值
-                    if (currentSelectedQueue) {
-                        $("#job_queue_name").val(currentSelectedQueue).trigger('change.select2');
-                    }
-                    
-                    // 使用命名空间绑定 change 事件
                     $("#job_queue_name").off('change.jobQueue').on('change.jobQueue', function() {
-                        // 队列选择变化时，获取函数入参信息
-                        const selectedQueue = $(this).val();
-                        if (selectedQueue) {
-                            loadFuncParamsInfo(selectedQueue);
-                        } else {
+                        const sq = $(this).val();
+                        if (sq) loadFuncParamsInfo(sq);
+                        else {
                             $('#func_params_text').html('请先选择队列名称，将显示函数所需参数');
                             $('#job_kwargs').attr('placeholder', '请先选择队列名称');
                         }
@@ -56472,7 +52998,6 @@ if __name__ == '__main__':
             });
         }
 
-        // 加载队列的函数入参信息
         function loadFuncParamsInfo(queueName) {
             $.get('/funboost/get_one_queue_config?queue_name=' + encodeURIComponent(queueName), function(response) {
                 if (response.succ && response.data && response.data.auto_generate_info) {
@@ -56482,52 +53007,36 @@ if __name__ == '__main__':
                         const mustArgs = paramsInfo.must_arg_name_list || [];
                         const optionalArgs = paramsInfo.optional_arg_name_list || [];
                         
-                        // 生成 JSON 模板并填充到输入框（只在输入框为空时填充）
                         let templateObj = {};
                         mustArgs.forEach(arg => templateObj[arg] = '');
                         optionalArgs.forEach(arg => templateObj[arg] = '');
-                        const templateText = Object.keys(templateObj).length > 0 
-                            ? JSON.stringify(templateObj, null, 2) 
-                            : '{}';
+                        const templateText = Object.keys(templateObj).length > 0 ? JSON.stringify(templateObj, null, 2) : '{}';
                         
-                        // 如果输入框为空，则填充模板
                         if (!$('#job_kwargs').val().trim()) {
                             $('#job_kwargs').val(templateText);
                         }
                         
-                        // 生成提示文本
-                        let html = `<strong>函数: ${funcName}</strong><br>`;
+                        let html = `<strong style="color:#60a5fa;">函数: ${funcName}</strong><br>`;
                         if (mustArgs.length > 0) {
-                            html += `<span style="color: #d9534f;">必填参数:</span> <code>${mustArgs.join('</code>, <code>')}</code>`;
+                            html += `<span style="color: #f87171;">必填参数:</span> <code>${mustArgs.join('</code>, <code>')}</code>`;
                         } else {
-                            html += `<span style="color: #5cb85c;">无必填参数</span>`;
+                            html += `<span style="color: #4ade80;">无必填参数</span>`;
                         }
                         if (optionalArgs.length > 0) {
-                            html += `<br><span style="color: #f0ad4e;">可选参数:</span> <code>${optionalArgs.join('</code>, <code>')}</code>`;
+                            html += `<br><span style="color: #fbbf24;">可选参数:</span> <code>${optionalArgs.join('</code>, <code>')}</code>`;
                         }
                         $('#func_params_text').html(html);
-                    } else {
-                        $('#func_params_text').html('无法获取函数入参信息');
                     }
-                } else {
-                    $('#func_params_text').html('无法获取队列配置信息');
                 }
-            }).fail(function() {
-                $('#func_params_text').html('获取队列配置失败');
             });
         }
 
-        // 刷新表格数据
         function refreshTable() {
-            const queueName = selectedQueue;
             let url = '/funboost/get_timing_jobs?job_store_kind=redis';
-            if (queueName) {
-                url += `&queue_name=${queueName}`;
-            }
+            if (selectedQueue) url += `&queue_name=${selectedQueue}`;
             
             $.get(url, function(response) {
                 if (response.succ && response.data.jobs_by_queue) {
-                    // 将 jobs_by_queue 字典转换为 jobs 数组
                     const jobsByQueue = response.data.jobs_by_queue;
                     const jobsList = [];
                     Object.keys(jobsByQueue).forEach(function(queue) {
@@ -56536,29 +53045,32 @@ if __name__ == '__main__':
                         });
                     });
                     table.setData(jobsList).then(function() {
-                        // 数据加载完成后，获取所有可见队列的调度器状态
-                        // 增加延时以确保 Tabulator 完成 DOM 渲染（特别是分组头）
                         setTimeout(function() {
-                            console.log('refreshTable: updating scheduler status for all queues');
                             Object.keys(jobsByQueue).forEach(function(queue) {
-                                // 尝试更新状态
                                 updateSchedulerStatus(queue);
                             });
                         }, 500); 
                     });
+
+                    // 更新统计
+                    let totalJobs = 0, runningJobs = 0;
+                    Object.keys(jobsByQueue).forEach(q => {
+                        const jobs = jobsByQueue[q];
+                        totalJobs += jobs.length;
+                        jobs.forEach(j => { if (j.status !== 'paused') runningJobs++; });
+                    });
+                    $('#total_queues').text(Object.keys(jobsByQueue).length);
+                    $('#total_jobs').text(totalJobs);
+                    $('#running_jobs').text(runningJobs);
                 } else {
                     table.setData([]);
                 }
-            }).fail(function() {
-                alert('加载任务列表失败');
             });
         }
 
-        // 更新表格过滤器
         function updateTableFilters() {
             const searchValue = $('#searchInput').val();
             const statusFilter = $('#statusFilter').val();
-            
             const filters = [];
             
             if (searchValue && searchValue.trim() !== '') {
@@ -56568,63 +53080,42 @@ if __name__ == '__main__':
                 ]);
             }
             
-            // 状态过滤
             if (statusFilter && statusFilter !== '') {
                 filters.push({field: "status", type: "=", value: statusFilter});
             }
             
             table.clearFilter();
-            if (filters.length > 0) {
-                table.setFilter(filters);
-            }
-            
-            // 队列筛选通过重新加载数据实现
+            if (filters.length > 0) table.setFilter(filters);
             refreshTable();
         }
 
-        // 清除搜索
-        function clearSearch() {
-            $('#searchInput').val('');
-            updateTableFilters();
-        }
-
-        // 搜索框事件
         $('#searchInput').on('keyup', function() {
             updateTableFilters();
         });
 
-        // 切换触发器配置区域
         function switchTriggerSection(type) {
             $('.trigger-section').removeClass('active');
             $(`#${type}TriggerSection`).addClass('active');
-            // 确保对应的 radio button 被选中
             $(`input[name="trigger_type"][value="${type}"]`).prop('checked', true);
         }
 
-        // 显示添加任务模态框
         function showAddJobModal() {
             $('#addJobForm')[0].reset();
             $('#kwargs_validation').hide();
             switchTriggerSection('interval');
-            // 重置标题为添加模式
-            $('#addJobModal .modal-title').text('添加定时任务');
+            $('#addJobModal .modal-title').html('<i class="fa fa-plus-circle" style="color: #10b981; margin-right: 10px;"></i>添加定时任务');
             $('#addJobModal').modal('show');
-            // 强制设置存储方式为 redis
             setTimeout(function() {
                 $('#job_store_redis').prop('checked', true);
             }, 100);
         }
 
-        // JSON 验证函数
         function validateJSON(jsonString) {
-            if (!jsonString || jsonString.trim() === '') {
-                return { valid: true, error: null, data: null };
-            }
-            
+            if (!jsonString || jsonString.trim() === '') return { valid: true, error: null, data: null };
             try {
                 const parsed = JSON.parse(jsonString);
                 if (typeof parsed !== 'object' || Array.isArray(parsed)) {
-                    return { valid: false, error: 'kwargs 必须是一个对象（{}），不能是数组', data: null };
+                    return { valid: false, error: 'kwargs 必须是一个对象', data: null };
                 }
                 return { valid: true, error: null, data: parsed };
             } catch (e) {
@@ -56632,7 +53123,6 @@ if __name__ == '__main__':
             }
         }
 
-        // 实时验证 JSON 输入
         $('#job_kwargs').on('input', function() {
             const jsonString = $(this).val();
             const validation = validateJSON(jsonString);
@@ -56641,38 +53131,27 @@ if __name__ == '__main__':
             if (!jsonString || jsonString.trim() === '') {
                 validationDiv.hide();
             } else if (validation.valid) {
-                validationDiv.html('<span style="color: green;"><i class="fa fa-check-circle"></i> JSON 格式正确</span>');
+                validationDiv.html('<span style="color: #4ade80;"><i class="fa fa-check-circle"></i> JSON 格式正确</span>');
                 validationDiv.show();
             } else {
-                validationDiv.html('<span style="color: red;"><i class="fa fa-exclamation-circle"></i> JSON 格式错误: ' + validation.error + '</span>');
+                validationDiv.html('<span style="color: #f87171;"><i class="fa fa-exclamation-circle"></i> JSON 格式错误: ' + validation.error + '</span>');
                 validationDiv.show();
             }
         });
 
-        // 提交添加任务
         function submitAddJob() {
-            console.log('submitAddJob called');
             const queueName = $('#job_queue_name').val();
             const jobId = $('#job_id').val();
             
-            // 使用 ID 直接判断选中的触发器类型
             let triggerType;
-            if ($('#trigger_date').is(':checked')) {
-                triggerType = 'date';
-            } else if ($('#trigger_interval').is(':checked')) {
-                triggerType = 'interval';
-            } else if ($('#trigger_cron').is(':checked')) {
-                triggerType = 'cron';
-            }
-            console.log('triggerType by ID:', triggerType);
+            if ($('#trigger_date').is(':checked')) triggerType = 'date';
+            else if ($('#trigger_interval').is(':checked')) triggerType = 'interval';
+            else if ($('#trigger_cron').is(':checked')) triggerType = 'cron';
             
             const jobStoreKind = $('#job_store_redis').is(':checked') ? 'redis' : 'memory';
             const replaceExisting = $('#replace_existing').is(':checked');
             
-            if (!queueName) {
-                alert('请选择队列！');
-                return;
-            }
+            if (!queueName) { alert('请选择队列！'); return; }
             
             const jobData = {
                 queue_name: queueName,
@@ -56681,16 +53160,11 @@ if __name__ == '__main__':
                 replace_existing: replaceExisting
             };
             
-            if (jobId) {
-                jobData.job_id = jobId;
-            }
+            if (jobId) jobData.job_id = jobId;
             
-            // 处理函数参数 kwargs
             const kwargsInput = $('#job_kwargs').val().trim();
-            console.log('kwargsInput:', kwargsInput);
             if (kwargsInput) {
                 const validation = validateJSON(kwargsInput);
-                console.log('validation:', validation);
                 if (!validation.valid) {
                     alert('函数参数 JSON 格式错误:\n' + validation.error);
                     return;
@@ -56698,18 +53172,9 @@ if __name__ == '__main__':
                 jobData.kwargs = validation.data;
             }
             
-            console.log('triggerType:', triggerType);
-            console.log('jobData before trigger:', JSON.stringify(jobData));
-            
-            // 根据触发器类型收集参数
             if (triggerType === 'date') {
                 const runDate = $('#run_date').val();
-                console.log('runDate:', runDate);
-                if (!runDate) {
-                    alert('请填写执行时间！');
-                    return;
-                }
-                // datetime-local 格式是 "2025-12-12T14:27"，需要转换为 "2025-12-12 14:27:00"
+                if (!runDate) { alert('请填写执行时间！'); return; }
                 jobData.run_date = runDate.replace('T', ' ') + ':00';
             } else if (triggerType === 'interval') {
                 const weeks = parseInt($('#interval_weeks').val()) || 0;
@@ -56729,7 +53194,6 @@ if __name__ == '__main__':
                 if (minutes > 0) jobData.minutes = minutes;
                 if (seconds > 0) jobData.seconds = seconds;
             } else if (triggerType === 'cron') {
-                // cron 字段取值要做 trim，且不能用 `if(value)` 过滤（0 也应被视为有效输入）
                 const cronFields = {
                     year: ($('#cron_year').val() ?? '').toString().trim(),
                     month: ($('#cron_month').val() ?? '').toString().trim(),
@@ -56740,8 +53204,6 @@ if __name__ == '__main__':
                     second: ($('#cron_second').val() ?? '').toString().trim()
                 };
                 
-                console.log('cronFields:', JSON.stringify(cronFields));
-                
                 let hasField = false;
                 for (const [key, value] of Object.entries(cronFields)) {
                     if (value !== '') {
@@ -56750,67 +53212,11 @@ if __name__ == '__main__':
                     }
                 }
                 
-                console.log('jobData after cron:', JSON.stringify(jobData));
-                
-                if (!hasField) {
-                    alert('请至少填写一个 Cron 参数！');
-                    return;
-                }
+                if (!hasField) { alert('请至少填写一个 Cron 参数！'); return; }
             }
-            
-            console.log('Final jobData before confirm:', JSON.stringify(jobData));
-            // 构建确认信息
-            let confirmMsg = '请确认定时任务配置：\n\n';
-            confirmMsg += '【基本信息】\n';
-            confirmMsg += `  队列名称: ${jobData.queue_name}\n`;
-            if (jobData.job_id) {
-                confirmMsg += `  任务ID: ${jobData.job_id}\n`;
-            }
-            confirmMsg += `  存储方式: ${jobData.job_store_kind}\n`;
-            confirmMsg += `  覆盖已存在: ${jobData.replace_existing ? '是' : '否'}\n\n`;
-            
-            confirmMsg += '【触发器配置】\n';
-            confirmMsg += `  触发器类型: ${jobData.trigger}\n`;
-            
-            if (triggerType === 'date') {
-                confirmMsg += `  执行时间: ${jobData.run_date}\n`;
-            } else if (triggerType === 'interval') {
-                confirmMsg += '  时间间隔: ';
-                const intervalParts = [];
-                if (jobData.weeks) intervalParts.push(`${jobData.weeks}周`);
-                if (jobData.days) intervalParts.push(`${jobData.days}天`);
-                if (jobData.hours) intervalParts.push(`${jobData.hours}小时`);
-                if (jobData.minutes) intervalParts.push(`${jobData.minutes}分钟`);
-                if (jobData.seconds) intervalParts.push(`${jobData.seconds}秒`);
-                confirmMsg += intervalParts.join(' ') + '\n';
-            } else if (triggerType === 'cron') {
-                // 用一行摘要展示 cron，避免原生 confirm 弹窗对缩进/多行展示不稳定导致“看起来是空的”
-                const cronKeys = ['year', 'month', 'day', 'day_of_week', 'hour', 'minute', 'second'];
-                const cronLabels = {'year': '年', 'month': '月', 'day': '日', 'day_of_week': '星期', 'hour': '时', 'minute': '分', 'second': '秒'};
-                const cronParts = [];
-                for (const key of cronKeys) {
-                    const v = jobData[key];
-                    if (v !== undefined && v !== null && v.toString().trim() !== '') {
-                        cronParts.push(`${cronLabels[key]}:${v}`);
-                    }
-                }
-                confirmMsg += `  Cron 表达式: ${cronParts.length ? cronParts.join(' ') : '(无配置)'}\n`;
-            }
-            
-            if (jobData.kwargs && Object.keys(jobData.kwargs).length > 0) {
-                confirmMsg += '\n【函数参数】\n';
-                confirmMsg += JSON.stringify(jobData.kwargs, null, 2);
-            }
-            
-            confirmMsg += '\n\n确定要添加这个定时任务吗？';
-            
-            // 弹窗确认
-            if (!confirm(confirmMsg)) {
-                console.log('用户取消了添加任务');
-                return;
-            }
-            
-            // 发送请求
+
+            if (!confirm('确定要添加这个定时任务吗？')) return;
+
             $.ajax({
                 url: '/funboost/add_timing_job',
                 method: 'POST',
@@ -56818,112 +53224,84 @@ if __name__ == '__main__':
                 data: JSON.stringify(jobData),
                 success: function(response) {
                     if (response.succ) {
-                        alert('任务添加成功！\n任务ID: ' + response.data.job_id);
+                        alert('✅ 任务添加成功！\n任务ID: ' + response.data.job_id);
                         $('#addJobModal').modal('hide');
                         refreshTable();
+                        loadQueues();
                     } else {
-                        alert('添加失败: ' + response.msg);
+                        alert('❌ 添加失败: ' + response.msg);
                     }
                 },
                 error: function(xhr) {
-                    alert('添加失败: ' + xhr.responseText);
+                    alert('❌ 添加失败: ' + xhr.responseText);
                 }
             });
         }
 
-        // 显示任务详情
         function showJobDetail(job) {
-            // 先显示基本内容
             let content = `
-                <div class="form-horizontal">
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">任务ID:</label>
-                        <div class="col-sm-9">
-                            <p class="form-control-static">${job.job_id}</p>
+                <div style="display: grid; gap: 15px;">
+                    <div style="display: flex; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 12px;">
+                        <span style="width: 100px; color: rgba(255,255,255,0.6);">任务ID</span>
+                        <code style="background: rgba(139,92,246,0.2); color: #c4b5fd; padding: 4px 10px; border-radius: 6px;">${job.job_id}</code>
                         </div>
+                    <div style="display: flex; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 12px;">
+                        <span style="width: 100px; color: rgba(255,255,255,0.6);">队列名称</span>
+                        <span style="color: #60a5fa;">${job.queue_name}</span>
                     </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">队列名称:</label>
-                        <div class="col-sm-9">
-                            <p class="form-control-static">${job.queue_name}</p>
+                    <div style="display: flex; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 12px;">
+                        <span style="width: 100px; color: rgba(255,255,255,0.6);">函数名</span>
+                        <span id="detail_func_name" style="color: #4ade80;"><i class="fa fa-spinner fa-spin"></i> 加载中...</span>
                         </div>
+                    <div style="display: flex; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 12px;">
+                        <span style="width: 100px; color: rgba(255,255,255,0.6);">触发器</span>
+                        <span style="color: #fbbf24;">${job.trigger || '-'}</span>
                     </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">函数名:</label>
-                        <div class="col-sm-9">
-                            <p class="form-control-static" id="detail_func_name"><i class="fa fa-spinner fa-spin"></i> 加载中...</p>
+                    <div style="display: flex; border-bottom: 1px solid rgba(245,158,11,0.2); padding-bottom: 12px;">
+                        <span style="width: 100px; color: rgba(255,255,255,0.6);">下次执行</span>
+                        <span style="color: #60a5fa;">${job.next_run_time || '-'}</span>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">触发器:</label>
-                        <div class="col-sm-9">
-                            <p class="form-control-static">${job.trigger || '-'}</p>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">下次执行时间:</label>
-                        <div class="col-sm-9">
-                            <p class="form-control-static">${job.next_run_time || '-'}</p>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">函数参数:</label>
-                        <div class="col-sm-9">
-                            <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; max-height: 200px; overflow-y: auto;">${job.kwargs && Object.keys(job.kwargs).length > 0 ? JSON.stringify(job.kwargs, null, 2) : '无参数'}</pre>
-                        </div>
+                    <div>
+                        <span style="color: rgba(255,255,255,0.6); display: block; margin-bottom: 8px;">函数参数</span>
+                        <pre style="background: rgba(20,20,40,0.8); padding: 15px; border-radius: 10px; border: 1px solid rgba(245,158,11,0.2); color: #e0e0e0; font-size: 13px; max-height: 200px; overflow-y: auto;">${job.kwargs && Object.keys(job.kwargs).length > 0 ? JSON.stringify(job.kwargs, null, 2) : '无参数'}</pre>
                     </div>
                 </div>
             `;
             $('#jobDetailContent').html(content);
             $('#jobDetailModal').modal('show');
             
-            // 异步获取函数名
             $.get('/funboost/get_one_queue_config?queue_name=' + encodeURIComponent(job.queue_name), function(response) {
                 if (response.succ && response.data && response.data.auto_generate_info) {
                     const funcName = response.data.auto_generate_info.final_func_input_params_info?.func_name || '-';
-                    $('#detail_func_name').html(`<strong style="color: #337ab7;">${funcName}</strong>`);
+                    $('#detail_func_name').html('<strong>' + funcName + '</strong>');
                 } else {
                     $('#detail_func_name').text('-');
                 }
-            }).fail(function() {
-                $('#detail_func_name').text('-');
             });
         }
 
-        // 编辑定时任务
         function editJob(job) {
-            // 重置表单
             $('#addJobForm')[0].reset();
             $('#kwargs_validation').hide();
             
-            // 填充基本信息
             $('#job_queue_name').val(job.queue_name).trigger('change');
             $('#job_id').val(job.job_id);
-            $('#replace_existing').prop('checked', true); // 编辑时默认替换
+            $('#replace_existing').prop('checked', true);
             
-            // 填充 kwargs
             if (job.kwargs && Object.keys(job.kwargs).length > 0) {
                 $('#job_kwargs').val(JSON.stringify(job.kwargs, null, 2));
             }
             
-            // 解析 trigger 字符串，设置触发器类型和参数
             const triggerStr = job.trigger || '';
             
             if (triggerStr.startsWith('interval')) {
-                // interval 类型
                 $('input[name="trigger_type"][value="interval"]').prop('checked', true);
                 switchTriggerSection('interval');
-                
-                // 解析 interval 参数 (格式: interval[0:00:10] 或 interval[1 day, 2:03:04])
                 const match = triggerStr.match(/interval\[(.+)\]/);
                 if (match) {
                     const intervalPart = match[1];
-                    // 解析 days
                     const dayMatch = intervalPart.match(/(\d+)\s*day/);
-                    if (dayMatch) {
-                        $('#interval_days').val(parseInt(dayMatch[1]));
-                    }
-                    // 解析时间部分 (H:MM:SS)
+                    if (dayMatch) $('#interval_days').val(parseInt(dayMatch[1]));
                     const timeMatch = intervalPart.match(/(\d+):(\d+):(\d+)/);
                     if (timeMatch) {
                         $('#interval_hours').val(parseInt(timeMatch[1]));
@@ -56932,11 +53310,8 @@ if __name__ == '__main__':
                     }
                 }
             } else if (triggerStr.startsWith('cron')) {
-                // cron 类型
                 $('input[name="trigger_type"][value="cron"]').prop('checked', true);
                 switchTriggerSection('cron');
-                
-                // 解析 cron 参数 (格式: cron[...])
                 const match = triggerStr.match(/cron\[(.+)\]/);
                 if (match) {
                     const cronParts = match[1].split(',').map(s => s.trim());
@@ -56948,326 +53323,112 @@ if __name__ == '__main__':
                     });
                 }
             } else if (triggerStr.startsWith('date')) {
-                // date 类型（一次性任务）
                 $('input[name="trigger_type"][value="date"]').prop('checked', true);
                 switchTriggerSection('date');
-                
-                // 解析 date 参数 (格式: date[2024-01-01 12:00:00 ...])
-                const match = triggerStr.match(/date\[(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
-                if (match) {
-                    const datetime = match[1].replace(' ', 'T');
-                    $('#date_run_date').val(datetime);
-                }
             }
-            
-            // 设置存储方式为 redis
+
             $('#job_store_redis').prop('checked', true);
-            
-            // 修改模态框标题为编辑模式
-            $('#addJobModal .modal-title').text('编辑定时任务');
-            
-            // 打开模态框
+            $('#addJobModal .modal-title').html('<i class="fa fa-edit" style="color: #8b5cf6; margin-right: 10px;"></i>编辑定时任务');
             $('#addJobModal').modal('show');
         }
 
-        // 暂停任务
         function pauseJob(jobId, queueName) {
-            if (!confirm(`确定要暂停任务 ${jobId} 吗？`)) {
-                return;
-            }
+            if (!confirm(`确定要暂停任务 ${jobId} 吗？`)) return;
             
             $.ajax({
                 url: '/funboost/pause_timing_job?job_id=' + jobId + '&queue_name=' + queueName,
                 method: 'POST',
                 success: function(response) {
                     if (response.succ) {
-                        alert('暂停成功！');
                         refreshTable();
                     } else {
                         alert('暂停失败: ' + response.msg);
                     }
-                },
-                error: function(xhr) {
-                    alert('暂停失败: ' + xhr.responseText);
                 }
             });
         }
 
-        // 恢复任务
         function resumeJob(jobId, queueName) {
-            if (!confirm(`确定要恢复任务 ${jobId} 吗？`)) {
-                return;
-            }
+            if (!confirm(`确定要恢复任务 ${jobId} 吗？`)) return;
             
             $.ajax({
                 url: '/funboost/resume_timing_job?job_id=' + jobId + '&queue_name=' + queueName,
                 method: 'POST',
                 success: function(response) {
                     if (response.succ) {
-                        alert('恢复成功！');
                         refreshTable();
                     } else {
                         alert('恢复失败: ' + response.msg);
                     }
-                },
-                error: function(xhr) {
-                    alert('恢复失败: ' + xhr.responseText);
                 }
             });
         }
 
-        // 删除任务
         function deleteJob(jobId, queueName) {
-            if (!confirm(`确定要删除任务 ${jobId} 吗？\n此操作不可撤销！`)) {
-                return;
-            }
+            if (!confirm(`确定要删除任务 ${jobId} 吗？\n此操作不可撤销！`)) return;
             
             $.ajax({
                 url: '/funboost/delete_timing_job?job_id=' + jobId + '&queue_name=' + queueName,
                 method: 'DELETE',
                 success: function(response) {
                     if (response.succ) {
-                        alert('删除成功！');
                         refreshTable();
+                        loadQueues();
                     } else {
                         alert('删除失败: ' + response.msg);
                     }
-                },
-                error: function(xhr) {
-                    alert('删除失败: ' + xhr.responseText);
                 }
             });
         }
 
-        // 删除所有任务
         function deleteAllJobs() {
-            const queueName = selectedQueue;
-            const confirmMsg = queueName 
-                ? `确定要删除队列 ${queueName} 的所有任务吗？`
+            const confirmMsg = selectedQueue
+                ? `确定要删除队列 ${selectedQueue} 的所有任务吗？`
                 : '确定要删除所有队列的所有任务吗？';
                 
-            if (!confirm(confirmMsg + '\n此操作不可撤销！')) {
-                return;
-            }
+            if (!confirm(confirmMsg + '\n此操作不可撤销！')) return;
             
             let url = '/funboost/delete_all_timing_jobs?job_store_kind=redis';
-            if (queueName) {
-                url += '&queue_name=' + queueName;
-            }
+            if (selectedQueue) url += '&queue_name=' + selectedQueue;
             
             $.ajax({
                 url: url,
                 method: 'DELETE',
                 success: function(response) {
                     if (response.succ) {
-                        alert(`成功删除 ${response.data.deleted_count} 个任务！`);
+                        alert(`✅ 成功删除 ${response.data.deleted_count} 个任务！`);
                         refreshTable();
+                        loadQueues();
                     } else {
                         alert('删除失败: ' + response.msg);
                     }
-                },
-                error: function(xhr) {
-                    alert('删除失败: ' + xhr.responseText);
                 }
             });
         }
 
-        // 切换自动刷新
         function toggleAutoRefresh() {
             const button = $('#toggle-auto-refresh');
+            const indicator = $('#refresh-indicator');
+
             if (isAutoRefreshing) {
                 clearInterval(autoRefreshIntervalId);
                 isAutoRefreshing = false;
                 button.html('<i class="fa fa-play"></i> 自动刷新');
-                button.removeClass('btn-danger').addClass('btn-primary');
+                button.removeClass('active');
+                indicator.removeClass('active');
             } else {
                 isAutoRefreshing = true;
                 button.html('<i class="fa fa-pause"></i> 暂停刷新');
-                button.removeClass('btn-primary').addClass('btn-danger');
+                button.addClass('active');
+                indicator.addClass('active');
                 refreshTable();
                 autoRefreshIntervalId = setInterval(refreshTable, AUTO_REFRESH_INTERVAL);
             }
         }
 
-        // ==================== 顶部调度器控制函数 ====================
-        
-        // 更新顶部调度器状态显示
-        function updateTopSchedulerStatus(queueName) {
-            const controlArea = $('#schedulerControlArea');
-            const statusSpan = $('#topSchedulerStatus');
-            const pauseBtn = $('#topPauseSchedulerBtn');
-            const resumeBtn = $('#topResumeSchedulerBtn');
-            
-            console.log('updateTopSchedulerStatus: called with', queueName);
-            console.log('updateTopSchedulerStatus: pauseBtn exists:', pauseBtn.length > 0);
-            console.log('updateTopSchedulerStatus: resumeBtn exists:', resumeBtn.length > 0);
-            
-            if (!queueName) {
-                // 没有选择队列，隐藏控制区域
-                controlArea.hide();
-                return;
-            }
-            
-            // 显示控制区域
-            controlArea.css('display', 'flex');
-            
-            // 显示加载状态
-            statusSpan.removeClass('label-success label-warning label-danger').addClass('label-default').text('加载中...');
-            pauseBtn.hide();
-            resumeBtn.hide();
-            
-            console.log('updateTopSchedulerStatus: fetching status for', queueName);
-            
-            $.get('/funboost/get_scheduler_status?queue_name=' + encodeURIComponent(queueName))
-                .done(function(response) {
-                    console.log('updateTopSchedulerStatus: response', response);
-                    console.log('updateTopSchedulerStatus: status_code =', response.data ? response.data.status_code : 'no data');
-                    
-                    if (response.succ && response.data) {
-                        const status = response.data.status_code; // 0: stopped, 1: running, 2: paused
-                        
-                        statusSpan.removeClass('label-success label-warning label-danger label-default');
-                        
-                        if (status === 1) { // Running
-                            console.log('updateTopSchedulerStatus: status is RUNNING, showing pause button');
-                            statusSpan.addClass('label-success').text('调度中');
-                            // 强制显示为 inline-block
-                            // console.log('Showing pause button for', queueName, pauseBtn.length);
-                            pauseBtn.css('display', 'inline-block'); 
-                            resumeBtn.hide();
-                        } else if (status === 2) { // Paused
-                            console.log('updateTopSchedulerStatus: status is PAUSED, showing resume button');
-                            statusSpan.addClass('label-warning').text('已暂停');
-                            pauseBtn.hide(); 
-                            resumeBtn.css('display', 'inline-block');
-                        } else { // Stopped (0) or other
-                            console.log('updateTopSchedulerStatus: status is STOPPED or unknown (' + status + '), showing resume button');
-                            statusSpan.addClass('label-danger').text('已停止');
-                            pauseBtn.hide(); 
-                            resumeBtn.css('display', 'inline-block');
-                        }
-                        
-                        // 验证按钮显示状态
-                        console.log('updateTopSchedulerStatus: pauseBtn visible:', pauseBtn.is(':visible'));
-                        console.log('updateTopSchedulerStatus: resumeBtn visible:', resumeBtn.is(':visible'));
-                    } else {
-                        console.log('updateTopSchedulerStatus: response not successful or no data');
-                        statusSpan.addClass('label-default').text('未知状态');
-                    }
-                })
-                .fail(function(xhr, status, error) {
-                    console.error('updateTopSchedulerStatus: request failed', status, error);
-                    statusSpan.addClass('label-danger').text('获取失败');
-                });
-        }
-        
-        // 暂停选中队列的调度器
-        function pauseSelectedScheduler() {
-            console.log('>>> Entered pauseSelectedScheduler function');
-            try {
-                // 优先从 DOM 获取当前选中的值，作为双重保险
-                const domQueue = $('#queueFilter').val();
-                console.log('Queue from DOM:', domQueue, 'Global selectedQueue:', selectedQueue);
-                
-                const targetQueue = domQueue || selectedQueue;
-
-                if (!targetQueue) {
-                    console.warn('No queue selected!');
-                    alert('请先选择一个队列');
-                    return;
-                }
-                
-                console.log('Ready to confirm pause for:', targetQueue);
-                if (!confirm(`确定要暂停队列 "${targetQueue}" 的所有定时任务调度吗？\n暂停后，该队列的定时任务将不会被触发。`)) {
-                    console.log('User cancelled confirmation');
-                    return;
-                }
-                
-                console.log('Sending AJAX request to pause:', targetQueue);
-                
-                $.ajax({
-                    url: '/funboost/pause_scheduler?queue_name=' + encodeURIComponent(targetQueue),
-                    method: 'POST',
-                    success: function(response) {
-                        console.log('Pause AJAX success:', response);
-                        if (response.succ) {
-                            // alert('暂停成功'); // 可选：是否弹窗提示
-                            updateTopSchedulerStatus(targetQueue);
-                        } else {
-                            alert('暂停失败: ' + response.msg);
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Pause AJAX error:', status, error, xhr.responseText);
-                        alert('暂停请求失败: ' + (xhr.responseText || error));
-                    }
-                });
-            } catch (err) {
-                console.error('CRITICAL ERROR in pauseSelectedScheduler:', err);
-                alert('执行出错: ' + err.message);
-            }
-        }
-        
-        // 恢复选中队列的调度器
-        function resumeSelectedScheduler() {
-            console.log('>>> Entered resumeSelectedScheduler function');
-            try {
-                const domQueue = $('#queueFilter').val();
-                console.log('Queue from DOM:', domQueue, 'Global selectedQueue:', selectedQueue);
-                
-                const targetQueue = domQueue || selectedQueue;
-
-                if (!targetQueue) {
-                    alert('请先选择一个队列');
-                    return;
-                }
-                
-                console.log('Ready to confirm resume for:', targetQueue);
-                if (!confirm(`确定要恢复队列 "${targetQueue}" 的定时任务调度吗？`)) {
-                    console.log('User cancelled confirmation');
-                    return;
-                }
-                
-                console.log('Sending AJAX request to resume:', targetQueue);
-                
-                $.ajax({
-                    url: '/funboost/resume_scheduler?queue_name=' + encodeURIComponent(targetQueue),
-                    method: 'POST',
-                    success: function(response) {
-                        console.log('Resume AJAX success:', response);
-                        if (response.succ) {
-                            // alert('恢复成功');
-                            updateTopSchedulerStatus(targetQueue);
-                        } else {
-                            alert('恢复失败: ' + response.msg);
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Resume AJAX error:', status, error, xhr.responseText);
-                        alert('恢复请求失败: ' + (xhr.responseText || error));
-                    }
-                });
-            } catch (err) {
-                console.error('CRITICAL ERROR in resumeSelectedScheduler:', err);
-                alert('执行出错: ' + err.message);
-            }
-        }
-        
-        // 刷新选中队列的调度器状态
-        function refreshSelectedSchedulerStatus() {
-            if (selectedQueue) {
-                updateTopSchedulerStatus(selectedQueue);
-            }
-        }
-        
-        // 更新调度器状态 (显示在分组头)
         function updateSchedulerStatus(queueName) {
-            // 查找所有对应此队列的控制组
             const controlsDiv = $(`.scheduler-controls-group[data-queue="${queueName}"]`);
-            
-            if (controlsDiv.length === 0) {
-                return;
-            }
+            if (controlsDiv.length === 0) return;
             
             const statusSpan = controlsDiv.find('.scheduler-status');
             const pauseBtn = controlsDiv.find('.btn-pause-group');
@@ -57276,123 +53437,70 @@ if __name__ == '__main__':
             $.get('/funboost/get_scheduler_status?queue_name=' + encodeURIComponent(queueName))
                 .done(function(response) {
                     if (response.succ && response.data) {
-                        const status = response.data.status_code; // 0: stopped, 1: running, 2: paused
+                        const status = response.data.status_code;
                         
-                        statusSpan.removeClass('label-success label-warning label-danger label-default');
+                        statusSpan.removeClass('scheduler-running scheduler-paused scheduler-stopped');
                         
-                        // 强制显式设置 display 属性，防止 .show() 不起作用
-                        if (status === 1) { // Running
-                            statusSpan.addClass('label-success').text('调度中');
+                        if (status === 1) {
+                            statusSpan.addClass('scheduler-running').text('调度中');
                             pauseBtn.css('display', 'inline-block');
                             resumeBtn.hide();
-                        } else if (status === 2) { // Paused
-                            statusSpan.addClass('label-warning').text('已暂停');
+                        } else if (status === 2) {
+                            statusSpan.addClass('scheduler-paused').text('已暂停');
                             pauseBtn.hide();
                             resumeBtn.css('display', 'inline-block');
-                        } else { // Stopped (0)
-                            statusSpan.addClass('label-danger').text('已停止');
+                        } else {
+                            statusSpan.addClass('scheduler-stopped').text('已停止');
                             pauseBtn.hide();
                             resumeBtn.css('display', 'inline-block');
                         }
-                    } else {
-                        statusSpan.addClass('label-default').text('未知');
                     }
-                })
-                .fail(function() {
-                    statusSpan.removeClass('label-success label-warning label-default').addClass('label-danger').text('获取失败');
                 });
         }
 
-        // 暂停调度器
         function pauseScheduler(queueName) {
-            console.log('pauseScheduler called with:', queueName);
-            
-            if (!confirm(`确定要暂停队列 "${queueName}" 的所有定时任务调度吗？\n暂停后，该队列的定时任务将不会被触发。`)) {
-                console.log('pauseScheduler: user cancelled');
-                return;
-            }
-            
-            console.log('pauseScheduler: sending POST request');
+            if (!confirm(`确定要暂停队列 "${queueName}" 的所有定时任务调度吗？`)) return;
             
             $.ajax({
                 url: '/funboost/pause_scheduler?queue_name=' + encodeURIComponent(queueName),
                 method: 'POST',
                 success: function(response) {
-                    console.log('pauseScheduler: success', response);
-                    if (response.succ) {
-                        updateSchedulerStatus(queueName);
-                    } else {
-                        alert('暂停失败: ' + response.msg);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('pauseScheduler: error', status, error, xhr.responseText);
-                    alert('暂停请求失败: ' + (xhr.responseText || error));
+                    if (response.succ) updateSchedulerStatus(queueName);
+                    else alert('暂停失败: ' + response.msg);
                 }
             });
         }
 
-        // 恢复调度器
         function resumeScheduler(queueName) {
-            console.log('resumeScheduler called with:', queueName);
-            
-            if (!confirm(`确定要恢复队列 "${queueName}" 的定时任务调度吗？`)) {
-                console.log('resumeScheduler: user cancelled');
-                return;
-            }
-            
-            console.log('resumeScheduler: sending POST request');
+            if (!confirm(`确定要恢复队列 "${queueName}" 的定时任务调度吗？`)) return;
             
             $.ajax({
                 url: '/funboost/resume_scheduler?queue_name=' + encodeURIComponent(queueName),
                 method: 'POST',
                 success: function(response) {
-                    console.log('resumeScheduler: success', response);
-                    if (response.succ) {
-                        updateSchedulerStatus(queueName);
-                    } else {
-                        alert('恢复失败: ' + response.msg);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('resumeScheduler: error', status, error, xhr.responseText);
-                    alert('请求失败: ' + (xhr.responseText || '网络错误'));
+                    if (response.succ) updateSchedulerStatus(queueName);
+                    else alert('恢复失败: ' + response.msg);
                 }
             });
         }
 
-        // 显示定时任务说明模态框
         function showHelpModal() {
             $('#helpModal').modal('show');
         }
 
-        // ==================== 确保函数全局可访问 ====================
-        // 将所有关键函数显式挂载到 window 对象，防止因作用域问题导致 onclick 失效
-        window.pauseSelectedScheduler = pauseSelectedScheduler;
-        window.resumeSelectedScheduler = resumeSelectedScheduler; // 保留旧的
-        window.refreshSelectedSchedulerStatus = refreshSelectedSchedulerStatus;
-        window.updateTopSchedulerStatus = updateTopSchedulerStatus;
-        
-        // 新的调度器控制函数
+        // 全局函数
         window.pauseScheduler = pauseScheduler;
         window.resumeScheduler = resumeScheduler;
         window.updateSchedulerStatus = updateSchedulerStatus;
-        
-        // 行级任务操作函数
         window.pauseJob = pauseJob;
         window.resumeJob = resumeJob;
         window.deleteJob = deleteJob;
         window.editJob = editJob;
         window.showJobDetail = showJobDetail;
-        
-        // 帮助说明函数
         window.showHelpModal = showHelpModal;
-        
-        console.log('Global functions exposed to window object');
     </script>
 </body>
 </html>
-
 
 `````
 
@@ -57402,132 +53510,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/publishers/base_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/base_publisher.py`
-
-#### 📦 Imports
-
-- `from pathlib import Path`
-- `import abc`
-- `import copy`
-- `import inspect`
-- `import atexit`
-- `import json`
-- `import logging`
-- `import multiprocessing`
-- `import sys`
-- `import threading`
-- `import time`
-- `import typing`
-- `from functools import wraps`
-- `from threading import Lock`
-- `import nb_log`
-- `from funboost.concurrent_pool.async_helper import simple_run_in_executor`
-- `from funboost.constant import ConstStrForClassMethod`
-- `from funboost.constant import FunctionKind`
-- `from funboost.core.broker_kind__exclusive_config_default_define import generate_broker_exclusive_config`
-- `from funboost.core.func_params_model import PublisherParams`
-- `from funboost.core.func_params_model import PriorityConsumingControlConfig`
-- `from funboost.core.function_result_status_saver import FunctionResultStatus`
-- `from funboost.core.helper_funs import MsgGenerater`
-- `from funboost.core.loggers import develop_logger`
-- `from funboost.core.loggers import LoggerLevelSetterMixin`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-- `from funboost.core.loggers import get_logger`
-- `from funboost.core.msg_result_getter import AsyncResult`
-- `from funboost.core.msg_result_getter import AioAsyncResult`
-- `from funboost.core.serialization import PickleHelper`
-- `from funboost.core.serialization import Serialization`
-- `from funboost.core.task_id_logger import TaskIdLogger`
-- `from funboost.utils import decorators`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.funboost_config_deafult import FunboostCommonConfig`
-- `from nb_libs.path_helper import PathHelper`
-- `from funboost.core.consuming_func_iniput_params_check import ConsumingFuncInputParamsChecker`
-- `import amqpstorm`
-- `from pikav1.exceptions import AMQPError as PikaAMQPError`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class AbstractPublisher(LoggerLevelSetterMixin)`
-*Line: 86*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, publisher_params: PublisherParams)`
-  - **Parameters:**
-    - `self`
-    - `publisher_params: PublisherParams`
-
-**Public Methods (13):**
-- `def custom_init(self)`
-- `def publish(self, msg: typing.Union[str, dict], task_id = None, priority_control_config: PriorityConsumingControlConfig = None)`
-  - **Docstring:**
-  `````
-  :param msg:函数的入参字典或者字典转json。,例如消费函数是 def add(x,y)，你就发布 {"x":1,"y":2}
-  :param task_id:可以指定task_id,也可以不指定就随机生产uuid
-  :param priority_control_config:优先级配置，消息可以携带优先级配置，覆盖boost的配置。
-  :return:
-  `````
-- `def send_msg(self, msg: typing.Union[dict, str])`
-  - *直接发送任意消息内容到消息队列,不生成辅助参数,无视函数入参名字,不校验入参个数和键名*
-- `def push(self, *func_args, **func_kwargs)`
-  - **Docstring:**
-  `````
-  简写，只支持传递消费函数的本身参数，不支持priority_control_config参数。
-  类似于 publish和push的关系类似 apply_async 和 delay的关系。前者更强大，后者更简略。
-  
-  例如消费函数是
-  def add(x,y):
-      print(x+y)
-  
-  publish({"x":1,'y':2}) 和 push(1,2)是等效的。但前者可以传递priority_control_config参数。后者只能穿add函数所接受的入参。
-  :param func_args:
-  :param func_kwargs:
-  :return:
-  `````
-- `def concrete_realization_of_publish(self, msg: str)` `abc.abstractmethod`
-- `def sync_call(self, msg_dict: dict, is_return_rpc_data_obj = True) -> typing.Union[dict, FunctionResultStatus]`
-  - *仅有部分中间件支持同步调用并阻塞等待返回结果,不依赖AsyncResult + redis作为rpc，例如 http grpc 等*
-- `def clear(self)` `abc.abstractmethod`
-- `def get_message_count(self)` `abc.abstractmethod`
-- `def close(self)` `abc.abstractmethod`
-- `async def aio_push(self, *func_args, **func_kwargs) -> AioAsyncResult`
-  - **Docstring:**
-  `````
-  asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
-  但为了更好的防止网络波动(例如发布消息到外网的消息队列耗时达到10毫秒),可以使用aio_push
-  `````
-- `async def aio_publish(self, msg: typing.Union[str, dict], task_id = None, priority_control_config: PriorityConsumingControlConfig = None) -> AioAsyncResult`
-  - **Docstring:**
-  `````
-  asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
-  但为了更好的防止网络波动(例如发布消息到外网的消息队列耗时达到10毫秒),可以使用aio_push
-  `````
-- `def check_func_msg_dict(self, msg_dict: dict)`
-- `def check_func_input_params(self, *args, **kwargs)`
-  - **Docstring:**
-  `````
-  校验 push 风格的参数: f.check_params(1, y=2)
-  利用框架启动时已经解析好的 final_func_input_params_info 进行参数映射和校验。
-  :param args: 位置参数
-  :param kwargs: 关键字参数
-  :return: 校验通过返回 True，失败抛出异常
-  `````
-
-**Properties (1):**
-- `@property final_func_input_params_info`
-
-**Class Variables (1):**
-- `delay = push`
-
-#### 🔧 Public Functions (1)
-
-- `def deco_mq_conn_error(f)`
-  - *Line: 372*
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -57935,41 +53917,6 @@ def deco_mq_conn_error(f):
 
 --- **start of file: funboost/publishers/celery_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/celery_publisher.py`
-
-#### 📦 Imports
-
-- `import os`
-- `import sys`
-- `import time`
-- `import celery`
-- `import celery.result`
-- `import typing`
-- `from funboost.assist.celery_helper import celery_app`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.publishers.base_publisher import PriorityConsumingControlConfig`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class CeleryPublisher(AbstractPublisher)`
-*Line: 15*
-
-**Docstring:**
-`````
-使用celery作为中间件
-`````
-
-**Public Methods (5):**
-- `def publish(self, msg: typing.Union[str, dict], task_id = None, priority_control_config: PriorityConsumingControlConfig = None) -> celery.result.AsyncResult`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -58034,52 +53981,6 @@ class CeleryPublisher(AbstractPublisher, ):
 
 
 --- **start of file: funboost/publishers/confluent_kafka_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/confluent_kafka_publisher.py`
-
-#### 📦 Imports
-
-- `import os`
-- `from funboost.core.lazy_impoter import KafkaPythonImporter`
-- `import atexit`
-- `import time`
-- `from confluent_kafka import Producer as ConfluentProducer`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from pathlib import Path`
-- `import sys`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class ConfluentKafkaPublisher(AbstractPublisher)`
-*Line: 35*
-
-**Docstring:**
-`````
-使用kafka作为中间件，这个confluent_kafka包的性能远强于 kafka-pyhton
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-##### 📌 `class SaslPlainKafkaPublisher(ConfluentKafkaPublisher)`
-*Line: 83*
-
-**Docstring:**
-`````
-使用kafka作为中间件，这个confluent_kafka包的性能远强于 kafka-pyhton
-`````
-
-**Public Methods (1):**
-- `def custom_init(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -58199,38 +54100,6 @@ class SaslPlainKafkaPublisher(ConfluentKafkaPublisher):
 
 --- **start of file: funboost/publishers/dramatiq_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/dramatiq_publisher.py`
-
-#### 📦 Imports
-
-- `import copy`
-- `import json`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.assist.dramatiq_helper import DramatiqHelper`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.utils.redis_manager import RedisMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class DramatiqPublisher(AbstractPublisher)`
-*Line: 13*
-
-**Docstring:**
-`````
-使用dramatiq框架作为中间件
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -58286,34 +54155,6 @@ class DramatiqPublisher(AbstractPublisher, ):
 
 --- **start of file: funboost/publishers/empty_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/empty_publisher.py`
-
-#### 📦 Imports
-
-- `import abc`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class EmptyPublisher(AbstractPublisher)`
-*Line: 9*
-
-**Docstring:**
-`````
-空的发布者，空的实现，需要搭配 boost入参的 consumer_override_cls 和 publisher_override_cls使用，或者被继承。
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg: str)` `abc.abstractmethod`
-- `def clear(self)` `abc.abstractmethod`
-- `def get_message_count(self)` `abc.abstractmethod`
-- `def close(self)` `abc.abstractmethod`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -58355,47 +54196,6 @@ class EmptyPublisher(AbstractPublisher, metaclass=abc.ABCMeta):
 
 
 --- **start of file: funboost/publishers/faststream_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/faststream_publisher.py`
-
-#### 📦 Imports
-
-- `import abc`
-- `import asyncio`
-- `import json`
-- `import time`
-- `import typing`
-- `from funboost import PriorityConsumingControlConfig`
-- `from funboost.concurrent_pool.async_helper import get_or_create_event_loop`
-- `from funboost.core.serialization import Serialization`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.assist.faststream_helper import app`
-- `from funboost.assist.faststream_helper import get_broker`
-- `from faststream import FastStream`
-- `from faststream import Context`
-- `from faststream.annotations import Logger`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class FastStreamPublisher(AbstractPublisher)`
-*Line: 19*
-
-**Docstring:**
-`````
-空的发布者，空的实现，需要搭配 boost入参的 consumer_override_cls 和 publisher_override_cls使用，或者被继承。
-`````
-
-**Public Methods (6):**
-- `def custom_init(self)`
-- `def publish(self, msg: typing.Union[str, dict], task_id = None, priority_control_config: PriorityConsumingControlConfig = None)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -58466,47 +54266,6 @@ class FastStreamPublisher(AbstractPublisher, metaclass=abc.ABCMeta):
 
 --- **start of file: funboost/publishers/grpc_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/grpc_publisher.py`
-
-#### 📦 Imports
-
-- `import abc`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.assist.grpc_helper import funboost_grpc_pb2_grpc`
-- `from funboost.assist.grpc_helper import funboost_grpc_pb2`
-- `from funboost.core.serialization import Serialization`
-- `from funboost.core.function_result_status_saver import FunctionResultStatus`
-- `import grpc`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class GrpcPublisher(AbstractPublisher)`
-*Line: 9*
-
-**Docstring:**
-`````
-grpc 作为broker
-`````
-
-**Public Methods (6):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg: str)`
-- `def sync_call(self, msg_dict: dict, is_return_rpc_data_obj = True)`
-  - **Docstring:**
-  `````
-  同步请求,并阻塞等待结果返回.
-  不像push那样依赖AsyncResult + redis 实现的rpc
-  :param msg_dict:
-  :return:
-  `````
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 import abc
 from funboost.publishers.base_publisher import AbstractPublisher
@@ -58570,40 +54329,6 @@ class GrpcPublisher(AbstractPublisher, ):
 
 
 --- **start of file: funboost/publishers/httpsqs_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/httpsqs_publisher.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `import http.client`
-- `from urllib.parse import quote`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `import urllib3`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class HttpsqsPublisher(AbstractPublisher)`
-*Line: 16*
-
-**Docstring:**
-`````
-使用httpsqs作为中间件
-`````
-
-**Public Methods (7):**
-- `def custom_init(self)`
-- `def opt_httpsqs000(self, opt = None, data = '')`
-- `def opt_httpsqs(self, opt = None, data = '')`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -58685,38 +54410,6 @@ class HttpsqsPublisher(AbstractPublisher):
 
 --- **start of file: funboost/publishers/http_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/http_publisher.py`
-
-#### 📦 Imports
-
-- `import threading`
-- `from funboost.core.function_result_status_saver import FunctionResultStatus`
-- `from funboost.core.serialization import Serialization`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from urllib3 import PoolManager`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class HTTPPublisher(AbstractPublisher)`
-*Line: 12*
-
-**Docstring:**
-`````
-http实现的，不支持持久化。
-`````
-
-**Public Methods (6):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def sync_call(self, msg_dict: dict, is_return_rpc_data_obj = True)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -58781,39 +54474,6 @@ class HTTPPublisher(AbstractPublisher, ):
 
 --- **start of file: funboost/publishers/huey_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/huey_publisher.py`
-
-#### 📦 Imports
-
-- `import copy`
-- `import json`
-- `from huey import RedisHuey`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.assist.huey_helper import HueyHelper`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.utils.redis_manager import RedisMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class HueyPublisher(AbstractPublisher)`
-*Line: 15*
-
-**Docstring:**
-`````
-使用huey框架作为中间件
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -58866,36 +54526,6 @@ class HueyPublisher(AbstractPublisher, ):
 
 
 --- **start of file: funboost/publishers/kafka_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/kafka_publisher.py`
-
-#### 📦 Imports
-
-- `import atexit`
-- `from funboost.core.lazy_impoter import KafkaPythonImporter`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class KafkaPublisher(AbstractPublisher)`
-*Line: 13*
-
-**Docstring:**
-`````
-使用kafka作为中间件
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -58962,50 +54592,6 @@ class KafkaPublisher(AbstractPublisher, ):
 
 
 --- **start of file: funboost/publishers/kombu_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/kombu_publisher.py`
-
-#### 📦 Imports
-
-- `import os`
-- `import json`
-- `from kombu.transport.virtual.base import Channel`
-- `from kombu.entity import Exchange`
-- `from kombu.entity import Queue`
-- `from kombu.connection import Connection`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.publishers.base_publisher import deco_mq_conn_error`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.funboost_config_deafult import FunboostCommonConfig`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class NoEncode`
-*Line: 28*
-
-**Public Methods (2):**
-- `def encode(self, s)`
-- `def decode(self, s)`
-
-##### 📌 `class KombuPublisher(AbstractPublisher)`
-*Line: 42*
-
-**Docstring:**
-`````
-使用kombu作为中间件,这个能直接一次性支持很多种小众中间件，但性能很差，除非是分布式函数调度框架没实现的中间件种类用户才可以用这种，用户也可以自己对比性能。
-`````
-
-**Public Methods (6):**
-- `def custom_init(self)`
-- `def init_broker(self)`
-- `def concrete_realization_of_publish(self, msg)` `deco_mq_conn_error`
-- `def clear(self)` `deco_mq_conn_error`
-- `def get_message_count(self)` `deco_mq_conn_error`
-- `def close(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -59125,69 +54711,6 @@ class KombuPublisher(AbstractPublisher, ):
 
 --- **start of file: funboost/publishers/local_python_queue_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/local_python_queue_publisher.py`
-
-#### 📦 Imports
-
-- `from collections import deque`
-- `from queue import Queue`
-- `from queue import SimpleQueue`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.queues.memory_queues_map import PythonQueues`
-
-#### 🏛️ Classes (3)
-
-##### 📌 `class LocalPythonQueuePublisher(AbstractPublisher)`
-*Line: 13*
-
-**Docstring:**
-`````
-使用python内置queue对象作为中间件。方便测试，每个中间件的消费者类是鸭子类，多态可以互相替换。
-`````
-
-**Public Methods (4):**
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-**Properties (1):**
-- `@property local_python_queue -> Queue`
-
-##### 📌 `class LocalPythonQueuePublisherSimpleQueue(AbstractPublisher)`
-*Line: 41*
-
-**Docstring:**
-`````
-使用python内置SimpleQueue对象作为中间件。方便测试，每个中间件的消费者类是鸭子类，多态可以互相替换。
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-##### 📌 `class LocalPythonQueuePublisherDeque(AbstractPublisher)`
-*Line: 69*
-
-**Docstring:**
-`````
-使用python内置 Dequeu 对象作为中间件。方便测试，每个中间件的消费者类是鸭子类，多态可以互相替换。
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -59296,34 +54819,6 @@ class LocalPythonQueuePublisherDeque(AbstractPublisher):
 
 --- **start of file: funboost/publishers/meomory_deque_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/meomory_deque_publisher.py`
-
-#### 📦 Imports
-
-- `from collections import deque`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class DequePublisher(AbstractPublisher)`
-*Line: 11*
-
-**Docstring:**
-`````
-使用python内置queue对象作为中间件。方便测试，每个中间件的消费者类是鸭子类，多态可以互相替换。
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -59371,39 +54866,6 @@ class DequePublisher(AbstractPublisher):
 
 --- **start of file: funboost/publishers/mongomq_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/mongomq_publisher.py`
-
-#### 📦 Imports
-
-- `import os`
-- `import json`
-- `from funboost.utils.dependency_packages.mongomq import MongoQueue`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.utils import time_util`
-- `from funboost.utils.mongo_util import MongoMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class MongoMqPublisher(AbstractPublisher, MongoMixin)`
-*Line: 13*
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-**Properties (1):**
-- `@property queue`
-
-**Class Variables (1):**
-- `pid__queue_map = {}`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -59411,6 +54873,7 @@ class DequePublisher(AbstractPublisher):
 import os
 
 import json
+from funboost.constant import MongoDbName
 from funboost.utils.dependency_packages.mongomq import MongoQueue
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.utils import time_util
@@ -59430,11 +54893,10 @@ class MongoMqPublisher(AbstractPublisher, MongoMixin):
     def queue(self):
         ''' 不能提前实例化，mongo fork进程不安全，这样是动态生成queue'''
         pid = os.getpid()
-        key = (pid, 'consume_queues', self._queue_name)
+        key = (pid, MongoDbName.MONGOMQ_DB, self._queue_name)
         if key not in MongoMqPublisher.pid__queue_map:
             queuex = MongoQueue(
-                # self.mongo_client.get_database('consume_queues').get_collection(self._queue_name),
-                self.get_mongo_collection('consume_queues', self._queue_name),
+                self.get_mongo_collection(MongoDbName.MONGOMQ_DB, self._queue_name),
                 consumer_id=f"consumer-{time_util.DatetimeConverter().datetime_str}",
                 timeout=600,
                 max_attempts=3,
@@ -59466,35 +54928,6 @@ class MongoMqPublisher(AbstractPublisher, MongoMixin):
 
 
 --- **start of file: funboost/publishers/mqtt_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/mqtt_publisher.py`
-
-#### 📦 Imports
-
-- `from funboost.core.lazy_impoter import PahoMqttImporter`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class MqttPublisher(AbstractPublisher)`
-*Line: 68*
-
-**Docstring:**
-`````
-使用 emq 作为中间件
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -59611,34 +55044,6 @@ class MqttPublisher(AbstractPublisher, ):
 
 --- **start of file: funboost/publishers/mysql_cdc_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/mysql_cdc_publisher.py`
-
-#### 📦 Imports
-
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class MysqlCdcPublisher(AbstractPublisher)`
-*Line: 5*
-
-**Docstring:**
-`````
-A placeholder publisher for the CDC broker.
-Publishing is handled automatically by the consumer by listening to binlog events.
-Direct publishing is not supported and will raise an error.
-`````
-
-**Public Methods (4):**
-- `def concrete_realization_of_publish(self, msg: str)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 
 
@@ -59672,47 +55077,6 @@ class MysqlCdcPublisher(AbstractPublisher):
 
 
 --- **start of file: funboost/publishers/nameko_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/nameko_publisher.py`
-
-#### 📦 Imports
-
-- `import copy`
-- `import json`
-- `import time`
-- `import typing`
-- `import uuid`
-- `from nameko.standalone.rpc import ClusterRpcProxy`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.publishers.base_publisher import PriorityConsumingControlConfig`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class NamekoPublisher(AbstractPublisher)`
-*Line: 20*
-
-**Docstring:**
-`````
-使用nameko作为中间件
-`````
-
-**Public Methods (6):**
-- `def custom_init(self)`
-- `def publish(self, msg: typing.Union[str, dict], task_id = None, priority_control_config: PriorityConsumingControlConfig = None)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-#### 🔧 Public Functions (1)
-
-- `def get_nameko_config()`
-  - *Line: 16*
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -59773,35 +55137,6 @@ class NamekoPublisher(AbstractPublisher, ):
 
 --- **start of file: funboost/publishers/nats_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/nats_publisher.py`
-
-#### 📦 Imports
-
-- `from funboost.core.lazy_impoter import NatsImporter`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class NatsPublisher(AbstractPublisher)`
-*Line: 6*
-
-**Docstring:**
-`````
-使用nats作为中间件
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 ﻿from funboost.core.lazy_impoter import NatsImporter
 from funboost.publishers.base_publisher import AbstractPublisher
@@ -59840,35 +55175,6 @@ class NatsPublisher(AbstractPublisher, ):
 
 
 --- **start of file: funboost/publishers/nsq_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/nsq_publisher.py`
-
-#### 📦 Imports
-
-- `from funboost.core.lazy_impoter import GnsqImporter`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class NsqPublisher(AbstractPublisher)`
-*Line: 9*
-
-**Docstring:**
-`````
-使用nsq作为中间件
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -59916,35 +55222,6 @@ class NsqPublisher(AbstractPublisher, ):
 
 --- **start of file: funboost/publishers/peewee_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/peewee_publisher.py`
-
-#### 📦 Imports
-
-- `from funboost.queues.peewee_queue import PeeweeQueue`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class PeeweePublisher(AbstractPublisher)`
-*Line: 9*
-
-**Docstring:**
-`````
-使用Sqlachemy 操作数据库 ，实现的5种sql 数据库服务器作为 消息队列。包括sqlite mydql microsoftsqlserver postgre oracle
-这个是使用数据库表模拟的消息队列。这不是突发奇想一意孤行，很多包库都实现了这。
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -59986,39 +55263,6 @@ class PeeweePublisher(AbstractPublisher):
 
 
 --- **start of file: funboost/publishers/persist_queue_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/persist_queue_publisher.py`
-
-#### 📦 Imports
-
-- `import json`
-- `import sqlite3`
-- `import persistqueue`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.core.loggers import get_funboost_file_logger`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class PersistQueuePublisher(AbstractPublisher)`
-*Line: 17*
-
-**Docstring:**
-`````
-使用persistqueue实现的本地持久化队列。
-这个是本地持久化，支持本地多个启动的python脚本共享队列任务。与LocalPythonQueuePublisher相比，不会随着python解释器退出，导致任务丢失。
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -60091,53 +55335,6 @@ class PersistQueuePublisher(AbstractPublisher):
 
 --- **start of file: funboost/publishers/pulsar_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/pulsar_publisher.py`
-
-#### 📝 Module Docstring
-
-`````
-import pulsar
-
-client = pulsar.Client('pulsar://localhost:6650')
-
-producer = client.create_producer('my-topic36')
-
-for i in range(10):
-    producer.send(('Hello-%d' % i).encode('utf-8'))
-
-client.close()
-`````
-
-#### 📦 Imports
-
-- `import os`
-- `from pulsar.schema import schema`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `import pulsar`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class PulsarPublisher(AbstractPublisher)`
-*Line: 27*
-
-**Docstring:**
-`````
-使用pulsar作为中间件
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-  - *用户换个 subscription_name 就可以重新消费了，不需要清空消息*
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 '''
 
@@ -60198,41 +55395,6 @@ class PulsarPublisher(AbstractPublisher, ):
 
 
 --- **start of file: funboost/publishers/rabbitmq_amqpstorm_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/rabbitmq_amqpstorm_publisher.py`
-
-#### 📦 Imports
-
-- `import amqpstorm`
-- `from amqpstorm.basic import Basic as AmqpStormBasic`
-- `from amqpstorm.queue import Queue as AmqpStormQueue`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.publishers.base_publisher import deco_mq_conn_error`
-- `from funboost.utils import decorators`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher)`
-*Line: 12*
-
-**Public Methods (6):**
-- `def custom_init(self)`
-- `def init_broker(self)`
-- `def concrete_realization_of_publish(self, msg: str)` `deco_mq_conn_error`
-- `def clear(self)` `deco_mq_conn_error`
-- `def get_message_count(self)` `deco_mq_conn_error`
-- `def close(self)`
-
-**Class Variables (4):**
-- `connection: amqpstorm.UriConnection`
-- `channel: amqpstorm.Channel`
-- `channel_wrapper_by_ampqstormbaic: AmqpStormBasic`
-- `queue: AmqpStormQueue`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -60308,41 +55470,6 @@ class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher):
 
 
 --- **start of file: funboost/publishers/rabbitmq_complex_routing_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/rabbitmq_complex_routing_publisher.py`
-
-#### 📦 Imports
-
-- `import amqpstorm`
-- `from amqpstorm.basic import Basic as AmqpStormBasic`
-- `from amqpstorm.queue import Queue as AmqpStormQueue`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.publishers.base_publisher import deco_mq_conn_error`
-- `from funboost.utils import decorators`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RabbitmqComplexRoutingPublisher(AbstractPublisher)`
-*Line: 12*
-
-**Public Methods (6):**
-- `def custom_init(self)`
-- `def init_broker(self)`
-- `def concrete_realization_of_publish(self, msg: str)` `deco_mq_conn_error`
-- `def clear(self)` `deco_mq_conn_error`
-- `def get_message_count(self)` `deco_mq_conn_error`
-- `def close(self)`
-
-**Class Variables (4):**
-- `connection: amqpstorm.UriConnection`
-- `channel: amqpstorm.Channel`
-- `channel_wrapper_by_ampqstormbaic: AmqpStormBasic`
-- `queue: AmqpStormQueue`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -60439,39 +55566,6 @@ class RabbitmqComplexRoutingPublisher(AbstractPublisher):
 
 --- **start of file: funboost/publishers/rabbitmq_pika_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/rabbitmq_pika_publisher.py`
-
-#### 📦 Imports
-
-- `from threading import Lock`
-- `from pikav1 import BasicProperties`
-- `import pikav1`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.publishers.base_publisher import deco_mq_conn_error`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RabbitmqPublisher(AbstractPublisher)`
-*Line: 11*
-
-**Docstring:**
-`````
-使用pika实现的。
-`````
-
-**Public Methods (6):**
-- `def custom_init(self)`
-- `def init_broker(self)`
-- `def concrete_realization_of_publish(self, msg)` `deco_mq_conn_error`
-- `def clear(self)` `deco_mq_conn_error`
-- `def get_message_count(self)` `deco_mq_conn_error`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -60539,38 +55633,6 @@ class RabbitmqPublisher(AbstractPublisher):
 
 --- **start of file: funboost/publishers/rabbitmq_rabbitpy_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/rabbitmq_rabbitpy_publisher.py`
-
-#### 📦 Imports
-
-- `import os`
-- `import rabbitpy`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.publishers.base_publisher import deco_mq_conn_error`
-- `from funboost.utils.rabbitmq_factory import RabbitMqFactory`
-- `import time`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RabbitmqPublisherUsingRabbitpy(AbstractPublisher)`
-*Line: 11*
-
-**Docstring:**
-`````
-使用rabbitpy包实现的。
-`````
-
-**Public Methods (5):**
-- `def init_broker(self)`
-- `def concrete_realization_of_publish(self, msg)` `deco_mq_conn_error`
-- `def clear(self)` `deco_mq_conn_error`
-- `def get_message_count(self)` `deco_mq_conn_error`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -60635,46 +55697,6 @@ class RabbitmqPublisherUsingRabbitpy(AbstractPublisher):
 
 
 --- **start of file: funboost/publishers/redis_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/redis_publisher.py`
-
-#### 📦 Imports
-
-- `import os`
-- `import time`
-- `from queue import Queue`
-- `from queue import Empty`
-- `from threading import Lock`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.publishers.redis_queue_flush_mixin import FlushRedisQueueMixin`
-- `from funboost.utils import decorators`
-- `from funboost.utils.redis_manager import RedisMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RedisPublisher(FlushRedisQueueMixin, AbstractPublisher, RedisMixin)`
-*Line: 17*
-
-**Docstring:**
-`````
-使用redis作为中间件,这个是大幅优化了发布速度的方式。简单的发布是 redis_publisher_0000.py 中的代码方式。
-
-这个是复杂版，批量推送，简单版在 funboost/publishers/redis_publisher_simple.py
-`````
-
-**Public Methods (4):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-**Class Variables (1):**
-- `_push_method = 'rpush'`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -60758,29 +55780,6 @@ class RedisPublisher(FlushRedisQueueMixin, AbstractPublisher, RedisMixin, ):
 
 --- **start of file: funboost/publishers/redis_publisher_lpush.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/redis_publisher_lpush.py`
-
-#### 📦 Imports
-
-- `from funboost.publishers.redis_publisher import RedisPublisher`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RedisPublisherLpush(RedisPublisher)`
-*Line: 9*
-
-**Docstring:**
-`````
-使用redis作为中间件,
-`````
-
-**Class Variables (1):**
-- `_push_method = 'lpush'`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -60807,42 +55806,6 @@ class RedisPublisherLpush(RedisPublisher):
 
 
 --- **start of file: funboost/publishers/redis_publisher_priority.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/redis_publisher_priority.py`
-
-#### 📦 Imports
-
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.publishers.redis_queue_flush_mixin import FlushRedisQueueMixin`
-- `from funboost.utils.redis_manager import RedisMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RedisPriorityPublisher(FlushRedisQueueMixin, AbstractPublisher, RedisMixin)`
-*Line: 10*
-
-**Docstring:**
-`````
-redis队列，支持任务优先级。
-`````
-
-**Public Methods (6):**
-- `def custom_init(self)`
-- `def build_queue_name_by_msg(self, msg)`
-  - **Docstring:**
-  `````
-  根据消息的other_extra_params的 priority ，自动生成子队列名。例如 queue_name:1   queue_name:2  queue_name:3 queue_name:4
-  :param msg:
-  :return:
-  `````
-- `def concrete_realization_of_publish(self, msg)`
-- `def get_message_count(self)`
-- `def close(self)`
-- `def clear(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -60912,33 +55875,6 @@ class RedisPriorityPublisher(FlushRedisQueueMixin,AbstractPublisher, RedisMixin,
 
 --- **start of file: funboost/publishers/redis_publisher_simple.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/redis_publisher_simple.py`
-
-#### 📦 Imports
-
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.publishers.redis_queue_flush_mixin import FlushRedisQueueMixin`
-- `from funboost.utils.redis_manager import RedisMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RedisPublisher(FlushRedisQueueMixin, AbstractPublisher, RedisMixin)`
-*Line: 9*
-
-**Docstring:**
-`````
-使用redis作为中间件
-`````
-
-**Public Methods (3):**
-- `def concrete_realization_of_publish(self, msg)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -60972,33 +55908,6 @@ class RedisPublisher(FlushRedisQueueMixin, AbstractPublisher, RedisMixin, ):
 
 
 --- **start of file: funboost/publishers/redis_pubsub_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/redis_pubsub_publisher.py`
-
-#### 📦 Imports
-
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.utils.redis_manager import RedisMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RedisPubSubPublisher(AbstractPublisher, RedisMixin)`
-*Line: 8*
-
-**Docstring:**
-`````
-使用redis作为中间件
-`````
-
-**Public Methods (4):**
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -61036,20 +55945,6 @@ class RedisPubSubPublisher(AbstractPublisher, RedisMixin, ):
 
 --- **start of file: funboost/publishers/redis_queue_flush_mixin.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/redis_queue_flush_mixin.py`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class FlushRedisQueueMixin`
-*Line: 1*
-
-**Public Methods (1):**
-- `def clear(self)`
-
-
----
-
 `````python
 class FlushRedisQueueMixin:
     # noinspection PyUnresolvedReferences
@@ -61071,36 +55966,6 @@ class FlushRedisQueueMixin:
 
 
 --- **start of file: funboost/publishers/redis_stream_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/redis_stream_publisher.py`
-
-#### 📦 Imports
-
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from funboost.utils.redis_manager import RedisMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RedisStreamPublisher(AbstractPublisher, RedisMixin)`
-*Line: 8*
-
-**Docstring:**
-`````
-redis 的 stream 结构 作为中间件实现的。需要redis 5.0以上，redis stream结构 是redis的消息队列，功能远超 list结构。
-`````
-
-**Public Methods (4):**
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-**Class Variables (1):**
-- `_has__check_redis_version = False`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -61154,37 +56019,6 @@ class RedisStreamPublisher(AbstractPublisher, RedisMixin):
 
 
 --- **start of file: funboost/publishers/rocketmq_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/rocketmq_publisher.py`
-
-#### 📦 Imports
-
-- `import threading`
-- `import time`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-- `from rocketmq.client import Producer`
-- `from rocketmq.client import Message`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RocketmqPublisher(AbstractPublisher)`
-*Line: 12*
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-**Class Variables (2):**
-- `_group_id__rocketmq_producer = {}`
-- `_lock_for_create_producer = threading.Lock()`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -61255,36 +56089,6 @@ class RocketmqPublisher(AbstractPublisher, ):
 
 --- **start of file: funboost/publishers/rq_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/rq_publisher.py`
-
-#### 📦 Imports
-
-- `import json`
-- `from funboost.assist.rq_helper import RqHelper`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class RqPublisher(AbstractPublisher)`
-*Line: 10*
-
-**Docstring:**
-`````
-使用redis作为中间件,这个是大幅优化了发布速度的方式。简单的发布是 redis_publisher_0000.py 中的代码方式。
-
-这个是复杂版，批量推送，简单版在 funboost/publishers/redis_publisher_simple.py
-`````
-
-**Public Methods (4):**
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -61328,36 +56132,6 @@ class RqPublisher(AbstractPublisher):
 
 --- **start of file: funboost/publishers/sqla_queue_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/sqla_queue_publisher.py`
-
-#### 📦 Imports
-
-- `from funboost.queues import sqla_queue`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class SqlachemyQueuePublisher(AbstractPublisher)`
-*Line: 10*
-
-**Docstring:**
-`````
-使用Sqlachemy 操作数据库 ，实现的5种sql 数据库服务器作为 消息队列。包括sqlite mydql microsoftsqlserver postgre oracle
-这个是使用数据库表模拟的消息队列。这不是突发奇想一意孤行，很多包库都实现了这。
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -61399,34 +56173,6 @@ class SqlachemyQueuePublisher(AbstractPublisher):
 
 
 --- **start of file: funboost/publishers/tcp_publisher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/publishers/tcp_publisher.py`
-
-#### 📦 Imports
-
-- `import socket`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class TCPPublisher(AbstractPublisher)`
-*Line: 8*
-
-**Docstring:**
-`````
-使用tcp作为中间件,不支持持久化，支持分布式
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -61482,39 +56228,6 @@ class TCPPublisher(AbstractPublisher, ):
 
 --- **start of file: funboost/publishers/txt_file_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/txt_file_publisher.py`
-
-#### 📦 Imports
-
-- `import shutil`
-- `from pathlib import Path`
-- `from nb_filelock import FileLock`
-- `from persistqueue import Queue`
-- `from persistqueue.serializers import json as json_serializer`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class TxtFilePublisher(AbstractPublisher)`
-*Line: 15*
-
-**Docstring:**
-`````
-使用txt文件作为中间件
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -61566,34 +56279,6 @@ class TxtFilePublisher(AbstractPublisher, ):
 
 --- **start of file: funboost/publishers/udp_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/udp_publisher.py`
-
-#### 📦 Imports
-
-- `import socket`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class UDPPublisher(AbstractPublisher)`
-*Line: 8*
-
-**Docstring:**
-`````
-使用udp作为中间件,不支持持久化，支持分布式
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -61643,34 +56328,6 @@ class UDPPublisher(AbstractPublisher, ):
 
 --- **start of file: funboost/publishers/zeromq_publisher.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/zeromq_publisher.py`
-
-#### 📦 Imports
-
-- `from funboost.core.lazy_impoter import ZmqImporter`
-- `from funboost.publishers.base_publisher import AbstractPublisher`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class ZeroMqPublisher(AbstractPublisher)`
-*Line: 8*
-
-**Docstring:**
-`````
-zeromq 中间件的发布者，zeromq基于socket代码，不会持久化，且不需要安装软件。
-`````
-
-**Public Methods (5):**
-- `def custom_init(self)`
-- `def concrete_realization_of_publish(self, msg)`
-- `def clear(self)`
-- `def get_message_count(self)`
-- `def close(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -61717,18 +56374,6 @@ class ZeroMqPublisher(AbstractPublisher):
 
 --- **start of file: funboost/publishers/__init__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/publishers/__init__.py`
-
-#### 📝 Module Docstring
-
-`````
-实现各种中间件类型的发布者。
-`````
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -61745,27 +56390,6 @@ class ZeroMqPublisher(AbstractPublisher):
 
 
 --- **start of file: funboost/queues/memory_queues_map.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/queues/memory_queues_map.py`
-
-#### 📦 Imports
-
-- `import queue`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class PythonQueues`
-*Line: 4*
-
-**Public Methods (1):**
-- `def get_queue(cls, queue_name)` `classmethod`
-
-**Class Variables (1):**
-- `local_pyhton_queue_name__local_pyhton_queue_obj_map = {}`
-
-
----
 
 `````python
 import queue
@@ -61787,62 +56411,6 @@ class PythonQueues:
 
 
 --- **start of file: funboost/queues/peewee_queue.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/queues/peewee_queue.py`
-
-#### 📦 Imports
-
-- `import datetime`
-- `import time`
-- `from funboost.core.loggers import LoggerLevelSetterMixin`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.core.lazy_impoter import PeeweeImporter`
-- `from threadpool_executor_shrink_able import ThreadPoolExecutorShrinkAble`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class TaskStatus`
-*Line: 14*
-
-**Class Variables (5):**
-- `TO_BE_CONSUMED = 'to_be_consumed'`
-- `PENGDING = 'pengding'`
-- `FAILED = 'failed'`
-- `SUCCESS = 'success'`
-- `REQUEUE = 'requeue'`
-
-##### 📌 `class PeeweeQueue(FunboostFileLoggerMixin, LoggerLevelSetterMixin)`
-*Line: 22*
-
-**Docstring:**
-`````
-使用peewee操作数据库模拟消息队列
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, queue_name)`
-  - **Parameters:**
-    - `self`
-    - `queue_name`
-
-**Public Methods (8):**
-- `def push(self, body)`
-- `def get(self)`
-- `def set_success(self, job_id, is_delete_the_task = False)`
-- `def set_failed(self, job_id)`
-- `def set_task_status(self, job_id, status: str)`
-- `def requeue_task(self, job_id)`
-- `def clear_queue(self)`
-- `def get_count_by_status(self, status)`
-
-**Properties (2):**
-- `@property total_count`
-- `@property to_be_consumed_count`
-
-
----
 
 `````python
 import datetime
@@ -61980,99 +56548,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/queues/sqla_queue.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/queues/sqla_queue.py`
-
-#### 📝 Module Docstring
-
-`````
-使用sqlachemy来使5种关系型数据库模拟消息队列。
-`````
-
-#### 📦 Imports
-
-- `import datetime`
-- `import json`
-- `import time`
-- `from pathlib import Path`
-- `import sqlalchemy`
-- `from sqlalchemy import Column`
-- `from sqlalchemy import func`
-- `from sqlalchemy import or_`
-- `from sqlalchemy import and_`
-- `from sqlalchemy import Table`
-- `from sqlalchemy import MetaData`
-- `from sqlalchemy import Integer`
-- `from sqlalchemy import String`
-- `from sqlalchemy import DateTime`
-- `from sqlalchemy import create_engine`
-- `from sqlalchemy.ext.automap import automap_base`
-- `from sqlalchemy.ext.declarative import declarative_base`
-- `from sqlalchemy.orm import sessionmaker`
-- `from sqlalchemy.orm import scoped_session`
-- `from sqlalchemy.pool import StaticPool`
-- `from sqlalchemy_utils import database_exists`
-- `from sqlalchemy_utils import create_database`
-- `from funboost.utils import decorators`
-- `from funboost.core.loggers import FunboostFileLoggerMixin`
-- `from funboost.core.loggers import LoggerLevelSetterMixin`
-
-#### 🏛️ Classes (3)
-
-##### 📌 `class TaskStatus`
-*Line: 27*
-
-**Class Variables (5):**
-- `TO_BE_CONSUMED = 'to_be_consumed'`
-- `PENGDING = 'pengding'`
-- `FAILED = 'failed'`
-- `SUCCESS = 'success'`
-- `REQUEUE = 'requeue'`
-
-##### 📌 `class SessionContext`
-*Line: 64*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, session)`
-  - **Parameters:**
-    - `self`
-    - `session`
-
-##### 📌 `class SqlaQueue(FunboostFileLoggerMixin, LoggerLevelSetterMixin)`
-*Line: 78*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, queue_name: str, sqla_conn_url: str)`
-  - **Parameters:**
-    - `self`
-    - `queue_name: str`
-    - `sqla_conn_url: str`
-
-**Public Methods (9):**
-- `def push(self, sqla_task_dict)`
-- `def bulk_push(self, sqla_task_dict_list: list)`
-  - **Docstring:**
-  `````
-  queue = SqlaQueue('queue37', 'sqlite:////sqlachemy_queues/queues.db')
-  queue.bulk_push([queue.SqlaQueueModel(body=json.dumps({'a': i, 'b': 2 * i}), status=TaskStatus.TO_BE_CONSUMED) for i in range(10000)])
-  :param sqla_task_dict_list:
-  :return:
-  `````
-- `def get(self)`
-- `def set_success(self, sqla_task_dict, is_delete_the_task = True)`
-- `def set_failed(self, sqla_task_dict)`
-- `def set_task_status(self, sqla_task_dict, status: str)`
-- `def requeue_task(self, sqla_task_dict)`
-- `def clear_queue(self)`
-- `def get_count_by_status(self, status)`
-
-**Properties (2):**
-- `@property total_count`
-- `@property to_be_consumed_count`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -62335,12 +56810,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/queues/__init__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/queues/__init__.py`
-
-
----
-
 `````python
 
 `````
@@ -62351,17 +56820,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/timing_job/apscheduler_use_mysql_store.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/timing_job/apscheduler_use_mysql_store.py`
-
-#### 📦 Imports
-
-- `from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore`
-- `from funboost.timing_job import FsdfBackgroundScheduler`
-
-
----
 
 `````python
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -62382,43 +56840,6 @@ from funboost.timing_job import FsdfBackgroundScheduler
 
 
 --- **start of file: funboost/timing_job/apscheduler_use_redis_store.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/timing_job/apscheduler_use_redis_store.py`
-
-#### 📦 Imports
-
-- `from apscheduler.jobstores.redis import RedisJobStore`
-- `from funboost.utils.redis_manager import RedisMixin`
-- `from funboost.utils.redis_manager import get_redis_conn_kwargs`
-- `from funboost.timing_job import FunboostBackgroundScheduler`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.funboost_config_deafult import FunboostCommonConfig`
-- `from funboost.utils.decorators import RedisDistributedBlockLockContextManager`
-- `from funboost.core.loggers import flogger`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class FunboostBackgroundSchedulerProcessJobsWithinRedisLock(FunboostBackgroundScheduler)`
-*Line: 14*
-
-**Docstring:**
-`````
-分布式或多进程都启动某个apscheduler实例，如果都使用的同一个数据库类型的jobstores ，_process_jobs有很大概率会造成报错， 因为_process_jobs使用的是线程锁，管不了其他进程和分布式机器。
-
-https://groups.google.com/g/apscheduler/c/Gjc_JQMPePc 问题也提到了这个bug
-
-继承 Custom schedulers https://apscheduler.readthedocs.io/en/3.x/extending.html   可以重写 _create_lock
-`````
-
-**Public Methods (1):**
-- `def set_process_jobs_redis_lock_key(self, lock_key)`
-
-**Class Variables (1):**
-- `process_jobs_redis_lock_key = None`
-
-
----
 
 `````python
 from apscheduler.jobstores.redis import RedisJobStore
@@ -62522,122 +56943,6 @@ test_frame/test_apschedual/test_change_aps_conf.py
 
 
 --- **start of file: funboost/timing_job/timing_job_base.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/timing_job/timing_job_base.py`
-
-#### 📝 Module Docstring
-
-`````
-集成定时任务。
-`````
-
-#### 📦 Imports
-
-- `import atexit`
-- `import time`
-- `from apscheduler.executors.pool import BasePoolExecutor`
-- `from typing import Union`
-- `import threading`
-- `from apscheduler.schedulers.background import BackgroundScheduler`
-- `from apscheduler.schedulers.base import STATE_STOPPED`
-- `from apscheduler.schedulers.base import STATE_RUNNING`
-- `from apscheduler.util import undefined`
-- `from threading import TIMEOUT_MAX`
-- `import deprecated`
-- `from funboost.utils.redis_manager import RedisMixin`
-- `from funboost.funboost_config_deafult import FunboostCommonConfig`
-- `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.booster import BoostersManager`
-- `from funboost.core.booster import Booster`
-- `from funboost.core.func_params_model import BoosterParams`
-- `from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAble`
-- `from funboost.concurrent_pool.custom_threadpool_executor import ThreadPoolExecutorShrinkAbleNonDaemon`
-- `import datetime`
-- `from funboost import boost`
-- `from funboost import BrokerEnum`
-- `from funboost import fsdf_background_scheduler`
-- `from funboost import timing_publish_deco`
-- `from funboost import run_forever`
-- `from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class ThreadPoolExecutorForAps(BasePoolExecutor)`
-*Line: 57*
-
-**Docstring:**
-`````
-An executor that runs jobs in a concurrent.futures thread pool.
-
-Plugin alias: ``threadpool``
-
-:param max_workers: the maximum number of spawned threads.
-:param pool_kwargs: dict of keyword arguments to pass to the underlying
-    ThreadPoolExecutor constructor
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, max_workers = 100, pool_kwargs = None)`
-  - **Parameters:**
-    - `self`
-    - `max_workers = 100`
-    - `pool_kwargs = None`
-
-##### 📌 `class FunboostBackgroundScheduler(BackgroundScheduler)`
-*Line: 84*
-
-**Docstring:**
-`````
-自定义的， 继承了官方BackgroundScheduler，
-通过重写 _main_loop ，使得动态修改增加删除定时任务配置更好。
-`````
-
-**Public Methods (3):**
-- `def add_timing_publish_job(self, func, trigger = None, args = None, kwargs = None, id = None, name = None, misfire_grace_time = undefined, coalesce = undefined, max_instances = undefined, next_run_time = undefined, jobstore = 'default', executor = 'default', replace_existing = False, **trigger_args)` `deprecated.deprecated(reason='以后不要再使用这种方式，对于job_store为数据库时候需要序列化不好。使用内存和数据库都兼容的添加任务方式: add_push_job')`
-- `def add_push_job(self, func: Booster, trigger = None, args = None, kwargs = None, id = None, name = None, misfire_grace_time = undefined, coalesce = undefined, max_instances = undefined, next_run_time = undefined, jobstore = 'default', executor = 'default', replace_existing = False, **trigger_args)`
-  - **Docstring:**
-  `````
-  :param func: 被@boost装饰器装饰的函数
-  :param trigger:
-  :param args:
-  :param kwargs:
-  :param id:
-  :param name:
-  :param misfire_grace_time:
-  :param coalesce:
-  :param max_instances:
-  :param next_run_time:
-  :param jobstore:
-  :param executor:
-  :param replace_existing:
-  :param trigger_args:
-  :return:
-  `````
-- `def start(self, paused = False, block_exit = True)`
-
-**Class Variables (2):**
-- `_last_wait_seconds = None`
-- `_last_has_task = False`
-
-#### 🔧 Public Functions (3)
-
-- `def timing_publish_deco(consuming_func_decorated_or_consumer: Union[callable, AbstractConsumer])` `deprecated.deprecated(reason='以后不要再使用这种方式，对于job_store为数据库时候需要序列化不好。使用内存和数据库都兼容的添加任务方式: add_push_job')`
-  - *Line: 30*
-
-- `def push_fun_params_to_broker(queue_name: str, *args, **kwargs)`
-  - *Line: 42*
-  - **Docstring:**
-  `````
-  queue_name 队列名字
-  *args **kwargs 是消费函数的入参
-  `````
-
-- `def consume_func(x, y)` `Booster(boost_params=BoosterParams(queue_name='queue_test_666', broker_kind=BrokerEnum.LOCAL_PYTHON_QUEUE))`
-  - *Line: 224*
-
-
----
 
 `````python
 """
@@ -62897,107 +57202,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/timing_job/timing_push.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/timing_job/timing_push.py`
-
-#### 📦 Imports
-
-- `from funboost.utils import redis_manager`
-- `from funboost.core.booster import BoostersManager`
-- `from funboost.core.booster import Booster`
-- `from apscheduler.jobstores.redis import RedisJobStore`
-- `from funboost.timing_job.timing_job_base import funboost_aps_scheduler`
-- `from funboost.timing_job.timing_job_base import undefined`
-- `from funboost.timing_job.apscheduler_use_redis_store import FunboostBackgroundSchedulerProcessJobsWithinRedisLock`
-- `from funboost.funboost_config_deafult import FunboostCommonConfig`
-- `from apscheduler.schedulers.base import BaseScheduler`
-- `from funboost.constant import RedisKeys`
-- `from funboost import boost`
-- `from funboost import BrokerEnum`
-- `from funboost import ctrl_c_recv`
-- `from funboost import BoosterParams`
-- `from funboost import ApsJobAdder`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class ApsJobAdder`
-*Line: 11*
-
-**Docstring:**
-`````
-20250116新增加的统一的新增定时任务的方式，推荐这种方式。
-用户不用像之前再去关心使用哪个apscheduler对象去添加定时任务了。
-
-例如 add_numbers 是@boost装饰的消费函数
-ApsJobAdder(add_numbers,job_store_kind='memory').add_push_job(
-    args=(1, 2),
-    trigger='date',  # 使用日期触发器
-    run_date='2025-01-16 18:23:50',  # 设置运行时间
-    # id='add_numbers_job'  # 任务ID
-)
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, booster: Booster, job_store_kind: str = 'memory', is_auto_start = True, is_auto_paused = False)`
-  - **Docstring:**
-  `````
-  Initialize the ApsJobAdder.
-  
-  :param booster: A Booster object representing the function to be scheduled.
-  :param job_store_kind: The type of job store to use. Default is 'memory'.
-                         Can be 'memory' or 'redis'.
-  `````
-  - **Parameters:**
-    - `self`
-    - `booster: Booster`
-    - `job_store_kind: str = 'memory'`
-    - `is_auto_start = True`
-    - `is_auto_paused = False`
-
-**Public Methods (3):**
-- `def get_funboost_redis_apscheduler(cls, queue_name)` `classmethod`
-  - **Docstring:**
-  `````
-  每个队列名字的定时任务有自己单独的 aspchedule r定时器,
-  每隔定时器用不同的redis jobstore的 jobs_key 和 run_times_key，防止互相干扰和取出不属于自己的任务.
-  如果所有函数使用同一个定时器和一个jobs_key ,当用户只想运行f1定时任务,如果用户把f2删了,或者不需要运行f2定时任务,那就报错或者不方便.
-  `````
-- `def get_aps_obj(cls, queue_name, job_store_kind)` `classmethod`
-- `def add_push_job(self, trigger = None, args = None, kwargs = None, id = None, name = None, misfire_grace_time = undefined, coalesce = undefined, max_instances = undefined, next_run_time = undefined, jobstore = 'default', executor = 'default', replace_existing = False, **trigger_args)`
-  - **Docstring:**
-  `````
-  1. 这里的入参都是和apscheduler的add_job的入参一样的，funboost作者没有创造新的入参。
-  但是官方apscheduler的入参第一个入参是函数，
-  funboost的ApsJobAdder对象.add_push_job入参去掉了函数，因为类的实例化时候会把函数传进来，不需要再麻烦用户一次了。
-  
-  
-  2. add_push_job目的是 定时运行 消费函数.push方法发布消息到消费队列， 而不是 定时直接运行 消费函数自身。
-  
-  相当于 aps_obj.add_job(消费函数.push, trigger, args, kwargs, id, name, .....)
-  那为什么 不直接使用 aps_obj.add_job(消费函数.push, trigger, args, kwargs, id, name, .....) 呢？因为 消费函数.push是实例方法，
-  如果redis作为 jobstore， 消费函数.push 会报错，因为 消费函数.push 是实例方法，不能被序列化。只有普通函数和静态方法才能被序列化。
-  所以开发了一个 add_push_job方法， 里面再去用 add_job， 使用 push_fun_params_to_broker 这个普通函数作为 add_job 的第一个入参，
-  这个普通函数里面再去调用 消费函数.push 方法， 相当于是曲线救国避免 aps_obj.add_job(消费函数.push 不可序列化问题。
-  
-  
-  3. 用户也可以自己定义一个普通函数my_push，你这个普通函数my_push 里面去调用消费函数.push方法；然后使用 aps_obj.add_job 使用你自己定义的这个my_push作为第一个入参。
-  这种方式更容易你去理解，和apscheduler 官方库的原生写法一模一样。 但是不如 add_push_job 方便，因为 需要你亲自给每个消费函数分别定义一个普通函数my_push。
-  `````
-
-**Properties (1):**
-- `@property aps_obj -> BaseScheduler`
-
-**Class Variables (1):**
-- `queue__redis_aps_map = {}`
-
-#### 🔧 Public Functions (1)
-
-- `def sum_two_numbers(x, y)` `BoosterParams(queue_name='sum_queue3', broker_kind=BrokerEnum.REDIS)`
-  - *Line: 125*
-
-
----
-
 `````python
 from funboost.utils import redis_manager
 from funboost.core.booster import BoostersManager, Booster
@@ -63178,22 +57382,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/timing_job/__init__.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/timing_job/__init__.py`
-
-#### 📦 Imports
-
-- `from funboost.timing_job.timing_job_base import FsdfBackgroundScheduler`
-- `from funboost.timing_job.timing_job_base import funboost_aps_scheduler`
-- `from funboost.timing_job.timing_job_base import fsdf_background_scheduler`
-- `from funboost.timing_job.timing_job_base import timing_publish_deco`
-- `from funboost.timing_job.timing_job_base import FunboostBackgroundScheduler`
-- `from funboost.timing_job.timing_job_base import push_fun_params_to_broker`
-- `from funboost.timing_job.timing_push import ApsJobAdder`
-
-
----
-
 `````python
 from  funboost.timing_job.timing_job_base import (FsdfBackgroundScheduler ,
 funboost_aps_scheduler ,fsdf_background_scheduler,timing_publish_deco,FunboostBackgroundScheduler,push_fun_params_to_broker )
@@ -63209,37 +57397,6 @@ from funboost.timing_job.timing_push import ApsJobAdder
 
 
 --- **start of file: funboost/utils/apscheduler_monkey.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/utils/apscheduler_monkey.py`
-
-#### 📦 Imports
-
-- `from datetime import datetime`
-- `from datetime import timedelta`
-- `from traceback import format_tb`
-- `import logging`
-- `import sys`
-- `from pytz import utc`
-- `import six`
-- `import apscheduler`
-- `from apscheduler.events import JobExecutionEvent`
-- `from apscheduler.events import EVENT_JOB_MISSED`
-- `from apscheduler.events import EVENT_JOB_ERROR`
-- `from apscheduler.events import EVENT_JOB_EXECUTED`
-- `import traceback`
-
-#### 🔧 Public Functions (2)
-
-- `def my_run_job(job, jobstore_alias, run_times, logger_name)`
-  - *Line: 15*
-  - *主要是把函数的入参放到event上，便于listener获取函数对象和函数入参。*
-
-- `def patch_run_job()`
-  - *Line: 86*
-
-
----
 
 `````python
 from datetime import datetime, timedelta
@@ -63342,21 +57499,6 @@ def patch_run_job():
 
 --- **start of file: funboost/utils/block_exit.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/utils/block_exit.py`
-
-#### 📦 Imports
-
-- `import time`
-
-#### 🔧 Public Functions (1)
-
-- `def block_python_main_thread_exit()`
-  - *Line: 6*
-
-
----
-
 `````python
 
 
@@ -63374,125 +57516,6 @@ def block_python_main_thread_exit():
 
 
 --- **start of file: funboost/utils/bulk_operation.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/utils/bulk_operation.py`
-
-#### 📝 Module Docstring
-
-`````
-@author:Administrator
-@file: bulk_operation.py
-@time: 2018/08/27
-
-三大数据库的更简单的批次操作，自动聚合一定时间内的离散任务为批次任务。免除手工数组切片的烦恼。
-`````
-
-#### 📦 Imports
-
-- `import atexit`
-- `import re`
-- `import os`
-- `from threading import Thread`
-- `from typing import Union`
-- `import abc`
-- `import time`
-- `from queue import Queue`
-- `from queue import Empty`
-- `import unittest`
-- `from pymongo import UpdateOne`
-- `from pymongo import InsertOne`
-- `from pymongo import UpdateMany`
-- `from pymongo import collection`
-- `from pymongo import MongoClient`
-- `import redis`
-- `from funboost.core.lazy_impoter import ElasticsearchImporter`
-- `from funboost.utils.redis_manager import RedisMixin`
-- `from funboost.utils.time_util import DatetimeConverter`
-- `from funboost.utils import LoggerMixin`
-- `from funboost.utils import decorators`
-
-#### 🏛️ Classes (6)
-
-##### 📌 `class RedisOperation`
-*Line: 29*
-
-**Docstring:**
-`````
-redis的操作，此类作用主要是规范下格式而已
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, operation_name: str, key: str, value: str)`
-  - **Docstring:**
-  `````
-  :param operation_name: redis操作名字，例如 sadd lpush等
-  :param key: redis的键
-  :param value: reids键的值
-  `````
-  - **Parameters:**
-    - `self`
-    - `operation_name: str`
-    - `key: str`
-    - `value: str`
-
-##### 📌 `class BaseBulkHelper(LoggerMixin)`
-*Line: 43*
-
-**Docstring:**
-`````
-批量操纵抽象基类
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, base_object: Union[collection.Collection, redis.Redis], threshold: int = 100, max_time_interval = 10, is_print_log: bool = True)`
-  - **Parameters:**
-    - `self`
-    - `base_object: Union[collection.Collection, redis.Redis]`
-    - `threshold: int = 100`
-    - `max_time_interval = 10`
-    - `is_print_log: bool = True`
-
-**Public Methods (1):**
-- `def add_task(self, base_operation: Union[UpdateOne, InsertOne, RedisOperation, tuple, dict])`
-  - *添加单个需要执行的操作，程序自动聚合陈批次操作*
-
-**Class Variables (1):**
-- `bulk_helper_map = {}`
-
-##### 📌 `class MongoBulkWriteHelper(BaseBulkHelper)`
-*Line: 109*
-
-**Docstring:**
-`````
-一个更简单的批量插入,可以直接提交一个操作，自动聚合多个操作为一个批次再插入，速度快了n倍。
-`````
-
-##### 📌 `class ElasticBulkHelper(BaseBulkHelper)`
-*Line: 137*
-
-**Docstring:**
-`````
-elastic批量插入。
-`````
-
-##### 📌 `class RedisBulkWriteHelper(BaseBulkHelper)`
-*Line: 163*
-
-**Docstring:**
-`````
-redis批量插入，比自带的更方便操作非整除批次
-`````
-
-##### 📌 `class _Test(unittest.TestCase, LoggerMixin)`
-*Line: 206*
-
-**Public Methods (2):**
-- `def test_mongo_bulk_write(self)`
-- `def test_redis_bulk_write(self)` `unittest.skip`
-
-
----
 
 `````python
 # coding=utf8
@@ -63739,40 +57762,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/utils/class_utils.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/utils/class_utils.py`
-
-#### 📦 Imports
-
-- `import copy`
-- `import gc`
-- `import inspect`
-- `import re`
-- `import sys`
-- `import typing`
-- `import nb_log`
-- `from types import MethodType`
-- `from types import FunctionType`
-- `from funboost.constant import FunctionKind`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class ClsHelper`
-*Line: 14*
-
-**Public Methods (8):**
-- `def get_instncae_method_cls(instncae_method)` `staticmethod`
-- `def get_classs_method_cls(class_method)` `staticmethod`
-- `def is_class_method(method)` `staticmethod`
-- `def is_static_method(method)` `staticmethod`
-- `def is_instance_method(cls, method)` `classmethod`
-- `def is_common_function(cls, method)` `classmethod`
-- `def get_method_kind(cls, method: typing.Callable) -> str` `classmethod`
-- `def get_obj_init_params_for_funboost(obj_init_params: dict)` `staticmethod`
-
-
----
-
 `````python
 import copy
 import gc
@@ -63884,38 +57873,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/utils/ctrl_c_end.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/utils/ctrl_c_end.py`
-
-#### 📦 Imports
-
-- `import os`
-- `import sys`
-- `import time`
-- `import signal`
-
-#### 🔧 Public Functions (2)
-
-- `def signal_handler(signum, frame)`
-  - *Line: 7*
-
-- `def ctrl_c_recv()`
-  - *Line: 13*
-  - **Docstring:**
-  `````
-  主要目的就是阻止主线程退出而已。 因为funboost为了方便用户连续启动多个consume都是子线程运行循环调度的。
-  apscheduler background 类型必须有主线程在运行，否则会很快结束。所以需要阻止主线程退出。
-  在代码最最末尾加上 ctrl_c_recv() 就可以阻止主线程退出。
-  
-  你也可以不用ctrl_c_recv(),  直接在你的启动脚本文件的最末尾加上：
-  while 1:
-      time.sleep(100) 
-  来达到阻止主线程退出的目的。
-  `````
-
-
----
-
 `````python
 import os
 import sys
@@ -63963,335 +57920,6 @@ def ctrl_c_recv():
 
 
 --- **start of file: funboost/utils/decorators.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/utils/decorators.py`
-
-#### 📦 Imports
-
-- `import base64`
-- `import copy`
-- `import abc`
-- `import logging`
-- `import random`
-- `import uuid`
-- `from typing import TypeVar`
-- `from contextlib import contextmanager`
-- `import functools`
-- `import json`
-- `import os`
-- `import sys`
-- `import threading`
-- `import time`
-- `import traceback`
-- `import unittest`
-- `from functools import wraps`
-- `import pysnooper`
-- `from tomorrow3 import threads as tomorrow_threads`
-- `from funboost.utils import LogManager`
-- `from funboost.utils import nb_print`
-- `from funboost.utils import LoggerMixin`
-- `from nb_log import LoggerLevelSetterMixin`
-- `import json`
-
-#### 🏛️ Classes (15)
-
-##### 📌 `class CustomException(Exception)`
-*Line: 35*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, err = '')`
-  - **Parameters:**
-    - `self`
-    - `err = ''`
-
-##### 📌 `class SingletonMeta(type)`
-*Line: 182*
-
-**Class Variables (1):**
-- `_instances = {}`
-
-##### 📌 `class SingletonBaseCall`
-*Line: 191*
-
-**Docstring:**
-`````
-单例基类。任何继承自这个基类的子类都会自动成为单例。
-
-示例：
-class MyClass(SingletonBase):
-    pass
-
-instance1 = MyClass()
-instance2 = MyClass()
-
-assert instance1 is instance2  # 实例1和实例2实际上是同一个对象
-`````
-
-##### 📌 `class SingletonBaseNew`
-*Line: 210*
-
-**Class Variables (1):**
-- `_instance = None`
-
-##### 📌 `class SingletonBaseCustomInit`
-*Line: 223*
-
-**Class Variables (1):**
-- `_instance = None`
-
-##### 📌 `class TimerContextManager(LoggerMixin)`
-*Line: 290*
-
-**Docstring:**
-`````
-用上下文管理器计时，可对代码片段计时
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, is_print_log = True)`
-  - **Parameters:**
-    - `self`
-    - `is_print_log = True`
-
-##### 📌 `class RedisDistributedLockContextManager(LoggerMixin, LoggerLevelSetterMixin)`
-*Line: 314*
-
-**Docstring:**
-`````
-分布式redis锁上下文管理.
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, redis_client, redis_lock_key, expire_seconds = 30)`
-  - **Parameters:**
-    - `self`
-    - `redis_client`
-    - `redis_lock_key`
-    - `expire_seconds = 30`
-
-**Class Variables (1):**
-- `unlock_script = '\n       if redis.call("get",KEYS[1]) == ARGV[1] then\n           return redis.call("del",KEYS[1])\n       else\n           return 0\n       end'`
-
-##### 📌 `class RedisDistributedBlockLockContextManager(RedisDistributedLockContextManager)`
-*Line: 364*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, redis_client, redis_lock_key, expire_seconds = 30, check_interval = 0.1)`
-  - **Parameters:**
-    - `self`
-    - `redis_client`
-    - `redis_lock_key`
-    - `expire_seconds = 30`
-    - `check_interval = 0.1`
-
-##### 📌 `class ExceptionContextManager`
-*Line: 402*
-
-**Docstring:**
-`````
-用上下文管理器捕获异常，可对代码片段进行错误捕捉，比装饰器更细腻
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, logger_name = 'ExceptionContextManager', verbose = 100, donot_raise__exception = True)`
-  - **Docstring:**
-  `````
-  :param verbose: 打印错误的深度,对应traceback对象的limit，为正整数
-  :param donot_raise__exception:是否不重新抛出错误，为Fasle则抛出，为True则不抛出
-  `````
-  - **Parameters:**
-    - `self`
-    - `logger_name = 'ExceptionContextManager'`
-    - `verbose = 100`
-    - `donot_raise__exception = True`
-
-##### 📌 `class cached_class_property(object)`
-*Line: 474*
-
-**Docstring:**
-`````
-类属性缓存装饰器
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, func)`
-  - **Parameters:**
-    - `self`
-    - `func`
-
-##### 📌 `class cached_property(object)`
-*Line: 489*
-
-**Docstring:**
-`````
-实例属性缓存装饰器
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, func)`
-  - **Parameters:**
-    - `self`
-    - `func`
-
-##### 📌 `class FunctionResultCacher`
-*Line: 538*
-
-**Public Methods (1):**
-- `def cached_function_result_for_a_time(cls, cache_time: float)` `classmethod`
-  - **Docstring:**
-  `````
-  函数的结果缓存一段时间装饰器,不要装饰在返回结果是超大字符串或者其他占用大内存的数据结构上的函数上面。
-  :param cache_time :缓存的时间
-  :type cache_time : float
-  `````
-
-**Class Variables (2):**
-- `logger = LogManager('FunctionResultChche').get_logger_and_add_handlers(log_level_int=20)`
-- `func_result_dict = {}`
-
-##### 📌 `class __KThread(threading.Thread)`
-*Line: 589*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, *args, **kwargs)`
-  - **Parameters:**
-    - `self`
-    - `*args`
-    - `**kwargs`
-
-**Public Methods (4):**
-- `def start(self)`
-  - *Start the thread.*
-- `def globaltrace(self, frame, why, arg)`
-- `def localtrace(self, frame, why, arg)`
-- `def kill(self)`
-
-##### 📌 `class TIMEOUT_EXCEPTION(Exception)`
-*Line: 624*
-
-**Docstring:**
-`````
-function run timeout
-`````
-
-##### 📌 `class _Test(unittest.TestCase)`
-*Line: 670*
-
-**Public Methods (12):**
-- `def test_superposition(self)` `unittest.skip`
-  - *测试多次运行和异常重试,测试装饰器叠加*
-- `def test_run_many_times(self)` `unittest.skip`
-  - *测试运行5次*
-- `def test_tomorrow_threads(self)` `unittest.skip`
-  - *测试多线程装饰器,每2秒打印5次*
-- `def test_singleton(self)` `unittest.skip`
-  - *测试单例模式的装饰器*
-- `def test_flyweight(self)` `unittest.skip`
-- `def test_keep_circulating(self)` `unittest.skip`
-  - *测试间隔时间，循环运行*
-- `def test_timer(self)` `unittest.skip`
-  - *测试计时器装饰器*
-- `def test_timer_context(self)` `unittest.skip`
-  - *测试上下文，对代码片段进行计时*
-- `def test_where_is_it_called(self)` `unittest.skip`
-  - *测试函数被调用的装饰器，被调用2次将会记录2次被调用的日志*
-- `def test_cached_function_result(self)`
-- `def test_exception_context_manager(self)` `unittest.skip`
-- `def test_timeout(self)` `unittest.skip`
-  - **Docstring:**
-  `````
-  测试超时装饰器
-  :return:
-  `````
-
-#### 🔧 Public Functions (16)
-
-- `def run_many_times(times = 1)`
-  - *Line: 41*
-  - **Docstring:**
-  `````
-  把函数运行times次的装饰器
-  :param times:运行次数
-  没有捕获错误，出错误就中断运行，可以配合handle_exception装饰器不管是否错误都运行n次。
-  `````
-
-- `def handle_exception(retry_times = 0, error_detail_level = 0, is_throw_error = False, time_sleep = 0)`
-  - *Line: 60*
-  - **Docstring:**
-  `````
-  捕获函数错误的装饰器,重试并打印日志
-  :param retry_times : 重试次数
-  :param error_detail_level :为0打印exception提示，为1打印3层深度的错误堆栈，为2打印所有深度层次的错误堆栈
-  :param is_throw_error : 在达到最大次数时候是否重新抛出错误
-  :type error_detail_level: int
-  `````
-
-- `def keep_circulating(time_sleep = 0.001, exit_if_function_run_sucsess = False, is_display_detail_exception = True, block = True, daemon = False)`
-  - *Line: 102*
-  - **Docstring:**
-  `````
-  间隔一段时间，一直循环运行某个方法的装饰器
-  :param time_sleep :循环的间隔时间
-  :param exit_if_function_run_sucsess :如果成功了就退出循环
-  :param is_display_detail_exception
-  :param block :是否阻塞主主线程，False时候开启一个新的线程运行while 1。
-  `````
-
-- `def synchronized(func)`
-  - *Line: 139*
-  - *线程锁装饰器，可以加在单例模式上*
-
-- `def singleton(cls: ClSX) -> ClSX`
-  - *Line: 151*
-  - *单例模式装饰器,新加入线程锁，更牢固的单例模式，主要解决多线程如100线程同时实例化情况下可能会出现三例四例的情况,实测。*
-
-- `def singleton_no_lock(cls: ClSX) -> ClSX`
-  - *Line: 167*
-  - *单例模式装饰器,新加入线程锁，更牢固的单例模式，主要解决多线程如100线程同时实例化情况下可能会出现三例四例的情况,实测。*
-
-- `def flyweight(cls)`
-  - *Line: 236*
-
-- `def timer(func)`
-  - *Line: 272*
-  - *计时器装饰器，只能用来计算函数运行时间*
-
-- `def where_is_it_called(func)`
-  - *Line: 430*
-  - *一个装饰器，被装饰的函数，如果被调用，将记录一条日志,记录函数被什么文件的哪一行代码所调用*
-
-- `def cached_method_result(fun)`
-  - *Line: 503*
-  - *方法的结果装饰器,不接受self以外的多余参数，主要用于那些属性类的property方法属性上，配合property装饰器，主要是在pycahrm自动补全上比上面的装饰器好*
-
-- `def cached_method_result_for_instance(fun)`
-  - *Line: 521*
-  - *方法的结果装饰器,不接受self以外的多余参数，主要用于那些属性类的property方法属性上*
-
-- `def timeout(seconds)`
-  - *Line: 629*
-  - **Docstring:**
-  `````
-  超时装饰器，指定超时时间
-  
-  若被装饰的方法在指定的时间内未返回，则抛出Timeout异常
-  `````
-
-- `def lock_func(*args, **kwargs)` `wraps(func)`
-  - *Line: 144*
-
-- `def inner(self)` `wraps(fun)`
-  - *Line: 507*
-
-- `def inner(self)` `wraps(fun)`
-  - *Line: 525*
-
-- `def timeout_decorator(func)`
-  - *Line: 634*
-
-
----
 
 `````python
 # coding=utf-8
@@ -65142,17 +58770,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/utils/develop_log.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/utils/develop_log.py`
-
-#### 📦 Imports
-
-- `import nb_log`
-- `from funboost.funboost_config_deafult import FunboostCommonConfig`
-
-
----
-
 `````python
 import nb_log
 from funboost.funboost_config_deafult import FunboostCommonConfig
@@ -65168,83 +58785,6 @@ from funboost.funboost_config_deafult import FunboostCommonConfig
 
 
 --- **start of file: funboost/utils/expire_lock.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/utils/expire_lock.py`
-
-#### 📝 Module Docstring
-
-`````
-基于程序内存的过期锁。
-`````
-
-#### 📦 Imports
-
-- `import copy`
-- `from threading import Thread`
-- `from threading import Event`
-- `from threading import Lock`
-- `import time`
-- `import typing`
-- `import uuid`
-- `from funboost.utils import time_util`
-- `from nb_log import get_logger`
-
-#### 🏛️ Classes (3)
-
-##### 📌 `class LockStore`
-*Line: 17*
-
-**Public Methods (2):**
-- `def set(cls, lock_key, value, ex)` `classmethod`
-- `def delete(cls, lock_key, value)` `classmethod`
-
-**Class Variables (6):**
-- `lock_for_operate_store = Lock()`
-- `lock_key__info_map: typing.Dict[str, typing.Dict] = {}`
-- `_has_start_delete_expire_lock_key_thread = False`
-- `THREAD_DELETE_DAEMON = False`
-- `DELETE_INTERVAL = 0.01`
-- `logger = get_logger('LockStore')`
-
-##### 📌 `class ExpireLockConf`
-*Line: 71*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, expire_seconds = 30, lock_key = None)`
-  - **Parameters:**
-    - `self`
-    - `expire_seconds = 30`
-    - `lock_key = None`
-
-##### 📌 `class ExpireLockContextManager`
-*Line: 77*
-
-**Docstring:**
-`````
-分布式redis锁上下文管理.
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, lock_expire_conf: ExpireLockConf)`
-  - **Parameters:**
-    - `self`
-    - `lock_expire_conf: ExpireLockConf`
-
-**Public Methods (2):**
-- `def acquire(self)`
-- `def realese(self)`
-
-#### 🔧 Public Functions (2)
-
-- `def f(x)`
-  - *Line: 122*
-
-- `def test_raw_lock_fun(x)`
-  - *Line: 131*
-
-
----
 
 `````python
 '''
@@ -65402,40 +58942,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/utils/json_helper.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/utils/json_helper.py`
-
-#### 📦 Imports
-
-- `import json`
-- `import typing`
-- `from datetime import datetime as _datetime`
-- `from datetime import date as _date`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class _CustomEncoder(json.JSONEncoder)`
-*Line: 17*
-
-**Docstring:**
-`````
-自定义的json解析器，mongodb返回的字典中的时间格式是datatime，json直接解析出错
-`````
-
-**Public Methods (1):**
-- `def default(self, obj)`
-
-#### 🔧 Public Functions (2)
-
-- `def dict_to_un_strict_json(dictx: dict, indent = 4)`
-  - *Line: 6*
-
-- `def monkey_patch_json()`
-  - *Line: 44*
-
-
----
-
 `````python
 import json
 import typing
@@ -65511,65 +59017,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/utils/mongo_util.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/utils/mongo_util.py`
-
-#### 📦 Imports
-
-- `import functools`
-- `import os`
-- `import pymongo`
-- `from pymongo.collection import Collection`
-- `from funboost.utils import decorators`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class MongoMixin0000`
-*Line: 16*
-
-**Docstring:**
-`````
-mixin类被继承，也可以直接实例化。
-
-
-这种在 linux运行 + pymongo 版本4.xx  + 多进程子进程中操作会报错。
-/usr/local/lib/python3.8/dist-packages/pymongo/topology.py:172: UserWarning: MongoClient opened before fork. Create MongoClient only after forking.
-See PyMongo's documentation for details: https://pymongo.readthedocs.io/en/stable/faq.html#is-pymongo-fork-safe
-`````
-
-**Properties (2):**
-- `@property mongo_client`
-- `@property mongo_db_task_status`
-
-##### 📌 `class MongoMixin`
-*Line: 37*
-
-**Docstring:**
-`````
-mixin类被继承，也可以直接实例化。
-
-这个是修改后的，当使用f.multi_process_connsume() + linux +  保存结果到mongo + pymongo.0.2 时候不再报错了。
-
-在linux上 即使写 connect=False，如果在主进程操作了collection，那么就破坏了 connect=False，在子进程中继续操作这个collection全局变量就会报错。
-设计了多进程+fork 每次都 get_mongo_collection() 是最保险的
-`````
-
-**Public Methods (1):**
-- `def get_mongo_collection(self, database_name, colleciton_name) -> pymongo.collection.Collection`
-
-**Properties (2):**
-- `@property mongo_client -> pymongo.MongoClient`
-- `@property mongo_db_task_status`
-
-**Class Variables (3):**
-- `processid__client_map = {}`
-- `processid__db_map = {}`
-- `processid__col_map = {}`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -65578,6 +59025,7 @@ import functools
 import os
 import pymongo
 from pymongo.collection import Collection
+from funboost.constant import MongoDbName
 from funboost.utils import decorators
 
 
@@ -65586,25 +59034,7 @@ def _get_mongo_url():
     from funboost.funboost_config_deafult import BrokerConnConfig
     return BrokerConnConfig.MONGO_CONNECT_URL
 
-class MongoMixin0000:
-    """
-    mixin类被继承，也可以直接实例化。
 
-
-    这种在 linux运行 + pymongo 版本4.xx  + 多进程子进程中操作会报错。
-    /usr/local/lib/python3.8/dist-packages/pymongo/topology.py:172: UserWarning: MongoClient opened before fork. Create MongoClient only after forking.
-    See PyMongo's documentation for details: https://pymongo.readthedocs.io/en/stable/faq.html#is-pymongo-fork-safe
-    """
-
-    @property
-    @decorators.cached_method_result
-    def mongo_client(self):
-        return pymongo.MongoClient(_get_mongo_url(), connect=False)  # connect等于False原因见注释
-
-    @property
-    @decorators.cached_method_result
-    def mongo_db_task_status(self):
-        return self.mongo_client.get_database('task_status')
 
 
 class MongoMixin:
@@ -65632,9 +59062,9 @@ class MongoMixin:
     @property
     def mongo_db_task_status(self):
         pid = os.getpid()
-        key = (pid, 'task_status')
+        key = (pid, MongoDbName.TASK_STATUS_DB)
         if key not in MongoMixin.processid__db_map:
-            MongoMixin.processid__db_map[key] = self.mongo_client.get_database('task_status')
+            MongoMixin.processid__db_map[key] = self.mongo_client.get_database(MongoDbName.TASK_STATUS_DB)
         return MongoMixin.processid__db_map[key]
 
     def get_mongo_collection(self, database_name, colleciton_name) -> pymongo.collection.Collection:
@@ -65657,96 +59087,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/utils/monkey_color_log.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/utils/monkey_color_log.py`
-
-#### 📝 Module Docstring
-
-`````
-如果老项目没用使用Logmanager,可以打此猴子补丁，自动使项目中的任何日志变彩色和可跳转。
-`````
-
-#### 📦 Imports
-
-- `import sys`
-- `import os`
-- `import logging`
-- `from logging import StreamHandler`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class ColorHandler(logging.Handler)`
-*Line: 14*
-
-**Docstring:**
-`````
-A handler class which writes logging records, appropriately formatted,
-to a stream. Note that this class does not close the stream, as
-sys.stdout or sys.stderr may be used.
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, stream = None)`
-  - **Docstring:**
-  `````
-  Initialize the handler.
-  
-  If stream is not specified, sys.stderr is used.
-  `````
-  - **Parameters:**
-    - `self`
-    - `stream = None`
-
-**Public Methods (4):**
-- `def setFormatter(self, fmt)`
-- `def flush(self)`
-  - *Flushes the stream.*
-- `def emit0(self, record)`
-  - **Docstring:**
-  `````
-  前后彩色不分离的方式
-  Emit a record.
-  
-  If a formatter is specified, it is used to format the record.
-  The record is then written to the stream with a trailing newline.  If
-  exception information is present, it is formatted using
-  traceback.print_exception and appended to the stream.  If the stream
-  has an 'encoding' attribute, it is used to determine how to do the
-  output to the stream.
-  `````
-- `def emit(self, record)`
-  - **Docstring:**
-  `````
-  前后彩色分离的方式。
-  Emit a record.
-  
-  If a formatter is specified, it is used to format the record.
-  The record is then written to the stream with a trailing newline.  If
-  exception information is present, it is formatted using
-  traceback.print_exception and appended to the stream.  If the stream
-  has an 'encoding' attribute, it is used to determine how to do the
-  output to the stream.
-  `````
-
-**Class Variables (4):**
-- `os_name = os.name`
-- `terminator = '\n'`
-- `bule = 96 if os_name == 'nt' else 36`
-- `yellow = 93 if os_name == 'nt' else 33`
-
-#### 🔧 Public Functions (1)
-
-- `def my_func()`
-  - *Line: 163*
-  - **Docstring:**
-  `````
-  模拟常规使用控制台StreamHandler日志的方式。自动变彩。
-  :return:
-  `````
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -65943,16 +59283,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/utils/monkey_patches.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/utils/monkey_patches.py`
-
-#### 📦 Imports
-
-- `import collections.abc`
-
-
----
-
 `````python
 
 
@@ -66012,41 +59342,6 @@ AttributeError: module 'collections' has no attribute 'MutableMapping'
 
 
 --- **start of file: funboost/utils/mqtt_util.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/utils/mqtt_util.py`
-
-#### 📦 Imports
-
-- `import urllib3`
-- `import json`
-- `import nb_log`
-- `import decorator_libs`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class MqttHttpHelper(nb_log.LoggerMixin, nb_log.LoggerLevelSetterMixin)`
-*Line: 24*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, mqtt_publish_url = 'http://127.0.0.1:18083/api/v2/mqtt/publish', user = 'admin', passwd = 'public', display_full_msg = False)`
-  - **Docstring:**
-  `````
-  :param mqtt_publish_url: mqtt的http接口，这是mqtt中间件自带的，不是重新自己实现的接口。不需要导入paho.mqtt.client,requeests urllib3即可。
-  :param display_full_msg: 时候打印发布的任务
-  `````
-  - **Parameters:**
-    - `self`
-    - `mqtt_publish_url = 'http://127.0.0.1:18083/api/v2/mqtt/publish'`
-    - `user = 'admin'`
-    - `passwd = 'public'`
-    - `display_full_msg = False`
-
-**Public Methods (1):**
-- `def pub_message(self, topic, msg)`
-
-
----
 
 `````python
 import urllib3
@@ -66119,67 +59414,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/utils/paramiko_util.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/utils/paramiko_util.py`
-
-#### 📦 Imports
-
-- `import os`
-- `import re`
-- `import sys`
-- `import time`
-- `from nb_log import LoggerMixin`
-- `from nb_log import LoggerLevelSetterMixin`
-- `import paramiko`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class ParamikoFolderUploader(LoggerMixin, LoggerLevelSetterMixin)`
-*Line: 10*
-
-**Docstring:**
-`````
-paramoki 实现的文件夹上传
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, host, port, user, password, local_dir: str, remote_dir: str, path_pattern_exluded_tuple = ('/.git/', '/.idea/', '/dist/', '/build/'), file_suffix_tuple_exluded = ('.pyc', '.log', '.gz'), only_upload_within_the_last_modify_time = 3650 * 24 * 60 * 60, file_volume_limit = 1000 * 1000, sftp_log_level = 20, pkey_file_path = None)`
-  - **Docstring:**
-  `````
-  :param host:
-  :param port:
-  :param user:
-  :param password:
-  :param local_dir:
-  :param remote_dir:
-  :param path_pattern_exluded_tuple: 命中了这些正则的直接排除
-  :param file_suffix_tuple_exluded: 这些结尾的文件排除
-  :param only_upload_within_the_last_modify_time: 仅仅上传最近多少天修改的文件
-  :param file_volume_limit: 大于这个体积的不上传，单位b。
-  :param sftp_log_level:日志级别
-  :param pkey_file_path: 私钥文件路径，如果设置了这个，那么使用私钥登录。
-  `````
-  - **Parameters:**
-    - `self`
-    - `host`
-    - `port`
-    - `user`
-    - `password`
-    - `local_dir: str`
-    - `remote_dir: str`
-    - `path_pattern_exluded_tuple = ('/.git/', '/.idea/', '/dist/', '/build/')`
-    - `file_suffix_tuple_exluded = ('.pyc', '.log', '.gz')`
-    - `only_upload_within_the_last_modify_time = 3650 * 24 * 60 * 60`
-    - `file_volume_limit = 1000 * 1000`
-    - `sftp_log_level = 20`
-    - `pkey_file_path = None`
-
-**Public Methods (1):**
-- `def upload(self)`
-
-
----
 
 `````python
 #coding=utf-8
@@ -66311,96 +59545,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/utils/rabbitmq_factory.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/utils/rabbitmq_factory.py`
-
-#### 📦 Imports
-
-- `import pikav0 as pika`
-- `import rabbitpy`
-- `from pikav0.adapters.blocking_connection import BlockingChannel`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-
-#### 🏛️ Classes (3)
-
-##### 📌 `class RabbitmqClientRabbitPy`
-*Line: 11*
-
-**Docstring:**
-`````
-使用rabbitpy包。
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, username, password, host, port, virtual_host, heartbeat = 0)`
-  - **Parameters:**
-    - `self`
-    - `username`
-    - `password`
-    - `host`
-    - `port`
-    - `virtual_host`
-    - `heartbeat = 0`
-
-**Public Methods (1):**
-- `def creat_a_channel(self) -> rabbitpy.AMQP`
-
-##### 📌 `class RabbitmqClientPika`
-*Line: 25*
-
-**Docstring:**
-`````
-使用pika包,多线程不安全的包。
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, username, password, host, port, virtual_host, heartbeat = 0)`
-  - **Docstring:**
-  `````
-  parameters = pika.URLParameters('amqp://guest:guest@localhost:5672/%2F')
-  
-  connection = pika.SelectConnection(parameters=parameters,
-                            on_open_callback=on_open)
-  :param username:
-  :param password:
-  :param host:
-  :param port:
-  :param virtual_host:
-  :param heartbeat:
-  `````
-  - **Parameters:**
-    - `self`
-    - `username`
-    - `password`
-    - `host`
-    - `port`
-    - `virtual_host`
-    - `heartbeat = 0`
-
-**Public Methods (1):**
-- `def creat_a_channel(self) -> BlockingChannel`
-
-##### 📌 `class RabbitMqFactory`
-*Line: 53*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, heartbeat = 600, is_use_rabbitpy = 0)`
-  - **Docstring:**
-  `````
-  :param heartbeat:
-  :param is_use_rabbitpy: 为0使用pika，多线程不安全。为1使用rabbitpy，多线程安全的包。
-  `````
-  - **Parameters:**
-    - `self`
-    - `heartbeat = 600`
-    - `is_use_rabbitpy = 0`
-
-**Public Methods (1):**
-- `def get_rabbit_cleint(self)`
-
-
----
-
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
@@ -66493,73 +59637,6 @@ class RabbitMqFactory:
 
 
 --- **start of file: funboost/utils/redis_manager.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/utils/redis_manager.py`
-
-#### 📦 Imports
-
-- `import copy`
-- `import os`
-- `import threading`
-- `import redis5`
-- `from funboost.funboost_config_deafult import BrokerConnConfig`
-- `from funboost.utils import decorators`
-
-#### 🏛️ Classes (3)
-
-##### 📌 `class RedisManager(object)`
-*Line: 28*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, host = '127.0.0.1', port = 6379, db = 0, username = '', password = '', ssl = False)`
-  - **Parameters:**
-    - `self`
-    - `host = '127.0.0.1'`
-    - `port = 6379`
-    - `db = 0`
-    - `username = ''`
-    - `password = ''`
-    - `ssl = False`
-
-**Public Methods (1):**
-- `def get_redis(self) -> redis5.Redis`
-  - *:rtype :redis5.Redis*
-
-**Class Variables (2):**
-- `_redis_db__conn_map = {}`
-- `_lock = threading.Lock()`
-
-##### 📌 `class RedisMixin(object)`
-*Line: 69*
-
-**Docstring:**
-`````
-可以被作为万能mixin能被继承，也可以单独实例化使用。
-`````
-
-**Public Methods (2):**
-- `def redis_db_n(self, db)`
-- `def timestamp(self)`
-  - *如果是多台机器做分布式控频 乃至确认消费，每台机器取自己的时间，如果各机器的时间戳不一致会发生问题，改成统一使用从redis服务端获取时间，单位是时间戳秒。*
-
-**Properties (2):**
-- `@property redis_db_frame`
-- `@property redis_db_filter_and_rpc_result`
-
-##### 📌 `class AioRedisMixin(object)`
-*Line: 94*
-
-**Properties (1):**
-- `@property aioredis_db_filter_and_rpc_result`
-
-#### 🔧 Public Functions (1)
-
-- `def get_redis_conn_kwargs()`
-  - *Line: 16*
-
-
----
 
 `````python
 # coding=utf8
@@ -66671,12 +59748,6 @@ class AioRedisMixin(object):
 
 
 --- **start of file: funboost/utils/redis_manager_old.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/utils/redis_manager_old.py`
-
-
----
 
 `````python
 # # coding=utf8
@@ -66796,56 +59867,6 @@ class AioRedisMixin(object):
 
 
 --- **start of file: funboost/utils/resource_monitoring.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/utils/resource_monitoring.py`
-
-#### 📦 Imports
-
-- `import datetime`
-- `import json`
-- `import socket`
-- `import sys`
-- `import threading`
-- `import time`
-- `from funboost.core.lazy_impoter import PsutilImporter`
-- `from funboost.utils import LoggerLevelSetterMixin`
-- `from funboost.utils import LoggerMixin`
-- `from funboost.utils import decorators`
-- `from funboost.utils.mongo_util import MongoMixin`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class ResourceMonitor(LoggerMixin, LoggerLevelSetterMixin, MongoMixin)`
-*Line: 61*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, process = PsutilImporter().psutil.Process(), is_save_info_to_mongo = False, mongo_col = 'default')`
-  - **Parameters:**
-    - `self`
-    - `process = PsutilImporter().psutil.Process()`
-    - `is_save_info_to_mongo = False`
-    - `mongo_col = 'default'`
-
-**Public Methods (11):**
-- `def divide_1m(value)` `staticmethod`
-- `def get_current_process_memory(self) -> float`
-- `def get_current_process_cpu(self)`
-- `def get_os_cpu_percpu(self)`
-- `def get_os_cpu_totalcpu(self)`
-- `def get_os_cpu_avaragecpu(self)`
-- `def get_os_virtual_memory(self) -> dict`
-- `def get_os_net_info(self)`
-- `def get_all_info(self)`
-- `def start_build_info_loop(self, interval = 60)`
-- `def start_build_info_loop_on_daemon_thread(self, interval = 60)`
-
-**Class Variables (2):**
-- `cpu_count = PsutilImporter().psutil.cpu_count()`
-- `host_name = socket.gethostname()`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-
@@ -67004,32 +60025,6 @@ class ResourceMonitor(LoggerMixin, LoggerLevelSetterMixin, MongoMixin):
 
 --- **start of file: funboost/utils/restart_python.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/utils/restart_python.py`
-
-#### 📦 Imports
-
-- `import datetime`
-- `import os`
-- `import sys`
-- `import threading`
-- `import time`
-- `import nb_log`
-
-#### 🔧 Public Functions (1)
-
-- `def restart_program(seconds)`
-  - *Line: 19*
-  - **Docstring:**
-  `````
-  间隔n秒重启脚本
-  :param seconds:
-  :return:
-  `````
-
-
----
-
 `````python
 import datetime
 import os
@@ -67087,55 +60082,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/utils/simple_data_class.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/utils/simple_data_class.py`
-
-#### 📦 Imports
-
-- `import json`
-- `import copy`
-- `import typing`
-- `from funboost.utils import json_helper`
-- `from funboost.utils.str_utils import PwdEnc`
-- `from funboost.utils.str_utils import StrHelper`
-- `import datetime`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class DataClassBase`
-*Line: 10*
-
-**Docstring:**
-`````
-使用类实现的 简单数据类。
-也可以使用装饰器来实现数据类
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, **kwargs)`
-  - **Parameters:**
-    - `self`
-    - `**kwargs`
-
-**Public Methods (5):**
-- `def get_dict(self)`
-- `def get_json(self, indent = 4)`
-- `def get_pwd_enc_json(self, indent = 4)`
-  - *防止打印密码明文,泄漏密码*
-- `def update_cls_attribute(cls, **kwargs)` `classmethod`
-- `def update_instance_attribute(self, **kwargs)`
-
-##### 📌 `class A(DataClassBase)`
-*Line: 70*
-
-**Class Variables (3):**
-- `x = 1`
-- `y = 2`
-- `z = datetime.datetime.now()`
-
-
----
 
 `````python
 import json
@@ -67229,37 +60175,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/utils/str_utils.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/utils/str_utils.py`
-
-#### 📦 Imports
-
-- `import re`
-
-#### 🏛️ Classes (2)
-
-##### 📌 `class PwdEnc`
-*Line: 4*
-
-**Public Methods (2):**
-- `def enc_broker_uri(cls, uri: str)` `classmethod`
-- `def enc_pwd(pwd: str, plain_len = 3)` `staticmethod`
-
-##### 📌 `class StrHelper`
-*Line: 30*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, strx: str)`
-  - **Parameters:**
-    - `self`
-    - `strx: str`
-
-**Public Methods (1):**
-- `def judge_contains_str_list(self, str_list: list, ignore_case = True)`
-
-
----
-
 `````python
 import re
 
@@ -67321,54 +60236,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/utils/task_dispatcher.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/utils/task_dispatcher.py`
-
-#### 📦 Imports
-
-- `import inspect`
-- `import asyncio`
-- `from functools import wraps`
-- `from typing import Callable`
-- `from typing import Any`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class LocalFunctionsDispatcher`
-*Line: 8*
-
-**Docstring:**
-`````
-本地内存中函数分发运行
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self)`
-  - **Parameters:**
-    - `self`
-
-**Public Methods (3):**
-- `def task(self, name: str = None)`
-  - *注册任务的装饰器*
-- `def run(self, task_name: str, *args, **kwargs) -> Any`
-  - *同步调用任务，不支持直接 await 异步函数*
-- `async def aio_run(self, task_name: str, *args, **kwargs) -> Any`
-  - *异步调用任务，普通函数通过线程池执行*
-
-#### 🔧 Public Functions (3)
-
-- `def add(a, b)` `dispatcher.task()`
-  - *Line: 59*
-
-- `async def mul(a, b)` `dispatcher.task(name='mul_task')`
-  - *Line: 63*
-
-- `async def main()`
-  - *Line: 74*
-
-
----
 
 `````python
 
@@ -67458,104 +60325,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/utils/time_util.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/utils/time_util.py`
-
-#### 📦 Imports
-
-- `import functools`
-- `import typing`
-- `import datetime`
-- `import time`
-- `import re`
-- `import pytz`
-- `from funboost.core.funboost_time import FunboostTime`
-- `from funboost.utils import nb_print`
-- `from funboost.funboost_config_deafult import FunboostCommonConfig`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class DatetimeConverter`
-*Line: 56*
-
-**Docstring:**
-`````
-最爽的时间操作方式。使用真oop需要实例化，调用方式比纯静态方法工具类好太多。
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, datetimex: typing.Union[int, float, datetime.datetime, str] = None)`
-  - **Docstring:**
-  `````
-  :param datetimex: 接受时间戳  datatime类型 和 时间字符串三种类型
-  `````
-  - **Parameters:**
-    - `self`
-    - `datetimex: typing.Union[int, float, datetime.datetime, str] = None`
-
-**Public Methods (2):**
-- `def bulid_conveter_with_other_formatter(cls, datetime_str, datetime_formatter)` `classmethod`
-  - **Docstring:**
-  `````
-  :param datetime_str: 时间字符串
-  :param datetime_formatter: 能够格式化该字符串的模板
-  :return:
-  `````
-- `def is_greater_than_now(self)`
-
-**Properties (5):**
-- `@property datetime_str`
-- `@property time_str`
-- `@property date_str`
-- `@property timestamp`
-- `@property one_hour_ago_datetime_converter`
-
-**Class Variables (3):**
-- `DATETIME_FORMATTER = '%Y-%m-%d %H:%M:%S'`
-- `DATETIME_FORMATTER2 = '%Y-%m-%d'`
-- `DATETIME_FORMATTER3 = '%H:%M:%S'`
-
-#### 🔧 Public Functions (5)
-
-- `def build_defualt_date()`
-  - *Line: 17*
-  - **Docstring:**
-  `````
-  获取今天和明天的日期
-  :return:
-  `````
-
-- `def get_day_by_interval(n)`
-  - *Line: 29*
-  - **Docstring:**
-  `````
-  :param n: 离当天的日期，可为正负整数
-  :return:
-  `````
-
-- `def get_ahead_one_hour(datetime_str)`
-  - *Line: 40*
-  - **Docstring:**
-  `````
-  获得提前一小时的时间字符串和时间戳
-  :return:
-  `````
-
-- `def timestamp_to_datetime_str(timestamp)`
-  - *Line: 50*
-
-- `def seconds_to_hour_minute_second(seconds)`
-  - *Line: 130*
-  - **Docstring:**
-  `````
-  把秒转化成还需要的时间
-  :param seconds:
-  :return:
-  `````
-
-
----
 
 `````python
 # coding=utf-8
@@ -67740,21 +60509,6 @@ if __name__ == '__main__':
 
 --- **start of file: funboost/utils/un_strict_json_dumps.py** (project: funboost) --- 
 
-
-### 📄 Python File Metadata: `funboost/utils/un_strict_json_dumps.py`
-
-#### 📦 Imports
-
-- `import json`
-
-#### 🔧 Public Functions (1)
-
-- `def dict2json(dictx: dict, indent = 4)`
-  - *Line: 4*
-
-
----
-
 `````python
 import json
 
@@ -67781,26 +60535,6 @@ if __name__ == '__main__':
 
 
 --- **start of file: funboost/utils/__init__.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/utils/__init__.py`
-
-#### 📦 Imports
-
-- `from funboost.utils.dependency_packages_in_pythonpath import add_to_pythonpath`
-- `from nb_log import LogManager`
-- `from nb_log import simple_logger`
-- `from nb_log import LoggerMixin`
-- `from nb_log import LoggerLevelSetterMixin`
-- `from nb_log import LoggerMixinDefaultWithFileHandler`
-- `from nb_log import nb_print`
-- `from nb_log import patch_print`
-- `from nb_log import reverse_patch_print`
-- `from nb_log import get_logger`
-- `from funboost.utils.json_helper import monkey_patch_json`
-
-
----
 
 `````python
 # -*- coding: utf-8 -*-

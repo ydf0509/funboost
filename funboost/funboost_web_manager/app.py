@@ -214,7 +214,8 @@ def serve_template(template):
 
 @app.route("/running_consumer/hearbeat_info_by_queue_name")
 def hearbeat_info_by_queue_name():
-    if request.args.get("queue_name") in ("所有", None):
+    queue_name = request.args.get("queue_name")
+    if queue_name in ("所有", None, ""):
         info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
         ret_list = []
         for queue_name, dic in info_map.items():
@@ -222,15 +223,14 @@ def hearbeat_info_by_queue_name():
         return jsonify(ret_list)
     else:
         return jsonify(
-            ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_queue_name(
-                request.args.get("queue_name")
-            )
+            ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_queue_name(queue_name)
         )
 
 
 @app.route("/running_consumer/hearbeat_info_by_ip")
 def hearbeat_info_by_ip():
-    if request.args.get("ip") in ("所有", None):
+    ip = request.args.get("ip")
+    if ip in ("所有", None, ""):
         info_map = (
             ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_ip()
         )
@@ -240,9 +240,7 @@ def hearbeat_info_by_ip():
         return jsonify(ret_list)
     else:
         return jsonify(
-            ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_ip(
-                request.args.get("ip")
-            )
+            ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_ip(ip)
         )
 
 

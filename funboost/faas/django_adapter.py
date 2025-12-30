@@ -33,7 +33,7 @@ import traceback
 import typing
 from ninja import Router, Schema
 from pydantic import Field
-from funboost import AioAsyncResult, PriorityConsumingControlConfig
+from funboost import AioAsyncResult, TaskOptions
 from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter, QueuesConusmerParamsGetter
 from funboost.core.loggers import get_funboost_file_logger
 
@@ -100,7 +100,7 @@ async def publish_msg(request, payload: MsgItemSchema):
     
     try:
         # 核心：通过redis中的配置动态获取或创建 Publisher 对象
-        publisher = SingleQueueConusmerParamsGetter(payload.queue_name).generate_publisher_by_funboost_redis_info()
+        publisher = SingleQueueConusmerParamsGetter(payload.queue_name).gen_publisher_for_faas()
         booster_params_by_redis = SingleQueueConusmerParamsGetter(payload.queue_name).get_one_queue_params_use_cache()
 
         if payload.need_result:
@@ -111,7 +111,7 @@ async def publish_msg(request, payload: MsgItemSchema):
             # 异步发布消息 (带 RPC 配置)
             async_result = await publisher.aio_publish(
                 payload.msg_body,
-                priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True)
+                task_options=TaskOptions(is_using_rpc_mode=True)
             )
             task_id = async_result.task_id
             
@@ -188,7 +188,7 @@ def get_msg_count(request, queue_name: str):
     """
     try:
 
-        publisher = SingleQueueConusmerParamsGetter(queue_name).generate_publisher_by_funboost_redis_info()
+        publisher = SingleQueueConusmerParamsGetter(queue_name).gen_publisher_for_faas()
         # 获取数量通常很快，不需要 async
         count = publisher.get_message_count()
         return {

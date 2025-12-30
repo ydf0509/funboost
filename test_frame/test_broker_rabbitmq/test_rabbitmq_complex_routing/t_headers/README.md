@@ -118,7 +118,7 @@ headers_publisher = BoostersManager.get_cross_project_publisher(PublisherParams(
 # 发布消息时指定头属性
 headers_publisher.publish(
     {'user_id': 'user001', 'title': '标题', 'content': '内容', 'timestamp': '时间'},
-    priority_control_config=PriorityConsumingControlConfig(
+    task_options=TaskOptions(
         other_extra_params={
             'headers_for_publish': {
                 'priority': 'high',

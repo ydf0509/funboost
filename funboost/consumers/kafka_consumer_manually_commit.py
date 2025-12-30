@@ -35,7 +35,7 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
     def custom_init(self):
         self._lock_for_operate_offset_dict = threading.Lock()
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
 
         try:
             admin_client = KafkaPythonImporter().KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
@@ -126,7 +126,7 @@ class KafkaConsumerManuallyCommit(AbstractConsumer):
 
 class SaslPlainKafkaConsumer(KafkaConsumerManuallyCommit):
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
 
         try:
             admin_client = KafkaPythonImporter().KafkaAdminClient(

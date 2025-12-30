@@ -33,7 +33,7 @@ class FastStreamConsumer(EmptyConsumer):
         subc(f)
         self.faststream_subscriber = subc
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         """ 完全由faststream框架接管控制消费，不使用funboost的AbstractConsumer的_run"""
         while 1:
             time.sleep(100)

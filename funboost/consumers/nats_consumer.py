@@ -12,7 +12,7 @@ class NatsConsumer(AbstractConsumer):
     """
 
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         # print(88888888888888)
         nats_client = NatsImporter().NATSClient(BrokerConnConfig.NATS_URL, socket_timeout=600, socket_keepalive=True)
         nats_client.connect()

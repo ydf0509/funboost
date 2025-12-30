@@ -41,7 +41,7 @@ class PersistQueuePublisher(AbstractPublisher):
 
         self.queue = persistqueue.SQLiteAckQueue(path=BrokerConnConfig.SQLLITE_QUEUES_PATH, name=self._queue_name, auto_commit=True, serializer=json, multithreading=True)
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         # noinspection PyTypeChecker
         self.queue.put(msg)
 

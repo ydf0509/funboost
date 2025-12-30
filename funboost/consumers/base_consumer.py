@@ -34,7 +34,7 @@ from threading import Lock
 import asyncio
 
 import nb_log
-from funboost.core.current_task import funboost_current_task, FctContext
+from funboost.core.current_task import FctContext,set_fct_context
 from funboost.core.loggers import develop_logger
 
 from funboost.core.func_params_model import BoosterParams, PublisherParams, BaseJsonAbleModel
@@ -117,12 +117,12 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         return self._publisher_of_dlx_queue
 
     @classmethod
-    def join_shedual_task_thread(cls):
+    def join_dispatch_task_thread(cls):
         """
 
         :return:
         """
-        # ConsumersManager.join_all_consumer_shedual_task_thread()
+        # ConsumersManager.join_all_consumer_dispatch_task_thread()
         if GlobalVars.has_start_a_consumer_flag:
             # self.keep_circulating(10,block=True,)(time.sleep)()
             while 1:
@@ -149,7 +149,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         self._concurrent_mode_dispatcher = ConcurrentModeDispatcher(self)
         if consumer_params.concurrent_mode == ConcurrentModeEnum.ASYNC:
-            self._run = self._async_run  # 这里做了自动转化，使用async_run代替run
+            self._any_run = self._async_run  # 这里做了自动转化，使用async_run代替run
+        else:
+            self._any_run = self._run
         self.logger: logging.Logger
         self._build_logger()
         # stdout_write(f'''{time.strftime("%H:%M:%S")} "{self.consumer_params.auto_generate_info['where_to_instantiate']}"  \033[0;37;44m此行 实例化队列名 {self.queue_name} 的消费者, 类型为 {self.__class__}\033[0m\n''')
@@ -246,7 +248,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if is_main_process:
             self.logger.info(f'{self.queue_name} consumer 的消费者配置:\n {self.consumer_params.json_str_value()}')
 
-        atexit.register(self.join_shedual_task_thread)
+        atexit.register(self.join_dispatch_task_thread)
 
         self._save_consumer_params()
 
@@ -262,7 +264,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         # pass
         if self.consumer_params.is_fake_booster is True:
             return
-        if self.consumer_params.is_send_consumer_hearbeat_to_redis:
+        if self.consumer_params.is_send_consumer_heartbeat_to_redis:
             RedisMixin().redis_db_frame.hmset(RedisKeys.FUNBOOST_QUEUE__CONSUMER_PARAMS,{self.queue_name: self.consumer_params.json_str_value()})
             RedisMixin().redis_db_frame.sadd(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES, self.queue_name)
             RedisMixin().redis_db_frame.sadd(RedisKeys.FUNBOOST_ALL_IPS, nb_log_config_default.computer_ip)
@@ -376,7 +378,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._result_persistence_helper = ResultPersistenceHelper(self.consumer_params.function_result_status_persistance_conf, self.queue_name)
 
         self._distributed_consumer_statistics = DistributedConsumerStatistics(self)
-        if self.consumer_params.is_send_consumer_hearbeat_to_redis:
+        if self.consumer_params.is_send_consumer_heartbeat_to_redis:
             self._distributed_consumer_statistics.run()
             self.logger.warning(f'启动了分布式环境 使用 redis 的键 hearbeat:{self._queue_name} 统计活跃消费者 ，当前消费者唯一标识为 {self.consumer_identification}')
 
@@ -387,7 +389,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if self.consumer_params.do_task_filtering:
             self._redis_filter.delete_expire_filter_task_cycle()  # 这个默认是RedisFilter类，是个pass不运行。所以用别的消息中间件模式，不需要安装和配置redis。
         if self.consumer_params.schedule_tasks_on_main_thread:
-            self.keep_circulating(1, daemon=False)(self._shedual_task)()
+            self.keep_circulating(1, daemon=False)(self._dispatch_task)()
         else:
             self._concurrent_mode_dispatcher.schedulal_task_with_no_block()
 
@@ -429,18 +431,18 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         funboost_lazy_impoter.BoostersManager.get_or_create_booster_by_queue_name(queue_name).publish(msg)
 
     @abc.abstractmethod
-    def _shedual_task(self):
+    def _dispatch_task(self):
         """
         每个子类必须实现这个的方法，完成如何从中间件取出消息，并将函数和运行参数添加到工作池。
 
-        funboost 的 _shedual_task 哲学是：“我不管你怎么从你的系统里拿到任务，我只要求你拿到任务后，
+        funboost 的 _dispatch_task 哲学是：“我不管你怎么从你的系统里拿到任务，我只要求你拿到任务后，
         调用 self._submit_task(msg) 方法把它交给我处理就行。”
 
         所以无论获取消息是 拉模式 还是推模式 还是轮询模式，无论是是单条获取 还是多条批量多条获取，
         无论是传统mq,kafka,还是数据库,还是socket grpc tcp,还是kombu,还是python任务框架 celery rq dramtiq,
         还是文件系统 ,以及火热的 mysql cdc(数据变更捕获) ,都能轻松扩展任意东西作为funboost的中间件。
 
-        _shedual_task 是万物可作为broker的核心,没有任何东西作为不了broker,扩展性无敌.
+        _dispatch_task 是万物可作为broker的核心,没有任何东西作为不了broker,扩展性无敌.
 
         :return:
         """
@@ -513,11 +515,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._confirm_consume(kw)  # 不运行就必须确认消费，否则会发不能确认消费，导致消息队列中间件认为消息没有被消费。
             return
         publish_time = get_publish_time(kw['body'])
-        msg_expire_senconds_priority = self._get_priority_conf(kw, 'msg_expire_senconds')
-        if msg_expire_senconds_priority and time.time() - msg_expire_senconds_priority > publish_time:
+        msg_expire_seconds_priority = self._get_priority_conf(kw, 'msg_expire_seconds')
+        if msg_expire_seconds_priority and time.time() - msg_expire_seconds_priority > publish_time:
             self.logger.warning(
                 f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(time.time() - publish_time, 4)} 秒 ,'
-                f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
+                f'超过了指定的 {msg_expire_seconds_priority} 秒，丢弃任务')
             self._confirm_consume(kw)
             return
 
@@ -540,7 +542,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._start_delay_task_scheduler()
 
             # 这种方式是扔到线程池
-            # self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._run,), kwargs={'kw': kw},
+            # self._delay_task_scheduler.add_job(self.concurrent_pool.submit, 'date', run_date=run_date, args=(self._any_run,), kwargs={'kw': kw},
             #                                    misfire_grace_time=misfire_grace_time)
 
             # 这种方式是延时任务重新以普通任务方式发送到消息队列
@@ -555,7 +557,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._confirm_consume(kw)
 
         else:  # 普通任务
-            self.concurrent_pool.submit(self._run, kw)
+            self.concurrent_pool.submit(self._any_run, kw)
 
         if self.consumer_params.is_using_distributed_frequency_control:  # 如果是需要分布式控频。
             active_num = self._distributed_consumer_statistics.active_consumer_num
@@ -751,8 +753,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
             # self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
             self.logger.critical(msg=log_msg, exc_info=True)
-        fct = funboost_current_task()
-        fct.set_fct_context(None)
+        set_fct_context(None)
 
     # noinspection PyProtectedMember
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
@@ -760,24 +761,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         function_only_params = kw['function_only_params'] if self._do_not_delete_extra_from_msg is False else kw['body']
         task_id = kw['body']['extra']['task_id']
         t_start = time.time()
-
-        fct = funboost_current_task()
-        fct_context = FctContext(function_params=function_only_params,
-                                 full_msg=kw['body'],
-                                 function_result_status=function_result_status,
-                                 logger=self.logger, queue_name=self.queue_name, )
-
+        fct_context = FctContext(function_result_status=function_result_status,
+                                 logger=self.logger, )
+        set_fct_context(fct_context)
         try:
             function_run = self.consuming_function
+            
             if self._consuming_function_is_asyncio:
-                fct_context.asyncio_use_thread_concurrent_mode = True
                 function_run = sync_or_async_fun_deco(function_run)
-            else:
-                pass
-                fct_context.asynco_use_thread_concurrent_mode = False
-            fct.set_fct_context(fct_context)
             function_timeout = self._get_priority_conf(kw, 'function_timeout')
-            function_run = function_run if self.consumer_params.consumin_function_decorator is None else self.consumer_params.consumin_function_decorator(function_run)
+            function_run = function_run if self.consumer_params.consuming_function_decorator is None else self.consumer_params.consuming_function_decorator(function_run)
             function_run = function_run if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
                 function_timeout)(function_run)
 
@@ -799,9 +792,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             function_result_status.success = True
             if self.consumer_params.log_level <= logging.DEBUG:
                 result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '
-                # print(funboost_current_task().task_id)
-                # print(fct.function_result_status.task_id)
-                # print(get_current_taskid())
+               
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 {function_only_params} , '
                                   f'结果是  {result_str_to_be_print}   {self._get_concurrent_info()}  ')
@@ -943,8 +934,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
             # self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
             self.logger.critical(msg=log_msg, exc_info=True)
-        fct = funboost_current_task()
-        fct.set_fct_context(None)
+        set_fct_context(None)
 
     # noinspection PyProtectedMember
     async def _async_run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
@@ -955,12 +945,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         # noinspection PyBroadException
         t_start = time.time()
-        fct = funboost_current_task()
-        fct_context = FctContext(function_params=function_only_params,
-                                 full_msg=kw['body'],
-                                 function_result_status=function_result_status,
-                                 logger=self.logger, queue_name=self.queue_name, )
-        fct.set_fct_context(fct_context)
+
+        fct_context = FctContext(function_result_status=function_result_status,
+                                 logger=self.logger,  )
+        set_fct_context(fct_context)
         try:
             corotinue_obj = self.consuming_function(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params, kw['body']['extra']))
             if not asyncio.iscoroutine(corotinue_obj):
@@ -1182,26 +1170,26 @@ class ConcurrentModeDispatcher(FunboostFileLoggerMixin):
 
     # def schedulal_task_with_no_block(self):
     #     if ConsumersManager.schedual_task_always_use_thread:
-    #         t = Thread(target=self.consumer.keep_circulating(1)(self.consumer._shedual_task))
+    #         t = Thread(target=self.consumer.keep_circulating(1)(self.consumer._dispatch_task))
     #         ConsumersManager.schedulal_thread_to_be_join.append(t)
     #         t.start()
     #     else:
     #         if self._concurrent_mode in [ConcurrentModeEnum.THREADING, ConcurrentModeEnum.ASYNC,
     #                                      ConcurrentModeEnum.SINGLE_THREAD, ]:
-    #             t = Thread(target=self.consumer.keep_circulating(1)(self.consumer._shedual_task))
+    #             t = Thread(target=self.consumer.keep_circulating(1)(self.consumer._dispatch_task))
     #             ConsumersManager.schedulal_thread_to_be_join.append(t)
     #             t.start()
     #         elif self._concurrent_mode == ConcurrentModeEnum.GEVENT:
     #             import gevent
-    #             g = gevent.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
+    #             g = gevent.spawn(self.consumer.keep_circulating(1)(self.consumer._dispatch_task), )
     #             ConsumersManager.schedulal_thread_to_be_join.append(g)
     #         elif self._concurrent_mode == ConcurrentModeEnum.EVENTLET:
     #             import eventlet
-    #             g = eventlet.spawn(self.consumer.keep_circulating(1)(self.consumer._shedual_task), )
+    #             g = eventlet.spawn(self.consumer.keep_circulating(1)(self.consumer._dispatch_task), )
     #             ConsumersManager.schedulal_thread_to_be_join.append(g)
 
     def schedulal_task_with_no_block(self):
-        self.consumer.keep_circulating(1, block=False, daemon=False)(self.consumer._shedual_task)()
+        self.consumer.keep_circulating(1, block=False, daemon=False)(self.consumer._dispatch_task)()
 
 
 def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3):
@@ -1274,7 +1262,7 @@ class MetricCalculation:
                     msg += f''' 预计还需要 {need_time} 时间 才能执行完成 队列 {self.consumer.queue_name} 中的 {self.msg_num_in_broker} 个剩余任务'''
                     self.consumer.logger.info(msg)
                 self.last_show_remaining_execution_time = time.time()
-            if self.consumer.consumer_params.is_send_consumer_hearbeat_to_redis is True:
+            if self.consumer.consumer_params.is_send_consumer_heartbeat_to_redis is True:
                 RedisMixin().redis_db_frame.hincrby(RedisKeys.FUNBOOST_QUEUE__RUN_COUNT_MAP, self.consumer.queue_name, self.execute_task_times_every_unit_time_temp)
                 RedisMixin().redis_db_frame.hincrby(RedisKeys.FUNBOOST_QUEUE__RUN_FAIL_COUNT_MAP, self.consumer.queue_name, self.execute_task_times_every_unit_time_temp_fail)
 

@@ -14,7 +14,7 @@ def _run_consumer_in_new_process(queue_name, ):
     booster_current_pid = funboost_lazy_impoter.BoostersManager.get_or_create_booster_by_queue_name(queue_name)
     # booster_current_pid = boost(**boost_params)(consuming_function)
     booster_current_pid.consume()
-    # ConsumersManager.join_all_consumer_shedual_task_thread()
+    # ConsumersManager.join_all_consumer_dispatch_task_thread()
     run_forever()
 
 

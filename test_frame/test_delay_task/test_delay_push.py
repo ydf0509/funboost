@@ -3,7 +3,7 @@
 from test_frame.test_delay_task.test_delay_consume import f
 import datetime
 import time
-from funboost import PriorityConsumingControlConfig
+from funboost import TaskOptions
 
 """
 测试发布延时任务，不是发布后马上就执行函数。
@@ -23,30 +23,30 @@ misfire_grace_time 如果不为None，必须是大于等于1的整数，此值�
 #     time.sleep(1)
 #
 #     # 消息发布10秒后再执行。如果消费慢导致任务积压，misfire_grace_time为None，即使轮到消息消费时候离发布超过10秒了仍然执行。
-#     f.publish({'x': i}, priority_control_config=PriorityConsumingControlConfig(countdown=10))
+#     f.publish({'x': i}, task_options=TaskOptions(countdown=10))
 #
 #     # 规定消息在17点56分30秒运行，如果消费慢导致任务积压，misfire_grace_time为None，即使轮到消息消费时候已经过了17点56分30秒仍然执行。
-#     f.publish({'x': i * 10}, priority_control_config=PriorityConsumingControlConfig(
+#     f.publish({'x': i * 10}, task_options=TaskOptions(
 #         eta=datetime.datetime(2023, 5, 14, 17, 56, 30) + datetime.timedelta(seconds=i)))
 #
 #     # 消息发布10秒后再执行。如果消费慢导致任务积压，misfire_grace_time为30，如果轮到消息消费时候离发布超过40 (10+30) 秒了则放弃执行，
 #     # 如果轮到消息消费时候离发布时间是20秒，由于 20 < (10 + 30)，则仍然执行
-#     f.publish({'x': i * 100}, priority_control_config=PriorityConsumingControlConfig(
+#     f.publish({'x': i * 100}, task_options=TaskOptions(
 #         countdown=10, misfire_grace_time=30))
 #
 #     # 规定消息在17点56分30秒运行，如果消费慢导致任务积压，如果轮到消息消费时候已经过了17点57分00秒，
 #     # misfire_grace_time为30，如果轮到消息消费时候超过了17点57分0秒 则放弃执行，
 #     # 如果如果轮到消息消费时候是17点56分50秒则执行。
-#     f.publish({'x': i * 1000}, priority_control_config=PriorityConsumingControlConfig(
+#     f.publish({'x': i * 1000}, task_options=TaskOptions(
 #         eta=datetime.datetime(2023, 5, 14, 17, 56, 30) + datetime.timedelta(seconds=i),
 #         misfire_grace_time=30))  # 按指定的时间运行一次。
 #
 #     # 这个设置了消息由于消息堆积导致运行的时候比本应该运行的时间如果小于1亿秒，就仍然会被执行，所以几乎肯定不会被放弃运行
-#     f.publish({'x': i * 10000}, priority_control_config=PriorityConsumingControlConfig(
+#     f.publish({'x': i * 10000}, task_options=TaskOptions(
 #         eta=datetime.datetime(2022, 5, 19, 17, 56, 30) + datetime.timedelta(seconds=i),
 #         misfire_grace_time=100000000))   # 按指定的时间运行一次。
 
-f.publish({'x':  10}, priority_control_config=PriorityConsumingControlConfig(
+f.publish({'x':  10}, task_options=TaskOptions(
     eta=datetime.datetime.now() + datetime.timedelta(seconds=20)))
 
 f.push(666)

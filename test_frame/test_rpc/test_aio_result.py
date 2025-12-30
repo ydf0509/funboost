@@ -4,7 +4,7 @@ run_current_script_on_remote()
 
 import asyncio
 
-from funboost import AioAsyncResult,PriorityConsumingControlConfig
+from funboost import AioAsyncResult,TaskOptions
 from test_frame.test_rpc.test_consume import add
 
 
@@ -17,7 +17,7 @@ async def process_result(status_and_result: dict):
 
 
 async def test_get_result(i):
-    add.publish({"a":1,"b":2},task_id=100005,priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True))
+    add.publish({"a":1,"b":2},task_id=100005,task_options=TaskOptions(is_using_rpc_mode=True))
     async_result = add.push(i, i * 2)
     aio_async_result = AioAsyncResult(task_id=async_result.task_id) # 这里要使用asyncio语法的类，更方便的配合asyncio异步编程生态
     print(await aio_async_result.result) # 注意这里有个await，如果不await就是打印一个协程对象，不会得到结果。这是asyncio的基本语法，需要用户精通asyncio。

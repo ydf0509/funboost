@@ -30,7 +30,7 @@ class KafkaConsumer(AbstractConsumer):
             other value will raise the exception. Default: 'latest'.
     """
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         try:
             admin_client = KafkaPythonImporter().KafkaAdminClient(bootstrap_servers=BrokerConnConfig.KAFKA_BOOTSTRAP_SERVERS)
             admin_client.create_topics([KafkaPythonImporter().NewTopic(self._queue_name,

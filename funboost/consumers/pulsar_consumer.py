@@ -37,7 +37,7 @@ class PulsarConsumer(AbstractConsumer, ):
     def custom_init(self):
         pass
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         try:
             import pulsar  # 需要用户自己 pip install pulsar-client ，目前20221206只支持linux安装此python包。
         except ImportError:

@@ -41,7 +41,7 @@ class RabbitmqComplexRoutingConsumer(RabbitmqConsumerAmqpStorm):
                                            routing_key=routing_key_bind, arguments=arguments_for_bind)
         self._rp = rp
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         # 重写父类的方法，以支持更复杂的绑定逻辑
         def callback(amqpstorm_message: amqpstorm.Message):
             body = amqpstorm_message.body

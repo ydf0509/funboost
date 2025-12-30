@@ -233,38 +233,43 @@ class SingletonBaseCustomInit(metaclass=abc.ABCMeta):
         raise NotImplemented
 
 
+
 def flyweight(cls):
-    _instance = {}
+    # 1. 闭包内的存储，每个类独立拥有自己的实例缓存，互不干扰
+    _instances = {}
+    
+    # 2. 为每个类创建一个独立的锁，避免全局锁竞争
+    _class_lock = threading.Lock()
 
-    def _make_arguments_to_key(args, kwds):
-        key = args
-        if kwds:
-            sorted_items = sorted(kwds.items())
-            for item in sorted_items:
-                key += item
-        return key
+    def _make_key(args, kwds):
+        """
+        生成唯一的 Key。
+        为了防止冲突，必须区分 args 和 kwargs。
+        frozenset 用于让 kwargs 可哈希且无视顺序。
+        添加一个分隔符或者将其放入元组结构中以确保唯一性。
+        """
+        if not kwds:
+            return args
+        
+        # 将 kwargs 转换为可哈希的 frozenset
+        # 结构: (args_tuple, kwargs_frozenset)
+        # 这样 (1, 2) 和 (1, a=2) 永远不会相等
+        return (args, frozenset(kwds.items()))
 
-    @synchronized
     @wraps(cls)
     def _flyweight(*args, **kwargs):
-        # locals_copy = copy.deepcopy(locals())
-        # import inspect
-        # nb_print(inspect.getfullargspec(cls.__init__))
-        # nb_print(cls.__init__.__defaults__)  # 使用__code__#总参数个数
-        #
-        # nb_print(cls.__init__.__code__.co_argcount)  # 总参数名
-        #
-        # nb_print(cls.__init__.__code__.co_varnames)
-        #
-        #
-        # nb_print(locals_copy)
-        # cache_param_value_list = [locals_copy.get(param, None) for param in cache_params]
-
-        cache_key = f'{cls}_{_make_arguments_to_key(args, kwargs)}'
-        # nb_print(cache_key)
-        if cache_key not in _instance:
-            _instance[cache_key] = cls(*args, **kwargs)
-        return _instance[cache_key]
+        # 1. 生成 Key
+        cache_key = _make_key(args, kwargs)
+        
+        # 2. 第一次检查 (无锁，高性能)
+        if cache_key not in _instances:
+            # 3. 加锁 (仅针对当前类加锁)
+            with _class_lock:
+                # 4. 第二次检查 (Double-Checked Locking)
+                if cache_key not in _instances:
+                    _instances[cache_key] = cls(*args, **kwargs)
+        
+        return _instances[cache_key]
 
     return _flyweight
 

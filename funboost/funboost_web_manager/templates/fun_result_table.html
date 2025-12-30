@@ -412,10 +412,56 @@
             color: #667eea;
         }
 
+        .stat-card.pending::before {
+            background: linear-gradient(90deg, #fd7e14, #ffc107);
+        }
+
+        .stat-card.pending .stat-icon {
+            background: rgba(253, 126, 20, 0.1);
+            color: #fd7e14;
+        }
+
+        .stat-card.pending .stat-value {
+            color: #fd7e14;
+        }
+
+        .stat-card.summary::before {
+            background: linear-gradient(90deg, #28a745, #dc3545);
+        }
+
+        .stat-card.summary .stat-icon {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(220, 53, 69, 0.1));
+            color: #6c757d;
+        }
+
+        .stat-card.summary .stat-value {
+            font-size: 20px;
+        }
+
+        .stat-card .success-text {
+            color: #28a745;
+            font-weight: 700;
+        }
+
+        .stat-card .fail-text {
+            color: #dc3545;
+            font-weight: 700;
+        }
+
         .stat-label {
             font-size: 13px;
             color: #6c757d;
             margin-bottom: 8px;
+        }
+
+        .refresh-hint {
+            font-size: 11px;
+            color: #adb5bd;
+            font-weight: 400;
+            margin-left: 6px;
+            padding: 2px 6px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
         }
 
         .stat-value {
@@ -496,14 +542,12 @@
         }
 
         .result-table tbody tr {
-            transition: all 0.2s ease;
+            transition: background 0.2s ease;
             cursor: pointer;
         }
 
         .result-table tbody tr:hover {
-            background: rgba(102, 126, 234, 0.18) !important;
-            box-shadow: 0 2px 12px rgba(102, 126, 234, 0.25);
-            transform: scale(1.002);
+            background: rgba(102, 126, 234, 0.12) !important;
         }
         
         .result-table tbody tr:hover td {
@@ -516,7 +560,7 @@
         .result-table tbody tr.row-fail:hover,
         .result-table tbody tr.row-warning:hover,
         .result-table tbody tr.row-running:hover {
-            background: rgba(102, 126, 234, 0.22) !important;
+            background: rgba(102, 126, 234, 0.18) !important;
         }
 
         .result-table tbody td {
@@ -524,15 +568,180 @@
             font-size: 13px;
             color: #495057;
             border-bottom: 1px solid #f0f0f0;
-            max-width: 200px;
+            vertical-align: top;
+            max-width: 180px;
+            word-break: break-all;
+        }
+
+        /* 可展开的长文本单元格 - 默认收起状态 */
+        .cell-expandable {
+            max-width: 160px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 4px;
+            background: rgba(102, 126, 234, 0.06);
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            font-size: 12px;
+            transition: all 0.2s ease;
+            position: relative;
         }
 
-        .result-table tbody td:hover {
-            white-space: normal;
+        .cell-expandable:hover {
+            background: rgba(102, 126, 234, 0.12);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .cell-expandable::after {
+            content: ' ▼';
+            font-size: 9px;
+            color: #667eea;
+            opacity: 0.7;
+        }
+
+        /* 展开状态 */
+        .cell-expandable.expanded {
+            max-width: 350px;
+            max-height: 150px;
+            overflow: auto;
+            white-space: pre-wrap;
             word-break: break-all;
+            background: #fff;
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+            z-index: 10;
+            position: relative;
+        }
+
+        .cell-expandable.expanded::after {
+            content: ' ▲';
+        }
+
+        .cell-expandable.expanded::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .cell-expandable.expanded::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .cell-expandable.expanded::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 3px;
+        }
+
+        /* 错误信息单元格 - 红色样式 */
+        .cell-expandable.cell-error {
+            background: rgba(220, 53, 69, 0.08);
+            border-color: rgba(220, 53, 69, 0.25);
+            color: #c92a2a;
+        }
+
+        .cell-expandable.cell-error:hover {
+            background: rgba(220, 53, 69, 0.15);
+            border-color: rgba(220, 53, 69, 0.4);
+        }
+
+        .cell-expandable.cell-error::after {
+            color: #dc3545;
+        }
+
+        .cell-expandable.cell-error.expanded {
+            border-color: #dc3545;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
+        }
+
+        /* 普通文本单元格 - 使用统一的 max-width: 180px */
+
+        /* 选中行样式 */
+        .result-table tbody tr.row-selected {
+            background: rgba(102, 126, 234, 0.15) !important;
+            outline: 2px solid #667eea;
+            outline-offset: -2px;
+        }
+
+        /* 复制按钮容器 */
+        .copy-btn-wrapper {
+            display: none;
+            margin-top: 6px;
+        }
+
+        .row-selected .copy-btn-wrapper {
+            display: block;
+        }
+
+        /* 复制按钮样式 */
+        .btn-copy {
+            padding: 3px 8px;
+            font-size: 11px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-copy:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-copy:active {
+            transform: scale(0.95);
+        }
+
+        .btn-copy.copied {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .btn-copy i {
+            font-size: 10px;
+        }
+
+        /* 重新运行按钮样式 */
+        .btn-rerun {
+            padding: 3px 8px;
+            font-size: 11px;
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 5px;
+        }
+
+        .btn-rerun:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-rerun:active {
+            transform: scale(0.95);
+        }
+
+        .btn-rerun.running {
+            background: linear-gradient(135deg, #6c757d, #495057);
+            cursor: not-allowed;
+        }
+
+        .btn-rerun.success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .btn-rerun i {
+            font-size: 10px;
         }
 
         /* 状态徽章 */
@@ -643,8 +852,7 @@
 
         /* 滚动条样式 */
         .table-scroll {
-            max-height: 600px;
-            overflow-y: auto;
+            /* 移除最大高度限制，不显示滚动条 */
         }
 
         .table-scroll::-webkit-scrollbar {
@@ -1030,6 +1238,11 @@
                     <input type="text" class="form-control" id="params" placeholder="输入参数搜索...">
                 </div>
 
+                <div class="query-group task-id-input">
+                    <label><i class="fa fa-tag"></i> Task ID</label>
+                    <input type="text" class="form-control" id="task_id_search" placeholder="输入task_id..." style="width: 200px;">
+                </div>
+
                 <div class="query-group time-cost-input">
                     <label><i class="fa fa-clock-o"></i> 最小耗时(秒)</label>
                     <input type="number" class="form-control" id="min_time_cost" placeholder="如: 1" min="0" step="0.1" style="width: 100px;">
@@ -1063,22 +1276,22 @@
                 <div class="stat-label">当前队列</div>
                 <div class="stat-value" id="stat_queue" style="font-size: 16px; word-break: break-all;">未选择</div>
             </div>
-            <div class="stat-card success">
-                <div class="stat-icon"><i class="fa fa-check"></i></div>
-                <div class="stat-label">查询范围成功次数</div>
-                <div class="stat-value" id="stat_success">0</div>
-            </div>
-            <div class="stat-card fail">
-                <div class="stat-icon"><i class="fa fa-times"></i></div>
-                <div class="stat-label">查询范围失败次数</div>
-                <div class="stat-value" id="stat_fail">0</div>
+            <div class="stat-card summary">
+                <div class="stat-icon"><i class="fa fa-bar-chart"></i></div>
+                <div class="stat-label">查询范围统计</div>
+                <div class="stat-value" id="stat_summary"><span class="success-text">成功: 0</span> / <span class="fail-text">失败: 0</span></div>
             </div>
             <div class="stat-card recent">
                 <div class="stat-icon"><i class="fa fa-bolt"></i></div>
-                <div class="stat-label">最近1分钟</div>
-                <div class="stat-value" id="stat_recent">成功: 0 / 失败: 0</div>
+                <div class="stat-label">最近1分钟 <span class="refresh-hint" id="recent_refresh_time">每30秒刷新</span></div>
+                <div class="stat-value" id="stat_recent"><span class="success-text">成功: 0</span> / <span class="fail-text">失败: 0</span></div>
+            </div>
+            <div class="stat-card pending">
+                <div class="stat-icon"><i class="fa fa-inbox"></i></div>
+                <div class="stat-label">队列剩余消息 <span class="refresh-hint" id="msg_count_refresh_time">每60秒刷新</span></div>
+                <div class="stat-value" id="stat_msg_count">-</div>
+            </div>
         </div>
-    </div>
 
         <!-- 结果表格 -->
         <div class="table-panel fade-in" style="animation-delay: 0.3s; position: relative;">
@@ -1107,8 +1320,8 @@
                 <table class="result-table" id="table">
                     <thead>
                         <tr>
-                            <th>执行机器</th>
                             <th>函数名称</th>
+                            <th>Task ID</th>
                             <th>函数入参</th>
                             <th>函数结果</th>
                             <th>发布时间</th>
@@ -1118,6 +1331,7 @@
                             <th>运行状态</th>
                             <th>是否成功</th>
                             <th>错误原因</th>
+                            <th>执行机器</th>
                             <th>线程数</th>
                         </tr>
                     </thead>
@@ -1238,6 +1452,10 @@
                         // 保存到 localStorage
                         if (currentColName) {
                             localStorage.setItem('funboost_last_queue', currentColName);
+                            // 立即更新队列剩余消息数量
+                            updateMsgCount();
+                        } else {
+                            $('#stat_msg_count').text('-');
                         }
                     });
 
@@ -1250,6 +1468,8 @@
                         $('#table_container').show();
                         $('#empty_state').hide();
                         queryResult(currentColName, 0, true);
+                        // 初始化时获取队列剩余消息数量
+                        updateMsgCount();
                     }
                 }
             });
@@ -1285,6 +1505,8 @@
             iid = setInterval(autoFreshResult, refreshInterval);
             setInterval(updateQueryText, 30000);
             setInterval(updateTopText, 30000);
+            // 每60秒刷新队列剩余消息数量
+            setInterval(updateMsgCount, 60000);
         });
 
         // 查询结果
@@ -1311,6 +1533,7 @@
                     end_time: $("#end_time").val(),
                     is_success: $("#sucess_status").val(),
                     function_params: $("#params").val(),
+                    task_id: $("#task_id_search").val(),
                     page: page
                 },
                 success: function(result, status) {
@@ -1376,19 +1599,44 @@
                         var time_start_obj = new Date(item.time_start * 1000);
                         var time_start_str = dateToString(time_start_obj);
 
-                        html += '<tr class="' + rowClass + '">' +
-                            '<td title="' + escapeHtml(item.host_process + ' - ' + item.script_name) + '">' + escapeHtml(item.host_process) + '</td>' +
-                            '<td>' + escapeHtml(item.function) + '</td>' +
-                            '<td title="' + escapeHtml(item.params_str) + '">' + escapeHtml(truncate(item.params_str, 30)) + '</td>' +
-                            '<td title="' + escapeHtml(String(item.result)) + '">' + escapeHtml(truncate(String(item.result), 30)) + '</td>' +
-                            '<td>' + escapeHtml(item.publish_time_format) + '</td>' +
-                            '<td>' + time_start_str + '</td>' +
-                            '<td>' + (item.time_cost ? item.time_cost.toFixed(3) : '-') + '</td>' +
-                            '<td>' + item.run_times + '</td>' +
-                            '<td><span class="status-badge ' + statusBadgeClass + '">' + run_status_text + '</span></td>' +
-                            '<td><span class="status-badge ' + statusBadgeClass + '"><i class="fa fa-' + (item.success ? 'check' : 'times') + '"></i> ' + successText + '</span></td>' +
-                            '<td title="' + escapeHtml(item.exception || '') + '">' + escapeHtml(truncate(item.exception || '-', 30)) + '</td>' +
-                            '<td>' + (item.total_thread || '-') + '</td>' +
+                        // 构建带复制按钮的单元格
+                        function buildCellWithCopy(content, isExpandable, isError) {
+                            var cellClass = isExpandable ? (isError ? 'cell-expandable cell-error' : 'cell-expandable') : '';
+                            var onclick = isExpandable ? ' onclick="toggleExpand(this)"' : '';
+                            var displayContent = content || '-';
+                            var copyData = escapeHtml(content || '-');
+                            
+                            if (isExpandable && content) {
+                                return '<div class="' + cellClass + '"' + onclick + '>' + escapeHtml(content) + '</div>' +
+                                       '<div class="copy-btn-wrapper"><button class="btn-copy" onclick="copyToClipboard(this, \'' + copyData.replace(/'/g, "\\'").replace(/\n/g, "\\n") + '\')"><i class="fa fa-copy"></i> 复制</button></div>';
+                            } else {
+                                return '<span class="cell-text">' + escapeHtml(displayContent) + '</span>' +
+                                       '<div class="copy-btn-wrapper"><button class="btn-copy" onclick="copyToClipboard(this, \'' + copyData.replace(/'/g, "\\'").replace(/\n/g, "\\n") + '\')"><i class="fa fa-copy"></i> 复制</button></div>';
+                            }
+                        }
+
+                        // 构建 Task ID 单元格内容（失败且finish时添加重新运行按钮）
+                        var taskIdContent = buildCellWithCopy(item.task_id, false, false);
+                        if (item.success === false && item.run_status === 'finish' && item.params_str) {
+                            var paramsForRerun = item.params_str.replace(/'/g, "\\'").replace(/\n/g, "\\n").replace(/"/g, "&quot;");
+                            var taskIdForRerun = (item.task_id || '').replace(/'/g, "\\'");
+                            taskIdContent += '<div class="copy-btn-wrapper"><button class="btn-rerun" onclick="rerunTask(this, \'' + currentColName + '\', \'' + paramsForRerun + '\', \'' + taskIdForRerun + '\')"><i class="fa fa-refresh"></i> 重新运行</button></div>';
+                        }
+
+                        html += '<tr class="' + rowClass + '" onclick="selectRow(this)">' +
+                            '<td>' + buildCellWithCopy(item.function, false, false) + '</td>' +
+                            '<td style="font-family: monospace; font-size: 12px;">' + taskIdContent + '</td>' +
+                            '<td>' + buildCellWithCopy(item.params_str, true, false) + '</td>' +
+                            '<td>' + buildCellWithCopy(String(item.result || ''), true, false) + '</td>' +
+                            '<td>' + buildCellWithCopy(item.publish_time_format, false, false) + '</td>' +
+                            '<td>' + buildCellWithCopy(time_start_str, false, false) + '</td>' +
+                            '<td>' + buildCellWithCopy(item.time_cost ? item.time_cost.toFixed(3) : '-', false, false) + '</td>' +
+                            '<td>' + buildCellWithCopy(String(item.run_times), false, false) + '</td>' +
+                            '<td><span class="status-badge ' + statusBadgeClass + '">' + run_status_text + '</span><div class="copy-btn-wrapper"><button class="btn-copy" onclick="copyToClipboard(this, \'' + run_status_text + '\')"><i class="fa fa-copy"></i> 复制</button></div></td>' +
+                            '<td><span class="status-badge ' + statusBadgeClass + '"><i class="fa fa-' + (item.success ? 'check' : 'times') + '"></i> ' + successText + '</span><div class="copy-btn-wrapper"><button class="btn-copy" onclick="copyToClipboard(this, \'' + successText + '\')"><i class="fa fa-copy"></i> 复制</button></div></td>' +
+                            '<td>' + buildCellWithCopy(item.exception, true, true) + '</td>' +
+                            '<td class="cell-normal" title="' + escapeHtml(item.host_process + ' - ' + item.script_name) + '">' + buildCellWithCopy(item.host_process, false, false) + '</td>' +
+                            '<td>' + buildCellWithCopy(String(item.total_thread || '-'), false, false) + '</td>' +
                             '</tr>';
                     }
                     $("#table_body").html(html);
@@ -1414,6 +1662,123 @@
             return text.length > maxLen ? text.substring(0, maxLen) + '...' : text;
         }
 
+        // 点击展开/收起单元格
+        function toggleExpand(el) {
+            event.stopPropagation(); // 阻止事件冒泡到行
+            $(el).toggleClass('expanded');
+        }
+
+        // 选择行（显示复制按钮）
+        function selectRow(row) {
+            var $row = $(row);
+            if ($row.hasClass('row-selected')) {
+                // 如果已选中，取消选中
+                $row.removeClass('row-selected');
+            } else {
+                // 取消其他行的选中状态
+                $('.result-table tbody tr').removeClass('row-selected');
+                // 选中当前行
+                $row.addClass('row-selected');
+            }
+        }
+
+        // 复制到剪贴板
+        function copyToClipboard(btn, text) {
+            event.stopPropagation(); // 阻止事件冒泡到行
+            
+            // 处理转义字符
+            text = text.replace(/\\n/g, '\n').replace(/\\'/g, "'");
+            
+            // 使用 Clipboard API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    showCopySuccess(btn);
+                }).catch(function() {
+                    fallbackCopy(text, btn);
+                });
+            } else {
+                fallbackCopy(text, btn);
+            }
+        }
+
+        // 降级复制方法
+        function fallbackCopy(text, btn) {
+            var textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showCopySuccess(btn);
+            } catch (e) {
+                alert('复制失败，请手动复制');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // 显示复制成功
+        function showCopySuccess(btn) {
+            var $btn = $(btn);
+            var originalHtml = $btn.html();
+            $btn.addClass('copied').html('<i class="fa fa-check"></i> 已复制');
+            setTimeout(function() {
+                $btn.removeClass('copied').html(originalHtml);
+            }, 1500);
+        }
+
+        // 重新运行失败的任务
+        function rerunTask(btn, queueName, paramsStr, taskId) {
+            event.stopPropagation(); // 阻止事件冒泡到行
+            
+            var $btn = $(btn);
+            if ($btn.hasClass('running')) {
+                return; // 防止重复点击
+            }
+
+            // 解析参数
+            var params;
+            try {
+                paramsStr = paramsStr.replace(/\\n/g, '\n').replace(/\\'/g, "'").replace(/&quot;/g, '"');
+                params = JSON.parse(paramsStr);
+            } catch (e) {
+                alert('参数解析失败: ' + e.message);
+                return;
+            }
+
+            // 显示运行中状态
+            var originalHtml = $btn.html();
+            $btn.addClass('running').html('<i class="fa fa-spinner fa-spin"></i> 运行中...');
+
+            // 调用后台 publish 接口
+            $.ajax({
+                url: '/funboost/publish',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    queue_name: queueName,
+                    msg_body: params,
+                    task_id: taskId || null
+                }),
+                success: function(response) {
+                    if (response.succ) {
+                        $btn.removeClass('running').addClass('success').html('<i class="fa fa-check"></i> 已重发');
+                        setTimeout(function() {
+                            $btn.removeClass('success').html(originalHtml);
+                        }, 3000);
+                    } else {
+                        alert('重新运行失败: ' + (response.msg || '未知错误'));
+                        $btn.removeClass('running').html(originalHtml);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('重新运行失败: ' + error);
+                    $btn.removeClass('running').html(originalHtml);
+                }
+            });
+        }
+
         // 更新统计文本
         function updateQueryText() {
             if (currentColName === undefined || !currentColName) {
@@ -1428,8 +1793,7 @@
                     end_time: $("#end_time").val()
                 },
                 success: function(result, status) {
-                    $('#stat_success').text(result.success_num.toLocaleString());
-                    $('#stat_fail').text(result.fail_num.toLocaleString());
+                    $('#stat_summary').html('<span class="success-text">成功: ' + result.success_num.toLocaleString() + '</span> / <span class="fail-text">失败: ' + result.fail_num.toLocaleString() + '</span>');
                 }
             });
         }
@@ -1449,9 +1813,46 @@
                     end_time: dateToString(t2)
                 },
                 success: function(result, status) {
-                    $('#stat_recent').html('成功: <strong>' + result.success_num + '</strong> / 失败: <strong>' + result.fail_num + '</strong>');
+                    $('#stat_recent').html('<span class="success-text">成功: ' + result.success_num + '</span> / <span class="fail-text">失败: ' + result.fail_num + '</span>');
+                    $('#recent_refresh_time').text(formatRefreshTime(new Date()));
                 }
             });
+        }
+
+        // 更新队列剩余消息数量
+        function updateMsgCount() {
+            if (currentColName === undefined || !currentColName) {
+                $('#stat_msg_count').text('-');
+                return;
+            }
+            $.ajax({
+                url: '/funboost/get_msg_count',
+                data: { queue_name: currentColName },
+                success: function(result) {
+                    if (result && result.succ && result.data) {
+                        var count = result.data.count;
+                        if (count === -1) {
+                            $('#stat_msg_count').text('不支持');
+                        } else {
+                            $('#stat_msg_count').text(count.toLocaleString());
+                        }
+                        $('#msg_count_refresh_time').text(formatRefreshTime(new Date()));
+                    } else {
+                        $('#stat_msg_count').text('-');
+                    }
+                },
+                error: function() {
+                    $('#stat_msg_count').text('-');
+                }
+            });
+        }
+
+        // 格式化刷新时间
+        function formatRefreshTime(date) {
+            var h = date.getHours().toString().padStart(2, '0');
+            var m = date.getMinutes().toString().padStart(2, '0');
+            var s = date.getSeconds().toString().padStart(2, '0');
+            return h + ':' + m + ':' + s + ' 刷新';
         }
 
         // 自动刷新

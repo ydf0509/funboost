@@ -23,7 +23,7 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
 
 
     # noinspection DuplicatedCode
-    def _shedual_task(self):
+    def _dispatch_task(self):
         pull_msg_batch_size =  self.consumer_params.broker_exclusive_config['pull_msg_batch_size']
         while True:
             # if False:
@@ -45,7 +45,7 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
                     kw = {'body': result[1]}
                     self._submit_task(kw)
 
-    def _shedual_task00(self):
+    def _dispatch_task00(self):
         while True:
             result = self.redis_db_frame.blpop(self._queue_name, timeout=60)
             if result:

@@ -23,7 +23,7 @@ class MqttConsumer(AbstractConsumer):
         self._topic_shared = f'$share/fsdf/{self._queue_name}'
 
     # noinspection DuplicatedCode
-    def _shedual_task(self):
+    def _dispatch_task(self):
         client = PahoMqttImporter().mqtt.Client()
         # client.username_pw_set('admin', password='public')
         client.on_connect = self._on_connect
@@ -36,7 +36,7 @@ class MqttConsumer(AbstractConsumer):
 
     def _on_socket_close(self, client, userdata, socket):
         self.logger.critical(f'{client, userdata, socket}')
-        self._shedual_task()
+        self._dispatch_task()
 
     # noinspection PyPep8Naming
     def _on_disconnect(self, client, userdata, reasonCode, properties):

@@ -15,7 +15,7 @@ class EmptyPublisher(AbstractPublisher, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def concrete_realization_of_publish(self, msg: str):
+    def _publish_impl(self, msg: str):
         raise NotImplemented('not realization')
 
     @abc.abstractmethod

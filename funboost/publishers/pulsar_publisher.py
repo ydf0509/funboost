@@ -34,7 +34,7 @@ class PulsarPublisher(AbstractPublisher, ):
         self._client = pulsar.Client(BrokerConnConfig.PULSAR_URL, )
         self._producer = self._client.create_producer(self._queue_name, schema=schema.StringSchema(), producer_name=f'funboost_publisher_{os.getpid()}')
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         self._producer.send(msg)
 
     def clear(self):

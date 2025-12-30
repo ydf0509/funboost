@@ -101,8 +101,8 @@ class KombuConsumer(AbstractConsumer, ):
             os.makedirs(processed_folder, exist_ok=True)
 
     # noinspection DuplicatedCode
-    def _shedual_task(self):  # 这个倍while 1 启动的，会自动重连。
-        patch_kombu_redis()
+    def _dispatch_task(self):  # 这个倍while 1 启动的，会自动重连。
+        # patch_kombu_redis() # 不调用
 
         def callback(body: dict, message: Message):
             # print(type(body),body,type(message),message)

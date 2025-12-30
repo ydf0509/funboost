@@ -27,11 +27,11 @@ class PauseConsumer(AbstractConsumer):
             self._confirm_consume(kw)
             return
         publish_time = get_publish_time(kw['body'])
-        msg_expire_senconds_priority = self._get_priority_conf(kw, 'msg_expire_senconds')
-        if msg_expire_senconds_priority and time.time() - msg_expire_senconds_priority > publish_time:
+        msg_expire_seconds_priority = self._get_priority_conf(kw, 'msg_expire_seconds')
+        if msg_expire_seconds_priority and time.time() - msg_expire_seconds_priority > publish_time:
             self.logger.warning(
                 f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(time.time() - publish_time, 4)} 秒 ,'
-                f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
+                f'超过了指定的 {msg_expire_seconds_priority} 秒，丢弃任务')
             self._confirm_consume(kw)
             return 0
 

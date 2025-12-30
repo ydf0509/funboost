@@ -2,6 +2,7 @@ import copy
 import pytz
 import time
 import uuid
+from funboost.utils.uuid7 import uuid7
 import datetime
 from funboost.core.funboost_time import FunboostTime, fast_get_now_time_str
 
@@ -51,7 +52,15 @@ run_forever = block_python_main_thread_exit
 class MsgGenerater:
     @staticmethod
     def generate_task_id(queue_name:str) -> str:
-        return f'{queue_name}_result:{uuid.uuid4()}'
+        """
+        UUIDv7 是 时间有序（time-ordered） 的 UUID，新一代 UUID 规范（RFC 9562，已标准化），
+        专门为数据库/分布式系统设计。一句话总结：
+        UUIDv7 = “像 UUID 一样全局唯一 + 像雪花 ID 一样按时间递增”
+        """
+        # return f'{queue_name}_result:{uuid.uuid4()}'
+        uuid7_obj =  uuid7()
+        return str(uuid7_obj) # uuid7 对数据库顺序更友好
+
 
     @staticmethod
     def generate_publish_time() -> float:
@@ -68,8 +77,10 @@ class MsgGenerater:
     @classmethod
     def generate_pulish_time_and_task_id(cls,queue_name:str,task_id=None):
         extra_params = {'task_id': task_id or cls.generate_task_id(queue_name), 
-                        'publish_time': cls.generate_publish_time(),
-                        'publish_time_format': cls.generate_publish_time_format()}
+                        'publish_time': cls.generate_publish_time(),  # 时间戳秒
+                        'publish_time_format': cls.generate_publish_time_format() # 时间字符串 例如 2025-12-25 10:00:00
+                        
+                        }
         return extra_params
 
 

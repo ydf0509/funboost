@@ -64,7 +64,13 @@ class FunctionResultStatus():
         self._has_to_dlx_queue = False
         self._has_kill_task = False
         self.rpc_result_expire_seconds = None
+        
+         # 额外的方便用户扩展，如果用户想自己放点其他的其他特殊奇葩信息，可以放在这里。而不必来这里改源码加字段。
+         # 用户可以在同一个线程或者协程中通过 fct.function_result_status.user_context 获取。
+        self.user_context:dict = {} 
+      
 
+       
     @classmethod
     def parse_status_and_result_to_obj(cls,status_dict:dict):
         obj = cls(status_dict['queue_name'],status_dict['function'],status_dict['msg_dict'])
@@ -100,15 +106,13 @@ class FunctionResultStatus():
                      })
         if not without_datetime_obj:
             item.update({'insert_time': time_util.DatetimeConverter().datetime_obj,
-                         'utime': datetime.datetime.utcnow(),
+                         'utime': datetime.datetime.now(datetime.timezone.utc),
                          })
         else:
             item = delete_keys_and_return_new_dict(item, ['insert_time', 'utime'])
-        # kw['body']['extra']['task_id']
-        # item['_id'] = self.task_id.split(':')[-1] or str(uuid.uuid4())
-        item['_id'] = self.task_id or str(uuid.uuid4())
-        # self.logger.warning(item['_id'])
-        # self.logger.warning(item)
+
+        item['_id'] = self.task_id
+   
         return item
 
     def __str__(self):
@@ -128,13 +132,14 @@ class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):
         self._last_bulk_insert_time = 0
         self._has_start_bulk_insert_thread = False
         self._queue_name = queue_name
+        self._table_name = self.function_result_status_persistance_conf.table_name
         if self.function_result_status_persistance_conf.is_save_status:
             self._create_indexes()
             # self._mongo_bulk_write_helper = MongoBulkWriteHelper(task_status_col, 100, 2)
             self.logger.debug(f"函数运行状态结果将保存至mongo的 {MongoDbName.TASK_STATUS_DB} 库的 {queue_name} 集合中，请确认 funboost.py文件中配置的 MONGO_CONNECT_URL")
 
     def _create_indexes(self):
-        task_status_col = self.get_mongo_collection(MongoDbName.TASK_STATUS_DB, self._queue_name)
+        task_status_col = self.get_mongo_collection(MongoDbName.TASK_STATUS_DB, self._table_name)
         try:
             has_creat_index = False
             index_dict = task_status_col.index_information()
@@ -146,7 +151,9 @@ class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):
                     old_expire_after_seconds = v['expireAfterSeconds']
             if has_creat_index is False:
                 # params_str 如果很长，必须使用TEXt或HASHED索引。
-                task_status_col.create_indexes([IndexModel([("insert_time_str", -1)]), IndexModel([("insert_time", -1)]),
+                task_status_col.create_indexes([
+                    IndexModel([("queue_name", 1)]),
+                    IndexModel([("insert_time_str", -1)]), IndexModel([("insert_time", -1)]),
                                                 IndexModel([("params_str", pymongo.TEXT)]), IndexModel([("success", 1)]),
                                                 IndexModel([("time_cost", -1)]),  # 用于按耗时查询
                                                 ], )
@@ -163,7 +170,7 @@ class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):
 
     def save_function_result_to_mongo(self, function_result_status: FunctionResultStatus):
         if self.function_result_status_persistance_conf.is_save_status:
-            task_status_col = self.get_mongo_collection(MongoDbName.TASK_STATUS_DB, self._queue_name)  # type: pymongo.collection.Collection
+            task_status_col = self.get_mongo_collection(MongoDbName.TASK_STATUS_DB, self._table_name)  # type: pymongo.collection.Collection
             item = function_result_status.get_status_dict()
             item2 = copy.copy(item)
             if not self.function_result_status_persistance_conf.is_save_result:
@@ -191,7 +198,7 @@ class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):
     def _bulk_insert(self):
         with self._bulk_list_lock:
             if time.time() - self._last_bulk_insert_time > 0.5 and self._bulk_list:
-                task_status_col = self.get_mongo_collection(MongoDbName.TASK_STATUS_DB, self._queue_name)
+                task_status_col = self.get_mongo_collection(MongoDbName.TASK_STATUS_DB, self._table_name)
                 task_status_col.bulk_write(self._bulk_list, ordered=False)
                 self._bulk_list.clear()
                 self._last_bulk_insert_time = time.time()

@@ -35,7 +35,7 @@ class RedisPriorityPublisher(FlushRedisQueueMixin,AbstractPublisher, RedisMixin,
             queue_name = f'{self.queue_name}:{priority}'
         return queue_name
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         queue_name = self.build_queue_name_by_msg(msg)
         # self.logger.debug([queue_name, msg])
         self.redis_db_frame.rpush(queue_name, msg)
@@ -48,7 +48,6 @@ class RedisPriorityPublisher(FlushRedisQueueMixin,AbstractPublisher, RedisMixin,
         return count
 
     def close(self):
-        # self.redis_db7.connection_pool.disconnect()
         pass
 
     def clear(self):

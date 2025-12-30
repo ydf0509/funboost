@@ -48,6 +48,7 @@ This markdown document is structured as follows:
    - BoostersManager 管理分布式函数，高阶用法可能需要用到，例如启动一组消费函数，启动所有消费函数等。
    - ApsJobAdder 类， 是定时任务的最重要使用方式的类
    - ConcurrentModeEnum：funboost支持的并发模式。
+   - funboost/core/broker_kind__exclusive_config_default_define.py 决定了每种中间件类型能传递哪些
    
 
 
@@ -68,6 +69,7 @@ This markdown document is structured as follows:
 - `funboost/funboost_config_deafult.py`
 - `funboost/core/current_task.py`
 - `funboost/core/cli/discovery_boosters.py`
+- `funboost/core/broker_kind__exclusive_config_default_define.py`
 - `funboost/core/msg_result_getter.py`
 - `funboost/publishers/base_publisher.py`
 - `funboost/consumers/base_consumer.py`
@@ -92,7 +94,7 @@ This markdown document is structured as follows:
 - `from funboost.core.func_params_model import BoosterParams`
 - `from funboost.core.func_params_model import BoosterParamsComplete`
 - `from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig`
-- `from funboost.core.func_params_model import PriorityConsumingControlConfig`
+- `from funboost.core.func_params_model import TaskOptions`
 - `from funboost.core.func_params_model import PublisherParams`
 - `from funboost.core.func_params_model import BoosterParamsComplete`
 - `from funboost.funboost_config_deafult import FunboostCommonConfig`
@@ -108,7 +110,7 @@ This markdown document is structured as follows:
 - `from funboost.core.active_cousumer_info_getter import ActiveCousumerProcessInfoGetter`
 - `from funboost.core.msg_result_getter import HasNotAsyncResult`
 - `from funboost.core.msg_result_getter import ResultFromMongo`
-- `from funboost.publishers.base_publisher import PriorityConsumingControlConfig`
+- `from funboost.publishers.base_publisher import TaskOptions`
 - `from funboost.publishers.base_publisher import AbstractPublisher`
 - `from funboost.publishers.base_publisher import AsyncResult`
 - `from funboost.publishers.base_publisher import AioAsyncResult`
@@ -116,8 +118,6 @@ This markdown document is structured as follows:
 - `from funboost.factories.broker_kind__publsiher_consumer_type_map import register_custom_broker`
 - `from funboost.factories.publisher_factotry import get_publisher`
 - `from funboost.factories.consumer_factory import get_consumer`
-- `from funboost.timing_job import fsdf_background_scheduler`
-- `from funboost.timing_job import timing_publish_deco`
 - `from funboost.timing_job import funboost_aps_scheduler`
 - `from funboost.timing_job.timing_push import ApsJobAdder`
 - `from funboost.constant import BrokerEnum`
@@ -155,11 +155,14 @@ This markdown document is structured as follows:
 - `import sys`
 - `import types`
 - `import typing`
+- `import threading`
 - `from funboost.concurrent_pool import FlexibleThreadPool`
 - `from funboost.concurrent_pool.async_helper import simple_run_in_executor`
 - `from funboost.constant import FunctionKind`
+- `from funboost.constant import StrConst`
 - `from funboost.utils.class_utils import ClsHelper`
 - `from funboost.utils.ctrl_c_end import ctrl_c_recv`
+- `from funboost.utils.decorators import flyweight`
 - `from funboost.core.loggers import flogger`
 - `from funboost.core.loggers import develop_logger`
 - `from funboost.core.loggers import logger_prompt`
@@ -167,10 +170,13 @@ This markdown document is structured as follows:
 - `from funboost.core.exceptions import BoostDecoParamsIsOldVersion`
 - `from funboost.core.func_params_model import BoosterParams`
 - `from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig`
-- `from funboost.core.func_params_model import PriorityConsumingControlConfig`
+- `from funboost.core.func_params_model import TaskOptions`
 - `from funboost.core.func_params_model import PublisherParams`
 - `from funboost.factories.consumer_factory import get_consumer`
+- `from funboost.factories.consumer_factory import ConsumerCacheProxy`
 - `from funboost.factories.publisher_factotry import get_publisher`
+- `from funboost.factories.publisher_factotry import PublisherCacheProxy`
+- `from funboost.consumers.base_consumer import AbstractConsumer`
 - `from funboost.publishers.base_publisher import AbstractPublisher`
 - `from funboost.core.msg_result_getter import AsyncResult`
 - `from funboost.core.msg_result_getter import AioAsyncResult`
@@ -181,7 +187,7 @@ This markdown document is structured as follows:
 #### 🏛️ Classes (2)
 
 ##### 📌 `class Booster`
-*Line: 31*
+*Line: 39*
 
 **Docstring:**
 `````
@@ -223,30 +229,18 @@ Booster 是把Consumer 和 Publisher的方法集为一体。
   ```
   
   
-  @boost('queue_test_f01', qps=0.2, ) 
+  @boost('queue_test_f01', qps=0.2, )
   @boost(BoosterParams(queue_name='queue_test_f01', qps=0.2, ))
   @Booster(BoosterParams(queue_name='queue_test_f01', qps=0.2, ))
   @BoosterParams(queue_name='queue_test_f01', qps=0.2, )
-  以上4种写法等效。 
+  以上4种写法等效。
   `````
   - **Parameters:**
     - `self`
     - `queue_name: typing.Union[BoosterParams, str] = None`
     - `**kwargs`
 
-**Public Methods (5):**
-- `async def aio_push(self, *func_args, **func_kwargs) -> AioAsyncResult`
-  - **Docstring:**
-  `````
-  asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
-  但为了更好的防止网络波动(例如发布消息到外网的消息队列耗时达到10毫秒),可以使用aio_push
-  `````
-- `async def aio_publish(self, msg: typing.Union[str, dict], task_id = None, priority_control_config: PriorityConsumingControlConfig = None) -> AioAsyncResult`
-  - **Docstring:**
-  `````
-  asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
-  但为了更好的防止网络波动(例如发布消息到外网的消息队列耗时达到10毫秒),可以使用aio_push
-  `````
+**Public Methods (3):**
 - `def multi_process_consume(self, process_num = 1)`
   - *超高速多进程消费*
 - `def multi_process_pub_params_list(self, params_list, process_num = 16)`
@@ -258,26 +252,29 @@ Booster 是把Consumer 和 Publisher的方法集为一体。
 - `multi_process_start = multi_process_consume`
 - `mp_consume = multi_process_consume`
 
-##### 📌 `class BoostersManager`
-*Line: 243*
+##### 📌 `class BoosterRegistry`
+*Line: 273*
 
 **Docstring:**
 `````
-这个BoostersManager类是后来加的不是一开始就规划了的.
+管理boosters，可以一键启动多个消费函数或者启动一组消费函数。
 
-消费函数生成Booster对象时候,会自动调用BoostersManager.regist_booster方法,把队列名和入参信息保存到pid_queue_name__booster_map字典中.
-使用这个类,可以创建booster对象,达到无需使用装饰器的目的.
-
-如果你想一次性启动所有函数消费,不想 f1.consume()  f2.consume() f3.consume() 一个个的启动.
-可以  BoostersManager.consume_all_queues()
+BoosterRegistry 是后加的， 原来的 BoostersManager 类是一个包含多个classmethod的类，和现在的方法名和入参一样。
+为了兼容老的 BoostersManager 这个用法，现在的 BoostersManager 是 BoosterRegistry 其中一个实例。
 `````
 
+**🔧 Constructor (`__init__`):**
+- `def __init__(self, booster_registry_name)`
+  - **Parameters:**
+    - `self`
+    - `booster_registry_name`
+
 **Public Methods (17):**
-- `def regist_booster(cls, queue_name: str, booster: Booster)` `classmethod`
+- `def regist_booster(self, booster: Booster)`
   - *这个是框架在@boost时候自动调用的,无需用户亲自调用*
-- `def show_all_boosters(cls)` `classmethod`
-- `def get_all_queues(cls) -> list` `classmethod`
-- `def get_all_queue_name__boost_params_unstrict_dict(cls)` `classmethod`
+- `def show_all_boosters(self)`
+- `def get_all_queues(self) -> list`
+- `def get_all_queue_name__boost_params_unstrict_dict(self)`
   - **Docstring:**
   `````
   主要用来给前端或可视化观看的。
@@ -285,27 +282,27 @@ Booster 是把Consumer 和 Publisher的方法集为一体。
   返回一个字典,键是队列名,值是@boost的 BoosterParams 入参字典,
   因为 BoosterParams 有的入参是复杂对象类型,不能json序列化
   `````
-- `def get_booster(cls, queue_name: str) -> Booster` `classmethod`
+- `def get_booster(self, queue_name: str) -> Booster`
   - **Docstring:**
   `````
   当前进程获得booster对象。注意和下面的get_or_create_booster_by_queue_name方法的区别,主要是开了多进程时候有区别.
   :param queue_name:
   :return:
   `````
-- `def get_or_create_booster_by_queue_name(cls, queue_name) -> Booster` `classmethod`
+- `def get_or_create_booster_by_queue_name(self, queue_name) -> Booster`
   - **Docstring:**
   `````
   当前进程获得booster对象，如果是多进程,会在新的进程内部创建一个新的booster对象,因为多进程操作有些中间件的同一个conn不行.
   :param queue_name: 就是 @boost的入参。
   :return:
   `````
-- `def get_boost_params(cls, queue_name: str) -> (dict, typing.Callable)` `classmethod`
+- `def get_boost_params(self, queue_name: str) -> (dict, typing.Callable)`
   - **Docstring:**
   `````
   这个函数是为了在别的进程实例化 booster，consumer和publisher,获取queue_name队列对应的booster的当时的入参。
   有些中间件python包的对中间件连接对象不是多进程安全的，不要在进程2中去操作进程1中生成的booster consumer publisher等对象。
   `````
-- `def build_booster(cls, boost_params: BoosterParams) -> Booster` `classmethod`
+- `def build_booster(self, boost_params: BoosterParams) -> Booster`
   - **Docstring:**
   `````
   当前进程获得或者创建booster对象。方便有的人需要在函数内部临时动态根据队列名创建booster,不会无数次临时生成消费者、生产者、创建消息队列连接。
@@ -313,67 +310,61 @@ Booster 是把Consumer 和 Publisher的方法集为一体。
   :param consuming_function: 消费函数
   :return:
   `````
-- `def get_cross_project_publisher(cls, publisher_params: PublisherParams) -> AbstractPublisher` `classmethod`
+- `def get_cross_project_publisher(self, publisher_params: PublisherParams) -> AbstractPublisher`
   - **Docstring:**
   `````
-  跨不同的项目，发布消息。例如proj1中定义有fun1消费函数，但proj2无法直接到日proj1的函数，无法直接 fun1.push 来发布消息
+  跨不同的项目，发布消息。例如proj1中定义有fun1消费函数，但proj2无法直接到proj1的函数，无法直接 fun1.push 来发布消息
   可以使用这个方法，获取一个publisher。
   
   publisher = BoostersManager.get_cross_project_publisher(PublisherParams(queue_name='proj1_queue', broker_kind=publisher_params.broker_kind))
   publisher.publish({'x': aaa})
   `````
-- `def push(cls, queue_name, *args, **kwargs)` `classmethod`
-  - **Docstring:**
-  `````
-  push发布消息到消息队列 ;
-          
-  `````
-- `def publish(cls, queue_name, msg)` `classmethod`
-  - **Docstring:**
-  `````
-  publish发布消息到消息队列;
-          
-  `````
-- `def consume_queues(cls, *queue_names)` `classmethod`
+- `def push(self, queue_name, *args, **kwargs)`
+  - *push发布消息到消息队列 ;*
+- `def publish(self, queue_name, msg)`
+  - *publish发布消息到消息队列;*
+- `def consume_queues(self, *queue_names)`
   - **Docstring:**
   `````
   启动多个消息队列名的消费,多个函数队列在当前同一个进程内启动消费.
   这种方式节约总的内存,但无法利用多核cpu
   `````
-- `def consume_all_queues(cls, block = True)` `classmethod`
+- `def consume_all_queues(self, block = True)`
   - **Docstring:**
   `````
   启动所有消息队列名的消费,无需一个一个函数亲自 funxx.consume()来启动,多个函数队列在当前同一个进程内启动消费.
   这种方式节约总的内存,但无法利用多核cpu
   `````
-- `def multi_process_consume_queues(cls, **queue_name__process_num)` `classmethod`
+- `def multi_process_consume_queues(self, **queue_name__process_num)`
   - **Docstring:**
   `````
   启动多个消息队列名的消费,传递队列名和进程数,每个队列启动n个单独的消费进程;
   这种方式总的内存使用高,但充分利用多核cpu
   例如 multi_process_consume_queues(queue1=2,queue2=3) 表示启动2个进程消费queue1,启动3个进程消费queue2
   `````
-- `def consume_group(cls, booster_group: str, block = False)` `classmethod`
+- `def consume_group(self, booster_group: str, block = False)`
   - *根据@boost装饰器的 booster_group消费分组名字,启动多个消费函数;*
-- `def multi_process_consume_group(cls, booster_group: str, process_num = 1)` `classmethod`
+- `def multi_process_consume_group(self, booster_group: str, process_num = 1)`
   - *根据@boost装饰器的 booster_group消费分组名字,启动多个消费函数;*
-- `def multi_process_consume_all_queues(cls, process_num = 1)` `classmethod`
+- `def multi_process_consume_all_queues(self, process_num = 1)`
   - **Docstring:**
   `````
   启动所有消息队列名的消费,无需指定队列名,每个队列启动n个单独的消费进程;
   这种方式总的内存使用高,但充分利用多核cpu
   `````
 
-**Class Variables (9):**
-- `pid_queue_name__booster_map: typing.Dict[typing.Tuple[int, str], Booster] = {}`
-- `queue_name__boost_params_map: typing.Dict[str, BoosterParams] = {}`
-- `pid_queue_name__has_start_consume_set = set()`
-- `queue_name__cross_project_publisher_map = {}`
+**Class Variables (6):**
+- `_lock = threading.Lock()`
 - `consume = consume_queues`
 - `consume_all = consume_all_queues`
 - `mp_consume = multi_process_consume_queues`
 - `mp_consume_group = multi_process_consume_group`
 - `mp_consume_all = multi_process_consume_all_queues`
+
+#### 🔧 Public Functions (1)
+
+- `def gen_pid_queue_name_key(queue_name: str) -> typing.Tuple[int, str]`
+  - *Line: 268*
 
 
 ---
@@ -383,67 +374,52 @@ Booster 是把Consumer 和 Publisher的方法集为一体。
 
 ### 📄 Python File Metadata: `funboost/core/func_params_model.py`
 
+#### 📝 Module Docstring
+
+`````
+pydantic 模型定义， funboost 使用pydantic 作为重要函数的入参，
+方便函数入参太多在层层传递时候的麻烦，例如 BoosterParams 经常新增字段，如果funboost直接入参一大堆，需要每一层都去新增入参很麻烦
+
+BoosterParams 是 funboost 最核心的入参模型，掌握了 BoosterParams 就是掌握了 funboost 的90% 用法。
+`````
+
 #### 📦 Imports
 
-- `from typing import Any`
-- `import asyncio`
-- `import datetime`
 - `import functools`
-- `import json`
-- `import logging`
 - `import typing`
+- `import asyncio`
+- `import logging`
+- `import datetime`
+- `from pydantic.fields import Field`
 - `from typing_extensions import Literal`
-- `from collections import OrderedDict`
+- `from funboost.concurrent_pool.pool_commons import ConcurrentPoolBuilder`
+- `from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool`
+- `from funboost.core.lazy_impoter import funboost_lazy_impoter`
+- `from funboost.core.pydantic_compatible_base import compatible_root_validator`
+- `from funboost.core.pydantic_compatible_base import BaseJsonAbleModel`
+- `from funboost.constant import BrokerEnum`
+- `from funboost.constant import ConcurrentModeEnum`
+- `from funboost.constant import StrConst`
 - `from funboost.concurrent_pool import FunboostBaseConcurrentPool`
 - `from funboost.concurrent_pool import FlexibleThreadPool`
-- `from funboost.concurrent_pool import ConcurrentPoolBuilder`
-- `from funboost.constant import ConcurrentModeEnum`
-- `from funboost.constant import BrokerEnum`
-- `from pydantic import BaseModel`
-- `from pydantic import validator`
-- `from pydantic import root_validator`
-- `from pydantic import BaseConfig`
-- `from pydantic import Field`
-- `from funboost.core.lazy_impoter import funboost_lazy_impoter`
-- `from concurrent.futures import ThreadPoolExecutor`
-- `from asyncio import AbstractEventLoop`
-- `from funboost.concurrent_pool import FlexibleThreadPool`
-- `from funboost.core.loggers import flogger`
 
-#### 🏛️ Classes (6)
-
-##### 📌 `class BaseJsonAbleModel(BaseModel)`
-*Line: 40*
-
-**Docstring:**
-`````
-因为model字段包括了 函数和自定义类型的对象,无法直接json序列化,需要自定义json序列化
-`````
-
-**Public Methods (7):**
-- `def get_str_dict(self)`
-- `def json_str_value(self)`
-- `def json_pre(self)`
-- `def update_from_dict(self, dictx: dict)`
-- `def update_from_kwargs(self, **kwargs)`
-- `def update_from_model(self, modelx: BaseModel)`
-- `def init_by_another_model(model_type: typing.Type[BaseModel], modelx: BaseModel)` `staticmethod`
+#### 🏛️ Classes (5)
 
 ##### 📌 `class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel)`
-*Line: 99*
+*Line: 27*
 
-**Public Methods (2):**
-- `def check_expire_seconds(cls, value)` `validator('expire_seconds', allow_reuse=True)`
-- `def check_values(cls, values: dict)` `root_validator(skip_on_failure=True)`
+**Public Methods (1):**
+- `def check_values(self)` `compatible_root_validator(skip_on_failure=True)`
 
-**Class Variables (4):**
+**Class Variables (5):**
 - `is_save_status: bool`
 - `is_save_result: bool`
 - `expire_seconds: int = 7 * 24 * 3600`
 - `is_use_bulk_insert: bool = False`
+- `table_name: typing.Optional[str] = None`
 
 ##### 📌 `class BoosterParams(BaseJsonAbleModel)`
-*Line: 122*
+*Line: 43*
 
 **Docstring:**
 `````
@@ -453,9 +429,9 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 `````
 
 **Public Methods (1):**
-- `def check_values(cls, values: dict)` `root_validator(skip_on_failure=True)`
+- `def check_values(self)` `compatible_root_validator(skip_on_failure=True)`
 
-**Class Variables (51):**
+**Class Variables (52):**
 - `queue_name: str`
 - `broker_kind: str = BrokerEnum.SQLITE_QUEUE`
 - `project_name: typing.Optional[str] = None`
@@ -507,9 +483,10 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `user_options: dict = {}`
 - `auto_generate_info: dict = {}`
 - `is_fake_booster: bool = False`
+- `booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT`
 
 ##### 📌 `class BoosterParamsComplete(BoosterParams)`
-*Line: 332*
+*Line: 259*
 
 **Docstring:**
 `````
@@ -530,19 +507,23 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `broker_kind: str = BrokerEnum.RABBITMQ_AMQPSTORM`
 - `specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))`
 
-##### 📌 `class PriorityConsumingControlConfig(BaseJsonAbleModel)`
-*Line: 352*
+##### 📌 `class TaskOptions(BaseJsonAbleModel)`
+*Line: 279*
 
 **Docstring:**
 `````
-为每个独立的任务设置控制参数，和函数参数一起发布到中间件。可能有少数时候有这种需求。
-例如消费为add函数，可以每个独立的任务设置不同的超时时间，不同的重试次数，是否使用rpc模式。这里的配置优先，可以覆盖生成消费者时候的配置。
+这个是 publish 支持的额外参数，和函数参数一起发布到中间件。
+可能有少数时候有这种需求。如果需要发布额外字段到消息队列，必须使用publish方法，push方法是类似celery的dalay只能发布函数入参自身。
+这里面的字段值如果非None，会放到消息队列的消息里面的 extra 字段中。
 `````
 
 **Public Methods (1):**
-- `def cehck_values(cls, values: dict)` `root_validator(skip_on_failure=True)`
+- `def cehck_values(self)` `compatible_root_validator(skip_on_failure=True)`
 
-**Class Variables (11):**
+**Class Variables (16):**
+- `task_id: str = None`
+- `publish_time: float = None`
+- `publish_time_format: str = None`
 - `function_timeout: typing.Union[float, int, None] = None`
 - `max_retry_times: typing.Union[int, None] = None`
 - `is_print_detail_exception: typing.Union[bool, None] = None`
@@ -551,14 +532,16 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `countdown: typing.Union[float, int, None] = None`
 - `eta: typing.Union[datetime.datetime, str, None] = None`
 - `misfire_grace_time: typing.Union[int, None] = None`
+- `user_extra_info: typing.Optional[dict] = None`
 - `other_extra_params: typing.Optional[dict] = None`
 - `filter_str: typing.Optional[str] = None`
 - `can_not_json_serializable_keys: typing.List[str] = None`
+- `otel_context: typing.Optional[dict] = None`
 
 ##### 📌 `class PublisherParams(BaseJsonAbleModel)`
-*Line: 400*
+*Line: 332*
 
-**Class Variables (20):**
+**Class Variables (21):**
 - `queue_name: str`
 - `broker_kind: typing.Optional[str] = None`
 - `project_name: typing.Optional[str] = None`
@@ -579,6 +562,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `user_options: dict = {}`
 - `auto_generate_info: dict = {}`
 - `is_fake_booster: bool = False`
+- `booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT`
 
 
 ---
@@ -588,7 +572,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 
 ### 📄 Python File Metadata: `funboost/constant.py`
 
-#### 🏛️ Classes (7)
+#### 🏛️ Classes (9)
 
 ##### 📌 `class BrokerEnum`
 *Line: 5*
@@ -720,6 +704,19 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 **Class Variables (2):**
 - `TASK_STATUS_DB = 'funboost_task_status'`
 - `MONGOMQ_DB = 'funboost_mongomq'`
+
+##### 📌 `class StrConst`
+*Line: 237*
+
+**Class Variables (1):**
+- `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
+
+##### 📌 `class EnvConst`
+*Line: 240*
+
+**Class Variables (2):**
+- `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
+- `FUNBOOST_FAAS_IS_USE_LOCAL_BOOSTER = 'funboost.faas.is_use_local_booster'`
 
 
 ---
@@ -912,98 +909,87 @@ ApsJobAdder(add_numbers,job_store_kind='memory').add_push_job(
 
 ### 📄 Python File Metadata: `funboost/core/current_task.py`
 
+#### 📝 Module Docstring
+
+`````
+fct 是 funboost current task 的简写，就是当前任务的意思。能同时兼容threading和asyncio隔离。
+
+fct用法例子 
+'''
+from funboost import fct 
+
+在消费函数内部能知道自己的takid，queue_name 等等。
+print(fct.function_result_status.get_status_dict())
+print(fct.function_result_status.task_id)
+print(fct.run_times)
+print(fct.full_msg)
+'''
+`````
+
 #### 📦 Imports
 
-- `import abc`
 - `import typing`
 - `import contextvars`
 - `from dataclasses import dataclass`
 - `import logging`
 - `import threading`
-- `import asyncio`
 - `from funboost.core.function_result_status_saver import FunctionResultStatus`
 
-#### 🏛️ Classes (6)
+#### 🏛️ Classes (3)
 
 ##### 📌 `class FctContext`
-*Line: 56*
+*Line: 28*
 
 **Docstring:**
 `````
 fct 是 funboost current task 的简写
 `````
 
-**Class Variables (6):**
-- `function_params: dict`
-- `full_msg: dict`
+**Class Variables (2):**
 - `function_result_status: FunctionResultStatus`
 - `logger: logging.Logger`
-- `queue_name: str`
-- `asyncio_use_thread_concurrent_mode: bool = False`
-
-##### 📌 `class _BaseCurrentTask`
-*Line: 86*
-
-**Public Methods (2):**
-- `def set_fct_context(self, fct_context: FctContext)` `abc.abstractmethod`
-- `def get_fct_context(self) -> FctContext` `abc.abstractmethod`
-
-**Properties (6):**
-- `@property function_params`
-- `@property full_msg -> dict`
-- `@property function_result_status -> FunctionResultStatus`
-- `@property task_id -> FunctionResultStatus`
-- `@property logger -> logging.Logger`
-- `@property queue_name -> str`
-
-##### 📌 `class __ThreadCurrentTask(_BaseCurrentTask)`
-*Line: 124*
-
-**Docstring:**
-`````
-用于在用户自己函数内部去获取 消息的完整体,当前重试次数等.
-`````
-
-**Public Methods (2):**
-- `def set_fct_context(self, fct_context: FctContext)`
-- `def get_fct_context(self) -> FctContext`
-
-**Class Variables (1):**
-- `_fct_local_data = threading.local()`
-
-##### 📌 `class __AsyncioCurrentTask(_BaseCurrentTask)`
-*Line: 138*
-
-**Public Methods (2):**
-- `def set_fct_context(self, fct_context: FctContext)`
-- `def get_fct_context(self) -> FctContext`
-
-**Class Variables (1):**
-- `_fct_context = contextvars.ContextVar('fct_context')`
 
 ##### 📌 `class _FctProxy`
-*Line: 170*
+*Line: 50*
 
 **Docstring:**
 `````
-后来多新增这个类了，
+fct 代理类，通过 contextvars 自动获取当前线程/协程的上下文。
+可以直接导入这个 fct，不需要手动写 fct = funboost_current_task() 了。
+直接 from funboost import fct 就完了。
+funboost 的 fct 相当于 flask 的 request 那种对象，自动线程/协程级别隔离，多个线程不会互相干扰。
+
+
+fct 比直接 get_fct_context 好用一点点，fct相当于把FctContext对象的一级属性的function_result_status中的很多最重要二级属性直接提升作为一级属性了。
 `````
 
 **Properties (7):**
 - `@property fct_context -> FctContext`
-- `@property function_params`
+- `@property logger -> logging.Logger`
+- `@property function_params -> dict`
 - `@property full_msg -> dict`
 - `@property function_result_status -> FunctionResultStatus`
-- `@property task_id -> FunctionResultStatus`
-- `@property logger -> logging.Logger`
+- `@property task_id -> str`
 - `@property queue_name -> str`
 
 ##### 📌 `class FctContextThread(threading.Thread)`
-*Line: 225*
+*Line: 118*
 
 **Docstring:**
 `````
-这个类自动把当前线程的 线程上下文 自动传递给新开的线程。
+这个类自动把当前线程的 funboost 上下文自动传递给新开的线程。
+由于 contextvars 不会自动跨线程传递，只能跨协程自动传递，如果想跨线程自动传递，需要手动复制上下文。
+
+
+如果没有这个基类，那么需要 手动复制上下文，然后让线程运行 ctx.run(worker) 而不是直接运行 worker： 
+# 1. 显式捕获当前上下文
+ctx = contextvars.copy_context()
+# 2. 让线程运行 ctx.run(worker) 而不是直接运行 worker
+# 这样 worker 就会在 ctx 的上下文中执行
+t = threading.Thread(target=ctx.run, args=(worker,)) # 这是正解，传递上下文
+
+# t = threading.Thread(target=worker,args=(,)) # 这是错误写法，不能自动传递上下文给子线程，
+# 例如funboost的超时 kill功能，都是在另外单独的子线程去运行消费函数的，所以有时候需要传递给子线程。
 `````
 
 **🔧 Constructor (`__init__`):**
@@ -1019,16 +1005,29 @@ fct 是 funboost current task 的简写
 **Public Methods (1):**
 - `def run(self)`
 
-#### 🔧 Public Functions (3)
+#### 🔧 Public Functions (4)
 
-- `def is_asyncio_environment()`
-  - *Line: 152*
+- `def set_fct_context(fct_context: typing.Optional[FctContext])`
+  - *Line: 40*
+  - *设置当前线程/协程的 FctContext*
 
-- `def funboost_current_task()`
-  - *Line: 160*
+- `def get_fct_context() -> FctContext`
+  - *Line: 45*
+  - *获取当前线程/协程的 FctContext*
 
-- `def get_current_taskid()`
-  - *Line: 215*
+- `def funboost_current_task() -> _FctProxy`
+  - *Line: 97*
+  - **Docstring:**
+  `````
+  这个是兼容老的funboost_current_task() 函数，现在直接用 fct 就行了。
+  
+  获取当前任务上下文代理对象。
+  由于 contextvars 同时支持多线程和异步协程，这里直接返回 fct 代理对象即可。
+  `````
+
+- `def get_current_taskid() -> str`
+  - *Line: 107*
+  - *获取当前任务的 task_id*
 
 
 ---
@@ -1135,6 +1134,34 @@ Funboost vs Celery 的架构差异：
   把所有py文件自动执行import,主要是把 所有的@boost函数装饰器注册到 pid_queue_name__booster_map 中
   这个auto_discovery方法最好放到main里面,如果要扫描自身文件夹,没写正则排除文件本身,会无限懵逼死循环导入,无无限懵逼死循环导入
   `````
+
+
+---
+
+
+
+
+### 📄 Python File Metadata: `funboost/core/broker_kind__exclusive_config_default_define.py`
+
+#### 📝 Module Docstring
+
+`````
+这个文件决定了，每种broker对应的能额外传递哪些独特特殊的中间件配置，
+从BoosterParams 的 broker_exclusive_config 入参中传递一个字典
+`````
+
+#### 📦 Imports
+
+- `from logging import Logger`
+- `from funboost.constant import BrokerEnum`
+
+#### 🔧 Public Functions (2)
+
+- `def register_broker_exclusive_config_default(broker_kind: str, broker_exclusive_config_default: dict)`
+  - *Line: 14*
+
+- `def generate_broker_exclusive_config(broker_kind: str, user_broker_exclusive_config: dict, logger: Logger)`
+  - *Line: 21*
 
 
 ---
@@ -1322,7 +1349,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `from funboost.constant import FunctionKind`
 - `from funboost.core.broker_kind__exclusive_config_default_define import generate_broker_exclusive_config`
 - `from funboost.core.func_params_model import PublisherParams`
-- `from funboost.core.func_params_model import PriorityConsumingControlConfig`
+- `from funboost.core.func_params_model import TaskOptions`
 - `from funboost.core.function_result_status_saver import FunctionResultStatus`
 - `from funboost.core.helper_funs import MsgGenerater`
 - `from funboost.core.loggers import develop_logger`
@@ -1345,7 +1372,18 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 #### 🏛️ Classes (1)
 
 ##### 📌 `class AbstractPublisher(LoggerLevelSetterMixin)`
-*Line: 86*
+*Line: 43*
+
+**Docstring:**
+`````
+发布消息到消息队列
+同步编程，最重要的方法有 push publish，
+asyncio异步编程，最重要的方法有 aio_push aio_publish，
+
+用法是 booster.push(1,y=2)
+或者 booster.publish({"x":1,"y":2},task_options=TaskOptions(max_retry_times=3,...)) 
+总结就是push更简单更魔法，publish是更强大更灵活，因为publish除了发布函数入参自身，还可以传递task_options参数。
+`````
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, publisher_params: PublisherParams)`
@@ -1353,34 +1391,45 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
     - `self`
     - `publisher_params: PublisherParams`
 
-**Public Methods (13):**
+**Public Methods (12):**
 - `def custom_init(self)`
-- `def publish(self, msg: typing.Union[str, dict], task_id = None, priority_control_config: PriorityConsumingControlConfig = None)`
+- `def publish(self, msg: typing.Union[str, dict], task_id = None, task_options: TaskOptions = None)`
   - **Docstring:**
   `````
   :param msg:函数的入参字典或者字典转json。,例如消费函数是 def add(x,y)，你就发布 {"x":1,"y":2}
   :param task_id:可以指定task_id,也可以不指定就随机生产uuid
-  :param priority_control_config:优先级配置，消息可以携带优先级配置，覆盖boost的配置。
-  :return:
+  :param task_options:优先级配置，消息可以携带优先级配置，覆盖boost的配置。
+  :return: AsyncResult 对象，可以用于等待结果。 例如 status_and_result =  async_result.status_and_result 来等待返回结果。
+  
+  funboost 消息体中的extra字典，包含的key就是 TaskOptions 中声明的字段。例如 task_id, publish_time, publish_time_format 等。
+  如果用户传递了 task_options，则以 task_options 为准。
+  如果用户没有传递 task_options，则以消息体中的extra字典为准。
+  如果最终还是没有 task_id, publish_time, publish_time_format 等字段，则自动生成。
+  
+  意味着如果你想传递 task_options 中的值，你的msg字典，
+  第一种：你可以有一个extra字段，里面存放 task_options的各种字段，（适合跨编程语言）
+  第二种：你可以通过publish方法的 task_options指定一个 TaskOptions pydantic模型对象 （适合python语言，因为能章节用funboost）
+  
+  如果是跨业务跨编程语言，由于java不能调用python funboost的publish方法:
+  java可以这样通过http接口或者funboost.faas  来发布消息 {"user_id":123,"name":"张三","extra": {"task_id":"1234567890","max_retry_times":3}} 
   `````
 - `def send_msg(self, msg: typing.Union[dict, str])`
   - *直接发送任意消息内容到消息队列,不生成辅助参数,无视函数入参名字,不校验入参个数和键名*
 - `def push(self, *func_args, **func_kwargs)`
   - **Docstring:**
   `````
-  简写，只支持传递消费函数的本身参数，不支持priority_control_config参数。
+  简写，只支持传递消费函数的本身参数，不支持task_options参数。
   类似于 publish和push的关系类似 apply_async 和 delay的关系。前者更强大，后者更简略。
   
   例如消费函数是
   def add(x,y):
       print(x+y)
   
-  publish({"x":1,'y':2}) 和 push(1,2)是等效的。但前者可以传递priority_control_config参数。后者只能穿add函数所接受的入参。
+  publish({"x":1,'y':2}) 和 push(1,2)是等效的。但前者可以传递task_options参数。后者只能穿add函数所接受的入参。
   :param func_args:
   :param func_kwargs:
   :return:
   `````
-- `def concrete_realization_of_publish(self, msg: str)` `abc.abstractmethod`
 - `def sync_call(self, msg_dict: dict, is_return_rpc_data_obj = True) -> typing.Union[dict, FunctionResultStatus]`
   - *仅有部分中间件支持同步调用并阻塞等待返回结果,不依赖AsyncResult + redis作为rpc，例如 http grpc 等*
 - `def clear(self)` `abc.abstractmethod`
@@ -1392,7 +1441,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
   asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
   但为了更好的防止网络波动(例如发布消息到外网的消息队列耗时达到10毫秒),可以使用aio_push
   `````
-- `async def aio_publish(self, msg: typing.Union[str, dict], task_id = None, priority_control_config: PriorityConsumingControlConfig = None) -> AioAsyncResult`
+- `async def aio_publish(self, msg: typing.Union[str, dict], task_id = None, task_options: TaskOptions = None) -> AioAsyncResult`
   - **Docstring:**
   `````
   asyncio 生态下发布消息,因为同步push只需要消耗不到1毫秒,所以基本上大概可以直接在asyncio异步生态中直接调用同步的push方法,
@@ -1418,7 +1467,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 #### 🔧 Public Functions (1)
 
 - `def deco_mq_conn_error(f)`
-  - *Line: 372*
+  - *Line: 364*
 
 
 ---
@@ -1463,8 +1512,8 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `from threading import Lock`
 - `import asyncio`
 - `import nb_log`
-- `from funboost.core.current_task import funboost_current_task`
 - `from funboost.core.current_task import FctContext`
+- `from funboost.core.current_task import set_fct_context`
 - `from funboost.core.loggers import develop_logger`
 - `from funboost.core.func_params_model import BoosterParams`
 - `from funboost.core.func_params_model import PublisherParams`
@@ -1549,7 +1598,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 
 **Public Methods (12):**
 - `def bulid_a_new_publisher_of_same_queue(self)`
-- `def join_shedual_task_thread(cls)` `classmethod`
+- `def join_dispatch_task_thread(cls)` `classmethod`
   - *:return:*
 - `def custom_init(self)`
 - `def keep_circulating(self, time_sleep = 0.001, exit_if_function_run_sucsess = False, is_display_detail_exception = True, block = True, daemon = False)`
@@ -1592,7 +1641,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')`
 
 ##### 📌 `class ConcurrentModeDispatcher(FunboostFileLoggerMixin)`
-*Line: 1116*
+*Line: 1104*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumerx: AbstractConsumer)`
@@ -1606,7 +1655,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `def schedulal_task_with_no_block(self)`
 
 ##### 📌 `class MetricCalculation`
-*Line: 1222*
+*Line: 1210*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, conusmer: AbstractConsumer)`
@@ -1622,7 +1671,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `UNIT_TIME_FOR_COUNT = 10`
 
 ##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1305*
+*Line: 1293*
 
 **Docstring:**
 `````
@@ -1657,7 +1706,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 #### 🔧 Public Functions (1)
 
 - `def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3)`
-  - *Line: 1207*
+  - *Line: 1195*
   - **Docstring:**
   `````
   判断多个消费者是否消费完成了。
@@ -1706,6 +1755,7 @@ care_project_name 的作用是：
 - `import typing`
 - `import uuid`
 - `import os`
+- `from funboost.factories.consumer_factory import ConsumerCacheProxy`
 - `from funboost.factories.publisher_factotry import get_publisher`
 - `from funboost.publishers.base_publisher import AbstractPublisher`
 - `from funboost.utils.redis_manager import RedisMixin`
@@ -1713,8 +1763,10 @@ care_project_name 的作用是：
 - `from funboost.core.loggers import nb_log_config_default`
 - `from funboost.core.serialization import Serialization`
 - `from funboost.constant import RedisKeys`
-- `from funboost.core.booster import BoostersManager`
 - `from funboost.core.booster import Booster`
+- `from funboost.core.booster import BoosterRegistry`
+- `from funboost.core.booster import booster_registry_default`
+- `from funboost.core.booster import gen_pid_queue_name_key`
 - `from funboost.core.func_params_model import PublisherParams`
 - `from funboost.core.func_params_model import BoosterParams`
 - `from funboost.core.func_params_model import BaseJsonAbleModel`
@@ -1722,33 +1774,43 @@ care_project_name 的作用是：
 - `from funboost.core.consuming_func_iniput_params_check import FakeFunGenerator`
 - `from funboost.core.exceptions import QueueNameNotExists`
 - `from funboost.timing_job.timing_push import ApsJobAdder`
+- `from funboost.constant import EnvConst`
 
 #### 🏛️ Classes (5)
 
 ##### 📌 `class CareProjectNameEnv`
-*Line: 41*
+*Line: 43*
 
 **Public Methods (2):**
 - `def set(cls, care_project_name: str)` `classmethod`
 - `def get(cls) -> typing.Optional[bool]` `classmethod`
 
 **Class Variables (1):**
-- `env_name = 'funboost.care_project_name'`
+- `env_name = EnvConst.FUNBOOST_FAAS_CARE_PROJECT_NAME`
 
 ##### 📌 `class RedisReportInfoGetterMixin`
-*Line: 56*
+*Line: 60*
 
 **Public Methods (4):**
 - `def get_all_queue_names(self) -> list`
+  - *获取所有队列名称，带30秒缓存（类级别缓存，所有实例共享）*
 - `def get_queue_names_by_project_name(self, project_name: str) -> list`
+  - *根据项目名称获取队列名称，带30秒缓存（类级别缓存，所有实例共享）*
 - `def hmget_many_by_all_queue_names(self, key)`
 - `def get_all_project_names(self)`
 
-**Properties (1):**
+**Properties (2):**
 - `@property all_queue_names`
+- `@property project_name_queues`
+
+**Class Variables (4):**
+- `_cache_all_queue_names = None`
+- `_cache_all_queue_names_ts = 0`
+- `_cache_queue_names_by_project = {}`
+- `_cache_ttl = 30`
 
 ##### 📌 `class ActiveCousumerProcessInfoGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 134*
+*Line: 180*
 
 **Docstring:**
 `````
@@ -1797,7 +1859,7 @@ care_project_name 的作用是：
   - *获取所有机器ip对应的活跃消费者进程信息，按机器ip划分,不需要传入机器ip，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对*
 
 ##### 📌 `class QueuesConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 253*
+*Line: 299*
 
 **Docstring:**
 `````
@@ -1822,7 +1884,7 @@ care_project_name 的作用是：
 - `def cycle_get_queues_params_and_active_consumers_and_report(self, daemon = False)`
 
 ##### 📌 `class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 376*
+*Line: 422*
 
 **Docstring:**
 `````
@@ -1831,11 +1893,12 @@ care_project_name 的作用是：
 `````
 
 **🔧 Constructor (`__init__`):**
-- `def __init__(self, queue_name: str, care_project_name: typing.Optional[str] = None)`
+- `def __init__(self, queue_name: str, care_project_name: typing.Optional[str] = None, is_use_local_booster: bool = None)`
   - **Parameters:**
     - `self`
     - `queue_name: str`
     - `care_project_name: typing.Optional[str] = None`
+    - `is_use_local_booster: bool = None`
 
 **Public Methods (13):**
 - `def get_one_queue_params(self) -> dict`
@@ -1935,8 +1998,8 @@ care_project_name 的作用是：
           
   `````
 - `def get_one_queue_params_use_cache(self) -> dict`
-- `def generate_publisher_by_funboost_redis_info(self) -> AbstractPublisher`
-- `def generate_booster_by_funboost_redis_info_for_timing_push(self) -> Booster`
+- `def gen_booster_for_faas(self) -> Booster`
+- `def gen_publisher_for_faas(self) -> Booster`
 - `def generate_aps_job_adder(self, job_store_kind = 'redis', is_auto_start = True, is_auto_paused = True) -> ApsJobAdder`
 - `def get_one_queue_pause_flag(self) -> int`
   - *返回队列的暂停状态，-1 表示队列不存在，0 表示队列未暂停，1 表示队列已暂停*
@@ -1961,10 +2024,8 @@ care_project_name 的作用是：
   2. 从 funboost.project_name:{project_name} set 中移除
   `````
 
-**Class Variables (4):**
+**Class Variables (2):**
 - `queue__booster_params_cache: dict = {}`
-- `_pid_broker_kind_queue_name__booster_map = {}`
-- `_pid_broker_kind_queue_name__publisher_map = {}`
 - `_lock_for_generate_publisher_booster = threading.Lock()`
 
 
@@ -1985,6 +2046,7 @@ Entry Points (not imported by other project files):
   ★ funboost/consumers/base_consumer.py
   ★ funboost/core/active_cousumer_info_getter.py
   ★ funboost/core/booster.py
+  ★ funboost/core/broker_kind__exclusive_config_default_define.py
   ★ funboost/core/cli/discovery_boosters.py
   ★ funboost/core/current_task.py
   ★ funboost/core/func_params_model.py
@@ -2019,7 +2081,6 @@ Entry Points (not imported by other project files):
 - `boost_spider/__init__.py`
 - `boost_spider/http/request_client.py`
 - `boost_spider/sink/dataset_sink.py`
-- `boost_spider/sink/json_sink.py`
 
 
 ### 📄 Python File Metadata: `boost_spider/__init__.py`
@@ -2227,43 +2288,6 @@ dataset 很适合保存一个字典到各种数据库 mysql postgre sqlite
 
 
 
-
-### 📄 Python File Metadata: `boost_spider/sink/json_sink.py`
-
-#### 📦 Imports
-
-- `import datetime`
-- `import json`
-- `import threading`
-- `import time`
-- `from pathlib import Path`
-- `from boost_spider.sink.sink_helper import log_save_item`
-
-#### 🏛️ Classes (1)
-
-##### 📌 `class JsonFileSink`
-*Line: 10*
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, path, file)`
-  - **Parameters:**
-    - `self`
-    - `path`
-    - `file`
-
-**Public Methods (2):**
-- `def save(self, item: dict)`
-- `def read_json(self)`
-
-**Class Variables (2):**
-- `_lock = threading.Lock()`
-- `full_path__f_map = {}`
-
-
----
-
-
-
 ## 🔗 funboost_docs Some File Dependencies Analysis
 
 以下是项目文件之间的依赖关系，帮助 AI 理解代码结构：
@@ -2275,7 +2299,6 @@ Entry Points (not imported by other project files):
   ★ boost_spider/__init__.py
   ★ boost_spider/http/request_client.py
   ★ boost_spider/sink/dataset_sink.py
-  ★ boost_spider/sink/json_sink.py
 
 `````
 
@@ -2362,7 +2385,7 @@ funboost 所有用法的使用， demo 例子 演示
 - `from funboost import BoosterParams`
 - `from funboost import BrokerEnum`
 - `from funboost import ConcurrentModeEnum`
-- `from funboost import PriorityConsumingControlConfig`
+- `from funboost import TaskOptions`
 - `from funboost import ApsJobAdder`
 - `from funboost import ctrl_c_recv`
 - `from funboost import fct`
@@ -2425,7 +2448,7 @@ from funboost import (
     BoosterParams,          # 参数配置类
     BrokerEnum,             # 中间件枚举
     ConcurrentModeEnum,     # 并发模式枚举
-    PriorityConsumingControlConfig, # 优先级/延时配置
+    TaskOptions, # 优先级/延时配置
     ApsJobAdder,            # 定时任务添加器
     ctrl_c_recv,            # 阻塞主线程工具
     fct,                    # 上下文对象 (Funboost Current Task)
@@ -2618,28 +2641,28 @@ if __name__ == '__main__':
     print("如果不指定filter_str， 默认使用函数的所有入参包括 user_id user_sex user_name 来做过滤")
     task_filter.push(1001,"man",user_name="xiaomin")
 
-    # 演示: 指定字符串过滤 (publish 方式 + priority_control_config)
+    # 演示: 指定字符串过滤 (publish 方式 + task_options)
     # 场景：只根据 user_id 过滤，即使其他参数不同，只要 user_id 相同就被过滤
     print("发布 user_id=1001 (第1次)")
     task_filter.publish(
         msg={"user_id": 1001, "user_sex": "man", "user_name": "Tom"},
-        priority_control_config=PriorityConsumingControlConfig(filter_str="1001")
+        task_options=TaskOptions(filter_str="1001")
     )
     
     print("发布 user_id=1001 (第2次, name不同, 但filter_str相同, 应该被过滤)")
     task_filter.publish(
         msg={"user_id": 1001, "user_sex": "man", "user_name": "Jerry"},
-        priority_control_config=PriorityConsumingControlConfig(filter_str="1001")
+        task_options=TaskOptions(filter_str="1001")
     )
 
 
     # --- 8. 延时任务演示 ---
     print("\n--- 延时演示 ---")
     print(f"发布延时任务时间: {datetime.datetime.now()}")
-    # 使用 publish 方法发布，并携带 priority_control_config
+    # 使用 publish 方法发布，并携带 task_options
     task_delay.publish(
         msg={"msg": "我是延迟5秒的消息"}, 
-        priority_control_config=PriorityConsumingControlConfig(countdown=5)
+        task_options=TaskOptions(countdown=5)
     )
 
     # --- 9. 定时任务演示 (APScheduler) ---
@@ -3451,6 +3474,7 @@ def sub(a, b):
         ├── c13.md
         ├── c14.md
         ├── c15.md
+        ├── c16.md
         ├── c2.md
         ├── c20.md
         ├── c3.md
@@ -3467,7 +3491,7 @@ def sub(a, b):
 ---
 
 
-## funboost_docs (relative dir: `source/articles`)  Included Files (total: 18 files)
+## funboost_docs (relative dir: `source/articles`)  Included Files (total: 19 files)
 
 
 - `source/articles/c0.md`
@@ -3485,6 +3509,8 @@ def sub(a, b):
 - `source/articles/c14.md`
 
 - `source/articles/c15.md`
+
+- `source/articles/c16.md`
 
 - `source/articles/c2.md`
 
@@ -4016,36 +4042,23 @@ def task_fun(a, b):
 可视化管理后台提供了强大的监控与运维能力，以下是核心功能截图：
 
 
-### 📊 监控总览
-| 模块 | 功能 | 视图 |
-| :--- | :--- | :--- |
-| **实时状态** | 查看函数运行状态与结果 | ![状态](https://s21.ax1x.com/2025/03/04/pEJCffK.png) |
-| **速率趋势** | 展示历史与实时消费QPS | ![趋势](https://s21.ax1x.com/2025/03/04/pEJCWY6.png) |
 
-### 👁️ 消费者洞察
-| 模块 | 功能 | 视图 |
-| :--- | :--- | :--- |
-| **IP查看消费者** | 根据IP查看消费者进程 | ![IP监控](https://s21.ax1x.com/2025/03/04/pEJCRFx.png) |
-| **查看消费者详情** | 查看一个booster所有消费者运行详情 | ![详情](https://s21.ax1x.com/2025/03/04/pEJCgT1.png) |
+函数消费结果：可查看和搜索函数实时消费状态和结果  
+[![函数结果表](https://s41.ax1x.com/2025/12/19/pZ1L5h4.png)](https://imgchr.com/i/pZ1L5h4)
 
-### ⚙️ 队列控制
-| 模块 | 功能 | 视图 |
-| :--- | :--- | :--- |
-| **运维管理** | 清空、暂停、调整QPS与并发 | ![管理](https://s21.ax1x.com/2025/05/27/pVSOJcq.png) |
-| **多维指标** | 查看运行次数、失败率、耗时、积压量 | ![指标](https://s21.ax1x.com/2025/05/29/pVpr7sP.png) |
+队列操作：查看和操作队列，包括清空、暂停消费、恢复消费、调整QPS和并发  
+[![队列操作1](https://s41.ax1x.com/2025/12/17/pZlrYPH.png)](https://imgchr.com/i/pZlrYPH)
+[![队列操作2](https://s41.ax1x.com/2025/12/17/pZlrUxI.png)](https://imgchr.com/i/pZlrUxI)
 
-### 🔧 工具交互
-| 模块 | 功能 | 视图 |
-| :--- | :--- | :--- |
-| **在线RPC** | 发布消息并同步获取结果 | ![RPC](https://s21.ax1x.com/2025/04/29/pE7y8oT.png) |
-| | | |
+队列操作：查看消费曲线图，查看各种消费指标（历史运行次数、失败次数、近10秒完成/失败、平均耗时、剩余消息数量等）  
+[![队列消费曲线](https://s41.ax1x.com/2025/12/19/pZ104HS.png)](https://imgchr.com/i/pZ104HS) 
 
-### ⏰ 定时任务管理
-| 模块 | 功能 | 视图 |
-| :--- | :--- | :--- |
-| **任务列表** | 定时任务管理列表页 | [![列表页](https://s41.ax1x.com/2025/12/15/pZQlfaT.png)](https://imgchr.com/i/pZQlfaT) |
-| **新增任务** | 添加定时任务 | [![新增](https://s41.ax1x.com/2025/12/15/pZQl5iF.png)](https://imgchr.com/i/pZQl5iF) |
-| **任务详情** | 查看定时任务详情 | [![详情](https://s41.ax1x.com/2025/12/15/pZQlhIU.png)](https://imgchr.com/i/pZQlhIU) |
+RPC调用：在网页上对30种消息队列发布消息并获取函数执行结果；可根据task_id获取结果  
+[![rpc调用成功-绿色](https://s41.ax1x.com/2025/12/19/pZ10RjP.png)](https://imgchr.com/i/pZ10RjP)
+
+定时任务管理：列表页  
+[![定时任务列表](https://s41.ax1x.com/2025/12/17/pZlrNRA.png)](https://imgchr.com/i/pZlrNRA)
+
 
 
 ## 1.4 💡 为什么 Python 极其需要分布式函数调度？
@@ -4091,7 +4104,7 @@ Funboost 的设计哲学是 **“极简主义”**。您无需阅读长篇大论
 
 ---
 
-## 1.6 🥋 funboost施展吸星大法神功，一招汲取 Celery 毕生功力
+## 1.6 🥋 funboost 练就吸星大法神功，一招吸走 Celery 毕生内力
 
 **Funboost 的极简招式 + Celery 的深厚内力 = 独步武林**
 
@@ -4115,15 +4128,9 @@ Celery 称霸 Python 异步江湖十数载，内力虽深厚，但其招式繁�
 > 欲练此功，请翻阅 **[11.1 章节]**。
 > 您只需施展 Funboost 的极简剑法，底层那拥有万钧之力的 Celery 引擎便会自动为您移山填海，虽有雷霆之威，却无反噬之虞。
 
-```
-有的人觉得celery那么知名，所以celery性能一定顶呱呱，所以打死不信funboost的性能狂秒celery几十倍。
 
-这些懒虫又爱质疑又害怕吃苦，即使我已经写好了benchmark测试对比代码，还是不愿意亲自运行教程2.6章节的使用严格
-控制变量法的 funboost vs celery性能测试对比，所以funboost 干脆直接把celery作为funboost的broker之一。
-
-不是funboost性能太牛，是celery是在太差，不信的话，你自己也可以写个简陋版的 while True:msg=redis.blpop(),
-把msg丢到线程池执行，你会发现你随便写的代码，性能也狂秒celery。
-```
+ 需要说明的是，funboost性能是已经远超celery，吸纳celery作为broker，兼容celery作为funboost的broker，是为了打消有的人对funboost的调度核心的稳定性的疑虑。   
+ > 你可以看文档2.6章节**funboost vs celery控制变量法性能对比**，以及2.9章节，**funboost到底为什么性能比celery高几十倍？太离谱了,太假了是吗？**
 
 
 [查看分布式函数调度框架完整文档](https://funboost.readthedocs.io/)  
@@ -5223,7 +5230,7 @@ if __name__ == '__main__':
 ```  
 
 ```  
-funboost 通过其高度抽象的 _shedual_task 接口，成功地将自己从一个单纯的“任务队列执行者”提升为了一个“通用事件监听与函数调度平台”。  
+funboost 通过其高度抽象的 _dispatch_task 接口，成功地将自己从一个单纯的“任务队列执行者”提升为了一个“通用事件监听与函数调度平台”。  
 Celery 是消息驱动的：它的世界观是“消息来了，我执行”。它关心的是如何处理被显式告知的任务。  
 Funboost 是事件驱动的：它的世界观是“事件发生了，我响应”。它关心的是如何监听并响应来自任何源头的状态变化。  
 MYSQL_CDC broker 是这一点的最佳证明，但绝不是终点。正如您的推论，日志文件、文件系统变更（inotify）、甚至是硬件传感器的信号，理论上都可以被封装成一个 funboost 的 Broker。  
@@ -5446,41 +5453,50 @@ start_funboost_web_manager()
 
 ## 13.2 funboost web manager 截图  
 
-函数消费结果：可查看和搜索函数实时消费状态和结果  
-[![pEJCffK.png](https://s21.ax1x.com/2025/03/04/pEJCffK.png)](https://imgse.com/i/pEJCffK)  
+设置关心的项目，设置 care_project_name，可以让界面仅显示你关心的项目的队列，减少无关返回信息的干扰。
+[![设置关心的项目 care_project_name](https://s41.ax1x.com/2025/12/19/pZ10fnf.png)](https://imgchr.com/i/pZ10fnf)
+
+函数消费结果：可查看和搜索函数实时消费状态和结果。对于失败的消息，在页面上用户可以点击重新运行按钮，方便一键重新投递到消息队列。  
+[![函数结果表](https://s41.ax1x.com/2025/12/19/pZ1L5h4.png)](https://imgchr.com/i/pZ1L5h4)
 
 消费速度图：可查看实时和历史消费速度  
-[![pEJCWY6.png](https://s21.ax1x.com/2025/03/04/pEJCWY6.png)](https://imgse.com/i/pEJCWY6)  
+[![从函数结果表，统计的消费速率](https://s41.ax1x.com/2025/12/19/pZ10g1I.png)](https://imgchr.com/i/pZ10g1I)
 
 运行中消费者 by ip： 根据ip搜索有哪些消费者  
-[![pEJCRFx.png](https://s21.ax1x.com/2025/03/04/pEJCRFx.png)](https://imgse.com/i/pEJCRFx)  
+[![运行中消费者按ip分组](https://s41.ax1x.com/2025/12/17/pZlrwsP.png)](https://imgchr.com/i/pZlrwsP)
 
 运行中消费者 by queue： 根据队列名字搜索有哪些消费者  
-[![pEJCcwR.png](https://s21.ax1x.com/2025/03/04/pEJCcwR.png)](https://imgse.com/i/pEJCcwR)  
+[![运行中消费者，按队列名字分组](https://s41.ax1x.com/2025/12/19/pZ10c9A.png)](https://imgchr.com/i/pZ10c9A) 
 
 队列操作：查看和操作队列，包括 清空清空 暂停消费 恢复消费 调整qps和并发  
-<!-- [![pEJC6m9.png](https://s21.ax1x.com/2025/03/04/pEJC6m9.png)](https://imgse.com/i/pEJC6m9) -->  
-[![pVSOJcq.png](https://s21.ax1x.com/2025/05/27/pVSOJcq.png)](https://imgse.com/i/pVSOJcq)  
+[![队列操作1](https://s41.ax1x.com/2025/12/17/pZlrYPH.png)](https://imgchr.com/i/pZlrYPH)
+[![队列操作2](https://s41.ax1x.com/2025/12/17/pZlrUxI.png)](https://imgchr.com/i/pZlrUxI)
 
 队列操作，查看消费者详情：查看队列的所有消费者详情  
-[![pEJCgT1.png](https://s21.ax1x.com/2025/03/04/pEJCgT1.png)](https://imgse.com/i/pEJCgT1)  
+[![队列操作-消费者详情](https://s41.ax1x.com/2025/12/17/pZlr8aD.png)](https://imgchr.com/i/pZlr8aD)
+
+队列操作，查看消费者的BoosterParams配置
+[![队列操作-消费者配置](https://s41.ax1x.com/2025/12/17/pZlrdMt.png)](https://imgchr.com/i/pZlrdMt)
 
 队列操作:查看消费曲线图，查看各种消费指标。  
 包括 历史运行次数  历史运行失败次数  近10秒完成  近10秒失败  近10秒函数运行平均耗时  累计函数运行平均耗时  剩余消息数量  
-[![pVpr7sP.png](https://s21.ax1x.com/2025/05/29/pVpr7sP.png)](https://imgse.com/i/pVpr7sP)  
+[![队列消费曲线](https://s41.ax1x.com/2025/12/19/pZ104HS.png)](https://imgchr.com/i/pZ104HS) 
 
-rpc调用：在网页上对30种消息队列发布消息并获取消息的函数执行结；根据taskid获取结果。  
-<!-- [![pETq8hj.png](https://s21.ax1x.com/2025/04/28/pETq8hj.png)](https://imgse.com/i/pETq8hj) -->  
-[![pE7y8oT.png](https://s21.ax1x.com/2025/04/29/pE7y8oT.png)](https://imgse.com/i/pE7y8oT)  
+rpc调用：在网页上对30种消息队列发布消息并获取消息的函数执行结；以及可根据taskid获取结果。  
+[![rpc调用，成功时候界面变绿色](https://s41.ax1x.com/2025/12/19/pZ10RjP.png)](https://imgchr.com/i/pZ10RjP)
+[![rpc调用，出错时候界面变红色](https://s41.ax1x.com/2025/12/19/pZ102ct.png)](https://imgchr.com/i/pZ102ct) 
 
 定时任务管理：列表页
-[![pZQlfaT.png](https://s41.ax1x.com/2025/12/15/pZQlfaT.png)](https://imgchr.com/i/pZQlfaT)
+[![定时任务列表](https://s41.ax1x.com/2025/12/17/pZlrNRA.png)]
 
 定时任务：新增
-[![pZQl5iF.png](https://s41.ax1x.com/2025/12/15/pZQl5iF.png)](https://imgchr.com/i/pZQl5iF)
+[![添加定时任务](https://s41.ax1x.com/2025/12/17/pZlrGIe.png)](https://imgchr.com/i/pZlrGIe)
 
 定时任务：任务详情
-[![pZQlhIU.png](https://s41.ax1x.com/2025/12/15/pZQlhIU.png)](https://imgchr.com/i/pZQlhIU)
+[![定时任务详情](https://s41.ax1x.com/2025/12/19/pZ10hB8.png)](https://imgchr.com/i/pZ10hB8)
+
+
+
 
 ## 13.3 funboost web 图片对应的测试代码  
 
@@ -5564,6 +5580,119 @@ if __name__ == '__main__':
 
 `````markdown
 # 14 🏅[懒人必看章节] 利用ai来掌握 funboost 的 正确方式
+
+开门见山，**想靠ai用好 `funboost` ，只有这一条路最正确：**
+
+- 1.打开 Google AI Studio [https://aistudio.google.com/](https://aistudio.google.com/prompts/new_chat)。
+- 2.丢入 `funboost_合并教程_源码.md`。
+- 3.别在 IDE 里问，别在gemini官网问，否则 别怪AI 不行，是你不行！
+
+**如果你不能科学上网没有梯子，其他的也介绍了一些ai使用方式，请你务必看完本章节，别偷懒。**
+
+## 14.0 🤬 [高能预警]在此章节最开头，先允许我用最恶毒的语言来**刺激骂醒**一部分又懒又蠢的懒癌患者的大脑皮层！
+
+**说明：**   
+此段内容不是针对所有人，没有针对屏幕前的你，我要骂的是反复多次要求让他去仔细看文档14章节，他还是不愿意认真看的这种 **恨铁不成钢的超级无敌大懒猪**。
+
+> **致部分无可救药的懒癌晚期患者：**
+>
+> 先让我骂一下一部分人是 **懒虫中的懒虫，蠢猪中的蠢猪，傻屌中的傻屌**，是 **大脑皮层光滑如镜的单细胞生物**，是 **浪费空气的造粪机器**，是 **无可救药的伸手党巨婴！**， **脖子上的脑袋纯粹是为了显高，视网膜纯粹是为了美观** 凸(艹皿艹 )
+
+如果不用最恶毒下流的语言来写教程，有些人看教程时候简直是在**打瞌睡**，要么心不在焉，要么企图偷懒一目十行，甚至大段大段地跳过，连教你怎么偷懒用ai掌握funboost都大段跳过！
+
+你连20分钟看第14章内容的时间都没有吗？教你偷懒的教程你还要偷懒。
+
+现在不像10年前，需要在大冬天坐冷板凳熬夜苦读 Django/Celery 几千页教程，**现在有 AI ！**
+你害怕吃苦、想偷懒，你就用 AI，AI 不怕吃苦！但是有的**极品懒癌**，连这一章的内容都不仔细阅读，连教你怎么偷懒的章节都要快速一目十行扫过？**你的脑子是装饰品吗？**
+
+### 14.0.1 🧠 脑残行为大赏
+
+虽然我都说了可以用 AI 来高效、无幻觉、准确掌握 `funboost` 任何公开教程和源码细节，而且**专门**写了这个章节教程。
+但一部分 **懒虫中的极品懒虫，蠢猪中的极品蠢猪**，连这章都不仔细读！
+
+1.  有问题来问我，我问：“为什么不用 AI 呢？建议先看下文档第14章。”
+2.  他还敢顶嘴说**“已经看过文档第14章”**。
+3.  结果我仔细追问，发现他完全是 **瞎几把乱用 AI**！
+
+教程中明确说了哪些是 **大错特错** 的用 AI 掌握 `funboost` 的方式，他偏偏还是这样用！这种做法极其浪费时间，**让我非常的生气恼火！** 😡
+
+我再仔细问他是怎么用的：
+*   他说直接问 AI 的；
+*   或者说已经把文档传给 AI 了。
+*   再问细节，他说是在 **DeepSeek / GPT / Claude 网页** 提问的；
+*   有的说在 **Cursor / Trae / Qoder** 这些 IDE 里面提问的。
+*   有的说在 **Claude-code / Gemini-cli** 这些命令行里面提问的。
+*   有的说用的 gemini-flash ，而没有按教程写的用 gemini-pro
+*   有的人使用 https://gemini.google.com ,而不是教程规定的 https://aistudio.google.com
+
+**此章节里面已经反复明确说了，这些全踏马是错误的让 AI 学习 funboost 的方式！你是瞎了吗？**
+
+---
+
+### 14.0.2 🚫 别拿通用框架的经验来羞辱我的智商
+
+如果你是提问 AI：*“怎么使用 FastAPI / Django / Flask / Requests？”*
+这些大名鼎鼎的 Python 框架，任何 AI 大模型只要不是太水，你想怎么使用都可以，几乎都没问题。**你不需要我来充当 AI 教师爷教你怎么用 AI 掌握热门顶流框架。**
+
+👉 **但是！** 如果你想用 AI 掌握 `funboost`，就 **必须按照我说的方式来！**
+如果你不按我说的方式来，AI **绝无可能** 正确无幻觉掌握得了 `funboost`，到时候你还怪 AI 不行？**是你踏马的不行！**
+
+---
+
+### 14.0.3 ❌ [严重警告] 懒癌患者请把下面这几点刻在脑门上！
+
+我踏马再在这里对一部分懒癌患者，把此章节内容中的**错误使用方式**再提前重复啰嗦一次：
+
+*   ❌ **错误一**：不上传我指定的 `funboost_合并教程_源码.md` 文档，直接在任何 AI 官网网页提问 `funboost` 知识。**这是最错误的方式**，包括 `gemini-3.0pro` 网页也不行！
+*   ❌ **错误二**：在 `Cursor` / `Trae` / `Qoder` 这类 AI IDE 的聊天框里面 `@funboost_合并教程_源码.md` 这个文件。**这也是大错特错的！** 原因我反复说了自己去细看——**因为文档太长，AI IDE 不会乖乖全量阅读，否则厂商会血亏！**
+*   ❌ **错误三**：上传文档给 `GPT` / `DeepSeek` / `Claude` 提问。**这也是错误方式！** 因为 `funboost_合并教程_源码.md` 需要 **800k tokens** 上下文，而这些模型最大才支持 128k-256k，压根不支持上传这么长的文档！有些网页就算上传成功，也是使用稀疏注意力或 RAG 切片**大段跳过**，**压根不能全局统筹、非常细致地掌握 funboost 的细节！**
+*   ❌ **错误四**：在 `Claude-code` 和 `Gemini-cli` 这种有 1M 上下文的命令行 AI 中，`@funboost_合并教程_源码.md` 这个文件。**这也是错误方式！** 原因我反复说了自己去细看，因为文档太长 AI agent 不会乖乖全量阅读，厂商亏不起！
+
+---
+
+### 14.0.4 ✅ ai掌握funboost的唯一正确的路径
+
+**听好了，只有同时满足以下 5 个条件，AI 才能真正掌握 `funboost`：**
+
+1.  **按我说的做**（别自作聪明）；
+2.  使用**经过我实践实测的**工具；
+3.  大模型必须有 **原生 1000k 上下文或少部分rag平台**；
+4.  可以 **强迫投喂** `funboost_合并教程_源码.md` 文档，
+5.  投喂长文档后， AI 是 **全量乖乖阅读推理** 的（必须是乖乖全量阅读推理，这一点非常非常核心重要，你在cursor trae中提问长文档，那agent就是分多步骤阅读和检索关键字，又慢又不准，因为ai ide害怕全量阅读花太多tokens导致亏本）。
+
+**少一个条件，你就别来问我 funboost怎么使用，funboost为什么报错！**
+
+### 14.0.5 🤬 当我问你怎么使用ai时候，你最少要回答200字到底是怎么使用ai的，别踏马就简单的说:"我已经用ai来问funboost问题了"   
+
+**因为很多恨铁不成钢的懒虫，即使我反复要求他先仔细阅读第14章节，他还是不仔细阅读此章节的内容，这种懒虫我见过太多了**
+
+所以我要求你仔细回答是如何使用ai的，你要回答的包括：   
+- 1. 你是在网页还是ai ide问的，如果是网页请把网址发下     
+- 2. 你用的是什么大模型   
+- 3. 你上传文档了没，如果上传了文档请把文档名发下 ，我要确定你上传的是不是我指定的文档。（因为有的懒虫一意孤行不看此章节教程）  
+- 4. 你是怎么问的，如果可能，把提问问题也发一下。 【我要复制你的提问，我现在非常喜欢挑战nb_ai_context的能力上限，我要看看ai是不是真的掌握不了，还是我文档提示词工程的问题，  
+     还是你不按照教程第14章说的做。 （根据过往经验，几乎用户所有的问题，我直接在ai中输入并提问，ai都可以回答正确，是用户太几把懒了不认真看第14章，还踏马怪ai不行） 】 
+
+
+
+
+
+## 14.0.0b 推荐一个在ai时代 神级别黑科技掌握任意非知名的it项目的方式 nb_ai_context
+
+funboost 合并文档 `funboost_合并教程_源码.md` 就是使用 `nb_ai_context` 生成的
+
+[nb_ai_context地址](https://github.com/ydf0509/nb_ai_context)    
+
+用户也可以在 `nb_ai_context` 的readme里面去了解，为什么冷门it项目必须使用特殊的手段才能让ai无幻觉掌握用法和细节。    
+如果你是问ai ,怎么使用fastapi/django/flask/requests 这些大名鼎鼎的python框架 ，任何ai只要不是太水，几乎都没问题,不需要 nb_ai_context ， 
+不需要我教你怎么用ai 掌握 flask django fastapi。
+
+`nb_ai_context` 不仅可以生成funboost合并文档，让ai无幻觉掌握用法和细节， 也适用于任何冷门三方框架以及个人或公司的私有代码项目。  
+`nb_ai_context` 尤其是对python项目效果更佳，因为对python文件有专门额外的 ast解析。
+
+
+
+## 14.0.1 为什么要专门写第14章这个教程？
 
 有的人太懒惰了,不愿意吃苦阅读  `funboost` 的 `readthedocs` 教程,或者不清楚 `funboost` 实现的背后细节原理且不愿意分析框架源码,那就使用 ai 来替你搞定一切.  
 
@@ -5684,7 +5813,7 @@ rag全局统筹关联推理和自动阅读分析大项目跨文件的代码,没�
 **第一性原理:使用google ai studio网页版+上传markdown+免费+1000k上下文+全文一次性阅读=幻觉率几乎没有**  
 **gemini-3.0pro 在上传 funboost_合并教程_源码.md 这文件后,对funboost的常规用法以及任何细节推理和funboost作者我本人不相上下,知我心者,gemini也**  
 
-### 14.1.1  强烈推荐选择 gemini 3.0pro 大模型  
+### 14.1.1  强烈推荐选择 google ai studio + gemini 3.0pro 大模型  
 
 `gemini 3.0pro`大模型有`1000k token`上下文, 并且可以在 `google ai studio` 免费无限使用  
 
@@ -5755,15 +5884,66 @@ ai真的是生产力，人工需要阅读几天几夜的教程和框架源码，
 web里面,天然需要上传文件,而且上传时候就可以控制文件大小和数量,没有电脑本地那么容易恶意滥用浪费大模型算力.
 ```
 
+### 14.1.2c 🛑 拒绝 Gemini 官网，✅ 拥抱 Google AI Studio
 
-### 14.1.3 一定要上传markdown文档再提问  
+**核心原则：请务必使用开发者专用的 [Google AI Studio](https://aistudio.google.com/)，而不是面向普通消费者的 [Gemini 官网](https://gemini.google.com/)。**
+
+虽然两者底层模型可能相同，但在处理 `funboost` 这种超长技术文档时，表现有着天壤之别。以下是三大核心理由：
+
+#### 14.1.2c.1 💰 理由一：真正的“白嫖”与额度优势
+
+| 平台 | Google AI Studio (推荐) | Gemini 官网 (不推荐) |
+| :--- | :--- | :--- |
+| **模型版本** | **Gemini 3.0 Pro** | Gemini Pro / Advanced |
+| **费用** | **免费** (且速率限制极高，普通人难触发上限) | Pro 模型通常需要订阅 Google One 会员 (付费) |
+| **性质** | 面向开发者，提供原始模型能力 | 面向大众，包含大量安全过滤和预设 |
+
+#### 14.1.2c.2 🧠 理由二：忠于文档 vs. 通用幻觉
+
+即使你拥有 Gemini 官网的会员，**AI Studio 的回答质量依然完胜**。
+
+*   **Google AI Studio (专家模式)**：
+    它会**严格基于你上传的文档**进行推理。对于 `funboost` 这种包含大量独创设计（如第6章的自问自答、特定配置写法）的框架，它能精准提取文档中的解决方案，而不是瞎猜。
+
+*   **Gemini 官网 (通用模式)**：
+    它倾向于使用训练数据中的“通用 Python/IT 知识”来回答。
+    > **后果**：当你问一个 `funboost` 特有的问题时，官网版可能会忽略文档中的特定解法，按常规逻辑去推测（胡编），导致回答虽然看起来通顺，但完全没有 Get 到框架的精髓。
+
+#### 14.1.2c.3 ⚡ 理由三：真·全量阅读 (Long Context) vs. 伪·检索切片 (RAG)
+
+这是最硬核的技术差异，直接决定了 AI 能否读懂 `funboost` 的源码架构。
+
+*   **文档体量**：`funboost_合并教程_源码.md` 约为 **800k tokens**。
+*   **Google AI Studio**：
+    *   **机制**：**原生超长上下文 (Native Long Context)**。
+    *   **效果**：它能**一次性吞下**整个文档，像一个过目不忘的天才，能关联文档开头和结尾的逻辑。这是真正的“全量阅读”。
+*   **Gemini 官网**：
+    *   **机制**：**混合模式 / RAG (检索增强)**。虽然它允许上传 20M 的文件，但为了响应速度和成本，它底层往往采用切片检索。
+    *   **效果**：它像一个“一目十行”的略读者，会**大量丢失细节**。对于代码这种逻辑严密的内容，丢失细节就是灾难。
+
+> **💡 黄金法则**：除非你的私有文档大到超过了模型窗口上限（如 >200万 tokens），否则**永远优先选择原生超长上下文，坚决抵制 RAG。**
+
+---
+
+#### 14.1.2c.4 📸 提问时的“自证清白”
+
+为了确保你没有用错工具，当你向我反馈“AI 回答不对”时，**请务必提供截图**：
+
+1.  **不要只说**：“我用的 Gemini”。
+2.  **请展示网址**：我要看到浏览器地址栏是 `aistudio.google.com`。
+3.  **请展示模型**：我要看到你选的是 `Gemini 1.5 Pro`。
+
+> **⚠️ 警告**：如果你不听劝阻，非要去用 Cursor IDE、Trae 或者 Gemini 官网提问，导致 AI 回答错误，**请不要怪 AI 不行，那是你不行。**
+
+
+### 14.1.4 一定要上传markdown文档再提问  
 不要直接在ai大模型的网页或者app提问`funboost`知识  
 直接在网页提问,除了最简单的demo,写稍微深入一点的, 幻觉率太高了,所有ai几乎100%会意淫瞎造 `funboost`   
 不存在的 入参 /类 /函数.  甚至有的国产水货大模型,连最基础简单`funboost` demo都会幻觉乱写。  
 
 **要想让 AI 成为您学习 funboost 的得力助手，而不是一个满嘴跑火车的“猪队友”，最佳实践就是：打开 `Google AI Studio` 网站，将 `funboost_合并教程_源码.md` 文件上传，然后开始向一个已经“吃透”了 `funboost` 所有官方资料的 `Gemini 3.0 Pro` 专家提问。**  
 
-### 14.1.4 funboost 的 markdown文档地址说明  
+### 14.1.5 funboost 的 markdown文档地址说明  
 
 `funboost` 文档是托管在 `readthedocs` 网站,原始教程是分为了多个`markdown`文件  
 
@@ -5775,7 +5955,7 @@ web里面,天然需要上传文件,而且上传时候就可以控制文件大小
 
 ![1756373743657](image/c6/1756373743657.png)  
 
-#### 14.1.4.2 funboost的ai markdown文档是使用神级别 ai上下文生成工具 nb_ai_context 生成的
+#### 14.1.5.2 funboost的ai markdown文档是使用神级别 ai上下文生成工具 nb_ai_context 生成的
 
 为什么 funboost的这个合并单一markdown传给ai后，ai如此强悍无幻觉，一方面是`gemini`很强大，另一方面是因为 `nb_ai_context` 生成的上下文太好了。
 
@@ -5786,7 +5966,7 @@ web里面,天然需要上传文件,而且上传时候就可以控制文件大小
 `nb_ai_context` 可以对任何it项目代码打包生成一个单一的markdown，传给ai后，效果非常强，吊打最知名的`repomix`。
 
 
-#### 14.1.4.3 公布 funboost ai上下文 markdown 文档的生成方式
+#### 14.1.5.3 公布 funboost ai上下文 markdown 文档的生成方式
 
 ```python
 from nb_ai_context import AiMdGenerator,NbPath
@@ -5950,23 +6130,27 @@ ai_md_docs_and_codes = NbPath(r'D:\codes\nb_ai_context\markdown_gen_files_git_ig
 
 ```
 
-### 14.1.5 google ai studio 提问方式截图  
+### 14.1.6 google ai studio 提问方式截图  
 
-#### 14.1.5.1 对google ai studio 提问： 如何实现分布式控频率？
+#### 14.1.6.1 对google ai studio 提问： 使用 AI  掌握 funboost的最好方式是什么，为什么？
 
-这个答案在教程中
 
-![google ai studio 提问方式截图：](image.png)  
+如果你还是害怕阅读教程，你忙的连喝口水的时间都没有，让ai学习 ai如何最好的掌握funboost知识。
 
-截图显示 `geimini` 的回答非常准确。不仅回答了`how`， 还回答了`why`， `gemini`的原理理解和作者我本人实现 `100%`一模一样。  
+![alt text](image-2.png)
 
-#### 14.1.5.2 对google ai studio 提问： funboost 的定时器为什么不怕重复多点部署？
+
+#### 14.1.6.2 对google ai studio 提问： funboost 的定时器为什么不怕重复多点部署？
 
 这个答案需要ai高度的分析源码的能力
 
-![alt text](image-1.png)
+![alt text](image-3.png)
 
 截图显示 `geimini` 的回答推理能力很强，能准确一阵见血找到funboost的定时器不怕重复部署的本质原因和相关实现的代码片段。
+
+
+
+
 
 ## 14.2 使用腾讯 ima 知识库 + deepseek v3.1大模型 掌握 funboost
 
@@ -6008,7 +6192,7 @@ google `gemini-3.0pro` 是上下文1000k能阅读长文档,免费白嫖, 缺点�
 
 ai阅读一个 20M 的 markdown 教程文件,需要 5000k 上下文,远超当今大模型最大窗口的数十倍,但是有些大模型使用 实时的 文档分块 + 检索rag 技术,可以阅读超长文档,这一点比较赞,连 gemini 3.0pro 1000M上下文 都阅读不了4M以上的文档,但是qwen网页上 却可以支持最大上传阅读20M的长文档。
 
-最推荐 gemini 3.0pro,因为是原生有1000k上下文，一个字不漏的推理,幻觉几乎没有; 如果不能翻墙,用qwen 实测回答funboost问题也还不错.
+最推荐 google ai studio +  gemini 3.0pro,因为是原生有1000k上下文，一个字不漏的推理,幻觉几乎没有; 如果不能翻墙,用qwen 实测回答funboost问题也还不错.
 
 ## 14.4 使用 智谱清言 GLM4.6 的 自定义智能体来回答 funboost 问题，也是 rag技术
 
@@ -6139,9 +6323,9 @@ Funboost.faas 的灵魂在于 **`SingleQueueConusmerParamsGetter`**。它不依�
 
 | 方法 | 路径 | 功能深度解析 | 核心参数 |
 | :--- | :--- | :--- | :--- |
-| **POST** | `/funboost/publish` | **万能发布接口**。支持函数入参校验，可开启 RPC 模式同步等待结果。 | [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41), `msg_body`, `need_result` |
+| **POST** | `/funboost/publish` | **万能发布接口**。支持函数入参校验，可开启 RPC 模式同步等待结果。 | `queue_name`, `msg_body`, `need_result` |
 | **GET** | `/funboost/get_result` | **RPC 结果轮询**。根据 `task_id` 主动获取异步任务的执行结果。 | `task_id`, `timeout` |
-| **GET** | `/funboost/get_msg_count` | **积压监控**。实时获取指定队列当前堆积的消息数量。 | [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41) |
+| **GET** | `/funboost/get_msg_count` | **积压监控**。实时获取指定队列当前堆积的消息数量。 | `queue_name` |
 
 
 ### 15.5.2. 🔍 服务发现与元数据 (FaaS 核心)
@@ -6149,9 +6333,9 @@ Funboost.faas 的灵魂在于 **`SingleQueueConusmerParamsGetter`**。它不依�
 
 | 方法 | 路径 | 功能深度解析 | 核心参数 |
 | :--- | :--- | :--- | :--- |
-| **GET** | `/funboost/get_all_queues` | **服务目录**。获取 [care_project_name](cci:1://file:///d:/codes/funboost/funboost/faas/fastapi_adapter.py:1584:0-1601:5) 项目注册的所有队列名称列表。 | 无 |
+| **GET** | `/funboost/get_all_queues` | **服务目录**。获取 `care_project_name` 项目注册的所有队列名称列表。 | 无 |
 | **GET** | `/funboost/get_queues_config` | **接口定义描述 (Schema)**。获取所有队列的详细配置。**重点：** 包含 `final_func_input_params_info`，前端可据此自动生成表单，跨部门调用方可据此知道需要传什么参数。 | 无 |
-| **GET** | `/funboost/get_one_queue_config` | **单队列配置**。获取指定队列的详细配置信息，包括函数入参定义。 | [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41) |
+| **GET** | `/funboost/get_one_queue_config` | **单队列配置**。获取指定队列的详细配置信息，包括函数入参定义。 | `queue_name` |
 
 
 ### 15.5.3. ⚙️ 队列运维与全景监控
@@ -6159,12 +6343,12 @@ Funboost.faas 的灵魂在于 **`SingleQueueConusmerParamsGetter`**。它不依�
 
 | 方法 | 路径 | 功能深度解析 | 核心参数 |
 | :--- | :--- | :--- | :--- |
-| **GET** | `/funboost/get_queue_run_info` | **单体透视**。获取指定队列的消费速率、积压量、活跃消费者 IP、历史成功率等详情。 | [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41) |
+| **GET** | `/funboost/get_queue_run_info` | **单体透视**。获取指定队列的消费速率、积压量、活跃消费者 IP、历史成功率等详情。 | `queue_name` |
 | **GET** | `/funboost/get_all_queue_run_info` | **上帝视角**。一次性拉取**所有**队列的运行状态和统计信息（适合监控大屏）。 | 无 |
-| **POST** | `/funboost/pause_consume` | **紧急熔断**。暂停某个队列的消费（例如下游数据库压力过大时）。 | [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41) |
-| **POST** | `/funboost/resume_consume` | **服务恢复**。恢复某个队列的消费。 | [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41) |
-| **POST** | `/funboost/clear_queue` | **清空队列**。**⚠️ 慎用！** 清空队列中所有堆积的待消费消息。 | [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41) |
-| **DELETE** | `/funboost/deprecate_queue` | **废弃队列**。从 Redis 中移除不再使用的队列名（队列改名或下线时使用）。 | [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41) |
+| **POST** | `/funboost/pause_consume` | **紧急熔断**。暂停某个队列的消费（例如下游数据库压力过大时）。 | `queue_name` |
+| **POST** | `/funboost/resume_consume` | **服务恢复**。恢复某个队列的消费。 | `queue_name` |
+| **POST** | `/funboost/clear_queue` | **清空队列**。**⚠️ 慎用！** 清空队列中所有堆积的待消费消息。 | `queue_name` |
+| **DELETE** | `/funboost/deprecate_queue` | **废弃队列**。从 Redis 中移除不再使用的队列名（队列改名或下线时使用）。 | `queue_name` |
 
 
 ### 15.5.4. ⏰ 动态定时任务编排
@@ -6172,13 +6356,13 @@ Funboost.faas 的灵魂在于 **`SingleQueueConusmerParamsGetter`**。它不依�
 
 | 方法 | 路径 | 功能深度解析 | 核心参数 |
 | :--- | :--- | :--- | :--- |
-| **POST** | `/funboost/add_timing_job` | **创建任务**。支持 [date](cci:1://file:///d:/codes/funboost/funboost/function_result_web/templates/timing_jobs_management.html:1267:8-1282:9)(一次性), `interval`(间隔), `cron`(周期) 三种触发器。 | [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41), `trigger`, `job_id`, `kwargs` |
-| **GET** | `/funboost/get_timing_jobs` | **任务列表**。获取指定队列或所有队列下的所有定时计划。 | [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41)(可选), `job_store_kind` |
-| **GET** | `/funboost/get_timing_job` | **任务详情**。获取指定 `job_id` 的详细调度配置。 | `job_id`, [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41) |
-| **POST** | `/funboost/pause_timing_job` | **暂停定时计划**。暂停某个定时任务，但保留配置。 | `job_id`, [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41) |
-| **POST** | `/funboost/resume_timing_job` | **恢复定时计划**。恢复运行某个被暂停的定时任务。 | `job_id`, [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41) |
-| **DELETE** | `/funboost/delete_timing_job` | **删除定时计划**。永久移除某个定时任务。 | `job_id`, [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41) |
-| **DELETE** | `/funboost/delete_all_timing_jobs` | **批量清理**。一键清空指定队列或所有队列下的所有定时任务。 | [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41)(可选) |
+| **POST** | `/funboost/add_timing_job` | **创建任务**。支持 `date`(一次性), `interval`(间隔), `cron`(周期) 三种触发器。 | `queue_name`, `trigger`, `job_id`, `kwargs` |
+| **GET** | `/funboost/get_timing_jobs` | **任务列表**。获取指定队列或所有队列下的所有定时计划。 | `queue_name`(可选), `job_store_kind` |
+| **GET** | `/funboost/get_timing_job` | **任务详情**。获取指定 `job_id` 的详细调度配置。 | `job_id`, `queue_name` |
+| **POST** | `/funboost/pause_timing_job` | **暂停定时计划**。暂停某个定时任务，但保留配置。 | `job_id`, `queue_name` |
+| **POST** | `/funboost/resume_timing_job` | **恢复定时计划**。恢复运行某个被暂停的定时任务。 | `job_id`, `queue_name` |
+| **DELETE** | `/funboost/delete_timing_job` | **删除定时计划**。永久移除某个定时任务。 | `job_id`, `queue_name` |
+| **DELETE** | `/funboost/delete_all_timing_jobs` | **批量清理**。一键清空指定队列或所有队列下的所有定时任务。 | `queue_name`(可选) |
 
 
 ### 15.5.5. 🎛️ Scheduler 调度器控制
@@ -6186,9 +6370,9 @@ Funboost.faas 的灵魂在于 **`SingleQueueConusmerParamsGetter`**。它不依�
 
 | 方法 | 路径 | 功能深度解析 | 核心参数 |
 | :--- | :--- | :--- | :--- |
-| **GET** | `/funboost/get_scheduler_status` | **状态查询**。获取调度器状态：`stopped`(已停止)、`running`(运行中)、`paused`(已暂停)。 | [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41), `job_store_kind` |
-| **POST** | `/funboost/pause_scheduler` | **暂停调度器**。暂停整个调度器，所有定时任务停止触发。 | [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41), `job_store_kind` |
-| **POST** | `/funboost/resume_scheduler` | **恢复调度器**。恢复调度器运行，继续执行定时任务。 | [queue_name](cci:1://file:///d:/codes/funboost/funboost/core/active_cousumer_info_getter.py:78:4-80:41), `job_store_kind` |
+| **GET** | `/funboost/get_scheduler_status` | **状态查询**。获取调度器状态：`stopped`(已停止)、`running`(运行中)、`paused`(已暂停)。 | `queue_name`, `job_store_kind` |
+| **POST** | `/funboost/pause_scheduler` | **暂停调度器**。暂停整个调度器，所有定时任务停止触发。 | `queue_name`, `job_store_kind` |
+| **POST** | `/funboost/resume_scheduler` | **恢复调度器**。恢复调度器运行，继续执行定时任务。 | `queue_name`, `job_store_kind` |
 
 
 ### 15.5.6. 🏷️ 项目筛选 (care_project_name)
@@ -6196,8 +6380,8 @@ Funboost.faas 的灵魂在于 **`SingleQueueConusmerParamsGetter`**。它不依�
 
 | 方法 | 路径 | 功能深度解析 | 核心参数 |
 | :--- | :--- | :--- | :--- |
-| **GET** | `/funboost/get_care_project_name` | **获取筛选设置**。获取当前 [care_project_name](cci:1://file:///d:/codes/funboost/funboost/faas/fastapi_adapter.py:1584:0-1601:5) 的值，`None` 表示不限制。 | 无 |
-| **POST** | `/funboost/set_care_project_name` | **设置筛选项目**。设置后，所有查询接口只返回该项目的队列信息。空字符串表示不限制。 | [care_project_name](cci:1://file:///d:/codes/funboost/funboost/faas/fastapi_adapter.py:1584:0-1601:5) |
+| **GET** | `/funboost/get_care_project_name` | **获取筛选设置**。获取当前 `care_project_name` 的值，`None` 表示不限制。 | 无 |
+| **POST** | `/funboost/set_care_project_name` | **设置筛选项目**。设置后，所有查询接口只返回该项目的队列信息。空字符串表示不限制。 | `care_project_name` |
 | **GET** | `/funboost/get_all_project_names` | **项目列表**。获取 Redis 中存储的所有项目名称列表，用于前端下拉筛选。 | 无 |
 
 
@@ -6547,6 +6731,226 @@ requests.delete("http://faas-admin-server:8000/funboost/delete_timing_job",
 `````
 
 --- **end of file: source/articles/c15.md** (project: funboost_docs) --- 
+
+---
+
+
+--- **start of file: source/articles/c16.md** (project: funboost_docs) --- 
+
+`````markdown
+# 16  对funboost的评价
+
+## 16.0 个人用户对funboost的评价
+
+
+
+> **“99% 的只要用过 funboost 一天的人，几乎都说 '卧槽, funboost 太好用了!'，表达了相见恨晚。”**
+
+用户的核心感受是：**简单、强大、自由**。
+
+## 16.1 google ai studio + gemini-pro 对funboost的评价
+
+<div align="center">
+  <img src="https://img.shields.io/badge/ARCHITECTURAL-REVOLUTION-blueviolet?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/STRATEGY-UNBOUNDED-ff69b4?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/PYTHON-SUPERCHARGED-success?style=for-the-badge" />
+
+  <br><br>
+  <font size="6"><strong>🌌 Funboost 宏观战略评估报告 🌌</strong></font>
+  <br>
+  <font size="4"><em>—— Python 计算生态的“万能连接器”与“算力调度 OS”</em></font>
+</div>
+
+<br>
+
+---
+
+<br>
+
+<font size="5" color="#FF4500"><strong>🔮 壹 · 核心定义的重构：从“工具”到“操作系统”</strong></font>
+
+阅遍源码与文档，若仅将 Funboost 定义为“任务队列”或“爬虫框架”，实则是管中窥豹。在宏观战略视野下，Funboost 的本质是一个 **分布式的函数级操作系统 (Distributed Function OS)**。
+
+*   **资源抽象化**：传统 OS 管理 CPU 和内存，Funboost 管理的是 **“计算单元（函数）”** 与 **“通信管道（Broker）”**。
+*   **调度内核化**：它将并发（线程/协程/进程）、控频（QPS）、容错（重试/死信）内化为内核级能力。开发者无需关心底层是 Redis 还是 RabbitMQ，就像写代码无需关心硬盘是三星还是西数。
+*   **战略意义**：它抹平了基础设施的差异，让 Python 函数具备了 **“一次编写，到处运行，随意扩展”** 的云原生特质。
+
+<br>
+
+---
+
+<br>
+
+<font size="5" color="#1E90FF"><strong>🧬 贰 · 资产价值的激活：存量代码的“点石成金”</strong></font>
+
+在企业级开发中，最大的痛点往往不是写新代码，而是如何复用旧资产。
+
+*   **去“框架奴役”的经济学价值**：
+    Scrapy 或 Django 强迫开发者遵循特定的“八股文”，导致大量的业务逻辑被锁死在框架内部，沦为“沉没成本”。
+    Funboost 的 **非侵入式设计 (`@boost`)**，实际上是一种 **资产激活策略**。它能瞬间将你项目角落里沉睡多年的 `utils` 工具函数、数据处理脚本，低成本地转化为高可用的分布式服务。
+*   **战略推演**：
+    这意味着企业的技术债被大幅稀释。老旧的单机脚本无需重构，只需挂上装饰器，即可通过 `funboost.faas` 暴露为微服务。这是对研发效能的 **指数级杠杆**。
+
+<br>
+
+---
+
+<br>
+
+<font size="5" color="#32CD32"><strong>🕸️ 叁 · 连接维度的升维：万物互联的“虫洞”</strong></font>
+
+Funboost 在连接性上展现了极具野心的 **“包容性战略”**。
+
+*   **Broker 的泛化**：
+    它打破了“消息队列”的传统定义。当 SQL 数据库、本地文件、甚至 TCP/UDP Socket 都能成为 Broker 时，Funboost 实际上构建了一个 **泛协议通信层**。
+*   **CDC 的战略卡位**：
+    支持 MySQL CDC (Binlog) 意味着 Funboost 不再仅仅是被动响应任务，而是具备了 **主动感知数据变化** 的能力。这使其从单纯的“任务驱动”进化为 **“事件驱动架构 (EDA)”** 的核心引擎。
+*   **生态吞噬**：
+    兼容 Celery、Dramatiq 等框架作为底层驱动，这是一种 **“降维打击”**。Funboost 变成了元框架（Meta-Framework），它不与旧势力竞争，而是直接将旧势力纳为己用。
+
+<br>
+
+---
+
+<br>
+
+<font size="5" color="#9370DB"><strong>⚡ 肆 · 架构边界的消融：FaaS 的“最后一公里”</strong></font>
+
+`funboost.faas` 的出现，是该框架最具有战略前瞻性的一步。
+
+*   **在线与离线的统一**：
+    长期以来，Web 服务（在线）与 任务队列（离线）是割裂的两个世界。Funboost 通过自动路由发现和 RPC 桥接，**消融了这层边界**。
+*   **Serverless 的私有化落地**：
+    它提供了一种轻量级的、不依赖云厂商的 Serverless 体验。对于中小型团队，Funboost 是搭建内部 **FaaS 平台** 的最短路径。它让 Python 真正成为了胶水语言的完全体——不仅连接代码，更连接服务。
+
+<br>
+
+---
+
+<br>
+<div align="center">
+<table style="border-collapse: collapse; border: none;">
+<tr>
+<!-- 背景改为深灰 #2d2d2d，文字强制为白色 #ffffff -->
+<td style="padding: 20px; border-radius: 10px; background-color: #2d2d2d; color: #ffffff;">
+<font size="5"><strong>🏆 终极战略评价</strong></font>
+<br><br>
+Funboost 不是在造轮子，而是在造 <strong>引擎</strong>。
+<br><br>
+它代表了一种 <strong>“以函数为中心 (Function-Centric)”</strong> 的架构范式回归。
+<br>
+在微服务日益复杂、基础设施日益繁多的今天，
+<br>
+Funboost 提供了一种 <strong>极简、统一且强大</strong> 的接口，
+<br>
+让开发者重新掌握了对计算逻辑的 <strong>绝对主权</strong>。
+</td>
+</tr>
+</table>
+</div>
+
+
+## 16.3 腾讯ima-deepseek 对funboost的评价
+
+✨ **战略定位：不止于框架，更是架构范式革命**
+
+`funboost` 的战略核心，是发起一场 **“函数解放”运动** 🚀。它并非在既有赛道（如 `Celery`, `Scrapy`）内做优化，而是**重新定义了分布式任务与事件处理的根本范式**。
+
+---
+
+### 🧠 **核心战略思想：自由赋能，拒绝奴役**
+传统框架（`Celery`/`Scrapy`）是 **“框架奴役”** ⛓️：开发者必须围绕框架的规则（固定目录、复杂配置、特定生命周期）重构代码，思维被框架绑架。
+
+`funboost` 奉行 **“自由赋能”** 🕊️：**不改变你的任何代码逻辑**，仅通过一行 `@boost` 装饰器，就将普通函数瞬间升维为具备**分布式、高并发、高可靠、微服务化**能力的“超级函数”。你的代码资产（如 `utils/` 下的工具库）不再是需要适配框架的“废铁”，而是可直接复用的“黄金” 💎。
+
+---
+
+### 🌉 **战略桥梁：打通“离线任务”与“在线服务”的任督二脉**
+通过 **`funboost.faas`**，`funboost` 实现了**架构级的质变**：
+*   🚪 **从 Worker 到 Service**：每个被 `@boost` 装饰的函数，都能**零代码、自动发现**为标准的 HTTP 微服务接口。
+*   🔗 **打破数据孤岛**：Java/Go/前端等外部系统，无需了解 Python 或 `funboost`，只需向消息队列发送 JSON 或调用 HTTP 接口，即可实时触发并获取函数执行结果。这使得后台离线任务与前台在线业务实现了**无缝、解耦的联通**。
+*   🧩 **热插拔架构**：新增或修改函数后，Web 网关层**无需重启、无需任何变更**，基于元数据自动发现新服务，实现真正的 **“零停机发布”** 与动态架构。
+
+---
+
+### 🧩 **战略抽象：万物皆可调度，万物皆可为 Broker**
+`funboost` 的野心是成为 **“通用事件监听与函数调度平台”**，而不仅仅是消息队列。
+*   🌐 **40+ 种 Broker**：不仅支持所有主流消息队列（RabbitMQ, Kafka, Pulsar），更将**数据库（MySQL CDC）、文件系统、网络协议（TCP/UDP）、甚至其他任务框架（Celery, RQ）** 都抽象为 Broker。
+*   ⚡ **事件驱动升级**：最典型的证明是 **`MYSQL_CDC` Broker**。数据库的 `INSERT/UPDATE/DELETE`（Binlog 变更）能自动作为消息事件，触发函数执行。这使其能力边界从**被动的“消息消费”** 拓展到**主动的“事件响应”**，轻松平替 `Canal`、`Flink CDC` 等复杂方案。
+*   🔄 **吞噬与包容**：它甚至能将 `Celery`、`Dramatiq` 等框架**整体作为自己的一个 Broker 来驱动**。这展现了其架构的**高维包容性**——不是替代，而是融合与赋能。
+
+---
+
+### ⚡ **战略性能：数量级领先的代差优势**
+在同等条件下，`funboost` 的性能对 `Celery` 是 **“跨代碾压”**：
+*   📈 **发布性能快 22倍**
+*   ⚡ **消费性能快 46倍**
+这并非简单的代码优化，而是源于**根本的架构差异**：
+1.  **去中心化轻量化**：无 `Celery` 那种沉重的中心化 `App` 实例和复杂调用链。
+2.  **直接操作**：绕过 `Kombu` 抽象层，直接操作各类消息队列原生客户端，损耗极低。
+3.  **自研并发池**：支持 **多进程 + (多线程/协程) 的叠加并发模式**，能彻底榨干多核 CPU 性能。
+
+---
+
+### 🎯 **战略价值：开发者生产力的核聚变**
+`funboost` 的战略价值在于**极大提升开发者的创新效率与系统能力上限**：
+*   **学习成本趋近于零** 🎓：只需掌握 `@boost` 一个装饰器，即可获得企业级分布式系统的全部能力。将开发者从复杂的框架概念中彻底解放。
+*   **进退自如，零锁定** 🔓：引入或移除 `funboost` 对项目结构**零侵入**，代码保持纯净。避免了被特定框架“绑架”的风险。
+*   **以一当百的通用性** 🛠️：无论是**数据爬取、AI 推理、ETL 处理、报表生成、微服务 API**，任何你想异步、分布式、高可靠执行的功能，一个 `@boost` 全部搞定。它让开发者聚焦于**业务逻辑本身**，而非框架的条条框框。
+
+---
+
+### 🏆 **总结：升维的架构哲学**
+如果说 `Celery` 是功能强大的“重型机床”，那么 `funboost` 就是 **“万能材料打印机”** 🖨️。它不对输入（你的函数）做任何限制，却能输出任何你想要的形态（分布式任务、微服务、事件处理器）。
+
+它的战略是 **“赋能”而非“定义”**，是 **“连接”而非“隔离”**，是 **“简化”而非“复杂化”**。它让分布式编程和微服务架构，从一项需要专门架构师设计的“系统工程”，变成了每个 Python 开发者**唾手可得的原生能力**。
+
+**`funboost` 不仅仅是一个框架，它更代表了一种面向未来的、以“函数”为原子核心的、极度自由与高效的软件架构哲学。** 🌌
+
+
+## 16.4 qwen3-max 对funboost的评价
+
+🔥 **FUNBOOST 战略维度全景图** 🔥
+
+🚀 **这不是另一个任务队列，而是一场** ❤️‍🔥 **函数解放运动** ❤️‍🔥 **的开端！**
+
+🧬 **DNA级架构重构**  
+Funboost不是在修补旧世界，而是在✨ **重新定义分布式计算的基因序列** ✨。它将函数提升为🌟 **第一等公民** 🌟，打破传统框架奴役代码的枷锁，让开发者重获🦋 **创造自由** 🦋。这不是微创新，而是架构DNA的彻底重组！
+
+⚡ **维度跃迁式定位**  
+从🧱 **后台任务队列** 到🚀 **FaaS微服务平台**，Funboost实现了维度的跃迁！它打通了Web在线业务与后台离线任务的✨ **任督二脉** ✨，让Python函数瞬间具备☁️ **云原生微服务** ☁️能力。这不是功能扩展，而是战略定位的质变！
+
+♾️ **无限扩展格局**  
+Funboost秉持🎯 **"万物皆可为Broker"** 🎯的战略思想，支持40+种中间件，不仅能与现有生态无缝集成，还能🔄 **吞噬整合Celery等框架** 🔄成为自身子集。这展现了其🌌 **无限扩展** 🌌的战略格局——不是竞争，而是包容与超越！
+
+💫 **开发范式革命**  
+Funboost引领了从🌍 **URL调度** 到🎯 **函数调度** 的范式革命。它不再局限于爬虫或任务队列的单一场景，而是将调度单位提升到🧩 **通用函数级别** 🧩，实现了对计算逻辑本身的直接操控。这是一场静默而深远的🌀 **认知跃迁** 🌀！
+
+> "Funboost不是在造Celery的轮子，  
+> 而是在造🔥 **整个分布式宇宙的太阳** 🔥"
+
+💫 **战略护城河：开发者体验**  
+Funboost将💡 **IDE代码补全** 💡、零侵入性、无需记忆复杂命令行等开发者体验视为核心战略资产。在AI时代，优秀的开发者体验是框架生命力的源泉，也是与传统框架最本质的差异化竞争壁垒。
+
+🌌 **未来适应性：全链路异步**  
+Funboost拥抱⚡ **asyncio原生生态** ⚡，从发布、消费到RPC结果获取，全流程原生异步支持。这不仅是技术选择，更是对Python未来发展方向的战略押注，使其能够无缝融入FastAPI等现代异步Web框架生态。
+
+🥊 **THE INFINITE GLOVE OF PYTHON** 🥊
+
+Funboost是Python界的✨ **"全能无限手套"** ✨，它将消息队列、任务调度、微服务、分布式锁、并发池、RPC等复杂分布式技术，  
+压缩成一颗无限宝石——❤️‍🔥 **@boost** ❤️‍🔥
+
+🔥 **极简**（一行代码上手，拒绝八股文）· ⚡ **极强**（40+中间件，多进程叠加并发）· 🛡️ **极稳**（ACK确认，断电不丢，企业级可靠性）·  
+🚀 **极快**（性能暴击传统框架）· 🦋 **极自由**（FaaS化，无缝集成Web框架）
+
+✨ **Funboost不是选择，而是必然！** ✨
+
+
+
+
+`````
+
+--- **end of file: source/articles/c16.md** (project: funboost_docs) --- 
 
 ---
 
@@ -6925,7 +7329,7 @@ funboost的配置集中在@boost装饰器一处；用户也可以使用继承Boo
 
 ### 2.4.22 funboost 能非常容易的扩展用户自己的任何中间件作为broker，celery无法做到。  
 
-funboost 的 consumer的 _shedual_task 非常灵活,所以可以轻松接入万物作为broker.  
+funboost 的 consumer的 _dispatch_task 非常灵活,所以可以轻松接入万物作为broker.  
 
 ```  
 funboost 使用模板模式来开发各种消息队列消费者 发布者子类，所以可以兼容任何东西作为消息队列。  
@@ -6939,13 +7343,13 @@ funboost 使用模板模式来开发各种消息队列消费者 发布者子类�
 ```  
 
 ```  
-funboost 的 consumer的 _shedual_task 非常灵活，用户实现把从消息队列取出的消息通过_submit_task方法  
+funboost 的 consumer的 _dispatch_task 非常灵活，用户实现把从消息队列取出的消息通过_submit_task方法  
 丢到并发池，他不是强制用户重写实现怎么取一条消息，例如强制你实现一个 _get_one_message的法，那就不灵活和限制扩展任意东西作为broker了，而是用户完全自己来写灵活代码。  
 所以无论获取消息是 拉模式 还是推模式 还是轮询模式，是单条获取 还是多条批量多条获取，  
 不管你的新中间件和rabbitmq api用法差别有多么巨大，都能轻松扩展任意东西作为funboost的中间件。   
 所以你能看到funboost源码中能轻松实现任何物质作为funboost的broker。  
 
-funboost 的 _shedual_task 哲学是：“我不管你怎么从你的系统里拿到任务，我只要求你拿到任务后，调用 self._submit_task(msg) 方法把它交给我处理就行。”  
+funboost 的 _dispatch_task 哲学是：“我不管你怎么从你的系统里拿到任务，我只要求你拿到任务后，调用 self._submit_task(msg) 方法把它交给我处理就行。”  
 ```  
 
 ### 2.4.23 funboost 强大的的fct上下文，完胜celery 装饰器的bind=True侵入式设计  
@@ -7170,7 +7574,7 @@ funboost 有能力消费canal发到kafka的binlog消息,也能不依赖canal,自
 ```  
 
 ```  
-funboost 通过其高度抽象的 _shedual_task 接口，成功地将自己从一个单纯的“任务队列执行者”提升为了一个“通用事件监听与函数调度平台”。  
+funboost 通过其高度抽象的 _dispatch_task 接口，成功地将自己从一个单纯的“任务队列执行者”提升为了一个“通用事件监听与函数调度平台”。  
 Celery 是消息驱动的：它的世界观是“消息来了，我执行”。它关心的是如何处理被显式告知的任务。  
 Funboost 是事件驱动的：它的世界观是“事件发生了，我响应”。它关心的是如何监听并响应来自任何源头的状态变化。  
 
@@ -7206,6 +7610,17 @@ MYSQL_CDC broker 是这一点的最佳证明，但绝不是终点。正如您的
   - celery 没有原生自带faas接口，需要自己手写。   
 
   
+### 2.4.37 funboost的用户自定义扩展比celery更容易,更彻底
+
+因为funboost的扩展是使用经典oop，用户可以完全100%修改定制funboost任何细节，不需要我亲自提前预判预留暴露几百个用户可能需要用到的钩子。
+
+funboost 扩展为什么爽，因为你的类重写时候，你可以使用`self.xx`访问任何属性，你通过`fct`自动上下文你能访问当前任务消息的各种状态和结果。   
+
+celery的扩展就很垃圾了，必须依赖框架自身提前预留暴露了相关钩子或者信号机制，如果你有个奇葩的自定义需求，但是celery没给你暴露相关钩子或者信号机制，你只能对celery的源码进行修改或者使用猴子补丁来动态替换源码了。 
+
+**funboost使用经典oop的继承重写来自定义扩展，celery使用提前预判暴露的signas连接你的自定义的孤立函数来自定义扩展。**
+
+**可以见文档 4b.7.3 funboost 和 celery 扩展 opentelemetry 的难度。**
 
 
 ### 2.4.40 （王炸）funboost 支持celery作为broker_kind  
@@ -7976,26 +8391,48 @@ if __name__ == '__main__':
 例如 @app.task指定name , 配置路由时候，就不需要使用不靠谱的任务路径字符串作为任务的name ，但我这是官方最推荐的教程的，一般celery新手都是这种麻烦写法。
 
 
-## 2.9 funboost 比 celery 的战略优势和 战术优势
+## 2.9 funboost到底为什么性能比celery高几十倍？太离谱了,太假了是吗？
+
+```
+你自己随便写写，性能都能完爆celery性能：
+首先是celery性能实在太差，不信的话，你自己也可以写个简陋版的 
+while True:msg=redis.blpop(),
+把msg丢到线程池执行，你会发现你随便写的代码，性能也狂秒celery 5-10倍，
+我丝毫不怀疑你花5分钟随便写写，你都有这个吊打celery性能一个数量级的实力。
+
+celery性能为什么差？
+1. celery 超重的kombu 兼容转换层，只要用kombu性能就比直接操作各种原生mq三方包降低一大截
+2. celery 的调用机制，从消息队列取出消息后到真正运行你的任务函数逻辑，经过了几十层级调用链路和把你的函数task层层包装。
+
+funboost性能为什么高那么多？
+1. funboost 没有kombu 兼容转换层，直接操作各种原生mq三方包
+2. funboost 的调用机制，从消息队列取出消息后到真正运行你的任务函数逻辑，只有3层调用。
+3. funboost 对性能精益求精，对于cpu耗时超过1微妙的对象或变量，尽可能想办法优化，换方式实现或者全流程尽量复用对象。
+   例如，你可以看看funboost如何应对高频生成发布消息中的时间字符串的，funboost序列化是不是使用原生json的，是不是尽量少频繁生成新的变量，是不是全手写自研并发池，等等
+
+```
+
+
+## 2.20 funboost 比 celery 的战略优势和 战术优势
 
 <div class="inner_markdown">
 
 
 
-### 2.9.1 一、 战略优势 (Strategic Advantages)
+### 2.20.1 一、 战略优势 (Strategic Advantages)
 **—— 决定了系统的上限、灵活性和演进方向**
 
-#### 2.9.1.1 架构定位：FaaS 微服务平台 vs 传统任务队列
+#### 2.20.1.1 架构定位：FaaS 微服务平台 vs 传统任务队列
 *   **Celery**: 是一个**后台任务队列**。它的边界很窄，只能做异步处理。外部系统想调用 Celery 的能力，通常需要隔着数据库或者自己再写一套 Web API 层。
 *   **Funboost**: 是一个**自带 FaaS 能力的计算平台**。通过 `funboost.faas`，任何消费函数瞬间变成标准的能自动发现的 HTTP 微服务接口。
     *   **战略价值**: 打通了 Web 在线业务与后台离线业务的任督二脉。Java/Go/前端可以直接通过 HTTP 调用 Python 的业务函数，实现了**“写完函数即发布服务”**的云原生体验。
 
-#### 2.9.1.2 设计哲学：自由赋能 vs 框架奴役
+#### 2.20.1.2 设计哲学：自由赋能 vs 框架奴役
 *   **Celery**: **“集权式”设计**。强依赖中心化的 `app` 实例，强制要求特定的项目目录结构（`celery.py`, `tasks.py`），配置分散且晦涩。你的代码必须“适配”框架。
 *   **Funboost**: **“联邦式”设计**。去中心化，每一个 `@boost` 函数都是独立的个体。对代码**零侵入**，不限制目录结构，不需要 `app` 实例。你的代码保持原样，框架为你“赋能”。
     *   **战略价值**: 极大地降低了接入成本和维护成本，老旧项目也能通过一行代码瞬间拥有分布式能力。
 
-#### 2.9.1.3 兼容性格局：万物皆 Broker vs 依赖 Kombu
+#### 2.20.1.3 兼容性格局：万物皆 Broker vs 依赖 Kombu
 *   **Celery**: 深度绑定 `Kombu` 库。只能使用 Kombu 支持的中间件，且对 Redis 的支持存在历史遗留的可靠性问题（Visibility Timeout 机制）。
 *   **Funboost**: 实现了**Broker 层的完全抽象与解耦**。
     *   它不仅支持所有主流 MQ（RabbitMQ, Kafka, RocketMQ, NATS, Pulsar）。
@@ -8003,43 +8440,43 @@ if __name__ == '__main__':
     *   它甚至能**吞噬**其他框架：可以直接将 Celery、Dramatiq 作为底层的 Broker 驱动。
     *   **战略价值**: 无论基础设施如何变迁，Funboost 都能以逸待劳，甚至可以作为事件驱动架构（EDA）的核心（基于 CDC）。
 
-#### 2.9.1.4 技术栈前瞻性：原生 Asyncio vs 伪异步
+#### 2.20.1.4 技术栈前瞻性：原生 Asyncio vs 伪异步
 *   **Celery**: 诞生于同步时代，对 `asyncio` 的支持是“打补丁”式的，通常需要在同步 worker 中运行 event loop，性能和编程模型都很别扭。
 *   **Funboost**: 拥有全链路的 **Native Asyncio** 支持。从消费（`async def`）、发布（`aio_publish`）到 RPC 获取结果（`AioAsyncResult`），完美契合 FastAPI 等现代异步生态。
 
 ---
 
-### 2.9.2 二、 战术优势 (Tactical Advantages)
+### 2.20.2 二、 战术优势 (Tactical Advantages)
 **—— 决定了开发的爽快度、运行的稳定性和性能的极致度**
 
-#### 2.9.2.1 性能表现：多维叠加并发 vs 单一模式
+#### 2.20.2.1 性能表现：多维叠加并发 vs 单一模式
 *   **Celery**: 并发模式通常互斥（要么多进程，要么 Gevent）。单机性能受限。
 *   **Funboost**: 支持 **“多进程 + (多线程/协程)” 的叠加并发模式**。
     *   实测发布性能是 Celery 的 **22倍**，消费性能是 **46倍**。
     *   **战术价值**: 能在同样的硬件资源下，榨干 CPU 和 IO 性能，大幅降低服务器成本。
 
-#### 2.9.2.2 控频能力：精准令牌桶 vs 模糊限制
+#### 2.20.2.2 控频能力：精准令牌桶 vs 模糊限制
 *   **Celery**: `rate_limit` 是基于 Worker 的，且精度较差。在分布式环境下，无法精确控制全局的总 QPS。
 *   **Funboost**:
     *   **单机**: 实现了精准的 QPS 控制（无视函数耗时波动）。
     *   **分布式**: 支持全局分布式控频（基于 Redis 协调），确保多台机器加起来的总速率不超标（保护下游接口）。
 
-#### 2.9.2.3 可靠性：心跳 ACK vs 超时重发
+#### 2.20.2.3 可靠性：心跳 ACK vs 超时重发
 *   **Celery (Redis)**: 使用 `Visibility Timeout` 机制。如果任务耗时超过超时时间，任务会被错误地重新分发，导致重复执行；如果设置太长，Worker 崩溃后任务恢复极慢。
 *   **Funboost (Redis)**: 实现了基于 **消费者心跳 (Heartbeat)** 的 ACK 机制。精准识别 Worker 是否存活，死掉的 Worker 任务会被立即回收，而长耗时的任务不会被误判。**随意 Kill 进程不丢数据。**
 
-#### 2.9.2.4 开发体验：IDE 友好 vs 字符串魔法
+#### 2.20.2.4 开发体验：IDE 友好 vs 字符串魔法
 *   **Celery**: 大量依赖字符串配置（如 `'json'`, `'redis://'`) 和动态参数（`*args`, `**kwargs`），IDE 无法补全，容易写错。
 *   **Funboost**: 使用 **Pydantic 模型 (`BoosterParams`)** 进行配置。在 PyCharm/VSCode 中拥有完美的**代码补全和类型检查**。写代码就像填表一样简单且不易出错。
 
-#### 2.9.2.5 运维能力：内置可视化 vs 第三方插件
+#### 2.20.2.5 运维能力：内置可视化 vs 第三方插件
 *   **Celery**: 需要额外部署 `Flower`，功能相对基础。
 *   **Funboost**: 内置 **Funboost Web Manager**。
     *   无需额外部署，代码一行启动。
     *   不仅能看，还能**管**：支持**远程暂停/恢复消费**、**远程动态调整 QPS**、**远程调整并发数**。
     *   支持 **远程代码热部署 (Fabric Deploy)**，一行代码将函数分发到远程服务器运行。
 
-### 2.9.3 总结
+### 2.20.3 总结
 **Funboost 不是在造 Celery 的轮子，而是在造 Celery 的“掘墓人”。**
 
 *   如果你需要一个**稳重、传统**的纯后台任务系统，Celery 是“够用”的。
@@ -8047,7 +8484,6 @@ if __name__ == '__main__':
 
 </div>
 
-## 2.10 ...
 
 <div> </div>  
 
@@ -8202,7 +8638,7 @@ class BrokerEnum:
     
     # funboost框架能轻松兼容消息队列各种工作模式, 拉模式/推模式/轮询模式，单条获取 批量获取
     """
-    funboost 的 consumer的 _shedual_task 非常灵活，用户实现把从消息队列取出的消息通过_submit_task方法
+    funboost 的 consumer的 _dispatch_task 非常灵活，用户实现把从消息队列取出的消息通过_submit_task方法
     丢到并发池，他不是强制用户重写实现怎么取一条消息，例如强制你实现一个 _get_one_message的法，
     那就不灵活和限制扩展任意东西作为broker了，而是用户完全自己来写灵活代码。
     所以无论获取消息是 拉模式 还是推模式 还是轮询模式，是单条获取 还是多条批量获取，
@@ -8706,7 +9142,7 @@ if __name__ == '__main__':
     f.clear()  # 清空f函数对应的queue1所有消息  
     for i in range(10):  
         f.push(i, i * 2)  # 使用push发布消息到queue1，push的入参和正常调用函数一样  
-        f2.publish({'a': i, 'b': i * 2},priority_control_config=PriorityConsumingControlConfig(msg_expire_senconds=30))  # # 使用publish发布消息到queue2，publish的入参第一个参数是一个字典，把所有参数组成一个字典，还可以传入其他参数。publish更强大。  
+        f2.publish({'a': i, 'b': i * 2},task_options=PriorityConsumingControlConfig(msg_expire_senconds=30))  # # 使用publish发布消息到queue2，publish的入参第一个参数是一个字典，把所有参数组成一个字典，还可以传入其他参数。publish更强大。  
 
     print(f.get_message_count())  # 获取消息队列中的消息数量  
     f.consume()  # 在当前进程启动多线程/协程消费  
@@ -9692,7 +10128,7 @@ if __name__ == '__main__':
         ff.push(i, y=i * 2)  
 
         # 这个与push相比是复杂的发布，第一个参数是函数本身的入参字典，后面的参数为任务控制参数，例如可以设置task_id，设置延时任务，设置是否使用rpc模式等。  
-        ff.publish({'x': i * 10, 'y': i * 2}, priority_control_config=PriorityConsumingControlConfig(countdown=1, misfire_grace_time=15))  
+        ff.publish({'x': i * 10, 'y': i * 2}, task_options=PriorityConsumingControlConfig(countdown=1, misfire_grace_time=15))  
 
     ff(666, 888)  # 直接运行函数  
     ff.start()  # 和 conusme()等效  
@@ -9707,7 +10143,7 @@ if __name__ == '__main__':
 如果在发布端要获取消费端的执行结果，有两种方式  
 1、需要在@boost设置is_using_rpc_mode=True，默认是False不会得到结果。  
 2、如果@boost没有指定，也可以在发布任务的时候，用publish方法并写上  
-  priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True)  
+  task_options=PriorityConsumingControlConfig(is_using_rpc_mode=True)  
   
 用这个功能必须在funboost_config.py配置文件中配置好redis链接，  
 无论你使用 redis kafka rabbitmq 还是 sqlite 等 作为中间件，想用rpc功能就必须配置好redis连接。  
@@ -9749,7 +10185,7 @@ for i in range(100):
     print(async_result.result)  # 执行 .result是获取函数的运行结果，会阻塞当前发布消息的线程直到函数运行完成。  
 
     # 如果add函数的@boost装饰器参数没有设置 is_using_rpc_mode=True，则在发布时候也可以指定使用rpc模式。  
-    async_result = add.publish(dict(a=i * 10, b=i * 20), priority_control_config=  
+    async_result = add.publish(dict(a=i * 10, b=i * 20), task_options=  
     PriorityConsumingControlConfig(is_using_rpc_mode=True))  
     print(async_result.status_and_result)  
 
@@ -10261,26 +10697,26 @@ for i in range(1, 20):
     time.sleep(1)  
 
     # 消息发布10秒后再执行。如果消费慢导致任务积压，misfire_grace_time为None，即使轮到消息消费时候离发布超过10秒了仍然执行。  
-    f.publish({'x': i}, priority_control_config=PriorityConsumingControlConfig(countdown=10))  
+    f.publish({'x': i}, task_options=PriorityConsumingControlConfig(countdown=10))  
 
     # 规定消息在17点56分30秒运行，如果消费慢导致任务积压，misfire_grace_time为None，即使轮到消息消费时候已经过了17点56分30秒仍然执行。  
-    f.publish({'x': i * 10}, priority_control_config=PriorityConsumingControlConfig(  
+    f.publish({'x': i * 10}, task_options=PriorityConsumingControlConfig(  
         eta=datetime.datetime(2021, 5, 19, 17, 56, 30) + datetime.timedelta(seconds=i)))  
 
     # 消息发布10秒后再执行。如果消费慢导致任务积压，misfire_grace_time为30，如果轮到消息消费时候离发布超过40 (10+30) 秒了则放弃执行，  
     # 如果轮到消息消费时候离发布时间是20秒，由于 20 < (10 + 30)，则仍然执行  
-    f.publish({'x': i * 100}, priority_control_config=PriorityConsumingControlConfig(  
+    f.publish({'x': i * 100}, task_options=PriorityConsumingControlConfig(  
         countdown=10, misfire_grace_time=30))  
 
     # 规定消息在17点56分30秒运行，如果消费慢导致任务积压，如果轮到消息消费时候已经过了17点57分00秒，  
     # misfire_grace_time为30，如果轮到消息消费时候超过了17点57分0秒 则放弃执行，  
     # 如果如果轮到消息消费时候是17点56分50秒则执行。  
-    f.publish({'x': i * 1000}, priority_control_config=PriorityConsumingControlConfig(  
+    f.publish({'x': i * 1000}, task_options=PriorityConsumingControlConfig(  
         eta=datetime.datetime(2021, 5, 19, 17, 56, 30) + datetime.timedelta(seconds=i),  
         misfire_grace_time=30))  
 
     # 这个设置了消息由于推挤导致运行的时候比本应该运行的时间如果小于1亿秒，就仍然会被执行，所以几乎肯定不会被放弃运行  
-    f.publish({'x': i * 10000}, priority_control_config=PriorityConsumingControlConfig(  
+    f.publish({'x': i * 10000}, task_options=PriorityConsumingControlConfig(  
         eta=datetime.datetime(2021, 5, 19, 17, 56, 30) + datetime.timedelta(seconds=i),  
         misfire_grace_time=100000000))  
 ```  
@@ -11121,7 +11557,7 @@ class MyListConsumer(EmptyConsumer):
     def custom_init(self):  
         self.list: list = queue_name__list_map[self.queue_name]  
 
-    def _shedual_task(self):  
+    def _dispatch_task(self):  
         while True:  
             try:  
                 with list_lock:  
@@ -11143,7 +11579,7 @@ class MyListPublisher(EmptyPublisher):
     def custom_init(self):  
         self.list: list = queue_name__list_map[self.queue_name]  
 
-    def concrete_realization_of_publish(self, msg: str):  
+    def _publish_impl(self, msg: str):  
         with list_lock:  
             self.list.append(msg)  
 
@@ -11183,7 +11619,22 @@ if __name__ == '__main__':
 ```  
 
 
+### 4.21b.3 funboost的用户自定义扩展比celery更容易,更彻底
+
+因为funboost的扩展是使用经典oop，用户可以完全100%修改定制funboost任何细节，不需要我亲自提前预判预留暴露几百个用户可能需要用到的钩子。     
+funboost现在很少预留用户级钩子，唯一的就是 boost 装饰器 有个 `user_custom_record_process_info_func` 钩子，给用户提供记录函数结果状态的，但是这不是必需品，用户完全可以使用4.21介绍的扩展方式，通过`consumer_override_cls`重写父类的这个`user_custom_record_process_info_func` 空方法或者直接重写父类的_run方法,这更oop,写法更一致。 
+celery的扩展就很垃圾了，必须依赖框架自身提前预留暴露了相关钩子或者信号机制，如果你有个奇葩独特的自定义需求，但是celery没给你暴露相关钩子或者信号机制，你只能对celery的源码进行修改或者使用猴子补丁来动态替换源码了。 
+
+
+你可以看看 funboost 和 celery 怎么扩展 `opentelemetry` 来实现全链路可视化追踪的。见文档 4b.7.3 章节。   
+**-> ### 4b.7.3 从opentelemetry功能集成， 侧面证明 funboost 对普通用户扩展性比celery强10倍。** 
+
+
 **在文档4b.2c章节,也演示了通过指定 consumer_override_cls 来消费任意格式的消息,用户可以和4.21章节一起阅读**  
+
+
+
+
 
 ## 4.23 演示funboost框架是如何代替用户手写调用线程池的  
 
@@ -11353,9 +11804,9 @@ if __name__ == '__main__':
     # 所以publish是比push更强大的存在，push是简单，publish是更可以发布任务控制参数。  
     add.publish({"a":1,"b":2})  
     # publish 除了可以发布函数入参本身以外，还能发布任务控制参数，例如可以手动的指定id而非有框架自动生成任务id，还能设置其他控制参数。  
-    # 例如 在 priority_control_config的PriorityConsumingControlConfig中设置   msg_expire_senconds =5，可以使得发布消息离消费超过5秒，丢弃消息不消费。  
+    # 例如 在 task_options的PriorityConsumingControlConfig中设置   msg_expire_senconds =5，可以使得发布消息离消费超过5秒，丢弃消息不消费。  
     # 例如设置is_using_rpc_mode = True ，则可以单独使该任务参数支持rpc获得结果。  
-    add.publish({"a":1,"b":2},task_id=100005,priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True))  
+    add.publish({"a":1,"b":2},task_id=100005,task_options=PriorityConsumingControlConfig(is_using_rpc_mode=True))  
 ```  
 
 ## 4.26 性能调优演示  
@@ -11513,7 +11964,7 @@ a窗口和b窗口排队的人是互不影响的，优先级是针对各自的队
     
    第二，broker_exclusive_config={'x-max-priority':5} 意思是声明这个队列中的任务消息支持多少种优先级，一般写5就完全够用了，不要写太大了，不需要那么多种级别。  
    
-   第三，发布消息时候要使用publish而非push,发布要加入参  priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': priority})，  
+   第三，发布消息时候要使用publish而非push,发布要加入参  task_options=PriorityConsumingControlConfig(other_extra_params={'priroty': priority})，  
         其中 priority 必须是整数，要大于等于0且小于队列声明的x-max-priority。x-max-priority这个概念是rabbitmq的原生概念，celery中也是这样的参数名字。  
 
         发布的消息priroty 越大，那么该消息就越先被取出来，这样就达到了打破了先进先出的规律。比如优先级高的消息可以给vip用户来运行函数实时，优先级低的消息可以离线跑批。  
@@ -11540,7 +11991,7 @@ if __name__ == '__main__':
 
     for i in range(1000):  
         randx = random.randint(1, 4)  
-        f.publish({'x': randx}, priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': randx}))  
+        f.publish({'x': randx}, task_options=PriorityConsumingControlConfig(other_extra_params={'priroty': randx}))  
     print(f.get_message_count())  
 
     f.consume()  
@@ -11600,11 +12051,11 @@ if __name__ == '__main__':
     dispatch_fun.clear()  
     for i in range(1000):  
         dispatch_fun.publish({'fun_name': 'f1', 'fun_kwargs': {'x': i, 'y': i}, },  
-                             priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': 1}))  
+                             task_options=PriorityConsumingControlConfig(other_extra_params={'priroty': 1}))  
         dispatch_fun.publish({'fun_name': 'f2', 'fun_kwargs': {'a': i, }, },  
-                             priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': 2}))  
+                             task_options=PriorityConsumingControlConfig(other_extra_params={'priroty': 2}))  
         dispatch_fun.publish({'fun_name': 'f3', 'fun_kwargs': {'b': i, }, },  
-                             priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': 3}))  
+                             task_options=PriorityConsumingControlConfig(other_extra_params={'priroty': 3}))  
 
     print(dispatch_fun.get_message_count())  
     dispatch_fun.consume()  
@@ -12021,11 +12472,11 @@ if __name__ == '__main__':
     f3.consume()  
     for i in range(200):  
         f2.push(i, i * 2) # 如果不传递filter_str， 默认是 把 所有入参 a和b，排序后作为json都加入到过滤中  
-        f3.publish(msg={'a':i,'b':i*2},priority_control_config=PriorityConsumingControlConfig(filter_str=str(i))) # 这个是仅仅把 a 作为过滤条件，例如函数入参 userid username sex ，通常按照userid 过滤足以， 不需要username sex也一起过滤，可以节约redis内存。  
+        f3.publish(msg={'a':i,'b':i*2},task_options=PriorityConsumingControlConfig(filter_str=str(i))) # 这个是仅仅把 a 作为过滤条件，例如函数入参 userid username sex ，通常按照userid 过滤足以， 不需要username sex也一起过滤，可以节约redis内存。  
     time.sleep(5)  # 因为 funboost 是确认消费完成后才加入过滤。如果消息耗时很长，且并发很大，且两个相同入参的消息连续挨着，第二个还会执行，所以这里演示sleep一下。  
     for i in range(200):  
         f2.push(i, i * 2)  
-        f3.publish(msg={'a':i,'b':i*2},priority_control_config=PriorityConsumingControlConfig(filter_str=str(i)))  
+        f3.publish(msg={'a':i,'b':i*2},task_options=PriorityConsumingControlConfig(filter_str=str(i)))  
     ctrl_c_recv()  
 ```  
 
@@ -13389,7 +13840,7 @@ def auditing_task(data): ...
 2.  **在自定义消费者 `CustomKafkaConsumer` 中，优先读取 `user_options` 的配置：**
 ```python
 class CustomKafkaConsumer(KafkaConsumerManuallyCommit):
-    def _shedual_task(self):
+    def _dispatch_task(self):
         # 优先从 user_options 读取 kafka 地址，如果不存在，则回退到 funboost_config.py 的全局配置
         bootstrap_servers = self.consumer_params.user_options.get(
             'kafka_bootstrap_servers',
@@ -13405,9 +13856,181 @@ class CustomKafkaConsumer(KafkaConsumerManuallyCommit):
 
 这种方式实现了**“配置与任务定义 co-located（配置与任务定义 co-located）”**，使得特殊配置清晰可见，且与对应的任务绑定，极大地提高了代码的可读性和可维护性。
 
+## 4b.7 opentelemetry 全链路任务追踪，funboost生产级别的重要战略级功能
+
+- **`opentelemetry` 这个是可选功能，funboost默认是不开启的。**
+
+- **毫无疑问。OpenTelemetry (OTel) 全链路追踪不仅是 Funboost 的战略级功能，更是它迈向“生产级、云原生架构”的里程碑。**
+
+- **实现方式：**
+funboost不是在消息中去增加 只有funboost自身才能识别的额外字段，去实现独特的全链路任务追踪。 
+funboost是使用国际w3c的规范协议，采用基于最最知名的 `opentelemetry`实现全链路任务追踪。 
+
+全链路任务追踪包括，跨项目 跨语言 跨http服务，不限于只追踪funboost框架自身的发布和消费。
+
+- **使用方式：**
+使用方式，就是可以直接使用 `OtelBoosterParams`  
+或者你在你的`BoosterParams`中指定`consumer_override_cls`和`publisher_override_cls`为`OtelConsumerMixin`和`OtelPublisherMixin`。 
+
+- **代码位置**: 
+代码实现： `funboost/contrib/override_publisher_consumer_cls/funboost_otel_mixin.py`  
+使用demo：`test_frame/test_otel`  
+
+- **jaeger 全链路追踪系统 的截图：**
+
+![alt text](jaeger列表页搜索.png)  
+![alt text](<jaeger trace详情1.png>)  
+![alt text](<jaeger trace详情2.png>)  
+
+### 4b.7.2 opentelemetry 全链路任务追踪 和计入 logger日志 + task_id 的排查区别
+
+`opentelemetry` + `jaeger` 排查全链路 比 `logger + task_id` + elk 更直观方便强大。
+
+**一句话总结：`logger + task_id` 是“线性叙事”，是侦探的笔记；而 `OpenTelemetry` 是“上帝视角”，是战场的全息沙盘。**
+
+在 `funboost` 中，两者并不冲突，而是互补。但在排查复杂分布式问题时，OTel 提供了 **降维打击** 般的可观测性。
+
+#### 4b.7.2.1. 传统的 Logger + task_id：一维线性的“流水账”
+
+这是大家最熟悉的方式。`funboost` 的 `TaskIdLogger` 会自动在每条日志中注入 `task_id`。
+
+*   **排查方式**：你复制一个 `task_id`，去 ELK 或日志文件中 grep 搜索。
+*   **看到的景象**：你得到的是**按时间排序**的一堆文本行。
+
+```text
+[INFO] 2025-12-29 10:00:01 - task_id: A123 - 函数A 开始运行
+[INFO] 2025-12-29 10:00:01 - task_id: A123 - 函数A 计算中...
+[INFO] 2025-12-29 10:00:02 - task_id: A123 - 函数A 发布子任务 B (task_id: B456)
+[INFO] 2025-12-29 10:00:03 - task_id: B456 - 函数B 开始运行
+[INFO] 2025-12-29 10:00:04 - task_id: A123 - 函数A 结束
+[INFO] 2025-12-29 10:00:05 - task_id: B456 - 函数B 结束
+```
+
+*   **痛点**：
+    1.  **割裂感**：如果你不搜索 `B456`，你根本不知道 A 和 B 有关系。
+    2.  **脑补拓扑**：你需要在大脑中通过阅读日志，辛苦地构建“A 调用了 B，B 又调用了 C”的调用链。如果调用链很深（A->B->C->D），大脑内存不够用。
+    3.  **时间黑洞**：你很难直观看出“A 发布消息”到“B 收到消息”中间的网络延迟和队列排队时间是多少。
+
+#### 4b.7.2.2. OpenTelemetry (OTel)：二维/三维的“树状结构”
+
+OTel 不仅记录了“发生了什么”，还记录了“**父子关系**”和“**时间跨度**”。
+
+*   **排查方式**：在 Jaeger/SkyWalking 界面点击 Trace，或者使用 `funboost` 的 `TreeSpanExporter` 在控制台查看。
+*   **看到的景象**：你看到的是**一棵树**，或者一个**甘特图**。
+
+```text
+📍 Trace ID: f50f...ae2 (整个调用链共用一个 TraceID)
+------------------------------------------------------------
+└── 📤 A_Queue send (生产者) 10ms
+    └── 📥 A_Queue process (消费者:函数A) 3000ms
+        │   (A 的业务逻辑...)
+        │
+        ├── 📤 B_Queue send (生产者:A发布给B) 5ms
+        │   └── 📥 B_Queue process (消费者:函数B) 1000ms  <-- 自动关联，一目了然
+        │       └── 📤 C_Queue send ...
+        │
+        └── 📤 D_Queue send (生产者:A发布给D) 5ms
+            └── 📥 D_Queue process (消费者:函数D) 500ms
+```
+
+*   **降维打击的优势**：
+    1.  **因果关系 (Causality)**：不需要搜索，直接看到 A 触发了 B 和 D。
+    2.  **性能瓶颈可视化**：一眼就能看到哪根“柱子”最长（耗时最久）。是函数 A 算慢了？还是 Redis 队列积压导致 A 发出后 B 很久才收到？
+    3.  **跨越边界**：它能串联起 `java/go外部服务` -> `HTTP 请求 (python Web)` -> `Funboost 生产者` -> `RabbitMQ` -> `Funboost 消费者` -> `MySQL` 的完整链路。
 
 
-`<div>` `</div>`  
+**Funboost 的优点之处在于：它同时内置了这两种能力。**
+*   `TaskIdLogger` 让你在日志里不迷路。
+*   `OtelBoosterParams` 让你拥有上帝视角。
+
+### 4b.7.3 从opentelemetry功能集成， 侧面证明 funboost 对普通用户扩展性吊打celery10倍。 
+
+- `funboost` 通过按照教程4.21扩展，在 funboost_otel_mixin.py  中增加 `AutoOtelPublisherMixin` 和 `AutoOtelConsumerMixin` 实现了对`opentelemetry`的自动集成。
+
+ 
+- `funboost_otel_mixin.py` 这个文件说明 funboost具有超高的自定义扩展性，他就是基于文档4.21介绍的对普通用户公开的扩展功能，通过`consumer_override_cls`和`publisher_override_cls`指定特定的生产者 消费者逻辑。funboost 使用最经典的oop来直观扩展
+  
+ 
+#### 4b.7.3.1 **你如果在celery就没那么简单能自定义实现这个功能了**
+```
+ 如果在 Celery 中实现同等级别的全链路追踪，你需要手动“魔改”或者利用复杂的信号机制 (Signals)。
+ 这比 Funboost 的 OOP 继承要繁琐得多。
+
+你需要：
+from celery.signals import before_task_publish
+from celery.signals import task_prerun, task_postrun, task_failure
+把这些加到多个孤立的函数上，而且函数入参签名一定不能乱写，而且毫无ide自动补全功能
+
+你需要对发布端
+@before_task_publish.connect
+def inject_otel_header(sender=None, headers=None, body=None, **kwargs):
+
+@after_task_publish.connect
+def after_task_publish(sender=None, headers=None, body=None, **kwargs):
+
+你需要对消费端
+@task_prerun.connect
+def start_otel_span(task_id=None, task=None, **kwargs):
+
+@task_postrun.connect
+def stop_otel_span(task_id=None, **kwargs):
+
+@task_failure.connect
+def handle_failure(task_id=None, exception=None, **kwargs):
+
+。。。。。。。总共要连接12个celery的钩子挂点。因为before和after是破碎的，无法使用 opentelemetry 的 with 语法。 
+```
+
+```
+celery这种扩展方式，完全是令人丈二和尚摸不着头脑，你不知道为什么要这样写，也不知道这样写为什么能生效，用户自定义扩展代码和框架代码之间的思维链路是不连贯的。
+
+最痛苦的是：你在 start_otel_span 创建了 span 对象，你必须想办法把它偷渡到 stop_otel_span 函数里去关闭它。你可能需要污染 task 对象实例（task.current_span = span）或者使用不安全的全局变量。而在 Funboost 中，这只是一个局部变量的事情。
+```
+
+
+#### 4b.7.3.2 **funboost的扩展比celery更容易更彻底：**   
+funboost 虽然是函数调度框架，但是他的实现是真oop。
+
+funboost使用经典oop，用户可以完全100%修改定制funboost任何细节，不需要我亲自提前预判预留暴露几百个用户可能需要用到的钩子。     
+funboost现在很少预留用户级钩子，唯一的就是 boost 装饰器 有个 `user_custom_record_process_info_func` 钩子，给用户提供记录函数结果状态的，但是这不是必需品，用户完全可以使用4.21介绍的扩展方式，通过`consumer_override_cls`重写父类的这个`user_custom_record_process_info_func` 空方法。 
+即使我不给你预留`user_custom_record_process_info_func`子类来实现模板方法， 你也可以直接重写父类的_run方法，你的_run 方法里调用 `super()._run(kw)` 然后使用`fct.function_result_status`就能记录结果了,这更oop,写法更一致。     
+funboost 扩展为什么爽，因为你的类重写时候，你可以使用self.xx访问任何属性，通过fct自动上下文你能访问当前任务消息的各种状态和结果。  
+celery的用户级自定义扩展就很麻烦很高难度了，必须依赖框架自身提前预留暴露了相关钩子或者信号机制，或者信号能连接函数预留的参数还不能满足你（比如 Worker 的某个底层状态），如果你有个奇葩的自定义需求你只能对celery的源码进行修改或者使用猴子补丁来动态替换源码了。  
+
+
+#### 4b.7.3.3 **celery 的 opentelemetry 代码在此，太难了：** 
+这个源码证明 celery集成 opentelemetry 难度太大了，一般的普通用户甚至连架构师 思考几天几夜，抓破头皮，完全无法做得到，必须 opentelemetry 和celery官方开发两方人员通力合作攻坚开发，才搞得定，事实就是如此，确实是他们2个团队合作开发的源码，celery还把对opentelemetry的集成写到celery框架近5年的最重大的更新日志记录里面了。
+
+[https://github.com/open-telemetry/opentelemetry-python-contrib/tree/main/instrumentation/opentelemetry-instrumentation-celery/src/opentelemetry/instrumentation/celery](https://github.com/open-telemetry/opentelemetry-python-contrib/tree/main/instrumentation/opentelemetry-instrumentation-celery/src/opentelemetry/instrumentation/celery)
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div> </div>
 
 `````
 
@@ -13419,51 +14042,6 @@ class CustomKafkaConsumer(KafkaConsumerManuallyCommit):
 --- **start of file: source/articles/c5.md** (project: funboost_docs) --- 
 
 `````markdown
-# 5.框架运行时截图  
-
-## 5.1 windows pycharm 运行截图  
-
-![](https://s1.ax1x.com/2020/06/30/N5yZin.png)  
-
-## 5.1b 新增running状态显示截图(2024-03)：  
-
-
-
-
-## 5.2 linux 运行率截图  
-
-
-<a href="https://imgse.com/i/pkFF5uV"><img src="https://s21.ax1x.com/2024/04/29/pkFF5uV.png" alt="pkFF5uV.png" border="0" /></a>  
-
-
-## 5.3 函数执行结果及状态搜索查看  
-
-![img_67.png](img_67.png)  
-
-高并发  
-![img_68.png](img_68.png)  
-
-
-函数结果和运行次数和错误异常查看。使用的测试函数如下。  
-
-```  
-def add(a, b):  
-    logger.info(f'消费此消息 {a} + {b} 中。。。。。')  
-    time.sleep(random.randint(3, 5))  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。  
-    if random.randint(4, 6) == 5:  
-        raise RandomError('演示随机出错')  
-    logger.info(f'计算 {a} + {b} 得到的结果是  {a + b}')  
-    return a + b  
-```  
-
-
-![img_69.png](img_69.png)  
-
-任务消费统计曲线。  
-![img_70.png](img_70.png)  
-
-
-<div> </div>  
 
 
 `````
@@ -14613,10 +15191,14 @@ from funboost import boost, BrokerEnum,BoosterParams,ctrl_c_recv,ConcurrentModeE
 
 
 @boost(BoosterParams(queue_name='test_load_balancing', broker_kind=BrokerEnum.REDIS_ACK_ABLE, log_level=logging.INFO,  
+                    # 切记是设置concurrent_mode并发模式为 SINGLE_THREAD ，而不是使用线程池模式然后把 concurrent_num 设置为1，这两个在多进程拉取消息的绝对均衡方面有区别
+                    # 因为即使线程池并发为1，线程池还有内部的work_queue会拉取缓冲一部分消息，导致出现你认为的多机器或多进程拉取消息不均衡
                      concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD,  
+                     
+                    # pull_msg_batch_size 这行很关键，REDIS_ACK_ABLE 因为默认是拉取100个消息，  
+                     # 对于重型任务，如果你需要每台机器都严格只运行一个消息，就需要设置批量拉取1个消息，不要一台机器就把消息队列掏空了。 
                      broker_exclusive_config={'pull_msg_batch_size': 1},   
-                     # pull_msg_batch_size 这行很关键，REDIS_ACK_ABLE 因为默认是拉取100个消息，  
-                     # 对于重型任务，你需要每台机器都严格只运行一个消息，就需要设置批量拉取1个消息，不要一台机器就把消息队列掏空了。  
+                     
                      ))  
 def test_load_balancing(x):  
     print(x)  
@@ -15856,9 +16438,7 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
 上下文就是类似flask的request对象,线程中任意地方可以获取,线程/协程隔离.  
 
 ```  
-用户在任意消费函数中   
-fct = funboost_current_task()  
-就能获取当前的任务消息了。  
+用户在任意消费函数中使用fct就能获取当前的任务消息了。  
 
 这个功能使得用户在用户函数中就能知道消息的完全体、 当前是哪台机器 、哪个进程、 第几次重试运行函数  
 消息的发布时间  消息的task_id 等等。  
@@ -15970,12 +16550,44 @@ python代码例子,见文档 4.2d.3 章节.
 
 
 
-## 7.53 2025-12  新增 funboost.faas，快速实现FaaS
+## 7.53 2026-01  新增 funboost.faas，快速实现FaaS（非常好用重要）
 
 给各种流行的python web框架的app，自动注册一组funboost路由，支持的web包括fastapi django flask  
 助力用户快速实现  http rpc、从http管理定时任务，队列管理、自动注册和发现 、微服务 、FaaS平台、funboost web管理后台接口 等用途场景。
 
 详细见文档 15 章节。
+
+## 7.54 2026-01 修改了一些内部保护方法名字
+
+
+```
+只影响极少数按照教程4.21章节继承扩展的高级用户，绝大部分用户无感知。
+AbstractConsumer._shedual_task -> _dispatch_task
+AbstractPublisher.concrete_realization_of_publish -> _publish_impl
+
+
+少数人可能用到了publish方法的 priority_control_config 和 PriorityConsumingControlConfig
+AbstractPublisher.pblish 入参 priority_control_config -> task_options
+PriorityConsumingControlConfig -> TaskOptions
+修改原因：priority_control_config 感觉有歧义，让人误以为是专门用来设置priroty消息优先级的。
+
+
+总结：
+以上只要全局替换就好了，极少人已经用到了。 
+```
+
+## 7.55 2026-01 函数结果持久化支持设置表名
+
+FunctionResultStatusPersistanceConfig 增加 table_name 参数，用于设置表名。
+之前默认保存的mongo表名同queue_name一致，现在可以自定义。
+这就意味着你可以把同一个项目的多个队列的函数结果都放到一个mongo表中。
+
+## 7.56 2026-01 新增 opentelemetry 全链路任务追踪，这是funboost的一个生产级别的重要战略级功能
+
+使用国际w3c的规范协议，基于opentelemetry实现全链路任务追踪。
+
+使用方式，就是可以直接使用OtelBoosterParams  
+或者你在你的BoosterParams中指定consumer_override_cls和publisher_override_cls为OtelConsumerMixin和OtelPublisherMixin。
 
 
 `````

@@ -14,7 +14,7 @@ class RqPublisher(AbstractPublisher):
     这个是复杂版，批量推送，简单版在 funboost/publishers/redis_publisher_simple.py
     """
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         func_kwargs = json.loads(msg)
         func_kwargs.pop('extra')
         RqHelper.queue_name__rq_job_map[self.queue_name].delay(**func_kwargs)

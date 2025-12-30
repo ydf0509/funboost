@@ -10,7 +10,7 @@ import traceback
 from funboost import nb_print
 from funboost.constant import RedisKeys
 
-from funboost.core.func_params_model import PriorityConsumingControlConfig, PublisherParams
+from funboost.core.func_params_model import TaskOptions, PublisherParams
 from funboost.core.msg_result_getter import AsyncResult
 from funboost.core.serialization import Serialization
 from funboost.utils import time_util, decorators  # LoggerMixin 已废弃，Statistic类不再使用
@@ -23,59 +23,148 @@ from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter
 # do_patch_frame_config()
 
 
+def get_mongo_table_name_by_queue_name(queue_name: str) -> str:
+    """
+    根据 queue_name 获取对应的 MongoDB 表名
+    
+    从队列配置的 function_result_status_persistance_conf.table_name 获取，
+    如果没有配置 table_name，则使用 queue_name 作为表名
+    
+    Args:
+        queue_name: 队列名称
+        
+    Returns:
+        MongoDB 表名
+    """
+    try:
+        queue_params = SingleQueueConusmerParamsGetter(queue_name).get_one_queue_params_use_cache()
+        if queue_params:
+            persistance_conf = queue_params.get('function_result_status_persistance_conf', {})
+            table_name = persistance_conf.get('table_name')
+            if table_name:
+                return table_name
+    except Exception as e:
+        nb_print(f'获取队列 {queue_name} 的表名失败: {e}')
+    # 默认使用 queue_name 作为表名
+    return queue_name
 
 
-# print(db)
-# print(type(db))
-# print(db.list_collection_names())
+def get_all_queue_table_info() -> dict:
+    """
+    获取所有队列及其对应的 MongoDB 表名映射
+    
+    Returns:
+        {queue_name: table_name, ...}
+    """
+    result = {}
+    try:
+        queues_config = QueuesConusmerParamsGetter().get_queues_params()
+        for queue_name, params in queues_config.items():
+            persistance_conf = params.get('function_result_status_persistance_conf', {})
+            table_name = persistance_conf.get('table_name') or queue_name
+            result[queue_name] = table_name
+    except Exception as e:
+        nb_print(f'获取所有队列表名映射失败: {e}')
+    return result
+
 
 def get_cols(col_name_search: str):
+    """
+    获取队列列表，并返回每个队列对应的 MongoDB 表的记录数
+    
+    不再使用 db.list_collection_names()，而是从队列配置中获取表名
+    注意：因为多个队列可能共享同一个表，所以查询时必须加上 queue_name 条件
+    """
     db = MongoMixin().mongo_db_task_status
-    if not col_name_search:
-        collection_name_list = db.list_collection_names()
-    else:
-        collection_name_list = [collection_name for collection_name in db.list_collection_names() if col_name_search in collection_name]
-    # return [{'collection_name': collection_name, 'count': db.get_collection(collection_name).find().count()} for collection_name in collection_name_list]
-    collection_name_set_filter = set(collection_name_list).intersection(QueuesConusmerParamsGetter().all_queue_names)
-    return [{'collection_name': collection_name, 'count': db.get_collection(collection_name).count_documents({})} for collection_name in collection_name_set_filter]
-    # for collection_name in collection_list:
-    #     if col_name_search in collection_name:
-    #     print (collection,db[collection].find().count())
+    
+    # 从队列配置获取所有队列及其对应的表名
+    queue_table_map = get_all_queue_table_info()
+    
+    result = []
+    for queue_name, table_name in queue_table_map.items():
+        # 根据搜索条件过滤
+        if col_name_search and col_name_search not in queue_name:
+            continue
+        
+        try:
+            # 必须加上 queue_name 条件，因为多个队列可能共享同一个表
+            count = db.get_collection(table_name).count_documents({'queue_name': queue_name})
+        except Exception:
+            count = 0
+        
+        result.append({
+            'collection_name': queue_name,  # 返回队列名（用于前端显示和后续查询）
+            'table_name': table_name,       # 实际的 MongoDB 表名
+            'count': count
+        })
+    
+    return result
 
 
-def query_result(col_name, start_time, end_time, is_success, function_params: str, page, ):
+def query_result(col_name, start_time, end_time, is_success, function_params: str, page, task_id: str = ''):
+    """
+    查询函数执行结果
+    
+    Args:
+        col_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
+    
+    注意：因为多个队列可能共享同一个表，所以查询时必须加上 queue_name 条件
+    """
     query_kw = copy.copy(locals())
     t0 = time.time()
     if not col_name:
         return []
     db = MongoMixin().mongo_db_task_status
-    condition = {
-        'insert_time': {'$gt': time_util.DatetimeConverter(start_time).datetime_obj,
-                        '$lt': time_util.DatetimeConverter(end_time).datetime_obj},
-    }
-    # condition = {
-    #     'insert_time_str': {'$gt': start_time,
-    #                     '$lt': end_time},
-    # }
-    if is_success in ('2', 2, True):
-        condition.update({"success": True})
-    elif is_success in ('3', 3, False):
-        condition.update({"success": False})
-    if function_params.strip():
-        condition.update({'params_str': {'$regex': function_params.strip()}})
+    
+    # 根据队列名获取实际的 MongoDB 表名
+    table_name = get_mongo_table_name_by_queue_name(col_name)
+    
+    # 基础条件：必须加上 queue_name，因为多个队列可能共享同一个表
+    condition = {'queue_name': col_name}
+    
+    # 如果传了 task_id，忽略其他条件（时间、运行状态等），直接根据 task_id 查询
+    if task_id and task_id.strip():
+        condition.update({'task_id': {'$regex': f'^{task_id.strip()}'}})
+    else:
+        # 正常查询：使用时间范围和其他条件
+        condition.update({
+            'insert_time': {'$gt': time_util.DatetimeConverter(start_time).datetime_obj,
+                            '$lt': time_util.DatetimeConverter(end_time).datetime_obj},
+        })
+        if is_success in ('2', 2, True):
+            condition.update({"success": True})
+        elif is_success in ('3', 3, False):
+            condition.update({"success": False})
+        if function_params.strip():
+            condition.update({'params_str': {'$regex': function_params.strip()}})
+    
     # nb_print(col_name)
     # nb_print(condition)
-    # results = list(db.get_collection(col_name).find(condition, ).sort([('insert_time', -1)]).skip(int(page) * 100).limit(100))
     # with decorators.TimerContextManager():
-    results = list(db.get_collection(col_name).find(condition, {'insert_time': 0, 'utime': 0}).skip(int(page) * 100).limit(100))
+    # 按时间逆序排序，最新的在前面
+    results = list(db.get_collection(table_name).find(condition, {'insert_time': 0, 'utime': 0}).sort([('time_start', -1)]).skip(int(page) * 100).limit(100))
     # nb_print(results)
-    nb_print(time.time() -t0, query_kw,len(results))
+    nb_print(time.time() -t0, query_kw, len(results), f'table: {table_name}')
     return results
 
 
 def get_speed(col_name, start_time, end_time):
+    """
+    获取指定时间范围内的消费速率统计
+    
+    Args:
+        col_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
+    
+    注意：因为多个队列可能共享同一个表，所以查询时必须加上 queue_name 条件
+    """
     db = MongoMixin().mongo_db_task_status
+    
+    # 根据队列名获取实际的 MongoDB 表名
+    table_name = get_mongo_table_name_by_queue_name(col_name)
+    
+    # 基础条件：必须加上 queue_name，因为多个队列可能共享同一个表
     condition = {
+        'queue_name': col_name,
         'insert_time': {'$gt': time_util.DatetimeConverter(start_time).datetime_obj,
                         '$lt': time_util.DatetimeConverter(end_time).datetime_obj},
     }
@@ -84,76 +173,22 @@ def get_speed(col_name, start_time, end_time):
     # }
     # nb_print(condition)
     with decorators.TimerContextManager():
-        # success_num = db.get_collection(col_name).count({**{'success': True}, **condition})
-        # fail_num = db.get_collection(col_name).count({**{'success': False}, **condition})
-        success_num = db.get_collection(col_name).count_documents({**{'success': True,'run_status':'finish'}, **condition})
-        fail_num = db.get_collection(col_name).count_documents({**{'success': False,'run_status':'finish'}, **condition})
+        # success_num = db.get_collection(table_name).count({**{'success': True}, **condition})
+        # fail_num = db.get_collection(table_name).count({**{'success': False}, **condition})
+        success_num = db.get_collection(table_name).count_documents({**{'success': True,'run_status':'finish'}, **condition})
+        fail_num = db.get_collection(table_name).count_documents({**{'success': False,'run_status':'finish'}, **condition})
         qps = (success_num + fail_num) / (time_util.DatetimeConverter(end_time).timestamp - time_util.DatetimeConverter(start_time).timestamp)
         return {'success_num': success_num, 'fail_num': fail_num, 'qps': round(qps, 1)}
 
 
-# 以下 Statistic 类已废弃，功能已迁移到 get_consume_speed_curve，前端不再使用 speed_statistic_for_echarts 路由
-# class Statistic(LoggerMixin):
-#     def __init__(self, col_name):
-#         db = MongoMixin().mongo_db_task_status
-#         self.col = db.get_collection(col_name)
-#         self.result = {'recent_10_days': {'time_arr': [], 'count_arr': []},
-#                        'recent_24_hours': {'time_arr': [], 'count_arr': []},
-#                        'recent_60_minutes': {'time_arr': [], 'count_arr': []},
-#                        'recent_60_seconds': {'time_arr': [], 'count_arr': []}}
-#
-#     def statistic_by_period(self, t_start: str, t_end: str):
-#         condition = {'insert_time': {'$gt': time_util.DatetimeConverter(t_start).datetime_obj,
-#                                                          '$lt': time_util.DatetimeConverter(t_end).datetime_obj}}
-#         count =  self.col.count_documents(condition)
-#         print(count,t_start,t_end,time_util.DatetimeConverter(t_start).datetime_obj.timestamp(),condition)
-#         return count
-#
-#     def build_result(self):
-#         with decorators.TimerContextManager():
-#             for i in range(10):
-#                 t1 = datetime.datetime.now() + datetime.timedelta(days=-(9 - i))
-#                 t2 = datetime.datetime.now() + datetime.timedelta(days=-(8 - i))
-#                 self.result['recent_10_days']['time_arr'].append(time_util.DatetimeConverter(t1).date_str)
-#                 count = self.statistic_by_period(time_util.DatetimeConverter(t1).date_str + ' 00:00:00',
-#                                                  time_util.DatetimeConverter(t2).date_str + ' 00:00:00')
-#                 self.result['recent_10_days']['count_arr'].append(count)
-#
-#             for i in range(0, 24):
-#                 t1 = datetime.datetime.now() + datetime.timedelta(hours=-(23 - i))
-#                 t2 = datetime.datetime.now() + datetime.timedelta(hours=-(22 - i))
-#                 self.result['recent_24_hours']['time_arr'].append(t1.strftime('%Y-%m-%d %H:00:00'))
-#                 count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:00:00'),
-#                                                  t2.strftime('%Y-%m-%d %H:00:00'))
-#                 self.result['recent_24_hours']['count_arr'].append(count)
-#
-#             for i in range(0, 60):
-#                 t1 = datetime.datetime.now() + datetime.timedelta(minutes=-(59 - i))
-#                 t2 = datetime.datetime.now() + datetime.timedelta(minutes=-(58 - i))
-#                 self.result['recent_60_minutes']['time_arr'].append(t1.strftime('%Y-%m-%d %H:%M:00'))
-#                 count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:%M:00'),
-#                                                  t2.strftime('%Y-%m-%d %H:%M:00'))
-#                 self.result['recent_60_minutes']['count_arr'].append(count)
-#
-#             for i in range(0, 60):
-#                 t1 = datetime.datetime.now() + datetime.timedelta(seconds=-(59 - i))
-#                 t2 = datetime.datetime.now() + datetime.timedelta(seconds=-(58 - i))
-#                 self.result['recent_60_seconds']['time_arr'].append(t1.strftime('%Y-%m-%d %H:%M:%S'))
-#                 count = self.statistic_by_period(t1.strftime('%Y-%m-%d %H:%M:%S'),
-#                                                  t2.strftime('%Y-%m-%d %H:%M:%S'))
-#                 self.result['recent_60_seconds']['count_arr'].append(count)
 
-
-
-    
-     
 
 def get_consume_speed_curve(col_name: str, start_time: str, end_time: str, granularity: str = 'auto'):
     """
     获取消费速率曲线数据
     
     Args:
-        col_name: 集合名称（队列名）
+        col_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
         start_time: 开始时间，格式 'YYYY-MM-DD HH:MM:SS'
         end_time: 结束时间，格式 'YYYY-MM-DD HH:MM:SS'
         granularity: 时间粒度，'second', 'minute', 'hour', 'day' 或 'auto'
@@ -169,6 +204,9 @@ def get_consume_speed_curve(col_name: str, start_time: str, end_time: str, granu
         }
     """
     db = MongoMixin().mongo_db_task_status
+    
+    # 根据队列名获取实际的 MongoDB 表名
+    table_name = get_mongo_table_name_by_queue_name(col_name)
     
     start_dt = time_util.DatetimeConverter(start_time).datetime_obj
     end_dt = time_util.DatetimeConverter(end_time).datetime_obj
@@ -224,13 +262,15 @@ def get_consume_speed_curve(col_name: str, start_time: str, end_time: str, granu
         if next_time > end_dt:
             next_time = end_dt
         
+        # 基础条件：必须加上 queue_name，因为多个队列可能共享同一个表
         condition_base = {
+            'queue_name': col_name,
             'insert_time': {'$gte': current, '$lt': next_time}
         }
         
         try:
-            success_count = db.get_collection(col_name).count_documents({**condition_base, 'success': True, 'run_status': 'finish'})
-            fail_count = db.get_collection(col_name).count_documents({**condition_base, 'success': False, 'run_status': 'finish'})
+            success_count = db.get_collection(table_name).count_documents({**condition_base, 'success': True, 'run_status': 'finish'})
+            fail_count = db.get_collection(table_name).count_documents({**condition_base, 'success': False, 'run_status': 'finish'})
         except Exception as e:
             success_count = 0
             fail_count = 0

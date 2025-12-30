@@ -49,7 +49,7 @@ def push_fun_params_to_broker(queue_name: str, *args, **kwargs):
         return booster.push(*args, **kwargs)
     except KeyError as e:
         from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter
-        publisher = SingleQueueConusmerParamsGetter(queue_name).generate_publisher_by_funboost_redis_info()
+        publisher = SingleQueueConusmerParamsGetter(queue_name).gen_publisher_for_faas()
         return publisher.push(*args, **kwargs)
         
 

@@ -20,7 +20,7 @@ class NsqConsumer(AbstractConsumer):
     """
 
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         consumer = GnsqImporter().Consumer(self._queue_name, 'frame_channel', BrokerConnConfig.NSQD_TCP_ADDRESSES,
                             max_in_flight=self.consumer_params.concurrent_num, heartbeat_interval=60, timeout=600, )  # heartbeat_interval 不能设置为600
 

@@ -51,7 +51,7 @@ class HTTPConsumer(AbstractConsumer, ):
             raise ValueError('please specify port')
 
     # noinspection DuplicatedCode
-    def _shedual_task(self):
+    def _dispatch_task(self):
         # flask_app = Flask(__name__)
         #
         # @flask_app.route('/queue', methods=['post'])

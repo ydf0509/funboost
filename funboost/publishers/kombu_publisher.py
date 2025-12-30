@@ -76,7 +76,7 @@ class KombuPublisher(AbstractPublisher, ):
         self.logger.warning(f'使用 kombu 库 连接 {self._kombu_broker_url_prefix} 中间件')
 
     @deco_mq_conn_error
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         self.producer.publish(json.loads(msg), exchange=self.exchange, routing_key=self._queue_name, declare=[self.queue])
 
     @deco_mq_conn_error

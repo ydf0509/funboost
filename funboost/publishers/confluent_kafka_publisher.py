@@ -54,7 +54,7 @@ class ConfluentKafkaPublisher(AbstractPublisher, ):
         self._recent_produce_time = time.time()
 
     # noinspection PyAttributeOutsideInit
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         # noinspection PyTypeChecker
         # self.logger.debug(msg)
         self._confluent_producer.produce(self._queue_name, msg.encode(), )

@@ -31,7 +31,7 @@ class MysqlCdcConsumer(AbstractConsumer):
         self.logger.info("FunboostCdcConsumer initialized. Ready to listen for binlog events.")
         self._bin_log_stream_reader_config = config
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         """
         This is the main loop that connects to MySQL, reads binlog events,
         and submits them as tasks to the funboost engine.

@@ -1,7 +1,7 @@
 import random
 import time
 
-from funboost import boost, PriorityConsumingControlConfig, BrokerEnum
+from funboost import boost, TaskOptions, BrokerEnum
 
 
 
@@ -24,7 +24,7 @@ if __name__ == '__main__':
         if randx > 10:
             randx = None
         print(randx)
-        f.publish({'x': randx}, priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': randx}))
+        f.publish({'x': randx}, task_options=TaskOptions(other_extra_params={'priroty': randx}))
     print(f.get_message_count())
       
     # f.consume()

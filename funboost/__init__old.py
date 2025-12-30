@@ -146,7 +146,7 @@
 #
 # def boost(queue_name,
 #           *,
-#           consumin_function_decorator: typing.Callable = _Undefined,
+#           consuming_function_decorator: typing.Callable = _Undefined,
 #           function_timeout: float = _Undefined,
 #           concurrent_num: int = _Undefined,
 #           specify_concurrent_pool=_Undefined,
@@ -159,8 +159,8 @@
 #           is_show_message_get_from_broker: bool = _Undefined,
 #           qps: float = _Undefined,
 #           is_using_distributed_frequency_control: bool = _Undefined,
-#           msg_expire_senconds: float = _Undefined,
-#           is_send_consumer_hearbeat_to_redis: bool = _Undefined,
+#           msg_expire_seconds: float = _Undefined,
+#           is_send_consumer_heartbeat_to_redis: bool = _Undefined,
 #           logger_prefix: str = _Undefined,
 #           create_logger_file: bool = _Undefined,
 #           do_task_filtering: bool = _Undefined,
@@ -183,7 +183,7 @@
 #
 #     # 为了代码提示好，这里重复一次入参意义。被此装饰器装饰的函数f，函数f对象本身自动加了一些方法，例如f.push 、 f.consume等。
 #     :param queue_name: 队列名字。
-#     :param consumin_function_decorator : 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
+#     :param consuming_function_decorator : 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
 #     :param function_timeout : 超时秒数，函数运行超过这个时间，则自动杀死函数。为0是不限制。设置后代码性能会变差，非必要不要轻易设置。
 #     # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
 #     # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
@@ -202,10 +202,10 @@
 #     :param is_print_detail_exception:是否打印详细的堆栈错误。为0则打印简略的错误占用控制台屏幕行数少。
 #     :param is_show_message_get_from_broker: 从中间件取出消息时候时候打印显示出来
 #     :param qps:指定1秒内的函数执行次数，例如可以是小数0.01代表每100秒执行一次，也可以是50代表1秒执行50次.为0则不控频。
-#     :param msg_expire_senconds:消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
+#     :param msg_expire_seconds:消息过期时间，为0永不过期，为10则代表，10秒之前发布的任务如果现在才轮到消费则丢弃任务。
 #     :param is_using_distributed_frequency_control: 是否使用分布式空频（依赖redis统计消费者数量，然后频率平分），默认只对当前实例化的消费者空频有效。
 #             假如实例化了2个qps为10的使用同一队列名的消费者，并且都启动，则每秒运行次数会达到20。如果使用分布式空频则所有消费者加起来的总运行次数是10。
-#     :param is_send_consumer_hearbeat_to_redis   是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
+#     :param is_send_consumer_heartbeat_to_redis   是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。
 #     :param logger_prefix: 日志前缀，可使不同的消费者生成不同的日志前缀
 #     :param create_logger_file : 是否创建文件日志
 #     :param do_task_filtering :是否执行基于函数参数的任务过滤

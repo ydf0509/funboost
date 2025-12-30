@@ -17,7 +17,7 @@ class NsqPublisher(AbstractPublisher, ):
         self._producer = GnsqImporter().Producer(BrokerConnConfig.NSQD_TCP_ADDRESSES)
         self._producer.start()
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         # noinspection PyTypeChecker
         self._producer.publish(self._queue_name, msg.encode())
 

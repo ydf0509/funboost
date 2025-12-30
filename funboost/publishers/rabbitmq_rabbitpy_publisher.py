@@ -24,7 +24,7 @@ class RabbitmqPublisherUsingRabbitpy(AbstractPublisher):
 
     # @decorators.tomorrow_threads(10)
     @deco_mq_conn_error
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         # noinspection PyTypeChecker
         import time
         # time.sleep(0.1)

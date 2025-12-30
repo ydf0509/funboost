@@ -14,7 +14,7 @@ class PeeweeConsumer(AbstractConsumer):
     """
 
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         self.queue = PeeweeQueue(self.queue_name)
         while True:
             task_dict = self.queue.get()

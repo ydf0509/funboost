@@ -19,7 +19,7 @@ class DequePublisher(AbstractPublisher):
             deque_queue_name__deque_obj_map[self._queue_name] = deque()
         self.queue = deque_queue_name__deque_obj_map[self._queue_name]  # type: deque
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         # noinspection PyTypeChecker
         self.queue.append(msg)
 

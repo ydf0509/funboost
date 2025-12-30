@@ -1,10 +1,10 @@
 import random
 from test_persist import my_consuming_function,f2,time,aio_f3,f4,f5,aio_f6
-from funboost import PriorityConsumingControlConfig,ApsJobAdder
+from funboost import TaskOptions,ApsJobAdder
 
 
 def interval_push_f5(x):
-    f5.publish({'x':x},priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': 4}))
+    f5.publish({'x':x},task_options=TaskOptions(other_extra_params={'priroty': 4}))
 
 ApsJobAdder(f5,job_store_kind='redis').aps_obj.add_job(
     interval_push_f5,trigger='interval',seconds=5,kwargs={'x':10},id='id_interval_push_f5',
@@ -16,7 +16,7 @@ for i in range(0, 10000):
     f2.push(i,i*2)
     aio_f3.push(i)
     f4.push(i)
-    f5.publish({'x':i},priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': random.randint(0,5)}))
+    f5.publish({'x':i},task_options=TaskOptions(other_extra_params={'priroty': random.randint(0,5)}))
     aio_f6.push(i)
     time.sleep(0.1)
 

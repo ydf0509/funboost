@@ -23,7 +23,7 @@ class RedisConsumerAckAble000(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractCo
     """
 
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         while True:
             result = self.redis_db_frame.blpop(self._queue_name, timeout=60)
             # task_bytes = self.redis_db_frame.lpop(self._queue_name)
@@ -58,7 +58,7 @@ class RedisConsumerAckAble111(ConsumerConfirmMixinWithTheHelpOfRedis, AbstractCo
     """
 
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         lua = '''
                      local v = redis.call("lpop", KEYS[1])
                      if v then
@@ -101,7 +101,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
 
 
 
-    def _shedual_task000(self):
+    def _dispatch_task000(self):
         # 可以采用lua脚本，也可以采用redis的watch配合pipeline使用。比代码分两行pop和zadd比还能减少一次io交互，还能防止丢失小概率一个任务。
         lua = '''
                      local v = redis.call("lpop", KEYS[1])
@@ -122,7 +122,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
                 # print('xiuxi')
                 time.sleep(0.5)
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         pull_msg_batch_size = self.consumer_params.broker_exclusive_config['pull_msg_batch_size']
         lua = f'''
                      local task_list = redis.call("lrange", KEYS[1],0,{pull_msg_batch_size-1})

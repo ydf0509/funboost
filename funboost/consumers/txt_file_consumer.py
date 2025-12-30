@@ -15,7 +15,7 @@ class TxtFileConsumer(AbstractConsumer, ):
     这个不想做消费确认了,要消费确认请选 SQLITE_QUEUE 、PERSISTQUEUE中间件
     """
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         file_queue_path = str((Path(BrokerConnConfig.TXT_FILE_PATH) / self.queue_name).absolute())
         file_lock = FileLock(Path(file_queue_path) / f'_funboost_txtfile_{self.queue_name}.lock')
         queue = Queue(str((Path(BrokerConnConfig.TXT_FILE_PATH) / self.queue_name).absolute()), autosave=True, serializer=json_serializer)

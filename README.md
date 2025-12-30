@@ -482,36 +482,23 @@ def task_fun(a, b):
 可视化管理后台提供了强大的监控与运维能力，以下是核心功能截图：
 
 
-### 📊 监控总览
-| 模块 | 功能 | 视图 |
-| :--- | :--- | :--- |
-| **实时状态** | 查看函数运行状态与结果 | ![状态](https://s21.ax1x.com/2025/03/04/pEJCffK.png) |
-| **速率趋势** | 展示历史与实时消费QPS | ![趋势](https://s21.ax1x.com/2025/03/04/pEJCWY6.png) |
 
-### 👁️ 消费者洞察
-| 模块 | 功能 | 视图 |
-| :--- | :--- | :--- |
-| **IP查看消费者** | 根据IP查看消费者进程 | ![IP监控](https://s21.ax1x.com/2025/03/04/pEJCRFx.png) |
-| **查看消费者详情** | 查看一个booster所有消费者运行详情 | ![详情](https://s21.ax1x.com/2025/03/04/pEJCgT1.png) |
+函数消费结果：可查看和搜索函数实时消费状态和结果  
+[![函数结果表](https://s41.ax1x.com/2025/12/19/pZ1L5h4.png)](https://imgchr.com/i/pZ1L5h4)
 
-### ⚙️ 队列控制
-| 模块 | 功能 | 视图 |
-| :--- | :--- | :--- |
-| **运维管理** | 清空、暂停、调整QPS与并发 | ![管理](https://s21.ax1x.com/2025/05/27/pVSOJcq.png) |
-| **多维指标** | 查看运行次数、失败率、耗时、积压量 | ![指标](https://s21.ax1x.com/2025/05/29/pVpr7sP.png) |
+队列操作：查看和操作队列，包括清空、暂停消费、恢复消费、调整QPS和并发  
+[![队列操作1](https://s41.ax1x.com/2025/12/17/pZlrYPH.png)](https://imgchr.com/i/pZlrYPH)
+[![队列操作2](https://s41.ax1x.com/2025/12/17/pZlrUxI.png)](https://imgchr.com/i/pZlrUxI)
 
-### 🔧 工具交互
-| 模块 | 功能 | 视图 |
-| :--- | :--- | :--- |
-| **在线RPC** | 发布消息并同步获取结果 | ![RPC](https://s21.ax1x.com/2025/04/29/pE7y8oT.png) |
-| | | |
+队列操作：查看消费曲线图，查看各种消费指标（历史运行次数、失败次数、近10秒完成/失败、平均耗时、剩余消息数量等）  
+[![队列消费曲线](https://s41.ax1x.com/2025/12/19/pZ104HS.png)](https://imgchr.com/i/pZ104HS) 
 
-### ⏰ 定时任务管理
-| 模块 | 功能 | 视图 |
-| :--- | :--- | :--- |
-| **任务列表** | 定时任务管理列表页 | [![列表页](https://s41.ax1x.com/2025/12/15/pZQlfaT.png)](https://imgchr.com/i/pZQlfaT) |
-| **新增任务** | 添加定时任务 | [![新增](https://s41.ax1x.com/2025/12/15/pZQl5iF.png)](https://imgchr.com/i/pZQl5iF) |
-| **任务详情** | 查看定时任务详情 | [![详情](https://s41.ax1x.com/2025/12/15/pZQlhIU.png)](https://imgchr.com/i/pZQlhIU) |
+RPC调用：在网页上对30种消息队列发布消息并获取函数执行结果；可根据task_id获取结果  
+[![rpc调用成功-绿色](https://s41.ax1x.com/2025/12/19/pZ10RjP.png)](https://imgchr.com/i/pZ10RjP)
+
+定时任务管理：列表页  
+[![定时任务列表](https://s41.ax1x.com/2025/12/17/pZlrNRA.png)](https://imgchr.com/i/pZlrNRA)
+
 
 
 ## 1.4 💡 为什么 Python 极其需要分布式函数调度？
@@ -557,7 +544,7 @@ Funboost 的设计哲学是 **“极简主义”**。您无需阅读长篇大论
 
 ---
 
-## 1.6 🥋 funboost施展吸星大法神功，一招汲取 Celery 毕生功力
+## 1.6 🥋 funboost 练就吸星大法神功，一招吸走 Celery 毕生内力
 
 **Funboost 的极简招式 + Celery 的深厚内力 = 独步武林**
 
@@ -581,15 +568,9 @@ Celery 称霸 Python 异步江湖十数载，内力虽深厚，但其招式繁�
 > 欲练此功，请翻阅 **[11.1 章节]**。
 > 您只需施展 Funboost 的极简剑法，底层那拥有万钧之力的 Celery 引擎便会自动为您移山填海，虽有雷霆之威，却无反噬之虞。
 
-```
-有的人觉得celery那么知名，所以celery性能一定顶呱呱，所以打死不信funboost的性能狂秒celery几十倍。
 
-这些懒虫又爱质疑又害怕吃苦，即使我已经写好了benchmark测试对比代码，还是不愿意亲自运行教程2.6章节的使用严格
-控制变量法的 funboost vs celery性能测试对比，所以funboost 干脆直接把celery作为funboost的broker之一。
-
-不是funboost性能太牛，是celery是在太差，不信的话，你自己也可以写个简陋版的 while True:msg=redis.blpop(),
-把msg丢到线程池执行，你会发现你随便写的代码，性能也狂秒celery。
-```
+ 需要说明的是，funboost性能是已经远超celery，吸纳celery作为broker，兼容celery作为funboost的broker，是为了打消有的人对funboost的调度核心的稳定性的疑虑。   
+ > 你可以看文档2.6章节**funboost vs celery控制变量法性能对比**，以及2.9章节，**funboost到底为什么性能比celery高几十倍？太离谱了,太假了是吗？**
 
 
 [查看分布式函数调度框架完整文档](https://funboost.readthedocs.io/)  

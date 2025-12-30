@@ -9,7 +9,7 @@ class MysqlCdcPublisher(AbstractPublisher):
     Direct publishing is not supported and will raise an error.
     """
 
-    def concrete_realization_of_publish(self, msg: str):
+    def _publish_impl(self, msg: str):
         raise NotImplementedError("The 'funboost_cdc' broker does not support manual publishing. "
                                   "Tasks are generated automatically from database changes.")
 

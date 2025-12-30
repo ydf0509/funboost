@@ -14,7 +14,7 @@ from funboost import (
     BoosterParams,          # 参数配置类
     BrokerEnum,             # 中间件枚举
     ConcurrentModeEnum,     # 并发模式枚举
-    PriorityConsumingControlConfig, # 优先级/延时配置
+    TaskOptions, # 优先级/延时配置
     ApsJobAdder,            # 定时任务添加器
     ctrl_c_recv,            # 阻塞主线程工具
     fct,                    # 上下文对象 (Funboost Current Task)
@@ -207,28 +207,28 @@ if __name__ == '__main__':
     print("如果不指定filter_str， 默认使用函数的所有入参包括 user_id user_sex user_name 来做过滤")
     task_filter.push(1001,"man",user_name="xiaomin")
 
-    # 演示: 指定字符串过滤 (publish 方式 + priority_control_config)
+    # 演示: 指定字符串过滤 (publish 方式 + task_options)
     # 场景：只根据 user_id 过滤，即使其他参数不同，只要 user_id 相同就被过滤
     print("发布 user_id=1001 (第1次)")
     task_filter.publish(
         msg={"user_id": 1001, "user_sex": "man", "user_name": "Tom"},
-        priority_control_config=PriorityConsumingControlConfig(filter_str="1001")
+        task_options=TaskOptions(filter_str="1001")
     )
     
     print("发布 user_id=1001 (第2次, name不同, 但filter_str相同, 应该被过滤)")
     task_filter.publish(
         msg={"user_id": 1001, "user_sex": "man", "user_name": "Jerry"},
-        priority_control_config=PriorityConsumingControlConfig(filter_str="1001")
+        task_options=TaskOptions(filter_str="1001")
     )
 
 
     # --- 8. 延时任务演示 ---
     print("\n--- 延时演示 ---")
     print(f"发布延时任务时间: {datetime.datetime.now()}")
-    # 使用 publish 方法发布，并携带 priority_control_config
+    # 使用 publish 方法发布，并携带 task_options
     task_delay.publish(
         msg={"msg": "我是延迟5秒的消息"}, 
-        priority_control_config=PriorityConsumingControlConfig(countdown=5)
+        task_options=TaskOptions(countdown=5)
     )
 
     # --- 9. 定时任务演示 (APScheduler) ---

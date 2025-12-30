@@ -16,7 +16,7 @@ class PeeweePublisher(AbstractPublisher):
     def custom_init(self):
         self.queue = PeeweeQueue(self._queue_name, )
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         # print(msg)
         self.queue.push(body=msg, )
 

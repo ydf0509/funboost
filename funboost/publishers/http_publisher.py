@@ -24,7 +24,7 @@ class HTTPPublisher(AbstractPublisher, ):
             raise ValueError('please specify port')
 
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         url = self._ip_port_str + '/queue'
         self._http.request('post', url, fields={'msg': msg,'call_type':'publish'})
 

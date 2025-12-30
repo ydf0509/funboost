@@ -12,7 +12,7 @@ class PersistQueueConsumer(AbstractConsumer):
     persist queue包实现的本地持久化消息队列。
     """
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         pub = PersistQueuePublisher(publisher_params=PublisherParams(queue_name=self.queue_name))
         while True:
             item = pub.queue.get()

@@ -14,7 +14,7 @@ class TxtFileConsumer(EmptyConsumer):
             with open(self.file_path, 'w') as f:
                 pass
                 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         """从 txt 文件中读取消息并提交任务"""
         while True:
             try:
@@ -52,7 +52,7 @@ class TxtFilePublisher(EmptyPublisher):
             with open(self.file_path, 'w') as f:
                 pass
 
-    def concrete_realization_of_publish(self, msg: str):
+    def _publish_impl(self, msg: str):
         """发布消息到 txt 文件"""
         with self.file_lock:
             with open(self.file_path, 'a') as f:

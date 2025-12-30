@@ -191,7 +191,7 @@ class CeleryConsumer(AbstractConsumer):
         CeleryHelper.add_start_work_celery_queue_name(self.queue_name)
         super().start_consuming_message()
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         """ 完全由celery框架接管控制消费，不使用funboost的AbstractConsumer的_run"""
         while 1:
             time.sleep(100)

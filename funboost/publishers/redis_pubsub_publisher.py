@@ -10,7 +10,7 @@ class RedisPubSubPublisher(AbstractPublisher, RedisMixin, ):
     使用redis作为中间件
     """
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         self.redis_db_frame.publish(self._queue_name, msg)
 
     def clear(self):
@@ -21,5 +21,4 @@ class RedisPubSubPublisher(AbstractPublisher, RedisMixin, ):
         return -1
 
     def close(self):
-        # self.redis_db7.connection_pool.disconnect()
         pass

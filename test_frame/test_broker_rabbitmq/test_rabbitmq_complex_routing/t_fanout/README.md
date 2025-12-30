@@ -106,7 +106,7 @@ fanout_publisher = BoostersManager.get_cross_project_publisher(PublisherParams(
 # 发布消息
 fanout_publisher.publish(
     {'user_id': 'user001', 'action': '用户注册', 'message': '欢迎新用户'},
-    priority_control_config=PriorityConsumingControlConfig(
+    task_options=TaskOptions(
         # 即使设置了路由键，fanout 模式也会忽略它
         other_extra_params={'routing_key_for_publish': 'ignored_key'}
     )

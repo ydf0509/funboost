@@ -16,7 +16,7 @@ class MyRedisConsumer(EmptyConsumer):
         print(funboost_config_deafult.BrokerConnConfig.REDIS_URL)
         self.redis_client = redis.from_url(funboost_config_deafult.BrokerConnConfig.REDIS_URL)
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         while True:
             try:
                 _, msg_bytes = self.redis_client.brpop(self.queue_name)
@@ -40,7 +40,7 @@ class MyRedisPublisher(EmptyPublisher):
     def custom_init(self):
         self.redis_client = redis.from_url(funboost_config_deafult.BrokerConnConfig.REDIS_URL)
 
-    def concrete_realization_of_publish(self, msg: str):
+    def _publish_impl(self, msg: str):
         self.redis_client.lpush(self.queue_name, msg)
 
     def clear(self):

@@ -8,7 +8,7 @@ import json
 import time
 import typing
 
-from funboost import PriorityConsumingControlConfig
+from funboost import TaskOptions
 from funboost.concurrent_pool.async_helper import get_or_create_event_loop
 from funboost.core.serialization import Serialization
 from funboost.publishers.base_publisher import AbstractPublisher
@@ -27,8 +27,8 @@ class FastStreamPublisher(AbstractPublisher, metaclass=abc.ABCMeta):
         get_or_create_event_loop().run_until_complete(self.broker.connect())
 
     def publish(self, msg: typing.Union[str, dict], task_id=None,
-                priority_control_config: PriorityConsumingControlConfig = None) :
-        msg, msg_function_kw, extra_params, task_id = self._convert_msg(msg, task_id, priority_control_config)
+                task_options: TaskOptions = None) :
+        msg, msg_function_kw, extra_params, task_id = self._convert_msg(msg, task_id, task_options)
         t_start = time.time()
         faststream_result =  get_or_create_event_loop().run_until_complete(self.broker.publish(Serialization.to_json_str(msg), self.queue_name))
         self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_function_kw}')  # 显示msg太长了。
@@ -42,7 +42,7 @@ class FastStreamPublisher(AbstractPublisher, metaclass=abc.ABCMeta):
         # return AsyncResult(task_id)
         return faststream_result  #
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         pass
 
 

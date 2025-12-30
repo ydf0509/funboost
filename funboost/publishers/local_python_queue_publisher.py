@@ -21,7 +21,7 @@ class LocalPythonQueuePublisher(AbstractPublisher):
     def local_python_queue(self) -> Queue:
         return PythonQueues.get_queue(self._queue_name)
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         # noinspection PyTypeChecker
         pass
         self.local_python_queue.put(msg)
@@ -49,7 +49,7 @@ class LocalPythonQueuePublisherSimpleQueue(AbstractPublisher):
             local_pyhton_queue_name__local_pyhton_queue_obj_map[self._queue_name] = SimpleQueue()
         self.queue = local_pyhton_queue_name__local_pyhton_queue_obj_map[self._queue_name]  # type: SimpleQueue
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         # noinspection PyTypeChecker
         self.queue.put(msg)
 
@@ -79,7 +79,7 @@ class LocalPythonQueuePublisherDeque(AbstractPublisher):
         # deque.get = deque.pop
         # # setattr(self.queue,'get',self.queue.pop)
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         # noinspection PyTypeChecker
         print(msg)
         self.queue.append(msg)

@@ -12,7 +12,7 @@ class MyRedisConsumer(EmptyConsumer):
         print(funboost_config_deafult.BrokerConnConfig.REDIS_URL)
         self.redis_client = redis.from_url(funboost_config_deafult.BrokerConnConfig.REDIS_URL)
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         """从 Redis 队列中消费消息"""
         while True:
             try:
@@ -42,7 +42,7 @@ class MyRedisPublisher(EmptyPublisher):
         """初始化 Redis 客户端"""
         self.redis_client = redis.from_url(funboost_config_deafult.BrokerConnConfig.REDIS_URL)
 
-    def concrete_realization_of_publish(self, msg: str):
+    def _publish_impl(self, msg: str):
         """将消息发布到 Redis 队列"""
         self.redis_client.lpush(self.queue_name, msg)
 

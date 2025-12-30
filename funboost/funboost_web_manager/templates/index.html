@@ -734,6 +734,9 @@
                 });
             }
 
+            // 暴露给 window 对象，以便 iframe 内的页面可以调用刷新
+            window.loadSidebarCareProjectName = loadSidebarCareProjectName;
+
             loadSidebarCareProjectName();
 
             // 为链接添加涟漪效果

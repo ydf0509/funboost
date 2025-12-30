@@ -16,7 +16,7 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
 import traceback
 from flask import Blueprint, request, jsonify
 
-from funboost import AsyncResult, PriorityConsumingControlConfig
+from funboost import AsyncResult, TaskOptions
 from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter, QueuesConusmerParamsGetter, CareProjectNameEnv
 from funboost.faas.faas_util import gen_aps_job_adder
 from funboost.core.loggers import get_funboost_file_logger
@@ -63,6 +63,7 @@ def publish_msg():
         msg_body = data.get('msg_body')
         need_result = data.get('need_result', False)
         timeout = data.get('timeout', 60)
+        task_id_param = data.get('task_id')  # 可选：指定 task_id
         
         # 验证必填字段
         if not queue_name:
@@ -87,26 +88,25 @@ def publish_msg():
         
         # BoostersManager.get_or_create_booster_by_queue_name 是通过queue_name反向得到或创建booster。
         # 不需要用户亲自判断queue_name，然后精确使用某个非常具体的消费函数，
-        publisher = SingleQueueConusmerParamsGetter(queue_name).generate_publisher_by_funboost_redis_info()
+        publisher = SingleQueueConusmerParamsGetter(queue_name).gen_publisher_for_faas()
         booster_params_by_redis = SingleQueueConusmerParamsGetter(queue_name).get_one_queue_params_use_cache()
 
         # 检查是否需要 RPC 模式
         if need_result:
-            if booster_params_by_redis['is_using_rpc_mode'] is False:
-                raise ValueError(f' need_result 为true,{queue_name} 队列消费者 需要@boost设置支持rpc模式')
-            
             # 开启 RPC 模式发布（同步方式）
             async_result = publisher.publish(
                 msg_body,
-                priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True)
+                task_id=task_id_param,  # 可选：指定 task_id（用于重试失败任务）
+                task_options=TaskOptions(is_using_rpc_mode=True)
             )
             task_id = async_result.task_id
             
             # 等待结果（同步方式）
+            print(async_result.task_id,timeout)
             status_and_result = AsyncResult(async_result.task_id, timeout=timeout).status_and_result
         else:
-            # 普通发布（同步方式）
-            async_result = publisher.publish(msg_body)
+            # 普通发布（同步方式），可以指定 task_id
+            async_result = publisher.publish(msg_body, task_id=task_id_param)
             task_id = async_result.task_id
 
         return jsonify({
@@ -209,7 +209,7 @@ def get_msg_count():
             },), 400
         
 
-        publisher = SingleQueueConusmerParamsGetter(queue_name).generate_publisher_by_funboost_redis_info()
+        publisher = SingleQueueConusmerParamsGetter(queue_name).gen_publisher_for_faas()
         # 获取消息数量（注意：某些中间件可能不支持准确计数，返回-1）
         count = publisher.get_message_count()
         
@@ -298,7 +298,7 @@ def clear_queue():
             }), 400
         
         # 通过 queue_name 自动获取对应的 publisher
-        publisher = SingleQueueConusmerParamsGetter(queue_name).generate_publisher_by_funboost_redis_info()
+        publisher = SingleQueueConusmerParamsGetter(queue_name).gen_publisher_for_faas()
         publisher.clear()
         
         return jsonify({
@@ -361,6 +361,97 @@ def get_one_queue_config():
         return jsonify({
             "succ": False,
             "msg": f"获取队列配置失败: {str(e)}",
+            "data": None
+        }), 500
+
+
+@flask_blueprint.route("/get_queues_config", methods=['GET'])
+def get_queues_config():
+    """
+    获取所有队列的配置信息
+    
+    返回所有已注册队列的详细配置参数，包括：
+    - 队列名称
+    - broker 类型
+    - 并发数量
+    - QPS 限制
+    - 是否启用 RPC 模式
+    - ！！！重要，消费函数的入参名字列表在 auto_generate_info.final_func_input_params_info 中
+    - 等等其他 @boost 装饰器的所有参数
+    
+    主要用于前端可视化展示和管理
+    """
+    try:
+        queues_config = QueuesConusmerParamsGetter().get_queues_params()
+        
+        return jsonify({
+            "succ": True,
+            "msg": "获取成功",
+            "data": {
+                "queues_config": queues_config,
+                "count": len(queues_config)
+            }
+        })
+    except Exception as e:
+        logger.exception(f'获取队列配置失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"获取队列配置失败: {str(e)}",
+            "data": {
+                "queues_config": {},
+                "count": 0
+            }
+        }), 500
+
+
+@flask_blueprint.route("/get_queue_run_info", methods=['GET'])
+def get_queue_run_info():
+    """
+    获取单个队列的运行信息
+    
+    查询参数:
+        queue_name: 队列名称（必填）
+    
+    返回:
+        队列的详细运行信息，包括：
+        - queue_params: 队列配置参数
+        - active_consumers: 活跃的消费者列表
+        - pause_flag: 暂停标志（-1,0表示未暂停，1表示已暂停）
+        - msg_num_in_broker: broker中的消息数量（实时）
+        - history_run_count: 历史运行总次数
+        - history_run_fail_count: 历史失败总次数
+        - all_consumers_last_x_s_execute_count: 所有消费进程，最近X秒所有消费者的执行次数
+        - all_consumers_last_x_s_execute_count_fail: 所有消费进程，最近X秒所有消费者的失败次数
+        - all_consumers_last_x_s_avarage_function_spend_time: 所有消费进程，最近X秒的平均函数耗时
+        - all_consumers_avarage_function_spend_time_from_start: 所有消费进程，从启动开始的平均函数耗时
+        - all_consumers_total_consume_count_from_start: 所有消费进程，从启动开始的总消费次数
+        - all_consumers_total_consume_count_from_start_fail: 所有消费进程，从启动开始的总失败次数
+        - all_consumers_last_execute_task_time: 所有消费进程中，最后一次执行任务的时间戳
+    """
+    try:
+        queue_name = request.args.get('queue_name')
+        
+        if not queue_name:
+            return jsonify({
+                "succ": False,
+                "msg": "queue_name 参数必填",
+                "data": None
+            }), 400
+        
+        # 获取单个队列的运行信息
+        queue_info = SingleQueueConusmerParamsGetter(queue_name).get_one_queue_params_and_active_consumers()
+        
+        return jsonify({
+            "succ": True,
+            "msg": "获取成功",
+            "data": queue_info
+        })
+        
+    except Exception as e:
+        logger.exception(f'获取队列运行信息失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"获取队列运行信息失败: {str(e)}",
             "data": None
         }), 500
 

@@ -28,7 +28,7 @@ class RabbitmqPublisher(AbstractPublisher):
 
     # noinspection PyAttributeOutsideInit
     @deco_mq_conn_error
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         with self._lock_for_pika:  # 亲测pika多线程publish会出错
             self.channel.basic_publish(exchange='',
                                        routing_key=self._queue_name,

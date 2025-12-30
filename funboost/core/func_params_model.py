@@ -1,123 +1,44 @@
-from typing import Any
+"""
+pydantic 模型定义， funboost 使用pydantic 作为重要函数的入参，
+方便函数入参太多在层层传递时候的麻烦，例如 BoosterParams 经常新增字段，如果funboost直接入参一大堆，需要每一层都去新增入参很麻烦
 
-import asyncio
-import datetime
+BoosterParams 是 funboost 最核心的入参模型，掌握了 BoosterParams 就是掌握了 funboost 的90% 用法。
+
+"""
+
 import functools
-import json
-import logging
 import typing
-
+import asyncio
+import logging
+import datetime
+from pydantic.fields import Field
 from typing_extensions import Literal
-from collections import OrderedDict
 
-from funboost.concurrent_pool import FunboostBaseConcurrentPool, FlexibleThreadPool, ConcurrentPoolBuilder
-from funboost.constant import ConcurrentModeEnum, BrokerEnum
-from pydantic import BaseModel, validator, root_validator, BaseConfig, Field
-
+from funboost.concurrent_pool.pool_commons import ConcurrentPoolBuilder
+from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool
 from funboost.core.lazy_impoter import funboost_lazy_impoter
+from funboost.core.pydantic_compatible_base import compatible_root_validator
+from funboost.core.pydantic_compatible_base import BaseJsonAbleModel
+from funboost.constant import BrokerEnum, ConcurrentModeEnum, StrConst
 
 
-def _patch_for_pydantic_field_deepcopy():
-    from concurrent.futures import ThreadPoolExecutor
-    from asyncio import AbstractEventLoop
-
-    # noinspection PyUnusedLocal,PyDefaultArgument
-    def __deepcopy__(self, memodict={}):
-        """
-        pydantic 的默认值，需要deepcopy
-        """
-        return self
-
-    # pydantic 的类型需要用到
-    ThreadPoolExecutor.__deepcopy__ = __deepcopy__
-    AbstractEventLoop.__deepcopy__ = __deepcopy__
-    # BaseEventLoop.__deepcopy__ = __deepcopy__
-
-
-_patch_for_pydantic_field_deepcopy()
-
-
-class BaseJsonAbleModel(BaseModel):
-    """
-    因为model字段包括了 函数和自定义类型的对象,无法直接json序列化,需要自定义json序列化
-    """
-
-    def get_str_dict(self):
-        model_dict: dict = self.dict()  # noqa
-        model_dict_copy = OrderedDict()
-        for k, v in model_dict.items():
-            if isinstance(v, typing.Callable):
-                model_dict_copy[k] = str(v)
-            # elif k in ['specify_concurrent_pool', 'specify_async_loop'] and v is not None:
-            elif type(v).__module__ != "builtins":  # 自定义类型的对象,json不可序列化,需要转化下.
-                model_dict_copy[k] = str(v)
-            else:
-                model_dict_copy[k] = v
-        return model_dict_copy
-
-    def json_str_value(self):
-        try:
-            return json.dumps(dict(self.get_str_dict()), ensure_ascii=False, )
-        except TypeError as e:
-            return str(self.get_str_dict())
-
-    def json_pre(self):
-        try:
-            return json.dumps(self.get_str_dict(), ensure_ascii=False, indent=4)
-        except TypeError as e:
-            return str(self.get_str_dict())
-
-    def update_from_dict(self, dictx: dict):
-        for k, v in dictx.items():
-            setattr(self, k, v)
-        return self
-
-    def update_from_kwargs(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        return self
-
-    def update_from_model(self, modelx: BaseModel):
-        for k, v in modelx.dict().items():
-            setattr(self, k, v)
-        return self
-
-    class Config(BaseConfig):
-        arbitrary_types_allowed = True
-        # allow_mutation = False
-        extra = "forbid"
-
-    @staticmethod
-    def init_by_another_model(model_type: typing.Type[BaseModel], modelx: BaseModel):
-        init_dict = {}
-        for k, v in modelx.dict().items():
-            if k in model_type.__fields__.keys():
-                init_dict[k] = v
-        return model_type(**init_dict)
-
+from funboost.concurrent_pool import FunboostBaseConcurrentPool
 
 class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
     is_save_status: bool  # 是否保存函数的运行状态信息
     is_save_result: bool  # 是否保存函数的运行结果
     expire_seconds: int = 7 * 24 * 3600  # mongo中的函数运行状态保存多久时间,自动过期
     is_use_bulk_insert: bool = False  # 是否使用批量插入来保存结果，批量插入是每隔0.5秒钟保存一次最近0.5秒内的所有的函数消费状态结果，始终会出现最后0.5秒内的执行结果没及时插入mongo。为False则，每完成一次函数就实时写入一次到mongo。
+    table_name:typing.Optional[str] = None # 表名，用于指定保存函数运行状态和结果的表名，默认使用队列名作为表名。   
 
-    @validator('expire_seconds',allow_reuse=True)
-    def check_expire_seconds(cls, value):
-        if value > 10 * 24 * 3600:
-            from funboost.core.loggers import flogger  # 这个文件不要提前导入日志,以免互相导入.
-            flogger.warning(f'你设置的过期时间为 {value} ,设置的时间过长。 ')
-        return value
-
-    @root_validator(skip_on_failure=True)
-    def check_values(cls, values: dict):
-        if not values['is_save_status'] and values['is_save_result']:
+    @compatible_root_validator(skip_on_failure=True)
+    def check_values(self, ):
+        expire_seconds = self.expire_seconds
+        if expire_seconds > 10 * 24 * 3600:
+            funboost_lazy_impoter.flogger.warning(f'你设置的过期时间为 {expire_seconds} 秒 ,设置的时间过长。 ')
+        if not self.is_save_status and self.is_save_result:
             raise ValueError(f'你设置的是不保存函数运行状态但保存函数运行结果。不允许你这么设置')
-        return values
-
-
-
-
+        return self
 
 class BoosterParams(BaseJsonAbleModel):
     """
@@ -134,7 +55,6 @@ class BoosterParams(BaseJsonAbleModel):
     # 一个项目的队列名字有哪些，是保存在redis的set中，key为 f'funboost.project_name:{project_name}'
     # 通常配合 CareProjectNameEnv.set($project_name) 使用 ，它可以让你在监控和管理时“只看自己的一亩三分地“，避免被其他人的队列刷屏干扰。"""
     project_name: typing.Optional[str] = None
-
 
     """如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。
     具体看ThreadPoolExecutorShrinkAble的说明
@@ -156,7 +76,7 @@ class BoosterParams(BaseJsonAbleModel):
     如果使用分布式空频则所有消费者加起来的总运行次数是10。"""
     is_using_distributed_frequency_control: bool = False
 
-    is_send_consumer_hearbeat_to_redis: bool = False  # 是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。这个功能,需要安装redis.
+    is_send_consumer_heartbeat_to_redis: bool = False  # 是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。这个功能,需要安装redis.
 
     """max_retry_times:
     最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
@@ -168,7 +88,7 @@ class BoosterParams(BaseJsonAbleModel):
     is_push_to_dlx_queue_when_retry_max_times: bool = False  # 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
 
 
-    consumin_function_decorator: typing.Optional[typing.Callable] = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
+    consuming_function_decorator: typing.Optional[typing.Callable] = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
     
     
     """
@@ -203,7 +123,7 @@ class BoosterParams(BaseJsonAbleModel):
     is_print_detail_exception: bool = True  # 消费函数出错时候,是否打印详细的报错堆栈,为False则只打印简略的报错信息不包含堆栈.
     publish_msg_log_use_full_msg: bool = False # 发布到消息队列的消息内容的日志，是否显示消息的完整体，还是只显示函数入参。
 
-    msg_expire_senconds: typing.Union[float, int,None] = None  # 消息过期时间,可以设置消息是多久之前发布的就丢弃这条消息,不运行. 为None则永不丢弃
+    msg_expire_seconds: typing.Union[float, int,None] = None  # 消息过期时间,可以设置消息是多久之前发布的就丢弃这条消息,不运行. 为None则永不丢弃
 
     do_task_filtering: bool = False  # 是否对函数入参进行过滤去重.
     task_filtering_expire_seconds: int = 0  # 任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ， 30分钟前发布过1 + 2 的任务，现在仍然执行，如果是30分钟以内执行过这个任务，则不执行1 + 2
@@ -282,36 +202,43 @@ class BoosterParams(BaseJsonAbleModel):
     """# is_fake_booster：是否是伪造的booster,
     # 用于faas模式下，因为跨项目的faas管理只拿到了redis的一些基本元数据，没有booster的函数逻辑，
     # 例如ApsJobAdder管理定时任务，需要booster，但没有真实的函数逻辑，
-    # 你可以看 SingleQueueConusmerParamsGetter.generate_booster_by_funboost_redis_info_for_timing_push 的用法，目前主要是控制不要执行 BoostersManager.regist_booster
+    # 你可以看 SingleQueueConusmerParamsGetter.gen_booster_for_faas 的用法，目前主要是控制不要执行 BoostersManager.regist_booster
     # 普通用户完全不用改这个参数。
     """
     is_fake_booster: bool = False
+    booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT  # 普通用户不用管不用改，用于隔离boosters注册。例如faas的是虚假的跨服务跨项目的booster，没有具体函数逻辑，不可污染真正的注册。
     
 
-    @root_validator(skip_on_failure=True, )
-    def check_values(cls, values: dict):
+    @compatible_root_validator(skip_on_failure=True, )
+    def check_values(self):
        
-
         # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
         # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
-        if values['qps'] and values['concurrent_num'] == 50:
-            values['concurrent_num'] = 500
-        if values['concurrent_mode'] == ConcurrentModeEnum.SINGLE_THREAD:
-            values['concurrent_num'] = 1
+        if self.qps and self.concurrent_num == 50:
+            self.concurrent_num = 500
+        if self.concurrent_mode == ConcurrentModeEnum.SINGLE_THREAD:
+            self.concurrent_num = 1
 
-        values['is_send_consumer_hearbeat_to_redis'] = values['is_send_consumer_hearbeat_to_redis'] or values['is_using_distributed_frequency_control']
+        self.is_send_consumer_heartbeat_to_redis = self.is_send_consumer_heartbeat_to_redis or self.is_using_distributed_frequency_control
 
-        if values['concurrent_mode'] not in ConcurrentModeEnum.__dict__.values():
+        if self.concurrent_mode not in ConcurrentModeEnum.__dict__.values():
             raise ValueError('设置的并发模式不正确')
-        if values['broker_kind'] in [BrokerEnum.REDIS_ACK_ABLE, BrokerEnum.REDIS_STREAM, BrokerEnum.REDIS_PRIORITY, 
+        if self.broker_kind in [BrokerEnum.REDIS_ACK_ABLE, BrokerEnum.REDIS_STREAM, BrokerEnum.REDIS_PRIORITY, 
                                      BrokerEnum.RedisBrpopLpush,BrokerEnum.REDIS,BrokerEnum.REDIS_PUBSUB]:
-            values['is_send_consumer_hearbeat_to_redis'] = True  # 需要心跳进程来辅助判断消息是否属于掉线或关闭的进程，需要重回队列
-        # if not set(values.keys()).issubset(set(BoosterParams.__fields__.keys())):
-        #     raise ValueError(f'{cls.__name__} 的字段包含了父类 BoosterParams 不存在的字段')
-        for k in values.keys():
-            if k not in BoosterParams.__fields__.keys():
-                raise ValueError(f'{cls.__name__} 的字段新增了父类 BoosterParams 不存在的字段 "{k}"')  # 使 BoosterParams的子类,不能增加字段,只能覆盖字段.
-        return values
+            self.is_send_consumer_heartbeat_to_redis = True  # 需要心跳进程来辅助判断消息是否属于掉线或关闭的进程，需要重回队列
+       
+        if self.function_result_status_persistance_conf.table_name is None:
+            self.function_result_status_persistance_conf.table_name = self.queue_name
+        
+        # 禁止子类添加 BoosterParams 中不存在的字段，主要是担心用户继承的子类中拼写错误，本以为自己是覆盖父类字段默认值，实际却变成了新增了字段。
+        # 兼容 Pydantic v1 和 v2 获取所有字段
+        self_fields = self.model_fields.keys() if hasattr(self, 'model_fields') else self.__fields__.keys()
+        parent_fields = BoosterParams.model_fields.keys() if hasattr(BoosterParams, 'model_fields') else BoosterParams.__fields__.keys()
+        for k in self_fields:
+            if k not in parent_fields:
+                raise ValueError(f'{self.__class__.__name__} 的字段新增了父类 BoosterParams 不存在的字段 "{k}"')  # 使 BoosterParams的子类,不能增加字段,只能覆盖字段.
+        
+        return self
 
     def __call__(self, func):
         """
@@ -334,7 +261,7 @@ class BoosterParamsComplete(BoosterParams):
     例如一个子类,这个BoosterParams的子类可以作为@booot的传参,每个@boost可以少写一些这些重复的入参字段.
 
     function_result_status_persistance_conf 永远支持函数消费状态 结果状态持久化
-    is_send_consumer_hearbeat_to_redis 永远支持发送消费者的心跳到redis,便于统计分布式环境的活跃消费者
+    is_send_consumer_heartbeat_to_redis 永远支持发送消费者的心跳到redis,便于统计分布式环境的活跃消费者
     is_using_rpc_mode  永远支持rpc模式
     broker_kind 永远是使用 amqpstorm包 操作 rabbbitmq作为消息队列.
     specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程池,线程资源利用更高.
@@ -342,60 +269,65 @@ class BoosterParamsComplete(BoosterParams):
 
     function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
         is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=True)  # 开启函数消费状态 结果持久化到 mongo,为True用户必须要安装mongo和多浪费一丝丝性能.
-    is_send_consumer_hearbeat_to_redis: bool = True  # 消费者心跳发到redis,为True那么用户必须安装reids
+    is_send_consumer_heartbeat_to_redis: bool = True  # 消费者心跳发到redis,为True那么用户必须安装reids
     is_using_rpc_mode: bool = True  # 固定支持rpc模式,不用每次指定 (不需要使用rpc模式的同学,就不要指定为True,必须安装redis和浪费一点性能)
     rpc_result_expire_seconds: int = 3600
     broker_kind: str = BrokerEnum.RABBITMQ_AMQPSTORM  # 固定使用rabbitmq,不用每次指定
     specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))  # 多个消费函数共享线程池
 
 
-class PriorityConsumingControlConfig(BaseJsonAbleModel):
+class TaskOptions(BaseJsonAbleModel):
     """
-    为每个独立的任务设置控制参数，和函数参数一起发布到中间件。可能有少数时候有这种需求。
-    例如消费为add函数，可以每个独立的任务设置不同的超时时间，不同的重试次数，是否使用rpc模式。这里的配置优先，可以覆盖生成消费者时候的配置。
+    这个是 publish 支持的额外参数，和函数参数一起发布到中间件。
+    可能有少数时候有这种需求。如果需要发布额外字段到消息队列，必须使用publish方法，push方法是类似celery的dalay只能发布函数入参自身。
+    这里面的字段值如果非None，会放到消息队列的消息里面的 extra 字段中。
     """
-
-    class Config:
-        json_encoders = {
-            datetime.datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S")
-        }
-
+    # task_id 和 publish_time 和 publish_time_format 这三个可以指定，如果不指定就自动生成
+    task_id: str = None
+    publish_time: float = None
+    publish_time_format: str = None
+    
+    # function_timeout，max_retry_times，is_print_detail_exception，msg_expire_seconds，is_using_rpc_mode 这几个是 消费函数执行时候的控制参数，
+    # 这个优先级比BoosterParams更高，例如 BoosterParams 设置重试3次，你可以通过 TaskOptions 设置重试10次，那么最终消费函数执行时候，会按照 TaskOptions 中的设置来执行。
+    # task_options 中的设置，优先级 高于 @boost(BoosterParams(...)) 中的设置。
     function_timeout: typing.Union[float, int,None] = None
-
     max_retry_times: typing.Union[int,None] = None
-
     is_print_detail_exception: typing.Union[bool,None] = None
-
-    msg_expire_senconds: typing.Union[float, int,None] = None
-
+    msg_expire_seconds: typing.Union[float, int,None] = None
     is_using_rpc_mode: typing.Union[bool,None] = None
 
+    # countdown，eta，misfire_grace_time 这三个是 发布延时任务
     countdown: typing.Union[float, int,None] = None
     eta: typing.Union[datetime.datetime, str,None] = None  # 时间对象， 或 %Y-%m-%d %H:%M:%S 字符串。
     misfire_grace_time: typing.Union[int, None] = None
+    
+    user_extra_info: typing.Optional[dict] = None # 用户自定义的额外信息，用户随意存放任何信息，但要保证可以json序列化。可以在消费端通过 fct.full_msg 获取。
 
-    other_extra_params: typing.Optional[dict] = None  # 其他参数, 例如消息优先级 , priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': priorityxx})，
+    other_extra_params: typing.Optional[dict] = None  # 其他参数，某些中间件独有的, 例如消息优先级 , task_options=TaskOptions(other_extra_params={'priroty': priorityxx})，
     
     """filter_str:
     用户指定过滤字符串， 例如函数入参是 def fun(userid,username,sex，user_description),
     默认是所有入参一起组成json来过滤，但其实只把userid的值来过滤就好了。所以如果需要精准的按照什么过滤，用户来灵活指定一个字符串就好了
     
     用法见文档4.35 
-    f3.publish(msg={'a':i,'b':i*2},priority_control_config=PriorityConsumingControlConfig(filter_str=str(i)))
+    f3.publish(msg={'a':i,'b':i*2},task_options=TaskOptions(filter_str=str(i)))
     """
     filter_str :typing.Optional[str] = None 
 
     can_not_json_serializable_keys: typing.List[str] = None # 不能json序列化的入参名字，反序列化时候需要使用pickle来反序列化这些字段(这个是自动生成的，用户不需要手动指定此入参。)
-    @root_validator(skip_on_failure=True)
-    def cehck_values(cls, values: dict):
-        if values['countdown'] and values['eta']:
+    
+    otel_context :typing.Optional[dict] = None # opentelemetry 的上下文，用于链路追踪
+
+    @compatible_root_validator(skip_on_failure=True)
+    def cehck_values(self):
+        if self.countdown and self.eta:
             raise ValueError('不能同时设置eta和countdown')
-        if values['misfire_grace_time'] is not None and values['misfire_grace_time'] < 1:
+        if self.misfire_grace_time is not None and self.misfire_grace_time < 1:
             raise ValueError(f'misfire_grace_time 的值要么是大于1的整数， 要么等于None')
-        return values
+        return self
 
 
-
+# PriorityConsumingControlConfig = TaskOptions # 兼容老名字
 
 class PublisherParams(BaseJsonAbleModel):
     queue_name: str
@@ -403,7 +335,7 @@ class PublisherParams(BaseJsonAbleModel):
 
     # 项目名, 默认为None, 给booster设置所属项目名, 用于在redis保存的funboost信息中，根据项目名字查看相关队列。
     # 如果不设置很难从redis保存的funboost信息中，区分哪些队列名属于哪个项目。 主要是给web接口查看用。
-    project_name: typing.Optional[str] = None
+    project_name: typing.Optional[str] = None # 推荐去设置
 
     log_level: int = logging.DEBUG
     logger_prefix: str = ''
@@ -426,6 +358,8 @@ class PublisherParams(BaseJsonAbleModel):
     user_options: dict = {}  # 用户自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置.
     auto_generate_info: dict = {}
     is_fake_booster: bool = False # 是否是伪造的booster, 不注册到BoostersManager
+    booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT  # 普通用户不用管不用改，用于隔离boosters注册。例如faas的是虚假的跨服务跨项目的booster，没有具体函数逻辑，不可污染真正的注册。
+    
     
 
 
@@ -435,7 +369,7 @@ if __name__ == '__main__':
     pass
     # print(FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=70 * 24 * 3600).update_from_kwargs(expire_seconds=100).get_str_dict())
     #
-    # print(PriorityConsumingControlConfig().get_str_dict())
+    # print(TaskOptions().get_str_dict())
 
     print(BoosterParams(queue_name='3213', specify_concurrent_pool=FlexibleThreadPool(100)).json_pre())
     # print(PublisherParams.schema_json())  # 注释掉，因为 PublisherParams 包含 Callable 类型字段，无法生成 JSON Schema

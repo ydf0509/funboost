@@ -40,7 +40,7 @@ class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher):
 
     # @decorators.tomorrow_threads(10)
     @deco_mq_conn_error
-    def concrete_realization_of_publish(self, msg: str):
+    def _publish_impl(self, msg: str):
         self.channel_wrapper_by_ampqstormbaic.publish(exchange='',
                                                       routing_key=self._queue_name,
                                                       body=msg,

@@ -25,7 +25,7 @@ import traceback
 import typing
 import asyncio
 
-from funboost import AioAsyncResult, AsyncResult, PriorityConsumingControlConfig, BoosterParams, Booster
+from funboost import AioAsyncResult, AsyncResult, TaskOptions, BoosterParams, Booster
 
 from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter, QueuesConusmerParamsGetter,CareProjectNameEnv
 from funboost.core.exceptions import FunboostException
@@ -257,6 +257,7 @@ class MsgItem(BaseModel):
     msg_body: dict  # 消息体,就是boost函数的入参字典,例如 {"x":1,"y":2}
     need_result: bool = False  # 发布消息后,是否需要返回结果
     timeout: int = 60  # 等待结果返回的最大等待时间.
+    task_id: str = None  # 可选：指定 task_id
 
 
 # 统一响应格式的数据结构
@@ -313,6 +314,8 @@ class FunctionResultStatusModel(BaseModel):
     host_name: str  # 主机名，例如 "LAPTOP-7V78BBO2"
     script_name: str  # 脚本名称（短），例如 "example_fastapi_router.py"
     script_name_long: str  # 脚本名称（完整路径）
+
+    user_context: typing.Optional[dict] = {}  # 用户自定义的额外信息，用户随意存放任何信息。
     
     # MongoDB文档ID
     _id: str  # MongoDB 文档ID，通常等于 task_id
@@ -360,29 +363,28 @@ async def publish_msg(msg_item: MsgItem):
     status_and_result = None
     task_id = None
     try:
-        # SingleQueueConusmerParamsGetter(msg_item.queue_name).generate_publisher_by_funboost_redis_info() 从 funboost 的reids配置中生成 publisher
+        # SingleQueueConusmerParamsGetter(msg_item.queue_name).gen_publisher_for_faas() 从 funboost 的reids配置中生成 publisher
         # 不需要用户亲自判断queue_name，然后精确使用某个非常具体的消费函数，
 
 
-        publisher = SingleQueueConusmerParamsGetter(msg_item.queue_name).generate_publisher_by_funboost_redis_info()
+        publisher = SingleQueueConusmerParamsGetter(msg_item.queue_name).gen_publisher_for_faas()
         booster_params_by_redis = SingleQueueConusmerParamsGetter(msg_item.queue_name).get_one_queue_params_use_cache()
         
         # 检查是否需要 RPC 模式
         if msg_item.need_result:
-            if booster_params_by_redis['is_using_rpc_mode'] is False:
-                raise ValueError(f' need_result 为true,{msg_item.queue_name} 队列消费者 需要@boost设置支持rpc模式')
-            
+          
             # 开启 RPC 模式发布
             async_result = await publisher.aio_publish(
                 msg_item.msg_body,
-                priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=True)
-            ) # 
+                task_id=msg_item.task_id,  # 可选：指定 task_id（用于重试失败任务）
+                task_options=TaskOptions(is_using_rpc_mode=True)
+            )
             task_id = async_result.task_id
             # 等待结果
             status_and_result = await AioAsyncResult(async_result.task_id, timeout=msg_item.timeout).status_and_result
         else:
-            # 普通发布
-            async_result = await publisher.aio_publish(msg_item.msg_body)
+            # 普通发布，可以指定 task_id
+            async_result = await publisher.aio_publish(msg_item.msg_body, task_id=msg_item.task_id)
             task_id = async_result.task_id
 
         return BaseResponse[RpcRespData](
@@ -555,7 +557,7 @@ def get_msg_count(queue_name: str):
     所以不需要写 try-except，异常会自动被捕获并返回统一格式
     """
     # 直接写业务逻辑，不需要 try-except
-    publisher = SingleQueueConusmerParamsGetter(queue_name).generate_publisher_by_funboost_redis_info()
+    publisher = SingleQueueConusmerParamsGetter(queue_name).gen_publisher_for_faas()
     # 获取消息数量（注意：某些中间件可能不支持准确计数，返回-1）
     count = publisher.get_message_count()
     return BaseResponse[CountData](
@@ -596,7 +598,7 @@ def clear_queue(request: QueueNameRequest):
     """
     try:
         # 通过 queue_name 自动获取对应的 booster
-        publisher = SingleQueueConusmerParamsGetter(request.queue_name).generate_publisher_by_funboost_redis_info()
+        publisher = SingleQueueConusmerParamsGetter(request.queue_name).gen_publisher_for_faas()
         publisher.clear()
         
         return BaseResponse[ClearQueueData](
@@ -679,7 +681,7 @@ class QueueParams(BaseAllowExtraModel):
     is_using_distributed_frequency_control: bool  # 是否使用分布式频控
     
     # 心跳与监控
-    is_send_consumer_hearbeat_to_redis: bool  # 是否发送消费者心跳到redis
+    is_send_consumer_heartbeat_to_redis: bool  # 是否发送消费者心跳到redis
     
     # 重试配置
     max_retry_times: int  # 最大自动重试次数
@@ -687,7 +689,7 @@ class QueueParams(BaseAllowExtraModel):
     is_push_to_dlx_queue_when_retry_max_times: bool  # 达到最大重试次数后是否推送到死信队列
     
     # 函数装饰与超时
-    consumin_function_decorator: typing.Optional[typing.Any]    # 函数装饰器
+    consuming_function_decorator: typing.Optional[typing.Any]    # 函数装饰器
     function_timeout: typing.Optional[float]  # 函数超时时间（秒）
     is_support_remote_kill_task: bool  # 是否支持远程杀死任务
     
@@ -702,7 +704,7 @@ class QueueParams(BaseAllowExtraModel):
     publish_msg_log_use_full_msg: bool  # 发布消息日志是否显示完整消息
     
     # 消息过期与过滤
-    msg_expire_senconds: typing.Optional[float]  # 消息过期时间（秒）
+    msg_expire_seconds: typing.Optional[float]  # 消息过期时间（秒）
     do_task_filtering: bool  # 是否对函数入参进行过滤去重
     task_filtering_expire_seconds: int  # 任务过滤的失效期
     
@@ -868,6 +870,26 @@ def get_queues_config():
             )
         )
 
+
+@fastapi_router.get("/get_one_queue_config", response_model=BaseResponse[QueueParams])
+@handle_funboost_exceptions
+def get_one_queue_config(queue_name: str):
+    """
+    获取单个队列的配置信息
+    
+    参数:
+        queue_name: 队列名称（必填）
+    
+    返回:
+        队列的配置信息，包括函数入参信息 (auto_generate_info.final_func_input_params_info)
+    """
+    queue_params = SingleQueueConusmerParamsGetter(queue_name).get_one_queue_params()
+    
+    return BaseResponse[QueueParams](
+        succ=True,
+        msg="获取成功",
+        data=queue_params
+    )
 @fastapi_router.get("/get_queue_run_info", response_model=BaseResponse[QueueParamsAndActiveConsumersData])
 def get_queue_run_info(queue_name: str):
     """
@@ -1013,25 +1035,7 @@ class TimingJobListData(BaseModel):
     total_count: int = 0
 
 
-@fastapi_router.get("/get_one_queue_config", response_model=BaseResponse)
-@handle_funboost_exceptions
-def get_one_queue_config(queue_name: str):
-    """
-    获取单个队列的配置信息
-    
-    参数:
-        queue_name: 队列名称（必填）
-    
-    返回:
-        队列的配置信息，包括函数入参信息 (auto_generate_info.final_func_input_params_info)
-    """
-    queue_params = SingleQueueConusmerParamsGetter(queue_name).get_one_queue_params()
-    
-    return BaseResponse(
-        succ=True,
-        msg="获取成功",
-        data=queue_params
-    )
+
 
 
 @fastapi_router.post("/add_timing_job", response_model=BaseResponse[TimingJobData])

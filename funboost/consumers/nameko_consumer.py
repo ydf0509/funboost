@@ -42,7 +42,7 @@ class NamekoConsumer(AbstractConsumer, ):
 
         all_queue_name__nameko_service_cls_map[self.queue_name] = MyService
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         container = ServiceContainer(all_queue_name__nameko_service_cls_map[self.queue_name], config=get_nameko_config())
         container.start()
         container.wait()

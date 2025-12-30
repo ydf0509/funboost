@@ -14,7 +14,7 @@ class SqlachemyConsumer(AbstractConsumer):
     """
 
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         self.queue = sqla_queue.SqlaQueue(self._queue_name, BrokerConnConfig.SQLACHEMY_ENGINE_URL)
         while True:
             sqla_task_dict = self.queue.get()

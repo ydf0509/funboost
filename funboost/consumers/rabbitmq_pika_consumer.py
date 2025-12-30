@@ -5,6 +5,8 @@ import os
 import functools
 import json
 from threading import Lock
+
+from deprecated import deprecated
 # # from nb_log import LogManager, get_logger
 # from funboost.constant import BrokerEnum
 # from funboost.publishers.base_publisher import deco_mq_conn_error
@@ -17,7 +19,7 @@ from funboost.funboost_config_deafult import BrokerConnConfig
 
 get_funboost_file_logger('pikav1', log_level_int=20)
 
-
+@deprecated('不建议使用这个中间件模式，建议使用 BrokerEnum.RABBITMQ_AMQPSTORM 操作rabbitmq')
 class RabbitmqConsumer(AbstractConsumer):
     """
     使用pika包实现的。
@@ -30,7 +32,7 @@ class RabbitmqConsumer(AbstractConsumer):
         self.logger.critical('pika 多线程中操作同一个 channel 有问题，如果使用 rabbitmq 建议设置中间件为 BrokerEnum.RABBITMQ_AMQPSTORM')
         os._exit(444) # noqa
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         # channel = RabbitMqFactory(is_use_rabbitpy=0).get_rabbit_cleint().creat_a_channel()
         # channel.queue_declare(queue=self._queue_name, durable=True)
         # channel.basic_qos(prefetch_count=self.consumer_params.concurrent_num)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 
-from funboost import BoostersManager, PublisherParams, BrokerEnum, PriorityConsumingControlConfig
+from funboost import BoostersManager, PublisherParams, BrokerEnum, TaskOptions
 import time
 
 BROKER_KIND_FOR_TEST = BrokerEnum.RABBITMQ_COMPLEX_ROUTING
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         # 使用动态路由键发布消息
         topic_publisher.publish(
             {'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'), 'content': message_content},
-            priority_control_config=PriorityConsumingControlConfig(
+            task_options=TaskOptions(
                 other_extra_params={'routing_key_for_publish': routing_key}
             )
         )

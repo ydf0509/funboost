@@ -26,11 +26,11 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
         if self.redis_db_frame.type(self._queue_name) == 'list':
             raise EnvironmentError(f'检测到已存在 {self._queue_name} 这个键，且类型是list， 必须换个队列名字或者删除这个 list 类型的键。'
                                    f'RedisStreamConsumer 使用的是 stream 数据结构')
-        self.consumer_params.is_send_consumer_hearbeat_to_redis = True
+        self.consumer_params.is_send_consumer_heartbeat_to_redis = True
         super().start_consuming_message()
         self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         pull_msg_batch_size = self.consumer_params.broker_exclusive_config['pull_msg_batch_size']
 
         try:

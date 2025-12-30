@@ -395,6 +395,10 @@
                         currentProjectName = projectName || null;
                         updateStatusDisplay(currentProjectName);
                         showSuccess(projectName ? `已设置为只显示项目: ${projectName}` : '已设置为显示全部项目');
+                        // 立即刷新父页面侧边栏的项目显示
+                        if (window.parent && window.parent.loadSidebarCareProjectName) {
+                            window.parent.loadSidebarCareProjectName();
+                        }
                     } else {
                         alert('设置失败: ' + response.msg);
                     }

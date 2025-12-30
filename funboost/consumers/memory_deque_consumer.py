@@ -18,7 +18,7 @@ class LocalPythonQueueConsumer(AbstractConsumer):
     def local_python_queue(self) -> deque:
         return meomory_deque_publisher.deque_queue_name__deque_obj_map[self._queue_name]
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         while True:
             task = self.local_python_queue.popleft()
             # self.logger.debug(f'从当前python解释器内部的 [{self._queue_name}] 队列中 取出的消息是：  {json.dumps(task)}  ')

@@ -93,7 +93,7 @@ class ZeroMqConsumer(AbstractConsumer):
         multiprocessing.Process(target=start_broker, args=(int(self._port), int(self._port) + 1)).start()
 
     # noinspection DuplicatedCode
-    def _shedual_task(self):
+    def _dispatch_task(self):
         self._start_broker_port()
         context = ZmqImporter().zmq.Context()
         # noinspection PyUnresolvedReferences

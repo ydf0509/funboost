@@ -16,7 +16,7 @@ class MyListConsumer(EmptyConsumer):
     def custom_init(self):
         self.list: list = queue_name__list_map[self.queue_name]
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         while True:
             try:
                 with list_lock:
@@ -38,7 +38,7 @@ class MyListPublisher(EmptyPublisher):
     def custom_init(self):
         self.list: list = queue_name__list_map[self.queue_name]
 
-    def concrete_realization_of_publish(self, msg: str):
+    def _publish_impl(self, msg: str):
         with list_lock:
             self.list.append(msg)
 

@@ -15,7 +15,7 @@ class TCPPublisher(AbstractPublisher, ):
         self._bufsize = self.publisher_params.broker_exclusive_config['bufsize']
 
     # noinspection PyAttributeOutsideInit
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         if not hasattr(self, '_tcp_cli_sock'):
             # ip__port_str = self.queue_name.split(':')
             # ip_port = (ip__port_str[0], int(ip__port_str[1]))

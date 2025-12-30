@@ -15,7 +15,7 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
 
     # _rabbitmq_pb_cls = RabbitmqPublisherUsingAmqpStorm
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         # noinspection PyTypeChecker
         def callback(amqpstorm_message: amqpstorm.Message):
             body = amqpstorm_message.body

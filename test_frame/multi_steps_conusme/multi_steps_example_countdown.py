@@ -1,7 +1,7 @@
 import time
 from funboost.utils.ctrl_c_end import ctrl_c_recv
 
-from funboost.core.func_params_model import PriorityConsumingControlConfig
+from funboost.core.func_params_model import TaskOptions
 from funboost import boost, BrokerEnum,ConcurrentModeEnum,BoosterParams,Booster,ctrl_c_recv
 
 from logging_tree import printout
@@ -11,7 +11,7 @@ from logging_tree import printout
 def step1(x):
     print(f'x 的值是 {x}')
     time.sleep(10)
-    step2.publish({'y':x*10},priority_control_config=PriorityConsumingControlConfig(countdown=5))
+    step2.publish({'y':x*10},task_options=TaskOptions(countdown=5))
 
 
 @Booster(BoosterParams(queue_name='queue_test_step2b', qps=3, broker_kind=BrokerEnum.REDIS_ACK_ABLE))

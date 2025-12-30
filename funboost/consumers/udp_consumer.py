@@ -26,7 +26,7 @@ class UDPConsumer(AbstractConsumer, ):
         self.__udp_client.connect(self.__ip_port)
 
     # noinspection DuplicatedCode
-    def _shedual_task(self):
+    def _dispatch_task(self):
         ip_port = ('', self.__ip_port[1])
         # ip_port = ('', 9999)
         server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # udp协议

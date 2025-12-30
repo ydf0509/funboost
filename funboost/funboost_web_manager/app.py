@@ -14,7 +14,7 @@ import datetime
 import json
 import traceback
 import typing
-from funboost.core.func_params_model import PriorityConsumingControlConfig
+from funboost.core.func_params_model import TaskOptions
 
 """
 pip install Flask flask_bootstrap  flask_wtf  wtforms flask_login       

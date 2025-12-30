@@ -19,7 +19,7 @@ class HttpsqsConsumer(AbstractConsumer):
         self.httpsqs_publisher = HttpsqsPublisher(publisher_params=PublisherParams(queue_name=self.queue_name))
 
     # noinspection DuplicatedCode
-    def _shedual_task(self):
+    def _dispatch_task(self):
         while True:
             text = self.httpsqs_publisher.opt_httpsqs('get')
             if text == 'HTTPSQS_GET_END':

@@ -49,7 +49,7 @@
             <h4>2. 运行中消费者 和 队列操作</h4>
             <pre>
 数据是从 Redis 消费者心跳获取的。<br>
-用户需要设置 <span class="highlight">@boost</span> 的 <span class="highlight">is_send_consumer_hearbeat_to_redis = True</span>，
+用户需要设置 <span class="highlight">@boost</span> 的 <span class="highlight">is_send_consumer_heartbeat_to_redis = True</span>，
 消费者心跳发送到 Redis 后，网页才能获取到对应的 queue 是否正在消费，在哪些机器消费。
 
 <span style="color:#FFA500"> 请不要在 <span class="highlight"> funboost_config.py </span> 配置文件的 <span class="highlight"> BrokerConnConfig.REDIS_DB </span> 的 db 中放太多其他用途的缓存key，因为有redis scan命令操作。 </span>

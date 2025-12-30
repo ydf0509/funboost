@@ -16,7 +16,7 @@ class RocketmqConsumer(AbstractConsumer):
 
     GROUP_ID = 'g_funboost'
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         try:
             from rocketmq.client import PushConsumer
         except BaseException as e:

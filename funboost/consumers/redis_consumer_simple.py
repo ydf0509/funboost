@@ -14,7 +14,7 @@ class RedisConsumer(AbstractConsumer, RedisMixin):
     """
 
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         while True:
             result = self.redis_db_frame.blpop(self._queue_name,timeout=60)
             if result:

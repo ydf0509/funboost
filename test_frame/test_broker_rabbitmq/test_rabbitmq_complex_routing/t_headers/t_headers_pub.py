@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 
-from funboost import BoostersManager, PublisherParams, BrokerEnum, PriorityConsumingControlConfig
+from funboost import BoostersManager, PublisherParams, BrokerEnum, TaskOptions
 import time
 from typing import Dict, Any, List
 
@@ -162,7 +162,7 @@ if __name__ == '__main__':
         # 使用 headers 进行消息路由
         headers_publisher.publish(
             notification['message'],  # type: ignore
-            priority_control_config=PriorityConsumingControlConfig(
+            task_options=TaskOptions(
                 other_extra_params={
                     'headers_for_publish': notification['headers']  # type: ignore
                 }

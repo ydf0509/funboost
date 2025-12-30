@@ -43,7 +43,7 @@ pool2 = ProcessPoolExecutor(4)
        concurrent_num=50, qps=20, is_print_detail_exception=False, is_push_to_dlx_queue_when_retry_max_times=True,
        retry_interval=10,
        # specify_concurrent_pool= pool2,
-       # concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,function_timeout=10,
+       # concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_heartbeat_to_redis=True,function_timeout=10,
        # function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True,expire_seconds=500000,is_use_bulk_insert=True)
        # is_using_rpc_mode=True,is_support_remote_kill_task=True,is_using_distributed_frequency_control=True,do_task_filtering=False,
        ))

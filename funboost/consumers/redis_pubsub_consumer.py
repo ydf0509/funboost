@@ -13,7 +13,7 @@ class RedisPbSubConsumer(AbstractConsumer, RedisMixin):
     """
 
 
-    def _shedual_task0000(self):
+    def _dispatch_task0000(self):
         pub = self.redis_db_frame.pubsub()
         pub.subscribe(self.queue_name)
         for item in pub.listen():
@@ -22,7 +22,7 @@ class RedisPbSubConsumer(AbstractConsumer, RedisMixin):
                 kw = {'body': item['data']}
                 self._submit_task(kw)
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         pub = self.redis_db_frame.pubsub()
         pub.subscribe(self.queue_name)
         pub.parse_response()

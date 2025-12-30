@@ -36,7 +36,7 @@ class MongoMqPublisher(AbstractPublisher, MongoMixin):
         return MongoMqPublisher.pid__queue_map[key]
 
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         # noinspection PyTypeChecker
         self.queue.put(json.loads(msg))
 

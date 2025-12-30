@@ -8,7 +8,7 @@
 
 运行可以发现控制台先打印的都是f3，最后还是f1.
 """
-from funboost import boost, PriorityConsumingControlConfig, BrokerEnum
+from funboost import boost, TaskOptions, BrokerEnum
 
 
 def f1(x, y):
@@ -33,11 +33,11 @@ if __name__ == '__main__':
     dispatch_fun.clear()
     for i in range(1000):
         dispatch_fun.publish({'fun_name': 'f1', 'fun_kwargs': {'x': i, 'y': i}, },
-                             priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': 1}))
+                             task_options=TaskOptions(other_extra_params={'priroty': 1}))
         dispatch_fun.publish({'fun_name': 'f2', 'fun_kwargs': {'a': i, }, },
-                             priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': 2}))
+                             task_options=TaskOptions(other_extra_params={'priroty': 2}))
         dispatch_fun.publish({'fun_name': 'f3', 'fun_kwargs': {'b': i, }, },
-                             priority_control_config=PriorityConsumingControlConfig(other_extra_params={'priroty': 3}))
+                             task_options=TaskOptions(other_extra_params={'priroty': 3}))
 
     print(dispatch_fun.get_message_count())
     dispatch_fun.consume()

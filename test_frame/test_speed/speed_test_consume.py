@@ -7,7 +7,7 @@ from funboost import boost, BrokerEnum,ConcurrentModeEnum,BoosterParams,ctrl_c_r
 import nb_log
 import json
 
-from funboost.core.current_task import funboost_current_task
+from funboost.core.current_task import fct
 from funboost.core.function_result_status_saver import FunctionResultStatus, RunStatus
 from funboost.core.helper_funs import delete_keys_and_return_new_dict
 from funboost.core.serialization import Serialization
@@ -86,11 +86,11 @@ class MostFastConsumer(AbstractConsumer):
             return
         # publish_time = get_publish_time(kw['body'])
         publish_time = 0
-        msg_expire_senconds_priority = self._get_priority_conf(kw, 'msg_expire_senconds')
-        if msg_expire_senconds_priority and time.time() - msg_expire_senconds_priority > publish_time:
+        msg_expire_seconds_priority = self._get_priority_conf(kw, 'msg_expire_seconds')
+        if msg_expire_seconds_priority and time.time() - msg_expire_seconds_priority > publish_time:
             self.logger.warning(
                 f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(time.time() - publish_time, 4)} 秒 ,'
-                f'超过了指定的 {msg_expire_senconds_priority} 秒，丢弃任务')
+                f'超过了指定的 {msg_expire_seconds_priority} 秒，丢弃任务')
             self._confirm_consume(kw)
             return 0
 
@@ -215,8 +215,7 @@ class MostFastConsumer(AbstractConsumer):
             # self.logger.critical(msg=f'{log_msg} \n', exc_info=True)
             # self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
             self.logger.critical(msg=log_msg, exc_info=True)
-        # fct = funboost_current_task()
-        # fct.set_fct_context(None)
+    
     
 
      # noinspection PyProtectedMember
@@ -226,23 +225,17 @@ class MostFastConsumer(AbstractConsumer):
         task_id = kw['body']['extra']['task_id']
         t_start = time.time()
 
-        # fct = funboost_current_task()
-        # fct_context = FctContext(function_params=function_only_params,
-        #                          full_msg=kw['body'],
-        #                          function_result_status=function_result_status,
-        #                          logger=self.logger, queue_name=self.queue_name,)
 
         try:
             function_run = self.consuming_function
             if self._consuming_function_is_asyncio:
-                # fct_context.asyncio_use_thread_concurrent_mode = True
                 function_run = sync_or_async_fun_deco(function_run)
             else:
                 pass
                 # fct_context.asynco_use_thread_concurrent_mode = False
             # fct.set_fct_context(fct_context)
             function_timeout = self._get_priority_conf(kw, 'function_timeout')
-            function_run = function_run if self.consumer_params.consumin_function_decorator is None else self.consumer_params.consumin_function_decorator(function_run)
+            function_run = function_run if self.consumer_params.consuming_function_decorator is None else self.consumer_params.consuming_function_decorator(function_run)
             function_run = function_run if not function_timeout else self._concurrent_mode_dispatcher.timeout_deco(
                 function_timeout)(function_run)
 
@@ -264,9 +257,7 @@ class MostFastConsumer(AbstractConsumer):
             function_result_status.success = True
             if self.consumer_params.log_level <= logging.DEBUG:
                 result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '
-                # print(funboost_current_task().task_id)
-                # print(fct.function_result_status.task_id)
-                # print(get_current_taskid())
+      
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 {function_only_params} , '
                                   f'结果是  {result_str_to_be_print}   {self._get_concurrent_info()}  ')

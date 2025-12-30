@@ -25,7 +25,7 @@ class RedisConsumerAckUsingTimeout(AbstractConsumer, RedisMixin):
         self._last_show_unack_ts = time.time()
 
     def start_consuming_message(self):
-        self.consumer_params.is_send_consumer_hearbeat_to_redis = True
+        self.consumer_params.is_send_consumer_heartbeat_to_redis = True
         super().start_consuming_message()
         self.keep_circulating(10, block=False)(self._requeue_tasks_which_unconfirmed)()
 
@@ -38,7 +38,7 @@ class RedisConsumerAckUsingTimeout(AbstractConsumer, RedisMixin):
     def _requeue(self, kw):
         self.redis_db_frame.rpush(self._queue_name, Serialization.to_json_str(kw['body']))
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         lua = '''
                      local v = redis.call("lpop", KEYS[1])
                      if v then

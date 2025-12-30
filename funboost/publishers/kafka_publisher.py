@@ -30,7 +30,7 @@ class KafkaPublisher(AbstractPublisher, ):
             self.logger.exception(e)
         atexit.register(self.close)  # 程序退出前不主动关闭，会报错。
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         # noinspection PyTypeChecker
         # self.logger.debug(msg)
         # print(msg)

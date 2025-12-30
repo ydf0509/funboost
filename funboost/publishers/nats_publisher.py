@@ -13,7 +13,7 @@ class NatsPublisher(AbstractPublisher, ):
         self.nats_client = NatsImporter().NATSClient(BrokerConnConfig.NATS_URL)
         self.nats_client.connect()
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         # print(msg)
         self.nats_client.publish(subject=self.queue_name, payload=msg.encode())
 

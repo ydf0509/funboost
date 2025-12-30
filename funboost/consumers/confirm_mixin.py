@@ -27,7 +27,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedis(RedisMixin):
         self._unack_zset_name = f'{self._queue_name}__unack'
 
     def start_consuming_message(self):
-        self.consumer_params.is_send_consumer_hearbeat_to_redis = True
+        self.consumer_params.is_send_consumer_heartbeat_to_redis = True
         super().start_consuming_message()
         self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
 
@@ -62,7 +62,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(ConsumerConfirmMixinWithT
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
         self._unack_zset_name = f'{self._queue_name}__unack_id_{self.consumer_identification}'
-        self.consumer_params.is_send_consumer_hearbeat_to_redis = True
+        self.consumer_params.is_send_consumer_heartbeat_to_redis = True
         self._last_show_unacked_msg_num_log = 0
 
     def _requeue_tasks_which_unconfirmed(self):

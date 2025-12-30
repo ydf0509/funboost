@@ -22,7 +22,7 @@ class HueyPublisher(AbstractPublisher, ):
         self._huey_task_fun = HueyHelper.queue_name__huey_task_fun_map[self.queue_name]
         self._huey_obj = HueyHelper.huey_obj # type: RedisHuey
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         if isinstance(msg, str):
             msg = json.loads(msg)
         msg_function_kw = copy.deepcopy(msg)

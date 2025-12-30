@@ -17,7 +17,7 @@ class LocalPythonQueueConsumer(AbstractConsumer):
     def local_python_queue(self) -> Queue:
         return PythonQueues.get_queue(self._queue_name)
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         while True:
             task = self.local_python_queue.get()
             if isinstance(task, dict):

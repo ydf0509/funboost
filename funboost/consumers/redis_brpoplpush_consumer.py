@@ -17,12 +17,12 @@ class RedisBrpopLpushConsumer(AbstractConsumer, RedisMixin):
 
 
     def start_consuming_message(self):
-        self.consumer_params.is_send_consumer_hearbeat_to_redis = True
+        self.consumer_params.is_send_consumer_heartbeat_to_redis = True
         super().start_consuming_message()
         self.keep_circulating(60, block=False)(self._requeue_tasks_which_unconfirmed)()
 
     # noinspection DuplicatedCode
-    def _shedual_task(self):
+    def _dispatch_task(self):
         unack_list_name = f'unack_{self._queue_name}_{self.consumer_identification}'
         while True:
             msg = self.redis_db_frame.brpoplpush(self._queue_name, unack_list_name, timeout=60)

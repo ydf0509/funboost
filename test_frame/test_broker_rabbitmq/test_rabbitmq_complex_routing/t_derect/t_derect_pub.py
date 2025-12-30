@@ -1,5 +1,5 @@
 
-from funboost import BoostersManager, PublisherParams, BrokerEnum, PriorityConsumingControlConfig
+from funboost import BoostersManager, PublisherParams, BrokerEnum, TaskOptions
 
 BROKER_KIND_FOR_TEST = BrokerEnum.RABBITMQ_COMPLEX_ROUTING
 EXCHANGE_NAME = 'direct_log_exchange'
@@ -23,10 +23,10 @@ if __name__ == '__main__':
     for i in range(10):
         # 发布一条 info 消息，指定路由键为 'info'，只有 info_fun 会收到
         common_publisher.publish({'msg': f'这是一条普通的INFO消息 {i}'},
-                                 priority_control_config=PriorityConsumingControlConfig(
+                                 task_options=TaskOptions(
                                      other_extra_params={'routing_key_for_publish': 'info'}))
 
         # 发布一条 error 消息，指定路由键为 'error'，只有 error_fun 会收到
         common_publisher.publish({'msg': f'这是一条严重的ERROR消息 {i}'},
-                                 priority_control_config=PriorityConsumingControlConfig(
+                                 task_options=TaskOptions(
                                      other_extra_params={'routing_key_for_publish': 'error'}))

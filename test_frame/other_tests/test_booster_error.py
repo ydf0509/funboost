@@ -1,6 +1,6 @@
 import time
 import gunicorn
-from funboost import boost, BrokerEnum, PriorityConsumingControlConfig
+from funboost import boost, BrokerEnum, TaskOptions
 
 
 @boost('ticket_query', broker_kind=BrokerEnum.REDIS_ACK_ABLE, concurrent_num=5)
@@ -14,6 +14,6 @@ def task(task_id, url: str, times):
     print('task')
 
 if __name__ == "__main__":
-    ticket_query.publish({'task_id':111,'url':'url222','times':33}, priority_control_config=PriorityConsumingControlConfig(countdown=50))
+    ticket_query.publish({'task_id':111,'url':'url222','times':33}, task_options=TaskOptions(countdown=50))
     task.multi_process_consume(process_num=2)
     ticket_query.consume()

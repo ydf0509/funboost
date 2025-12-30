@@ -1,5 +1,5 @@
 
-from funboost import BoosterParams, boost,run_forever,PriorityConsumingControlConfig,BrokerEnum,Booster
+from funboost import BoosterParams, boost,run_forever,TaskOptions,BrokerEnum,Booster
 
 
 @BoosterParams(
@@ -40,9 +40,9 @@ def ccc(msg):
 
 if __name__ == '__main__':
 
-    aaa.publish({'msg':'a队列的消息'},priority_control_config=PriorityConsumingControlConfig(countdown=10))
-    bbb.publish({'msg':'b队列的消息'},priority_control_config=PriorityConsumingControlConfig(countdown=15))
-    ccc.publish({'msg':'c队列的消息'},priority_control_config=PriorityConsumingControlConfig(countdown=20))
+    aaa.publish({'msg':'a队列的消息'},task_options=TaskOptions(countdown=10))
+    bbb.publish({'msg':'b队列的消息'},task_options=TaskOptions(countdown=15))
+    ccc.publish({'msg':'c队列的消息'},task_options=TaskOptions(countdown=20))
 
     aaa.consume()
     aaa.multi_process_consume(2)

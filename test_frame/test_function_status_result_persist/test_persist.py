@@ -8,18 +8,20 @@ import random
 
 class MyBoosterParams(BoosterParams):
     function_result_status_persistance_conf:FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
-        is_save_status=True, is_save_result=True, expire_seconds=7 * 24 * 3600)
-    is_send_consumer_hearbeat_to_redis:bool = True
+        is_save_status=True, is_save_result=True, expire_seconds=17 * 24 * 3600,table_name='test_project1_use_one_table')
+    is_send_consumer_heartbeat_to_redis:bool = True
     broker_exclusive_config :dict= {'pull_msg_batch_size':1}
     project_name:str = 'test_project1'
+    is_using_rpc_mode:bool = True
+    # xxxx:int=5
 
 
 @boost(MyBoosterParams(queue_name='queue_test_g01t',broker_kind=BrokerEnum.REDIS,qps=1,))
 def my_consuming_function(x):
     time.sleep(5)
     print(f'hi: {x}')
-    if random.random() > 0.9:
-        raise ValueError('f error')
+    if random.random() > 0.6:
+        raise ValueError('f error 很长的报错，看看显示咋样，啦啦啦啦啦啦啦啦啦啦啦啦啊啊啊啊')
     return x + 1
 
 @boost(MyBoosterParams(queue_name='queue_test_g02t',broker_kind=BrokerEnum.RABBITMQ_AMQPSTORM,qps=0.5,
@@ -91,3 +93,4 @@ if __name__ == '__main__':
     
 
     
+

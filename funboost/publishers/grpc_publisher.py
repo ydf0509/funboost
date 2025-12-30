@@ -17,7 +17,7 @@ class GrpcPublisher(AbstractPublisher, ):
         self._stub = stub
         self._channel = channel
 
-    def concrete_realization_of_publish(self, msg: str):
+    def _publish_impl(self, msg: str):
         request = funboost_grpc_pb2.FunboostGrpcRequest(json_req=msg,call_type="publish")
         response = self._stub.Call(request)
         return response.json_resp

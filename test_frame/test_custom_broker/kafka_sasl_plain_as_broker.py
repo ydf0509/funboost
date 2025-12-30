@@ -38,7 +38,7 @@ KFFKA_CONFIG = {
 class SaslPlainKafkaConsumer(KafkaConsumerManuallyCommit):
 
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
 
         # 这个包在win下不好安装，用户用这个中间件的时候自己再想办法安装。win用户需要安装c++ 14.0以上环境。
         from confluent_kafka import Consumer as ConfluentConsumer

@@ -3,7 +3,7 @@
 # @Time    : 2022/8/8 0008 14:57
 
 from test_frame.test_frame_using_thread.test_consume import consumer_add, consumer_sub
-from funboost.publishers.base_publisher import PriorityConsumingControlConfig
+from funboost.publishers.base_publisher import TaskOptions
 
 pb_add = consumer_add.bulid_a_new_publisher_of_same_queue()
 pb_add.clear()
@@ -17,7 +17,7 @@ for i in range(1000000):
     # print(async_result.status_and_result)
     # print('结果', async_result.result)
     # async_result = consumer_sub.publisher_of_same_queue.publish({'x': i, 'y': i * 6},
-    #                                                             priority_control_config=PriorityConsumingControlConfig(is_using_rpc_mode=False))
+    #                                                             task_options=TaskOptions(is_using_rpc_mode=False))
     # print('同步结果', async_result.result)
 
 """

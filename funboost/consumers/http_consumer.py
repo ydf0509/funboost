@@ -34,7 +34,7 @@ class HTTPConsumer(AbstractConsumer, ):
         if self._port is None:
             raise ValueError('please specify port')
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         """
         使用Flask实现HTTP服务器
         相比aiohttp，Flask是同步框架，避免了异步阻塞问题

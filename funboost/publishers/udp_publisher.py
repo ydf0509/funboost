@@ -22,7 +22,7 @@ class UDPPublisher(AbstractPublisher, ):
         self.__udp_client.connect(self.__ip_port)
 
     # noinspection PyAttributeOutsideInit
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         self.__udp_client.send(msg.encode('utf-8'), )
         self.__udp_client.recv(self._bufsize)
 

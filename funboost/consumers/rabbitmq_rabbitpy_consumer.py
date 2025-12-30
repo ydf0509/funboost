@@ -2,12 +2,13 @@
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:31
 import json
+from deprecated import deprecated
 import rabbitpy
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.utils.rabbitmq_factory import RabbitMqFactory
 
-
+@deprecated('不建议使用这个中间件模式，建议使用 BrokerEnum.RABBITMQ_AMQPSTORM 操作rabbitmq')
 class RabbitmqConsumerRabbitpy(AbstractConsumer):
     """
     使用rabbitpy实现的
@@ -15,7 +16,7 @@ class RabbitmqConsumerRabbitpy(AbstractConsumer):
     def custom_init(self):
         raise Exception('不建议使用这个中间件模式，建议使用 BrokerEnum.RABBITMQ_AMQPSTORM 操作rabbitmq')
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         # noinspection PyTypeChecker
         channel = RabbitMqFactory(is_use_rabbitpy=1).get_rabbit_cleint().creat_a_channel()  # type:  rabbitpy.AMQP         #
         channel.queue_declare(queue=self._queue_name, durable=True)

@@ -31,6 +31,12 @@ class FunboostLazyImpoter(SingletonBaseNew):
         from funboost.core import booster
         return booster.Booster
 
+    @property
+    @cached_method_result
+    def flogger(self):
+        from funboost.core.loggers import flogger
+        return flogger
+
 
 
     # @property

@@ -7,7 +7,7 @@
 import threading
 
 import time
-from funboost import BoosterParams, BrokerEnum,ctrl_c_recv,PriorityConsumingControlConfig,ConcurrentModeEnum
+from funboost import BoosterParams, BrokerEnum,ctrl_c_recv,TaskOptions,ConcurrentModeEnum
 
 
 # 通过设置broker_kind，一键切换中间件为mq或redis等20种中间件或包。
@@ -51,11 +51,11 @@ if __name__ == '__main__':
     f3.consume()
     for i in range(200):
         f2.push(i, i * 2) # 默认是 把 a和 b 所有入参排序后作为json都加入到过滤中
-        f3.publish(msg={'a':i,'b':i*2},priority_control_config=PriorityConsumingControlConfig(filter_str=str(i))) # 这个是仅仅把 a 作为过滤条件。
+        f3.publish(msg={'a':i,'b':i*2},task_options=TaskOptions(filter_str=str(i))) # 这个是仅仅把 a 作为过滤条件。
     time.sleep(5)  # 因为 funboost 是确认消费完成后才加入过滤。如果消息耗时很长，且并发很大，且两个相同入参的消息连续挨着，第二个还会执行，所以这里演示sleep一下。
     for i in range(200):
         f2.push(i, i * 2)
-        f3.publish(msg={'a':i,'b':i*2},priority_control_config=PriorityConsumingControlConfig(filter_str=str(i)))
+        f3.publish(msg={'a':i,'b':i*2},task_options=TaskOptions(filter_str=str(i)))
 
     
     ctrl_c_recv()

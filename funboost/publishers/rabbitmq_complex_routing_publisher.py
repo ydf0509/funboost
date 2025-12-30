@@ -53,7 +53,7 @@ class RabbitmqComplexRoutingPublisher(AbstractPublisher):
 
     # @decorators.tomorrow_threads(10)
     @deco_mq_conn_error
-    def concrete_realization_of_publish(self, msg: str):
+    def _publish_impl(self, msg: str):
         routing_key_publish_dynamic = self._get_from_other_extra_params('routing_key_for_publish', msg)
         routing_key_publish = routing_key_publish_dynamic if routing_key_publish_dynamic is not None else self._routing_key_for_publish
         # 核心修正2：为 headers 交换机添加 headers 支持

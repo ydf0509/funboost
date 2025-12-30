@@ -3,7 +3,7 @@
 from test_frame.test_delay_task.test_delay_consume import f
 import datetime
 import time
-from funboost import PriorityConsumingControlConfig
+from funboost import TaskOptions
 
 """
 测试发布延时任务，不是发布后马上就执行函数。
@@ -22,7 +22,7 @@ misfire_grace_time 如果不为None，必须是大于等于1的整数，此值�
 
 
 
-f.publish({'x':  45}, priority_control_config=PriorityConsumingControlConfig(
+f.publish({'x':  45}, task_options=TaskOptions(
     eta=datetime.datetime(2023, 5, 14, 20, 45, 59) + datetime.timedelta(seconds=10)))
 
 

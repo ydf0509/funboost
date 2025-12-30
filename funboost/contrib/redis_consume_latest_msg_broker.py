@@ -14,7 +14,7 @@ lpush + lpop 或者 rpush + rpop 就会消费最新发布的消息，如果是 l
 
 
 class RedisConsumeLatestPublisher(RedisPublisher):
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         self.redis_db_frame.lpush(self._queue_name, msg)
 
 

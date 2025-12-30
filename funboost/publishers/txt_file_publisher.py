@@ -25,7 +25,7 @@ class TxtFilePublisher(AbstractPublisher, ):
                                 autosave=True, serializer=json_serializer)
         self._file_lock = FileLock(Path(self._file_queue_path) / f'_funboost_txtfile_{self.queue_name}.lock')
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         with self._file_lock:
             self.file_queue.put(msg)
 

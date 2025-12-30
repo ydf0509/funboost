@@ -1,7 +1,8 @@
-# from __future__ import annotations
-# import typing
-# if typing.TYPE_CHECKING:
-#     from logging import Logger
+
+"""
+这个文件决定了，每种broker对应的能额外传递哪些独特特殊的中间件配置，
+从BoosterParams 的 broker_exclusive_config 入参中传递一个字典
+"""
 
 from logging import Logger
 from funboost.constant import BrokerEnum

@@ -14,7 +14,7 @@ def deco(f):
     return _f
 
 
-@boost(queue_name='s1qc', qps=0.2, broker_kind=BrokerEnum.REDIS, consumin_function_decorator=deco)
+@boost(queue_name='s1qc', qps=0.2, broker_kind=BrokerEnum.REDIS, consuming_function_decorator=deco)
 def step1(x):
     print(f'x 的值是 {x}')
     if x == 0:

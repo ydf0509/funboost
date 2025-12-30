@@ -22,7 +22,7 @@ def incr_deco(redis_key):
     return _inner
 
 
-@boost('test_queue_235',consumin_function_decorator=incr_deco(f'run_count:{nb_log.nb_log_config_default.computer_ip}'),
+@boost('test_queue_235',consuming_function_decorator=incr_deco(f'run_count:{nb_log.nb_log_config_default.computer_ip}'),
        do_task_filtering=True)
 # @incr_deco('test_queue_235_run_count')
 def fun(xxx, yyy):

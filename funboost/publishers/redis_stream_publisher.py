@@ -23,7 +23,7 @@ class RedisStreamPublisher(AbstractPublisher, RedisMixin):
                                    f'RedisStreamConsumer 使用的是 stream数据结构')
         self._has__check_redis_version = True
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         # redis服务端必须是5.0以上，并且确保这个键的类型是stream不能是list数据结构。
         if not self._has__check_redis_version:
             self._check_redis_version()
@@ -38,5 +38,4 @@ class RedisStreamPublisher(AbstractPublisher, RedisMixin):
         return self.redis_db_frame.xlen(self._queue_name)
 
     def close(self):
-        # self.redis_db7.connection_pool.disconnect()
         pass

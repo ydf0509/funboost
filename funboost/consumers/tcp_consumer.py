@@ -27,7 +27,7 @@ class TCPConsumer(AbstractConsumer, ):
         self.bufsize = self.consumer_params.broker_exclusive_config['bufsize']
 
     # noinspection DuplicatedCode
-    def _shedual_task(self):
+    def _dispatch_task(self):
       
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # tcp协议
         server.bind(self._ip_port)

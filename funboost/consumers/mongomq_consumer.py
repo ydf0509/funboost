@@ -13,7 +13,7 @@ class MongoMqConsumer(AbstractConsumer, MongoMixin):
     """
 
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         mp = MongoMqPublisher(publisher_params=PublisherParams(queue_name=self.queue_name))
         while True:
             job = mp.queue.next()

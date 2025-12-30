@@ -68,7 +68,7 @@ def diagnose_timing_jobs(queue_name=None):
         
         # 3. 检查通过 ApsJobAdder 能否获取任务
         try:
-            booster = SingleQueueConusmerParamsGetter(q_name).generate_booster_by_funboost_redis_info_for_timing_push()
+            booster = SingleQueueConusmerParamsGetter(q_name).gen_booster_for_faas()
             job_adder = ApsJobAdder(booster, job_store_kind='redis', is_auto_start=True)
             
             jobs = job_adder.aps_obj.get_jobs()

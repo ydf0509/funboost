@@ -18,13 +18,13 @@ queue_name__deque_map = {}
 
 class DequePublisher(AbstractPublisher):
     def __init__(self, *args, **kwargs):
-        print('此类可以重写父类 AbstractPublisher 的任何方法，但必须实现以下方法  concrete_realization_of_publish clear  get_message_count  close ')
+        print('此类可以重写父类 AbstractPublisher 的任何方法，但必须实现以下方法  _publish_impl clear  get_message_count  close ')
         super().__init__(*args, **kwargs)
         if self.queue_name not in queue_name__deque_map:
             queue_name__deque_map[self.queue_name] = deque()
         self.msg_deque: deque = queue_name__deque_map[self.queue_name]
 
-    def concrete_realization_of_publish(self, msg: str):
+    def _publish_impl(self, msg: str):
         self.msg_deque.append(msg)
 
     def clear(self):
@@ -39,13 +39,13 @@ class DequePublisher(AbstractPublisher):
 
 class DequeConsumer(AbstractConsumer):
     def __init__(self, *args, **kwargs):
-        print('此类可以重写父类 AbstractConsumer 的任何方法，但必须实现以下方法  _shedual_task  _confirm_consume  _requeue ')
+        print('此类可以重写父类 AbstractConsumer 的任何方法，但必须实现以下方法  _dispatch_task  _confirm_consume  _requeue ')
         super().__init__(*args, **kwargs)
         if self.queue_name not in queue_name__deque_map:
             queue_name__deque_map[self.queue_name] = deque()
         self.msg_deque: deque = queue_name__deque_map[self.queue_name]
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         while True:
             try:
                 task_str = self.msg_deque.popleft()

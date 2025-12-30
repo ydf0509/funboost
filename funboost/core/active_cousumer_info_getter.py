@@ -24,6 +24,7 @@ import typing
 import uuid
 import os
 
+from funboost.factories.consumer_factory import ConsumerCacheProxy
 from funboost.factories.publisher_factotry import get_publisher
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.utils.redis_manager import RedisMixin
@@ -31,15 +32,16 @@ from funboost.utils.redis_manager import RedisMixin
 from funboost.core.loggers import FunboostFileLoggerMixin,nb_log_config_default
 from funboost.core.serialization import Serialization
 from funboost.constant import RedisKeys
-from funboost.core.booster import BoostersManager, Booster
+from funboost.core.booster import  Booster,BoosterRegistry, booster_registry_default,gen_pid_queue_name_key
 from funboost.core.func_params_model import PublisherParams, BoosterParams, BaseJsonAbleModel
 from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig
 from funboost.core.consuming_func_iniput_params_check import FakeFunGenerator
 from funboost.core.exceptions import QueueNameNotExists
 from funboost.timing_job.timing_push import ApsJobAdder
+from funboost.constant import EnvConst
 
 class CareProjectNameEnv:
-    env_name = 'funboost.care_project_name'
+    env_name = EnvConst.FUNBOOST_FAAS_CARE_PROJECT_NAME
     @classmethod
     def set(cls, care_project_name: str):
         os.environ[cls.env_name] = care_project_name
@@ -51,9 +53,17 @@ class CareProjectNameEnv:
             return None
         return care_project_name
 
+booster_registry_for_faas = BoosterRegistry(
+    booster_registry_name='booster_registry_for_faas')
 
 
 class RedisReportInfoGetterMixin:
+    # 类属性：所有实例共享的缓存
+    _cache_all_queue_names = None
+    _cache_all_queue_names_ts = 0
+    _cache_queue_names_by_project = {}  # {project_name: {'data': [...], 'ts': timestamp}}
+    _cache_ttl = 30  # 缓存30秒
+    
     def _init(self,care_project_name:typing.Optional[str]=None,):
         """
         参数:
@@ -66,19 +76,55 @@ class RedisReportInfoGetterMixin:
             self.care_project_name = care_project_name
         else:
             self.care_project_name = CareProjectNameEnv.get()
-        self.project_name_queues = self.get_queue_names_by_project_name(self.care_project_name)
 
     def get_all_queue_names(self) ->list:
+        """获取所有队列名称，带30秒缓存（类级别缓存，所有实例共享）"""
+        current_time = time.time()
+        
+        # 检查缓存是否有效
+        if self._cache_all_queue_names is not None and (current_time - self._cache_all_queue_names_ts) < self._cache_ttl:
+            return self._cache_all_queue_names
+        
+        # 缓存失效，重新从redis获取
         if self.care_project_name:
-            return self.project_name_queues
-        return list(self.redis_db_frame.smembers(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES))
+            result = self.project_name_queues
+        else:
+            result = list(self.redis_db_frame.smembers(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES))
+        
+        # 更新缓存
+        self.__class__._cache_all_queue_names = result
+        self.__class__._cache_all_queue_names_ts = current_time
+        
+        return result
 
     def get_queue_names_by_project_name(self,project_name:str) ->list:
-        return list(self.redis_db_frame.smembers(RedisKeys.gen_funboost_project_name_key(project_name)))
+        """根据项目名称获取队列名称，带30秒缓存（类级别缓存，所有实例共享）"""
+        current_time = time.time()
+        
+        # 检查缓存是否有效
+        if project_name in self._cache_queue_names_by_project:
+            cache_entry = self._cache_queue_names_by_project[project_name]
+            if (current_time - cache_entry['ts']) < self._cache_ttl:
+                return cache_entry['data']
+        
+        # 缓存失效，重新从redis获取
+        result = list(self.redis_db_frame.smembers(RedisKeys.gen_funboost_project_name_key(project_name)))
+        
+        # 更新缓存
+        self.__class__._cache_queue_names_by_project[project_name] = {
+            'data': result,
+            'ts': current_time
+        }
+        
+        return result
     
     @property
     def all_queue_names(self):
         return self.get_all_queue_names()
+
+    @property
+    def project_name_queues(self):
+        return self.get_queue_names_by_project_name(self.care_project_name)
 
     def hmget_many_by_all_queue_names(self,key):
         # if self.care_project_name is False:
@@ -89,7 +135,7 @@ class RedisReportInfoGetterMixin:
             err_msg  = f"""
             care_project_name is set to {self.care_project_name},
 
-            make sure  you have set @boost(BoosterParams(is_send_consumer_hearbeat_to_redis=True,project_name=$project_name))
+            make sure  you have set @boost(BoosterParams(is_send_consumer_heartbeat_to_redis=True,project_name=$project_name))
 
             """
             self.logger.error(err_msg)
@@ -135,7 +181,7 @@ class ActiveCousumerProcessInfoGetter(RedisMixin,RedisReportInfoGetterMixin,Funb
     """
 
     获取分布式环境中的消费进程信息。
-    使用这里面的4个方法需要相应函数的@boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
+    使用这里面的4个方法需要相应函数的@boost装饰器设置 is_send_consumer_heartbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
     要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息
     """
 
@@ -379,16 +425,17 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
     方法 get_one_queue_params_and_active_consumers 返回信息最丰富
     """
     queue__booster_params_cache :dict= {}
-    _pid_broker_kind_queue_name__booster_map = {}
-    _pid_broker_kind_queue_name__publisher_map = {}
+    # _pid_broker_kind_queue_name__booster_map = {}
+    # _pid_broker_kind_queue_name__publisher_map = {}
     _lock_for_generate_publisher_booster = threading.Lock()
     
 
 
-    def __init__(self,queue_name:str,care_project_name:typing.Optional[str]=None):
+    def __init__(self,queue_name:str,care_project_name:typing.Optional[str]=None,is_use_local_booster:bool=None):
         RedisReportInfoGetterMixin._init(self,care_project_name)
         self.queue_name = queue_name
         self._check_booster_exists()
+        self.is_use_local_booster = is_use_local_booster if is_use_local_booster is not None else os.environ.get(EnvConst.FUNBOOST_FAAS_IS_USE_LOCAL_BOOSTER, 'false').lower() == 'true'
         self._last_update_consuming_func_input_params_checker = 0
      
     
@@ -419,11 +466,11 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
   "is_auto_start_specify_async_loop_in_child_thread": true,
   "qps": null,
   "is_using_distributed_frequency_control": false,
-  "is_send_consumer_hearbeat_to_redis": true,
+  "is_send_consumer_heartbeat_to_redis": true,
   "max_retry_times": 3,
   "retry_interval": 0,
   "is_push_to_dlx_queue_when_retry_max_times": false,
-  "consumin_function_decorator": null,
+  "consuming_function_decorator": null,
   "function_timeout": null,
   "is_support_remote_kill_task": false,
   "log_level": 10,
@@ -434,7 +481,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
   "is_show_message_get_from_broker": false,
   "is_print_detail_exception": true,
   "publish_msg_log_use_full_msg": false,
-  "msg_expire_senconds": null,
+  "msg_expire_seconds": null,
   "do_task_filtering": false,
   "task_filtering_expire_seconds": 0,
   "function_result_status_persistance_conf": {
@@ -506,58 +553,78 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
             get_from_redis_ts = time.time()
             self.queue__booster_params_cache[self.queue_name] = {'booster_params':booster_params,'get_from_redis_ts':get_from_redis_ts}
         return self.queue__booster_params_cache[self.queue_name]['booster_params']
+    
 
-    def generate_publisher_by_funboost_redis_info(self)-> AbstractPublisher:
+   
+    def _gen_booster_by_local_booster(self) -> Booster:
+        # 使用本地booster，这种也可以，每个项目单独自己起一个 funboost web manager 就可以，
+        # 启动  funboost web manager  之前，先导入相关的 booster所在模块,再调用 `start_funboost_web_manager()` 函数
+        
+        booster = booster_registry_default.get_or_create_booster_by_queue_name(self.queue_name)
+        return booster
+
+    def _gen_booster_by_redis_meta_info(self) -> Booster:
+        # 使用redis元信息生成假的fake booster，部分booster配置因为不可json序列化原因，直接赋值None了，缺点是不是真booster  
+        # 优点是支持跨项目管理booster，支持热加载。
         booster_params = self.get_one_queue_params_use_cache()
-        key = (os.getpid(), booster_params['broker_kind'], booster_params['queue_name'])
+        current_broker_kind = booster_params['broker_kind']
+        
+        # 利用 registry 的实例属性字典缓存
+        key = gen_pid_queue_name_key(self.queue_name)
+        existing_booster = booster_registry_for_faas.pid_queue_name__booster_map.get(key)
+        
+        if existing_booster:
+            """
+            faas 模式支持热加载不重启web服务就能发布，如果中间件先使用redis，后使用rabbitmq这种极端场景，
+            为了支持热加载，需要重新实例化booster。
+            """
+            if existing_booster.boost_params.broker_kind == current_broker_kind: 
+                 self._update_publisher_params_checker(existing_booster.publisher, booster_params)
+                 return existing_booster
+
         with self._lock_for_generate_publisher_booster:
-            if key not in self._pid_broker_kind_queue_name__publisher_map:
-                redis_final_func_input_params_info = booster_params['auto_generate_info']['final_func_input_params_info']
-                fake_fun = FakeFunGenerator.gen_fake_fun_by_params(redis_final_func_input_params_info)
-                booster_params['consuming_function'] = fake_fun
-                booster_params['consuming_function_raw'] = fake_fun
-                
-                booster_params['is_fake_booster'] = True # 重要，不要注册到BoostersManager，防止干扰用户的真实booster的消费函数逻辑。由此类的 _pid_broker_kind_queue_name__publisher_map 管理
-                # 发布消息时候会立即校验入参是否正确，你使用了redis中的 booster配置的 auto_generate_info.final_func_input_params_info 信息来校验入参名字和个数是否正确
-                # booster_params['should_check_publish_func_params'] = False # 
-                booster_params_model = BoosterParams(**booster_params)
-                publisher_params_model = BaseJsonAbleModel.init_by_another_model(PublisherParams, booster_params_model)
-                publisher = get_publisher(publisher_params_model)
-                self._pid_broker_kind_queue_name__publisher_map[key] = publisher
-            publisher:AbstractPublisher = self._pid_broker_kind_queue_name__publisher_map[key]
-            self._update_publisher_params_checker(publisher,booster_params)
-            return publisher
+             # 双重检查
+             existing_booster = booster_registry_for_faas.pid_queue_name__booster_map.get(key)
+             if existing_booster and existing_booster.boost_params.broker_kind == current_broker_kind:
+                 return existing_booster
 
-    def generate_booster_by_funboost_redis_info_for_timing_push(self)-> Booster:
-        booster_params= self.get_one_queue_params_use_cache()
-        key = (os.getpid(), booster_params['broker_kind'],booster_params['queue_name'])
-        with self._lock_for_generate_publisher_booster:
-            if key not in self._pid_broker_kind_queue_name__booster_map:
-                # 只是为了生成一个能发送定时的booster,不需要那么多配置，很多redis中的配置是不可序列化的用字符串替代了，有些字符串不能直接拿来使用，因为pydantic有类型校验。
-                redis_final_func_input_params_info = booster_params['auto_generate_info']['final_func_input_params_info']
-                fake_fun = FakeFunGenerator.gen_fake_fun_by_params(redis_final_func_input_params_info)
-                booster_params['consuming_function'] = fake_fun
-                booster_params['consuming_function_raw'] = fake_fun
+             # 生成新的 booster
+             redis_final_func_input_params_info = booster_params['auto_generate_info']['final_func_input_params_info']
+             fake_fun = FakeFunGenerator.gen_fake_fun_by_params(redis_final_func_input_params_info)
+             booster_params['consuming_function'] = fake_fun
+             booster_params['consuming_function_raw'] = fake_fun
 
-                # booster_params['should_check_publish_func_params'] = False
-                booster_params['specify_concurrent_pool'] = None
-                booster_params['specify_async_loop'] = None
-                booster_params['consumin_function_decorator'] = None
-                booster_params['function_result_status_persistance_conf'] = FunctionResultStatusPersistanceConfig(is_save_status=False,is_save_result=False)
-                booster_params['user_custom_record_process_info_func'] = None
-                booster_params['consumer_override_cls'] = None
-                booster_params['publisher_override_cls'] = None
+             booster_params['specify_concurrent_pool'] = None
+             booster_params['specify_async_loop'] = None
+             booster_params['consuming_function_decorator'] = None
+             booster_params['function_result_status_persistance_conf'] = FunctionResultStatusPersistanceConfig(is_save_status=False,is_save_result=False)
+             booster_params['user_custom_record_process_info_func'] = None
+             booster_params['consumer_override_cls'] = None
+             booster_params['publisher_override_cls'] = None
 
-                booster_params['is_fake_booster'] = True # 重要，不要注册到BoostersManager，防止干扰用户的真实booster的消费函数逻辑。由此类的 _pid_broker_kind_queue_name__booster_map 管理
-                booster_params_model = BoosterParams(**booster_params)
-                booster = Booster(booster_params_model)(booster_params_model.consuming_function)
-                self._pid_broker_kind_queue_name__booster_map[key] = booster
-            booster:Booster = self._pid_broker_kind_queue_name__booster_map[key]
-            self._update_publisher_params_checker(booster.publisher,booster_params)
-            return booster
+             booster_params['is_fake_booster'] = True 
+             # 关键：指定 registry，这样实例化时会自动注册到 booster_registry_for_faas，覆盖旧的 key
+             booster_params['booster_registry_name'] = 'booster_registry_for_faas'
 
+             booster_params_model = BoosterParams(**booster_params)
+             
+             booster = Booster(booster_params_model)(booster_params_model.consuming_function)
+             
+             self._update_publisher_params_checker(booster.publisher, booster_params)
+             return booster
+
+    def gen_booster_for_faas(self) -> Booster:
+        if self.is_use_local_booster:
+            return self._gen_booster_by_local_booster()
+        return self._gen_booster_by_redis_meta_info()
+    
+    def gen_publisher_for_faas(self)->Booster:
+        booster = self.gen_booster_for_faas()
+        return booster.publisher
+    
+   
     def generate_aps_job_adder(self,job_store_kind='redis',is_auto_start=True,is_auto_paused=True) -> ApsJobAdder:
-        booster = self.generate_booster_by_funboost_redis_info_for_timing_push()
+        booster = self.gen_booster_for_faas()
         job_adder = ApsJobAdder(booster, job_store_kind=job_store_kind, is_auto_start=is_auto_start,is_auto_paused=is_auto_paused)
         return job_adder
 
@@ -606,12 +673,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
         实时从broker获取的消息数量，
         """
         try:
-            consumer_params = self.get_one_queue_params()
-            publisher = BoostersManager.get_cross_project_publisher(
-                PublisherParams(queue_name=self.queue_name, 
-                                broker_kind=consumer_params['broker_kind'],
-                                broker_exclusive_config=consumer_params['broker_exclusive_config'],
-                                publish_msg_log_use_full_msg=True))
+            publisher = self.gen_publisher_for_faas()
             return publisher.get_message_count()
         except Exception as e:
             self.logger.exception(f'实时获取队列消息数失败 {e}')
@@ -702,9 +764,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
         self.redis_db_frame.srem(RedisKeys.gen_funboost_project_name_key(self.care_project_name), self.queue_name)
 
     
- 
 
-       
 
 
 if __name__ == '__main__':

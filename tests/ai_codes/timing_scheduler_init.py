@@ -27,7 +27,7 @@ def init_all_timing_schedulers():
         try:
             # 为每个队列创建 Redis 模式的调度器
             booster = SingleQueueConusmerParamsGetter(queue_name)\
-                .generate_booster_by_funboost_redis_info_for_timing_push()
+                .gen_booster_for_faas()
             
             # 创建并启动调度器
             job_adder = ApsJobAdder(booster, job_store_kind='redis', is_auto_start=True)
@@ -57,7 +57,7 @@ def get_scheduler_for_queue(queue_name, job_store_kind='redis'):
         if key not in _initialized_schedulers:
             try:
                 booster = SingleQueueConusmerParamsGetter(queue_name)\
-                    .generate_booster_by_funboost_redis_info_for_timing_push()
+                    .gen_booster_for_faas()
                 job_adder = ApsJobAdder(booster, job_store_kind='redis', is_auto_start=True)
                 _initialized_schedulers[key] = job_adder.aps_obj
                 logger.info(f"创建新的调度器: {queue_name}")

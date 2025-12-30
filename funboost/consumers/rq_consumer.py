@@ -21,7 +21,7 @@ class RqConsumer(AbstractConsumer):
         RqHelper.to_be_start_work_rq_queue_name_set.add(self.queue_name)
         super().start_consuming_message()
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         while 1:
             time.sleep(100)
 

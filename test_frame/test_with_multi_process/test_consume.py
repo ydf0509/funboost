@@ -2,7 +2,7 @@ import time
 from auto_run_on_remote import run_current_script_on_remote
 
 run_current_script_on_remote()
-from funboost import boost, BrokerEnum, PriorityConsumingControlConfig,FunctionResultStatusPersistanceConfig,BoosterParams
+from funboost import boost, BrokerEnum, TaskOptions,FunctionResultStatusPersistanceConfig,BoosterParams
 
 """
 演示多进程启动消费，多进程和 asyncio/threading/gevnt/evntlet是叠加关系，不是平行的关系。

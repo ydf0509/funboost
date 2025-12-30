@@ -2,7 +2,9 @@
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:19
 
-
+import os
+import threading
+import typing
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.core.func_params_model import BoosterParams
@@ -29,3 +31,22 @@ def get_consumer(boost_params: BoosterParams) -> AbstractConsumer:
         #     pass
 
         return ConsumerClsOverride(boost_params)
+
+
+class ConsumerCacheProxy:
+    pid_registry_queue_name__consumer_map:typing.Dict[typing.Tuple[int,str,str],AbstractConsumer] = {}
+    _lock = threading.Lock()
+
+    def __init__(self,boost_params: BoosterParams):
+        self.boost_params = boost_params
+
+    @property
+    def consumer(self) ->AbstractConsumer:
+        pid = os.getpid()
+        # 加入 booster_registry_name 作为命名空间隔离，支持不同 registry 使用相同的 queue_name 而不冲突
+        key = (pid, self.boost_params.booster_registry_name, self.boost_params.queue_name)
+        if key not in self.pid_registry_queue_name__consumer_map:
+            with self._lock:
+                if key not in self.pid_registry_queue_name__consumer_map:
+                    self.pid_registry_queue_name__consumer_map[key] = get_consumer(self.boost_params)
+        return self.pid_registry_queue_name__consumer_map[key]

@@ -20,7 +20,7 @@ class ZeroMqPublisher(AbstractPublisher):
         self.socket =socket
         self.logger.warning('框架使用 zeromq 中间件方式，必须先启动消费者(消费者会顺便启动broker) ,只有启动了服务端才能发布任务')
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         self.socket.send(msg.encode())
         self.socket.recv()
 

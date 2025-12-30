@@ -100,7 +100,7 @@ topic_publisher = BoostersManager.get_cross_project_publisher(PublisherParams(
 # 动态指定路由键发布消息
 topic_publisher.publish(
     {'timestamp': '2025-09-30 12:47:56', 'content': '消息内容'},  # 字典的 keys 必须与消费者函数参数名一致
-    priority_control_config=PriorityConsumingControlConfig(
+    task_options=TaskOptions(
         other_extra_params={'routing_key_for_publish': '动态路由键'}
     )
 )

@@ -88,7 +88,7 @@ class MqttPublisher(AbstractPublisher, ):
     def _on_connect(self, client, userdata, flags, rc):
         self.logger.info(f'连接mqtt服务端成功, {client, userdata, flags, rc}')
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         self._client.publish(self._queue_name, payload=msg, qos=0, retain=False)
 
     def clear(self):

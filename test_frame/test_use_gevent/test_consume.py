@@ -11,7 +11,7 @@ from funboost import ConcurrentModeEnum, BoosterParams,run_forever
 
 @BoosterParams(queue_name='queue_test62', concurrent_num=200, log_level=10, logger_prefix='zz平台消费',
                function_timeout=20, is_print_detail_exception=True,
-               msg_expire_senconds=500, concurrent_mode=ConcurrentModeEnum.GEVENT)
+               msg_expire_seconds=500, concurrent_mode=ConcurrentModeEnum.GEVENT)
 def f2(a, b):
     print(f'消费此消息 {a} + {b} 中。。。。。')
     time.sleep(10)  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。
@@ -20,7 +20,7 @@ def f2(a, b):
 
 @BoosterParams(queue_name='queue_test63', concurrent_num=200, log_level=10, logger_prefix='zz平台消费',
                function_timeout=20, is_print_detail_exception=True,
-               msg_expire_senconds=500, concurrent_mode=ConcurrentModeEnum.GEVENT)
+               msg_expire_seconds=500, concurrent_mode=ConcurrentModeEnum.GEVENT)
 def f3(a, b):
     print(f'消费此消息 {a} + {b} 中。。。。。')
     time.sleep(10)  # 模拟做某事需要阻塞10秒种，必须用并发绕过此阻塞。

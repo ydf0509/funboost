@@ -421,6 +421,23 @@
             color: #fcd34d;
         }
 
+        .status-warning-consumer {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(245, 158, 11, 0.15) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            margin-bottom: 15px;
+            animation: pulse-warning 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-warning {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .status-warning-consumer i {
+            color: #f87171;
+        }
+
         /* 关键结果区域 */
         .result-summary {
             display: grid;
@@ -646,6 +663,12 @@
                         </select>
                     </div>
 
+                    <!-- 消费者状态警告 -->
+                    <div class="status-box status-warning-consumer" id="consumer_warning" style="display: none;">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        <span id="consumer_warning_text">该队列没有正在运行的消费者，消息发送后可能无法被消费处理！</span>
+                    </div>
+
                     <div class="form-group">
                         <label class="form-label"><i class="fa fa-code"></i>消息体 (JSON)</label>
                         <textarea class="form-input code-textarea" id="message_content" rows="8" 
@@ -815,6 +838,7 @@
         function resetRpcFuncParamsUI() {
             $("#rpc_func_params_text").html("请先选择队列名称，将显示函数所需参数");
             $("#message_content").attr("placeholder", "请先选择队列名称，将自动生成消息体 JSON 模板");
+            $("#consumer_warning").hide();
         }
 
         function normalizeJsonText(text) {
@@ -1015,11 +1039,15 @@
         function loadRpcTemplateAndParamsInfo(queueName, prevQueueName) {
             if (!queueName) {
                 resetRpcFuncParamsUI();
+                $("#consumer_warning").hide();
                 return;
             }
 
             rpc_latest_request_queue = queueName;
             $("#rpc_func_params_text").html('<i class="fa fa-spinner fa-spin"></i> 加载中...');
+            $("#consumer_warning").hide();
+            
+            // 获取队列配置信息
             $.get("/funboost/get_one_queue_config?queue_name=" + encodeURIComponent(queueName), function (response) {
                 if (queueName !== rpc_latest_request_queue || queueName !== rpc_last_selected_queue) return;
                 if (response && response.succ && response.data && response.data.auto_generate_info) {
@@ -1029,21 +1057,10 @@
                     var templateText = buildRpcTemplateText(paramsInfo);
                     rpc_template_cache_by_queue[queueName] = templateText;
 
-                    var currentText = $("#message_content").val();
-                    var currentNorm = normalizeJsonText(currentText);
-                    var prevTemplate = prevQueueName ? rpc_template_cache_by_queue[prevQueueName] : null;
-                    var prevTemplateNorm = prevTemplate ? normalizeJsonText(prevTemplate) : null;
-
-                    var shouldOverwrite = false;
-                    if (!currentNorm) shouldOverwrite = true;
-                    else if (prevTemplateNorm && currentNorm === prevTemplateNorm) shouldOverwrite = true;
-                    else if (rpc_is_auto_filled === true) shouldOverwrite = true;
-
-                    if (shouldOverwrite) {
-                        $("#message_content").val(templateText);
-                        rpc_last_auto_filled_template = templateText;
-                        rpc_is_auto_filled = true;
-                    }
+                    // 切换队列时，始终根据新队列的函数入参重置消息体
+                    $("#message_content").val(templateText);
+                    rpc_last_auto_filled_template = templateText;
+                    rpc_is_auto_filled = true;
 
                     $("#message_content").attr("placeholder", "已根据队列自动生成消息体 JSON 模板（可自行修改）");
                 } else {
@@ -1051,6 +1068,23 @@
                 }
             }).fail(function () {
                 $("#rpc_func_params_text").html("获取队列配置失败");
+            });
+            
+            // 获取队列运行信息，检查消费者数量
+            $.get("/funboost/get_queue_run_info?queue_name=" + encodeURIComponent(queueName), function (response) {
+                if (queueName !== rpc_latest_request_queue || queueName !== rpc_last_selected_queue) return;
+                if (response && response.succ && response.data) {
+                    var activeConsumers = response.data.active_consumers || [];
+                    if (activeConsumers.length === 0) {
+                        $("#consumer_warning_text").text("⚠️ 该队列没有正在运行的消费者，消息发送后可能无法被消费处理！");
+                        $("#consumer_warning").show();
+                    } else {
+                        $("#consumer_warning").hide();
+                    }
+                }
+            }).fail(function () {
+                // 获取运行信息失败时不显示警告，避免干扰
+                $("#consumer_warning").hide();
             });
         }
 

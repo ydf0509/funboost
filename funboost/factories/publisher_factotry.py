@@ -2,7 +2,9 @@
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:16
 import copy
-
+import os
+import threading
+import typing
 from typing import Callable
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.core.func_params_model import PublisherParams
@@ -42,3 +44,18 @@ def get_publisher(publisher_params: PublisherParams) -> AbstractPublisher:
 
         return PublsiherClsOverride(publisher_params)
 
+class PublisherCacheProxy:
+    pid_registry_queue_name__publisher_map:typing.Dict[typing.Tuple[int,str,str],AbstractPublisher] = {}
+    _lock = threading.Lock()
+    def __init__(self,publisher_params: PublisherParams):
+        self.publisher_params = publisher_params
+      
+    @property
+    def publisher(self) ->AbstractPublisher:
+        pid = os.getpid()
+        key = (pid, self.publisher_params.booster_registry_name, self.publisher_params.queue_name)
+        if key not in self.pid_registry_queue_name__publisher_map:
+            with self._lock:
+                if key not in self.pid_registry_queue_name__publisher_map:
+                    self.pid_registry_queue_name__publisher_map[key] = get_publisher(self.publisher_params)
+        return self.pid_registry_queue_name__publisher_map[key]

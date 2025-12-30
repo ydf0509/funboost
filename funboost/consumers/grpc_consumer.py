@@ -52,7 +52,7 @@ class GrpcConsumer(AbstractConsumer, ):
 
         self.GRPC_SERVICER_CLS = FunboostGrpcServicer
 
-    def _shedual_task(self):
+    def _dispatch_task(self):
         server = grpc.server(self.concurrent_pool)
 
         # 添加服务

@@ -41,7 +41,7 @@ def sub(x, y):
 consumer_add = get_consumer('queue_test569', consuming_function=add, concurrent_num=50, max_retry_times=3,
                             qps=2000, log_level=10, logger_prefix='zz平台消费',
                             function_timeout=0, is_print_detail_exception=False,
-                            msg_expire_senconds=3600,
+                            msg_expire_seconds=3600,
                             is_using_rpc_mode=True,
                             function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True, False, 7 * 24 * 3600),
                             broker_kind=9, concurrent_mode=1, )  # 通过设置broker_kind，一键切换中间件为rabbitmq或redis等9种中间件或包。

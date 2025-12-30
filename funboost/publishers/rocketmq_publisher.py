@@ -32,7 +32,7 @@ class RocketmqPublisher(AbstractPublisher, ):
                 producer = self.__class__._group_id__rocketmq_producer[group_id]
             self._producer = producer
 
-    def concrete_realization_of_publish(self, msg):
+    def _publish_impl(self, msg):
         try:
             from rocketmq.client import Message
         except BaseException as e:

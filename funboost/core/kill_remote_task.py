@@ -7,6 +7,7 @@ from funboost.utils.redis_manager import RedisMixin
 from funboost.core.loggers import FunboostFileLoggerMixin
 from funboost.core.current_task import FctContextThread
 
+
 class ThreadKillAble(FctContextThread):
     task_id = None
     killed = False

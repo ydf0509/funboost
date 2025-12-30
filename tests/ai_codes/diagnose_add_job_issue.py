@@ -22,7 +22,7 @@ def test_add_job_directly():
     try:
         # 获取 booster
         booster = SingleQueueConusmerParamsGetter(queue_name)\
-            .generate_booster_by_funboost_redis_info_for_timing_push()
+            .gen_booster_for_faas()
         
         # 创建 ApsJobAdder
         job_adder = ApsJobAdder(booster, job_store_kind='redis', is_auto_start=True)
@@ -96,7 +96,7 @@ def test_add_job_via_flask_api():
         
         # 获取 booster
         booster = SingleQueueConusmerParamsGetter(queue_name)\
-            .generate_booster_by_funboost_redis_info_for_timing_push()
+            .gen_booster_for_faas()
         job_adder = ApsJobAdder(booster, job_store_kind=job_store_kind, is_auto_start=True)
         
         print(f"调度器对象: {job_adder.aps_obj}")

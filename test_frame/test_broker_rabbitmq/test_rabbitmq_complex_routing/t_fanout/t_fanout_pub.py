@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 
-from funboost import BoostersManager, PublisherParams, BrokerEnum, PriorityConsumingControlConfig
+from funboost import BoostersManager, PublisherParams, BrokerEnum, TaskOptions
 import time
 
 BROKER_KIND_FOR_TEST = BrokerEnum.RABBITMQ_COMPLEX_ROUTING
@@ -79,7 +79,7 @@ if __name__ == '__main__':
                 'action': event['action'], 
                 'message': event['message']
             },
-            priority_control_config=PriorityConsumingControlConfig(
+            task_options=TaskOptions(
                 # 即使设置了路由键，fanout 模式也会忽略，所有队列都会收到消息
                 other_extra_params={'routing_key_for_publish': 'ignored_routing_key'}
             )

@@ -442,11 +442,11 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `is_auto_start_specify_async_loop_in_child_thread: bool = True`
 - `qps: typing.Union[float, int, None] = None`
 - `is_using_distributed_frequency_control: bool = False`
-- `is_send_consumer_hearbeat_to_redis: bool = False`
+- `is_send_consumer_heartbeat_to_redis: bool = False`
 - `max_retry_times: int = 3`
 - `retry_interval: typing.Union[float, int] = 0`
 - `is_push_to_dlx_queue_when_retry_max_times: bool = False`
-- `consumin_function_decorator: typing.Optional[typing.Callable] = None`
+- `consuming_function_decorator: typing.Optional[typing.Callable] = None`
 - `function_timeout: typing.Union[int, float, None] = None`
 - `is_support_remote_kill_task: bool = False`
 - `log_level: int = logging.DEBUG`
@@ -457,7 +457,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `is_show_message_get_from_broker: bool = False`
 - `is_print_detail_exception: bool = True`
 - `publish_msg_log_use_full_msg: bool = False`
-- `msg_expire_senconds: typing.Union[float, int, None] = None`
+- `msg_expire_seconds: typing.Union[float, int, None] = None`
 - `do_task_filtering: bool = False`
 - `task_filtering_expire_seconds: int = 0`
 - `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=False, is_save_status=False, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)`
@@ -493,7 +493,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 例如一个子类,这个BoosterParams的子类可以作为@booot的传参,每个@boost可以少写一些这些重复的入参字段.
 
 function_result_status_persistance_conf 永远支持函数消费状态 结果状态持久化
-is_send_consumer_hearbeat_to_redis 永远支持发送消费者的心跳到redis,便于统计分布式环境的活跃消费者
+is_send_consumer_heartbeat_to_redis 永远支持发送消费者的心跳到redis,便于统计分布式环境的活跃消费者
 is_using_rpc_mode  永远支持rpc模式
 broker_kind 永远是使用 amqpstorm包 操作 rabbbitmq作为消息队列.
 specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程池,线程资源利用更高.
@@ -501,7 +501,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 
 **Class Variables (6):**
 - `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=True)`
-- `is_send_consumer_hearbeat_to_redis: bool = True`
+- `is_send_consumer_heartbeat_to_redis: bool = True`
 - `is_using_rpc_mode: bool = True`
 - `rpc_result_expire_seconds: int = 3600`
 - `broker_kind: str = BrokerEnum.RABBITMQ_AMQPSTORM`
@@ -527,7 +527,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `function_timeout: typing.Union[float, int, None] = None`
 - `max_retry_times: typing.Union[int, None] = None`
 - `is_print_detail_exception: typing.Union[bool, None] = None`
-- `msg_expire_senconds: typing.Union[float, int, None] = None`
+- `msg_expire_seconds: typing.Union[float, int, None] = None`
 - `is_using_rpc_mode: typing.Union[bool, None] = None`
 - `countdown: typing.Union[float, int, None] = None`
 - `eta: typing.Union[datetime.datetime, str, None] = None`
@@ -1815,7 +1815,7 @@ care_project_name 的作用是：
 **Docstring:**
 `````
 获取分布式环境中的消费进程信息。
-使用这里面的4个方法需要相应函数的@boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
+使用这里面的4个方法需要相应函数的@boost装饰器设置 is_send_consumer_heartbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。
 要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息
 `````
 
@@ -1918,11 +1918,11 @@ care_project_name 的作用是：
     "is_auto_start_specify_async_loop_in_child_thread": true,
     "qps": null,
     "is_using_distributed_frequency_control": false,
-    "is_send_consumer_hearbeat_to_redis": true,
+    "is_send_consumer_heartbeat_to_redis": true,
     "max_retry_times": 3,
     "retry_interval": 0,
     "is_push_to_dlx_queue_when_retry_max_times": false,
-    "consumin_function_decorator": null,
+    "consuming_function_decorator": null,
     "function_timeout": null,
     "is_support_remote_kill_task": false,
     "log_level": 10,
@@ -1933,7 +1933,7 @@ care_project_name 的作用是：
     "is_show_message_get_from_broker": false,
     "is_print_detail_exception": true,
     "publish_msg_log_use_full_msg": false,
-    "msg_expire_senconds": null,
+    "msg_expire_seconds": null,
     "do_task_filtering": false,
     "task_filtering_expire_seconds": 0,
     "function_result_status_persistance_conf": {
@@ -3370,7 +3370,7 @@ def add(x, y=10,):
 **Class Variables (7):**
 - `project_name: str = 'test_project1'`
 - `broker_kind: str = BrokerEnum.REDIS`
-- `is_send_consumer_hearbeat_to_redis: bool = True`
+- `is_send_consumer_heartbeat_to_redis: bool = True`
 - `is_using_rpc_mode: bool = True`
 - `booster_group: str = 'test_group1'`
 - `should_check_publish_func_params: bool = True`
@@ -3388,7 +3388,7 @@ from funboost import  BoosterParams, BrokerEnum, FunctionResultStatusPersistance
 class Project1BoosterParams(BoosterParams):
     project_name:str = 'test_project1'  # 核心配置，项目名，设置后，web接口就可以只关心某个项目下的队列，减少无关返回信息的干扰。
     broker_kind:str = BrokerEnum.REDIS
-    is_send_consumer_hearbeat_to_redis : bool= True # 向redis发送心跳，这样才能从redis获取相关队列的运行信息。
+    is_send_consumer_heartbeat_to_redis : bool= True # 向redis发送心跳，这样才能从redis获取相关队列的运行信息。
     is_using_rpc_mode:bool = True # 必须设置这一个参数为True，才能支持rpc功能。
     booster_group : str = 'test_group1' # 方便按分组启动消费
     should_check_publish_func_params:bool = True # 发布消息时，是否检查消息内容是否正确，不正确的消息格式立刻从接口返回报错消息内容不正确。
@@ -5379,7 +5379,7 @@ python funboost_cli_user.py mp_consume_all 2
 
 pause  
 
-支持暂停,前提是 @boost指定 is_send_consumer_hearbeat_to_redis=True  
+支持暂停,前提是 @boost指定 is_send_consumer_heartbeat_to_redis=True  
 
 ```  
 python funboost_cli_user.py pause queue1  queue2    #queue1  queue2 两个队列暂停消费  
@@ -5514,7 +5514,7 @@ from funboost.funboost_web_manager.app import start_funboost_web_manager
 class MyBoosterParams(BoosterParams):  
     project_name:str = 'test_project1'  # 核心配置，项目名，设置后，web接口就可以只关心某个项目下的队列，减少无关返回信息的干扰。
     broker_kind:str = BrokerEnum.REDIS
-    is_send_consumer_hearbeat_to_redis : bool= True # 向redis发送心跳，这样才能从redis获取相关队列的运行信息。
+    is_send_consumer_heartbeat_to_redis : bool= True # 向redis发送心跳，这样才能从redis获取相关队列的运行信息。
     is_using_rpc_mode:bool = True # 必须设置这一个参数为True，才能支持rpc功能。
     booster_group : str = 'test_group1' # 方便按分组启动消费
     should_check_publish_func_params:bool = True # 发布消息时，是否检查消息内容是否正确，不正确的消息格式立刻从接口返回报错消息内容不正确。
@@ -6551,7 +6551,7 @@ curl -X POST "http://127.0.0.1:8000/funboost/publish" \
 
 ## ⚠️💡 15.8 注意事项     
 
-- 1. @boost需要设置 `is_send_consumer_hearbeat_to_redis=True`，否则无法获从redis获取相关queue_name的配置元数据和运行信息
+- 1. @boost需要设置 `is_send_consumer_heartbeat_to_redis=True`，否则无法获从redis获取相关queue_name的配置元数据和运行信息
 
 - 2. 别忘了，**需要启动funboost消费**，否则只发布消息，没有后台消费执行消息。启动消费可以和web一起启动，也可以单独的脚本部署启动消费。（因为funboost.faas 是基于funboost的redis 注册的元数据驱动，不需要import依赖具体的函数。）
 
@@ -8851,7 +8851,7 @@ class BoosterParams(BaseJsonAbleModel):
     如果使用分布式空频则所有消费者加起来的总运行次数是10。"""
     is_using_distributed_frequency_control: bool = False
 
-    is_send_consumer_hearbeat_to_redis: bool = False  # 是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。这个功能,需要安装redis.
+    is_send_consumer_heartbeat_to_redis: bool = False  # 是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。这个功能,需要安装redis.
 
     """max_retry_times:
     最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
@@ -8863,7 +8863,7 @@ class BoosterParams(BaseJsonAbleModel):
     is_push_to_dlx_queue_when_retry_max_times: bool = False  # 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
 
 
-    consumin_function_decorator: typing.Optional[typing.Callable] = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
+    consuming_function_decorator: typing.Optional[typing.Callable] = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
     
     
     """
@@ -8898,7 +8898,7 @@ class BoosterParams(BaseJsonAbleModel):
     is_print_detail_exception: bool = True  # 消费函数出错时候,是否打印详细的报错堆栈,为False则只打印简略的报错信息不包含堆栈.
     publish_msg_log_use_full_msg: bool = False # 发布到消息队列的消息内容的日志，是否显示消息的完整体，还是只显示函数入参。
 
-    msg_expire_senconds: typing.Union[float, int,None] = None  # 消息过期时间,可以设置消息是多久之前发布的就丢弃这条消息,不运行. 为None则永不丢弃
+    msg_expire_seconds: typing.Union[float, int,None] = None  # 消息过期时间,可以设置消息是多久之前发布的就丢弃这条消息,不运行. 为None则永不丢弃
 
     do_task_filtering: bool = False  # 是否对函数入参进行过滤去重.
     task_filtering_expire_seconds: int = 0  # 任务过滤的失效期，为0则永久性过滤任务。例如设置过滤过期时间是1800秒 ， 30分钟前发布过1 + 2 的任务，现在仍然执行，如果是30分钟以内执行过这个任务，则不执行1 + 2
@@ -9142,7 +9142,7 @@ if __name__ == '__main__':
     f.clear()  # 清空f函数对应的queue1所有消息  
     for i in range(10):  
         f.push(i, i * 2)  # 使用push发布消息到queue1，push的入参和正常调用函数一样  
-        f2.publish({'a': i, 'b': i * 2},task_options=PriorityConsumingControlConfig(msg_expire_senconds=30))  # # 使用publish发布消息到queue2，publish的入参第一个参数是一个字典，把所有参数组成一个字典，还可以传入其他参数。publish更强大。  
+        f2.publish({'a': i, 'b': i * 2},task_options=PriorityConsumingControlConfig(msg_expire_seconds=30))  # # 使用publish发布消息到queue2，publish的入参第一个参数是一个字典，把所有参数组成一个字典，还可以传入其他参数。publish更强大。  
 
     print(f.get_message_count())  # 获取消息队列中的消息数量  
     f.consume()  # 在当前进程启动多线程/协程消费  
@@ -9753,7 +9753,7 @@ f2.get_message_count() 获取消息队中的消息数量，
 @boost(BoosterParams(queue_name='test_queue77g', log_level=10, broker_kind=BrokerEnum.REDIS_ACK_ABLE, qps=5,  
        create_logger_file=False, is_show_message_get_from_broker=True, concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD  
        # specify_concurrent_pool= pool2,  
-       # concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_hearbeat_to_redis=True,function_timeout=10,  
+       # concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD, concurrent_num=3,is_send_consumer_heartbeat_to_redis=True,function_timeout=10,  
        # function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(True,True)  
        ))  
 def f2(a, b):  
@@ -11109,7 +11109,7 @@ from funboost import ActiveCousumerProcessInfoGetter
 
 '''  
 获取分布式环境中的消费进程信息。  
-使用这里面的4个方法需要相应函数的@boost装饰器设置 is_send_consumer_hearbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。  
+使用这里面的4个方法需要相应函数的@boost装饰器设置 is_send_consumer_heartbeat_to_redis=True，这样会自动发送活跃心跳到redis。否则查询不到该函数的消费者进程信息。  
 要想使用消费者进程信息统计功能，用户无论使用何种消息队列中间件类型，用户都必须安装redis，并在 funboost_config.py 中配置好redis链接信息  
 '''  
 
@@ -11298,12 +11298,12 @@ if __name__ == '__main__':
 
 ## 4.18 暂停消费  
 
-框架支持暂停消费功能和继续消费功能，boost装饰器需要设置is_send_consumer_hearbeat_to_redis=True  
+框架支持暂停消费功能和继续消费功能，boost装饰器需要设置is_send_consumer_heartbeat_to_redis=True  
 
 ```python  
 from funboost import boost, BoosterParams  
 
-@boost(BoosterParams(queue_name='test_queue73ac', is_send_consumer_hearbeat_to_redis=True))  
+@boost(BoosterParams(queue_name='test_queue73ac', is_send_consumer_heartbeat_to_redis=True))  
 def f2(a, b):  
     return a - b  
 
@@ -11804,7 +11804,7 @@ if __name__ == '__main__':
     # 所以publish是比push更强大的存在，push是简单，publish是更可以发布任务控制参数。  
     add.publish({"a":1,"b":2})  
     # publish 除了可以发布函数入参本身以外，还能发布任务控制参数，例如可以手动的指定id而非有框架自动生成任务id，还能设置其他控制参数。  
-    # 例如 在 task_options的PriorityConsumingControlConfig中设置   msg_expire_senconds =5，可以使得发布消息离消费超过5秒，丢弃消息不消费。  
+    # 例如 在 task_options的PriorityConsumingControlConfig中设置   msg_expire_seconds =5，可以使得发布消息离消费超过5秒，丢弃消息不消费。  
     # 例如设置is_using_rpc_mode = True ，则可以单独使该任务参数支持rpc获得结果。  
     add.publish({"a":1,"b":2},task_id=100005,task_options=PriorityConsumingControlConfig(is_using_rpc_mode=True))  
 ```  
@@ -14821,12 +14821,12 @@ print("over")   # 如果不加上面那一行，这个会迅速打印over
 
 ## 6.16 框架支不支持函数上加两个装饰器？
 
-### 6.16.1 方式一：使用consumin_function_decorator 传参装饰器，
+### 6.16.1 方式一：使用consuming_function_decorator 传参装饰器，
 
-方式一：使用consumin_function_decorator 传参装饰器， 可以用push publish发布，不需要设置should_check_publish_func_params=False 
+方式一：使用consuming_function_decorator 传参装饰器， 可以用push publish发布，不需要设置should_check_publish_func_params=False 
 ```
 由于发布任务时候需要自动精确组装入参字典，所以不支持  *args  **kwargs形式的入参，不支持叠加两个@装饰器 （后来已更新解决方式，解决方式看6.16.2）  
-想在消费函数加装饰器，通过 boost 装饰器的 consumin_function_decorator 入参指定装饰器函数就行了。  
+想在消费函数加装饰器，通过 boost 装饰器的 consuming_function_decorator 入参指定装饰器函数就行了。  
 那么如果是想叠加3个装饰器怎么写，例如本来想：  
 
 @boost(BoosterParams(queue_name='queue666'))  
@@ -14835,7 +14835,7 @@ print("over")   # 如果不加上面那一行，这个会迅速打印over
 def task_fun(x,y):  
     ...  
     
-那就是写成 consumin_function_decorator=deco1('hello')(deco2) 就可以了，具体要了解装饰器的本质就知道，叠加100个装饰器都可以。  
+那就是写成 consuming_function_decorator=deco1('hello')(deco2) 就可以了，具体要了解装饰器的本质就知道，叠加100个装饰器都可以。  
 
 如下的例子是使用redis的incr命令统计每台机器ip 总共运行了多少次函数。  
 ```  
@@ -14863,7 +14863,7 @@ def incr_deco(redis_key):
     return _inner  
 
 
-@boost(BoosterParams(queue_name='test_queue_235', consumin_function_decorator=incr_deco(nb_log.nb_log_config_default.computer_ip)))  
+@boost(BoosterParams(queue_name='test_queue_235', consuming_function_decorator=incr_deco(nb_log.nb_log_config_default.computer_ip)))  
 def fun(xxx, yyy):  
     print(xxx + yyy)  
     return xxx + yyy  
@@ -16477,7 +16477,7 @@ def f(x):
 ## 7.46 2024-08 修复使用redis心跳来辅助确认消费的redis中间件模式，重复消费的bug  
 ```  
 用户的 broker_kind 如果是这四种 [BrokerEnum.REDIS_ACK_ABLE, BrokerEnum.REDIS_STREAM, BrokerEnum.REDIS_PRIORITY, BrokerEnum.RedisBrpopLpush]   
-用户需要升级到 46.2, 如果不想升级就需要手动指定 @boost(BoostParams(is_send_consumer_hearbeat_to_redis=True))  
+用户需要升级到 46.2, 如果不想升级就需要手动指定 @boost(BoostParams(is_send_consumer_heartbeat_to_redis=True))  
 
 用户如果使用的是 BrokerEnum.REIDS 和 BrokerEnum.REIDS_ACK_USING_TIMEOUT 不受影响，因为不使用redis心跳来辅助确认消费。  
 ```  
@@ -16557,24 +16557,55 @@ python代码例子,见文档 4.2d.3 章节.
 
 详细见文档 15 章节。
 
-## 7.54 2026-01 修改了一些内部保护方法名字
 
+## 7.54 2026-01 修改了一些拼写错误的名字，（对应funboost 版本 53.0之后）。
 
-```
-只影响极少数按照教程4.21章节继承扩展的高级用户，绝大部分用户无感知。
-AbstractConsumer._shedual_task -> _dispatch_task
-AbstractPublisher.concrete_realization_of_publish -> _publish_impl
+本次更新主要修正了部分方法的命名规范及拼写错误。   
+为了方便用户快速查阅，我将更新日志整理为一份清晰的对照表，并按模块进行了分类。
 
+### 1. 内部保护方法变更
 
-少数人可能用到了publish方法的 priority_control_config 和 PriorityConsumingControlConfig
-AbstractPublisher.pblish 入参 priority_control_config -> task_options
-PriorityConsumingControlConfig -> TaskOptions
-修改原因：priority_control_config 感觉有歧义，让人误以为是专门用来设置priroty消息优先级的。
+> **影响范围**：仅影响按照教程 4.21 章节进行继承扩展的高级用户。
 
+| 类名 | 旧方法名 (Old) | 新方法名 (New) |
+| --- | --- | --- |
+| `AbstractConsumer` | `_shedual_task` | `_dispatch_task` |
+| `AbstractPublisher` | `concrete_realization_of_publish` | `_publish_impl` |
 
-总结：
-以上只要全局替换就好了，极少人已经用到了。 
-```
+---
+
+### 2. 消息发送与配置类变更
+
+> **影响范围**：使用了priority_control_config的用户，一般用户没用到。
+
+| 变更位置 | 旧名称 | 新名称 | 说明 |
+| --- | --- | --- | --- |
+| `AbstractPublisher.publish` | `priority_control_config` (入参) | `task_options` | 减少歧义，扩大配置涵盖范围 |
+| 配置类定义 | `PriorityConsumingControlConfig` | `TaskOptions` | 更加通用化的命名 |
+
+---
+
+### 3. BoosterParams 参数拼写修正
+
+> **影响范围**：公有 API 修正。虽然涉及范围广，但字段较冷门。
+
+| 错误拼写 (旧) | 正确拼写 (新) | 修改类型 |
+| --- | --- | --- |
+| `is_send_consumer_hearbeat_to_redis` | `is_send_consumer_heartbeat_to_redis` | 拼写纠错 |
+| `consumin_function_decorator` | `consuming_function_decorator` | 拼写纠错 |
+| `msg_expire_senconds` | `msg_expire_seconds` | 拼写纠错 |
+
+---
+
+### 4. 💡 迁移建议
+
+* **全局替换**：大部分变更只需在 IDE 中进行全局搜索并替换即可完成升级。
+* **兼容性**：绝大部分普通用户（仅调用常规 `consume` 或 `push` 的用户）无感知。
+
+### 5. funboost 没有celery的配置变化改动大
+
+celery3到celery4的公有配置名字变化才叫翻天覆地，funboost一直以来，很少改变，这次改变一批。
+
 
 ## 7.55 2026-01 函数结果持久化支持设置表名
 

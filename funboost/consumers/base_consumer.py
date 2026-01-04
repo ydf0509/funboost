@@ -1326,6 +1326,7 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
         self._consumer_identification_map = consumer.consumer_identification_map
         self._queue_name = consumer.queue_name
         self._consumer = consumer
+        self.active_consumer_num = 1
         self._redis_key_name = RedisKeys.gen_redis_hearbeat_set_key_by_queue_name(self._queue_name)  
         self._last_show_consumer_num_timestamp = 0
 

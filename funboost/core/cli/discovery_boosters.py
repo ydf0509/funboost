@@ -60,7 +60,7 @@ from funboost.core.loggers import FunboostFileLoggerMixin
 from funboost.utils.decorators import flyweight
 from funboost.core.lazy_impoter import funboost_lazy_impoter
 
-@flyweight
+# @flyweight
 class BoosterDiscovery(FunboostFileLoggerMixin):
     def __init__(self, project_root_path: typing.Union[PathLike, str],
                  booster_dirs: typing.List[typing.Union[PathLike, str]],

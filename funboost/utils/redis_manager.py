@@ -16,7 +16,14 @@ from funboost.utils import decorators
 def get_redis_conn_kwargs():
     return {'host': BrokerConnConfig.REDIS_HOST, 'port': BrokerConnConfig.REDIS_PORT,
             'username': BrokerConnConfig.REDIS_USERNAME,'ssl' : BrokerConnConfig.REDIS_SSL,
-            'password': BrokerConnConfig.REDIS_PASSWORD, 'db': BrokerConnConfig.REDIS_DB}
+            'password': BrokerConnConfig.REDIS_PASSWORD, 'db': BrokerConnConfig.REDIS_DB,
+            
+            # 增强redis稳定性的，尤其外网redis
+            'health_check_interval' :30,
+            'socket_keepalive' :True,
+            # 'socket_timeout':120,  # 不要设置socket_timeout，rpc blpop 等待可以设置很长的时间,和这冲突
+
+            }
 
 
 def _get_redis_conn_kwargs_by_db(db):
@@ -29,7 +36,8 @@ class RedisManager(object):
     _redis_db__conn_map = {}
     _lock = threading.Lock()
 
-    def __init__(self, host='127.0.0.1', port=6379, db=0, username='', password='',ssl=False):
+    def __init__(self, host='127.0.0.1', port=6379, db=0, username='', password='',
+                ssl=False,health_check_interval=0,socket_keepalive=None,):
         pid = os.getpid()
         self._key = (host, port, db, username, password,ssl,pid)
         if self._key not in self.__class__._redis_db__conn_map:

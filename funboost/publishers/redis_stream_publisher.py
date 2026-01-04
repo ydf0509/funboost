@@ -2,10 +2,11 @@
 # @Author  : ydf
 # @Time    : 2021/4/3 0008 13:32
 from funboost.publishers.base_publisher import AbstractPublisher
+
 from funboost.utils.redis_manager import RedisMixin
 
 
-class RedisStreamPublisher(AbstractPublisher, RedisMixin):
+class RedisStreamPublisher(AbstractPublisher,RedisMixin):
     """
     redis 的 stream 结构 作为中间件实现的。需要redis 5.0以上，redis stream结构 是redis的消息队列，功能远超 list结构。
     """

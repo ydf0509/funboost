@@ -241,6 +241,15 @@ def flyweight(cls):
     # 2. 为每个类创建一个独立的锁，避免全局锁竞争
     _class_lock = threading.Lock()
 
+    def _make_hashable(value):
+        if isinstance(value, dict):
+            return tuple(sorted((k, _make_hashable(v)) for k, v in value.items()))
+        elif isinstance(value, (list, tuple)):
+            return tuple(_make_hashable(v) for v in value)
+        elif isinstance(value, set):
+            return frozenset(_make_hashable(v) for v in value)
+        return value
+
     def _make_key(args, kwds):
         """
         生成唯一的 Key。
@@ -248,13 +257,15 @@ def flyweight(cls):
         frozenset 用于让 kwargs 可哈希且无视顺序。
         添加一个分隔符或者将其放入元组结构中以确保唯一性。
         """
+        key_args = _make_hashable(args)
         if not kwds:
-            return args
+            return key_args
         
         # 将 kwargs 转换为可哈希的 frozenset
         # 结构: (args_tuple, kwargs_frozenset)
         # 这样 (1, 2) 和 (1, a=2) 永远不会相等
-        return (args, frozenset(kwds.items()))
+        key_kwargs = frozenset((k, _make_hashable(v)) for k, v in kwds.items())
+        return (key_args, key_kwargs)
 
     @wraps(cls)
     def _flyweight(*args, **kwargs):

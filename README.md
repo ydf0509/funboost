@@ -89,6 +89,14 @@ pip install funboost --upgrade
 
 #### 1.0.1.2 🤔 灵魂发问：Funboost 到底是什么？
 
+**Funboost 的功能已经极其丰富，甚至可以用“功能过剩”或“全能怪兽”来形容。**
+
+> **Funboost 早已超越了“任务队列框架”的传统定义，它已进化为新一代的「泛函计算平台 (Universal Function Computing Platform)」。**
+>
+> 如果说 Celery 是异步任务的“工具”，那么 Funboost 则是函数计算的“基础设施”。它不仅完美覆盖了 Celery 的核心能力，更打破了技术栈的边界，以**“函数”**为原子核心，贪婪地吞噬并融合了 **FaaS、RPC、微服务架构、网络爬虫、实时数据同步 (CDC/ETL) 、IOT（MQTT）、分布式定时任务、部署、运维；并完整支持 事件驱动 (EDA) 与 全链路可观测性（OpenTelemetry）**。
+>
+> 在 Funboost 的世界里，不再是对标 Celery，而是重新定义 Python 函数的生产力边界。
+
 > **答**：很难用一句话定义它。Funboost 是一个**万能框架**，几乎覆盖了 Python 所有的编程业务场景。它的答案是发散的，拥有无限可能。
 
 👉 **[点击查看发散性答案 (文档 6.0b 章节)](https://funboost.readthedocs.io/zh-cn/latest/articles/c6.html#b-funboost)**

@@ -47,7 +47,7 @@ class  BrokerEnum:
     REIDS_ACK_USING_TIMEOUT = 'reids_ack_using_timeout'  # 基于redis的 list + 临时unack的set队列，使用超时多少秒没确认消费就自动重回队列，请注意 ack_timeout的设置值和函数耗时大小，否则会发生反复重回队列的后果,boost可以设置ack超时，broker_exclusive_config={'ack_timeout': 1800}.缺点是无法区分执行太慢还是真宕机
     REDIS_PRIORITY = 'REDIS_PRIORITY'  # # 基于redis的多 list + 临时unack的set队列，blpop监听多个key，和rabbitmq的x-max-priority属性一样，支持任务优先级。看文档4.29优先级队列说明。
     REDIS_STREAM = 'REDIS_STREAM'  # 基于redis 5.0 版本以后，使用 stream 数据结构作为分布式消息队列，支持消费确认和持久化和分组消费，是redis官方推荐的消息队列形式，比list结构更适合。
-    RedisBrpopLpush = 'RedisBrpopLpush'  # 基于redis的list结构但是采用 brpoplpush 双队列形式，和 redis_ack_able的实现差不多，实现上采用了原生命令就不需要lua脚本来实现取出和加入unack了。
+    REDIS_BRPOP_LPUSH = 'RedisBrpopLpush'  # 基于redis的list结构但是采用 brpoplpush 双队列形式，和 redis_ack_able的实现差不多，实现上采用了原生命令就不需要lua脚本来实现取出和加入unack了。
     REDIS_PUBSUB = 'REDIS_PUBSUB'  # 基于redis 发布订阅的，发布一个消息多个消费者都能收到同一条消息，但不支持持久化
 
     MEMORY_QUEUE = 'MEMORY_QUEUE'  # 使用python queue.Queue实现的基于当前python进程的消息队列，不支持跨进程 跨脚本 跨机器共享任务，不支持持久化，适合一次性短期简单任务。
@@ -188,6 +188,7 @@ class RedisKeys:
 
     FUNBOOST_HEARTBEAT_QUEUE__DICT_PREFIX = 'funboost_hearbeat_queue__dict:'
     FUNBOOST_HEARTBEAT_SERVER__DICT_PREFIX = 'funboost_hearbeat_server__dict:'
+    FUNBOOST_UNACK_REGISTRY_PREFIX = 'funboost_unack_registry:'
 
 
     @staticmethod
@@ -220,6 +221,21 @@ class RedisKeys:
     def gen_funboost_project_name_key(project_name):
         prject_name_key = f'funboost.project_name:{project_name}'
         return prject_name_key
+
+    @staticmethod
+    def gen_redis_hearbeat_set_key_by_queue_name(queue_name):
+        return f'funboost_hearbeat_queue__str:{queue_name}'
+
+    @staticmethod
+    def gen_funboost_unack_registry_key_by_queue_name(queue_name):
+        """
+        方案C:
+        单独维护一个 unack key 的 registry(set)，只负责“全量索引”，不会被心跳线程清理。
+        registry 中存放的是具体的 unack redis key 名称，例如:
+        - redis_ack_able:  {queue_name}__unack_id_{consumer_id}
+        - brpoplpush:      unack_{queue_name}_{consumer_id}
+        """
+        return f'{RedisKeys.FUNBOOST_UNACK_REGISTRY_PREFIX}{queue_name}'
 
 class ConsumingFuncInputParamsCheckerField:
     is_manual_func_input_params = 'is_manual_func_input_params'

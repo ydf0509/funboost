@@ -49,7 +49,7 @@ class FunctionResultStatus():
         self.params = function_params
         self.params_str = Serialization.to_json_str(function_params)
         self.result = None
-        self.run_times = 0
+        self.run_times = 0 # 消息实际重试运行了多少次
         self.exception = None
         self.exception_type = None
         self.exception_msg = None
@@ -81,11 +81,6 @@ class FunctionResultStatus():
         return obj
 
     def get_status_dict(self, without_datetime_obj=False):
-        self.time_end = time.time()
-        if self.run_status == RunStatus.running:
-            self.time_cost = None
-        else:
-            self.time_cost = round(self.time_end - self.time_start, 3)
         item = {}
         for k, v in self.__dict__.items():
             if not k.startswith('_'):

@@ -223,8 +223,10 @@ class BoosterParams(BaseJsonAbleModel):
 
         if self.concurrent_mode not in ConcurrentModeEnum.__dict__.values():
             raise ValueError('设置的并发模式不正确')
-        if self.broker_kind in [BrokerEnum.REDIS_ACK_ABLE, BrokerEnum.REDIS_STREAM, BrokerEnum.REDIS_PRIORITY, 
-                                     BrokerEnum.RedisBrpopLpush,BrokerEnum.REDIS,BrokerEnum.REDIS_PUBSUB]:
+        if self.broker_kind in [BrokerEnum.REDIS_ACK_ABLE, BrokerEnum.REDIS_STREAM,
+                                 BrokerEnum.REDIS_PRIORITY, 
+                                     BrokerEnum.REDIS_BRPOP_LPUSH,BrokerEnum.REDIS,
+                                     BrokerEnum.REDIS_PUBSUB] or 'REDIS' in self.broker_kind:
             self.is_send_consumer_heartbeat_to_redis = True  # 需要心跳进程来辅助判断消息是否属于掉线或关闭的进程，需要重回队列
        
         if self.function_result_status_persistance_conf.table_name is None:

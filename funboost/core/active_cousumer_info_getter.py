@@ -238,24 +238,6 @@ class ActiveCousumerProcessInfoGetter(RedisMixin,RedisReportInfoGetterMixin,Funb
         redis_key = RedisKeys.gen_funboost_hearbeat_server__dict_key_by_ip(ip)
         return self._get_all_hearbeat_info_by_redis_key_name(redis_key)
 
-    # def _get_all_hearbeat_info_partition_by_redis_key_prefix(self, redis_key_prefix):
-    #     keys = self.redis_db_frame.scan(0, f'{redis_key_prefix}*', count=10000)[1]
-    #     infos_map = {}
-    #     for key in keys:
-    #         infos = self.redis_db_frame.smembers(key)
-    #         dict_key = key.replace(redis_key_prefix, '')
-    #         infos_map[dict_key] = []
-    #         for info_str in infos:
-    #             info_dict = json.loads(info_str)
-    #             if self.timestamp() - info_dict['hearbeat_timestamp'] < 15:
-    #                 infos_map[dict_key].append(info_dict)
-    #                 if self.timestamp() - info_dict['current_time_for_execute_task_times_every_unit_time'] > 30:
-    #                     info_dict['last_x_s_execute_count'] = 0
-    #                     info_dict['last_x_s_execute_count_fail'] = 0
-    #     return infos_map
-
-    
-    
     def get_all_ips(self):
         return self.redis_db_frame.smembers(RedisKeys.FUNBOOST_ALL_IPS)
     

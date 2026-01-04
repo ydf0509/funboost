@@ -486,7 +486,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT`
 
 ##### 📌 `class BoosterParamsComplete(BoosterParams)`
-*Line: 259*
+*Line: 261*
 
 **Docstring:**
 `````
@@ -508,7 +508,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))`
 
 ##### 📌 `class TaskOptions(BaseJsonAbleModel)`
-*Line: 279*
+*Line: 281*
 
 **Docstring:**
 `````
@@ -539,7 +539,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `otel_context: typing.Optional[dict] = None`
 
 ##### 📌 `class PublisherParams(BaseJsonAbleModel)`
-*Line: 332*
+*Line: 334*
 
 **Class Variables (21):**
 - `queue_name: str`
@@ -597,7 +597,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `REIDS_ACK_USING_TIMEOUT = 'reids_ack_using_timeout'`
 - `REDIS_PRIORITY = 'REDIS_PRIORITY'`
 - `REDIS_STREAM = 'REDIS_STREAM'`
-- `RedisBrpopLpush = 'RedisBrpopLpush'`
+- `REDIS_BRPOP_LPUSH = 'RedisBrpopLpush'`
 - `REDIS_PUBSUB = 'REDIS_PUBSUB'`
 - `MEMORY_QUEUE = 'MEMORY_QUEUE'`
 - `LOCAL_PYTHON_QUEUE = MEMORY_QUEUE`
@@ -664,7 +664,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 ##### 📌 `class RedisKeys`
 *Line: 176*
 
-**Public Methods (7):**
+**Public Methods (9):**
 - `def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name)` `staticmethod`
 - `def gen_funboost_hearbeat_queue__dict_key_by_queue_name(queue_name)` `staticmethod`
 - `def gen_funboost_hearbeat_server__dict_key_by_ip(ip)` `staticmethod`
@@ -672,8 +672,18 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `def gen_funboost_redis_apscheduler_jobs_key_by_queue_name(queue_name)` `staticmethod`
 - `def gen_funboost_redis_apscheduler_run_times_key_by_queue_name(queue_name)` `staticmethod`
 - `def gen_funboost_project_name_key(project_name)` `staticmethod`
+- `def gen_redis_hearbeat_set_key_by_queue_name(queue_name)` `staticmethod`
+- `def gen_funboost_unack_registry_key_by_queue_name(queue_name)` `staticmethod`
+  - **Docstring:**
+  `````
+  方案C:
+  单独维护一个 unack key 的 registry(set)，只负责“全量索引”，不会被心跳线程清理。
+  registry 中存放的是具体的 unack redis key 名称，例如:
+  - redis_ack_able:  {queue_name}__unack_id_{consumer_id}
+  - brpoplpush:      unack_{queue_name}_{consumer_id}
+  `````
 
-**Class Variables (12):**
+**Class Variables (13):**
 - `REDIS_KEY_PAUSE_FLAG = 'funboost_pause_flag'`
 - `REDIS_KEY_STOP_FLAG = 'funboost_stop_flag'`
 - `QUEUE__MSG_COUNT_MAP = 'funboost_queue__msg_count_map'`
@@ -686,9 +696,10 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `FUNBOOST_LAST_GET_QUEUES_PARAMS_AND_ACTIVE_CONSUMERS_AND_REPORT__UUID_TS = 'funboost_last_get_queues_params_and_active_consumers_and_report__uuid_ts'`
 - `FUNBOOST_HEARTBEAT_QUEUE__DICT_PREFIX = 'funboost_hearbeat_queue__dict:'`
 - `FUNBOOST_HEARTBEAT_SERVER__DICT_PREFIX = 'funboost_hearbeat_server__dict:'`
+- `FUNBOOST_UNACK_REGISTRY_PREFIX = 'funboost_unack_registry:'`
 
 ##### 📌 `class ConsumingFuncInputParamsCheckerField`
-*Line: 224*
+*Line: 240*
 
 **Class Variables (6):**
 - `is_manual_func_input_params = 'is_manual_func_input_params'`
@@ -699,20 +710,20 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `func_position = 'func_position'`
 
 ##### 📌 `class MongoDbName`
-*Line: 233*
+*Line: 249*
 
 **Class Variables (2):**
 - `TASK_STATUS_DB = 'funboost_task_status'`
 - `MONGOMQ_DB = 'funboost_mongomq'`
 
 ##### 📌 `class StrConst`
-*Line: 237*
+*Line: 253*
 
 **Class Variables (1):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
 
 ##### 📌 `class EnvConst`
-*Line: 240*
+*Line: 256*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -1414,7 +1425,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
   java可以这样通过http接口或者funboost.faas  来发布消息 {"user_id":123,"name":"张三","extra": {"task_id":"1234567890","max_retry_times":3}} 
   `````
 - `def send_msg(self, msg: typing.Union[dict, str])`
-  - *直接发送任意消息内容到消息队列,不生成辅助参数,无视函数入参名字,不校验入参个数和键名*
+  - *直接发送任意原始的消息内容到消息队列,不生成辅助参数,无视函数入参名字,不校验入参个数和键名*
 - `def push(self, *func_args, **func_kwargs)`
   - **Docstring:**
   `````
@@ -1467,7 +1478,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 #### 🔧 Public Functions (1)
 
 - `def deco_mq_conn_error(f)`
-  - *Line: 364*
+  - *Line: 371*
 
 
 ---
@@ -1657,6 +1668,16 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 ##### 📌 `class MetricCalculation`
 *Line: 1210*
 
+**Docstring:**
+`````
+MetricCalculation 是统计消费函数执行次数、失败次数、平均耗时、队列剩余消息数量等指标。
+这个在设置 is_send_consumer_heartbeat_to_redis 为 True 时，可以上报到redis中，并在 funboost_web_manager 中显示曲线。
+
+
+用户也可以 使用 PrometheusConsumerMixin 和 PrometheusPushGatewayConsumerMixin 来使用
+最有名的 prometheus 和 grafana 系统，来上报和展示指标。 
+`````
+
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, conusmer: AbstractConsumer)`
   - **Parameters:**
@@ -1671,7 +1692,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `UNIT_TIME_FOR_COUNT = 10`
 
 ##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1293*
+*Line: 1301*
 
 **Docstring:**
 `````
@@ -1859,7 +1880,7 @@ care_project_name 的作用是：
   - *获取所有机器ip对应的活跃消费者进程信息，按机器ip划分,不需要传入机器ip，自动扫描redis键。请不要在 funboost_config.py 的redis 指定的db中放太多其他业务的缓存键值对*
 
 ##### 📌 `class QueuesConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 299*
+*Line: 281*
 
 **Docstring:**
 `````
@@ -1884,7 +1905,7 @@ care_project_name 的作用是：
 - `def cycle_get_queues_params_and_active_consumers_and_report(self, daemon = False)`
 
 ##### 📌 `class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
-*Line: 422*
+*Line: 404*
 
 **Docstring:**
 `````
@@ -3648,6 +3669,14 @@ pip install funboost --upgrade
 
 
 #### 1.0.1.2 🤔 灵魂发问：Funboost 到底是什么？
+
+**Funboost 的功能已经极其丰富，甚至可以用“功能过剩”或“全能怪兽”来形容。**
+
+> **Funboost 早已超越了“任务队列框架”的传统定义，它已进化为新一代的「泛函计算平台 (Universal Function Computing Platform)」。**
+>
+> 如果说 Celery 是异步任务的“工具”，那么 Funboost 则是函数计算的“基础设施”。它不仅完美覆盖了 Celery 的核心能力，更打破了技术栈的边界，以**“函数”**为原子核心，贪婪地吞噬并融合了 **FaaS、RPC、微服务架构、网络爬虫、实时数据同步 (CDC/ETL) 、IOT（MQTT）、分布式定时任务、部署、运维；并完整支持 事件驱动 (EDA) 与 全链路可观测性（OpenTelemetry）**。
+>
+> 在 Funboost 的世界里，不再是对标 Celery，而是重新定义 Python 函数的生产力边界。
 
 > **答**：很难用一句话定义它。Funboost 是一个**万能框架**，几乎覆盖了 Python 所有的编程业务场景。它的答案是发散的，拥有无限可能。
 
@@ -9048,7 +9077,7 @@ class BrokerConnConfig(DataClassBase):
     REDIS_USERNAME = ''
     REDIS_PASSWORD = ''
     REDIS_PORT = 6379
-    REDIS_DB = 7  # redis消息队列所在db，请不要在这个db放太多其他键值对，以及方便你自己可视化查看你的redis db，框架里面有的功能会scan扫描unacked的键名，使用单独的db。
+    REDIS_DB = 7  # redis消息队列所在db，请不要在这个db放太多其他键值对，以及方便你自己可视化查看你的redis db，使用单独的db。
     REDIS_DB_FILTER_AND_RPC_RESULT = 8  # 如果函数做任务参数过滤 或者使用rpc获取结果，使用这个db，因为这个db的键值对多，和redis消息队列db分开
     REDIS_SSL = False # 是否使用ssl加密,默认是False
     REDIS_URL = f'{"rediss" if REDIS_SSL else "redis"}://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
@@ -13610,7 +13639,9 @@ if __name__ == '__main__':
 f1 每个任务会分解10个子任务到f2中运行， 并且f1中要等待10个子任务全部完成后，才开始执行下一步，打印 "哈哈"  
 ```  
 
-## 4b.5 funboost 任务编排(实现canvas功能)  
+## 4b.5 funboost 原生任务编排(实现canvas功能)  
+
+**tips： 用户可以对比 4b.8章节，funboost使用类似celery的声明式的任务编排语法**
 
 ```python  
 """  
@@ -13858,6 +13889,26 @@ class CustomKafkaConsumer(KafkaConsumerManuallyCommit):
 
 ## 4b.7 opentelemetry 全链路任务追踪，funboost生产级别的重要战略级功能
 
+- **使用方式：**
+使用方式，就是可以直接使用 `OtelBoosterParams`  
+或者你在你的`BoosterParams`中指定`consumer_override_cls`和`publisher_override_cls`为`OtelConsumerMixin`和`OtelPublisherMixin`。 
+
+```python
+
+from funboost.contrib.override_publisher_consumer_cls.funboost_otel_mixin import (
+    OtelBoosterParams
+)
+
+@boost(OtelBoosterParams(
+    queue_name='otel_demo_task_process',
+))
+def fun(x,y):
+    return x+y
+
+```
+
+
+
 - **`opentelemetry` 这个是可选功能，funboost默认是不开启的。**
 
 - **毫无疑问。OpenTelemetry (OTel) 全链路追踪不仅是 Funboost 的战略级功能，更是它迈向“生产级、云原生架构”的里程碑。**
@@ -13868,19 +13919,39 @@ funboost是使用国际w3c的规范协议，采用基于最最知名的 `opentel
 
 全链路任务追踪包括，跨项目 跨语言 跨http服务，不限于只追踪funboost框架自身的发布和消费。
 
-- **使用方式：**
-使用方式，就是可以直接使用 `OtelBoosterParams`  
-或者你在你的`BoosterParams`中指定`consumer_override_cls`和`publisher_override_cls`为`OtelConsumerMixin`和`OtelPublisherMixin`。 
+
 
 - **代码位置**: 
-代码实现： `funboost/contrib/override_publisher_consumer_cls/funboost_otel_mixin.py`  
-使用demo：`test_frame/test_otel`  
+ - **代码实现：** [funboost/contrib/override_publisher_consumer_cls/funboost_otel_mixin.py](https://github.com/ydf0509/funboost/tree/master/funboost/contrib/override_publisher_consumer_cls/funboost_otel_mixin.py)  
+ - **使用demo：** [test_frame/test_otel](https://github.com/ydf0509/funboost/tree/master/test_frame/test_otel)  
 
-- **jaeger 全链路追踪系统 的截图：**
 
-![alt text](jaeger列表页搜索.png)  
-![alt text](<jaeger trace详情1.png>)  
-![alt text](<jaeger trace详情2.png>)  
+### 4b.7.1 安装 jaeger ,可视化展示 opentelemetry 的全链路追踪
+
+jaeger 是收集和展示 opentelemetry 的分布式链路追踪的工具之一。你可以用docker 安装 jaeger。
+也有很多其他工具，比如 skyWalking 等，因为 opentelemetry 是国际w3c的通用链路追踪规范协议，有无数工具能支持。
+
+```sh
+docker run -d --name jaeger \
+  -e COLLECTOR_OTLP_ENABLED=true \
+  -p 6831:6831/udp \
+  -p 6832:6832/udp \
+  -p 5778:5778 \
+  -p 16686:16686 \
+  -p 4317:4317 \
+  -p 4318:4318 \
+  -p 14250:14250 \
+  -p 14268:14268 \
+  -p 14269:14269 \
+  -p 9411:9411 \
+  jaegertracing/all-in-one:latest
+```
+
+- **jaeger 分布式全链路追踪系统的截图：**
+
+![alt text](jaeger_list.png)  
+![alt text](jaeger_detail1.png)  
+![alt text](jaeger_detail2.png)  
 
 ### 4b.7.2 opentelemetry 全链路任务追踪 和计入 logger日志 + task_id 的排查区别
 
@@ -14006,16 +14077,276 @@ celery的用户级自定义扩展就很麻烦很高难度了，必须依赖框�
 
  
 
+## 4b.8 funboost 声明式任务编排 workfolw 
+
+**tips： 用户可以对比 4b.5章节，funboost 使用命令式自由编程实现任务编排(实现canvas功能)**
+
+**Funboost Workflow - 声明式任务编排**
+
+> 类似 Celery Canvas 的声明式任务编排 API，让工作流定义更简洁直观。
+
+**为什么funboost的任务编排要和celery的canvas API相似？**
+
+> 因为声明式任务编排要学习一套新的语法，用户学习成本太高，所以和celery一样，降低难度。
+
+### 4b.8.1 🚀 快速开始
+
+```python
+from funboost import boost
+from funboost.workflow import chain, group, chord, WorkflowBoosterParams
+
+# 1. 使用 WorkflowBoosterParams 定义任务
+@boost(WorkflowBoosterParams(queue_name='download_task'))
+def download(url):
+    return f'/downloads/{url}'
+
+@boost(WorkflowBoosterParams(queue_name='process_task'))
+def process(file_path, resolution='360p'):
+    return f'{file_path}_{resolution}'
+
+@boost(WorkflowBoosterParams(queue_name='notify_task'))
+def notify(results, url):
+    return f'完成: {url} -> {results}'
+
+# 2. 构建工作流（声明式）
+workflow = chain(
+    download.s('video.mp4'),
+    chord(
+        group(process.s(resolution=r) for r in ['360p', '720p', '1080p']),
+        notify.s(url='video.mp4')
+    )
+)
+
+# 3. 执行
+result = workflow.apply()
+```
+
+### 4b.8.2 📦 核心概念
+
+| 原语 | 说明 | 用法 |
+|:---|:---|:---|
+| **Signature** | 任务签名，表示待执行的任务 | `task.s(arg1, arg2)` |
+| **Chain** | 链式执行，上游结果传给下游 | `chain(a.s(), b.s(), c.s())` |
+| **Group** | 并行执行，收集所有结果 | `group(a.s(1), a.s(2), a.s(3))` |
+| **Chord** | 并行+汇总，header 并行后结果传给 body | `chord(group(...), callback.s())` |
+
+### 4b.8.3 🔧 API 详解
+
+#### 4b.8.3.1 Signature（任务签名）
+
+```python
+# .s() - 创建可变签名（接收上游结果作为第一个参数）
+sig = download.s(url)
+
+# .si() - 创建不可变签名（忽略上游结果）
+sig = notify.si(msg)  # 不会接收 chain 中上游的结果
+
+# | 运算符 - 创建 chain
+workflow = download.s(url) | process.s() | notify.s()
+```
+
+#### 4b.8.3.2 Chain（链式执行）
+
+```python
+# (x + y) * 2
+workflow = chain(
+    add.s(1, 2),      # 返回 3
+    multiply.s(2)     # 接收 3，返回 6
+)
+result = workflow.apply()  # 返回 6
+```
+
+#### 4b.8.3.3 Group（并行执行）
+
+```python
+# 并行处理多个任务
+g = group(
+    process.s(1),
+    process.s(2),
+    process.s(3)
+)
+results = g.apply()  # 返回 [r1, r2, r3]
+
+# 支持生成器
+g = group(process.s(i) for i in range(10))
+```
+
+#### 4b.8.3.4 Chord（并行+汇总）
+
+```python
+# header 并行执行，结果列表传给 body
+c = chord(
+    group(fetch.s(url) for url in urls),  # 并行抓取
+    aggregate.s()  # 接收 [r1, r2, ...] 汇总
+)
+result = c.apply()
+```
+
+### 4b.8.4 ⚙️ WorkflowBoosterParams
+
+预配置的参数类，内置：
+- `is_using_rpc_mode=True` - 工作流需要 RPC 获取结果
+- `WorkflowPublisherMixin` - 注入工作流上下文
+- `WorkflowConsumerMixin` - 提取工作流上下文
+
+```python
+from funboost.workflow import WorkflowBoosterParams
+
+class MyParams(WorkflowBoosterParams):
+    broker_kind: str = BrokerEnum.REDIS_ACK_ABLE
+    max_retry_times: int = 3
+```
+
+### 4b.8.5 🆚 与 Celery Canvas 对比
+
+| 功能 | Celery | Funboost Workflow |
+|:---|:---|:---|
+| 链式 | `chain(a.s(), b.s())` | `chain(a.s(), b.s())` ✅ |
+| 并行 | `group(a.s(), b.s())` | `group(a.s(), b.s())` ✅ |
+| 汇总 | `chord(group(...), cb.s())` | `chord(group(...), cb.s())` ✅ |
+| Pipe | `a.s() \| b.s()` | `a.s() \| b.s()` ✅ |
+| 不可变 | `a.si()` | `a.si()` ✅ |
+
+**优势**：
+- 无需学习 Celery 复杂配置
+- 自动拥有 `.s()` / `.si()` 方法（猴子补丁）
+- 与 funboost 其他功能无缝集成
+
+### 4b.8.6 🆚 与 Funboost 命令式编排对比
+
+Funboost 本身提供**命令式编排**  
+见 [test_frame/test_funboost_moni_canvas/t_funboost_moni_canvas.py](https://github.com/ydf0509/funboost/blob/master/test_frame/test_funboost_moni_canvas/t_funboost_moni_canvas.py)，
+使用 RPC 阻塞等待结果。本模块提供**声明式编排**，两种方式各有优势：
+
+#### 4b.8.6.1 同一个视频处理流程的两种写法
+
+**命令式（原生 RPC）**：
+```python
+@boost(MyParams(queue_name='canvas_task_queue'))
+def canvas_task(url):
+    # 1. 下载
+    r1 = download_video.push(url)
+    file = r1.wait_rpc_data_or_raise(raise_exception=True).result
+    
+    # 2. 并行转码
+    r2_list = [transform_video.push(file, resolution=r) 
+               for r in ['360p', '720p', '1080p']]
+    results = AsyncResult.batch_wait_rpc_data_or_raise(r2_list, raise_exception=True)
+    video_list = [r.result for r in results]
+    
+    # 3. 发送通知
+    r3 = send_finish_msg.push(video_list, url)
+    return r3.wait_rpc_data_or_raise(raise_exception=True).result
+```
+
+**声明式（Workflow）**：
+```python
+workflow = chain(
+    download_video.s(url),
+    chord(
+        group(transform_video.s(resolution=r) for r in ['360p', '720p', '1080p']),
+        send_finish_msg.s(url=url)
+    )
+)
+result = workflow.apply()
+```
+
+#### 4b.8.6.2 对比总结
+
+| 维度 | 命令式 (RPC) | 声明式 (Workflow) |
+|:---|:---|:---|
+| **代码量** | 较多 | 更少 ✅ |
+| **可读性** | 逻辑清晰，显式控制 | 结构简洁，一目了然 |
+| **灵活性** | **更高** ✅ 可加 if/else | 固定模式 |
+| **错误处理** | 精细控制每一步 | 统一异常传播 |
+| **调试** | 可分步打断点 | 需要理解执行流程 |
+| **适用场景** | 复杂条件逻辑 | 标准化流水线 |
+
+**选择建议**：
+- 🔧 **复杂逻辑**（条件分支、动态决策）→ 用**命令式**
+- 📋 **标准流程**（固定步骤、清晰流水线）→ 用**声明式**
+
+### 4b.8.7 📁 文件结构
+
+```
+funboost/workflow/
+├── __init__.py          # 入口 + 猴子补丁
+├── signature.py         # Signature 类
+├── primitives.py        # Chain/Group/Chord
+├── workflow_mixin.py    # Publisher/Consumer Mixin
+├── params.py            # WorkflowBoosterParams
+└── examples/
+    └── video_pipeline.py  # 完整示例
+```
+
+### 4b.8.8 📖 完整示例
+
+见 [examples/video_pipeline.py](https://github.com/ydf0509/funboost/blob/master/funboost/workflow/examples/video_pipeline.py) - 视频处理 Pipeline 演示：  
+先根据url下载视频，然后并行转码成3个分辨率，最后更新数据库发送通知。
 
 
 
 
+## 4b.9 funboost 支持 prometheus 指标监控
 
+**funboost自身也支持指标统计和上报**
+funboost自身内置了 MetricCalculation , 是自己实现的指标统计和上报，并且可以以曲线图的显示在funboost的web界面中。   
+但是现在 funboost 也支持 `prometheus` 指标监控，以便更好的对接你们自己的`grafana`运维系统，因为 `prometheus` 的指标协议 更通用，
 
+### 4b.9.0 Funboost Prometheus 监控指标 Mixin
 
+提供 Prometheus 指标采集能力，自动上报任务执行状态、耗时等指标。
 
+**支持两种模式：**
+- 1. HTTP Server 模式（单进程）— Prometheus 主动拉取
+- 2. Push Gateway 模式（多进程）— 主动推送到 Pushgateway
 
+### 4b.9.1 用法1：HTTP Server 模式（单进程）
+```python
+from funboost import boost
+from funboost.contrib.override_publisher_consumer_cls.funboost_promethus_mixin import (
+    PrometheusBoosterParams,
+    start_prometheus_http_server
+)
 
+# 启动 Prometheus HTTP 服务（默认端口 8000） 
+start_prometheus_http_server(port=8000)
+
+@boost(PrometheusBoosterParams(queue_name='my_task'))
+def my_task(x):
+    return x * 2
+
+my_task.consume()
+```
+
+### 4b.9.2 用法2：Push Gateway 模式（多进程推荐）
+```python
+from funboost import boost
+from funboost.contrib.override_publisher_consumer_cls.funboost_promethus_mixin import (
+    PrometheusPushGatewayBoosterParams,
+)
+
+@boost(PrometheusPushGatewayBoosterParams(
+    queue_name='my_task',
+    user_options={
+        'prometheus_pushgateway_url': 'localhost:9091',  # Pushgateway 地址
+        'prometheus_push_interval': 10.0,                # 推送间隔（秒）
+        'prometheus_job_name': 'my_app',                 # Prometheus job 名称
+    }
+))
+def my_task(x):
+    return x * 2
+
+my_task.consume()
+```
+
+### 4b.9.3 指标说明
+
+- funboost_task_total: 任务计数 (labels: queue, status)
+- funboost_task_latency_seconds: 任务耗时直方图 (labels: queue)
+- funboost_task_retries_total: 重试次数计数 (labels: queue)
+- funboost_queue_msg_count: 队列剩余消息数量 (labels: queue)
+- funboost_publish_total: 发布消息计数 (labels: queue)
 
 
 
@@ -14097,7 +14428,7 @@ celery的用户级自定义扩展就很麻烦很高难度了，必须依赖框�
 
 *   **强大的并发模型**:
     *   支持 `threading`, `gevent`, `eventlet`, `asyncio`, `single_thread` 五种细粒度并发模式。
-    *   支持**多进程叠加**以上模式（例如：多进程 + asyncio），能够轻松榨干多核CPU性能。
+    *   支持 **多进程嵌套多线程/协程** 的“核弹级”并发模式。
 
 *   **精细的任务控制 (超过30种)**:
     *   **QPS控频**: 可精确控制函数每秒执行次数，误差极小，远超Celery。
@@ -14124,7 +14455,23 @@ celery的用户级自定义扩展就很麻烦很高难度了，必须依赖框�
 *   **无需命令行**: 所有操作（包括启动消费、定时、Web UI）都可以通过Python代码完成，摆脱了Celery繁琐且易错的命令行。
 *   **日志系统**: 集成`nb_log`，提供彩色、可点击跳转的控制台日志和多进程安全的文件日志，并且日志模板中可自动包含`task_id`，极大方便了调试。
 
-<h3> 6.0.5. 为什么它值得学习和使用？</h3>
+
+<h3> 6.0.5. 架构模式的“三位一体”</h3>
+
+*   **异步任务队列**：基础能力（push/consume）。
+*   **RPC 框架**：同步获取结果 (`is_using_rpc_mode=True`)，替代 gRPC/Thrift。
+*   **FaaS/微服务**：`funboost.faas` 自动生成 HTTP 接口，支持服务发现和热加载。
+*   *现状*：它打通了 离线任务、在线服务、跨语言调用 的界限。
+
+<h3> 6.0.6 生产级治理能力的“堆料</h3>
+
+*   **可观测性**：原生集成 **OpenTelemetry**，支持 Jaeger/SkyWalking 全链路追踪。
+*   **控频**：精准 QPS 控制，支持单机和分布式全局控频。
+*   **容错**：心跳检测、ACK 确认、死信队列、自动重试。
+*   **编排**：2026年新增的 **Workflow** (Chain/Group/Chord)，补齐了复杂的任务流编排能力。
+*   **运维**：内置 Web 管理后台，支持远程停止/恢复、动态参数调整、代码热部署 (`fabric_deploy`)。
+
+<h3> 6.0.10. 为什么它值得学习和使用？</h3>
 
 1.  **解决了实际痛点**: 它直接解决了Celery等框架的诸多痛点：配置复杂、性能瓶颈、对Windows支持不佳、IDE体验差、框架侵入性强等。
 2.  **通用性极强**: 作为一个函数调度框架，它的应用场景极其广泛，从后台任务处理、数据清洗、ETL、Web爬虫到机器学习任务，几乎任何需要并发或分布式执行的函数都可以用`funboost`来加速和增强。
@@ -14132,7 +14479,7 @@ celery的用户级自定义扩展就很麻烦很高难度了，必须依赖框�
 4.  **功能强大且可靠**: 它不仅提供了丰富的功能，更在核心的可靠性（如ACK机制）上做到了极致，让你在生产环境中可以安心使用。
 5.  **性能卓越**: 在性能要求高的场景下，`funboost`能提供比主流框架高出一个数量级的吞吐能力。
 
-<h3> 6.0.6. 结论</h3>
+<h3> 6.0.11. 结论</h3>
 
 **`funboost` 是一个设计精良、思想先进、功能强大到令人惊叹，同时又保持了惊人易用性的框架。** 它真正做到了为开发者赋能，而不是用复杂的规则去奴役开发者。
 
@@ -14330,6 +14677,93 @@ if __name__ == "__main__":
 
 </div>
 
+## 6.0d Funboost 可以用于哪些场景？（7大核心领域）
+
+#### 1. 传统的异步后台任务（Asynchronous Tasks）
+这是最基础的用法。
+*   **场景**：发送邮件/短信验证码、生成PDF报表、视频转码/图片处理、批量Excel导入导出。
+*   **优势**：配置简单（比Celery简单10倍），支持Windows开发，精准QPS控频（防止把下游服务打挂）。
+
+#### 2. FaaS 微服务与 RPC 调用（Function as a Service）
+得益于 `funboost.faas`，这是架构级的质变。
+*   **场景**：
+    *   **跨语言调用**：Java/Go 后端需要调用 Python 的 AI 推理函数或数据分析函数。
+    *   **前后端交互**：前端点击按钮，直接触发后台耗时任务，并同步等待结果返回（RPC）。
+    *   **热插拔服务**：编写一个函数，自动注册为 HTTP 接口，Web 服务永不重启。
+*   **优势**：无需编写 Web Controller 层代码，自动服务发现，自带负载均衡。
+
+#### 3. 高性能分布式爬虫（Distributed Crawling）
+得益于 `boost_spider`。
+*   **场景**：全网数据抓取、竞对价格实时监控、需要高并发（单机千线程）的采集、应对强反爬（需要浏览器交互、多步逻辑）的场景。
+*   **优势**：比 Scrapy 更自由（随便用 requests/playwright），更稳（Redis ACK 不丢数据），更快（多机多进程叠加并发）。
+
+#### 4. 轻量级 ETL 与 数据同步（Data Pipeline & CDC）
+得益于 `BrokerEnum.MYSQL_CDC`。
+*   **场景**：
+    *   **实时同步**：监听 MySQL 业务表的变动，实时同步到 Redis 缓存或 ElasticSearch 索引。
+    *   **数据清洗**：从 Kafka 读取原始日志，清洗格式后存入数据仓库。
+*   **优势**：一行代码实现 Binlog 监听，替代复杂的 Canal/Flink 集群，降低中小规模数据同步的运维成本。
+
+#### 5. 定时任务与调度平台（Scheduling）
+*   **场景**：
+    *   每天凌晨 2 点生成日结报表。
+    *   订单创建 15 分钟后未支付自动取消（延时任务）。
+    *   构建企业级的统一分布式定时任务管理平台（通过 Web 界面管理几百个任务）。
+*   **优势**：基于 Redis 分布式锁，多机部署不重复执行；支持动态增删改查任务。
+
+#### 6. 物联网与实时通信（IoT & Real-time）
+得益于 `BrokerEnum.MQTT` 和 `BrokerEnum.TCP/UDP`。
+*   **场景**：
+    *   接收成千上万个传感器发来的 MQTT 消息并入库。
+    *   服务器向边缘设备下发控制指令。
+*   **优势**：直接对接 IoT 协议，无需额外部署消息转发服务。
+
+#### 7. 运维自动化与远程执行（DevOps）
+得益于 `fabric_deploy`。
+*   **场景**：一键将本地 Python 代码部署到 100 台远程 Linux 服务器并启动运行。
+*   **优势**：代码级集成，无需 Jenkins 或 Ansible 即可完成简单的分布式算力分发。
+
+
+## 6.0e Funboost 能同时替代哪些框架？（“杀手”清单）
+
+Funboost 的出现，意味着你可以在项目中**移除**或**不再学习**以下框架，实现技术栈的极度精简：
+
+#### 1. 替代 【任务队列框架】
+*   **被替代者**：`Celery`, `RQ`, `Huey`, `Dramatiq`
+*   **理由**：Funboost 性能是 Celery 的 46 倍，配置简单，无 Broker 限制，支持 Windows，自带 Web 监控，且完全兼容 Celery 的功能。
+
+#### 2. 替代 【爬虫框架】
+*   **被替代者**：`Scrapy`, `Feapder`, `PySpider`, `Colly` (Go)
+*   **理由**：Funboost 是函数调度，逻辑更自由（不强迫回调），天然支持分布式和断点续传（ACK），无需编写复杂的 Middleware 和 Pipeline。
+
+#### 3. 替代 【微服务/RPC 框架】
+*   **被替代者**：`Nameko` (Python微服务框架), `gRPC` (部分场景)
+*   **理由**：使用 `funboost.faas`，普通函数即服务。无需编写 `.proto` 文件，无需学习复杂的 Nameko 容器，直接通过 Redis/RabbitMQ 实现高性能 RPC。
+
+#### 4. 替代 【定时任务框架/工具】
+*   **被替代者**：`APScheduler` (独立使用时), `Linux Crontab`, `Celery Beat`, `XXL-JOB` (轻量级替代)
+*   **理由**：Funboost 内置了分布式定时调度能力，且自带 Web 管理界面，比 Crontab 可视化更好，比 APScheduler 原生使用更抗单点故障。
+
+#### 5. 替代 【数据同步/CDC 工具】
+*   **被替代者**：`Alibaba Canal` (轻量级场景), `Logstash`, `Filebeat`
+*   **理由**：对于 Python 技术栈的团队，维护一套 Java 的 Canal 集群成本太高。Funboost 的 `MYSQL_CDC` 模式只需一个脚本就能实现 MySQL Binlog 的实时监听和处理。
+
+#### 6. 替代 【Web 框架的插件】
+*   **被替代者**：`django-celery`, `flask-apscheduler`, `channels` (部分)
+*   **理由**：Funboost 与 Web 框架解耦，不需要特定的插件即可在 Flask/Django/FastAPI 中使用，且提供了统一的 `fastapi_router` 等适配器。
+
+---
+
+### 🏆 终极总结
+
+**Funboost 不是一个“轮子”，它是一辆“变形金刚”。**
+
+*   在 Web 开发手里，它是 **Celery + Nameko**。
+*   在爬虫工程师手里，它是 **Scrapy-Redis**。
+*   在数据工程师手里，它是 **Canal + Logstash**。
+*   在运维工程师手里，它是 **Crontab + Ansible**。
+
+**一个框架，解决 90% 的 Python 后端非 HTTP 请求类的业务需求。这就是 Funboost 的价值。**
 
 
 ## 6.1 你干嘛要写这个框架？和celery 、rq有什么区别？  
@@ -16620,7 +17054,29 @@ FunctionResultStatusPersistanceConfig 增加 table_name 参数，用于设置表
 使用方式，就是可以直接使用OtelBoosterParams  
 或者你在你的BoosterParams中指定consumer_override_cls和publisher_override_cls为OtelConsumerMixin和OtelPublisherMixin。
 
+## 7.56 2026-01 新增 Prometheus 指标监控，对接你们自己的运维系统
 
+funboost_web_manager 已经可以显示消费失败 成功 消息数量曲线了，现在新增了 集成 Prometheus 指标监控，方便对接你们自己的grafana等运维系统。
+
+
+
+## 7.58 2026-01 funboost新增声明式任务编排 workfolw 
+
+funboost现在也能支持和celery类似的 fun.s(1,2) 和 chain chord group  复杂的工作流编排了。
+
+详见文档 4b.8 章节
+
+## 7.59 2026-01 增强redis稳定性
+
+连接redis时候，默认设置
+```py
+{'health_check_interval' :30,
+            'socket_keepalive' :True,}
+```
+
+## 7.60 2026-01 funboost 的确认消费，unack消息重回队列去掉 scan
+
+funboost 去掉了 ack机制的unack消息重回队列的 redis.scan 命令操作，更好应对超多数量keys的的db（但是还是建议消息队列使用单独的db，减少查看redis数据库信息的其他keys干扰）。
 `````
 
 --- **end of file: source/articles/c7.md** (project: funboost_docs) --- 

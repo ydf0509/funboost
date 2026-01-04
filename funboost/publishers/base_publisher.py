@@ -118,6 +118,8 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def custom_init(self):
         pass
 
+    
+
     @staticmethod
     def _get_from_other_extra_params(k: str, msg):
         # msg_dict = json.loads(msg) if isinstance(msg, str) else msg
@@ -204,10 +206,15 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self.logger.info(
                     f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 队列中')
                 self._init_count()
+        self._after_publish(msg, msg_function_kw, task_id)
         return AsyncResult(task_id,timeout=self.publisher_params.rpc_timeout)
+    
+    def _after_publish(self, msg: dict, msg_function_kw: dict, task_id: str):
+        """发布消息后的钩子方法，子类可以覆写此方法来实现自定义逻辑，例如记录指标"""
+        pass
 
     def send_msg(self, msg: typing.Union[dict, str]):
-        """直接发送任意消息内容到消息队列,不生成辅助参数,无视函数入参名字,不校验入参个数和键名"""
+        """直接发送任意原始的消息内容到消息队列,不生成辅助参数,无视函数入参名字,不校验入参个数和键名"""
         decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
             self._publish_impl)(Serialization.to_json_str(msg))
 

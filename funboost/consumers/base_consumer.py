@@ -652,6 +652,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     async def _aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
         pass
 
+    def _sync_and_aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
+        pass
+
     def user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, ):  # 这个可以继承
         pass
 
@@ -695,10 +698,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     # noinspection PyProtectedMember
     def _run(self, kw: dict, ):
         # print(kw)
+        current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
+        fct_context = FctContext(function_result_status=current_function_result_status,
+                                 logger=self.logger, )
+        set_fct_context(fct_context)
+        task_id = kw['body']['extra']['task_id']
         try:
+            
             t_start_run_fun = time.time()
             max_retry_times = self._get_priority_conf(kw, 'max_retry_times')
-            current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
             current_retry_times = 0
             function_only_params = kw['function_only_params']
             for current_retry_times in range(max_retry_times + 1):
@@ -718,6 +726,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             if not (current_function_result_status._has_requeue and self.BROKER_KIND in [BrokerEnum.RABBITMQ_AMQPSTORM, BrokerEnum.RABBITMQ_PIKA, BrokerEnum.RABBITMQ_RABBITPY]):  # 已经nack了，不能ack，否则rabbitmq delevar tag 报错
                 self._confirm_consume(kw)
             current_function_result_status.run_status = RunStatus.finish
+            current_function_result_status.time_end = time.time()
+            current_function_result_status.time_cost = round(current_function_result_status.time_end - current_function_result_status.time_start, 4)
             self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
             if self._get_priority_conf(kw, 'do_task_filtering'):
                 self._redis_filter.add_a_value(function_only_params, self._get_priority_conf(kw, 'filter_str'))  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
@@ -737,13 +747,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                         # RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
                         # RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
                         current_function_result_status.rpc_result_expire_seconds = self.consumer_params.rpc_result_expire_seconds
-                        p.lpush(kw['body']['extra']['task_id'],
+                        p.lpush(task_id,
                                 Serialization.to_json_str(current_function_result_status.get_status_dict(without_datetime_obj=True)))
-                        p.expire(kw['body']['extra']['task_id'], self.consumer_params.rpc_result_expire_seconds)
+                        p.expire(task_id, self.consumer_params.rpc_result_expire_seconds)
                         p.execute()
 
             with self._lock_for_count_execute_task_times_every_unit_time:
                 self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
+            self._sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
             self._frame_custom_record_process_info_func(current_function_result_status, kw)
             self.user_custom_record_process_info_func(current_function_result_status, )  # 两种方式都可以自定义,记录结果,建议继承方式,不使用boost中指定 user_custom_record_process_info_func
             if self.consumer_params.user_custom_record_process_info_func:
@@ -754,17 +765,18 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
             self.logger.critical(msg=log_msg, exc_info=True)
         set_fct_context(None)
+        return current_function_result_status
+
 
     # noinspection PyProtectedMember
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
                                                        function_result_status: FunctionResultStatus, ):
         function_only_params = kw['function_only_params'] if self._do_not_delete_extra_from_msg is False else kw['body']
-        task_id = kw['body']['extra']['task_id']
+        
         t_start = time.time()
-        fct_context = FctContext(function_result_status=function_result_status,
-                                 logger=self.logger, )
-        set_fct_context(fct_context)
+        task_id = kw['body']['extra']['task_id']
         try:
+            
             function_run = self.consuming_function
             
             if self._consuming_function_is_asyncio:
@@ -781,18 +793,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                     return function_result_status
                 function_run = kill_remote_task.kill_fun_deco(task_id)(function_run)  # 用杀死装饰器包装起来在另一个线程运行函数,以便等待远程杀死。
             function_result_status.result = function_run(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params, kw['body']['extra']))
-            # if asyncio.iscoroutine(function_result_status.result):
-            #     log_msg = f'''异步的协程消费函数必须使用 async 并发模式并发,请设置消费函数 {self.consuming_function.__name__} 的concurrent_mode 为 ConcurrentModeEnum.ASYNC 或 4'''
-            #     # self.logger.critical(msg=f'{log_msg} \n')
-            #     # self.error_file_logger.critical(msg=f'{log_msg} \n')
-            #     self._log_critical(msg=log_msg)
-            #     # noinspection PyProtectedMember,PyUnresolvedReferences
-            #
-            #     os._exit(4)
             function_result_status.success = True
             if self.consumer_params.log_level <= logging.DEBUG:
                 result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '
-               
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 {function_only_params} , '
                                   f'结果是  {result_str_to_be_print}   {self._get_concurrent_info()}  ')
@@ -803,11 +806,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 # self.error_file_logger.critical(msg=f'{log_msg} \n')
                 self.logger.critical(msg=log_msg)
                 time.sleep(0.1)  # 防止快速无限出错入队出队，导致cpu和中间件忙
-                # 重回队列如果不修改task_id,insert插入函数消费状态结果到mongo会主键重复。要么保存函数消费状态使用replace，要么需要修改taskikd
-                # kw_new = copy.deepcopy(kw)
-                # new_task_id =f'{self._queue_name}_result:{uuid.uuid4()}'
-                # kw_new['body']['extra']['task_id'] = new_task_id
-                # self._requeue(kw_new)
                 self._requeue(kw)
                 function_result_status._has_requeue = True
             if isinstance(e, ExceptionForPushToDlxqueue):
@@ -872,11 +870,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         真asyncio并发,是单个loop里面运行无数协程,
         伪asyncio并发是在每个线程启动一个临时的loop,每个loop仅仅运行一个协程,然后等待这个协程结束,这完全违背了 asyncio 的核心初心理念,这种比多线程性能本身还差.
         """
+        current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
+        fct_context = FctContext(function_result_status=current_function_result_status,
+                                 logger=self.logger, )
+        set_fct_context(fct_context)
+        task_id = kw['body']['extra']['task_id']
         try:
             self._gen_asyncio_objects()
             t_start_run_fun = time.time()
             max_retry_times = self._get_priority_conf(kw, 'max_retry_times')
-            current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
             current_retry_times = 0
             function_only_params = kw['function_only_params']
             for current_retry_times in range(max_retry_times + 1):
@@ -894,6 +896,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             if not (current_function_result_status._has_requeue and self.BROKER_KIND in [BrokerEnum.RABBITMQ_AMQPSTORM, BrokerEnum.RABBITMQ_PIKA, BrokerEnum.RABBITMQ_RABBITPY]):
                 await simple_run_in_executor(self._confirm_consume, kw)
             current_function_result_status.run_status = RunStatus.finish
+            current_function_result_status.time_end = time.time()
+            current_function_result_status.time_cost = round(current_function_result_status.time_end - current_function_result_status.time_start, 4)
             await simple_run_in_executor(self._result_persistence_helper.save_function_result_to_mongo, current_function_result_status)
             if self._get_priority_conf(kw, 'do_task_filtering'):
                 # self._redis_filter.add_a_value(function_only_params)  # 函数执行成功后，添加函数的参数排序后的键值对字符串到set中。
@@ -912,9 +916,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 def push_result():
                     with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
                         current_function_result_status.rpc_result_expire_seconds = self.consumer_params.rpc_result_expire_seconds
-                        p.lpush(kw['body']['extra']['task_id'],
+                        p.lpush(task_id,
                                 Serialization.to_json_str(current_function_result_status.get_status_dict(without_datetime_obj=True)))
-                        p.expire(kw['body']['extra']['task_id'], self.consumer_params.rpc_result_expire_seconds)
+                        p.expire(task_id, self.consumer_params.rpc_result_expire_seconds)
                         p.execute()
 
                 if (current_function_result_status.success is False and current_retry_times == max_retry_times) or current_function_result_status.success is True:
@@ -922,12 +926,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             async with self._async_lock_for_count_execute_task_times_every_unit_time:
                 self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
 
-            self._frame_custom_record_process_info_func(current_function_result_status, kw)
+            self._sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
             await self._aio_frame_custom_record_process_info_func(current_function_result_status, kw)
-            self.user_custom_record_process_info_func(current_function_result_status, )  # 两种方式都可以自定义,记录结果.建议使用文档4.21.b的方式继承来重写
             await self.aio_user_custom_record_process_info_func(current_function_result_status, )
             if self.consumer_params.user_custom_record_process_info_func:
-                self.consumer_params.user_custom_record_process_info_func(current_function_result_status, )
+                await self.consumer_params.user_custom_record_process_info_func(current_function_result_status, )
 
         except BaseException as e:
             log_msg = f' error 严重错误 {type(e)} {e} '
@@ -935,6 +938,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             # self.error_file_logger.critical(msg=f'{log_msg} \n', exc_info=True)
             self.logger.critical(msg=log_msg, exc_info=True)
         set_fct_context(None)
+        return current_function_result_status
 
     # noinspection PyProtectedMember
     async def _async_run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
@@ -945,10 +949,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
         # noinspection PyBroadException
         t_start = time.time()
-
-        fct_context = FctContext(function_result_status=function_result_status,
-                                 logger=self.logger,  )
-        set_fct_context(fct_context)
         try:
             corotinue_obj = self.consuming_function(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params, kw['body']['extra']))
             if not asyncio.iscoroutine(corotinue_obj):
@@ -1208,6 +1208,14 @@ def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typin
 
 
 class MetricCalculation:
+    """
+    MetricCalculation 是统计消费函数执行次数、失败次数、平均耗时、队列剩余消息数量等指标。
+    这个在设置 is_send_consumer_heartbeat_to_redis 为 True 时，可以上报到redis中，并在 funboost_web_manager 中显示曲线。
+
+    
+    用户也可以 使用 PrometheusConsumerMixin 和 PrometheusPushGatewayConsumerMixin 来使用
+    最有名的 prometheus 和 grafana 系统，来上报和展示指标。 
+    """
     UNIT_TIME_FOR_COUNT = 10  # 这个不要随意改,需要其他地方配合,每隔多少秒计数，显示单位时间内执行多少次，暂时固定为10秒。
 
     def __init__(self, conusmer: AbstractConsumer) -> None:
@@ -1318,8 +1326,7 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
         self._consumer_identification_map = consumer.consumer_identification_map
         self._queue_name = consumer.queue_name
         self._consumer = consumer
-        self._redis_key_name = f'funboost_hearbeat_queue__str:{self._queue_name}'
-        self.active_consumer_num = 1
+        self._redis_key_name = RedisKeys.gen_redis_hearbeat_set_key_by_queue_name(self._queue_name)  
         self._last_show_consumer_num_timestamp = 0
 
         self._queue__consumer_identification_map_key_name = RedisKeys.gen_funboost_hearbeat_queue__dict_key_by_queue_name(self._queue_name)

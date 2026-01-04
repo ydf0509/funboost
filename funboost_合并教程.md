@@ -17076,7 +17076,7 @@ funboost现在也能支持和celery类似的 fun.s(1,2) 和 chain chord group  �
 
 ## 7.60 2026-01 funboost 的确认消费，unack消息重回队列去掉 scan
 
-funboost 去掉了 ack机制的unack消息重回队列的 redis.scan 命令操作，更好应对超多数量keys的的db（但是还是建议消息队列使用单独的db，减少查看redis数据库信息的其他keys干扰）。
+funboost 去掉了ack机制的unack消息重回队列的通过 redis.scan 命令扫描unack队列大全，更好应对超多数量keys的的db（但是还是建议消息队列使用单独的db，减少查看redis数据库信息的其他keys干扰）。
 `````
 
 --- **end of file: source/articles/c7.md** (project: funboost_docs) --- 

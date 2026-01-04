@@ -23,6 +23,7 @@ import time
 import typing
 import uuid
 import os
+import copy
 
 from funboost.factories.consumer_factory import ConsumerCacheProxy
 from funboost.factories.publisher_factotry import get_publisher
@@ -548,7 +549,8 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
     def _gen_booster_by_redis_meta_info(self) -> Booster:
         # 使用redis元信息生成假的fake booster，部分booster配置因为不可json序列化原因，直接赋值None了，缺点是不是真booster  
         # 优点是支持跨项目管理booster，支持热加载。
-        booster_params = self.get_one_queue_params_use_cache()
+        booster_params_raw = self.get_one_queue_params_use_cache()
+        booster_params = copy.deepcopy(booster_params_raw) # 因为下面改变了字典，可变对象先复制
         current_broker_kind = booster_params['broker_kind']
         
         # 利用 registry 的实例属性字典缓存

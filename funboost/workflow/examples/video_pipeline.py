@@ -27,7 +27,7 @@ from funboost.workflow import chain, group, chord, WorkflowBoosterParams
 
 class VideoWorkflowParams(WorkflowBoosterParams):
     """视频处理工作流的公共参数"""
-    broker_kind: str = BrokerEnum.REDIS_ACK_ABLE
+    broker_kind: str = BrokerEnum.SQLITE_QUEUE
     broker_exclusive_config: dict = {'pull_msg_batch_size': 1}
     max_retry_times: int = 0
 
@@ -155,11 +155,11 @@ if __name__ == '__main__':
     workflow = create_video_pipeline(url)
     
     # 同步执行工作流
-    result = workflow.apply()
+    rpc_data = workflow.apply()
     
     print('-' * 60)
     print('\n🏁 工作流执行完成！')
-    print(f'   最终结果: {result.result if hasattr(result, "result") else result}')
+    print(f'   最终结果: {rpc_data}')
     print('=' * 60)
     
     # 保持运行

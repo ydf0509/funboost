@@ -17076,7 +17076,7 @@ funboost现在也能支持和celery类似的 fun.s(1,2) 和 chain chord group  �
 
 ## 7.60 2026-01 funboost 的确认消费，unack消息重回队列去掉 scan
 
-funboost 去掉了 ack机制的unack消息重回队列的 redis.scan 命令操作，更好应对超多数量keys的的db（但是还是建议消息队列使用单独的db，减少查看redis数据库信息的其他keys干扰）。
+funboost 去掉了ack机制的unack消息重回队列的通过 redis.scan 命令扫描unack队列大全，更好应对超多数量keys的的db（但是还是建议消息队列使用单独的db，减少查看redis数据库信息的其他keys干扰）。
 `````
 
 --- **end of file: source/articles/c7.md** (project: funboost_docs) --- 
@@ -26581,7 +26581,7 @@ set_frame_config这个模块的 use_config_form_funboost_config_module() 是核�
 这段注释说明和使用的用户无关,只和框架开发人员有关.
 '''
 
-__version__ = "53.1"
+__version__ = "53.3"
 
 from funboost.set_frame_config import show_frame_config
 
@@ -32918,6 +32918,7 @@ class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin):
         self._consumer_identification_map = consumer.consumer_identification_map
         self._queue_name = consumer.queue_name
         self._consumer = consumer
+        self.active_consumer_num = 1
         self._redis_key_name = RedisKeys.gen_redis_hearbeat_set_key_by_queue_name(self._queue_name)  
         self._last_show_consumer_num_timestamp = 0
 
@@ -36506,7 +36507,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
                     kw = {'body': task_str, 'task_str': task_str}
                     self._submit_task(kw)
             else:
-                time.sleep(0.2)
+                time.sleep(0.1)
 
     def _requeue(self, kw):
         self.redis_db_frame.rpush(self._queue_name, json.dumps(kw['body']))
@@ -65785,7 +65786,7 @@ Funboost Workflow 示例 - 视频处理 Pipeline
 `````
 
 **Class Variables (3):**
-- `broker_kind: str = BrokerEnum.REDIS_ACK_ABLE`
+- `broker_kind: str = BrokerEnum.SQLITE_QUEUE`
 - `broker_exclusive_config: dict = {'pull_msg_batch_size': 1}`
 - `max_retry_times: int = 0`
 
@@ -65877,7 +65878,7 @@ from funboost.workflow import chain, group, chord, WorkflowBoosterParams
 
 class VideoWorkflowParams(WorkflowBoosterParams):
     """视频处理工作流的公共参数"""
-    broker_kind: str = BrokerEnum.REDIS_ACK_ABLE
+    broker_kind: str = BrokerEnum.SQLITE_QUEUE
     broker_exclusive_config: dict = {'pull_msg_batch_size': 1}
     max_retry_times: int = 0
 
@@ -66005,11 +66006,11 @@ if __name__ == '__main__':
     workflow = create_video_pipeline(url)
     
     # 同步执行工作流
-    result = workflow.apply()
+    rpc_data = workflow.apply()
     
     print('-' * 60)
     print('\n🏁 工作流执行完成！')
-    print(f'   最终结果: {result.result if hasattr(result, "result") else result}')
+    print(f'   最终结果: {rpc_data}')
     print('=' * 60)
     
     # 保持运行

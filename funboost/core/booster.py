@@ -241,7 +241,7 @@ class Booster:
     def __getstate__(self):
         state = {}
         state["queue_name"] = self.boost_params.queue_name
-        state["booster_registry_name"] = self.booster_registry_name
+        state["booster_registry_name"] = self.boost_params.booster_registry_name
         return state
 
     def __setstate__(self, state):
@@ -273,7 +273,7 @@ class BoosterRegistry:
     管理boosters，可以一键启动多个消费函数或者启动一组消费函数。
 
     BoosterRegistry 是后加的， 原来的 BoostersManager 类是一个包含多个classmethod的类，和现在的方法名和入参一样。
-    为了兼容老的 BoostersManager 这个用法，现在的 BoostersManager 是 BoosterRegistry 其中一个实例。
+    为了兼容老的 BoostersManager 这个用法，现在的 BoostersManager 是 BoosterRegistry 的其中一个实例。
     
     使用 __new__ 实现享元模式，每个 booster_registry_name 对应一个唯一实例。
     """

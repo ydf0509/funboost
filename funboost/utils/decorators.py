@@ -235,11 +235,26 @@ class SingletonBaseCustomInit(metaclass=abc.ABCMeta):
 
 
 def flyweight(cls):
+    """
+    享元模式装饰器，有限的多例模式，相同参数返回同一个实例。
+    
+    改进：兼容位置传参和关键字传参，以下两种调用方式会返回同一个实例：
+        cls('value')           # 位置参数
+        cls(param='value')     # 关键字参数
+    """
+    import inspect
+    
     # 1. 闭包内的存储，每个类独立拥有自己的实例缓存，互不干扰
     _instances = {}
     
     # 2. 为每个类创建一个独立的锁，避免全局锁竞争
     _class_lock = threading.Lock()
+    
+    # 3. 获取类的 __init__ 方法的签名，用于规范化参数
+    try:
+        _sig = inspect.signature(cls.__init__)
+    except (ValueError, TypeError):
+        _sig = None
 
     def _make_hashable(value):
         if isinstance(value, dict):
@@ -252,18 +267,30 @@ def flyweight(cls):
 
     def _make_key(args, kwds):
         """
-        生成唯一的 Key。
-        为了防止冲突，必须区分 args 和 kwargs。
-        frozenset 用于让 kwargs 可哈希且无视顺序。
-        添加一个分隔符或者将其放入元组结构中以确保唯一性。
+        生成唯一的 Key，兼容位置传参和关键字传参。
+        使用 inspect.signature.bind 将所有参数规范化为统一形式。
         """
+        if _sig is not None:
+            try:
+                # 绑定参数到签名，将位置参数和关键字参数统一规范化
+                # 传入 None 作为 self 参数的占位符
+                bound = _sig.bind(None, *args, **kwds)
+                bound.apply_defaults()  # 应用默认值，确保相同语义的调用生成相同的 key
+                
+                # 获取绑定后的参数字典，移除 self 参数
+                arguments = dict(bound.arguments)
+                arguments.pop('self', None)
+                
+                # 转换为可哈希的排序元组，确保顺序一致
+                return tuple(sorted((k, _make_hashable(v)) for k, v in arguments.items()))
+            except TypeError:
+                # 如果绑定失败（参数不匹配等），回退到原来的方式
+                pass
+        
+        # 回退方案：使用原来的方式
         key_args = _make_hashable(args)
         if not kwds:
             return key_args
-        
-        # 将 kwargs 转换为可哈希的 frozenset
-        # 结构: (args_tuple, kwargs_frozenset)
-        # 这样 (1, 2) 和 (1, a=2) 永远不会相等
         key_kwargs = frozenset((k, _make_hashable(v)) for k, v in kwds.items())
         return (key_args, key_kwargs)
 

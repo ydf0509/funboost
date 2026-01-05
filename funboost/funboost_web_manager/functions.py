@@ -41,7 +41,7 @@ def get_mongo_table_name_by_queue_name(queue_name: str) -> str:
         # print(queue_params,type(queue_params))
         if queue_params:
             persistance_conf = queue_params.get('function_result_status_persistance_conf', {})
-            print(persistance_conf,type(persistance_conf))
+            # print(persistance_conf,type(persistance_conf))
             table_name = persistance_conf.get('table_name')
             if table_name:
                 return table_name

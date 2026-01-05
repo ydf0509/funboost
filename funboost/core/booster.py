@@ -13,7 +13,6 @@ from funboost.constant import FunctionKind, StrConst
 from funboost.utils.class_utils import ClsHelper
 
 from funboost.utils.ctrl_c_end import ctrl_c_recv
-from funboost.utils.decorators import flyweight
 from funboost.core.loggers import flogger, develop_logger, logger_prompt
 
 from functools import wraps
@@ -178,7 +177,7 @@ class Booster:
             self.continue_consume = consumer.continue_consume
 
             wraps(consuming_function)(self)
-            # BoostersManager.regist_booster(self)  # 这一句是登记
+
             BoosterRegistry(self.boost_params.booster_registry_name).regist_booster(self)
             
             return self
@@ -269,20 +268,36 @@ def gen_pid_queue_name_key(queue_name: str,) -> typing.Tuple[int, str]:
     pid = os.getpid()
     return (pid,  queue_name)
 
-@flyweight  # flyweight是享元模式，有限的多例模式，每个 booster_registry_name 对应一个对象
 class BoosterRegistry:
     """
     管理boosters，可以一键启动多个消费函数或者启动一组消费函数。
 
     BoosterRegistry 是后加的， 原来的 BoostersManager 类是一个包含多个classmethod的类，和现在的方法名和入参一样。
     为了兼容老的 BoostersManager 这个用法，现在的 BoostersManager 是 BoosterRegistry 其中一个实例。
-
+    
+    使用 __new__ 实现享元模式，每个 booster_registry_name 对应一个唯一实例。
     """
 
     _lock = threading.Lock()
+    _instances: typing.Dict[str, 'BoosterRegistry'] = {}  # 享元模式缓存
 
+    def __new__(cls, booster_registry_name: str):
+        # 先检查缓存（无锁，高性能）
+        if booster_registry_name not in cls._instances:
+            with cls._lock:
+                # Double-Checked Locking
+                if booster_registry_name not in cls._instances:
+                    instance = super().__new__(cls)
+                    instance._initialize(booster_registry_name)
+                    cls._instances[booster_registry_name] = instance
+        return cls._instances[booster_registry_name]
 
-    def __init__(self,booster_registry_name):
+    def __init__(self, booster_registry_name: str):
+        # __new__ 已经处理了所有初始化逻辑，这里保持空实现
+        pass
+
+    def _initialize(self, booster_registry_name: str):
+        """真正的初始化逻辑，只在 __new__ 中调用一次"""
         self.booster_registry_name = booster_registry_name
         
         # pid_queue_name__booster_map字典存放 {(进程id,queue_name):Booster对象}
@@ -294,6 +309,7 @@ class BoosterRegistry:
         self.queue_name__boost_params_map: typing.Dict[str, BoosterParams] = {}
 
         self.pid_queue_name__has_start_consume_set = set()
+
       
 
     def regist_booster(self, booster: Booster):

@@ -1,39 +1,32 @@
-﻿# 🤖 AI Reading Guide for Project: funboost_docs
+﻿
+# 🤖 AI 上下文阅读协议 (由 nb_ai_context 生成)
 
-> **Important Notice for AI Models**: This document contains the complete source code and documentation for the `funboost_docs` project. Please read this guide carefully before analyzing the content.
+> **系统指令**：你正在解析一份由工具 **`nb_ai_context`** 自动生成的**结构化项目快照**。
+> **文档性质**：这**不是**一份普通的文档，而是专为 AI 大模型（LLM）设计的上下文数据流。它将项目文档、源代码和 AST 架构元数据进行了特殊的结构化合并。
 
-## 📖 Document Structure
+## 🧠 AI 认知与解析准则
 
-This markdown document is structured as follows:
+这份由 `nb_ai_context` 生成的文档是你的核心知识库。其中的内容是动态的——它可能包含完整的底层源码，也可能仅包含使用教程，或者是两者的混合。请遵循以下自适应阅读策略：
 
-1. **Project Summary** (`# markdown content namespace: xxx project summary`)
-   - Brief project description
-   - Core source files metadata (AST-parsed class/function signatures without full source code)
-   - File dependencies analysis
+### 1. 信息的层级与互补
+*   **文档即意图**：将 `README`、教程文档和 Docstrings 视为项目设计的**最高意图**。如果文档中详细描述了某个功能的用法，即使生成器没有包含其对应的源码实现，也请完全信任文档中的逻辑，并以此为基础进行回答。
+*   **源码即事实**：当遇到 `.py` 源码或 AST 元数据（类/函数签名）时，请以此作为实现细节、类型约束和语法准确性的**事实标准**。
+*   **缺失内容的推断**：如果教程演示了调用 `API.process()`，但本文档未包含 `API` 类的源码，**请勿认为该功能不存在**。你应该基于教程中的演示，合理推断该接口的输入输出和行为模式，并据此协助用户。
 
-2. **Project Root Files** (`# markdown content namespace: xxx Project Root Dir Some Files`)
-   - README.md, pyproject.toml, setup.py, etc.
+### 2. 文件边界与架构感知
+*   **上下文定界**：`nb_ai_context` 使用以下标记严格界定文件内容：
+    `--- **start of file: <路径>** ---` ... 内容 ... `--- **end of file: <路径>** ---`
+*   **结构可视化**：请利用“文件树 (File Tree)”章节来建立项目的宏观架构认知，即便某些文件未被展开显示。
+*   **依赖关系**：利用工具生成的“文件依赖分析”章节来理解模块间的引用关系，这有助于你在只有部分代码的情况下理清数据流向。
 
-3. **Source Code Sections** (`# markdown content namespace: xxx codes/examples/...`)
-   - File Tree: Shows directory structure
-   - Included Files: Lists all files in this section
-   - Full source code with AST metadata for Python files
-
-## 🔍 How to Identify File Boundaries
-
-- Each file starts with: `--- **start of file: <path>** (project: funboost_docs) ---`
-- Each file ends with: `--- **end of file: <path>** (project: funboost_docs) ---`
-- All file paths are relative to the project root
-
-## ⚠️ Important Notes
-
-1. **Do NOT hallucinate**: Only reference code, classes, functions, and APIs that actually exist in this document
-2. **Check file paths**: When suggesting code changes, always verify the file path exists in the File Tree
-3. **Respect the project structure**: The File Tree shows the actual directory layout
-4. **AST Metadata**: Python files include parsed metadata (imports, classes, methods) before the full source code
+### 3. 代码生成与交互
+*   **风格一致性**：在生成代码或解释逻辑时，请严格模仿文档中已有的代码风格和命名规范。
+*   **元数据利用**：对于仅展示 AST 元数据（如仅有类定义而无函数体）的 Python 文件，请将其视为有效的接口定义，确保你的代码调用符合这些签名约束。
+*   **事实锚定 (Fact Anchoring)**：生成代码时必须严格**锚定**在本文档提供的范围内。
+    *   涉及 API 调用时，必须基于**源码中的 AST 签名**或**教程中的演示示例**。
+    *   **严禁臆造**文档中既未定义、也未在教程中提及的类名、方法名或参数。确保每一个生成的 Token 都有文档依据。
 
 ---
-
 # markdown content namespace: funboost_docs project summary 
 
 
@@ -425,6 +418,8 @@ BoosterParams 是 funboost 最核心的入参模型，掌握了 BoosterParams �
 
 **Docstring:**
 `````
+掌握funboost 的精华就是知道 BoosterParams 的入参有哪些，如果知道有哪些入参字段，就掌握了funboost的 90% 用法。
+
 pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
 
 @boost的传参必须是此类或者继承此类,如果你不想每个装饰器入参都很多,你可以写一个子类继承BoosterParams, 传参这个子类,例如下面的 BoosterParamsComplete
@@ -448,7 +443,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `max_retry_times: int = 3`
 - `retry_interval: typing.Union[float, int] = 0`
 - `is_push_to_dlx_queue_when_retry_max_times: bool = False`
-- `consuming_function_decorator: typing.Optional[typing.Callable] = None`
+- `consuming_function_decorator: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `function_timeout: typing.Union[int, float, None] = None`
 - `is_support_remote_kill_task: bool = False`
 - `log_level: int = logging.DEBUG`
@@ -463,18 +458,18 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `do_task_filtering: bool = False`
 - `task_filtering_expire_seconds: int = 0`
 - `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=False, is_save_status=False, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)`
-- `user_custom_record_process_info_func: typing.Optional[typing.Callable] = None`
+- `user_custom_record_process_info_func: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `is_using_rpc_mode: bool = False`
 - `rpc_result_expire_seconds: int = 1800`
 - `rpc_timeout: int = 1800`
 - `delay_task_apscheduler_jobstores_kind: Literal['redis', 'memory'] = 'redis'`
 - `is_do_not_run_by_specify_time_effect: bool = False`
-- `do_not_run_by_specify_time: list = ['10:00:00', '22:00:00']`
+- `do_not_run_by_specify_time: list[str] = ['10:00:00', '22:00:00']`
 - `schedule_tasks_on_main_thread: bool = False`
 - `is_auto_start_consuming_message: bool = False`
 - `booster_group: typing.Union[str, None] = None`
-- `consuming_function: typing.Optional[typing.Callable] = None`
-- `consuming_function_raw: typing.Optional[typing.Callable] = None`
+- `consuming_function: typing.Optional[typing.Callable[..., typing.Any]] = None`
+- `consuming_function_raw: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `consuming_function_name: str = ''`
 - `broker_exclusive_config: dict = {}`
 - `should_check_publish_func_params: bool = True`
@@ -488,7 +483,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT`
 
 ##### 📌 `class BoosterParamsComplete(BoosterParams)`
-*Line: 261*
+*Line: 265*
 
 **Docstring:**
 `````
@@ -510,7 +505,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))`
 
 ##### 📌 `class TaskOptions(BaseJsonAbleModel)`
-*Line: 281*
+*Line: 285*
 
 **Docstring:**
 `````
@@ -541,7 +536,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `otel_context: typing.Optional[dict] = None`
 
 ##### 📌 `class PublisherParams(BaseJsonAbleModel)`
-*Line: 334*
+*Line: 338*
 
 **Class Variables (21):**
 - `queue_name: str`
@@ -553,7 +548,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `logger_name: str = ''`
 - `log_filename: typing.Optional[str] = None`
 - `clear_queue_within_init: bool = False`
-- `consuming_function: typing.Optional[typing.Callable] = None`
+- `consuming_function: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `broker_exclusive_config: dict = {}`
 - `should_check_publish_func_params: bool = True`
 - `manual_func_input_params: dict = {'is_manual_func_input_params': False, 'must_arg_name_list': [], 'optional_arg_name_list': []}`
@@ -636,6 +631,14 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 ##### 📌 `class ConcurrentModeEnum`
 *Line: 150*
 
+**Docstring:**
+`````
+funboost 支持多线程、gevent、eventlet、asyncio 单线程 并发模式。
+这里没有多进程枚举，是因为funboost 希望多进程和这些模式叠加并发，
+booster.mp_consume(8) 就是8进程叠加 n个线程或协程并发，
+funboost的多进程和多线程 asyncio是叠加的，不是互斥的。
+`````
+
 **Class Variables (6):**
 - `THREADING = 'threading'`
 - `GEVENT = 'gevent'`
@@ -645,7 +648,13 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `SOLO = SINGLE_THREAD`
 
 ##### 📌 `class FunctionKind`
-*Line: 161*
+*Line: 168*
+
+**Docstring:**
+`````
+funboost 比celery更强，funboost不仅支持函数和静态方法
+funboost也能直接支持@boost加到 类方法和实例方法上（但这需要按教程方式做，不能想当然的写）
+`````
 
 **Class Variables (4):**
 - `CLASS_METHOD = 'CLASS_METHOD'`
@@ -654,7 +663,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `COMMON_FUNCTION = 'COMMON_FUNCTION'`
 
 ##### 📌 `class ConstStrForClassMethod`
-*Line: 168*
+*Line: 179*
 
 **Class Variables (5):**
 - `FIRST_PARAM_NAME = 'first_param_name'`
@@ -664,7 +673,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `CLS_FILE = 'cls_file'`
 
 ##### 📌 `class RedisKeys`
-*Line: 176*
+*Line: 187*
 
 **Public Methods (9):**
 - `def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name)` `staticmethod`
@@ -701,7 +710,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `FUNBOOST_UNACK_REGISTRY_PREFIX = 'funboost_unack_registry:'`
 
 ##### 📌 `class ConsumingFuncInputParamsCheckerField`
-*Line: 240*
+*Line: 251*
 
 **Class Variables (6):**
 - `is_manual_func_input_params = 'is_manual_func_input_params'`
@@ -712,20 +721,20 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `func_position = 'func_position'`
 
 ##### 📌 `class MongoDbName`
-*Line: 249*
+*Line: 260*
 
 **Class Variables (2):**
 - `TASK_STATUS_DB = 'funboost_task_status'`
 - `MONGOMQ_DB = 'funboost_mongomq'`
 
 ##### 📌 `class StrConst`
-*Line: 253*
+*Line: 264*
 
 **Class Variables (1):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
 
 ##### 📌 `class EnvConst`
-*Line: 256*
+*Line: 267*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -1793,12 +1802,12 @@ care_project_name 的作用是：
 - `from funboost.core.booster import gen_pid_queue_name_key`
 - `from funboost.core.func_params_model import PublisherParams`
 - `from funboost.core.func_params_model import BoosterParams`
-- `from funboost.core.func_params_model import BaseJsonAbleModel`
 - `from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig`
 - `from funboost.core.consuming_func_iniput_params_check import FakeFunGenerator`
 - `from funboost.core.exceptions import QueueNameNotExists`
 - `from funboost.timing_job.timing_push import ApsJobAdder`
 - `from funboost.constant import EnvConst`
+- `from funboost.core.pydantic_compatible_base import get_cant_json_serializable_fields`
 
 #### 🏛️ Classes (5)
 
@@ -2023,7 +2032,7 @@ care_project_name 的作用是：
   `````
 - `def get_one_queue_params_use_cache(self) -> dict`
 - `def gen_booster_for_faas(self) -> Booster`
-- `def gen_publisher_for_faas(self) -> Booster`
+- `def gen_publisher_for_faas(self) -> AbstractPublisher`
 - `def generate_aps_job_adder(self, job_store_kind = 'redis', is_auto_start = True, is_auto_paused = True) -> ApsJobAdder`
 - `def get_one_queue_pause_flag(self) -> int`
   - *返回队列的暂停状态，-1 表示队列不存在，0 表示队列未暂停，1 表示队列已暂停*
@@ -3350,7 +3359,7 @@ if __name__ == '__main__':
 
 #### 🔧 Public Functions (1)
 
-- `def add(x, y = 10)` `boost(Project1BoosterParams(queue_name='test_funboost_faas_queue'))`
+- `def add(x: int, y: int = 10)` `boost(Project1BoosterParams(queue_name='test_funboost_faas_queue'))`
   - *Line: 6*
 
 
@@ -3362,7 +3371,7 @@ from funboost import boost, BoosterParams, BrokerEnum
 import time
 
 @boost(Project1BoosterParams(queue_name="test_funboost_faas_queue", ))
-def add(x, y=10,):
+def add(x:int, y:int=10,):
     time.sleep(1)
     print(f"add {x} + {y} = {x + y}")
     return x + y
@@ -3497,7 +3506,6 @@ def sub(a, b):
         ├── c12.md
         ├── c13.md
         ├── c14.md
-        ├── c14old.md
         ├── c15.md
         ├── c16.md
         ├── c2.md
@@ -3516,7 +3524,7 @@ def sub(a, b):
 ---
 
 
-## funboost_docs (relative dir: `source/articles`)  Included Files (total: 20 files)
+## funboost_docs (relative dir: `source/articles`)  Included Files (total: 19 files)
 
 
 - `source/articles/c0.md`
@@ -3532,8 +3540,6 @@ def sub(a, b):
 - `source/articles/c13.md`
 
 - `source/articles/c14.md`
-
-- `source/articles/c14old.md`
 
 - `source/articles/c15.md`
 
@@ -6250,645 +6256,6 @@ div> </div>
 ---
 
 
---- **start of file: source/articles/c14old.md** (project: funboost_docs) --- 
-
-`````markdown
-# 14 🏅[懒人必看章节] 利用ai来掌握 funboost 的 正确方式
-
-开门见山，**想靠ai用好 `funboost` ，只有这一条路最正确：**
-
-- 1.打开 Google AI Studio [https://aistudio.google.com/](https://aistudio.google.com/prompts/new_chat)。
-- 2.丢入 `funboost_all_docs_and_codes.md`。
-- 3.别在 IDE 里问，别在gemini官网问，否则 别怪AI 不行，是你不行！
-
-**如果你不能科学上网没有梯子，其他的也介绍了一些ai使用方式，请你务必看完本章节，别偷懒。**
-
-## 14.0 🤬 [高能预警]在此章节最开头，先允许我用最恶毒的语言来**刺激骂醒**一部分又懒又蠢的懒癌患者的大脑皮层！
-
-**说明：**   
-此段内容不是针对所有人，没有针对屏幕前的你，我要骂的是反复多次要求让他去仔细看文档14章节，他还是不愿意认真看的这种 **恨铁不成钢的超级无敌大懒猪**。
-
-> **致部分无可救药的懒癌晚期患者：**
->
-> 先让我骂一下一部分人是 **懒虫中的懒虫，蠢猪中的蠢猪，傻屌中的傻屌**，是 **大脑皮层光滑如镜的单细胞生物**，是 **浪费空气的造粪机器**，是 **无可救药的伸手党巨婴！**， **脖子上的脑袋纯粹是为了显高，视网膜纯粹是为了美观** 凸(艹皿艹 )
-
-如果不用最恶毒下流的语言来写教程，有些人看教程时候简直是在**打瞌睡**，要么心不在焉，要么企图偷懒一目十行，甚至大段大段地跳过，连教你怎么偷懒用ai掌握funboost都大段跳过！
-
-你连20分钟看第14章内容的时间都没有吗？教你偷懒的教程你还要偷懒。
-
-现在不像10年前，需要在大冬天坐冷板凳熬夜苦读 Django/Celery 几千页教程，**现在有 AI ！**
-你害怕吃苦、想偷懒，你就用 AI，AI 不怕吃苦！但是有的**极品懒癌**，连这一章的内容都不仔细阅读，连教你怎么偷懒的章节都要快速一目十行扫过？**你的脑子是装饰品吗？**
-
-### 14.0.1 🧠 脑残行为大赏
-
-虽然我都说了可以用 AI 来高效、无幻觉、准确掌握 `funboost` 任何公开教程和源码细节，而且**专门**写了这个章节教程。
-但一部分 **懒虫中的极品懒虫，蠢猪中的极品蠢猪**，连这章都不仔细读！
-
-1.  有问题来问我，我问：“为什么不用 AI 呢？建议先看下文档第14章。”
-2.  他还敢顶嘴说**“已经看过文档第14章”**。
-3.  结果我仔细追问，发现他完全是 **瞎几把乱用 AI**！
-
-教程中明确说了哪些是 **大错特错** 的用 AI 掌握 `funboost` 的方式，他偏偏还是这样用！这种做法极其浪费时间，**让我非常的生气恼火！** 😡
-
-我再仔细问他是怎么用的：
-*   他说直接问 AI 的；
-*   或者说已经把文档传给 AI 了。
-*   再问细节，他说是在 **DeepSeek / GPT / Claude 网页** 提问的；
-*   有的说在 **Cursor / Trae / Qoder** 这些 IDE 里面提问的。
-*   有的说在 **Claude-code / Gemini-cli** 这些命令行里面提问的。
-*   有的说用的 gemini-flash ，而没有按教程写的用 gemini-pro
-*   有的人使用 https://gemini.google.com ,而不是教程规定的 https://aistudio.google.com
-
-**此章节里面已经反复明确说了，这些全踏马是错误的让 AI 学习 funboost 的方式！你是瞎了吗？**
-
----
-
-### 14.0.2 🚫 别拿通用框架的经验来羞辱我的智商
-
-如果你是提问 AI：*“怎么使用 FastAPI / Django / Flask / Requests？”*
-这些大名鼎鼎的 Python 框架，任何 AI 大模型只要不是太水，你想怎么使用都可以，几乎都没问题。**你不需要我来充当 AI 教师爷教你怎么用 AI 掌握热门顶流框架。**
-
-👉 **但是！** 如果你想用 AI 掌握 `funboost`，就 **必须按照我说的方式来！**
-如果你不按我说的方式来，AI **绝无可能** 正确无幻觉掌握得了 `funboost`，到时候你还怪 AI 不行？**是你踏马的不行！**
-
----
-
-### 14.0.3 ❌ [严重警告] 懒癌患者请把下面这几点刻在脑门上！
-
-我踏马再在这里对一部分懒癌患者，把此章节内容中的**错误使用方式**再提前重复啰嗦一次：
-
-*   ❌ **错误一**：不上传我指定的 `funboost_all_docs_and_codes.md` 文档，直接在任何 AI 官网网页提问 `funboost` 知识。**这是最错误的方式**，包括 `gemini-3.0pro` 网页也不行！
-*   ❌ **错误二**：在 `Cursor` / `Trae` / `Qoder` 这类 AI IDE 的聊天框里面 `@funboost_all_docs_and_codes.md` 这个文件。**这也是大错特错的！** 原因我反复说了自己去细看——**因为文档太长，AI IDE 不会乖乖全量阅读，否则厂商会血亏！**
-*   ❌ **错误三**：上传文档给 `GPT` / `DeepSeek` / `Claude` 提问。**这也是错误方式！** 因为 `funboost_all_docs_and_codes.md` 需要 **800k tokens** 上下文，而这些模型最大才支持 128k-256k，压根不支持上传这么长的文档！有些网页就算上传成功，也是使用稀疏注意力或 RAG 切片**大段跳过**，**压根不能全局统筹、非常细致地掌握 funboost 的细节！**
-*   ❌ **错误四**：在 `Claude-code` 和 `Gemini-cli` 这种有 1M 上下文的命令行 AI 中，`@funboost_all_docs_and_codes.md` 这个文件。**这也是错误方式！** 原因我反复说了自己去细看，因为文档太长 AI agent 不会乖乖全量阅读，厂商亏不起！
-
----
-
-### 14.0.4 ✅ ai掌握funboost的唯一正确的路径
-
-**听好了，只有同时满足以下 5 个条件，AI 才能真正掌握 `funboost`：**
-
-1.  **按我说的做**（别自作聪明）；
-2.  使用**经过我实践实测的**工具；
-3.  大模型必须有 **原生 1000k 上下文或少部分rag平台**；
-4.  可以 **强迫投喂** `funboost_all_docs_and_codes.md` 文档，
-5.  投喂长文档后， AI 是 **全量乖乖阅读推理** 的（必须是乖乖全量阅读推理，这一点非常非常核心重要，你在cursor trae中提问长文档，那agent就是分多步骤阅读和检索关键字，又慢又不准，因为ai ide害怕全量阅读花太多tokens导致亏本）。
-
-**少一个条件，你就别来问我 funboost怎么使用，funboost为什么报错！**
-
-### 14.0.5 🤬 当我问你怎么使用ai时候，你最少要回答200字到底是怎么使用ai的，别踏马就简单的说:"我已经用ai来问funboost问题了"   
-
-**因为很多恨铁不成钢的懒虫，即使我反复要求他先仔细阅读第14章节，他还是不仔细阅读此章节的内容，这种懒虫我见过太多了**
-
-所以我要求你仔细回答是如何使用ai的，你要回答的包括：   
-- 1. 你是在网页还是ai ide问的，如果是网页请把网址发下     
-- 2. 你用的是什么大模型   
-- 3. 你上传文档了没，如果上传了文档请把文档名发下 ，我要确定你上传的是不是我指定的文档。（因为有的懒虫一意孤行不看此章节教程）  
-- 4. 你是怎么问的，如果可能，把提问问题也发一下。 【我要复制你的提问，我现在非常喜欢挑战nb_ai_context的能力上限，我要看看ai是不是真的掌握不了，还是我文档提示词工程的问题，  
-     还是你不按照教程第14章说的做。 （根据过往经验，几乎用户所有的问题，我直接在ai中输入并提问，ai都可以回答正确，是用户太几把懒了不认真看第14章，还踏马怪ai不行） 】 
-
-
-
-
-
-## 14.0.0b 推荐一个在ai时代 神级别黑科技掌握任意非知名的it项目的方式 nb_ai_context
-
-funboost 合并文档 `funboost_all_docs_and_codes.md` 就是使用 `nb_ai_context` 生成的
-
-[nb_ai_context地址](https://github.com/ydf0509/nb_ai_context)    
-
-用户也可以在 `nb_ai_context` 的readme里面去了解，为什么冷门it项目必须使用特殊的手段才能让ai无幻觉掌握用法和细节。    
-如果你是问ai ,怎么使用fastapi/django/flask/requests 这些大名鼎鼎的python框架 ，任何ai只要不是太水，几乎都没问题,不需要 nb_ai_context ， 
-不需要我教你怎么用ai 掌握 flask django fastapi。
-
-`nb_ai_context` 不仅可以生成funboost合并文档，让ai无幻觉掌握用法和细节， 也适用于任何冷门三方框架以及个人或公司的私有代码项目。  
-`nb_ai_context` 尤其是对python项目效果更佳，因为对python文件有专门额外的 ast解析。
-
-
-
-## 14.0.1 为什么要专门写第14章这个教程？
-
-有的人太懒惰了,不愿意吃苦阅读  `funboost` 的 `readthedocs` 教程,或者不清楚 `funboost` 实现的背后细节原理且不愿意分析框架源码,那就使用 ai 来替你搞定一切.  
-
-- **第一性原理:为什么要写第14章这个章节文档?**   
-因为无论是使用cursor trae qoder 这些ide,还是在各个大模型官方网页直接问 `funboost` 问题,都是大错特错的方式，必须提供完整的教程和源码上下文，ai大模型才能减少幻觉。
-
-| 大模型 | 网址                                                                                                                     | 评分 | 简要评价                                                                                                    |
-| --- |------------------------------------------------------------------------------------------------------------------------| --- |---------------------------------------------------------------------------------------------------------|
-| gemini-3.0pro | [Google AI Studio](https://aistudio.google.com/app/prompts)                                                            | 95 | 最强,知我心者gemini也。<br>1000k窗口,一次吞下源码和教程绰绰有余,<br>幻觉很少,能准确写代码并且不乱造方法名和入参,<br>跨章节全局连贯推理能力也非常强<br>真原生超长上下文秒RAG |
-| ima知识库 + deepseek v3.1 | [腾讯ima+funboost知识库](https://ima.qq.com/wiki/?shareId=aafc6364ae0f34ae237e4e2aa756e57d301d6461e51db030e0522cda3dc8729e) | 80 | 很强,rag能快速检索找到相关用法,<br>幻觉相对少,但全局连贯推理能力没有gemini的真1000K 上下文强                                               |
-| qwen3-max | [千问国际版](https://chat.qwen.ai/)                                                                                         | 75 | qwen3-max + 文档分块处理,实时rag ,<br>回答也还可以,可以掌握文档文字理念。                                                        |
-| 智谱清言 GLM4.6 | [智谱清言自定义funboost智能体](https://chatglm.cn/main/gdetail/69157797ad83dfcba0f454e7)                                         | 82 | 智谱清言的智能体，对于知识库功能，<br>比腾讯ima 自定义程度更高，<br>据说GLM4.6很强，用户可以亲自对比下ima+deepseek v3.1。                          |
-
-**章节目录**
-- 14.1 是最优先推荐使用 `google ai studio` 网页版提问 (1000k token上下文),而不是使用 `gemini-cli` 和 `gemini-code-assit` 和`cursor` 和 `trae` 阅读本地文档 
-   - google ai studio 真1000k全文推理，和gemini对话更有意思，有时能碰撞出思维的火花。 
-   - rag技术虽然回答快和准确，但感觉没什么意思，就是照着向量去检索然后照本宣科的回答，ai并没有多少自己的主见。 
-   - 即使都用 `gemini-3.0pro` 大模型 ，使用rag技术的  `google notebook lm` ，就是很无聊，没有 `google ai studio` 有意思。
-
-- 14.2 是推荐使用腾讯ima知识库 + deepseek v3.1大模型 (RAG技术),虽然deepseek 大模型只有128k token上下文,但是利用RAG技术,可以快速检索funboost用法 
-
-- 14.3 是使用 qwen 网页 https://chat.qwen.ai/ ,来阅读 funboost 文档  
-
-- 14.4 使用 智谱清言 GLM4.6 的 自定义funboost智能体来回答 funboost 问题，也是 rag技术
-
-- 14.10 是告诉你,为什么传统的基于字符串模糊匹配的搜索技术,被ai吊打
-
-### 14.0.2 **各个 ai 掌握 funboost 能力评分**
-
-超长上下文是 天才学霸记忆力超群能记下所有知识过目不忘；  
-rag是普通学生（记忆力能力不行） + 图书分类管理员，回答问题时候才临时抱佛脚去相关抽屉翻找书籍给答案，这种答案就不深度不连贯，不是全局视野。
-
-<h4> 14.1的 `google ai studio` + `gemini-3.0pro` , ai能力95分</h4>
-
-```
-最强,知我心者gemini也. 1000k窗口,一次吞下源码和教程绰绰有余,幻觉很少,能准确写代码并且不乱造方法名和入参,跨章节全局连贯推理能力也非常强
-
-gemini在以下方面都是最顶级的：
-1. 任何教程上已经明确写了的 funboost 用法；
-2. 文档全局跨章节的关联推理； 
-3. 对用户提问,回答的深度归纳能力;
-4. 拷问教程没写，需要阅读源码并总结的，
-   例如问 “funboost 源码是怎么实现 celery 作为 broker 的？”  ，
-   “funboost 源码是怎么实现 mysql cdc作为 broker 的？”，
-   “boost_spider” 为什么可以虐 xx 爬虫框架？“
-5. 让gemini实现扩展一个 新的 broker中间件种类;
-
-
-gemini-3.0pro 1000k上下文缺点是:
-据说1000k上下文服务端推理成本很高,是比128k 上下文 高10的二次方倍,但服务端推理成本高关我们什么事,反正google ai studio 是无限免费白嫖的.
-```
-
-<h4> 14.2的 `ima知识库` + `deepseek v3.1`,  ai能力80分  </h4>
-
-```
-很强,rag能快速检索找到相关用法,幻觉相对少,但全局连贯推理能力没有gemini的真1000K 上下文强, 
-实测rag技术还是不如gemini 1000k 超长上下文的大力出奇迹那么强悍,rag是次选,超长上下文才是王道.
-
-优点是： 一个知识库可以上传1个G的文档，相当于可以存放放几千本书，可以阅读500个funboost文档，然后对ai提问
-
-缺点1是： 知识库里面对deepseek提问，被默默地强制添加了提示词，提示词告诉了ai只能回答知识库中的知识，文档没明确提到的的都一律拒绝回答，
-例如你让 funboost 和 知名的rq  dramatiq feapder 比较一下，由于文档中没明确写这个内容，ima 就拒绝回答。
-
-缺点2是: rag感觉更适合文科文字知识回答，面对项目源码，多文件关联 ，函数层层调用的分析能力很弱，
-例如 a.py的 fun函 = 于b.py的fun函数 ,属于重定向了,rag居然不知道a.fun的入参从而乱造了几个入参,rag明显的没有 gemini3.0pro 超长上下文 强大。
-rag极度依赖 作者把文档写得很细很细，因为腾迅ima的rag为了怕ai瞎几把回答幻觉, 将默认提示词调教得非常严格防止幻觉，
-所以ai回答过于保守,不敢思维发散和推理总结,生怕回答错了。
-
-缺点3是: rag能快速检索召回找到具体用法,但是对冷门函数的入参如果在教程不反复啰嗦列举,如果只给了python源码,
-例如 a.py的 fun函 = 于b.py的fun函数，a.fun的入参还是会幻觉乱造，甚至连函数名都会似是而非乱造,给人90%意图准确,但10%细节又错误 的感觉,
-而python代码只要错一个字母,程序就会崩溃,不像回答文科文字答案容错率高宽容。
-```
-
-综上，RAG 本质是一种‘检索增强记忆’，不是‘理解增强推理’。面对函数调用链、参数传递等高依赖上下文的问题，长上下文模型始终是终极形态。
-
-<h4> 14.3的 `qwen 官方网页` + `qwen3-max`,  ai能力得分75分 </h4>
-
-```
-qwen3-max + 文档分块处理,实时rag ,回答也还可以,可以掌握文档文字理念。
-
-缺点是文档中的冷门边角知识,代码生成细节不好,不如gemini3.0pro强大。
-
-优点是 qwen3-max 网页,支持 20M 文档的上传,然后提问。 20M 足够容纳10个 funboost 框架源码和教程了.
-而gemini3.0pro 大约最大能支持 4M文档上传,就会超过1000k 上下文了。
-目前funboost 教程 + 源码 文件在2M以内，token 消费600k以内， 所以gemini-3.0pro 非常合适。
-```
-
-<h4> 14.4的 `智谱清言 GLM4.6` + `自定义funboost智能体`,  ai能力得分82分 </h4>
-
-智谱清言的智能体，对于知识库功能，比腾讯ima 自定义程度更高，回答引用了哪些内容更直观。  
-实测 回答问题和 腾讯ima + deepseek v3.1 相当.  
-
-<h4> 其他厂商的ai大模型针对掌握funboost知识都无法可用</h4>
-
-```
-funboost 教程加源码 是一个 2M markdown 单文件文档,需要600k token, 
-如果原生不支持1000k上下文,也不支持分块 rag ,那就无法可用。
-
-所以 gpt5 claude4  deepseek 豆包 智谱清言 kimi 都无法可用，不推荐用这些ai的官网来掌握 funboost 知识。
-```
-
-<h4> ai 选型小结:  </h4>
-
-```
-相比较 1000k token上下文的大模型和rag,优先选择 1000k token上下文的大模型,rag依赖文档写得很详细，适合检索召回, 
-rag全局统筹关联推理和自动阅读分析大项目跨文件的代码,没有原生支持1000k上下文的模型好.  
-原生长上下文除了更费钱废token,在各方面都比rag技术好,反正google ai studio 是免费白嫖的,所以优先使用这个.  
-```
-
-
-
-## 14.1 利用ai大模型来更好的掌握funboost的最佳方式是什么?  
-
-现在是ai时代,谁不用ai就太落伍吃亏了.   
-
-但是使用 ai 大模型也有技巧.  
-
-**第一性原理:使用google ai studio网页版+上传markdown+免费+1000k上下文+全文一次性阅读=幻觉率几乎没有**  
-**gemini-3.0pro 在上传 funboost_all_docs_and_codes.md 这文件后,对funboost的常规用法以及任何细节推理和funboost作者我本人不相上下,知我心者,gemini也**  
-
-### 14.1.1  强烈推荐选择 google ai studio + gemini 3.0pro 大模型  
-
-`gemini 3.0pro`大模型有`1000k token`上下文, 并且可以在 `google ai studio` 免费无限使用  
-
-funboost的教程需要300k token上下文,funboost的框架源码也需要300k token上下文,  
-`funboost_all_docs_and_codes.md` 这个文件需要大约600k token 上下文 ,全地球只有 `gemini 3.0pro` 能胜任完整阅读这个文档且免费且准确.  
-
-[https://aistudio.google.com/app/prompts](https://aistudio.google.com/app/prompts)  
-
-
-`claude4`写代码牛,是修改代码调用工具链强大,但是上下文只有200k,并且不免费,所以pass.  
-`gpt5` token上下文太短,也pass  
-
- **`funboost`知识就是ai大模型的试金石.**  ,使用长文档实测国产ai目前不行, `gemini-3.0pro` 经过实测,在`funboost`的文档推理上 是真正的遥遥领先。
-
-**只有google gemini 3.0pro 适合长文档一次性阅读**
-```  
-leetcode 一个题目,一般就不到10行文字,和 funboost这种 几万行的 教程 + 源码 文档相比,对ai的 要求不是一个级别.   
-LeetCode 测试的是在 封闭、小上下文 环境中解决孤立问题的能力。这就像要求一个学生解答一道定义清晰的数学题。   
-funboost 则要求理解一个 开放、大上下文 的复杂系统。这需要AI不仅能看懂每一行代码（“How”），   
-更能理解组件之间的相互作用、设计模式的应用、以及作者的设计哲学（“Why”），虽然ai不会真思考，但我在教程已经把why总结写得很详细很长了，gemini 不怕文档长。  
-```  
-
-**一个模型的真正实力，不应只看它在“闭卷考试”（Benchmark）上的分数，更要看它在“开卷项目”（真实世界问题）中的实际表现。**  
-
-
-### 14.1.2 强烈推荐在网页上传funboost文档提问!  
-
-强烈推荐在网页上传funboost文档提问,,不要使用`gemini-cli` 和 `gemini-code-assit` 和`cursor`阅读本地文档  
-
-**这是我实践得出来的经验,在网页提问markdown文档比gemini-cli阅读本地文件好**  
-
-推荐在 `google ai studio` 网页提问,而不是安装`gemini code assit`插件,让gemini在ide或者命令行中去阅读funboost的文档。  
-
-[https://aistudio.google.com/app/prompts](https://aistudio.google.com/app/prompts)  
-
-
-这似乎听起来反智,但实际上在网页上传文档并提问 `funboost` 问题,完爆 `gemini-cli` 和 `gemini-code-assit `阅读本机文件.  
-
-因为网页上是可以一次性阅读 40000 行 markdown 并推理,如果你在本地阅读,大模型工具调用链阅读文件,会每1次阅读最高2000行,  
-然后自动分多次阅读,这太浪费生命时间了,并且分多次阅读会触发使用大模型太频繁,导致自动切换到 `gemini-3.0flash`这个差劲大模型了。  
-
-`gemini-cli` 不擅长阅读本机超长文件,其实可以理解的,不然用户随便在一个有1000个文件的目录中,对gemini  
-说一句 `你阅读分析文件夹下所有文件`, `gemini-cli` 如果老老实实的执行,那`google`公司会亏得裤衩都没了,  
-你随便一个不到10个字的命令,就烧掉几百万token,相当于浪费了google 公司 50人民币的gpu推理成本,  
-所以`google`分2000行慢慢阅读文档,超频后就降智切换flash模型,甚至拒绝回答,来保护自己的算力不被滥用.  
-如果多次切割成2000行分批阅读，就是**管中窥豹**，对于理解像 `funboost` 这样逻辑连贯、前后关联的复杂框架是灾难性的。  
-
-实测,在`google ai studio` 的网页中,效果非常非常好,因为它是一次性阅读全文,不会每2000行来分批次慢慢阅读,   
-不管是对教内容程,还是对源码内容,`gemini-3.0pro`都推理的非常准确。  
-
-有的人太懒惰了,不愿意吃苦阅读  `funboost` 的 `readthedocs` 教程,或者不清楚 `funboost` 实现的背后细节原理且不愿意分析框架源码,  
-那么 把 `funboost_all_docs_and_codes.md` 这个文档上传到 `google ai studio` 并各种提问，就非常合适。  
-ai真的是生产力，人工需要阅读几天几夜的教程和框架源码，`gemini 3.0pro` 仅需不到1分钟就能分析的很准确。  
-
-###  14.1.2b 为什么不建议在cursor trae qoder 这些ai ide 阅读 funboost文档？
-
-**第一性原理:ai厂商早就预料到有坏蛋会恶意发起 Token DoS 攻击,让服务商血本无归**  
-```
-上面我已经说了,在cursor trae qoder 阅读 funboost文档,ide为了大模型调用的成本控制已经调了参数, 
-例如trae 对大文件需要自动分段阅读,每次只能阅读200行需要和ai交互多次,阅读4万行 代码 + 教程 ,需要调用200次ai,中途他会自动停止阅读的.
-
-那些说在ide阅读文档更好的人,请稍微用你的脑子好好想想,如果你的文件夹 dir1下有1000个100M的markdown文件,
-你对ai说 ,"请完整仔细阅读 dir1下所有文件内容,然后告诉我中心思想" ,你觉得ide和模型会乖乖听你这种无理要求吗? 
-你随便下个命令,ai需要花费 几十亿 token 来推理,浪费大模型厂商几百万人民币买显卡和电费, 别人ai公司难道没预料到会有这种坏蛋恶意滥用浪费大模型算力吗?
-如果有坏蛋让ai插件 "请阅读c盘下的所有深层级目录下所有文件内容" 呢?
-
-
-web里面,天然需要上传文件,而且上传时候就可以控制文件大小和数量,没有电脑本地那么容易恶意滥用浪费大模型算力.
-```
-
-### 14.1.2c 🛑 拒绝 Gemini 官网，✅ 拥抱 Google AI Studio
-
-**核心原则：请务必使用开发者专用的 [Google AI Studio](https://aistudio.google.com/)，而不是面向普通消费者的 [Gemini 官网](https://gemini.google.com/)。**
-
-虽然两者底层模型可能相同，但在处理 `funboost` 这种超长技术文档时，表现有着天壤之别。以下是三大核心理由：
-
-#### 14.1.2c.1 💰 理由一：真正的“白嫖”与额度优势
-
-| 平台 | Google AI Studio (推荐) | Gemini 官网 (不推荐) |
-| :--- | :--- | :--- |
-| **模型版本** | **Gemini 3.0 Pro** | Gemini Pro / Advanced |
-| **费用** | **免费** (且速率限制极高，普通人难触发上限) | Pro 模型通常需要订阅 Google One 会员 (付费) |
-| **性质** | 面向开发者，提供原始模型能力 | 面向大众，包含大量安全过滤和预设 |
-
-#### 14.1.2c.2 🧠 理由二：忠于文档 vs. 通用幻觉
-
-即使你拥有 Gemini 官网的会员，**AI Studio 的回答质量依然完胜**。
-
-*   **Google AI Studio (专家模式)**：
-    它会**严格基于你上传的文档**进行推理。对于 `funboost` 这种包含大量独创设计（如第6章的自问自答、特定配置写法）的框架，它能精准提取文档中的解决方案，而不是瞎猜。
-
-*   **Gemini 官网 (通用模式)**：
-    它倾向于使用训练数据中的“通用 Python/IT 知识”来回答。
-    > **后果**：当你问一个 `funboost` 特有的问题时，官网版可能会忽略文档中的特定解法，按常规逻辑去推测（胡编），导致回答虽然看起来通顺，但完全没有 Get 到框架的精髓。
-
-#### 14.1.2c.3 ⚡ 理由三：真·全量阅读 (Long Context) vs. 伪·检索切片 (RAG)
-
-这是最硬核的技术差异，直接决定了 AI 能否读懂 `funboost` 的源码架构。
-
-*   **文档体量**：`funboost_all_docs_and_codes.md` 约为 **800k tokens**。
-*   **Google AI Studio**：
-    *   **机制**：**原生超长上下文 (Native Long Context)**。
-    *   **效果**：它能**一次性吞下**整个文档，像一个过目不忘的天才，能关联文档开头和结尾的逻辑。这是真正的“全量阅读”。
-*   **Gemini 官网**：
-    *   **机制**：**混合模式 / RAG (检索增强)**。虽然它允许上传 20M 的文件，但为了响应速度和成本，它底层往往采用切片检索。
-    *   **效果**：它像一个“一目十行”的略读者，会**大量丢失细节**。对于代码这种逻辑严密的内容，丢失细节就是灾难。
-
-> **💡 黄金法则**：除非你的私有文档大到超过了模型窗口上限（如 >200万 tokens），否则**永远优先选择原生超长上下文，坚决抵制 RAG。**
-
----
-
-#### 14.1.2c.4 📸 提问时的“自证清白”
-
-为了确保你没有用错工具，当你向我反馈“AI 回答不对”时，**请务必提供截图**：
-
-1.  **不要只说**：“我用的 Gemini”。
-2.  **请展示网址**：我要看到浏览器地址栏是 `aistudio.google.com`。
-3.  **请展示模型**：我要看到你选的是 `Gemini 1.5 Pro`。
-
-> **⚠️ 警告**：如果你不听劝阻，非要去用 Cursor IDE、Trae 或者 Gemini 官网提问，导致 AI 回答错误，**请不要怪 AI 不行，那是你不行。**
-
-
-### 14.1.4 一定要上传markdown文档再提问  
-不要直接在ai大模型的网页或者app提问`funboost`知识  
-直接在网页提问,除了最简单的demo,写稍微深入一点的, 幻觉率太高了,所有ai几乎100%会意淫瞎造 `funboost`   
-不存在的 入参 /类 /函数.  甚至有的国产水货大模型,连最基础简单`funboost` demo都会幻觉乱写。  
-
-**要想让 AI 成为您学习 funboost 的得力助手，而不是一个满嘴跑火车的“猪队友”，最佳实践就是：打开 `Google AI Studio` 网站，将 `funboost_all_docs_and_codes.md` 文件上传，然后开始向一个已经“吃透”了 `funboost` 所有官方资料的 `Gemini 3.0 Pro` 专家提问。**  
-
-### 14.1.5 funboost 的 markdown文档地址说明  
-
-`funboost` 文档是托管在 `readthedocs` 网站,原始教程是分为了多个`markdown`文件  
-
-在`github`中有合并的`markdown`,分为2个文件.  
-一个是 `funboost_合并教程.md` , 这个是把 教程markdown文件合并成1个文件,方便一次性丢给`ai`,免得要多次上传。        
-另一个是 `funboost_all_docs_and_codes.md` ,  这个是包含了所有教程 + 所有 `funboost` 框架源码 ,更推荐把这个markdown丢给 ai ,反正`gemini` 1000k上下文无敌且免费,不用担心花自己`token`和`money`。   
-
-[https://github.com/ydf0509/funboost](https://github.com/ydf0509/funboost)  
-
-![1756373743657](image/c6/1756373743657.png)  
-
-#### 14.1.5.2 funboost的ai markdown文档是使用神级别 ai上下文生成工具 nb_ai_context 生成的
-
-为什么 funboost的这个合并单一markdown传给ai后，ai如此强悍无幻觉，一方面是`gemini`很强大，另一方面是因为 `nb_ai_context` 生成的上下文太好了。
-
-[nb_ai_context地址](https://github.com/ydf0509/nb_ai_context)
-
-安装 `nb_ai_context`： `pip install nb_ai_context`
-
-`nb_ai_context` 可以对任何it项目代码打包生成一个单一的markdown，传给ai后，效果非常强，吊打最知名的`repomix`。
-
-
-#### 14.1.5.3 公布 funboost ai上下文 markdown 文档的生成方式
-
-```python
-from nb_ai_context import AiMdGenerator,NbPath
-
-project_name="funboost"
-project_root=fr"D:\codes\{project_name}"
-
-project_summary = """
-- `funboost` 是python 全功能分布式函数调度框架
-- `funboost.faas` 是funboost的战略级核武器。使函数调度框架产生架构质变：从 Worker 到 Service
-
-- 以下一定要记住，最最重要的 类和函数如下：
-   - @boost(BoosterParams(...))  任意普通函数加上装饰器，变成分布式函数
-   - BoosterParams 装饰器入参控制大全，一定要学习这个类的所有入参配置；ai绝对不允许胡编乱造源码api和教程中不存在的BoosterParams字段入参。
-   - BrokerEnum：支持 40+ 种消息队列中间件。
-   - BoostersManager 管理分布式函数，高阶用法可能需要用到，例如启动一组消费函数，启动所有消费函数等。
-   - ApsJobAdder 类， 是定时任务的最重要使用方式的类
-   - ConcurrentModeEnum：funboost支持的并发模式。
-   
-
-"""
-
-
-boost_spider_summary = """
-- **`boost_spider` = `funboost` 的超跑引擎 + 一套为爬虫量身打造的瑞士军刀。所有仿scrapy api爬虫框架都还是处在变花样造一辆马车**
-
-- `boost_spider` 是增加了3个爬虫常用类，RequestClient  和  SpiderResponse  和 DatasetSink, 由funboost 驱动调度和并发。
-"""
-
-
-ai_md_codes = AiMdGenerator(
-    r"D:\codes\nb_ai_context\markdown_gen_files_git_ignore\ai_md_files\funboost_all_codes.md"
-).set_project_propery(project_name=project_name, project_root=project_root)
-
-ai_md_docs = AiMdGenerator(
-    r"D:\codes\nb_ai_context\markdown_gen_files_git_ignore\ai_md_files\funboost_all_docs.md"
-      ).set_project_propery(project_name="funboost_docs", project_root=r'D:\codes\funboost_docs')
-
-
-funboost_most_core_source_code_file_list=[
-        "funboost/__init__.py",
-        "funboost/core/booster.py",
-        "funboost/core/func_params_model.py",
-        "funboost/constant.py",
-        "funboost/timing_job/timing_push.py",
-        "funboost/funboost_config_deafult.py",
-        "funboost/core/current_task.py",
-        "funboost/core/cli/discovery_boosters.py",
-        
-        "funboost/core/msg_result_getter.py",
-        "funboost/publishers/base_publisher.py",
-        "funboost/consumers/base_consumer.py",
-        "funboost/core/active_cousumer_info_getter.py",
-        
-    ]
-
-(
-    ai_md_codes
-    .clear_text()
-    .add_ai_reading_guide()
-    .add_project_summary(
-        project_summary=project_summary, 
-        most_core_source_code_file_list=funboost_most_core_source_code_file_list)
-    .add_project_summary(
-        project_summary=boost_spider_summary, 
-        project_root=r"D:\codes\boost_spider",
-        most_core_source_code_file_list=[
-           "boost_spider/__init__.py",
-           "boost_spider/http/request_client.py",
-           "boost_spider/sink/dataset_sink.py",
-           "boost_spider/sink/json_sink.py",
-        
-    ])
-    .merge_from_dir(
-        relative_dir_name='examples',
-        use_gitignore=True,
-        as_title=f"{project_name} examples",
-        # 只包含 .py 和 .md 文件
-        should_include_suffixes=[".py", ".md", ".html"],
-        # 排除 __pycache__ 目录和特定的测试文件
-        excluded_dir_name_list=[],
-    )
-    .merge_from_dir(
-        relative_dir_name=project_name,
-        use_gitignore=True,
-        as_title=f"{project_name} codes",
-        # 只包含 .py 和 .md 文件
-        should_include_suffixes=[".py", ".md", ".html"],
-        # 排除 __pycache__ 目录和特定的测试文件
-        excluded_dir_name_list=[
-            r"funboost\utils\dependency_packages",
-            r"funboost\utils\dependency_packages_in_pythonpath",
-            r"funboost/utils/func_timeout",
-
-            r"funboost\funboost_web_manager\static",
-            r"funboost/concurrent_pool/backup"
-        ],
-    )
-    .merge_from_dir(
-        project_root=r"D:\codes\boost_spider",
-        relative_dir_name="boost_spider",
-        use_gitignore=True,
-        as_title="boost_spider codes",
-        # 只包含 .py 和 .md 文件
-        should_include_suffixes=[".py", ".md", ".html"],
-        # 排除 __pycache__ 目录和特定的测试文件
-        excluded_dir_name_list=[],
-    )
-    .get_textfile_info(is_show_info=True)
-)
-
-
-(
-    ai_md_docs
-    .clear_text()
-    .add_ai_reading_guide()
-    .add_project_summary(
-        project_summary=project_summary, 
-        project_root=r"D:\codes\funboost",
-        most_core_source_code_file_list=funboost_most_core_source_code_file_list
-    )
-    .add_project_summary(
-        project_summary=boost_spider_summary, 
-        project_root=r"D:\codes\boost_spider",
-        most_core_source_code_file_list=[
-           "boost_spider/__init__.py",
-           "boost_spider/http/request_client.py",
-           "boost_spider/sink/dataset_sink.py",
-           "boost_spider/sink/json_sink.py",
-        
-    ])
-    .merge_from_dir(
-        project_root=r"D:\codes\funboost",
-        relative_dir_name='examples',
-        use_gitignore=True,
-        as_title=f"{project_name} examples",
-        # 只包含 .py 和 .md 文件
-        should_include_suffixes=[".py", ".md", ".html"],
-        # 排除 __pycache__ 目录和特定的测试文件
-        excluded_dir_name_list=[],
-    )
-    .merge_from_dir(
-        project_root=r"D:\codes\funboost_docs",
-        relative_dir_name=r"source\articles",
-        use_gitignore=True,
-        as_title="funboost docs",
-        # 只包含 .py 和 .md 文件
-        should_include_suffixes=[".md"],
-        # 排除 __pycache__ 目录和特定的测试文件
-        excluded_dir_name_list=[],
-    )
-    .merge_from_files(
-        relative_file_name_list=["README.md"],
-        project_root=r"D:\codes\boost_spider",
-        as_title="boost_spider readme",
-    )
-    .get_textfile_info(is_show_info=True)
-)
-
-ai_md_docs_and_codes = NbPath(r'D:\codes\nb_ai_context\markdown_gen_files_git_ignore\ai_md_files','funboost_all_docs_and_codes.md').clear_text().merge_text_from_files([ai_md_docs,ai_md_codes])
-
-```
-
-### 14.1.6 google ai studio 提问方式截图  
-
-#### 14.1.6.1 对google ai studio 提问： 使用 AI  掌握 funboost的最好方式是什么，为什么？
-
-
-如果你还是害怕阅读教程，你忙的连喝口水的时间都没有，让ai学习 ai如何最好的掌握funboost知识。
-
-![alt text](image-2.png)
-
-
-#### 14.1.6.2 对google ai studio 提问： funboost 的定时器为什么不怕重复多点部署？
-
-这个答案需要ai高度的分析源码的能力
-
-![alt text](image-3.png)
-
-截图显示 `geimini` 的回答推理能力很强，能准确一阵见血找到funboost的定时器不怕重复部署的本质原因和相关实现的代码片段。
-
-
-
-
-
-## 14.2 使用腾讯 ima 知识库 + deepseek v3.1大模型 掌握 funboost
-
-
-
-### 14.2.1 为什么推荐使用腾讯 ima 知识库 + deepseek v3.1大模型
-
-google `gemini-3.0pro` 是上下文1000k能阅读长文档,免费白嫖, 缺点是google全家桶网站都被中国封杀了,部分用户始终无法掌握科学上网的方式,导致无法使用 `google ai studio` 和 `gemini-cli` 和 `gemini-code-assit` 
-
-所以新推荐这个方式,使用腾讯的 ima 知识库 + deepseek v3.1大模型, deepseek虽然自身只有128k上下文,但是配合 ima 知识库 RAG 检索技术,也可以掌握 funboost 知识,实测还可以.
-
-注意是让你使用 ima知识库 + deepseek v3.1大模型,而不是直接在 deepseek 网页里面去上传 funboost 教程文档再提问.
-
-### 14.2.2 提供现成的已创建好的ima知识库
-
-[【ima知识库】funboost 网页连接](https://ima.qq.com/wiki/?shareId=aafc6364ae0f34ae237e4e2aa756e57d301d6461e51db030e0522cda3dc8729e)
-
-<br><br>
-
-![ima知识库funboost二维码](img_ima.png)
-
-
-### 14.2.3 用户也可以在 ima 自己创建知识库
-
-用户可以自己创建知识库,将 `funboost_all_docs_and_codes.md` 这个文件上传到 ima 知识库,然后使用 deepseek v3.1大模型来提问.
-
-### 14.2.4 腾讯ima截图
-
-![img_83.png](img_83.png)
-
-
-## 14.3 使用 qwen 网页,来阅读 funboost 文档 (不能翻墙的人,用这个也还行)
-
-**注意要使用千问而不是通义：** 要使用https://chat.qwen.ai/ 而不是  https://www.tongyi.com/
-
-**第一性原理：** 现在有些大模型开始使用 实时的 文档分块 + 检索rag 技术,可以支持上传超长文档了，例如 gpt5 和 qwen3 。
-
-[qwen 官网 https://chat.qwen.ai/](https://chat.qwen.ai/)  Qwen 网页最大支持20M 文件上传   
-
-ai阅读一个 20M 的 markdown 教程文件,需要 5000k 上下文,远超当今大模型最大窗口的数十倍,但是有些大模型使用 实时的 文档分块 + 检索rag 技术,可以阅读超长文档,这一点比较赞,连 gemini 3.0pro 1000M上下文 都阅读不了4M以上的文档,但是qwen网页上 却可以支持最大上传阅读20M的长文档。
-
-最推荐 google ai studio +  gemini 3.0pro,因为是原生有1000k上下文，一个字不漏的推理,幻觉几乎没有; 如果不能翻墙,用qwen 实测回答funboost问题也还不错.
-
-## 14.4 使用 智谱清言 GLM4.6 的 自定义智能体来回答 funboost 问题，也是 rag技术
-
-- 使用的是在 智谱清言网站 创建的 智能体，已经将 python教程源码文档，添加到智能体的知识库了，所以用户不需要再上传文档了。  
-
-- 听说 GLM4.6 很牛逼突飞猛进是国产代码最强大模型，用户可以亲自对比下 ima+deepseek v3.1。
-
-- 智谱清言app 可定制性很高，例如可以支持长期记忆，可以通过智能体 自己搭建rag技术 ，deepseek太简陋了无法自定义，大家可以试试 。
-
-[使用 智谱清言 GLM4.6 的 自定义智能体来回答 funboost 问题](https://chatglm.cn/main/gdetail/69157797ad83dfcba0f454e7)
-
-
-
-
-div> </div>
-`````
-
---- **end of file: source/articles/c14old.md** (project: funboost_docs) --- 
-
----
-
-
 --- **start of file: source/articles/c15.md** (project: funboost_docs) --- 
 
 `````markdown
@@ -9490,6 +8857,8 @@ if __name__ == '__main__':
 
 class BoosterParams(BaseJsonAbleModel):
     """
+    掌握funboost 的精华就是知道 BoosterParams 的入参有哪些，如果知道有哪些入参字段，就掌握了funboost的 90% 用法。
+
     pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
 
     @boost的传参必须是此类或者继承此类,如果你不想每个装饰器入参都很多,你可以写一个子类继承BoosterParams, 传参这个子类,例如下面的 BoosterParamsComplete
@@ -9498,12 +8867,11 @@ class BoosterParams(BaseJsonAbleModel):
     queue_name: str  # 队列名字,必传项,每个函数要使用不同的队列名字.
     broker_kind: str = BrokerEnum.SQLITE_QUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html
 
-    """ project_name是项目名, 默认为None, 给booster设置所属项目名, 用于对于在redis保存的funboost信息中，根据项目名字查看相关队列。
+    """ project_name是项目名，属于管理层面的标签, 默认为None, 给booster设置所属项目名, 用于对于在redis保存的funboost信息中，根据项目名字查看相关队列。
     # 如果不设置很难从redis保存的funboost信息中，区分哪些队列名属于哪个项目。 主要是给web接口查看用。
     # 一个项目的队列名字有哪些，是保存在redis的set中，key为 f'funboost.project_name:{project_name}'
-    # 通常配合 CareProjectNameEnv.set($project_name) 使用 ，它可以让你在监控和管理时“只看自己的一亩三分地，避免被其他人的队列刷屏干扰。"""
+    # 通常配合 CareProjectNameEnv.set($project_name) 使用 ，它可以让你在监控和管理时“只看自己的一亩三分地“，避免被其他人的队列刷屏干扰。"""
     project_name: typing.Optional[str] = None
-
 
     """如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。
     具体看ThreadPoolExecutorShrinkAble的说明
@@ -9614,11 +8982,12 @@ class BoosterParams(BaseJsonAbleModel):
     # 每种中间件能传递的键值对可以看 funboost/core/broker_kind__exclusive_config_default.py 的 BROKER_EXCLUSIVE_CONFIG_DEFAULT 属性。
     """
     broker_exclusive_config: dict = {} 
-
+    
 
 
     should_check_publish_func_params: bool = True  # 消息发布时候是否校验消息发布内容,比如有的人发布消息,函数只接受a,b两个入参,他去传2个入参,或者传参不存在的参数名字; 如果消费函数加了装饰器 ，你非要写*args,**kwargs,那就需要关掉发布消息时候的函数入参检查
-   
+    manual_func_input_params :dict= {'is_manual_func_input_params': False,'must_arg_name_list':[],'optional_arg_name_list':[]} # 也可以手动指定函数入参字段，默认是根据消费函数def定义的入参来生成这个。
+
 
     consumer_override_cls: typing.Optional[typing.Type] = None  # 使用 consumer_override_cls 和 publisher_override_cls 来自定义重写或新增消费者 发布者,见文档4.21b介绍，
     publisher_override_cls: typing.Optional[typing.Type] = None
@@ -9645,7 +9014,17 @@ class BoosterParams(BaseJsonAbleModel):
     user_options: dict = {} # 用户自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置,例如配合 consumer_override_cls中读取 或 register_custom_broker 使用
     
     
-    auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
+    auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.例如包含 final_func_input_params_info 和 where_to_instantiate 等。
+    
+    """# is_fake_booster：是否是伪造的booster,
+    # 用于faas模式下，因为跨项目的faas管理只拿到了redis的一些基本元数据，没有booster的函数逻辑，
+    # 例如ApsJobAdder管理定时任务，需要booster，但没有真实的函数逻辑，
+    # 你可以看 SingleQueueConusmerParamsGetter.gen_booster_for_faas 的用法，目前主要是控制不要执行 BoostersManager.regist_booster
+    # 普通用户完全不用改这个参数。
+    """
+    is_fake_booster: bool = False
+    booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT  # 普通用户不用管不用改，用于隔离boosters注册。例如faas的是虚假的跨服务跨项目的booster，没有具体函数逻辑，不可污染真正的注册。
+    
     
     
    
@@ -14737,33 +14116,47 @@ celery的用户级自定义扩展就很麻烦很高难度了，必须依赖框�
 ### 4b.8.1 🚀 快速开始
 
 ```python
-from funboost import boost
+import time
+from funboost import boost, BrokerEnum
 from funboost.workflow import chain, group, chord, WorkflowBoosterParams
 
+
 # 1. 使用 WorkflowBoosterParams 定义任务
-@boost(WorkflowBoosterParams(queue_name='download_task'))
+@boost(WorkflowBoosterParams(queue_name='download_task',broker_kind=BrokerEnum.REDIS))
 def download(url):
+    time.sleep(1)
     return f'/downloads/{url}'
 
-@boost(WorkflowBoosterParams(queue_name='process_task'))
+
+@boost(WorkflowBoosterParams(queue_name='process_task',broker_kind=BrokerEnum.REDIS))
 def process(file_path, resolution='360p'):
+    time.sleep(2)
     return f'{file_path}_{resolution}'
 
-@boost(WorkflowBoosterParams(queue_name='notify_task'))
+
+@boost(WorkflowBoosterParams(queue_name='notify_task',broker_kind=BrokerEnum.REDIS))
 def notify(results, url):
+    time.sleep(1)
     return f'完成: {url} -> {results}'
 
-# 2. 构建工作流（声明式）
-workflow = chain(
-    download.s('video.mp4'),
-    chord(
-        group(process.s(resolution=r) for r in ['360p', '720p', '1080p']),
-        notify.s(url='video.mp4')
-    )
-)
 
-# 3. 执行
-result = workflow.apply()
+if __name__ == '__main__':
+    print('开始执行')
+    download.consume()
+    process.consume()
+    notify.consume()
+    # 2. 构建工作流（声明式）
+    workflow = chain(
+        download.s('video.mp4'),
+        chord(
+            group(process.s(resolution=r) for r in ['360p', '720p', '1080p']),
+            notify.s(url='video.mp4'),
+        )
+    )
+
+    # 3. 执行
+    result = workflow.apply()
+    print('工作流执行结果:', result)  # 阻塞等待结果
 ```
 
 ### 4b.8.2 📦 核心概念
@@ -14936,7 +14329,7 @@ funboost/workflow/
 
 **funboost自身也支持指标统计和上报**
 funboost自身内置了 MetricCalculation , 是自己实现的指标统计和上报，并且可以以曲线图的显示在funboost的web界面中。   
-但是现在 funboost 也支持 `prometheus` 指标监控，以便更好的对接你们自己的`grafana`运维系统，因为 `prometheus` 的指标协议 更通用，
+但是现在 funboost 也同时支持知名的 `prometheus` 指标监控，以便更好的对接你们自己的`grafana`运维系统，因为 `prometheus` 的指标协议 更通用，
 
 ### 4b.9.0 Funboost Prometheus 监控指标 Mixin
 
@@ -21870,42 +21263,35 @@ from utils.download_and_upload import download_and_upload_to_s3   # 你日积月
 ---
 
 
-﻿# 🤖 AI Reading Guide for Project: funboost
+﻿
+# 🤖 AI 上下文阅读协议 (由 nb_ai_context 生成)
 
-> **Important Notice for AI Models**: This document contains the complete source code and documentation for the `funboost` project. Please read this guide carefully before analyzing the content.
+> **系统指令**：你正在解析一份由工具 **`nb_ai_context`** 自动生成的**结构化项目快照**。
+> **文档性质**：这**不是**一份普通的文档，而是专为 AI 大模型（LLM）设计的上下文数据流。它将项目文档、源代码和 AST 架构元数据进行了特殊的结构化合并。
 
-## 📖 Document Structure
+## 🧠 AI 认知与解析准则
 
-This markdown document is structured as follows:
+这份由 `nb_ai_context` 生成的文档是你的核心知识库。其中的内容是动态的——它可能包含完整的底层源码，也可能仅包含使用教程，或者是两者的混合。请遵循以下自适应阅读策略：
 
-1. **Project Summary** (`# markdown content namespace: xxx project summary`)
-   - Brief project description
-   - Core source files metadata (AST-parsed class/function signatures without full source code)
-   - File dependencies analysis
+### 1. 信息的层级与互补
+*   **文档即意图**：将 `README`、教程文档和 Docstrings 视为项目设计的**最高意图**。如果文档中详细描述了某个功能的用法，即使生成器没有包含其对应的源码实现，也请完全信任文档中的逻辑，并以此为基础进行回答。
+*   **源码即事实**：当遇到 `.py` 源码或 AST 元数据（类/函数签名）时，请以此作为实现细节、类型约束和语法准确性的**事实标准**。
+*   **缺失内容的推断**：如果教程演示了调用 `API.process()`，但本文档未包含 `API` 类的源码，**请勿认为该功能不存在**。你应该基于教程中的演示，合理推断该接口的输入输出和行为模式，并据此协助用户。
 
-2. **Project Root Files** (`# markdown content namespace: xxx Project Root Dir Some Files`)
-   - README.md, pyproject.toml, setup.py, etc.
+### 2. 文件边界与架构感知
+*   **上下文定界**：`nb_ai_context` 使用以下标记严格界定文件内容：
+    `--- **start of file: <路径>** ---` ... 内容 ... `--- **end of file: <路径>** ---`
+*   **结构可视化**：请利用“文件树 (File Tree)”章节来建立项目的宏观架构认知，即便某些文件未被展开显示。
+*   **依赖关系**：利用工具生成的“文件依赖分析”章节来理解模块间的引用关系，这有助于你在只有部分代码的情况下理清数据流向。
 
-3. **Source Code Sections** (`# markdown content namespace: xxx codes/examples/...`)
-   - File Tree: Shows directory structure
-   - Included Files: Lists all files in this section
-   - Full source code with AST metadata for Python files
-
-## 🔍 How to Identify File Boundaries
-
-- Each file starts with: `--- **start of file: <path>** (project: funboost) ---`
-- Each file ends with: `--- **end of file: <path>** (project: funboost) ---`
-- All file paths are relative to the project root
-
-## ⚠️ Important Notes
-
-1. **Do NOT hallucinate**: Only reference code, classes, functions, and APIs that actually exist in this document
-2. **Check file paths**: When suggesting code changes, always verify the file path exists in the File Tree
-3. **Respect the project structure**: The File Tree shows the actual directory layout
-4. **AST Metadata**: Python files include parsed metadata (imports, classes, methods) before the full source code
+### 3. 代码生成与交互
+*   **风格一致性**：在生成代码或解释逻辑时，请严格模仿文档中已有的代码风格和命名规范。
+*   **元数据利用**：对于仅展示 AST 元数据（如仅有类定义而无函数体）的 Python 文件，请将其视为有效的接口定义，确保你的代码调用符合这些签名约束。
+*   **事实锚定 (Fact Anchoring)**：生成代码时必须严格**锚定**在本文档提供的范围内。
+    *   涉及 API 调用时，必须基于**源码中的 AST 签名**或**教程中的演示示例**。
+    *   **严禁臆造**文档中既未定义、也未在教程中提及的类名、方法名或参数。确保每一个生成的 Token 都有文档依据。
 
 ---
-
 # markdown content namespace: funboost project summary 
 
 
@@ -22297,6 +21683,8 @@ BoosterParams 是 funboost 最核心的入参模型，掌握了 BoosterParams �
 
 **Docstring:**
 `````
+掌握funboost 的精华就是知道 BoosterParams 的入参有哪些，如果知道有哪些入参字段，就掌握了funboost的 90% 用法。
+
 pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
 
 @boost的传参必须是此类或者继承此类,如果你不想每个装饰器入参都很多,你可以写一个子类继承BoosterParams, 传参这个子类,例如下面的 BoosterParamsComplete
@@ -22320,7 +21708,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `max_retry_times: int = 3`
 - `retry_interval: typing.Union[float, int] = 0`
 - `is_push_to_dlx_queue_when_retry_max_times: bool = False`
-- `consuming_function_decorator: typing.Optional[typing.Callable] = None`
+- `consuming_function_decorator: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `function_timeout: typing.Union[int, float, None] = None`
 - `is_support_remote_kill_task: bool = False`
 - `log_level: int = logging.DEBUG`
@@ -22335,18 +21723,18 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `do_task_filtering: bool = False`
 - `task_filtering_expire_seconds: int = 0`
 - `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=False, is_save_status=False, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)`
-- `user_custom_record_process_info_func: typing.Optional[typing.Callable] = None`
+- `user_custom_record_process_info_func: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `is_using_rpc_mode: bool = False`
 - `rpc_result_expire_seconds: int = 1800`
 - `rpc_timeout: int = 1800`
 - `delay_task_apscheduler_jobstores_kind: Literal['redis', 'memory'] = 'redis'`
 - `is_do_not_run_by_specify_time_effect: bool = False`
-- `do_not_run_by_specify_time: list = ['10:00:00', '22:00:00']`
+- `do_not_run_by_specify_time: list[str] = ['10:00:00', '22:00:00']`
 - `schedule_tasks_on_main_thread: bool = False`
 - `is_auto_start_consuming_message: bool = False`
 - `booster_group: typing.Union[str, None] = None`
-- `consuming_function: typing.Optional[typing.Callable] = None`
-- `consuming_function_raw: typing.Optional[typing.Callable] = None`
+- `consuming_function: typing.Optional[typing.Callable[..., typing.Any]] = None`
+- `consuming_function_raw: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `consuming_function_name: str = ''`
 - `broker_exclusive_config: dict = {}`
 - `should_check_publish_func_params: bool = True`
@@ -22360,7 +21748,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT`
 
 ##### 📌 `class BoosterParamsComplete(BoosterParams)`
-*Line: 261*
+*Line: 265*
 
 **Docstring:**
 `````
@@ -22382,7 +21770,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))`
 
 ##### 📌 `class TaskOptions(BaseJsonAbleModel)`
-*Line: 281*
+*Line: 285*
 
 **Docstring:**
 `````
@@ -22413,7 +21801,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `otel_context: typing.Optional[dict] = None`
 
 ##### 📌 `class PublisherParams(BaseJsonAbleModel)`
-*Line: 334*
+*Line: 338*
 
 **Class Variables (21):**
 - `queue_name: str`
@@ -22425,7 +21813,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `logger_name: str = ''`
 - `log_filename: typing.Optional[str] = None`
 - `clear_queue_within_init: bool = False`
-- `consuming_function: typing.Optional[typing.Callable] = None`
+- `consuming_function: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `broker_exclusive_config: dict = {}`
 - `should_check_publish_func_params: bool = True`
 - `manual_func_input_params: dict = {'is_manual_func_input_params': False, 'must_arg_name_list': [], 'optional_arg_name_list': []}`
@@ -22508,6 +21896,14 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 ##### 📌 `class ConcurrentModeEnum`
 *Line: 150*
 
+**Docstring:**
+`````
+funboost 支持多线程、gevent、eventlet、asyncio 单线程 并发模式。
+这里没有多进程枚举，是因为funboost 希望多进程和这些模式叠加并发，
+booster.mp_consume(8) 就是8进程叠加 n个线程或协程并发，
+funboost的多进程和多线程 asyncio是叠加的，不是互斥的。
+`````
+
 **Class Variables (6):**
 - `THREADING = 'threading'`
 - `GEVENT = 'gevent'`
@@ -22517,7 +21913,13 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `SOLO = SINGLE_THREAD`
 
 ##### 📌 `class FunctionKind`
-*Line: 161*
+*Line: 168*
+
+**Docstring:**
+`````
+funboost 比celery更强，funboost不仅支持函数和静态方法
+funboost也能直接支持@boost加到 类方法和实例方法上（但这需要按教程方式做，不能想当然的写）
+`````
 
 **Class Variables (4):**
 - `CLASS_METHOD = 'CLASS_METHOD'`
@@ -22526,7 +21928,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `COMMON_FUNCTION = 'COMMON_FUNCTION'`
 
 ##### 📌 `class ConstStrForClassMethod`
-*Line: 168*
+*Line: 179*
 
 **Class Variables (5):**
 - `FIRST_PARAM_NAME = 'first_param_name'`
@@ -22536,7 +21938,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `CLS_FILE = 'cls_file'`
 
 ##### 📌 `class RedisKeys`
-*Line: 176*
+*Line: 187*
 
 **Public Methods (9):**
 - `def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name)` `staticmethod`
@@ -22573,7 +21975,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `FUNBOOST_UNACK_REGISTRY_PREFIX = 'funboost_unack_registry:'`
 
 ##### 📌 `class ConsumingFuncInputParamsCheckerField`
-*Line: 240*
+*Line: 251*
 
 **Class Variables (6):**
 - `is_manual_func_input_params = 'is_manual_func_input_params'`
@@ -22584,20 +21986,20 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `func_position = 'func_position'`
 
 ##### 📌 `class MongoDbName`
-*Line: 249*
+*Line: 260*
 
 **Class Variables (2):**
 - `TASK_STATUS_DB = 'funboost_task_status'`
 - `MONGOMQ_DB = 'funboost_mongomq'`
 
 ##### 📌 `class StrConst`
-*Line: 253*
+*Line: 264*
 
 **Class Variables (1):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
 
 ##### 📌 `class EnvConst`
-*Line: 256*
+*Line: 267*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -23665,12 +23067,12 @@ care_project_name 的作用是：
 - `from funboost.core.booster import gen_pid_queue_name_key`
 - `from funboost.core.func_params_model import PublisherParams`
 - `from funboost.core.func_params_model import BoosterParams`
-- `from funboost.core.func_params_model import BaseJsonAbleModel`
 - `from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig`
 - `from funboost.core.consuming_func_iniput_params_check import FakeFunGenerator`
 - `from funboost.core.exceptions import QueueNameNotExists`
 - `from funboost.timing_job.timing_push import ApsJobAdder`
 - `from funboost.constant import EnvConst`
+- `from funboost.core.pydantic_compatible_base import get_cant_json_serializable_fields`
 
 #### 🏛️ Classes (5)
 
@@ -23895,7 +23297,7 @@ care_project_name 的作用是：
   `````
 - `def get_one_queue_params_use_cache(self) -> dict`
 - `def gen_booster_for_faas(self) -> Booster`
-- `def gen_publisher_for_faas(self) -> Booster`
+- `def gen_publisher_for_faas(self) -> AbstractPublisher`
 - `def generate_aps_job_adder(self, job_store_kind = 'redis', is_auto_start = True, is_auto_paused = True) -> ApsJobAdder`
 - `def get_one_queue_pause_flag(self) -> int`
   - *返回队列的暂停状态，-1 表示队列不存在，0 表示队列未暂停，1 表示队列已暂停*
@@ -25403,7 +24805,7 @@ if __name__ == '__main__':
 
 #### 🔧 Public Functions (1)
 
-- `def add(x, y = 10)` `boost(Project1BoosterParams(queue_name='test_funboost_faas_queue'))`
+- `def add(x: int, y: int = 10)` `boost(Project1BoosterParams(queue_name='test_funboost_faas_queue'))`
   - *Line: 6*
 
 
@@ -25415,7 +24817,7 @@ from funboost import boost, BoosterParams, BrokerEnum
 import time
 
 @boost(Project1BoosterParams(queue_name="test_funboost_faas_queue", ))
-def add(x, y=10,):
+def add(x:int, y:int=10,):
     time.sleep(1)
     print(f"add {x} + {y} = {x + y}")
     return x + y
@@ -26330,6 +25732,14 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 ##### 📌 `class ConcurrentModeEnum`
 *Line: 150*
 
+**Docstring:**
+`````
+funboost 支持多线程、gevent、eventlet、asyncio 单线程 并发模式。
+这里没有多进程枚举，是因为funboost 希望多进程和这些模式叠加并发，
+booster.mp_consume(8) 就是8进程叠加 n个线程或协程并发，
+funboost的多进程和多线程 asyncio是叠加的，不是互斥的。
+`````
+
 **Class Variables (6):**
 - `THREADING = 'threading'`
 - `GEVENT = 'gevent'`
@@ -26339,7 +25749,13 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `SOLO = SINGLE_THREAD`
 
 ##### 📌 `class FunctionKind`
-*Line: 161*
+*Line: 168*
+
+**Docstring:**
+`````
+funboost 比celery更强，funboost不仅支持函数和静态方法
+funboost也能直接支持@boost加到 类方法和实例方法上（但这需要按教程方式做，不能想当然的写）
+`````
 
 **Class Variables (4):**
 - `CLASS_METHOD = 'CLASS_METHOD'`
@@ -26348,7 +25764,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `COMMON_FUNCTION = 'COMMON_FUNCTION'`
 
 ##### 📌 `class ConstStrForClassMethod`
-*Line: 168*
+*Line: 179*
 
 **Class Variables (5):**
 - `FIRST_PARAM_NAME = 'first_param_name'`
@@ -26358,7 +25774,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `CLS_FILE = 'cls_file'`
 
 ##### 📌 `class RedisKeys`
-*Line: 176*
+*Line: 187*
 
 **Public Methods (9):**
 - `def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name)` `staticmethod`
@@ -26395,7 +25811,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `FUNBOOST_UNACK_REGISTRY_PREFIX = 'funboost_unack_registry:'`
 
 ##### 📌 `class ConsumingFuncInputParamsCheckerField`
-*Line: 240*
+*Line: 251*
 
 **Class Variables (6):**
 - `is_manual_func_input_params = 'is_manual_func_input_params'`
@@ -26406,20 +25822,20 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `func_position = 'func_position'`
 
 ##### 📌 `class MongoDbName`
-*Line: 249*
+*Line: 260*
 
 **Class Variables (2):**
 - `TASK_STATUS_DB = 'funboost_task_status'`
 - `MONGOMQ_DB = 'funboost_mongomq'`
 
 ##### 📌 `class StrConst`
-*Line: 253*
+*Line: 264*
 
 **Class Variables (1):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
 
 ##### 📌 `class EnvConst`
-*Line: 256*
+*Line: 267*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -26433,7 +25849,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 
 
 
-class  BrokerEnum:
+class BrokerEnum:
     """
     在funboost中万物皆可为消息队列broker,funboost内置了所有 知名的正经经典消息队列作为broker,
     也支持了基于 内存 各种数据库 文件系统 tcp/udp/http这些socket 模拟作为broker.
@@ -26579,17 +25995,28 @@ class  BrokerEnum:
 
 
 class ConcurrentModeEnum:
+    """
+    funboost 支持多线程、gevent、eventlet、asyncio 单线程 并发模式。
+    这里没有多进程枚举，是因为funboost 希望多进程和这些模式叠加并发，
+    booster.mp_consume(8) 就是8进程叠加 n个线程或协程并发，
+    funboost的多进程和多线程 asyncio是叠加的，不是互斥的。
+    """
     THREADING = 'threading'  # 线程方式运行，兼容支持 async def 的异步函数。
     GEVENT = 'gevent'
     EVENTLET = 'eventlet'
     ASYNC = 'async'  # asyncio并发，适用于async def定义的函数。
     SINGLE_THREAD = 'single_thread'  # 如果你不想并发，不想预先从消息队列中间件拉取消息到python程序的内存queue队列缓冲中，那么就适合使用此并发模式。
     SOLO = SINGLE_THREAD
+    
 
 
 # is_fsdf_remote_run = 0
 
 class FunctionKind:
+    """
+    funboost 比celery更强，funboost不仅支持函数和静态方法
+    funboost也能直接支持@boost加到 类方法和实例方法上（但这需要按教程方式做，不能想当然的写）
+    """
     CLASS_METHOD = 'CLASS_METHOD'
     INSTANCE_METHOD = 'INSTANCE_METHOD'
     STATIC_METHOD = 'STATIC_METHOD'
@@ -27235,7 +26662,7 @@ set_frame_config这个模块的 use_config_form_funboost_config_module() 是核�
 这段注释说明和使用的用户无关,只和框架开发人员有关.
 '''
 
-__version__ = "53.5"
+__version__ = "53.6"
 
 from funboost.set_frame_config import show_frame_config
 
@@ -36244,11 +35671,12 @@ class PeeweeConsumer(AbstractConsumer):
 - `from funboost.consumers.base_consumer import AbstractConsumer`
 - `from funboost.publishers.persist_queue_publisher import PersistQueuePublisher`
 - `from funboost.core.func_params_model import PublisherParams`
+- `from persistqueue import Empty`
 
 #### 🏛️ Classes (1)
 
 ##### 📌 `class PersistQueueConsumer(AbstractConsumer)`
-*Line: 10*
+*Line: 11*
 
 **Docstring:**
 `````
@@ -36267,6 +35695,7 @@ from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.publishers.persist_queue_publisher import PersistQueuePublisher
 from funboost.core.func_params_model import PublisherParams
+from persistqueue import Empty
 
 class PersistQueueConsumer(AbstractConsumer):
     """
@@ -36276,7 +35705,10 @@ class PersistQueueConsumer(AbstractConsumer):
     def _dispatch_task(self):
         pub = PersistQueuePublisher(publisher_params=PublisherParams(queue_name=self.queue_name))
         while True:
-            item = pub.queue.get()
+            try:
+                item = pub.queue.get(timeout=0.5)
+            except Empty:
+                continue
             # self.logger.debug(f'从本地持久化sqlite的 [{self._queue_name}] 队列中 取出的消息是：   {item}  ')
             kw = {'body': item, 'q': pub.queue, 'item': item}
             self._submit_task(kw)
@@ -40957,12 +40389,12 @@ care_project_name 的作用是：
 - `from funboost.core.booster import gen_pid_queue_name_key`
 - `from funboost.core.func_params_model import PublisherParams`
 - `from funboost.core.func_params_model import BoosterParams`
-- `from funboost.core.func_params_model import BaseJsonAbleModel`
 - `from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig`
 - `from funboost.core.consuming_func_iniput_params_check import FakeFunGenerator`
 - `from funboost.core.exceptions import QueueNameNotExists`
 - `from funboost.timing_job.timing_push import ApsJobAdder`
 - `from funboost.constant import EnvConst`
+- `from funboost.core.pydantic_compatible_base import get_cant_json_serializable_fields`
 
 #### 🏛️ Classes (5)
 
@@ -41187,7 +40619,7 @@ care_project_name 的作用是：
   `````
 - `def get_one_queue_params_use_cache(self) -> dict`
 - `def gen_booster_for_faas(self) -> Booster`
-- `def gen_publisher_for_faas(self) -> Booster`
+- `def gen_publisher_for_faas(self) -> AbstractPublisher`
 - `def generate_aps_job_adder(self, job_store_kind = 'redis', is_auto_start = True, is_auto_paused = True) -> ApsJobAdder`
 - `def get_one_queue_pause_flag(self) -> int`
   - *返回队列的暂停状态，-1 表示队列不存在，0 表示队列未暂停，1 表示队列已暂停*
@@ -41256,7 +40688,7 @@ from funboost.core.loggers import FunboostFileLoggerMixin,nb_log_config_default
 from funboost.core.serialization import Serialization
 from funboost.constant import RedisKeys
 from funboost.core.booster import  Booster,BoosterRegistry, booster_registry_default,gen_pid_queue_name_key
-from funboost.core.func_params_model import PublisherParams, BoosterParams, BaseJsonAbleModel
+from funboost.core.func_params_model import PublisherParams, BoosterParams
 from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig
 from funboost.core.consuming_func_iniput_params_check import FakeFunGenerator
 from funboost.core.exceptions import QueueNameNotExists
@@ -41635,7 +41067,6 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
     _lock_for_generate_publisher_booster = threading.Lock()
     
 
-
     def __init__(self,queue_name:str,care_project_name:typing.Optional[str]=None,is_use_local_booster:bool=None):
         RedisReportInfoGetterMixin._init(self,care_project_name)
         self.queue_name = queue_name
@@ -41761,6 +41192,23 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
     
 
    
+    @staticmethod
+    def _reset_non_json_serializable_fields(booster_params_from_redis: dict):
+        """
+        自动重置 BoosterParams 中所有不可JSON序列化的字段为 None
+        
+        注意：booster_params_from_redis 是从 Redis 取出的字典，不可json序列化的对象的值都是字符串形式
+        需要根据 BoosterParams 的类型定义，将不可序列化类型的字段重置为 None
+        """
+        # 获取不可序列化的字段名列表（带缓存）
+        from funboost.core.pydantic_compatible_base import get_cant_json_serializable_fields
+        non_serializable_fields = get_cant_json_serializable_fields(BoosterParams)
+        
+        # 重置这些字段为 None
+        for field_name in non_serializable_fields:
+            if field_name in booster_params_from_redis:
+                booster_params_from_redis[field_name] = None
+
     def _gen_booster_by_local_booster(self) -> Booster:
         # 使用本地booster，这种也可以，每个项目单独自己起一个 funboost web manager 就可以，
         # 启动  funboost web manager  之前，先导入相关的 booster所在模块,再调用 `start_funboost_web_manager()` 函数
@@ -41794,23 +41242,26 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
              if existing_booster and existing_booster.boost_params.broker_kind == current_broker_kind:
                  return existing_booster
 
+             # 自动重置所有不可JSON序列化的字段为None，(避免硬编码)
+             # 例如 user_custom_record_process_info_func  consumer_override_cls consuming_function_decorator 等等
+             self._reset_non_json_serializable_fields(booster_params)
+             
+             
              # 生成新的 booster
+             
+             # 手动设置需要的字段
              redis_final_func_input_params_info = booster_params['auto_generate_info']['final_func_input_params_info']
              fake_fun = FakeFunGenerator.gen_fake_fun_by_params(redis_final_func_input_params_info)
              booster_params['consuming_function'] = fake_fun
              booster_params['consuming_function_raw'] = fake_fun
-
-             booster_params['specify_concurrent_pool'] = None
-             booster_params['specify_async_loop'] = None
-             booster_params['consuming_function_decorator'] = None
-             booster_params['function_result_status_persistance_conf'] = FunctionResultStatusPersistanceConfig(is_save_status=False,is_save_result=False)
-             booster_params['user_custom_record_process_info_func'] = None
-             booster_params['consumer_override_cls'] = None
-             booster_params['publisher_override_cls'] = None
-
+             
              booster_params['is_fake_booster'] = True 
              # 关键：指定 registry，这样实例化时会自动注册到 booster_registry_for_faas，覆盖旧的 key
              booster_params['booster_registry_name'] = 'booster_registry_for_faas'
+
+             booster_params['function_result_status_persistance_conf'] = FunctionResultStatusPersistanceConfig(is_save_status=False,is_save_result=False)
+             
+             
 
              booster_params_model = BoosterParams(**booster_params)
              
@@ -41824,7 +41275,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
             return self._gen_booster_by_local_booster()
         return self._gen_booster_by_redis_meta_info()
     
-    def gen_publisher_for_faas(self)->Booster:
+    def gen_publisher_for_faas(self)->AbstractPublisher:
         booster = self.gen_booster_for_faas()
         return booster.publisher
     
@@ -42466,7 +41917,7 @@ class Booster:
     def __getstate__(self):
         state = {}
         state["queue_name"] = self.boost_params.queue_name
-        state["booster_registry_name"] = self.booster_registry_name
+        state["booster_registry_name"] = self.boost_params.booster_registry_name
         return state
 
     def __setstate__(self, state):
@@ -44621,6 +44072,8 @@ BoosterParams 是 funboost 最核心的入参模型，掌握了 BoosterParams �
 
 **Docstring:**
 `````
+掌握funboost 的精华就是知道 BoosterParams 的入参有哪些，如果知道有哪些入参字段，就掌握了funboost的 90% 用法。
+
 pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
 
 @boost的传参必须是此类或者继承此类,如果你不想每个装饰器入参都很多,你可以写一个子类继承BoosterParams, 传参这个子类,例如下面的 BoosterParamsComplete
@@ -44644,7 +44097,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `max_retry_times: int = 3`
 - `retry_interval: typing.Union[float, int] = 0`
 - `is_push_to_dlx_queue_when_retry_max_times: bool = False`
-- `consuming_function_decorator: typing.Optional[typing.Callable] = None`
+- `consuming_function_decorator: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `function_timeout: typing.Union[int, float, None] = None`
 - `is_support_remote_kill_task: bool = False`
 - `log_level: int = logging.DEBUG`
@@ -44659,18 +44112,18 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `do_task_filtering: bool = False`
 - `task_filtering_expire_seconds: int = 0`
 - `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=False, is_save_status=False, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)`
-- `user_custom_record_process_info_func: typing.Optional[typing.Callable] = None`
+- `user_custom_record_process_info_func: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `is_using_rpc_mode: bool = False`
 - `rpc_result_expire_seconds: int = 1800`
 - `rpc_timeout: int = 1800`
 - `delay_task_apscheduler_jobstores_kind: Literal['redis', 'memory'] = 'redis'`
 - `is_do_not_run_by_specify_time_effect: bool = False`
-- `do_not_run_by_specify_time: list = ['10:00:00', '22:00:00']`
+- `do_not_run_by_specify_time: list[str] = ['10:00:00', '22:00:00']`
 - `schedule_tasks_on_main_thread: bool = False`
 - `is_auto_start_consuming_message: bool = False`
 - `booster_group: typing.Union[str, None] = None`
-- `consuming_function: typing.Optional[typing.Callable] = None`
-- `consuming_function_raw: typing.Optional[typing.Callable] = None`
+- `consuming_function: typing.Optional[typing.Callable[..., typing.Any]] = None`
+- `consuming_function_raw: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `consuming_function_name: str = ''`
 - `broker_exclusive_config: dict = {}`
 - `should_check_publish_func_params: bool = True`
@@ -44684,7 +44137,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT`
 
 ##### 📌 `class BoosterParamsComplete(BoosterParams)`
-*Line: 261*
+*Line: 265*
 
 **Docstring:**
 `````
@@ -44706,7 +44159,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))`
 
 ##### 📌 `class TaskOptions(BaseJsonAbleModel)`
-*Line: 281*
+*Line: 285*
 
 **Docstring:**
 `````
@@ -44737,7 +44190,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `otel_context: typing.Optional[dict] = None`
 
 ##### 📌 `class PublisherParams(BaseJsonAbleModel)`
-*Line: 334*
+*Line: 338*
 
 **Class Variables (21):**
 - `queue_name: str`
@@ -44749,7 +44202,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `logger_name: str = ''`
 - `log_filename: typing.Optional[str] = None`
 - `clear_queue_within_init: bool = False`
-- `consuming_function: typing.Optional[typing.Callable] = None`
+- `consuming_function: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `broker_exclusive_config: dict = {}`
 - `should_check_publish_func_params: bool = True`
 - `manual_func_input_params: dict = {'is_manual_func_input_params': False, 'must_arg_name_list': [], 'optional_arg_name_list': []}`
@@ -44810,6 +44263,8 @@ class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
 
 class BoosterParams(BaseJsonAbleModel):
     """
+    掌握funboost 的精华就是知道 BoosterParams 的入参有哪些，如果知道有哪些入参字段，就掌握了funboost的 90% 用法。
+
     pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
 
     @boost的传参必须是此类或者继承此类,如果你不想每个装饰器入参都很多,你可以写一个子类继承BoosterParams, 传参这个子类,例如下面的 BoosterParamsComplete
@@ -44856,7 +44311,7 @@ class BoosterParams(BaseJsonAbleModel):
     is_push_to_dlx_queue_when_retry_max_times: bool = False  # 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
 
 
-    consuming_function_decorator: typing.Optional[typing.Callable] = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
+    consuming_function_decorator: typing.Optional[typing.Callable[..., typing.Any]] = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
     
     
     """
@@ -44899,7 +44354,7 @@ class BoosterParams(BaseJsonAbleModel):
     function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
         is_save_result=False, is_save_status=False, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)  # 是否保存函数的入参，运行结果和运行状态到mongodb。这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
 
-    user_custom_record_process_info_func: typing.Optional[typing.Callable] = None  # 提供一个用户自定义的保存消息处理记录到某个地方例如mysql数据库的函数，函数仅仅接受一个入参，入参类型是 FunctionResultStatus，用户可以打印参数
+    user_custom_record_process_info_func: typing.Optional[typing.Callable[..., typing.Any]] = None  # 提供一个用户自定义的保存消息处理记录到某个地方例如mysql数据库的函数，函数仅仅接受一个入参，入参类型是 FunctionResultStatus，用户可以打印参数
 
     is_using_rpc_mode: bool = False  # 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。
     rpc_result_expire_seconds: int = 1800  # redis保存rpc结果的过期时间.
@@ -44909,7 +44364,7 @@ class BoosterParams(BaseJsonAbleModel):
 
     
     is_do_not_run_by_specify_time_effect: bool = False  # 是否使不运行的时间段生效
-    do_not_run_by_specify_time: list = ['10:00:00', '22:00:00']  # 不运行的时间段,在这个时间段自动不运行函数.
+    do_not_run_by_specify_time: list[str] = ['10:00:00', '22:00:00']  # 不运行的时间段,在这个时间段自动不运行函数.
 
     schedule_tasks_on_main_thread: bool = False  # 直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
 
@@ -44921,8 +44376,8 @@ class BoosterParams(BaseJsonAbleModel):
     # 用法见文档 4.2d.3 章节.   使用 BoostersManager ,通过 consume_group 启动一组消费函数
     booster_group:typing.Union[str, None] = None
 
-    consuming_function: typing.Optional[typing.Callable] = None  # 消费函数,在@boost时候不用指定,因为装饰器知道下面的函数.
-    consuming_function_raw: typing.Optional[typing.Callable] = None  # 不需要传递，自动生成
+    consuming_function: typing.Optional[typing.Callable[..., typing.Any]] = None  # 消费函数,在@boost时候不用指定,因为装饰器知道下面的函数.
+    consuming_function_raw: typing.Optional[typing.Callable[..., typing.Any]] = None  # 不需要传递，自动生成
     consuming_function_name: str = '' # 不需要传递，自动生成
 
     
@@ -45026,6 +44481,8 @@ class BoosterParams(BaseJsonAbleModel):
         return funboost_lazy_impoter.boost(self)(func)
 
 
+
+
 class BoosterParamsComplete(BoosterParams):
     """
     例如一个子类,这个BoosterParams的子类可以作为@booot的传参,每个@boost可以少写一些这些重复的入参字段.
@@ -45113,7 +44570,7 @@ class PublisherParams(BaseJsonAbleModel):
     logger_name: str = ''  # 队列消费者发布者的日志命名空间.
     log_filename: typing.Optional[str] = None
     clear_queue_within_init: bool = False  # with 语法发布时候,先清空消息队列
-    consuming_function: typing.Optional[typing.Callable] = None  # consuming_function 作用是 inspect 模块获取函数的入参信息
+    consuming_function: typing.Optional[typing.Callable[..., typing.Any]] = None  # consuming_function 作用是 inspect 模块获取函数的入参信息
 
     broker_exclusive_config: dict = {}
     
@@ -46804,6 +46261,9 @@ def multi_process_pub_params_list(booster: Booster, params_list, process_num=16)
 - `import pydantic`
 - `from concurrent.futures import ThreadPoolExecutor`
 - `from asyncio import AbstractEventLoop`
+- `import inspect`
+- `from collections.abc import Callable as AbcCallable`
+- `from funboost.core.func_params_model import BoosterParams`
 - `from pydantic import ConfigDict`
 - `from pydantic import root_validator`
 - `from pydantic import model_validator`
@@ -46864,7 +46324,7 @@ def multi_process_pub_params_list(booster: Booster, params_list, process_num=16)
 - `_model_cls = cls`
 - `_field_keys = set(values.keys())`
 
-#### 🔧 Public Functions (5)
+#### 🔧 Public Functions (6)
 
 - `def get_pydantic_major_version() -> int`
   - *Line: 33*
@@ -46884,6 +46344,28 @@ def multi_process_pub_params_list(booster: Booster, params_list, process_num=16)
           if self.qps and self.concurrent_num == 50:
               self.concurrent_num = 500
           return self
+  `````
+
+- `def get_cant_json_serializable_fields(model_type: typing.Type[BaseModel]) -> typing.Set[str]`
+  - *Line: 222*
+  - **Docstring:**
+  `````
+  获取 Pydantic 模型中所有不可JSON序列化的字段名列表
+  使用缓存，每个模型类型只在第一次调用时计算
+  
+  Args:
+      model_type: Pydantic 模型类型
+      
+  Returns:
+      不可JSON序列化的字段名集合
+      
+  Example:
+      >>> from funboost.core.func_params_model import BoosterParams
+      >>> fields = get_cant_json_serializable_fields(BoosterParams)
+      >>> 'specify_concurrent_pool' in fields
+      True
+      >>> 'queue_name' in fields
+      False
   `````
 
 - `def decorator(func)`
@@ -47116,6 +46598,99 @@ class BaseJsonAbleModel(CompatibleModel):
                 init_dict[k] = v
         return model_type(**init_dict)
 
+
+# 缓存每个模型类型的不可序列化字段
+_model_non_serializable_fields_cache: typing.Dict[typing.Type, typing.Set[str]] = {}
+
+def get_cant_json_serializable_fields(model_type: typing.Type[BaseModel]) -> typing.Set[str]:
+    """
+    获取 Pydantic 模型中所有不可JSON序列化的字段名列表
+    使用缓存，每个模型类型只在第一次调用时计算
+    
+    Args:
+        model_type: Pydantic 模型类型
+        
+    Returns:
+        不可JSON序列化的字段名集合
+        
+    Example:
+        >>> from funboost.core.func_params_model import BoosterParams
+        >>> fields = get_cant_json_serializable_fields(BoosterParams)
+        >>> 'specify_concurrent_pool' in fields
+        True
+        >>> 'queue_name' in fields
+        False
+    """
+    # 如果已有缓存，直接返回
+    if model_type in _model_non_serializable_fields_cache:
+        return _model_non_serializable_fields_cache[model_type]
+    
+    import inspect
+    from collections.abc import Callable as AbcCallable
+    
+    non_serializable_fields = set()
+    
+    # 获取模型的所有字段类型注解
+    # 兼容 pydantic v1 和 v2
+    if hasattr(model_type, 'model_fields'):
+        # pydantic v2
+        fields_info = model_type.model_fields
+    else:
+        # pydantic v1
+        fields_info = model_type.__fields__
+    
+    for field_name, field_info in fields_info.items():
+        # 获取字段的类型注解
+        if hasattr(field_info, 'annotation'):
+            # pydantic v2
+            field_type = field_info.annotation
+        else:
+            # pydantic v1
+            field_type = field_info.outer_type_ if hasattr(field_info, 'outer_type_') else field_info.type_
+        
+        # 判断类型是否不可JSON序列化
+        # 使用 typing.get_origin 和 get_args 来准确判断类型
+        origin = typing.get_origin(field_type)
+        
+        # 处理 Optional[X] / Union[X, None] 类型，获取实际类型
+        if origin is typing.Union:
+            args = typing.get_args(field_type)
+            # 过滤掉 NoneType，获取实际类型
+            non_none_types = [arg for arg in args if arg is not type(None)]
+            if non_none_types:
+                field_type = non_none_types[0]
+                origin = typing.get_origin(field_type)
+        
+        # 判断是否是不可序列化的类型
+        # 1. typing.Callable - 函数类型
+        # 2. typing.Type - 类类型
+        # 3. 自定义类 - 实际的类对象（非基本类型）
+        is_callable = origin is AbcCallable or (hasattr(typing, 'Callable') and origin is getattr(typing, 'Callable', None))
+        is_type = origin is type or str(field_type).startswith('typing.Type')
+        
+        # 检查是否是自定义类：
+        # - 必须是一个实际的类（继承自 type，即 inspect.isclass 为 True）
+        # - 不是基本类型（str, int, float, bool, list, dict）
+        # - 不是 typing 模块的泛型（Literal, Union, Optional 等已被 origin 处理）
+        is_custom_class = False
+        if not is_callable and not is_type and origin is None:
+            # origin 为 None 说明不是泛型类型，可能是普通类
+            # 检查是否是实际的自定义类
+            if inspect.isclass(field_type):
+                # 是一个类，检查是否是基本类型
+                if field_type not in (str, int, float, bool, list, dict):
+                    is_custom_class = True
+        
+        if is_callable or is_type or is_custom_class:
+            non_serializable_fields.add(field_name)
+    
+    # 缓存结果
+    _model_non_serializable_fields_cache[model_type] = non_serializable_fields
+    return non_serializable_fields
+
+if __name__ == '__main__':
+    from funboost.core.func_params_model import BoosterParams
+    print(get_cant_json_serializable_fields(BoosterParams))
 `````
 
 --- **end of file: funboost/core/pydantic_compatible_base.py** (project: funboost) --- 
@@ -65121,14 +64696,17 @@ Funboost Workflow - 编排原语 (Primitives)
 #### 📦 Imports
 
 - `import typing`
+- `import uuid`
 - `from signature import Signature`
+- `from workflow_mixin import WorkflowPublisherMixin`
 - `from funboost.core.msg_result_getter import AsyncResult`
 - `from funboost.core.function_result_status_saver import FunctionResultStatus`
+- `from signature import _update_workflow_context_after_task`
 
 #### 🏛️ Classes (4)
 
 ##### 📌 `class Chain`
-*Line: 22*
+*Line: 45*
 
 **Docstring:**
 `````
@@ -65185,7 +64763,7 @@ result = workflow.apply()
   `````
 
 ##### 📌 `class Group`
-*Line: 112*
+*Line: 143*
 
 **Docstring:**
 `````
@@ -65235,7 +64813,7 @@ results = g.apply()  # 返回结果列表 [r1, r2, r3]
   `````
 
 ##### 📌 `class _WrapperResult`
-*Line: 195*
+*Line: 244*
 
 **Docstring:**
 `````
@@ -65249,7 +64827,7 @@ results = g.apply()  # 返回结果列表 [r1, r2, r3]
     - `result`
 
 ##### 📌 `class Chord`
-*Line: 204*
+*Line: 253*
 
 **Docstring:**
 `````
@@ -65299,7 +64877,7 @@ result = c.apply()
 #### 🔧 Public Functions (3)
 
 - `def chain(*tasks) -> Chain`
-  - *Line: 263*
+  - *Line: 320*
   - **Docstring:**
   `````
   创建链式执行工作流
@@ -65312,7 +64890,7 @@ result = c.apply()
   `````
 
 - `def group(*tasks) -> Group`
-  - *Line: 276*
+  - *Line: 333*
   - **Docstring:**
   `````
   创建并行执行工作流
@@ -65328,7 +64906,7 @@ result = c.apply()
   `````
 
 - `def chord(header, body) -> Chord`
-  - *Line: 292*
+  - *Line: 349*
   - **Docstring:**
   `````
   创建 并行+汇总 工作流
@@ -65363,9 +64941,32 @@ Funboost Workflow - 编排原语 (Primitives)
 """
 
 import typing
+import uuid
 from .signature import Signature
+from .workflow_mixin import WorkflowPublisherMixin
 from funboost.core.msg_result_getter import AsyncResult
 from funboost.core.function_result_status_saver import FunctionResultStatus
+
+
+def _ensure_workflow_context() -> bool:
+    """
+    确保存在工作流上下文，如果不存在则创建初始上下文
+    
+    :return: True 表示创建了新上下文（调用者需要在结束时清理），False 表示已存在上下文
+    """
+    existing = WorkflowPublisherMixin.get_workflow_context()
+    if existing:
+        return False  # 已存在，不需要创建
+    
+    # 创建初始工作流上下文
+    initial_ctx = {
+        'workflow_id': str(uuid.uuid4()),
+        'chain_depth': 0,
+        'current_task_id': None,
+        'parent_task_id': None,
+    }
+    WorkflowPublisherMixin.set_workflow_context(initial_ctx)
+    return True  # 新创建的，调用者需要清理
 
 
 class Chain:
@@ -65413,20 +65014,28 @@ class Chain:
         :param prev_result: 外部传入的初始结果（可选）
         :return: 最后一个任务的执行结果
         """
-        result = prev_result
-        result_status = None
+        # 确保存在工作流上下文（如果不存在则自动创建）
+        created_new_ctx = _ensure_workflow_context()
         
-        for task in self.tasks:
-            if isinstance(task, (Chain, Group, Chord)):
-                result_status = task.apply(prev_result=result)
-                result = result_status.result if isinstance(result_status, FunctionResultStatus) else result_status
-            elif isinstance(task, Signature):
-                result_status = task.apply(prev_result=result)
-                result = result_status.result
-            else:
-                raise TypeError(f"Unsupported task type: {type(task)}")
-        
-        return result_status
+        try:
+            result = prev_result
+            result_status = None
+            
+            for task in self.tasks:
+                if isinstance(task, (Chain, Group, Chord)):
+                    result_status = task.apply(prev_result=result)
+                    result = result_status.result if isinstance(result_status, FunctionResultStatus) else result_status
+                elif isinstance(task, Signature):
+                    result_status = task.apply(prev_result=result)
+                    result = result_status.result
+                else:
+                    raise TypeError(f"Unsupported task type: {type(task)}")
+            
+            return result_status
+        finally:
+            # 只有当本方法创建了上下文时才清理
+            if created_new_ctx:
+                WorkflowPublisherMixin.clear_workflow_context()
     
     def apply_async(self, prev_result=None) -> AsyncResult:
         """
@@ -65498,30 +65107,48 @@ class Group:
         if not self.tasks:
             return []
         
-        # 并行发布所有任务
-        async_results = []
-        for task in self.tasks:
-            if isinstance(task, Signature):
-                async_results.append(task.apply_async(prev_result))
-            elif isinstance(task, (Chain, Group, Chord)):
-                # 对于嵌套结构，同步执行（简化实现）
-                result = task.apply(prev_result)
-                # 包装成类似 AsyncResult 的结构以统一处理
-                async_results.append(_WrapperResult(result))
-            else:
-                raise TypeError(f"Unsupported task type: {type(task)}")
+        # 确保存在工作流上下文（如果不存在则自动创建）
+        created_new_ctx = _ensure_workflow_context()
         
-        # 等待所有结果
-        results = []
-        for ar in async_results:
-            if isinstance(ar, _WrapperResult):
-                results.append(ar.result)
-            else:
-                # AsyncResult
-                status = ar.wait_rpc_data_or_raise(raise_exception=True)
-                results.append(status.result)
-        
-        return results
+        try:
+            # 并行发布所有任务
+            async_results = []
+            for task in self.tasks:
+                if isinstance(task, Signature):
+                    async_results.append(task.apply_async(prev_result))
+                elif isinstance(task, (Chain, Group, Chord)):
+                    # 对于嵌套结构，同步执行（简化实现）
+                    result = task.apply(prev_result)
+                    # 包装成类似 AsyncResult 的结构以统一处理
+                    async_results.append(_WrapperResult(result))
+                else:
+                    raise TypeError(f"Unsupported task type: {type(task)}")
+            
+            # 等待所有结果
+            results = []
+            last_task_id = None
+            for ar in async_results:
+                if isinstance(ar, _WrapperResult):
+                    results.append(ar.result)
+                else:
+                    # AsyncResult
+                    status = ar.wait_rpc_data_or_raise(raise_exception=True)
+                    results.append(status.result)
+                    last_task_id = status.task_id
+            
+            # Group 完成后更新 workflow context
+            # 使用最后一个任务的 task_id 作为 current_task_id，
+            # 这样 chord callback 的 parent_task_id 能指向 group 中的某个任务
+            # 注意：_update_workflow_context_after_task 会同时递增 chain_depth
+            if last_task_id:
+                from .signature import _update_workflow_context_after_task
+                _update_workflow_context_after_task(last_task_id)
+            
+            return results
+        finally:
+            # 只有当本方法创建了上下文时才清理
+            if created_new_ctx:
+                WorkflowPublisherMixin.clear_workflow_context()
     
     def apply_async(self, prev_result=None) -> typing.List[AsyncResult]:
         """
@@ -65595,11 +65222,19 @@ class Chord:
         :param prev_result: 传递给 header 每个任务的初始结果
         :return: body 任务的执行结果
         """
-        # 1. 执行 header（并行）
-        header_results = self.header.apply(prev_result)
+        # 确保存在工作流上下文（如果不存在则自动创建）
+        created_new_ctx = _ensure_workflow_context()
         
-        # 2. 将 header 结果列表作为 body 的第一个参数执行
-        return self.body.apply(prev_result=header_results)
+        try:
+            # 1. 执行 header（并行）
+            header_results = self.header.apply(prev_result)
+            
+            # 2. 将 header 结果列表作为 body 的第一个参数执行
+            return self.body.apply(prev_result=header_results)
+        finally:
+            # 只有当本方法创建了上下文时才清理
+            if created_new_ctx:
+                WorkflowPublisherMixin.clear_workflow_context()
     
     def __repr__(self):
         return f"Chord(header={self.header}, body={self.body})"
@@ -65732,12 +65367,13 @@ Signature 表示一个"待执行"的任务，包含：
 - `import typing`
 - `from funboost.core.msg_result_getter import AsyncResult`
 - `from funboost.core.function_result_status_saver import FunctionResultStatus`
+- `from workflow_mixin import WorkflowPublisherMixin`
 - `from primitives import Chain`
 
 #### 🏛️ Classes (1)
 
 ##### 📌 `class Signature`
-*Line: 18*
+*Line: 37*
 
 **Docstring:**
 `````
@@ -65815,7 +65451,7 @@ async_result = sig.apply_async()  # 异步
 #### 🔧 Public Functions (1)
 
 - `def signature(booster, *args, **kwargs) -> Signature`
-  - *Line: 135*
+  - *Line: 160*
   - **Docstring:**
   `````
   便捷函数：创建任务签名
@@ -65845,6 +65481,25 @@ Signature 表示一个"待执行"的任务，包含：
 import typing
 from funboost.core.msg_result_getter import AsyncResult
 from funboost.core.function_result_status_saver import FunctionResultStatus
+from .workflow_mixin import WorkflowPublisherMixin
+
+
+def _update_workflow_context_after_task(task_id: str):
+    """
+    任务完成后更新 workflow_context 的 current_task_id 和 chain_depth
+    
+    这解决了 primitives 编排场景下的问题：
+    - 发布者发布任务 A，等待 RPC 结果
+    - A 完成，发布者需要知道 A 的 task_id
+    - 发布者发布任务 B 时，B 的 parent_task_id 应该是 A 的 task_id
+    - 同时递增 chain_depth，使得 B 的层级比 A 深一层
+    """
+    ctx = WorkflowPublisherMixin.get_workflow_context()
+    if ctx:
+        ctx = ctx.copy()
+        ctx['current_task_id'] = task_id
+        ctx['chain_depth'] = ctx.get('chain_depth', 0) + 1  # 递增层级
+        WorkflowPublisherMixin.set_workflow_context(ctx)
 
 
 class Signature:
@@ -65934,7 +65589,13 @@ class Signature:
         """
         args = self._build_args(prev_result)
         async_result = self.booster.push(*args, **self.kwargs)
-        return async_result.wait_rpc_data_or_raise(raise_exception=True)
+        result_status = async_result.wait_rpc_data_or_raise(raise_exception=True)
+        
+        # 任务完成后，更新 workflow_context 的 current_task_id
+        # 这样下一个任务发布时，parent_task_id 就是当前任务的 task_id
+        _update_workflow_context_after_task(result_status.task_id)
+        
+        return result_status
     
     def apply_async(self, prev_result=None) -> AsyncResult:
         """
@@ -66004,17 +65665,14 @@ Funboost Workflow - Publisher/Consumer Mixin
 
 - `import copy`
 - `import typing`
+- `import contextvars`
 - `from funboost.publishers.base_publisher import AbstractPublisher`
 - `from funboost.consumers.base_consumer import AbstractConsumer`
-- `from funboost.core.serialization import Serialization`
-- `import threading`
-- `import threading`
-- `import threading`
 
 #### 🏛️ Classes (2)
 
 ##### 📌 `class WorkflowPublisherMixin(AbstractPublisher)`
-*Line: 21*
+*Line: 27*
 
 **Docstring:**
 `````
@@ -66025,27 +65683,41 @@ Funboost Workflow - Publisher/Consumer Mixin
 2. 如果有，将工作流上下文注入到消息的 extra 字段中
 3. 支持链路追踪：可以追踪任务是由哪个上游任务触发的
 
-工作流上下文包含：
+消息中的工作流上下文包含：
 - workflow_id: 工作流唯一标识
-- parent_task_id: 父任务 ID
+- parent_task_id: 父任务 ID（谁触发了这个任务）
 - chain_depth: 链条深度（用于调试）
+
+注意：current_task_id 只在运行时 contextvars 中使用，不存入消息。
+任务自己的 ID 通过 extra.task_id 获取。
 `````
 
-**Public Methods (4):**
+**Public Methods (5):**
 - `def set_workflow_context(cls, workflow_ctx: dict)` `classmethod`
-  - *设置当前线程的工作流上下文*
+  - *设置当前线程/协程的工作流上下文*
 - `def get_workflow_context(cls) -> typing.Optional[dict]` `classmethod`
-  - *获取当前线程的工作流上下文*
+  - *获取当前线程/协程的工作流上下文*
 - `def clear_workflow_context(cls)` `classmethod`
-  - *清除当前线程的工作流上下文*
+  - *清除当前线程/协程的工作流上下文*
 - `def publish(self, msg, task_id = None, task_options = None)`
   - *发布消息，注入工作流上下文*
-
-**Class Variables (1):**
-- `_workflow_context_storage: typing.ClassVar[dict] = {}`
+- `async def aio_publish(self, msg, task_id = None, task_options = None)`
+  - **Docstring:**
+  `````
+  asyncio 生态下发布消息，处理跨线程的工作流上下文传递
+  
+  关键问题：父类 aio_publish 使用 run_in_executor 在线程池执行 publish，
+  但 contextvars 不会自动跨线程传递。
+  
+  解决方案：
+  1. 在当前 asyncio 线程先获取 workflow_context
+  2. 注入到消息的 extra._workflow_context_from_aio 中
+  3. 然后调用父类的 aio_publish（在 executor 线程中执行 publish）
+  4. publish 方法检测到 _workflow_context_from_aio，会使用它作为上下文
+  `````
 
 ##### 📌 `class WorkflowConsumerMixin(AbstractConsumer)`
-*Line: 83*
+*Line: 139*
 
 **Docstring:**
 `````
@@ -66053,17 +65725,17 @@ Funboost Workflow - Publisher/Consumer Mixin
 
 功能：
 1. 在执行任务前，从消息中提取工作流上下文
-2. 将上下文保存到线程本地存储，以便子任务继承
+2. 将上下文保存到 contextvars，以便子任务继承（同时支持多线程和异步协程）
 3. 执行完成后清理上下文
 
 这样，当消费函数内部调用 other_task.push() 时，
-WorkflowPublisherMixin 可以从线程本地存储获取上下文并注入到子任务消息中。
+WorkflowPublisherMixin 可以从 contextvars 获取上下文并注入到子任务消息中。
 `````
 
 #### 🔧 Public Functions (1)
 
 - `def get_current_workflow_context() -> typing.Optional[dict]`
-  - *Line: 143*
+  - *Line: 207*
   - **Docstring:**
   `````
   获取当前工作流上下文（供用户代码使用）
@@ -66099,10 +65771,16 @@ Funboost Workflow - Publisher/Consumer Mixin
 
 import copy
 import typing
+import contextvars
 
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost.core.serialization import Serialization
+
+# 使用 contextvars 统一管理上下文，同时支持多线程和异步协程场景
+# 参考 funboost/core/current_task.py 的实现
+_workflow_context_var: contextvars.ContextVar[typing.Optional[dict]] = contextvars.ContextVar(
+    'workflow_context', default=None
+)
 
 
 class WorkflowPublisherMixin(AbstractPublisher):
@@ -66114,35 +65792,57 @@ class WorkflowPublisherMixin(AbstractPublisher):
     2. 如果有，将工作流上下文注入到消息的 extra 字段中
     3. 支持链路追踪：可以追踪任务是由哪个上游任务触发的
     
-    工作流上下文包含：
+    消息中的工作流上下文包含：
     - workflow_id: 工作流唯一标识
-    - parent_task_id: 父任务 ID
+    - parent_task_id: 父任务 ID（谁触发了这个任务）
     - chain_depth: 链条深度（用于调试）
-    """
     
-    # 线程本地存储，用于保存当前任务的工作流上下文
-    _workflow_context_storage: typing.ClassVar[dict] = {}
+    注意：current_task_id 只在运行时 contextvars 中使用，不存入消息。
+    任务自己的 ID 通过 extra.task_id 获取。
+    """
     
     @classmethod
     def set_workflow_context(cls, workflow_ctx: dict):
-        """设置当前线程的工作流上下文"""
-        import threading
-        thread_id = threading.current_thread().ident
-        cls._workflow_context_storage[thread_id] = workflow_ctx
+        """设置当前线程/协程的工作流上下文"""
+        _workflow_context_var.set(workflow_ctx)
     
     @classmethod
     def get_workflow_context(cls) -> typing.Optional[dict]:
-        """获取当前线程的工作流上下文"""
-        import threading
-        thread_id = threading.current_thread().ident
-        return cls._workflow_context_storage.get(thread_id)
+        """获取当前线程/协程的工作流上下文"""
+        return _workflow_context_var.get()
     
     @classmethod
     def clear_workflow_context(cls):
-        """清除当前线程的工作流上下文"""
-        import threading
-        thread_id = threading.current_thread().ident
-        cls._workflow_context_storage.pop(thread_id, None)
+        """清除当前线程/协程的工作流上下文"""
+        _workflow_context_var.set(None)
+    
+    def _get_workflow_context_from_msg_or_contextvars(self, msg: dict) -> typing.Optional[dict]:
+        """
+        获取工作流上下文，优先从消息中获取（aio_publish 场景），否则从 contextvars 获取
+        
+        这解决了 aio_publish 使用 run_in_executor 跨线程时 contextvars 丢失的问题：
+        1. aio_publish 在 asyncio 线程先获取 contextvars 中的 workflow_context
+        2. 注入到消息的 extra._workflow_context_from_aio 中
+        3. publish 在 executor 线程执行时，优先从消息中恢复上下文
+        """
+        # 优先从消息中获取（aio_publish 场景下的跨线程传递）
+        aio_ctx = msg.get('extra', {}).get('_workflow_context_from_aio')
+        if aio_ctx:
+            return aio_ctx
+        # 否则从 contextvars 获取（同步调用场景）
+        return self.get_workflow_context()
+    
+    def _inject_workflow_context_to_msg(self, msg: dict):
+        """
+        将当前 contextvars 中的工作流上下文注入到消息中
+        用于 aio_publish 场景：在 asyncio 线程先捕获上下文，然后通过消息传递到 executor 线程
+        """
+        workflow_ctx = self.get_workflow_context()
+        if workflow_ctx:
+            if 'extra' not in msg:
+                msg['extra'] = {}
+            # 使用特殊 key，区别于最终注入的 workflow_context
+            msg['extra']['_workflow_context_from_aio'] = workflow_ctx
     
     def publish(self, msg, task_id=None, task_options=None):
         """
@@ -66150,21 +65850,49 @@ class WorkflowPublisherMixin(AbstractPublisher):
         """
         msg = copy.deepcopy(msg)  # 防止修改用户原始字典
         
-        # 获取当前工作流上下文
-        workflow_ctx = self.get_workflow_context()
+        # 获取当前工作流上下文（优先从消息中获取，解决 aio_publish 跨线程问题）
+        workflow_ctx = self._get_workflow_context_from_msg_or_contextvars(msg)
         
         if workflow_ctx:
             if 'extra' not in msg:
                 msg['extra'] = {}
             
-            # 创建新的上下文（更新 parent_task_id 和 chain_depth）
-            new_ctx = workflow_ctx.copy()
-            new_ctx['parent_task_id'] = workflow_ctx.get('current_task_id')
-            new_ctx['chain_depth'] = workflow_ctx.get('chain_depth', 0) + 1
+            # 创建消息中的上下文（只包含必要字段，不含 current_task_id）
+            msg_ctx = {
+                'workflow_id': workflow_ctx.get('workflow_id'),
+                'parent_task_id': workflow_ctx.get('current_task_id'),  # 父任务 = 当前正在执行的任务
+                'chain_depth': workflow_ctx.get('chain_depth', 0) + 1,
+            }
             
-            msg['extra']['workflow_context'] = new_ctx
+            msg['extra']['workflow_context'] = msg_ctx
+            
+            # 清理临时字段
+            msg['extra'].pop('_workflow_context_from_aio', None)
         
         return super().publish(msg, task_id, task_options)
+    
+    async def aio_publish(self, msg, task_id=None, task_options=None):
+        """
+        asyncio 生态下发布消息，处理跨线程的工作流上下文传递
+        
+        关键问题：父类 aio_publish 使用 run_in_executor 在线程池执行 publish，
+        但 contextvars 不会自动跨线程传递。
+        
+        解决方案：
+        1. 在当前 asyncio 线程先获取 workflow_context
+        2. 注入到消息的 extra._workflow_context_from_aio 中
+        3. 然后调用父类的 aio_publish（在 executor 线程中执行 publish）
+        4. publish 方法检测到 _workflow_context_from_aio，会使用它作为上下文
+        """
+        msg = copy.deepcopy(msg)  # 防止修改用户原始字典
+        
+        # 在当前 asyncio 线程捕获工作流上下文并注入到消息中
+        # 这样当 publish 在 executor 线程执行时，能从消息中恢复正确的上下文
+        self._inject_workflow_context_to_msg(msg)
+        
+        # 调用父类的 aio_publish，它会在 executor 中调用 self.publish
+        # publish 方法会检测到 msg['extra']['_workflow_context_from_aio'] 并使用它
+        return await super().aio_publish(msg, task_id, task_options)
 
 
 class WorkflowConsumerMixin(AbstractConsumer):
@@ -66173,11 +65901,11 @@ class WorkflowConsumerMixin(AbstractConsumer):
     
     功能：
     1. 在执行任务前，从消息中提取工作流上下文
-    2. 将上下文保存到线程本地存储，以便子任务继承
+    2. 将上下文保存到 contextvars，以便子任务继承（同时支持多线程和异步协程）
     3. 执行完成后清理上下文
     
     这样，当消费函数内部调用 other_task.push() 时，
-    WorkflowPublisherMixin 可以从线程本地存储获取上下文并注入到子任务消息中。
+    WorkflowPublisherMixin 可以从 contextvars 获取上下文并注入到子任务消息中。
     """
     
     def _extract_workflow_context(self, kw: dict) -> typing.Optional[dict]:
@@ -66189,15 +65917,19 @@ class WorkflowConsumerMixin(AbstractConsumer):
         同步消费函数执行，注入工作流上下文
         """
         # 1. 提取工作流上下文
-        workflow_ctx = self._extract_workflow_context(kw)
+        msg_ctx = self._extract_workflow_context(kw)
         
-        if workflow_ctx:
-            # 更新当前任务 ID
-            workflow_ctx = workflow_ctx.copy()
-            workflow_ctx['current_task_id'] = kw['body']['extra'].get('task_id')
+        if msg_ctx:
+            # 构建运行时上下文（添加 current_task_id，用于发布子任务时设置 parent_task_id）
+            runtime_ctx = {
+                'workflow_id': msg_ctx.get('workflow_id'),
+                'parent_task_id': msg_ctx.get('parent_task_id'),
+                'chain_depth': msg_ctx.get('chain_depth', 0),
+                'current_task_id': kw['body']['extra'].get('task_id'),  # 当前任务自己的 ID
+            }
             
-            # 保存到线程本地存储
-            WorkflowPublisherMixin.set_workflow_context(workflow_ctx)
+            # 保存到 contextvars（同时支持多线程和 asyncio）
+            WorkflowPublisherMixin.set_workflow_context(runtime_ctx)
         
         try:
             return super()._run(kw)
@@ -66210,15 +65942,19 @@ class WorkflowConsumerMixin(AbstractConsumer):
         异步消费函数执行，注入工作流上下文
         """
         # 1. 提取工作流上下文
-        workflow_ctx = self._extract_workflow_context(kw)
+        msg_ctx = self._extract_workflow_context(kw)
         
-        if workflow_ctx:
-            # 更新当前任务 ID
-            workflow_ctx = workflow_ctx.copy()
-            workflow_ctx['current_task_id'] = kw['body']['extra'].get('task_id')
+        if msg_ctx:
+            # 构建运行时上下文（添加 current_task_id，用于发布子任务时设置 parent_task_id）
+            runtime_ctx = {
+                'workflow_id': msg_ctx.get('workflow_id'),
+                'parent_task_id': msg_ctx.get('parent_task_id'),
+                'chain_depth': msg_ctx.get('chain_depth', 0),
+                'current_task_id': kw['body']['extra'].get('task_id'),  # 当前任务自己的 ID
+            }
             
-            # 保存到线程本地存储（asyncio 场景下可能需要更精细的处理）
-            WorkflowPublisherMixin.set_workflow_context(workflow_ctx)
+            # 保存到 contextvars（自动支持 asyncio 协程隔离）
+            WorkflowPublisherMixin.set_workflow_context(runtime_ctx)
         
         try:
             return await super()._async_run(kw)
@@ -66516,7 +66252,7 @@ Funboost Workflow 示例 - 视频处理 Pipeline
   `````
 
 - `def transform_video(video_file: str, resolution: str = '360p') -> str` `boost(VideoWorkflowParams(queue_name='wf_transform_video'))`
-  - *Line: 55*
+  - *Line: 56*
   - **Docstring:**
   `````
   步骤2：转码视频
@@ -66527,7 +66263,7 @@ Funboost Workflow 示例 - 视频处理 Pipeline
   `````
 
 - `def send_finish_msg(video_list: typing.List[str], url: str) -> str` `boost(VideoWorkflowParams(queue_name='wf_send_finish_msg'))`
-  - *Line: 75*
+  - *Line: 77*
   - **Docstring:**
   `````
   步骤3：发送完成通知
@@ -66538,7 +66274,7 @@ Funboost Workflow 示例 - 视频处理 Pipeline
   `````
 
 - `def create_video_pipeline(url: str)`
-  - *Line: 100*
+  - *Line: 103*
   - **Docstring:**
   `````
   创建视频处理工作流
@@ -66604,6 +66340,7 @@ def download_video(url: str) -> str:
     :param url: 视频 URL
     :return: 下载后的本地文件路径
     """
+    print(fct.full_msg)
     fct.logger.info(f'📥 开始下载视频: {url}')
     
     # 模拟下载耗时
@@ -66624,6 +66361,7 @@ def transform_video(video_file: str, resolution: str = '360p') -> str:
     :param resolution: 目标分辨率
     :return: 转码后的文件路径
     """
+    print(fct.full_msg)
     fct.logger.info(f'🔄 开始转码: {video_file} -> {resolution}')
     
     # 模拟转码耗时
@@ -66644,6 +66382,7 @@ def send_finish_msg(video_list: typing.List[str], url: str) -> str:
     :param url: 原始视频 URL
     :return: 完成消息
     """
+    print(fct.full_msg)
     fct.logger.info('📧 发送完成通知...')
     fct.logger.info(f'   原始视频: {url}')
     fct.logger.info(f'   转码结果: {video_list}')
@@ -68504,6 +68243,5189 @@ if __name__ == '__main__':
 `````
 
 --- **end of file: boost_spider/utils/__init__.py** (project: funboost) --- 
+
+---
+
+# markdown content namespace: demo_crawler  4 kind codes 
+
+
+## funboost File Tree (relative dir: `demo_crawler`)
+
+
+`````
+
+└── demo_crawler
+    ├── celery_imp
+    │   └── celery_crawler.py
+    ├── feapder_imp
+    │   └── feapder_news_crawler.py
+    ├── funboost_imp
+    │   └── boost_spider_crawler.py
+    ├── news_server.py
+    ├── scrapy_imp
+    │   └── scrapy_spider_crawler.py
+    ├── threadpool_crawler_imp
+    │   └── threadpool_crawler.py
+    ├── threadpool_redis_crawler_imp
+    │   └── redis_threadpool_crawler.py
+    └── 各种爬虫方式哪个更强大和更容易.md
+
+`````
+
+---
+
+
+## funboost (relative dir: `demo_crawler`)  Included Files (total: 8 files)
+
+
+- `demo_crawler/news_server.py`
+
+- `demo_crawler/各种爬虫方式哪个更强大和更容易.md`
+
+- `demo_crawler/celery_imp/celery_crawler.py`
+
+- `demo_crawler/feapder_imp/feapder_news_crawler.py`
+
+- `demo_crawler/funboost_imp/boost_spider_crawler.py`
+
+- `demo_crawler/scrapy_imp/scrapy_spider_crawler.py`
+
+- `demo_crawler/threadpool_crawler_imp/threadpool_crawler.py`
+
+- `demo_crawler/threadpool_redis_crawler_imp/redis_threadpool_crawler.py`
+
+
+---
+
+
+--- **start of file: demo_crawler/news_server.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `demo_crawler/news_server.py`
+
+#### 📝 Module Docstring
+
+`````
+新闻服务端 - FastAPI实现
+提供列表页、详情页和评论页API，用于爬虫测试
+`````
+
+#### 📦 Imports
+
+- `import random`
+- `import string`
+- `from datetime import datetime`
+- `from datetime import timedelta`
+- `from fastapi import FastAPI`
+- `from fastapi.responses import HTMLResponse`
+- `from pydantic import BaseModel`
+- `from typing import List`
+- `import uvicorn`
+
+#### 🏛️ Classes (2)
+
+##### 📌 `class NewsListItem(BaseModel)`
+*Line: 17*
+
+**Docstring:**
+`````
+列表页新闻项
+`````
+
+**Class Variables (2):**
+- `id: int`
+- `title: str`
+
+##### 📌 `class NewsDetail(BaseModel)`
+*Line: 23*
+
+**Docstring:**
+`````
+详情页新闻
+`````
+
+**Class Variables (5):**
+- `id: int`
+- `title: str`
+- `content: str`
+- `author: str`
+- `publish_time: str`
+
+#### 🔧 Public Functions (9)
+
+- `def random_chinese_title() -> str`
+  - *Line: 33*
+  - *生成随机新闻标题*
+
+- `def random_content(paragraphs: int = 5) -> str`
+  - *Line: 41*
+  - *生成随机新闻正文*
+
+- `def random_author() -> str`
+  - *Line: 62*
+  - *生成随机作者名*
+
+- `def random_time() -> str`
+  - *Line: 69*
+  - *生成随机发布时间（最近7天内）*
+
+- `def get_news_list(page: int = 1, size: int = 10)` `app.get('/news/list', response_model=List[NewsListItem], summary='获取新闻列表')`
+  - *Line: 78*
+  - **Docstring:**
+  `````
+  获取新闻列表页
+  - **page**: 页码，默认1
+  - **size**: 每页数量，默认10
+  `````
+
+- `def get_news_detail(news_id: int)` `app.get('/news/{news_id}', response_model=NewsDetail, summary='获取新闻详情')`
+  - *Line: 95*
+  - **Docstring:**
+  `````
+  获取新闻详情页
+  - **news_id**: 新闻ID
+  `````
+
+- `def random_comment_content() -> str`
+  - *Line: 110*
+  - *生成随机评论内容*
+
+- `def get_news_comments_html(news_id: int, page: int = 1, size: int = 10)` `app.get('/news/{news_id}/comments', response_class=HTMLResponse, summary='获取新闻评论页(HTML)')`
+  - *Line: 128*
+  - **Docstring:**
+  `````
+  获取新闻评论页 - 返回HTML格式，可使用xpath解析
+  - **news_id**: 新闻ID
+  - **page**: 页码，默认1
+  - **size**: 每页数量，默认10
+  `````
+
+- `def root()` `app.get('/', summary='首页')`
+  - *Line: 204*
+  - *API根路径，返回欢迎信息*
+
+
+---
+
+`````python
+"""
+新闻服务端 - FastAPI实现
+提供列表页、详情页和评论页API，用于爬虫测试
+"""
+import random
+import string
+from datetime import datetime, timedelta
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
+from typing import List
+import uvicorn
+
+app = FastAPI(title="新闻服务API", description="模拟新闻网站，支持列表页、详情页和评论页")
+
+# ================= 数据模型 =================
+class NewsListItem(BaseModel):
+    """列表页新闻项"""
+    id: int
+    title: str
+
+
+class NewsDetail(BaseModel):
+    """详情页新闻"""
+    id: int
+    title: str
+    content: str
+    author: str
+    publish_time: str
+
+
+# ================= 随机内容生成器 =================
+def random_chinese_title() -> str:
+    """生成随机新闻标题"""
+    prefixes = ["突发", "重磅", "独家", "最新", "今日", "热点", "特别报道", "深度分析"]
+    topics = ["科技发展", "经济形势", "社会新闻", "国际动态", "文化教育", "体育赛事", "娱乐八卦", "健康养生"]
+    actions = ["引发关注", "成为焦点", "获得突破", "再创新高", "迎来变革", "取得进展", "备受瞩目", "值得期待"]
+    return f"{random.choice(prefixes)}：{random.choice(topics)}{random.choice(actions)}"
+
+
+def random_content(paragraphs: int = 5) -> str:
+    """生成随机新闻正文"""
+    sentences = [
+        "这是一个令人振奋的消息。",
+        "相关专家表示，这一发展具有重要意义。",
+        "据了解，该事件引起了广泛关注。",
+        "业内人士指出，未来发展前景十分乐观。",
+        "根据最新数据显示，相关指标持续向好。",
+        "有关部门正在积极推进相关工作。",
+        "社会各界对此表示高度关注。",
+        "这标志着我们在该领域取得了重要突破。",
+        "预计未来还将有更多利好消息发布。",
+        "相关政策的出台将进一步推动行业发展。",
+    ]
+    content_parts = []
+    for _ in range(paragraphs):
+        paragraph = "".join(random.sample(sentences, k=random.randint(2, 4)))
+        content_parts.append(paragraph)
+    return "\n\n".join(content_parts)
+
+
+def random_author() -> str:
+    """生成随机作者名"""
+    surnames = ["张", "王", "李", "赵", "刘", "陈", "杨", "黄"]
+    names = ["明", "华", "强", "伟", "芳", "敏", "静", "军"]
+    return f"{random.choice(surnames)}{random.choice(names)}"
+
+
+def random_time() -> str:
+    """生成随机发布时间（最近7天内）"""
+    delta = timedelta(days=random.randint(0, 7), hours=random.randint(0, 23), minutes=random.randint(0, 59))
+    dt = datetime.now() - delta
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+
+# ================= API接口 =================
+@app.get("/news/list", response_model=List[NewsListItem], summary="获取新闻列表")
+def get_news_list(page: int = 1, size: int = 10):
+    """
+    获取新闻列表页
+    - **page**: 页码，默认1
+    - **size**: 每页数量，默认10
+    """
+    news_list = []
+    start_id = (page - 1) * size + 1
+    for i in range(size):
+        news_list.append(NewsListItem(
+            id=start_id + i,
+            title=random_chinese_title()
+        ))
+    return news_list
+
+
+@app.get("/news/{news_id}", response_model=NewsDetail, summary="获取新闻详情")
+def get_news_detail(news_id: int):
+    """
+    获取新闻详情页
+    - **news_id**: 新闻ID
+    """
+    return NewsDetail(
+        id=news_id,
+        title=random_chinese_title(),
+        content=random_content(paragraphs=random.randint(3, 6)),
+        author=random_author(),
+        publish_time=random_time()
+    )
+
+
+# ================= 评论相关 =================
+def random_comment_content() -> str:
+    """生成随机评论内容"""
+    comments = [
+        "这篇文章写得真好，非常有深度！",
+        "感谢分享，学到了很多新知识。",
+        "作者的观点很有见地，支持！",
+        "希望能看到更多这样的好文章。",
+        "非常赞同作者的分析，逻辑清晰。",
+        "这是我今天看到最好的一篇文章。",
+        "太棒了！期待后续更新。",
+        "收藏了，回头慢慢品读。",
+        "虽然有些观点不太认同，但总体不错。",
+        "专业的分析，受益匪浅。",
+    ]
+    return random.choice(comments)
+
+
+@app.get("/news/{news_id}/comments", response_class=HTMLResponse, summary="获取新闻评论页(HTML)")
+def get_news_comments_html(news_id: int, page: int = 1, size: int = 10):
+    """
+    获取新闻评论页 - 返回HTML格式，可使用xpath解析
+    - **news_id**: 新闻ID
+    - **page**: 页码，默认1
+    - **size**: 每页数量，默认10
+    """
+    comments_html = ""
+    start_id = (page - 1) * size + 1
+    
+    for i in range(size):
+        comment_id = (news_id * 1000) + start_id + i
+        author = random_author()
+        content = random_comment_content()
+        time_str = random_time()
+        likes = random.randint(0, 100)
+        
+        comments_html += f"""
+        <div class="comment-item" data-id="{comment_id}">
+            <div class="comment-header">
+                <span class="author">{author}</span>
+                <span class="time">{time_str}</span>
+            </div>
+            <div class="comment-content">
+                <p class="text">{content}</p>
+            </div>
+            <div class="comment-footer">
+                <span class="likes">👍 {likes}</span>
+                <a class="reply-link" href="/news/{news_id}/comments/{comment_id}/reply">回复</a>
+            </div>
+        </div>
+        """
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>新闻{news_id}的评论 - 第{page}页</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }}
+            .container {{ max-width: 800px; margin: 0 auto; }}
+            h1 {{ color: #333; }}
+            .comment-list {{ background: white; padding: 20px; border-radius: 8px; }}
+            .comment-item {{ border-bottom: 1px solid #eee; padding: 15px 0; }}
+            .comment-header {{ margin-bottom: 8px; }}
+            .author {{ font-weight: bold; color: #333; margin-right: 10px; }}
+            .time {{ color: #999; font-size: 12px; }}
+            .comment-content {{ color: #666; margin-bottom: 8px; }}
+            .comment-footer {{ font-size: 12px; color: #999; }}
+            .likes {{ margin-right: 15px; }}
+            .reply-link {{ color: #1890ff; text-decoration: none; }}
+            .pagination {{ margin-top: 20px; text-align: center; }}
+            .pagination a {{ margin: 0 5px; padding: 5px 10px; background: #1890ff; color: white; 
+                           text-decoration: none; border-radius: 4px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>新闻 #{news_id} 的评论</h1>
+            <div class="comment-list" id="commentList">
+                {comments_html}
+            </div>
+            <div class="pagination">
+                <a href="/news/{news_id}/comments?page={max(1, page-1)}&size={size}">上一页</a>
+                <span>第 {page} 页</span>
+                <a href="/news/{news_id}/comments?page={page+1}&size={size}">下一页</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html)
+
+
+@app.get("/", summary="首页")
+def root():
+    """API根路径，返回欢迎信息"""
+    return {
+        "message": "欢迎访问新闻服务API",
+        "endpoints": {
+            "列表页": "/news/list?page=1&size=10",
+            "详情页": "/news/{news_id}",
+            "评论页(HTML)": "/news/{news_id}/comments?page=1&size=10",
+            "API文档": "/docs"
+        }
+    }
+
+
+if __name__ == "__main__":
+    print("=" * 50)
+    print("新闻服务端启动中...")
+    print("API文档: http://127.0.0.1:7000/docs")
+    print("=" * 50)
+    uvicorn.run(app, host="127.0.0.1", port=7000)
+
+`````
+
+--- **end of file: demo_crawler/news_server.py** (project: funboost) --- 
+
+---
+
+
+--- **start of file: demo_crawler/各种爬虫方式哪个更强大和更容易.md** (project: funboost) --- 
+
+`````markdown
+# 🏆 六种爬虫实现方式深度对比
+
+> 基于六个实现的深度对比：
+> - `funboost_imp/boost_spider_crawler.py` - **Funboost + boost_spider** ⭐推荐
+> - `feapder_imp/feapder_news_crawler.py` - **Feapder 分布式爬虫**
+> - `scrapy_imp/scrapy_spider_crawler.py` - Scrapy 框架
+> - `celery_imp/celery_crawler.py` - **Celery 分布式任务队列**
+> - `threadpool_crawler_imp/threadpool_crawler.py` - Python 原生 ThreadPoolExecutor
+> - `threadpool_redis_crawler_imp/redis_threadpool_crawler.py` - Redis + ThreadPoolExecutor（手动分布式）
+
+## 📊 结论：Funboost + boost_spider 完胜！
+
+### 💡 为什么 Funboost 更强大？核心三大理念
+
+**1. 函数即服务（FaaS）架构**
+- 任何 Python 函数加上 `@boost` 装饰器，即可变成分布式任务消费者
+- 支持外部系统（Web后台/API/定时任务）随时动态注入任务
+- 这是 Scrapy/ThreadPool **架构上永远无法实现**的能力
+
+**2. 万物皆 Broker**
+- 支持 40+ 种消息中间件：Redis、RabbitMQ、Kafka、RocketMQ、NSQ、Pulsar、MQTT...
+- 一个参数切换：`broker_kind=BrokerEnum.REDIS_ACK_ABLE`
+- 内置 ACK 消费确认机制，任务永不丢失
+
+**3. 横冲直撞的自由写法**
+- 无需继承任何类，无需遵循框架约定
+- 平铺直叙的代码风格，如同写普通脚本
+- IDE 友好：完整的类型提示和代码补全
+
+---
+
+## 一、六方代码量对比
+
+| 功能模块 | ThreadPool | Redis+Pool | Celery | Feapder | Scrapy | Funboost |
+|---------|-----------|-----------|--------|---------|--------|----------|
+| 数据保存到 SQLite | ~50 行 | ~50 行 | ~50 行 | ~30 行 | ~70 行 | **2 行** |
+| 动态 UA 请求头 | ~30 行 | ~30 行 | ~30 行 | **1 参数** | ~40 行 | **1 参数** |
+| 任务去重 | ~20 行 | ~20 行 | ~20 行 | **1 参数** | 需配置 | **1 参数** |
+| 请求重试 | ~15 行 | ~15 行 | retry | 配置 | 需配置 | **1 参数** |
+| 分布式配置 | ❌ 无法 | ~100 行 | 需配置文件 | ✅ Redis原生 | scrapy-redis | **1 参数** |
+| 启动方式 | 直接运行 | 直接运行 | **多终端** | 直接运行 | scrapy命令 | **直接运行** |
+| 总代码量 | ~300 行 | ~450 行 | ~400 行 | ~200 行 | ~600 行 | **~100 行** |
+
+---
+
+## 二、核心功能六方对比
+
+| 对比维度 | ThreadPool | Redis+Pool | Celery | Feapder | Scrapy | Funboost |
+|---------|-----------|-----------|--------|---------|--------|----------|
+| **分布式** | ❌ 仅单机 | ⚠️ 手动 | ✅ 原生 | ✅ Redis原生 | ⚠️ 需插件 | ✅ 40+ 中间件 |
+| **启动复杂度** | 简单 | 简单 | **复杂(多终端)** | 简单 | 中等 | ✅ 简单 |
+| **断点续爬** | ❌ | ⚠️ Redis | ✅ | ✅ 原生支持 | ❌ | ✅ |
+| **任务防丢** | ❌ | ❌ | ✅ | ✅ 10分钟超时 | ❌ | ✅ ACK机制 |
+| **精确 QPS 控制** | ❌ | ❌ | ⚠️ 近似 | ❌ | ⚠️ 近似 | ✅ 精确 |
+| **分布式流控** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **任务去重** | ❌ 手动 | ❌ 手动 | ❌ 手动 | ✅ __unique_key__ | 需配置 | ✅ 1参数 |
+| **外部动态注入** | ❌ | ❌ | ⚠️ delay | ⚠️ 手动写Redis | ❌ | ✅ push |
+| **随机UA** | 手动 | 手动 | 手动 | ✅ 内置1000+ | 需中间件 | ✅ 1参数 |
+| **监控面板** | ❌ | ❌ | ⚠️ 需 Flower | ❌ | ⚠️ 需 Scrapyd | ✅ 内置 |
+| **部署便利性** | 手动复制 | 手动复制 | 复杂 | 手动 | 需 Scrapyd | ✅ 一键热更 |
+| **配置复杂度** | 低 | 中 | **高** | 中 | 高 | ✅ 低 |
+
+---
+
+## 三、代码实例对比
+
+### 3.1 数据保存到数据库
+
+**ThreadPoolExecutor 需要手写（~50 行）：**
+
+```python
+# 初始化数据库
+def init_database():
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS ...''')
+    conn.commit()
+    conn.close()
+
+# 保存函数
+db_lock = Lock()
+def save_news_to_db(news_data):
+    with db_lock:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute('''INSERT INTO ... VALUES (?, ?, ?)''', ...)
+        conn.commit()
+        conn.close()
+```
+
+**Scrapy 需要定义 Pipeline 类（~70 行）：**
+
+```python
+class SQLitePipeline:
+    def open_spider(self, spider):
+        self.conn = sqlite3.connect('data.db')
+        # ... 建表
+    def close_spider(self, spider):
+        self.conn.close()
+    def process_item(self, item, spider):
+        # ... 保存
+        return item
+
+# 还需要配置 ITEM_PIPELINES
+```
+
+**boost_spider 只需要 2 行：**
+
+```python
+from boost_spider.sink.dataset_sink import DatasetSink
+sink = DatasetSink("sqlite:///data.db")
+sink.save("news_detail", data)  # ⭐ 就这一行！
+```
+
+---
+
+### 3.2 动态请求头 / 随机 UA
+
+**ThreadPoolExecutor 需要手写（~30 行）：**
+
+```python
+USER_AGENTS = ['Mozilla/5.0 ...', ...]  # 自己维护列表
+
+def get_random_headers():
+    return {
+        'User-Agent': random.choice(USER_AGENTS),
+        'Accept': '...',
+        'Referer': '...',
+    }
+
+response = requests.get(url, headers=get_random_headers())
+```
+
+**Scrapy 需要定义 Middleware 类（~40 行）：**
+
+```python
+class RandomUserAgentMiddleware:
+    def process_request(self, request, spider):
+        request.headers['User-Agent'] = random.choice(USER_AGENTS)
+        # ...
+
+# 还需要配置 DOWNLOADER_MIDDLEWARES
+```
+
+**boost_spider 只需要 1 个参数：**
+
+```python
+client = RequestClient(
+    is_change_ua_every_request=True,  # ⭐ 就这一个参数！内置 100+ 种 UA
+    proxy_name_list=['kuai', 'abuyun'],  # 代理也是一个参数搞定
+)
+```
+
+---
+
+### 3.3 任务去重
+
+**ThreadPoolExecutor 需要手写（~20 行）：**
+
+```python
+crawled_ids = set()
+crawled_lock = Lock()
+
+def crawl_page(page_id):
+    with crawled_lock:
+        if page_id in crawled_ids:
+            return None  # 已爬取，跳过
+        crawled_ids.add(page_id)
+    # ... 爬取逻辑
+```
+
+**Scrapy 需要配置：**
+```python
+custom_settings = {
+    'DUPEFILTER_CLASS': 'scrapy.dupefilters.RFPDupeFilter',
+}
+```
+
+**Funboost 只需要 1 个参数：**
+
+```python
+@boost(BoosterParams(
+    do_task_filtering=True,  # ⭐ 就这一个参数！
+    task_filtering_expire_seconds=600,  # 可选：过期时间
+))
+def crawl_page(page_id):
+    ...
+```
+
+---
+
+## 四、🔥 降维打击：外部动态任务注入
+
+这是 **Funboost 对 Scrapy 和 ThreadPoolExecutor 的核心优势**，也是它们架构上**永远无法实现**的功能。
+
+### 为什么外部动态注入如此重要？
+
+传统爬虫框架（Scrapy/ThreadPool）的任务只能在代码启动时定义，无法响应外部实时需求。但在实际业务中，你经常需要：
+
+1. **运营人员需求**：后台管理页面点击"立即爬取这条新闻"
+2. **用户触发需求**：用户提交一个 URL，要求立即抓取
+3. **监控告警需求**：检测到数据缺失，自动补爬
+4. **定时任务需求**：每天凌晨 3 点爬取特定网站
+5. **API 接口需求**：对外提供爬虫服务，接收 HTTP 请求后执行
+
+### 各方案对比
+
+| 方案 | 能否外部注入 | 注入方式 |
+|-----|------------|---------|
+| ThreadPoolExecutor | ❌ 无法实现 | 任务必须在代码中预先定义 |
+| Scrapy | ❌ 无法实现 | 只能从 start_urls 开始，架构限制 |
+| Celery | ⚠️ 部分支持 | 需要通过 `.delay()` 或 `.apply_async()`，但不够灵活 |
+| **Funboost** | ✅ 完美支持 | HTTP API、RPC、直接调用、定时任务等多种方式 |
+
+### Funboost 外部注入的 5 种方式
+
+**方式1：代码中直接调用**
+```python
+# 在任何 Python 代码中都可以调用
+crawl_detail_page.push(news_id=12345)
+```
+
+**方式2：通过 HTTP API 注入（funboost.faas）**
+```python
+# 启动 FastAPI 路由
+from fastapi import FastAPI
+from funboost.faas import fastapi_router
+import uvicorn
+
+app = FastAPI()
+app.include_router(fastapi_router)
+
+# uvicorn.run(app, host="0.0.0.0", port=8000)
+# 启动后，任何系统都可以通过 HTTP 发布任务
+import requests
+requests.post("http://localhost:8000/funboost/publish", json={
+    "queue_name": "news_crawler_detail_page",
+    "msg_body": {"news_id": 12345}
+})
+```
+
+**方式3：RPC 调用并获取结果**
+```python
+# 设置 RPC 模式
+@boost(BoosterParams(
+    queue_name="news_crawler",
+    is_using_rpc_mode=True  # 开启 RPC
+))
+def crawl_detail_page(news_id):
+    # ... 爬取逻辑
+    return {"title": "新闻标题", "content": "..."}
+
+# 同步获取爬取结果（RPC 模式会阻塞等待消费者返回结果）
+# 注意：需要确保消费者已启动且开启了 RPC 模式
+async_result = crawl_detail_page.push(news_id=12345)
+result = async_result.result  # 阻塞直到获取结果
+print(result)  # {"title": "新闻标题", "content": "..."}
+```
+
+**方式4：定时任务自动发布**
+```python
+from funboost import ApsJobAdder
+
+# 每天凌晨 3 点自动爬取
+# 注意：ApsJobAdder(booster_func, job_store_kind='redis') 是推荐的新写法
+ApsJobAdder(crawl_list_page, job_store_kind='redis').add_push_job(
+    trigger='cron',
+    hour=3,
+    minute=0,
+    kwargs={"page": 1, "size": 100},
+    id='daily_crawl_job',
+    replace_existing=True
+)
+```
+
+**方式5：Flask/Django 自由集成（可以用faas的对应web框架的router，也可以灵活自由发挥调用funboost）**
+```python
+# Flask 路由中发布任务
+@app.route('/api/crawl', methods=['POST'])
+def trigger_crawl():
+    news_id = request.json['news_id']
+    crawl_detail_page.push(news_id=news_id)
+    return {"status": "ok", "message": "任务已发布"}
+```
+
+### 真实应用场景举例
+
+**场景1：新闻网站运营后台**
+```
+运营人员在后台看到某条新闻数据不完整
+→ 点击"重新爬取"按钮
+→ 前端调用 /api/crawl 接口
+→ Flask 接收请求后 crawl_detail_page.push(news_id=xxx)
+→ 爬虫消费者立即执行爬取
+→ 数据更新到数据库
+```
+
+**场景2：用户提交 URL 爬取服务**
+```
+用户在网页输入新闻 URL
+→ 后端解析出 news_id
+→ 通过 HTTP API 发布任务到 Funboost
+→ 爬虫执行并返回结果（RPC 模式）
+→ 前端实时显示爬取结果
+```
+
+**Scrapy/ThreadPool 为什么做不到？**
+
+1. **Scrapy**：任务必须从 `start_requests` 或 `start_urls` 开始，外部系统无法插入任务到运行中的 Spider
+2. **ThreadPoolExecutor**：没有消息队列机制，只能在代码中提前定义所有任务
+
+---
+
+## 五、代码风格对比
+
+| 写法 | ThreadPoolExecutor | Scrapy | Funboost + boost_spider |
+|-----|-------------------|--------|------------------------|
+| 爬取流程 | pool.submit() 提交任务 | callback 回调链 | ✅ 函数内 `.push()` |
+| 等待完成 | 手动收集 Future | 框架自动 | ✅ `ctrl_c_recv()` |
+| 线程池管理 | 手动创建和关闭 | 框架管理 | ✅ 装饰器自动管理 |
+| 配置方式 | 分散各处 | 分散多文件 | ✅ 集中在装饰器 |
+| 继承要求 | 无 | 必须继承 Spider | ✅ 普通函数即可 |
+| 思维模式 | 手动管理一切 | 学 Twisted/Pipeline | ✅ **自由奔放** |
+
+---
+
+## 六、生产环境部署与运维
+
+### 1. 部署对比
+
+| 维度 | Scrapy | Funboost |
+|-----|--------|----------|
+| **部署工具** | 需安装 Scrapyd + scrapyd-client | ✅ 内置 `fabric_deploy` |
+| **部署流程** | 打包 egg/whl → 上传到 Scrapyd → API 启动 | ✅ 一行代码自动上传并运行 |
+| **代码热更** | 复杂，需重新打包上传 | ✅ 自动检测文件变更热更新 |
+| **进程管理** | 依赖 Scrapyd 进程 | ✅ 兼容 Supervisor/Docker/K8s |
+
+### 2. Funboost 一键部署神器 `fabric_deploy`
+
+你以为部署爬虫还要登录服务器、git pull、pip install 吗？Funboost 只需要一行代码：
+
+```python
+# 在本地 Windows/Mac 电脑直接运行
+@boost(BoosterParams(queue_name="crawler"))
+def crawl(x):
+    pass
+
+if __name__ == '__main__':
+    # ⭐ 自动将当前代码同步到远程服务器并启动
+    crawl.fabric_deploy(
+        host='192.168.1.100', 
+        port=22,
+        user='root',
+        password='pwd',
+        process_num=4  # 启动4个进程
+    )
+```
+
+**执行流程**：
+1. 自动压缩本地代码（排除 .git 等）
+2. SSH 上传到服务器临时目录
+3. 自动安装依赖（如果有 requirements.txt）
+4. 启动指定数量的消费者进程
+5. 实时流式回显服务器日志到本地
+
+---
+
+## 七、打破语言藩篱：多语言微服务集成
+
+Scrapy 是一个 Python 孤岛，而 **Funboost 将爬虫变成了通用的 FaaS 服务**。
+
+### 场景：Java/Go 后端需要调用 Python 爬虫
+
+#### 方案 A：通过 HTTP API 调用 (通用性最强)
+
+1. Python 端启动 API 服务：
+   ```python
+   from fastapi import FastAPI
+   from funboost.faas import fastapi_router
+   import uvicorn
+
+   app = FastAPI()
+   app.include_router(fastapi_router)
+   
+   if __name__ == '__main__':
+       uvicorn.run(app, host="0.0.0.0", port=8000)
+   ```
+
+2. Java/Go/Node.js 端发起 HTTP 请求：
+   ```bash
+   curl -X POST http://python-server:8000/funboost/publish \
+        -d '{"queue_name": "crawler", "msg_body": {"url": "http://target.com"}}'
+   ```
+
+#### 方案 B：通过 Redis 协议直接调用 (性能最高)
+
+Java/Go 代码直接往 Redis 的 List 推送 JSON 字符串，Funboost 消费者自动获取并执行。
+
+**Go 语言示例**：
+```go
+import "github.com/go-redis/redis/v8"
+
+// 往 Redis 队列 push 消息，Funboost 会自动消费
+rdb.LPush(ctx, "crawler", `{"url": "http://target.com"}`)
+```
+
+**架构意义**：
+- **解耦**：后端业务系统不需要集成 Python 环境
+- **异步**：爬取任务异步执行，不会阻塞主业务
+- **高可用**：爬虫挂了不影响发任务，消息积压在 Redis 中等待消费
+
+---
+
+## 八、总结
+
+**boost_spider + Funboost 更牛逼的原因：**
+
+### 核心优势
+
+1. **开发效率**：代码量少 4-5 倍
+2. **架构灵活**：支持外部动态任务注入（其他方案永远做不到）
+3. **分布式原生**：40+ 种中间件开箱即用
+4. **学习成本低**：不需要手动管理线程池、Redis 连接、消费者循环、Celery Worker
+5. **代码风格爽**：平铺直叙，如写普通脚本
+
+### Funboost 的高级特性（其他框架没有）
+
+#### 1. 消息优先级
+```python
+@boost(BoosterParams(queue_name="crawler"))
+def crawl_page(url):
+    pass
+
+# 高优先级任务优先消费
+# 高优先级任务优先消费 (需要中间件支持优先级，如 RabbitMQ / Redis Priority)
+from funboost import TaskOptions
+crawl_page.publish({'url': "important.com"}, task_options=TaskOptions(other_extra_params={'priority': 9}))
+crawl_page.publish({'url': "normal.com"}, task_options=TaskOptions(other_extra_params={'priority': 5}))
+```
+
+#### 2. 延迟队列
+```python
+# 1小时后执行
+crawl_page.publish({"url": "example.com"}, task_options=TaskOptions(countdown=3600))
+
+# 指定时间执行
+from datetime import datetime
+crawl_page.publish({"url": "example.com"}, task_options=TaskOptions(eta=datetime(2025, 1, 1, 0, 0)))
+```
+
+#### 3. 异常处理策略
+```python
+from funboost import ExceptionForRetry, ExceptionForRequeue, ExceptionForPushToDlxqueue
+
+@boost(BoosterParams(queue_name="crawler", max_retry_times=3))
+def crawl_page(url):
+    if is_temporary_error():
+        raise ExceptionForRetry("临时错误，重试")  # 立即重试
+    elif is_need_requeue():
+        raise ExceptionForRequeue("重新入队")  # 推送到队列末尾
+    elif is_fatal_error():
+        raise ExceptionForPushToDlxqueue("致命错误，推送到死信队列")
+```
+
+#### 4. 工作流编排（类似 Celery Canvas）
+```python
+from funboost.workflow import chain, group, chord, WorkflowBoosterParams
+from funboost import boost
+
+@boost(WorkflowBoosterParams(queue_name="task1"))
+def task1(x):
+    return x + 1
+
+@boost(WorkflowBoosterParams(queue_name="task2"))
+def task2(y):
+    return y * 2
+
+@boost(WorkflowBoosterParams(queue_name="task3"))
+def task3(z):
+    return z ** 2
+
+# 链式执行：task1 -> task2 -> task3
+result = chain(task1.s(1), task2.s(), task3.s()).apply()
+
+# 并行执行
+result = group(task1.s(1), task1.s(2), task1.s(3)).apply()
+
+# 并行 + 汇总
+result = chord([task1.s(1), task1.s(2)], task2.s()).apply()
+```
+
+#### 5. 消费者分组管理
+```python
+# 定义多个消费函数，使用同一分组
+@boost(BoosterParams(queue_name="crawler1", booster_group="crawler_group"))
+def crawl_page1(url):
+    pass
+
+@boost(BoosterParams(queue_name="crawler2", booster_group="crawler_group"))
+def crawl_page2(url):
+    pass
+
+# 一键启动整个分组
+from funboost import BoostersManager
+BoostersManager.consume_group("crawler_group")
+
+# 或者多进程启动分组
+BoostersManager.multi_process_consume_group("crawler_group", process_num=4)
+```
+
+#### 6. 任务过滤与去重
+```python
+@boost(BoosterParams(
+    queue_name="crawler",
+    do_task_filtering=True,  # 开启去重
+    task_filtering_expire_seconds=600  # 10分钟内相同任务去重
+))
+def crawl_page(url):
+    pass
+
+# 相同URL在10分钟内只会执行一次
+crawl_page.push(url="example.com")
+crawl_page.push(url="example.com")  # 被过滤
+```
+
+#### 7. 任务结果持久化
+```python
+@boost(BoosterParams(
+    queue_name="crawler",
+    function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(
+        is_save_status=True,  # 保存任务状态
+        is_save_result=True,  # 保存任务结果
+        expire_seconds=7*24*3600  # 保留7天
+    )
+))
+def crawl_page(url):
+    return {"title": "新闻标题", "content": "..."}
+```
+
+#### 8. 远程杀死任务
+```python
+from funboost import RemoteTaskKiller
+
+# 杀死指定任务
+# 注意：消费者需要设置 @boost(BoosterParams(is_support_remote_kill_task=True))
+RemoteTaskKiller(queue_name="crawler", task_id="xxx").send_kill_remote_task_comd()
+```
+
+**六种方案定位：**
+
+| 方案 | 适用场景 | 分布式 | 外部注入 | 启动复杂度 | 推荐指数 |
+|-----|---------|-------|---------|-----------|---------|
+| ThreadPoolExecutor | 简单脚本、临时爬取 | ❌ | ❌ | 简单 | ⭐ |
+| Redis+ThreadPool | 学习原理、体验痛苦 | ⚠️ 手动 | ❌ | 简单 | ⭐⭐ |
+| Celery | 已有 Celery 基建的团队 | ✅ 原生 | ⚠️ delay | **复杂(多终端)** | ⭐⭐⭐ |
+| **Feapder** | **中大型爬虫、断点续爬** | ✅ Redis | ⚠️ | 简单 | ⭐⭐⭐⭐ |
+| Scrapy | 纯粹的离线全网爬取 | ⚠️ 需插件 | ❌ | 中等 | ⭐⭐⭐ |
+| **Funboost + boost_spider** | **生产级分布式爬虫** | ✅ 原生 | ✅ | ✅ 简单 | ⭐⭐⭐⭐⭐ |
+
+**最终结论**：从技术架构和开发体验来看，**Funboost + boost_spider** 是更现代、更灵活、更爽的选择！ 🚀
+
+### 选型建议
+
+1. **如果你是新手**：直接学 Funboost，它符合 Python 直觉（写函数），不需要理解复杂的框架约定
+2. **如果你做企业级项目**：Funboost 是最佳选择，FaaS 特性、ACK 机制和监控面板能极大降低运维成本
+3. **如果你维护老项目**：Funboost 不需要强制任何目录结构，可以随时引入老项目（比引入 Django 更容易）
+4. **如果你熟悉Scrapy但想升级**：可以考虑 Feapder，它的API与Scrapy相似（xpath/css解析），但原生支持分布式和断点续爬
+5. **如果你需要实时性**：Funboost 的 RPC 模式可以同步等待结果返回
+6. **如果你需要批量爬取**：Funboost 的分布式流控可以防止把目标网站打挂
+7. **如果你需要复杂工作流**：Funboost 支持 chain/group/chord，比 Celery Canvas 更简洁
+
+---
+
+## 附一：🥀 Celery 的 15 个痛点
+
+Celery 虽然是成熟的分布式任务队列，但在爬虫场景下有诸多不便：
+
+1. 需要创建 Celery 应用实例
+2. 需要配置 broker 和 backend
+3. 需要单独的配置文件/配置项
+4. rate_limit 是近似控制，不精确（Funboost qps=5 精确）
+5. 需要配置复杂的队列路由
+6. 需要自己实现任务去重（Funboost 一个参数）
+7. 需要自己实现数据保存（Funboost DatasetSink）
+8. 需要自己实现动态 UA（Funboost RequestClient）
+9. 任务装饰器参数繁多
+10. bind=True + self 才能访问上下文
+11. 推送子任务需要 .delay()/.apply_async()
+12. 需要手动调用 retry（Funboost 自动）
+13. 需要单独启动 Worker 进程（多终端）
+14. 监控需要额外部署 Flower
+15. 没有内置 XPath/CSS 解析
+
+**🌟 Funboost 对比：一个文件直接运行，所有功能内置！**
+
+---
+
+## 附二：🏗️ Redis+ThreadPool 手动分布式的 12 个痛点
+
+如果你用 Redis blpop + ThreadPoolExecutor 手动实现分布式，需要自己处理：
+
+1. Redis 连接池管理
+2. 多个线程池创建和管理
+3. 多个 while True 消费者循环
+4. JSON 序列化/反序列化
+5. 任务去重（set + Lock）
+6. 请求重试
+7. 动态 UA
+8. 数据库保存
+9. HTML 解析
+10. 初始任务发布
+11. 消费者线程启动
+12. 线程等待
+
+**🌟 Funboost 只需要：`@boost(...) + .consume() + .push()` 三件套！**
+
+---
+
+## 附三：Scrapy 的 20+ 个痛点
+
+Scrapy 虽然是老牌爬虫框架，功能强大，但在现代爬虫场景下有诸多不便：
+
+### 🔴 一、架构层面的根本性缺陷
+
+#### 1. **必须继承 Spider 类**（Funboost 普通函数即可）
+```python
+# Scrapy: 必须继承 Spider，受框架约束
+class MySpider(scrapy.Spider):
+    name = 'my_spider'
+    def parse(self, response):
+        pass
+
+# Funboost: 普通函数，自由奔放
+@boost(BoosterParams(queue_name="crawler"))
+def crawl_page(url):
+    pass
+```
+
+#### 2. **项目结构固定**：为了吃个鸡蛋，要先盖个养鸡场
+```
+my_scrapy_project/
+├── scrapy.cfg                # 项目配置文件
+├── my_scrapy_project/        # 项目主目录
+│   ├── __init__.py
+│   ├── items.py              # 定义数据结构
+│   ├── middlewares.py        # 中间件
+│   ├── pipelines.py          # 数据管道
+│   ├── settings.py           # 设置
+│   └── spiders/              # 爬虫目录
+│       ├── __init__.py
+│       └── my_spider.py      # 爬虫文件
+```
+
+**Funboost**：单文件搞定，`crawler.py` 一个文件包含所有逻辑！
+
+#### 3. **配置分散**：settings.py、custom_settings、中间件配置分散在多处
+```python
+# Scrapy: 配置分散在多个地方
+# settings.py
+CONCURRENT_REQUESTS = 10
+DOWNLOAD_DELAY = 0.2
+
+# spider.py
+custom_settings = {
+    'RETRY_TIMES': 3,
+}
+
+# Funboost: 装饰器一处配置
+@boost(BoosterParams(
+    queue_name="crawler",
+    concurrent_num=10,
+    qps=5,
+    max_retry_times=3
+))
+```
+
+#### 4. **callback 回调地狱**：解析流程被切割成多个回调函数
+```python
+# Scrapy: 回调地狱，逻辑支离破碎
+def parse_list(self, response):
+    for item in response.css('.item'):
+        yield scrapy.Request(
+            url=item.css('a::attr(href)').get(),
+            callback=self.parse_detail,
+            meta={'title': item.css('.title::text').get()}  # meta 传参
+        )
+
+def parse_detail(self, response):
+    title = response.meta['title']  # 从 meta 取参
+    yield scrapy.Request(
+        url=response.css('.comments_url::attr(href)').get(),
+        callback=self.parse_comments,
+        meta={'title': title}  # 继续传递
+    )
+
+# Funboost: 平铺直叙，逻辑一气呵成
+@boost(BoosterParams(queue_name="list"))
+def crawl_list(page):
+    items = get_list(page)
+    for item in items:
+        crawl_detail.push(item_id=item['id'], title=item['title'])
+
+@boost(BoosterParams(queue_name="detail"))
+def crawl_detail(item_id, title):  # 直接用函数参数，IDE 可检查
+    detail = get_detail(item_id)
+    crawl_comments.push(item_id=item_id, title=title)
+```
+
+### 🔴 二、分布式与任务管理痛点
+
+#### 5. **原生不支持分布式**：必须引入 `scrapy-redis` 插件
+- 需要安装配置 `scrapy-redis`
+- 修改 Spider 类继承 `RedisSpider`
+- 配置 Redis 连接
+- **仍然存在消息丢失风险**（blpop 模式）
+
+#### 6. **任务不持久化**：默认使用内存队列，进程结束任务丢失
+```python
+# Scrapy: 内存队列，重启任务全丢
+# start_urls = ['http://example.com/page1', ...]  # 内存中
+
+# Funboost: Redis/RabbitMQ 持久化，断点续爬
+@boost(BoosterParams(
+    queue_name="crawler",
+    broker_kind=BrokerEnum.REDIS_ACK_ABLE  # ACK 机制，任务永不丢失
+))
+```
+
+#### 7. ⭐⭐⭐ **无法外部动态注入任务**（最致命）
+这是 **Scrapy 架构上永远无法实现的能力**！
+
+**Scrapy 的限制**：
+- 任务只能从 `start_urls` 或 Spider 内部 `yield Request` 产生
+- 外部系统无法插入任务到运行中的 Spider
+- **这是数据孤岛，不是微服务！**
+
+**Funboost 可以随时注入**：
+```python
+# 运营人员点击"立即爬取"
+crawl_detail.push(news_id=12345)
+
+# Java 后端通过 HTTP API 注入
+POST /funboost/publish
+{"queue_name": "crawler", "msg_body": {"url": "xxx"}}
+
+# 定时任务每天 3 点自动爬取
+from funboost import ApsJobAdder
+ApsJobAdder(crawl_list_page, job_store_kind='redis').add_push_job(
+    trigger='cron', hour=3, minute=0, kwargs={"page": 1}, id='daily_job'
+)
+```
+
+#### 8. **启动方式固定**：必须使用 `scrapy crawl spider_name` 命令
+```bash
+# Scrapy: 命令行启动，不够灵活
+scrapy crawl my_spider
+
+# Funboost: 直接运行 Python 文件
+python crawler.py
+```
+
+### 🔴 三、流控与并发痛点
+
+#### 9. **精确流控困难**：`DOWNLOAD_DELAY` 是近似控制，不是精确 QPS
+```python
+# Scrapy: 近似控制，QPS 会波动
+DOWNLOAD_DELAY = 0.2  # 约 5 QPS，但不精确
+
+# Funboost: 精确到毫秒级
+@boost(BoosterParams(qps=5))  # 严格每秒 5 次
+```
+
+#### 10. **分布式流控需自己实现**
+- Scrapy 的 `DOWNLOAD_DELAY` 只对单机有效
+- 多机器部署时，无法统一流控
+- Funboost 内置分布式 QPS 控制
+
+#### 11. **并发模型固定**：强制使用 Twisted 异步
+```python
+# Scrapy: 必须用 Twisted 异步，学习曲线陡峭
+# 遇到 Selenium 等同步库，异步优势全失
+
+# Funboost: 自由选择
+concurrent_mode=ConcurrentModeEnum.THREADING  # 线程
+concurrent_mode=ConcurrentModeEnum.ASYNC      # 协程
+concurrent_mode=ConcurrentModeEnum.GEVENT     # gevent
+```
+
+### 🔴 四、功能配置痛点
+
+#### 12. **任务去重需配置**
+```python
+# Scrapy: 需要配置 DUPEFILTER_CLASS
+DUPEFILTER_CLASS = 'scrapy.dupefilters.RFPDupeFilter'
+
+# Funboost: 一个参数
+@boost(BoosterParams(do_task_filtering=True))
+```
+
+#### 13. **数据持久化需定义 Pipeline**
+```python
+# Scrapy: 需要 70+ 行代码
+class SQLitePipeline:
+    def open_spider(self, spider):
+        # 连接数据库...
+    def close_spider(self, spider):
+        # 关闭连接...
+    def process_item(self, item, spider):
+        # 保存数据...
+
+# 还要配置
+ITEM_PIPELINES = {'myproject.pipelines.SQLitePipeline': 300}
+
+# Funboost: 2 行代码
+from boost_spider.sink.dataset_sink import DatasetSink
+DatasetSink("sqlite:///data.db").save("news", data)
+```
+
+#### 14. **动态请求头需定义 Middleware**
+```python
+# Scrapy: 需要 40+ 行 Middleware
+class RandomUserAgentMiddleware:
+    def process_request(self, request, spider):
+        request.headers['User-Agent'] = random.choice(USER_AGENTS)
+
+# 还要配置
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+    'myproject.middlewares.RandomUserAgentMiddleware': 400,
+}
+
+# Funboost: 1 个参数
+RequestClient(is_change_ua_every_request=True)
+```
+
+### 🔴 五、Scrapy 架构上无法实现的场景
+
+#### 15. ⭐ **浏览器多轮交互**（Scrapy 几乎无能为力）
+
+**场景**：使用 Selenium 浏览器渲染页面，并需要多轮交互：
+- 输入文字 → 点击按钮1 → sleep 10秒
+- 根据内容判断 → 点击按钮2 或 按钮3
+- 等待元素出现 → 提取网页内容
+
+**Scrapy 的困境**：
+- 在 `parse` 方法里操作浏览器，会把 Twisted 异步变成同步阻塞
+- 几乎把 Scrapy 退化成单线程执行
+- 只有"代码扫地僧"才能把浏览器操作也异步化，极其复杂
+
+**Funboost 轻松搞定**：
+```python
+@boost(BoosterParams(queue_name="browser", concurrent_num=10))
+def crawl_with_browser(url):
+    driver = webdriver.Chrome()
+    driver.get(url)
+    
+    # 多轮交互，自然而然
+    driver.find_element_by_id('input').send_keys('keywords')
+    driver.find_element_by_id('btn1').click()
+    time.sleep(10)
+    
+    if '条件A' in driver.page_source:
+        driver.find_element_by_id('btn2').click()
+    else:
+        driver.find_element_by_id('btn3').click()
+    
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "result"))
+    )
+    
+    data = driver.find_element_by_id('result').text
+    driver.quit()
+    return data
+```
+
+#### 16. ⭐ **Token 短时效场景**（Scrapy 实现极其困难）
+
+**场景**：登录 token 只有 30 秒有效期，需要：
+1. 获取 token
+2. 用 token 连续爬取 100 个详情页
+3. token 过期前刷新
+
+**Scrapy 的困境**：
+- callback 机制无法保证连续性
+- 在回调间共享状态极其困难
+
+**Funboost 丝滑实现**：
+```python
+@boost(BoosterParams(queue_name="detail_batch"))
+def crawl_detail_batch(id_list):
+    token = login_get_token()  # 获取 token
+    results = []
+    
+    for i, id in enumerate(id_list):
+        if i % 50 == 0 and i > 0:  # 每 50 个刷新 token
+            token = refresh_token(token)
+        
+        data = crawl_detail_with_token(id, token)
+        results.append(data)
+    
+    return results
+```
+
+#### 17. ⭐ **分布式轮流爬取**（反爬场景）
+
+**场景**：利用多台物理机 IP 反爬，轮流在多台机器请求，同时保证只有一台机器在运行
+
+**Scrapy**：架构上无法实现
+
+**Funboost**：
+```python
+# 使用 RPC + 单线程模式实现
+@boost(BoosterParams(
+    queue_name="crawler",
+    concurrent_mode=ConcurrentModeEnum.SOLO,  # 单线程
+    is_using_rpc_mode=True
+))
+def crawl_page(url):
+    return requests.get(url).text
+
+# 轮流分发到不同 IP 的机器
+for url in urls:
+    result = crawl_page.push(url=url).result  # RPC 阻塞等待消费者返回结果
+```
+
+### 🔴 六、开发体验痛点
+
+#### 18. **单元测试困难**：扛泰山，大海捞针
+```python
+# Scrapy: 测试极其复杂
+# 需要模拟 Response、Request、Spider 等多个对象
+from scrapy.http import HtmlResponse, Request
+
+request = Request(url='http://example.com')
+response = HtmlResponse(url='http://example.com', request=request, body=b'...')
+spider = MySpider()
+result = list(spider.parse(response))
+
+# Funboost: 直接测试函数
+def test_crawl():
+    result = crawl_page(url='http://example.com')
+    assert result['title'] == 'Expected Title'
+```
+
+#### 19. **调试困难**：回调链追踪九曲回肠
+- 断点在多个 callback 间跳转
+- `meta` 传参无类型检查，容易出错
+
+#### 20. **无法复用已有代码**：老项目的 utils 文件夹成废物
+```python
+# 已有的请求函数无法被 Scrapy 直接使用
+# utils/my_request.py
+def my_request(url, proxy=None):
+    # 你的代理逻辑、重试逻辑...
+    return requests.get(url, proxies=proxy)
+
+# Scrapy: 必须改造成 Middleware 或 Download Handler
+# Funboost: 直接用！
+@boost(BoosterParams(queue_name="crawler"))
+def crawl(url):
+    resp = my_request(url)  # 直接复用
+    return parse(resp.text)
+```
+
+### Scrapy vs Funboost 核心区别总结
+
+| 维度 | Scrapy | Funboost + boost_spider |
+|-----|--------|------------------------|
+| **思维方式** | 框架约束，回调地狱 | 自由奔放，平铺直叙 |
+| **代码量** | ~600 行（多文件） | ~100 行（单文件） |
+| **外部注入** | ❌ 架构限制，无法实现 | ✅ 天然支持（降维打击） |
+| **复杂场景** | ❌ Selenium、Token、轮流爬取无法实现 | ✅ 函数内自由实现 |
+| **分布式** | ⚠️ 需插件 | ✅ 原生支持 40+ 中间件 |
+| **学习成本** | 高（Twisted 异步） | 低（装饰器） |
+| **可测性** | 差（需要模拟大量对象） | 优（直接测试函数） |
+| **复用性** | 差（老代码需改造） | 优（直接复用 utils） |
+
+### ⚡ Funboost 对 Scrapy 的"十败十胜"
+
+从 Funboost 教程原文：
+
+1. **道**：Scrapy URL 调度，画地为牢；Funboost 函数调度，万物皆可
+2. **易**：Scrapy 七八个文件；Funboost 一个装饰器
+3. **力**：Scrapy 多核难用；Funboost 四重并发（线程+协程+进程+多机）
+4. **准**：Scrapy QPS 随缘；Funboost 精确到毫秒
+5. **明**：Scrapy 回调地狱；Funboost 平铺直叙
+6. **固**：Scrapy 断点堪忧；Funboost ACK 万无一失
+7. **容**：Scrapy 老码难容；Funboost 海纳百川
+8. **活**：Scrapy 中间件天堑；Funboost 自由封装
+9. **巧**：Scrapy 奇巧束手；Funboost 复杂流程轻松
+10. **捷**：Scrapy 调试大海捞针；Funboost IDE 如虎添翼
+
+**🌟 Funboost 只需要：`@boost(...) + .consume() + .push()` 三件套！**
+
+---
+
+> 本文档基于以下六个文件的实际代码对比生成：
+> - `funboost_imp/boost_spider_crawler.py`
+> - `feapder_imp/feapder_news_crawler.py`
+> - `scrapy_imp/scrapy_spider_crawler.py`
+> - `celery_imp/celery_crawler.py`
+> - `threadpool_crawler_imp/threadpool_crawler.py`
+> - `threadpool_redis_crawler_imp/redis_threadpool_crawler.py`
+
+
+`````
+
+--- **end of file: demo_crawler/各种爬虫方式哪个更强大和更容易.md** (project: funboost) --- 
+
+---
+
+
+--- **start of file: demo_crawler/celery_imp/celery_crawler.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `demo_crawler/celery_imp/celery_crawler.py`
+
+#### 📝 Module Docstring
+
+`````
+================================================================================
+                新闻爬虫 - 使用 Celery 分布式任务队列实现
+================================================================================
+
+🎯 本文件目的：
+   使用 Celery 框架实现新闻爬虫，与 Funboost + boost_spider 形成对比。
+   展示 Celery 作为分布式任务队列在爬虫场景下与 Funboost 的差异。
+
+================================================================================
+                    ⚠️ Celery 实现的痛点对比
+================================================================================
+
+📊 与 Funboost 对比：
+┌─────────────────────────┬────────────────────────────────┬────────────────────────────────┐
+│       对比项            │           Celery               │     Funboost + boost_spider    │
+├─────────────────────────┼────────────────────────────────┼────────────────────────────────┤
+│ 项目结构                │ 需要多个文件(app/tasks/config) │ ⭐ 单文件即可运行              │
+│ 启动方式                │ 需要单独启动 worker 进程       │ ⭐ .consume() 一行代码         │
+│ 中间件选择              │ 主要 Redis/RabbitMQ            │ ⭐ 40+ 种中间件               │
+│ 精确流控(QPS)           │ rate_limit 近似控制            │ ⭐ qps=5 精确到毫秒            │
+│ 分布式流控              │ 需要自己实现                   │ ⭐ 内置分布式 QPS 控制         │
+│ 任务去重                │ 需要自己实现                   │ ⭐ do_task_filtering=True     │
+│ 分组启动                │ 需要配置 queue 路由            │ ⭐ booster_group 一个参数     │
+│ 外部动态注入            │ ⚠️ 可以但需 apply_async       │ ⭐ .push() 更简洁             │
+│ 监控面板                │ 需要单独部署 Flower            │ ⭐ 内置 Web 管理面板           │
+│ RPC 获取结果            │ AsyncResult 异步获取           │ ⭐ 原生 RPC 模式更简洁         │
+│ 定时任务                │ celery-beat 单独进程           │ ⭐ 内置 APScheduler           │
+│ 消息确认机制            │ ack_late 配置                  │ ⭐ ACK_ABLE 中间件原生支持    │
+│ 代理/UA管理             │ 需要自己实现                   │ ⭐ RequestClient 一行代码     │
+│ 数据保存                │ 需要自己实现                   │ ⭐ DatasetSink 一行代码       │
+│ 配置复杂度              │ 需要单独配置文件               │ ⭐ 装饰器参数集中配置          │
+└─────────────────────────┴────────────────────────────────┴────────────────────────────────┘
+
+💔 Celery 的主要问题：
+   1. 需要单独的 worker 进程（celery -A tasks worker）
+   2. 需要单独的配置文件
+   3. 没有内置的精确 QPS 控制
+   4. 没有内置的任务去重
+   5. 监控需要额外部署 Flower
+
+================================================================================
+`````
+
+#### 📦 Imports
+
+- `from celery import Celery`
+- `import requests`
+- `import sqlite3`
+- `import os`
+- `import random`
+- `from threading import Lock`
+- `import json`
+- `from lxml import etree`
+
+#### 🔧 Public Functions (7)
+
+- `def init_database()`
+  - *Line: 126*
+  - *初始化数据库*
+
+- `def save_news_to_db(news_data)`
+  - *Line: 157*
+
+- `def save_comment_to_db(comment_data)`
+  - *Line: 169*
+
+- `def get_random_headers()`
+  - *Line: 192*
+
+- `def crawl_list_page(self, page: int = 1, size: int = 10)` `app.task(bind=True, max_retries=3, default_retry_delay=1, rate_limit='2/s')`
+  - *Line: 212*
+  - **Docstring:**
+  `````
+  爬取新闻列表页
+  
+  💔 Celery 痛点 10：任务定义需要 @app.task 装饰器 + 各种参数
+  🌟 Funboost 对比：
+     @boost(BoosterParams(
+         queue_name="list_page",
+         qps=2,
+         concurrent_num=5,
+     ))
+     def crawl_list_page(page, size): ...
+     
+     配置更简洁，参数更直观！
+  
+  💔 Celery 痛点 11：bind=True + self 才能访问任务上下文
+  🌟 Funboost 对比：fct (Funboost Current Task) 上下文直接可用
+  `````
+
+- `def crawl_detail_page(self, news_id: int, title: str)` `app.task(bind=True, max_retries=3, default_retry_delay=1, rate_limit='5/s')`
+  - *Line: 265*
+  - **Docstring:**
+  `````
+  爬取新闻详情页
+  
+  💔 Celery 痛点 14：没有内置的任务去重功能
+  🌟 Funboost 对比：
+     do_task_filtering=True,              # 开启去重
+     task_filtering_expire_seconds=600,   # 过期时间
+  `````
+
+- `def crawl_comments_page(self, news_id: int, title: str, page: int = 1, size: int = 10)` `app.task(bind=True, max_retries=3, default_retry_delay=1, rate_limit='10/s')`
+  - *Line: 327*
+  - **Docstring:**
+  `````
+  爬取新闻评论页
+  
+  💔 Celery 痛点 15：没有内置的 XPath/CSS 解析
+  🌟 Funboost 对比：SpiderResponse.xpath() 开箱即用
+  `````
+
+
+---
+
+`````python
+# -*- coding: utf-8 -*-
+"""
+================================================================================
+                新闻爬虫 - 使用 Celery 分布式任务队列实现
+================================================================================
+
+🎯 本文件目的：
+   使用 Celery 框架实现新闻爬虫，与 Funboost + boost_spider 形成对比。
+   展示 Celery 作为分布式任务队列在爬虫场景下与 Funboost 的差异。
+
+================================================================================
+                    ⚠️ Celery 实现的痛点对比
+================================================================================
+
+📊 与 Funboost 对比：
+┌─────────────────────────┬────────────────────────────────┬────────────────────────────────┐
+│       对比项            │           Celery               │     Funboost + boost_spider    │
+├─────────────────────────┼────────────────────────────────┼────────────────────────────────┤
+│ 项目结构                │ 需要多个文件(app/tasks/config) │ ⭐ 单文件即可运行              │
+│ 启动方式                │ 需要单独启动 worker 进程       │ ⭐ .consume() 一行代码         │
+│ 中间件选择              │ 主要 Redis/RabbitMQ            │ ⭐ 40+ 种中间件               │
+│ 精确流控(QPS)           │ rate_limit 近似控制            │ ⭐ qps=5 精确到毫秒            │
+│ 分布式流控              │ 需要自己实现                   │ ⭐ 内置分布式 QPS 控制         │
+│ 任务去重                │ 需要自己实现                   │ ⭐ do_task_filtering=True     │
+│ 分组启动                │ 需要配置 queue 路由            │ ⭐ booster_group 一个参数     │
+│ 外部动态注入            │ ⚠️ 可以但需 apply_async       │ ⭐ .push() 更简洁             │
+│ 监控面板                │ 需要单独部署 Flower            │ ⭐ 内置 Web 管理面板           │
+│ RPC 获取结果            │ AsyncResult 异步获取           │ ⭐ 原生 RPC 模式更简洁         │
+│ 定时任务                │ celery-beat 单独进程           │ ⭐ 内置 APScheduler           │
+│ 消息确认机制            │ ack_late 配置                  │ ⭐ ACK_ABLE 中间件原生支持    │
+│ 代理/UA管理             │ 需要自己实现                   │ ⭐ RequestClient 一行代码     │
+│ 数据保存                │ 需要自己实现                   │ ⭐ DatasetSink 一行代码       │
+│ 配置复杂度              │ 需要单独配置文件               │ ⭐ 装饰器参数集中配置          │
+└─────────────────────────┴────────────────────────────────┴────────────────────────────────┘
+
+💔 Celery 的主要问题：
+   1. 需要单独的 worker 进程（celery -A tasks worker）
+   2. 需要单独的配置文件
+   3. 没有内置的精确 QPS 控制
+   4. 没有内置的任务去重
+   5. 监控需要额外部署 Flower
+
+================================================================================
+"""
+
+# ==========================================
+# 💔 Celery 痛点 1：需要创建 Celery 应用实例
+# ==========================================
+# 🌟 Funboost 对比：直接使用 @boost 装饰器，无需创建应用实例
+from celery import Celery
+import requests
+import sqlite3
+import os
+import random
+from threading import Lock
+import json
+
+# ==========================================
+# 💔 Celery 痛点 2：需要配置 broker 和 backend
+# ==========================================
+# 🌟 Funboost 对比：broker_kind=BrokerEnum.REDIS_ACK_ABLE 一个参数
+app = Celery(
+    'news_crawler',
+    broker='redis://localhost:6379/1',      # 消息代理
+    backend='redis://localhost:6379/2',     # 结果存储
+)
+
+# ==========================================
+# 💔 Celery 痛点 3：需要单独的配置
+# ==========================================
+# 🌟 Funboost 对比：所有配置在 @boost(BoosterParams(...)) 一个地方
+app.conf.update(
+    # 任务序列化格式
+    task_serializer='json',
+    accept_content=['json'],
+    result_serializer='json',
+    
+    # 时区
+    timezone='Asia/Shanghai',
+    enable_utc=True,
+    
+    # 重试配置
+    # 💔 Celery：需要在任务中手动处理重试
+    # 🌟 Funboost：max_retry_times=3 一个参数
+    task_acks_late=True,  # 任务完成后才确认
+    task_reject_on_worker_lost=True,
+    
+    # 并发配置
+    # 💔 Celery：启动 worker 时用 -c 参数指定
+    # 🌟 Funboost：concurrent_num=10 一个参数
+    worker_concurrency=10,
+    
+    # 💔 Celery 痛点 4：rate_limit 是近似控制，不精确
+    # 🌟 Funboost：qps=5 精确到毫秒级
+    # task_default_rate_limit='5/s',  # 近似每秒5个
+    
+    # 队列路由
+    # 💔 Celery 痛点 5：需要配置复杂的队列路由
+    # 🌟 Funboost：queue_name 直接指定
+    task_routes={
+        'celery_crawler.crawl_list_page': {'queue': 'list_page'},
+        'celery_crawler.crawl_detail_page': {'queue': 'detail_page'},
+        'celery_crawler.crawl_comments_page': {'queue': 'comments_page'},
+    },
+)
+
+# ================= 配置 =================
+BASE_URL = "http://127.0.0.1:7000"
+
+# ==========================================
+# 💔 Celery 痛点 6：需要自己实现任务去重
+# ==========================================
+# 🌟 Funboost 对比：do_task_filtering=True 一个参数
+crawled_detail_ids = set()
+crawled_detail_lock = Lock()
+crawled_comment_keys = set()
+crawled_comment_lock = Lock()
+
+# ==========================================
+# 💔 Celery 痛点 7：需要自己实现数据保存
+# ==========================================
+# 🌟 Funboost 对比：DatasetSink.save() 一行代码
+db_lock = Lock()
+db_path = os.path.join(os.path.dirname(__file__), 'celery_crawled_data.db')
+
+def init_database():
+    """初始化数据库"""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS news_detail (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            news_id INTEGER,
+            title TEXT,
+            author TEXT,
+            publish_time TEXT,
+            content TEXT
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            news_id INTEGER,
+            news_title TEXT,
+            page INTEGER,
+            comment_id TEXT,
+            author TEXT,
+            time TEXT,
+            content TEXT,
+            likes TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+    print("💔 [Celery] 数据库初始化完成")
+
+def save_news_to_db(news_data):
+    with db_lock:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO news_detail (news_id, title, author, publish_time, content)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (news_data['news_id'], news_data['title'], news_data['author'],
+              news_data['publish_time'], news_data['content']))
+        conn.commit()
+        conn.close()
+
+def save_comment_to_db(comment_data):
+    with db_lock:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO comments (news_id, news_title, page, comment_id, author, time, content, likes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (comment_data['news_id'], comment_data['news_title'], comment_data['page'],
+              comment_data['comment_id'], comment_data['author'], comment_data['time'],
+              comment_data['content'], comment_data['likes']))
+        conn.commit()
+        conn.close()
+
+# ==========================================
+# 💔 Celery 痛点 8：需要自己实现动态 UA
+# ==========================================
+# 🌟 Funboost 对比：RequestClient(is_change_ua_every_request=True)
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+]
+
+def get_random_headers():
+    return {
+        'User-Agent': random.choice(USER_AGENTS),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+    }
+
+
+# ==========================================
+# Celery 任务定义
+# ==========================================
+
+@app.task(
+    bind=True,              # 绑定任务实例
+    max_retries=3,          # 最大重试次数
+    default_retry_delay=1,  # 重试延迟
+    # 💔 Celery 痛点 9：rate_limit 是近似控制
+    # 🌟 Funboost：qps=2 精确每秒2次
+    rate_limit='2/s',
+)
+def crawl_list_page(self, page: int = 1, size: int = 10):
+    """
+    爬取新闻列表页
+    
+    💔 Celery 痛点 10：任务定义需要 @app.task 装饰器 + 各种参数
+    🌟 Funboost 对比：
+       @boost(BoosterParams(
+           queue_name="list_page",
+           qps=2,
+           concurrent_num=5,
+       ))
+       def crawl_list_page(page, size): ...
+       
+       配置更简洁，参数更直观！
+    
+    💔 Celery 痛点 11：bind=True + self 才能访问任务上下文
+    🌟 Funboost 对比：fct (Funboost Current Task) 上下文直接可用
+    """
+    url = f"{BASE_URL}/news/list?page={page}&size={size}"
+    print(f"[列表页] 正在爬取: {url}")
+    
+    try:
+        response = requests.get(url, headers=get_random_headers(), timeout=10)
+        response.raise_for_status()
+        news_list = response.json()
+        
+        print(f"[列表页] 获取到 {len(news_list)} 条新闻")
+        
+        # 💔 Celery 痛点 12：推送子任务需要 .delay() 或 .apply_async()
+        # 🌟 Funboost 对比：crawl_detail_page.push(news_id=xxx) 更直观
+        for news_item in news_list:
+            news_id = news_item["id"]
+            title = news_item["title"]
+            print(f"  -> 发现新闻 [ID: {news_id}] {title}")
+            
+            # 使用 delay 推送任务
+            crawl_detail_page.delay(news_id=news_id, title=title)
+        
+        return {"status": "success", "page": page, "count": len(news_list)}
+    
+    except Exception as e:
+        print(f"[列表页] 爬取失败: {e}")
+        # 💔 Celery 痛点 13：需要手动调用 retry
+        # 🌟 Funboost 对比：抛出异常自动重试
+        raise self.retry(exc=e)
+
+
+@app.task(
+    bind=True,
+    max_retries=3,
+    default_retry_delay=1,
+    rate_limit='5/s',
+)
+def crawl_detail_page(self, news_id: int, title: str):
+    """
+    爬取新闻详情页
+    
+    💔 Celery 痛点 14：没有内置的任务去重功能
+    🌟 Funboost 对比：
+       do_task_filtering=True,              # 开启去重
+       task_filtering_expire_seconds=600,   # 过期时间
+    """
+    # 手动去重逻辑
+    with crawled_detail_lock:
+        if news_id in crawled_detail_ids:
+            print(f"  💔 [Celery] 跳过已爬取: news_id={news_id}")
+            return None
+        crawled_detail_ids.add(news_id)
+    
+    url = f"{BASE_URL}/news/{news_id}"
+    print(f"[详情页] 正在爬取: {url}")
+    
+    try:
+        response = requests.get(url, headers=get_random_headers(), timeout=10)
+        response.raise_for_status()
+        news_detail = response.json()
+        
+        content = news_detail.get("content", "")
+        author = news_detail.get("author", "未知")
+        publish_time = news_detail.get("publish_time", "未知")
+        
+        print("=" * 60)
+        print(f"[爬取成功] 新闻ID: {news_id}")
+        print(f"标题: {title}")
+        print(f"作者: {author}")
+        print("=" * 60)
+        
+        # 保存到数据库
+        save_news_to_db({
+            "news_id": news_id,
+            "title": title,
+            "author": author,
+            "publish_time": publish_time,
+            "content": content,
+        })
+        print("  💔 [Celery] 保存新闻到 SQLite（需自己写保存函数）")
+        
+        # 推送评论页任务
+        for page in range(1, 3):
+            crawl_comments_page.delay(news_id=news_id, title=title, page=page)
+            print(f"  -> 已推送: 爬取新闻{news_id}的第{page}页评论")
+        
+        return {"status": "success", "news_id": news_id}
+    
+    except Exception as e:
+        print(f"[详情页] 爬取失败 (ID: {news_id}): {e}")
+        raise self.retry(exc=e)
+
+
+@app.task(
+    bind=True,
+    max_retries=3,
+    default_retry_delay=1,
+    rate_limit='10/s',
+)
+def crawl_comments_page(self, news_id: int, title: str, page: int = 1, size: int = 10):
+    """
+    爬取新闻评论页
+    
+    💔 Celery 痛点 15：没有内置的 XPath/CSS 解析
+    🌟 Funboost 对比：SpiderResponse.xpath() 开箱即用
+    """
+    # 手动去重
+    cache_key = f"{news_id}_{page}"
+    with crawled_comment_lock:
+        if cache_key in crawled_comment_keys:
+            print(f"  💔 [Celery] 跳过已爬取: {cache_key}")
+            return None
+        crawled_comment_keys.add(cache_key)
+    
+    url = f"{BASE_URL}/news/{news_id}/comments?page={page}&size={size}"
+    print(f"[评论页] 正在爬取: {url}")
+    
+    try:
+        response = requests.get(url, headers=get_random_headers(), timeout=10)
+        response.raise_for_status()
+        
+        # 需要手动安装和使用 lxml 解析
+        from lxml import etree
+        html = etree.HTML(response.text)
+        comment_items = html.xpath('//div[@class="comment-item"]')
+        
+        print(f"[评论页] 找到 {len(comment_items)} 条评论")
+        
+        for item in comment_items:
+            comment_id = item.get('data-id')
+            author = item.xpath('.//span[@class="author"]/text()')
+            author = author[0] if author else None
+            time_str = item.xpath('.//span[@class="time"]/text()')
+            time_str = time_str[0] if time_str else None
+            content = item.xpath('.//p[@class="text"]/text()')
+            content = content[0] if content else None
+            likes = item.xpath('.//span[@class="likes"]/text()')
+            likes = likes[0] if likes else None
+            
+            save_comment_to_db({
+                "news_id": news_id,
+                "news_title": title,
+                "page": page,
+                "comment_id": comment_id,
+                "author": author,
+                "time": time_str,
+                "content": content,
+                "likes": likes,
+            })
+            
+            print(f"  📝 评论#{comment_id} | {author}")
+        
+        print(f"[评论爬取成功] 新闻ID: {news_id}, 第{page}页, 共 {len(comment_items)} 条")
+        return {"status": "success", "news_id": news_id, "page": page}
+    
+    except Exception as e:
+        print(f"[评论页] 爬取失败: {e}")
+        raise self.retry(exc=e)
+
+
+# ================= 入口 =================
+if __name__ == "__main__":
+    print()
+    print("=" * 70)
+    print("            新闻爬虫 - Celery 分布式任务队列实现")
+    print("=" * 70)
+    print()
+    print("⚠️ Celery 的使用步骤（比 Funboost 复杂得多）：")
+    print()
+    print("💔 步骤 1：启动 Redis")
+    print("   redis-server")
+    print()
+    print("💔 步骤 2：启动 news_server.py")
+    print("   python news_server.py")
+    print()
+    print("💔 步骤 3：启动 Celery Worker（需要单独的终端）")
+    print("   celery -A celery_crawler worker -l info -Q list_page,detail_page,comments_page")
+    print()
+    print("💔 步骤 4：发布初始任务（又一个终端）")
+    print("   python -c \"from celery_crawler import *; [crawl_list_page.delay(page=i) for i in range(1,4)]\"")
+    print()
+    print("💔 步骤 5：（可选）启动 Flower 监控")
+    print("   celery -A celery_crawler flower")
+    print()
+    print("=" * 70)
+    print()
+    print("🌟 Funboost 对比（简洁得多）：")
+    print()
+    print("   # 只需要一个文件，运行一次即可：")
+    print("   python boost_spider_crawler.py")
+    print()
+    print("   # 内部代码也更简洁：")
+    print("   from funboost import boost, BoosterParams, BrokerEnum")
+    print()
+    print("   @boost(BoosterParams(")
+    print("       queue_name='list_page',")
+    print("       broker_kind=BrokerEnum.REDIS_ACK_ABLE,")
+    print("       qps=2,")
+    print("       concurrent_num=5,")
+    print("       do_task_filtering=True,")
+    print("   ))")
+    print("   def crawl_list_page(page, size): ...")
+    print()
+    print("   crawl_list_page.consume()  # 启动消费")
+    print("   crawl_list_page.push(page=1)  # 发布任务")
+    print()
+    print("=" * 70)
+    print()
+    print("💔 Celery 的 15 个痛点总结：")
+    print("   1. 需要创建 Celery 应用实例")
+    print("   2. 需要配置 broker 和 backend")
+    print("   3. 需要单独的配置文件/配置项")
+    print("   4. rate_limit 是近似控制，不精确")
+    print("   5. 需要配置复杂的队列路由")
+    print("   6. 需要自己实现任务去重")
+    print("   7. 需要自己实现数据保存")
+    print("   8. 需要自己实现动态 UA")
+    print("   9. rate_limit 近似 QPS 控制")
+    print("   10. 任务装饰器参数繁多")
+    print("   11. bind=True + self 才能访问上下文")
+    print("   12. 推送子任务需要 .delay()/.apply_async()")
+    print("   13. 需要手动调用 retry")
+    print("   14. 没有内置任务去重")
+    print("   15. 没有内置 XPath/CSS 解析")
+    print()
+    print("🌟 Funboost 只需要：")
+    print("   @boost(BoosterParams(...)) + .consume() + .push()")
+    print("   一切自动处理！")
+    print("=" * 70)
+    
+    # 初始化数据库
+    init_database()
+    
+    print()
+    print("请按照上述步骤在多个终端中启动 Celery Worker...")
+
+`````
+
+--- **end of file: demo_crawler/celery_imp/celery_crawler.py** (project: funboost) --- 
+
+---
+
+
+--- **start of file: demo_crawler/feapder_imp/feapder_news_crawler.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `demo_crawler/feapder_imp/feapder_news_crawler.py`
+
+#### 📝 Module Docstring
+
+`````
+================================================================================
+            新闻爬虫 - 使用 Feapder Spider 实现分布式爬取
+================================================================================
+
+🎯 本文件目的：
+   演示如何使用 Feapder 框架的 Spider（分布式爬虫）实现列表页、详情页、评论页的三层爬取。
+   符合 Feapder 最佳实践。
+
+================================================================================
+                        ⭐ Feapder 核心特性
+================================================================================
+
+📊 Feapder Spider 特点：
+┌──────────────────────────┬────────────────────────────────────────────────────────┐
+│       ⭐ 特性             │              说明                                      │
+├──────────────────────────┼────────────────────────────────────────────────────────┤
+│ 1. 基于Redis分布式        │ 任务存储在Redis，支持多进程/多机器分布式采集            │
+│ 2. 断点续爬              │ 爬虫中断后重启，自动从上次中断处继续                    │
+│ 3. 任务防丢              │ 任务做完才删除，异常退出10分钟后任务自动重新可用        │
+│ 4. RANDOM_HEADERS        │ 内置1000+ User-Agent，自动随机切换                      │
+│ 5. Item自动入库          │ yield Item() 自动批量入库，无需手动处理                 │
+│ 6. 自定义Pipeline        │ 支持MySQL/MongoDB/自定义Pipeline                       │
+│ 7. callback回调链        │ parse_list -> parse_detail -> parse_comments           │
+│ 8. Request携带参数       │ Request(url, news_id=xxx) 直接携带，无需meta           │
+│ 9. 内置去重              │ REQUEST_FILTER_ENABLE / ITEM_FILTER_ENABLE             │
+│ 10. xpath/css/re解析     │ response.xpath/css/re 类似Scrapy                       │
+└──────────────────────────┴────────────────────────────────────────────────────────┘
+
+================================================================================
+`````
+
+#### 📦 Imports
+
+- `import os`
+- `import sqlite3`
+- `from typing import Dict`
+- `from typing import List`
+- `from typing import Tuple`
+- `import feapder`
+- `from feapder import Item`
+- `from feapder.pipelines import BasePipeline`
+
+#### 🏛️ Classes (4)
+
+##### 📌 `class SQLitePipeline(BasePipeline)`
+*Line: 45*
+
+**Docstring:**
+`````
+SQLite Pipeline - 自动创建表并批量入库
+
+feapder的Item会自动流经此Pipeline:
+- Item类名去掉Item后缀作为表名（如NewsDetailItem -> news_detail）
+- 自动根据Item字段创建表
+- 批量插入数据
+`````
+
+**🔧 Constructor (`__init__`):**
+- `def __init__(self)`
+  - **Parameters:**
+    - `self`
+
+**Public Methods (3):**
+- `def save_items(self, table: str, items: List[Dict]) -> bool`
+  - *批量保存数据*
+- `def update_items(self, table: str, items: List[Dict], update_keys: Tuple = ()) -> bool`
+  - *更新数据（暂不实现）*
+- `def close(self)`
+  - *关闭数据库连接*
+
+##### 📌 `class NewsDetailItem(Item)`
+*Line: 116*
+
+**Docstring:**
+`````
+新闻详情 Item - 自动入库到 news_detail 表
+
+Feapder 最佳实践：
+- 定义Item类，yield item 自动批量入库
+- __pipelines__ 指定Pipeline实例
+- __unique_key__ 可指定去重字段
+`````
+
+**🔧 Constructor (`__init__`):**
+- `def __init__(self, *args, **kwargs)`
+  - **Parameters:**
+    - `self`
+    - `*args`
+    - `**kwargs`
+
+**Class Variables (2):**
+- `__pipelines__ = [_sqlite_pipeline]`
+- `__unique_key__ = ['news_id']`
+
+##### 📌 `class CommentsItem(Item)`
+*Line: 137*
+
+**Docstring:**
+`````
+评论 Item - 自动入库到 comments 表
+`````
+
+**🔧 Constructor (`__init__`):**
+- `def __init__(self, *args, **kwargs)`
+  - **Parameters:**
+    - `self`
+    - `*args`
+    - `**kwargs`
+
+**Class Variables (2):**
+- `__pipelines__ = [_sqlite_pipeline]`
+- `__unique_key__ = ['comment_id']`
+
+##### 📌 `class NewsCrawler(feapder.Spider)`
+*Line: 158*
+
+**Docstring:**
+`````
+Feapder 分布式新闻爬虫
+
+爬取流程: 列表页(JSON) -> 详情页(JSON) -> 评论页(HTML/xpath)
+
+⭐ Feapder 最佳实践：
+1. 使用 Spider 类（基于Redis的分布式爬虫）
+2. 使用 __custom_setting__ 配置爬虫参数
+3. 使用 callback 指定解析函数
+4. 使用 Request(url, param=value) 携带参数
+5. 使用 yield Item() 自动入库
+`````
+
+**Public Methods (4):**
+- `def start_requests(self)`
+  - **Docstring:**
+  `````
+  初始任务入口 - 下发列表页任务
+  
+  ⭐ Feapder 最佳实践：
+  - yield feapder.Request(url, callback=self.xxx) 指定回调函数
+  - 可以携带自定义参数：feapder.Request(url, page=1)
+  `````
+- `def parse_list(self, request, response)`
+  - **Docstring:**
+  `````
+  解析列表页 - JSON响应
+  
+  ⭐ Feapder 特性：
+  - response.json 直接获取JSON数据（类似 response.json()）
+  - 通过 request.page 取出携带的参数
+  
+  💔 Scrapy 对比：需要 response.meta['page'] 传递参数
+  ✅ Funboost 对比：response.resp_dict 获取JSON
+  `````
+- `def parse_detail(self, request, response)`
+  - **Docstring:**
+  `````
+  解析详情页 - JSON响应，yield Item 自动入库
+  
+  ⭐ Feapder 最佳实践：
+  - request.news_id 取出携带的参数
+  - yield Item() 自动批量入库
+  
+  💔 Scrapy 对比：需要定义 Item 类 + Pipeline + settings 配置
+  ✅ Funboost 对比：DatasetSink.save() 一行代码入库
+  `````
+- `def parse_comments(self, request, response)`
+  - **Docstring:**
+  `````
+  解析评论页 - HTML响应，使用 xpath 解析
+  
+  ⭐ Feapder 特性：
+  - response.xpath() 返回 SelectorList，与 Scrapy 用法一致
+  - .extract_first() 获取第一个匹配的文本
+  - .extract() 获取所有匹配的文本列表
+  
+  💔 Scrapy 对比：用法相同
+  ✅ Funboost 对比：SpiderResponse.xpath() 用法相同
+  `````
+
+**Class Variables (2):**
+- `__custom_setting__ = dict(REDISDB_IP_PORTS='localhost:6379', REDISDB_USER_PASS='', REDISDB_DB=0, SPIDER_THREAD_COUNT=5, SPIDER_MAX_RETRY_TIMES=3, SPIDER_SLEEP_TIME=0, RANDOM_HEADERS=True, USER_AGENT_TYPE='chrome', LOG_LEVEL='INFO')`
+- `BASE_URL = 'http://127.0.0.1:7000'`
+
+
+---
+
+`````python
+# -*- coding: utf-8 -*-
+"""
+================================================================================
+            新闻爬虫 - 使用 Feapder Spider 实现分布式爬取
+================================================================================
+
+🎯 本文件目的：
+   演示如何使用 Feapder 框架的 Spider（分布式爬虫）实现列表页、详情页、评论页的三层爬取。
+   符合 Feapder 最佳实践。
+
+================================================================================
+                        ⭐ Feapder 核心特性
+================================================================================
+
+📊 Feapder Spider 特点：
+┌──────────────────────────┬────────────────────────────────────────────────────────┐
+│       ⭐ 特性             │              说明                                      │
+├──────────────────────────┼────────────────────────────────────────────────────────┤
+│ 1. 基于Redis分布式        │ 任务存储在Redis，支持多进程/多机器分布式采集            │
+│ 2. 断点续爬              │ 爬虫中断后重启，自动从上次中断处继续                    │
+│ 3. 任务防丢              │ 任务做完才删除，异常退出10分钟后任务自动重新可用        │
+│ 4. RANDOM_HEADERS        │ 内置1000+ User-Agent，自动随机切换                      │
+│ 5. Item自动入库          │ yield Item() 自动批量入库，无需手动处理                 │
+│ 6. 自定义Pipeline        │ 支持MySQL/MongoDB/自定义Pipeline                       │
+│ 7. callback回调链        │ parse_list -> parse_detail -> parse_comments           │
+│ 8. Request携带参数       │ Request(url, news_id=xxx) 直接携带，无需meta           │
+│ 9. 内置去重              │ REQUEST_FILTER_ENABLE / ITEM_FILTER_ENABLE             │
+│ 10. xpath/css/re解析     │ response.xpath/css/re 类似Scrapy                       │
+└──────────────────────────┴────────────────────────────────────────────────────────┘
+
+================================================================================
+"""
+
+import os
+import sqlite3
+from typing import Dict, List, Tuple
+
+import feapder
+from feapder import Item
+from feapder.pipelines import BasePipeline
+
+
+# ================= SQLite Pipeline =================
+
+class SQLitePipeline(BasePipeline):
+    """
+    SQLite Pipeline - 自动创建表并批量入库
+    
+    feapder的Item会自动流经此Pipeline:
+    - Item类名去掉Item后缀作为表名（如NewsDetailItem -> news_detail）
+    - 自动根据Item字段创建表
+    - 批量插入数据
+    """
+    
+    def __init__(self):
+        db_path = os.path.join(os.path.dirname(__file__), 'feapder_crawled_data.db')
+        self.conn = sqlite3.connect(db_path, check_same_thread=False)
+        self._created_tables = set()
+        print(f"[SQLitePipeline] 数据库已连接: {db_path}")
+    
+    def _ensure_table(self, table: str, item: Dict):
+        """确保表存在，不存在则创建"""
+        if table in self._created_tables:
+            return
+        
+        # 根据item的字段动态创建表
+        columns = ', '.join([f"{k} TEXT" for k in item.keys()])
+        sql = f"CREATE TABLE IF NOT EXISTS {table} (id INTEGER PRIMARY KEY AUTOINCREMENT, {columns})"
+        
+        cursor = self.conn.cursor()
+        cursor.execute(sql)
+        self.conn.commit()
+        self._created_tables.add(table)
+        print(f"[SQLitePipeline] 表 {table} 已就绪")
+    
+    def save_items(self, table: str, items: List[Dict]) -> bool:
+        """批量保存数据"""
+        if not items:
+            return True
+        
+        self._ensure_table(table, items[0])
+        
+        cursor = self.conn.cursor()
+        for item in items:
+            columns = ', '.join(item.keys())
+            placeholders = ', '.join(['?' for _ in item])
+            sql = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
+            try:
+                cursor.execute(sql, list(item.values()))
+            except Exception as e:
+                print(f"[SQLitePipeline] 插入失败: {e}")
+        
+        self.conn.commit()
+        print(f"[SQLitePipeline] ✓ 保存 {len(items)} 条到 {table} 表")
+        return True
+    
+    def update_items(self, table: str, items: List[Dict], update_keys: Tuple = ()) -> bool:
+        """更新数据（暂不实现）"""
+        return True
+    
+    def close(self):
+        """关闭数据库连接"""
+        if self.conn:
+            self.conn.close()
+            print("[SQLitePipeline] 数据库连接已关闭")
+
+
+# 创建全局Pipeline实例，供Item使用
+_sqlite_pipeline = SQLitePipeline()
+
+
+# ================= Item 定义 =================
+# Item类名去掉Item后缀 = 表名 (news_detail, comments)
+# 使用 __pipelines__ 指定Pipeline实例（feapder语法）
+
+class NewsDetailItem(Item):
+    """
+    新闻详情 Item - 自动入库到 news_detail 表
+    
+    Feapder 最佳实践：
+    - 定义Item类，yield item 自动批量入库
+    - __pipelines__ 指定Pipeline实例
+    - __unique_key__ 可指定去重字段
+    """
+    __pipelines__ = [_sqlite_pipeline]  # ⭐ 使用Item的__pipelines__指定Pipeline
+    __unique_key__ = ["news_id"]  # 根据 news_id 去重
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.news_id = None
+        self.title = None
+        self.author = None
+        self.publish_time = None
+        self.content = None
+
+
+class CommentsItem(Item):
+    """
+    评论 Item - 自动入库到 comments 表
+    """
+    __pipelines__ = [_sqlite_pipeline]  # ⭐ 使用Item的__pipelines__指定Pipeline
+    __unique_key__ = ["comment_id"]  # 根据 comment_id 去重
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.news_id = None
+        self.news_title = None
+        self.page = None
+        self.comment_id = None
+        self.author = None
+        self.time = None
+        self.content = None
+        self.likes = None
+
+
+# ================= Spider 爬虫 =================
+
+class NewsCrawler(feapder.Spider):
+    """
+    Feapder 分布式新闻爬虫
+    
+    爬取流程: 列表页(JSON) -> 详情页(JSON) -> 评论页(HTML/xpath)
+    
+    ⭐ Feapder 最佳实践：
+    1. 使用 Spider 类（基于Redis的分布式爬虫）
+    2. 使用 __custom_setting__ 配置爬虫参数
+    3. 使用 callback 指定解析函数
+    4. 使用 Request(url, param=value) 携带参数
+    5. 使用 yield Item() 自动入库
+    """
+    
+    # ⭐ 爬虫配置 - 使用 __custom_setting__ 覆盖默认配置
+    __custom_setting__ = dict(
+        # Redis 配置（Spider必须）
+        REDISDB_IP_PORTS="localhost:6379",
+        REDISDB_USER_PASS="",
+        REDISDB_DB=0,
+        
+        # 并发配置
+        SPIDER_THREAD_COUNT=5,          # 并发线程数
+        SPIDER_MAX_RETRY_TIMES=3,       # 最大重试次数
+        SPIDER_SLEEP_TIME=0,            # 下载间隔（秒）
+        
+        # ⭐ 随机 User-Agent（feapder内置功能，无需自己实现！）
+        RANDOM_HEADERS=True,            # 开启随机UA
+        USER_AGENT_TYPE="chrome",       # UA类型：chrome/firefox/safari/mobile
+        
+        # 注意：Pipeline已在Item类中通过 __pipelines__ 指定，无需在这里配置
+        
+        # 日志
+        LOG_LEVEL="INFO",
+    )
+    
+    BASE_URL = "http://127.0.0.1:7000"
+    
+    def start_requests(self):
+        """
+        初始任务入口 - 下发列表页任务
+        
+        ⭐ Feapder 最佳实践：
+        - yield feapder.Request(url, callback=self.xxx) 指定回调函数
+        - 可以携带自定义参数：feapder.Request(url, page=1)
+        """
+        print("=" * 60)
+        print("新闻爬虫 - Feapder Spider 分布式爬取")
+        print("爬取流程: 列表页 -> 详情页 -> 评论页(xpath解析)")
+        print("=" * 60)
+        
+        # 爬取前3页列表，每页5条
+        for page in range(1, 4):
+            url = f"{self.BASE_URL}/news/list?page={page}&size=5"
+            print(f"[下发任务] 列表页 第{page}页: {url}")
+            yield feapder.Request(url, callback=self.parse_list, page=page)
+    
+    def parse_list(self, request, response):
+        """
+        解析列表页 - JSON响应
+        
+        ⭐ Feapder 特性：
+        - response.json 直接获取JSON数据（类似 response.json()）
+        - 通过 request.page 取出携带的参数
+        
+        💔 Scrapy 对比：需要 response.meta['page'] 传递参数
+        ✅ Funboost 对比：response.resp_dict 获取JSON
+        """
+        page = request.page
+        
+        # ⭐【Feapder 特性 1】response.json 属性直接获取JSON
+        # 💔 Scrapy 对比：json.loads(response.text)
+        news_list = response.json
+        
+        print(f"[列表页] 第{page}页 获取到 {len(news_list)} 条新闻")
+        
+        for news in news_list:
+            news_id = news["id"]
+            title = news["title"]
+            print(f"  -> 发现新闻 [ID: {news_id}] {title}")
+            
+            # ⭐【Feapder 特性 2】Request直接携带参数，无需meta
+            # 💔 Scrapy 对比：需要 meta={'news_id': news_id, 'title': title}
+            # ✅ Funboost 对比：函数参数直接传递
+            yield feapder.Request(
+                f"{self.BASE_URL}/news/{news_id}",
+                callback=self.parse_detail,
+                news_id=news_id,
+                title=title,
+            )
+    
+    def parse_detail(self, request, response):
+        """
+        解析详情页 - JSON响应，yield Item 自动入库
+        
+        ⭐ Feapder 最佳实践：
+        - request.news_id 取出携带的参数
+        - yield Item() 自动批量入库
+        
+        💔 Scrapy 对比：需要定义 Item 类 + Pipeline + settings 配置
+        ✅ Funboost 对比：DatasetSink.save() 一行代码入库
+        """
+        news_id = request.news_id
+        title = request.title
+        news = response.json
+        
+        # ⭐【Feapder 特性 3】创建 Item 并赋值
+        # 💔 Scrapy 对比：同样需要定义 Item 类
+        # ✅ Funboost 对比：直接使用 dict 即可
+        item = NewsDetailItem()
+        item.news_id = news_id
+        item.title = title
+        item.author = news.get("author", "未知")
+        item.publish_time = news.get("publish_time", "")
+        item.content = news.get("content", "")
+        
+        print("=" * 60)
+        print(f"[详情页] 新闻ID: {news_id}")
+        print(f"标题: {title}")
+        print(f"作者: {item.author}")
+        print(f"发布时间: {item.publish_time}")
+        print(f"正文预览: {item.content[:80]}...")
+        print("=" * 60)
+        
+        # ⭐【Feapder 特性 4】yield Item，自动批量入库到 news_detail 表
+        # 💔 Scrapy 对比：需要配置 ITEM_PIPELINES，在 Pipeline 中手写 SQL
+        # ✅ Funboost 对比：DatasetSink("sqlite:///data.db").save("news", data)
+        yield item
+        print(f"  💾 [yield Item] 将自动入库到 news_detail 表")
+        
+        # ⭐【Feapder 特性 5】下发评论页任务（前2页）
+        # 💔 Scrapy 对比：同样使用 yield Request
+        # ✅ Funboost 对比：crawl_comments_page.push()
+        for page in range(1, 3):
+            yield feapder.Request(
+                f"{self.BASE_URL}/news/{news_id}/comments?page={page}&size=10",
+                callback=self.parse_comments,
+                news_id=news_id,
+                title=title,
+                comment_page=page,
+            )
+            print(f"  -> 已发布: 爬取新闻{news_id}的第{page}页评论")
+    
+    def parse_comments(self, request, response):
+        """
+        解析评论页 - HTML响应，使用 xpath 解析
+        
+        ⭐ Feapder 特性：
+        - response.xpath() 返回 SelectorList，与 Scrapy 用法一致
+        - .extract_first() 获取第一个匹配的文本
+        - .extract() 获取所有匹配的文本列表
+        
+        💔 Scrapy 对比：用法相同
+        ✅ Funboost 对比：SpiderResponse.xpath() 用法相同
+        """
+        news_id = request.news_id
+        title = request.title
+        page = request.comment_page
+        
+        print(f"[评论页] 正在解析: 新闻{news_id} 第{page}页")
+        
+        # ⭐【Feapder 特性 6】使用 xpath 解析 HTML
+        # 💔 Scrapy 对比：用法完全相同
+        # ✅ Funboost 对比：SpiderResponse.xpath() 同样支持
+        comment_items = response.xpath('//div[@class="comment-item"]')
+        print(f"[评论页] 找到 {len(comment_items)} 条评论")
+        
+        for elem in comment_items:
+            # ⭐【Feapder 特性 7】创建 Item 并使用 xpath 提取数据
+            item = CommentsItem()
+            item.news_id = news_id
+            item.news_title = title
+            item.page = page
+            
+            # 提取评论ID
+            item.comment_id = elem.xpath('./@data-id').extract_first()
+            # 提取作者
+            item.author = elem.xpath('.//span[@class="author"]/text()').extract_first()
+            # 提取评论时间
+            item.time = elem.xpath('.//span[@class="time"]/text()').extract_first()
+            # 提取评论内容
+            item.content = elem.xpath('.//p[@class="text"]/text()').extract_first()
+            # 提取点赞数
+            item.likes = elem.xpath('.//span[@class="likes"]/text()').extract_first()
+            
+            print(f"  📝 评论#{item.comment_id} | {item.author} | {item.time}")
+            print(f"     内容: {item.content}")
+            print(f"     点赞: {item.likes}")
+            
+            # ⭐【Feapder 特性 8】yield Item，自动批量入库到 comments 表
+            yield item
+        
+        # 输出汇总
+        print("=" * 60)
+        print(f"[评论爬取成功] 新闻ID: {news_id}, 第{page}页")
+        print(f"标题: {title}")
+        print(f"共解析 {len(comment_items)} 条评论")
+        print(f"  💾 [yield Item] 将自动入库到 comments 表")
+        print("=" * 60)
+
+
+# ================= 入口 =================
+if __name__ == "__main__":
+    """
+    运行说明：
+    
+    1. 先启动 Redis:
+       redis-server
+    
+    2. 启动 news_server.py:
+       cd demo_crawler
+       python news_server.py
+    
+    3. 运行爬虫:
+       cd demo_crawler/feapder_imp
+       python feapder_news_crawler.py
+    
+    4. 验证数据:
+       sqlite3 feapder_crawled_data.db
+       .tables
+       SELECT COUNT(*) FROM news_detail;
+       SELECT COUNT(*) FROM comments;
+    """
+    print("=" * 60)
+    print("新闻爬虫 - Feapder Spider 分布式爬取")
+    print("支持：列表页 -> 详情页 -> 评论页(xpath解析)")
+    print("=" * 60)
+    print()
+    
+    # ⭐【Feapder 特性】Spider 基于 Redis 分布式
+    # 💔 Scrapy 对比：需要 scrapy-redis 插件才能分布式
+    # ✅ Funboost 对比：支持 40+ 种中间件
+    print("[启动] 创建 Feapder Spider 实例...")
+    print("[配置] Redis: localhost:6379")
+    print("[配置] 并发线程: 5")
+    print("[配置] 随机UA: 开启")
+    print()
+    
+    # delete_keys="*" 清空任务队列，重新爬取（开发调试时使用）
+    # 正式环境去掉 delete_keys 参数，支持断点续爬
+    spider = NewsCrawler(
+        redis_key="news:feapder",  # Redis中的key前缀
+        delete_keys="*",           # 开发模式：每次清空重新爬取
+    )
+    
+    print("[启动] 开始爬取...")
+    print()
+    spider.start()
+
+
+`````
+
+--- **end of file: demo_crawler/feapder_imp/feapder_news_crawler.py** (project: funboost) --- 
+
+---
+
+
+--- **start of file: demo_crawler/funboost_imp/boost_spider_crawler.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `demo_crawler/funboost_imp/boost_spider_crawler.py`
+
+#### 📝 Module Docstring
+
+`````
+================================================================================
+            新闻爬虫 - 使用 Funboost + boost_spider 实现分布式爬取
+================================================================================
+
+🎯 本文件目的：
+   演示如何使用 Funboost 框架实现列表页、详情页、评论页的三层爬取流程。
+   使用 boost_spider 的 SpiderResponse 进行 xpath 解析（你羡慕的 Scrapy selector 功能）
+
+================================================================================
+                  ⭐ Funboost + boost_spider 核心优势对比表
+================================================================================
+
+📊 与 Scrapy 对比（详见 ../scrapy_imp/scrapy_spider_crawler.py）：
+┌──────────────────────────┬────────────────────────────────────────────────────────┐
+│       ⭐ 优势项           │              Funboost + boost_spider 实现              │
+├──────────────────────────┼────────────────────────────────────────────────────────┤
+│ 1. 单文件开箱即用        │ 无需创建项目结构，单个 .py 文件即可运行                │
+│ 2. 40+ 中间件选择        │ Redis/RabbitMQ/Kafka/MongoDB/SQLite/NSQ/...           │
+│ 3. 原生分布式            │ 改一个参数 broker_kind 立刻分布式，无需额外插件        │
+│ 4. 精确 QPS 流控         │ qps=5 精确每秒5次，支持分布式统一流控                 │
+│ 5. 一键任务去重          │ do_task_filtering=True 即可去重                       │
+│ 6. 自动重试              │ max_retry_times=3 自动重试                            │
+│ 7. 消息确认 ACK          │ REDIS_ACK_ABLE 确保任务不丢失，支持断点续爬           │
+│ 8. 外部动态任务注入      │ ⭐ HTTP/API 随时注入二级任务（Scrapy 无法实现！）      │
+│ 9. 分组启动消费          │ BoostersManager.consume_group("xxx") 一键启动一组     │
+│ 10. RPC 获取结果         │ is_using_rpc_mode=True 支持获取消费结果               │
+│ 11. XPath/CSS 解析       │ SpiderResponse.xpath()/css() 和 Scrapy 一样强大       │
+│ 12. 代理/UA/Cookie管理   │ RequestClient 内置代理轮换、UA随机、Session管理       │
+│ 13. 内置监控面板         │ funboost_web_manager 可视化监控                       │
+│ 14. 定时任务             │ ApsJobAdder 内置 APScheduler                         │
+│ 15. 平铺直叙的代码风格   │ 无 callback 地狱，函数之间直接 .push() 调用           │
+└──────────────────────────┴────────────────────────────────────────────────────────┘
+
+⭐ 核心优势：外部系统实时动态注入"二级任务"
+───────────────────────────────────────────
+场景：运营人员在后台发现某条新闻需要重新爬取
+Funboost：直接调用 crawl_detail_page.push(news_id=12345)
+Scrapy：❌ 无法实现，只能从 start_urls 开始爬取
+
+这是 Funboost 对 Scrapy 的【降维打击】！
+================================================================================
+`````
+
+#### 📦 Imports
+
+- `import requests`
+- `from funboost import boost`
+- `from funboost import BoosterParams`
+- `from funboost import BrokerEnum`
+- `from funboost import ctrl_c_recv`
+- `from funboost import BoostersManager`
+- `from boost_spider import RequestClient`
+- `from boost_spider.sink.dataset_sink import DatasetSink`
+- `import boost_spider`
+
+#### 🏛️ Classes (1)
+
+##### 📌 `class BaseCrawlerParams(BoosterParams)`
+*Line: 70*
+
+**Docstring:**
+`````
+爬虫通用配置基类
+
+⭐【Funboost 优势 2】配置集中：所有配置在装饰器一个地方
+⭐【Funboost 优势 3】类型安全：BoosterParams 是 Pydantic 模型，IDE 可以自动补全和类型检查
+💔  Scrapy 对比：settings 是 Python 字典，没有类型检查，容易拼错键名
+
+- 统一使用 Redis ACK Able 中间件（增强数据安全性）
+- 统一归属到 news_crawler_group 分组
+`````
+
+**Class Variables (3):**
+- `broker_kind: str = BrokerEnum.REDIS_ACK_ABLE`
+- `booster_group: str = 'news_crawler_group'`
+- `max_retry_times: int = 3`
+
+#### 🔧 Public Functions (3)
+
+- `def crawl_list_page(page: int = 1, size: int = 10)` `boost(BaseCrawlerParams(queue_name='news_crawler_list_page', qps=2, concurrent_num=5))`
+  - *Line: 107*
+  - **Docstring:**
+  `````
+  爬取新闻列表页
+  
+  ⭐【Funboost 优势 9】平铺直叙的代码风格
+  - 无需 callback 回调，直接 crawl_detail_page.push() 发起下一层任务
+  - 代码逻辑清晰，如同编写普通脚本
+  💔  Scrapy 对比：callback 回调地狱，parse_list -> parse_detail -> parse_comments
+  
+  ⭐【Funboost 优势 10】外部动态任务注入（核心降维打击优势！）
+  - 运营人员可以随时调用 crawl_list_page.push(page=5) 注入新任务
+  - 支持 HTTP API 注入（funboost.faas）
+  💔  Scrapy 对比：❌ 无法从外部实时注入二级任务，只能从 start_urls 开始
+  
+  - 请求列表页API
+  - 解析返回的新闻列表
+  - 推送详情页爬取任务
+  `````
+
+- `def crawl_detail_page(news_id: int, title: str)` `boost(BaseCrawlerParams(queue_name='news_crawler_detail_page', qps=5, concurrent_num=10, do_task_filtering=True, task_filtering_expire_seconds=600))`
+  - *Line: 167*
+  - **Docstring:**
+  `````
+  爬取新闻详情页
+  
+  ⭐【Funboost 优势 12】函数参数类型安全
+  - news_id: int, title: str 有类型标注
+  - IDE 可以检查类型，push 时参数错误会提示
+  💔  Scrapy 对比：通过 response.meta 传参，容易出错
+  
+  - 请求详情页API
+  - 解析并保存新闻内容
+  - 推送评论页爬取任务
+  `````
+
+- `def crawl_comments_page(news_id: int, title: str, page: int = 1, size: int = 10)` `boost(BaseCrawlerParams(queue_name='news_crawler_comments_page', qps=10, concurrent_num=15, retry_interval=1, do_task_filtering=True))`
+  - *Line: 237*
+  - **Docstring:**
+  `````
+  爬取新闻评论页 - 使用 boost_spider 的 SpiderResponse 进行 xpath 解析
+  
+  ⭐【boost_spider 优势】SpiderResponse 拥有你羡慕的 Scrapy selector 功能！
+  - resp.xpath('//div[@class="xxx"]')  -> XPath 选择器
+  - resp.css('div.xxx')                -> CSS 选择器  
+  - resp.re_search(pattern)            -> 正则匹配
+  - resp.resp_dict                     -> 自动解析 JSON
+  - resp.selector                      -> parsel.Selector 对象
+  
+  同时 RequestClient 还内置了：
+  - 代理管理（多代理商轮换）：proxy_name_list=['kuai', 'abuyun']
+  - 请求自动重试：request_retry_times=3
+  - UA 随机化：is_change_ua_every_request=True
+  - Session/Cookie 管理：自动保持会话
+  💔  Scrapy 对比：代理/重试/UA 都需要自己写中间件配置
+  
+  - 请求评论页HTML
+  - 使用xpath解析评论列表
+  - 提取评论信息
+  `````
+
+
+---
+
+`````python
+"""
+================================================================================
+            新闻爬虫 - 使用 Funboost + boost_spider 实现分布式爬取
+================================================================================
+
+🎯 本文件目的：
+   演示如何使用 Funboost 框架实现列表页、详情页、评论页的三层爬取流程。
+   使用 boost_spider 的 SpiderResponse 进行 xpath 解析（你羡慕的 Scrapy selector 功能）
+
+================================================================================
+                  ⭐ Funboost + boost_spider 核心优势对比表
+================================================================================
+
+📊 与 Scrapy 对比（详见 ../scrapy_imp/scrapy_spider_crawler.py）：
+┌──────────────────────────┬────────────────────────────────────────────────────────┐
+│       ⭐ 优势项           │              Funboost + boost_spider 实现              │
+├──────────────────────────┼────────────────────────────────────────────────────────┤
+│ 1. 单文件开箱即用        │ 无需创建项目结构，单个 .py 文件即可运行                │
+│ 2. 40+ 中间件选择        │ Redis/RabbitMQ/Kafka/MongoDB/SQLite/NSQ/...           │
+│ 3. 原生分布式            │ 改一个参数 broker_kind 立刻分布式，无需额外插件        │
+│ 4. 精确 QPS 流控         │ qps=5 精确每秒5次，支持分布式统一流控                 │
+│ 5. 一键任务去重          │ do_task_filtering=True 即可去重                       │
+│ 6. 自动重试              │ max_retry_times=3 自动重试                            │
+│ 7. 消息确认 ACK          │ REDIS_ACK_ABLE 确保任务不丢失，支持断点续爬           │
+│ 8. 外部动态任务注入      │ ⭐ HTTP/API 随时注入二级任务（Scrapy 无法实现！）      │
+│ 9. 分组启动消费          │ BoostersManager.consume_group("xxx") 一键启动一组     │
+│ 10. RPC 获取结果         │ is_using_rpc_mode=True 支持获取消费结果               │
+│ 11. XPath/CSS 解析       │ SpiderResponse.xpath()/css() 和 Scrapy 一样强大       │
+│ 12. 代理/UA/Cookie管理   │ RequestClient 内置代理轮换、UA随机、Session管理       │
+│ 13. 内置监控面板         │ funboost_web_manager 可视化监控                       │
+│ 14. 定时任务             │ ApsJobAdder 内置 APScheduler                         │
+│ 15. 平铺直叙的代码风格   │ 无 callback 地狱，函数之间直接 .push() 调用           │
+└──────────────────────────┴────────────────────────────────────────────────────────┘
+
+⭐ 核心优势：外部系统实时动态注入"二级任务"
+───────────────────────────────────────────
+场景：运营人员在后台发现某条新闻需要重新爬取
+Funboost：直接调用 crawl_detail_page.push(news_id=12345)
+Scrapy：❌ 无法实现，只能从 start_urls 开始爬取
+
+这是 Funboost 对 Scrapy 的【降维打击】！
+================================================================================
+"""
+
+import requests
+from funboost import boost, BoosterParams, BrokerEnum, ctrl_c_recv, BoostersManager
+from boost_spider import RequestClient
+# RequestClient.get()/request() 返回 SpiderResponse 对象，支持 xpath/css 解析
+
+# ⭐【boost_spider 优势 13】DatasetSink：一行代码保存到 SQLite/MySQL/PostgreSQL
+# 💔  Scrapy 对比：需要定义 Item、配置 Pipeline、在 settings 中启用 Pipeline
+from boost_spider.sink.dataset_sink import DatasetSink
+
+import boost_spider
+print(boost_spider.__file__)
+
+# ================= 配置 =================
+BASE_URL = "http://127.0.0.1:7000"
+
+# ⭐ DatasetSink 初始化：一行代码，连接 SQLite 数据库
+# 💔 Scrapy 对比：需要在 settings.py 配置 ITEM_PIPELINES，再定义 Pipeline 类
+DB_URL = "sqlite:///demo_crawler/funboost_imp/funboost_crawled_data.db"  # SQLite 数据库文件
+data_sink = DatasetSink(DB_URL)
+
+
+
+# ================= 爬虫公共配置 =================
+# ⭐【Funboost 优势 1】配置继承：子类继承 BoosterParams，避免重复配置
+# 💔  Scrapy 对比：settings.py + custom_settings + 中间件，配置分散在多处
+class BaseCrawlerParams(BoosterParams):
+    """
+    爬虫通用配置基类
+    
+    ⭐【Funboost 优势 2】配置集中：所有配置在装饰器一个地方
+    ⭐【Funboost 优势 3】类型安全：BoosterParams 是 Pydantic 模型，IDE 可以自动补全和类型检查
+    💔  Scrapy 对比：settings 是 Python 字典，没有类型检查，容易拼错键名
+    
+    - 统一使用 Redis ACK Able 中间件（增强数据安全性）
+    - 统一归属到 news_crawler_group 分组
+    """
+    # ⭐【Funboost 优势 4】40+ 种中间件选择
+    # 💔  Scrapy 对比：仅支持内存队列，分布式需要 scrapy-redis 插件
+    broker_kind:str = BrokerEnum.REDIS_ACK_ABLE  # 使用Redis ACK模式，确保消息不丢失，支持断点续爬
+    
+    # ⭐【Funboost 优势 5】分组管理：一个参数即可分组
+    # 💔  Scrapy 对比：无分组概念，需要手动管理多个 Spider
+    booster_group:str = "news_crawler_group"     # 统一分组，BoostersManager.consume_group("xxx")一键启动
+    
+    # ⭐【Funboost 优势 6】自动重试：一个参数搞定
+    # 💔  Scrapy 对比：需要配置 RETRY_ENABLED 和 RETRY_TIMES 等多个 settings
+    max_retry_times :int= 3                      # 默认重试3次
+  
+  
+
+
+# ================= 爬虫函数定义 =================
+# ⭐【Funboost 优势 7】装饰器即分布式：普通函数 + @boost = 分布式消费函数
+# 💔  Scrapy 对比：必须继承 Spider 类，遵循框架约定
+
+@boost(BaseCrawlerParams(
+    queue_name="news_crawler_list_page",
+    # ⭐【Funboost 优势 8】精确 QPS 流控：qps=2 表示精确每秒2次
+    # 💔  Scrapy 对比：DOWNLOAD_DELAY 是近似控制，不精确
+    qps=2,  # 每秒最多请求2次列表页，支持分布式统一流控
+    concurrent_num=5,  # 并发数5
+))
+def crawl_list_page(page: int = 1, size: int = 10):
+    """
+    爬取新闻列表页
+    
+    ⭐【Funboost 优势 9】平铺直叙的代码风格
+    - 无需 callback 回调，直接 crawl_detail_page.push() 发起下一层任务
+    - 代码逻辑清晰，如同编写普通脚本
+    💔  Scrapy 对比：callback 回调地狱，parse_list -> parse_detail -> parse_comments
+    
+    ⭐【Funboost 优势 10】外部动态任务注入（核心降维打击优势！）
+    - 运营人员可以随时调用 crawl_list_page.push(page=5) 注入新任务
+    - 支持 HTTP API 注入（funboost.faas）
+    💔  Scrapy 对比：❌ 无法从外部实时注入二级任务，只能从 start_urls 开始
+    
+    - 请求列表页API
+    - 解析返回的新闻列表
+    - 推送详情页爬取任务
+    """
+    url = f"{BASE_URL}/news/list?page={page}&size={size}"
+    print(f"[列表页] 正在爬取: {url}")
+    
+    
+    # ⭐【boost_spider 优势 14】动态请求头：RequestClient 内置 UA 随机化
+    # 💔  Scrapy 对比：需要定义 Downloader Middleware 类，配置 settings
+    client = RequestClient(
+        proxy_name_list=None,        # 可设置代理列表，如 ['kuai', 'abuyun']
+        request_retry_times=3,       # 请求重试次数
+        is_change_ua_every_request=True,  # ⭐ 只需一行代码每次请求随机切换 UA！
+    )
+    # 可以设置自定义请求头
+    custom_headers = {
+        'Referer': 'https://news.example.com/',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+    }
+    response = client.get(url, timeout=10, headers=custom_headers)
+    news_list = response.resp_dict  # ⭐ SpiderResponse 自动解析 JSON
+    
+    print(f"[列表页] 获取到 {len(news_list)} 条新闻")
+    
+    # 遍历新闻列表，推送详情页爬取任务
+    for news_item in news_list:
+        news_id = news_item["id"]
+        title = news_item["title"]
+        print(f"  -> 发现新闻 [ID: {news_id}] {title}")
+        # 推送详情页爬取任务
+        crawl_detail_page.push(news_id=news_id, title=title)
+    
+    return {"status": "success", "page": page, "count": len(news_list)}
+    
+
+@boost(BaseCrawlerParams(
+    queue_name="news_crawler_detail_page",
+    qps=5,  # 每秒最多请求5次详情页
+    concurrent_num=10,  # 并发数10,
+    # ⭐【Funboost 优势 11】一键任务去重
+    # 💔  Scrapy 对比：需要配置 DUPEFILTER_CLASS，可能还需要 BloomFilter 插件
+    do_task_filtering=True, # 通过函数入参自动去重，无需任何配置
+    task_filtering_expire_seconds = 600, # 仅在600秒之内去重，支持过期时间控制
+    
+))
+def crawl_detail_page(news_id: int, title: str):
+    """
+    爬取新闻详情页
+    
+    ⭐【Funboost 优势 12】函数参数类型安全
+    - news_id: int, title: str 有类型标注
+    - IDE 可以检查类型，push 时参数错误会提示
+    💔  Scrapy 对比：通过 response.meta 传参，容易出错
+    
+    - 请求详情页API
+    - 解析并保存新闻内容
+    - 推送评论页爬取任务
+    """
+    url = f"{BASE_URL}/news/{news_id}"
+    print(f"[详情页] 正在爬取: {url}")
+    
+    
+    response = requests.get(url, timeout=10)
+    response.raise_for_status()
+    news_detail = response.json()
+    
+    # 提取新闻内容
+    content = news_detail.get("content", "")
+    author = news_detail.get("author", "未知")
+    publish_time = news_detail.get("publish_time", "未知")
+    
+    # 输出爬取结果（实际项目中可以保存到数据库）
+    print("=" * 60)
+    print(f"[爬取成功] 新闻ID: {news_id}")
+    print(f"标题: {title}")
+    print(f"作者: {author}")
+    print(f"发布时间: {publish_time}")
+    print(f"正文预览: {content[:100]}...")
+    print("=" * 60)
+    
+    # 推送评论页爬取任务（爬取前2页评论）
+    for page in range(1, 3):
+        crawl_comments_page.push(news_id=news_id, title=title, page=page)
+        print(f"  -> 已发布: 爬取新闻{news_id}的第{page}页评论")
+    
+    # ⭐【boost_spider 优势】DatasetSink 一行代码保存到 SQLite！
+    # 💔  Scrapy 对比：需要 yield item -> Pipeline -> 数据库
+    news_data = {
+        "news_id": news_id,
+        "title": title,
+        "author": author,
+        "publish_time": publish_time,
+        "content": content,
+    }
+    data_sink.save("news_detail", news_data)  # ⭐ 一行代码保存！
+    print(f"  💾 [已保存到SQLite] news_detail 表")
+    
+    return {
+        "status": "success",
+        "news_id": news_id,
+        "title": title,
+        "content_length": len(content)
+    }
+    
+ 
+
+
+@boost(BaseCrawlerParams(
+    queue_name="news_crawler_comments_page",
+    qps=10,  # 每秒最多请求10次评论页
+    concurrent_num=15,  # 并发数15
+    retry_interval=1,   # 这里可以覆盖基类的配置,
+    do_task_filtering=True, # 通过函数入参自动去重
+    # task_filtering_expire_seconds = 600, # 不配置有效期就是永久过滤。
+))
+def crawl_comments_page(news_id: int, title: str, page: int = 1, size: int = 10):
+    """
+    爬取新闻评论页 - 使用 boost_spider 的 SpiderResponse 进行 xpath 解析
+    
+    ⭐【boost_spider 优势】SpiderResponse 拥有你羡慕的 Scrapy selector 功能！
+    - resp.xpath('//div[@class="xxx"]')  -> XPath 选择器
+    - resp.css('div.xxx')                -> CSS 选择器  
+    - resp.re_search(pattern)            -> 正则匹配
+    - resp.resp_dict                     -> 自动解析 JSON
+    - resp.selector                      -> parsel.Selector 对象
+    
+    同时 RequestClient 还内置了：
+    - 代理管理（多代理商轮换）：proxy_name_list=['kuai', 'abuyun']
+    - 请求自动重试：request_retry_times=3
+    - UA 随机化：is_change_ua_every_request=True
+    - Session/Cookie 管理：自动保持会话
+    💔  Scrapy 对比：代理/重试/UA 都需要自己写中间件配置
+    
+    - 请求评论页HTML
+    - 使用xpath解析评论列表
+    - 提取评论信息
+    """
+    url = f"{BASE_URL}/news/{news_id}/comments?page={page}&size={size}"
+    print(f"[评论页] 正在爬取: {url}")
+    
+    
+    # 使用 boost_spider 的 RequestClient 发送请求
+    # RequestClient.request() 返回 SpiderResponse 对象，支持 xpath/css 解析
+    client = RequestClient(proxy_name_list=None,request_retry_times=3,is_change_ua_every_request=True)
+    resp = client.get(url, timeout=10)
+    
+    # 使用 xpath 解析 HTML 页面
+    # 通过 resp.selector 属性获取 parsel.Selector 对象
+    print("[评论页] 使用 xpath 解析评论...")
+
+
+    # 提取所有评论项
+    # boost_spider的 resp是 SpiderResponse类型，自带你羡慕的scrapy那样的xpath css方法
+    comment_items = resp.xpath('//div[@class="comment-item"]') 
+    print(f"[评论页] 找到 {len(comment_items)} 条评论")
+    
+    comments = []
+    for item in comment_items:
+        # 提取评论ID
+        comment_id = item.xpath('./@data-id').get()
+        # 提取作者
+        author = item.xpath('.//span[@class="author"]/text()').get()
+        # 提取评论时间
+        time_str = item.xpath('.//span[@class="time"]/text()').get()
+        # 提取评论内容
+        content = item.xpath('.//p[@class="text"]/text()').get()
+        # 提取点赞数
+        likes = item.xpath('.//span[@class="likes"]/text()').get()
+        
+        comment = {
+            "comment_id": comment_id,
+            "author": author,
+            "time": time_str,
+            "content": content,
+            "likes": likes,
+        }
+        comments.append(comment)
+        
+        # 输出每条评论
+        print(f"  📝 评论#{comment_id} | {author} | {time_str}")
+        print(f"     内容: {content}")
+        print(f"     点赞: {likes}")
+    
+    # 输出汇总
+    print("=" * 60)
+    print(f"[评论爬取成功] 新闻ID: {news_id}, 第{page}页")
+    print(f"标题: {title}")
+    print(f"共解析 {len(comments)} 条评论")
+    print("=" * 60)
+    
+    # ⭐【boost_spider 优势】DatasetSink 批量保存评论到 SQLite！
+    # 💔  Scrapy 对比：需要在 Pipeline 中处理 item
+    for comment in comments:
+        comment["news_id"] = news_id
+        comment["news_title"] = title
+        comment["page"] = page
+        data_sink.save("comments", comment)  # ⭐ 一行代码保存！
+    print(f"  💾 [已保存到SQLite] comments 表, {len(comments)} 条记录")
+    
+    return {
+        "status": "success",
+        "news_id": news_id,
+        "page": page,
+        "comments_count": len(comments),
+        "comments": comments
+    }
+    
+
+
+
+# ================= 入口 =================
+if __name__ == "__main__":
+    print("=" * 60)
+    print("新闻爬虫 - Funboost 分布式爬取")
+    print("支持：列表页 -> 详情页 -> 评论页(xpath解析)")
+    print("=" * 60)
+    print()
+    
+    # 1. 使用 BoostersManager.consume_group 分组启动所有消费者（非阻塞）
+    # 只要装饰器中指定了 booster_group 参数，就可以通过该分组名称一次性启动所有相关消费者
+    print("[启动] 分组启动所有爬虫消费者...")
+    BoostersManager.consume_group("news_crawler_group")
+    print("  -> 列表页/详情页/评论页爬虫消费者已启动 ✓")
+    
+    # 2. 发布初始任务：爬取前3页新闻列表
+    print()
+    print("[发布任务] 开始爬取前3页新闻列表...")
+    for page in range(1, 4):
+        crawl_list_page.push(page=page, size=5)
+        print(f"  -> 已发布: 爬取第 {page} 页")
+    
+    print()
+    print("爬虫已启动，按 Ctrl+C 停止...")
+    print()
+    
+    # 3. 保持程序运行
+    ctrl_c_recv()
+
+`````
+
+--- **end of file: demo_crawler/funboost_imp/boost_spider_crawler.py** (project: funboost) --- 
+
+---
+
+
+--- **start of file: demo_crawler/scrapy_imp/scrapy_spider_crawler.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `demo_crawler/scrapy_imp/scrapy_spider_crawler.py`
+
+#### 📝 Module Docstring
+
+`````
+================================================================================
+                 Scrapy 新闻爬虫实现 —— 与 Funboost 爬虫的对比学习
+================================================================================
+
+🎯 本文件目的：
+   使用 Scrapy 框架实现同样的新闻爬虫功能，与 funboost_imp/boost_spider_crawler.py 形成对比。
+   通过大量注释说明两个框架在各方面的差异，帮助理解 Funboost + boost_spider 的优势。
+
+📊 功能对比表（同样的爬取需求，不同的实现方式）：
+   ┌──────────────────────┬──────────────────────────────┬──────────────────────────────┐
+   │       对比项         │          Scrapy              │     Funboost + boost_spider  │
+   ├──────────────────────┼──────────────────────────────┼──────────────────────────────┤
+   │ 项目结构             │ 需要标准项目结构，多个文件   │ ⭐ 单文件即可运行            │
+   │ 分布式能力           │ 需安装 scrapy-redis 插件     │ ⭐ 原生40+中间件分布式       │
+   │ 中间件选择           │ 仅 Redis/Kafka(需插件)       │ ⭐ 40+种消息队列中间件       │
+   │ 任务队列             │ 内存队列，进程结束任务丢失   │ ⭐ 持久化队列，断点续爬      │
+   │ 动态任务注入         │ ❌ 不支持外部实时注入二级任务 │ ⭐ 天然支持HTTP/RPC动态注入  │
+   │ 精确流控(QPS)        │ 近似控制(DOWNLOAD_DELAY)     │ ⭐ 精确到毫秒级QPS控制       │
+   │ 分布式流控           │ 需自己实现                   │ ⭐ 内置分布式QPS控制         │
+   │ 任务去重             │ 需配置+BloomFilter           │ ⭐ 一个参数do_task_filtering │
+   │ 自动重试             │ 中间件配置                   │ ⭐ 装饰器参数max_retry_times │
+   │ 消息确认(ACK)        │ 需scrapy-redis支持           │ ⭐ 原生ACK，消息不丢失       │
+   │ 并发模型             │ Twisted异步                  │ ⭐ 多种:线程/协程/gevent/... │
+   │ 监控面板             │ 需部署Scrapyd+第三方UI       │ ⭐ 内置Web管理面板           │
+   │ RPC获取结果          │ 不支持                       │ ⭐ 原生RPC模式获取结果       │
+   │ 定时任务             │ 需配合cron/celery-beat       │ ⭐ 内置APScheduler集成       │
+   │ 学习曲线             │ 需学Twisted/中间件/settings  │ ⭐ 装饰器一行搞定            │
+   │ 爬取路径追踪         │ 复杂 callback 链             │ ⭐ 直观的函数调用链          │
+   │ XPath/CSS解析        │ 内置selector                 │ ⭐ SpiderResponse同样支持    │
+   │ 代理管理             │ 需自己实现中间件             │ ⭐ RequestClient内置代理管理 │
+   │ Session/Cookie管理   │ 需CookiesMiddleware配置      │ ⭐ RequestClient自动管理     │
+   └──────────────────────┴──────────────────────────────┴──────────────────────────────┘
+
+================================================================================
+                          ⚠️ Scrapy 实现的局限性说明
+================================================================================
+
+1. 【外部动态任务注入】（Scrapy 无法实现）
+   Scrapy的任务只能从start_urls或Spider内部yield产生，不能从外部系统实时注入任务。
+   
+   🌟 Funboost对比：
+   - 天然支持 HTTP/API/RPC 任意时刻从外部注入"二级任务"
+   - 例如：用户在后台点击"立即爬取此新闻"，马上可以 crawl_detail_page.push(news_id=xxx)
+   - 这是 Scrapy 架构根本无法实现的功能，是 Funboost 降维打击 Scrapy 的核心优势！
+
+2. 【分布式部署】（Scrapy 需要额外插件）
+   需要安装配置 scrapy-redis，修改settings，配置Redis连接等。
+   
+   🌟 Funboost对比：
+   - 只需把 broker_kind 改为 BrokerEnum.REDIS_ACK_ABLE
+   - 无需任何额外配置，开箱即用分布式
+   - 支持40+种消息队列作为分布式后端
+
+3. 【任务去重】（Scrapy 需要配置）
+   需要在 settings 中配置 DUPEFILTER_CLASS，可能还需要 BloomFilter
+   
+   🌟 Funboost对比：
+   - 装饰器加一个参数：do_task_filtering=True
+   - 可选配置过期时间：task_filtering_expire_seconds=600
+
+4. 【精确流控】（Scrapy 近似控制）
+   Scrapy 的 DOWNLOAD_DELAY 是近似控制，不是精确 QPS
+   
+   🌟 Funboost对比：
+   - qps=5 表示精确每秒5次
+   - 支持分布式场景下的统一流控
+
+================================================================================
+`````
+
+#### 📦 Imports
+
+- `import scrapy`
+- `from scrapy.crawler import CrawlerProcess`
+- `from scrapy.http import Request`
+- `from scrapy import signals`
+- `import json`
+- `import sqlite3`
+- `import os`
+- `import random`
+
+#### 🏛️ Classes (3)
+
+##### 📌 `class SQLitePipeline`
+*Line: 94*
+
+**Docstring:**
+`````
+💔 Scrapy 需要定义这个 Pipeline 类来保存数据
+
+需要：
+1. 定义 Pipeline 类
+2. 实现 open_spider / close_spider / process_item 方法
+3. 在 settings 中配置 ITEM_PIPELINES 启用
+
+🌟 Funboost 对比：sink.save("table", data) 一行代码搞定！
+`````
+
+**Public Methods (3):**
+- `def open_spider(self, spider)`
+  - *爬虫启动时创建数据库连接*
+- `def close_spider(self, spider)`
+  - *爬虫结束时关闭数据库连接*
+- `def process_item(self, item, spider)`
+  - *处理每个 item*
+
+##### 📌 `class RandomUserAgentMiddleware`
+*Line: 186*
+
+**Docstring:**
+`````
+💔 Scrapy 需要定义这个 Middleware 类来实现动态 User-Agent
+
+需要：
+1. 定义 Middleware 类
+2. 实现 process_request 方法
+3. 在 settings 中配置 DOWNLOADER_MIDDLEWARES 启用
+4. 需要禁用默认的 UserAgentMiddleware
+
+🌟 Funboost + boost_spider 对比：
+   client = RequestClient(is_change_ua_every_request=True)
+   只需要这一个参数！RequestClient 内置了 100+ 种 UA 随机切换
+`````
+
+**Public Methods (1):**
+- `def process_request(self, request, spider)`
+  - *为每个请求随机设置 User-Agent*
+
+##### 📌 `class NewsSpider(scrapy.Spider)`
+*Line: 213*
+
+**Docstring:**
+`````
+Scrapy 新闻爬虫
+
+┌─────────────────────────────────────────────────────────────────┐
+│  💔 Scrapy 的痛点 1：必须继承 Spider 类                          │
+│                                                                 │
+│  🌟 Funboost 对比：                                              │
+│  - 任何普通函数加 @boost 装饰器即可变为分布式消费函数             │
+│  - 无需继承任何类，无需遵循任何框架约定                          │
+│  - 思维方式：横冲直撞，大开大合，自由奔放                        │
+└─────────────────────────────────────────────────────────────────┘
+`````
+
+**Public Methods (7):**
+- `def start_requests(self)`
+  - **Docstring:**
+  `````
+  ==========================================
+  【Scrapy 痛点 4】任务起点固定
+  ==========================================
+  Scrapy 的任务只能从 start_requests 或 start_urls 开始
+  无法从外部动态注入任务
+  
+  🌟 Funboost 对比：
+  - 任务可以从任何地方发起：crawl_list_page.push(page=1)
+  - 支持 HTTP API 动态注入任务（funboost.faas）
+  - 支持 RPC 远程调用发布任务
+  - 支持定时任务自动发布（ApsJobAdder）
+  
+  ⭐ 外部系统实时动态注入"二级任务"的需求：
+  假设运营人员在后台看到一条新闻需要重新爬取，他可以直接调用：
+     crawl_detail_page.push(news_id=12345)
+  这个任务会立即进入消息队列，等待消费者处理。
+  
+  💔 Scrapy 完全无法实现这种外部动态注入！
+  `````
+- `def parse_list_page(self, response)`
+  - **Docstring:**
+  `````
+  解析新闻列表页
+  
+  ==========================================
+  【Scrapy 痛点 6】callback 回调地狱
+  ==========================================
+  Scrapy 的解析流程必须通过 callback 链接：
+    start_requests -> parse_list_page -> parse_detail_page -> ...
+  
+  这种写法的问题：
+    - 代码逻辑被切割成多个回调函数
+    - 难以追踪完整的爬取路径
+    - 传递上下文数据需要通过 meta 字典
+  
+  🌟 Funboost 对比：
+    - 直观的函数调用链：
+      crawl_list_page 中直接 crawl_detail_page.push(news_id=xxx)
+    - 每个函数独立，逻辑清晰
+    - 上下文通过函数参数传递，类型安全
+    - 思维方式：平铺直叙，如写普通脚本
+  `````
+- `def parse_detail_page(self, response)`
+  - **Docstring:**
+  `````
+  解析新闻详情页
+  
+  ==========================================
+  【boost_spider 的 SpiderResponse 优势】
+  ==========================================
+  在 Funboost 爬虫中，使用 boost_spider 的 RequestClient 发请求：
+  
+  from boost_spider import RequestClient
+  client = RequestClient(proxy_name_list=None, request_retry_times=3)
+  resp = client.get(url)  # 返回 SpiderResponse 对象
+  
+  SpiderResponse 兼具 requests.Response 的所有功能，同时增加：
+  - resp.xpath('//div[@class="xxx"]')  -> 类似 Scrapy selector
+  - resp.css('div.xxx')                -> CSS 选择器
+  - resp.resp_dict                     -> 自动解析 JSON
+  - resp.re_search / re_findall        -> 正则匹配
+  - resp.selector                      -> parsel.Selector 对象
+  
+  🌟 你羡慕的 Scrapy selector 功能，boost_spider 全都有！
+  🌟 而且 boost_spider 的 RequestClient 还内置了：
+     - 代理管理（多代理商轮换）
+     - Session 管理
+     - 请求重试    
+     - UA 随机化
+  `````
+- `def parse_comments_page(self, response)`
+  - **Docstring:**
+  `````
+  解析评论页（使用 XPath）
+  
+  ==========================================
+  【XPath/CSS 解析对比】
+  ==========================================
+  
+  Scrapy 内置强大的 Selector：
+    response.xpath('//div[@class="comment-item"]')
+    response.css('div.comment-item')
+  
+  🌟 boost_spider 的 SpiderResponse 同样支持：
+    resp.xpath('//div[@class="comment-item"]')
+    resp.css('div.comment-item')
+  
+  两者在解析能力上几乎一样强大！
+  但 boost_spider 的优势在于：
+    - 与 Funboost 分布式调度无缝集成
+    - RequestClient 内置代理/重试/UA管理
+    - 无需学习 Twisted 异步编程
+  `````
+- `def handle_error(self, failure)`
+  - **Docstring:**
+  `````
+  错误处理
+  
+  ==========================================
+  【Scrapy 痛点 9】错误处理复杂
+  ==========================================
+  💔 Scrapy：需要配置 errback，处理 Twisted Failure 对象
+  🌟 Funboost：异常自动重试，max_retry_times=3
+             抛出 ExceptionForRetry 触发重试
+             抛出 ExceptionForRequeue 重新入队
+             抛出 ExceptionForPushToDlxqueue 推送到死信队列
+  `````
+- `def from_crawler(cls, crawler, *args, **kwargs)` `classmethod`
+- `def spider_closed(self, spider)`
+  - *爬虫关闭时输出统计*
+
+**Class Variables (3):**
+- `name = 'news_spider'`
+- `custom_settings = {'CONCURRENT_REQUESTS': 10, 'CONCURRENT_REQUESTS_PER_DOMAIN': 10, 'DOWNLOAD_DELAY': 0.2, 'RETRY_ENABLED': True, 'RETRY_TIMES': 3, 'LOG_LEVEL': 'INFO', 'ITEM_PIPELINES': {'__main__.SQLitePipeline': 300}, 'DOWNLOADER_MIDDLEWARES': {'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None, '__main__.RandomUserAgentMiddleware': 400}}`
+- `crawled_count = {'list': 0, 'detail': 0, 'comment': 0}`
+
+
+---
+
+`````python
+# -*- coding: utf-8 -*-
+"""
+================================================================================
+                 Scrapy 新闻爬虫实现 —— 与 Funboost 爬虫的对比学习
+================================================================================
+
+🎯 本文件目的：
+   使用 Scrapy 框架实现同样的新闻爬虫功能，与 funboost_imp/boost_spider_crawler.py 形成对比。
+   通过大量注释说明两个框架在各方面的差异，帮助理解 Funboost + boost_spider 的优势。
+
+📊 功能对比表（同样的爬取需求，不同的实现方式）：
+   ┌──────────────────────┬──────────────────────────────┬──────────────────────────────┐
+   │       对比项         │          Scrapy              │     Funboost + boost_spider  │
+   ├──────────────────────┼──────────────────────────────┼──────────────────────────────┤
+   │ 项目结构             │ 需要标准项目结构，多个文件   │ ⭐ 单文件即可运行            │
+   │ 分布式能力           │ 需安装 scrapy-redis 插件     │ ⭐ 原生40+中间件分布式       │
+   │ 中间件选择           │ 仅 Redis/Kafka(需插件)       │ ⭐ 40+种消息队列中间件       │
+   │ 任务队列             │ 内存队列，进程结束任务丢失   │ ⭐ 持久化队列，断点续爬      │
+   │ 动态任务注入         │ ❌ 不支持外部实时注入二级任务 │ ⭐ 天然支持HTTP/RPC动态注入  │
+   │ 精确流控(QPS)        │ 近似控制(DOWNLOAD_DELAY)     │ ⭐ 精确到毫秒级QPS控制       │
+   │ 分布式流控           │ 需自己实现                   │ ⭐ 内置分布式QPS控制         │
+   │ 任务去重             │ 需配置+BloomFilter           │ ⭐ 一个参数do_task_filtering │
+   │ 自动重试             │ 中间件配置                   │ ⭐ 装饰器参数max_retry_times │
+   │ 消息确认(ACK)        │ 需scrapy-redis支持           │ ⭐ 原生ACK，消息不丢失       │
+   │ 并发模型             │ Twisted异步                  │ ⭐ 多种:线程/协程/gevent/... │
+   │ 监控面板             │ 需部署Scrapyd+第三方UI       │ ⭐ 内置Web管理面板           │
+   │ RPC获取结果          │ 不支持                       │ ⭐ 原生RPC模式获取结果       │
+   │ 定时任务             │ 需配合cron/celery-beat       │ ⭐ 内置APScheduler集成       │
+   │ 学习曲线             │ 需学Twisted/中间件/settings  │ ⭐ 装饰器一行搞定            │
+   │ 爬取路径追踪         │ 复杂 callback 链             │ ⭐ 直观的函数调用链          │
+   │ XPath/CSS解析        │ 内置selector                 │ ⭐ SpiderResponse同样支持    │
+   │ 代理管理             │ 需自己实现中间件             │ ⭐ RequestClient内置代理管理 │
+   │ Session/Cookie管理   │ 需CookiesMiddleware配置      │ ⭐ RequestClient自动管理     │
+   └──────────────────────┴──────────────────────────────┴──────────────────────────────┘
+
+================================================================================
+                          ⚠️ Scrapy 实现的局限性说明
+================================================================================
+
+1. 【外部动态任务注入】（Scrapy 无法实现）
+   Scrapy的任务只能从start_urls或Spider内部yield产生，不能从外部系统实时注入任务。
+   
+   🌟 Funboost对比：
+   - 天然支持 HTTP/API/RPC 任意时刻从外部注入"二级任务"
+   - 例如：用户在后台点击"立即爬取此新闻"，马上可以 crawl_detail_page.push(news_id=xxx)
+   - 这是 Scrapy 架构根本无法实现的功能，是 Funboost 降维打击 Scrapy 的核心优势！
+
+2. 【分布式部署】（Scrapy 需要额外插件）
+   需要安装配置 scrapy-redis，修改settings，配置Redis连接等。
+   
+   🌟 Funboost对比：
+   - 只需把 broker_kind 改为 BrokerEnum.REDIS_ACK_ABLE
+   - 无需任何额外配置，开箱即用分布式
+   - 支持40+种消息队列作为分布式后端
+
+3. 【任务去重】（Scrapy 需要配置）
+   需要在 settings 中配置 DUPEFILTER_CLASS，可能还需要 BloomFilter
+   
+   🌟 Funboost对比：
+   - 装饰器加一个参数：do_task_filtering=True
+   - 可选配置过期时间：task_filtering_expire_seconds=600
+
+4. 【精确流控】（Scrapy 近似控制）
+   Scrapy 的 DOWNLOAD_DELAY 是近似控制，不是精确 QPS
+   
+   🌟 Funboost对比：
+   - qps=5 表示精确每秒5次
+   - 支持分布式场景下的统一流控
+
+================================================================================
+"""
+
+import scrapy
+from scrapy.crawler import CrawlerProcess
+from scrapy.http import Request
+from scrapy import signals
+import json
+import sqlite3  # 用于 SQLite Pipeline
+import os       # 用于路径处理
+import random   # 用于动态 User-Agent
+
+# ================= 配置 =================
+BASE_URL = "http://127.0.0.1:7000"
+
+# ==========================================
+# 【Scrapy 痛点 11】数据持久化需要定义 Pipeline 类
+# ==========================================
+# 💔 Scrapy：需要下面这么多代码来保存数据到 SQLite
+# 🌟 Funboost + boost_spider 对比：
+#    from boost_spider.sink.dataset_sink import DatasetSink
+#    sink = DatasetSink("sqlite:///data.db")
+#    sink.save("table_name", data_dict)  # 就这一行！
+
+class SQLitePipeline:
+    """
+    💔 Scrapy 需要定义这个 Pipeline 类来保存数据
+    
+    需要：
+    1. 定义 Pipeline 类
+    2. 实现 open_spider / close_spider / process_item 方法
+    3. 在 settings 中配置 ITEM_PIPELINES 启用
+    
+    🌟 Funboost 对比：sink.save("table", data) 一行代码搞定！
+    """
+    
+    def open_spider(self, spider):
+        """爬虫启动时创建数据库连接"""
+        db_path = os.path.join(os.path.dirname(__file__), 'scrapy_crawled_data.db')
+        self.conn = sqlite3.connect(db_path)
+        self.cursor = self.conn.cursor()
+        
+        # 创建表
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS news_detail (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                news_id INTEGER,
+                title TEXT,
+                author TEXT,
+                publish_time TEXT,
+                content TEXT
+            )
+        ''')
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS comments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                news_id INTEGER,
+                news_title TEXT,
+                page INTEGER,
+                comment_id TEXT,
+                author TEXT,
+                time TEXT,
+                content TEXT,
+                likes TEXT
+            )
+        ''')
+        self.conn.commit()
+        print("💔 [Scrapy Pipeline] 数据库已连接")
+    
+    def close_spider(self, spider):
+        """爬虫结束时关闭数据库连接"""
+        self.conn.close()
+        print("💔 [Scrapy Pipeline] 数据库已关闭")
+    
+    def process_item(self, item, spider):
+        """处理每个 item"""
+        if item.get('type') == 'news_detail':
+            self.cursor.execute('''
+                INSERT INTO news_detail (news_id, title, author, publish_time, content)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (item['news_id'], item['title'], item['author'], 
+                  item['publish_time'], item['content']))
+            self.conn.commit()
+            print(f"  💔 [Scrapy Pipeline] 保存新闻到 SQLite: {item['news_id']}")
+        
+        elif item.get('type') == 'comments':
+            for comment in item.get('comments', []):
+                self.cursor.execute('''
+                    INSERT INTO comments (news_id, news_title, page, comment_id, author, time, content, likes)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (item['news_id'], item.get('title', ''), item['page'],
+                      comment.get('comment_id'), comment.get('author'),
+                      comment.get('time'), comment.get('content'), comment.get('likes')))
+            self.conn.commit()
+            print(f"  💔 [Scrapy Pipeline] 保存 {len(item.get('comments', []))} 条评论到 SQLite")
+        
+        return item
+
+
+# ==========================================
+# 【Scrapy 痛点 13】动态请求头需要定义 Middleware 类
+# ==========================================
+# 💔 Scrapy：需要下面这么多代码来实现动态 User-Agent
+# 🌟 Funboost + boost_spider 对比：
+#    client = RequestClient(is_change_ua_every_request=True)  # 就这一个参数！
+
+# 预定义的 User-Agent 列表
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+]
+
+class RandomUserAgentMiddleware:
+    """
+    💔 Scrapy 需要定义这个 Middleware 类来实现动态 User-Agent
+    
+    需要：
+    1. 定义 Middleware 类
+    2. 实现 process_request 方法
+    3. 在 settings 中配置 DOWNLOADER_MIDDLEWARES 启用
+    4. 需要禁用默认的 UserAgentMiddleware
+    
+    🌟 Funboost + boost_spider 对比：
+       client = RequestClient(is_change_ua_every_request=True)
+       只需要这一个参数！RequestClient 内置了 100+ 种 UA 随机切换
+    """
+    
+    def process_request(self, request, spider):
+        """为每个请求随机设置 User-Agent"""
+        ua = random.choice(USER_AGENTS)
+        request.headers['User-Agent'] = ua
+        # 添加其他常见请求头
+        request.headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        request.headers['Accept-Language'] = 'zh-CN,zh;q=0.9,en;q=0.8'
+        request.headers['Accept-Encoding'] = 'gzip, deflate'
+        request.headers['Referer'] = 'https://news.example.com/'
+        print(f"  💔 [Scrapy Middleware] 设置 UA: {ua[:50]}...")
+        return None  # 继续处理请求
+
+class NewsSpider(scrapy.Spider):
+    """
+    Scrapy 新闻爬虫
+    
+    ┌─────────────────────────────────────────────────────────────────┐
+    │  💔 Scrapy 的痛点 1：必须继承 Spider 类                          │
+    │                                                                 │
+    │  🌟 Funboost 对比：                                              │
+    │  - 任何普通函数加 @boost 装饰器即可变为分布式消费函数             │
+    │  - 无需继承任何类，无需遵循任何框架约定                          │
+    │  - 思维方式：横冲直撞，大开大合，自由奔放                        │
+    └─────────────────────────────────────────────────────────────────┘
+    """
+    name = 'news_spider'
+    
+    # ==========================================
+    # 【Scrapy 痛点 2】settings 配置分散在多个地方
+    # ==========================================
+    # 在 Scrapy 中，配置分散在：
+    #   - settings.py（全局配置）
+    #   - custom_settings（Spider级别配置）
+    #   - 各种中间件配置
+    #
+    # 🌟 Funboost 对比：
+    #   - 所有配置集中在 @boost(BoosterParams(...)) 一个地方
+    #   - qps、concurrent_num、max_retry_times 等一目了然
+    #   - 继承 BoosterParams 还可以复用配置
+    custom_settings = {
+        # 并发数设置
+        # 💔 Scrapy：需要在 settings 中配置
+        # 🌟 Funboost：concurrent_num=10 一个参数搞定
+        'CONCURRENT_REQUESTS': 10,
+        'CONCURRENT_REQUESTS_PER_DOMAIN': 10,
+        
+        # 下载延迟（近似流控）
+        # 💔 Scrapy：DOWNLOAD_DELAY 是近似控制，不精确
+        # 🌟 Funboost：qps=5 表示精确每秒5次，支持分布式统一控频
+        'DOWNLOAD_DELAY': 0.2,  # 每个请求间隔0.2秒，约 5 QPS
+        
+        # 重试配置
+        # 💔 Scrapy：需要配置中间件
+        # 🌟 Funboost：max_retry_times=3 一个参数搞定
+        'RETRY_ENABLED': True,
+        'RETRY_TIMES': 3,
+        
+        # 日志级别
+        'LOG_LEVEL': 'INFO',
+        
+        # ==========================================
+        # 【Scrapy 痛点 3】去重需要额外配置
+        # ==========================================
+        # 💔 Scrapy：需要配置 DUPEFILTER_CLASS
+        # 🌟 Funboost：do_task_filtering=True 一个参数
+        #            task_filtering_expire_seconds=600 控制过期时间
+        # 'DUPEFILTER_CLASS': 'scrapy.dupefilters.RFPDupeFilter',
+        
+        # ==========================================
+        # 【Scrapy 痛点 12】数据持久化需要配置 ITEM_PIPELINES
+        # ==========================================
+        # 💔 Scrapy：需要在 settings 中配置 Pipeline
+        # 🌟 Funboost：sink.save("table", data) 一行代码！
+        'ITEM_PIPELINES': {
+            '__main__.SQLitePipeline': 300,  # 启用 SQLite Pipeline
+        },
+        
+        # ==========================================
+        # 【Scrapy 痛点 14】动态请求头需要配置 DOWNLOADER_MIDDLEWARES
+        # ==========================================
+        # 💔 Scrapy：需要定义 Middleware 类 + 下面的 settings 配置
+        # 🌟 Funboost：RequestClient(is_change_ua_every_request=True) 一个参数！
+        'DOWNLOADER_MIDDLEWARES': {
+            'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,  # 禁用默认 UA
+            '__main__.RandomUserAgentMiddleware': 400,  # 启用自定义动态 UA
+        },
+    }
+    
+    # 统计数据
+    crawled_count = {'list': 0, 'detail': 0, 'comment': 0}
+    
+    def start_requests(self):
+        """
+        ==========================================
+        【Scrapy 痛点 4】任务起点固定
+        ==========================================
+        Scrapy 的任务只能从 start_requests 或 start_urls 开始
+        无法从外部动态注入任务
+        
+        🌟 Funboost 对比：
+        - 任务可以从任何地方发起：crawl_list_page.push(page=1)
+        - 支持 HTTP API 动态注入任务（funboost.faas）
+        - 支持 RPC 远程调用发布任务
+        - 支持定时任务自动发布（ApsJobAdder）
+        
+        ⭐ 外部系统实时动态注入"二级任务"的需求：
+        假设运营人员在后台看到一条新闻需要重新爬取，他可以直接调用：
+           crawl_detail_page.push(news_id=12345)
+        这个任务会立即进入消息队列，等待消费者处理。
+        
+        💔 Scrapy 完全无法实现这种外部动态注入！
+        """
+        print("=" * 60)
+        print("新闻爬虫 - Scrapy 实现")
+        print("☠️ 对比 Funboost，Scrapy 有诸多局限性，详见代码注释")
+        print("=" * 60)
+        print()
+        
+        # 爬取前3页新闻列表
+        for page in range(1, 4):
+            url = f"{BASE_URL}/news/list?page={page}&size=5"
+            print(f"[列表页] 发起请求: {url}")
+            yield Request(
+                url=url,
+                callback=self.parse_list_page,
+                meta={'page': page},
+                # ==========================================
+                # 【Scrapy 痛点 5】错误处理需要配置 errback
+                # ==========================================
+                # 💔 Scrapy：需要分别配置 callback 和 errback
+                # 🌟 Funboost：异常自动重试，max_retry_times=3
+                errback=self.handle_error,
+            )
+    
+    def parse_list_page(self, response):
+        """
+        解析新闻列表页
+        
+        ==========================================
+        【Scrapy 痛点 6】callback 回调地狱
+        ==========================================
+        Scrapy 的解析流程必须通过 callback 链接：
+          start_requests -> parse_list_page -> parse_detail_page -> ...
+        
+        这种写法的问题：
+          - 代码逻辑被切割成多个回调函数
+          - 难以追踪完整的爬取路径
+          - 传递上下文数据需要通过 meta 字典
+        
+        🌟 Funboost 对比：
+          - 直观的函数调用链：
+            crawl_list_page 中直接 crawl_detail_page.push(news_id=xxx)
+          - 每个函数独立，逻辑清晰
+          - 上下文通过函数参数传递，类型安全
+          - 思维方式：平铺直叙，如写普通脚本
+        """
+        page = response.meta.get('page', 1)
+        
+        try:
+            news_list = json.loads(response.text)
+            self.crawled_count['list'] += 1
+            print(f"[列表页] 获取到 {len(news_list)} 条新闻 (第{page}页)")
+            
+            # 遍历新闻列表，发起详情页请求
+            for news_item in news_list:
+                news_id = news_item['id']
+                title = news_item['title']
+                print(f"  -> 发现新闻 [ID: {news_id}] {title}")
+                
+                # 请求详情页
+                detail_url = f"{BASE_URL}/news/{news_id}"
+                yield Request(
+                    url=detail_url,
+                    callback=self.parse_detail_page,
+                    # ==========================================
+                    # 【Scrapy 痛点 7】meta 传参容易出错
+                    # ==========================================
+                    # 💔 Scrapy：通过 meta 字典传递数据，没有类型检查
+                    # 🌟 Funboost：函数参数直接传递，IDE 可以检查类型
+                    #            crawl_detail_page.push(news_id=news_id, title=title)
+                    meta={'news_id': news_id, 'title': title},
+                    errback=self.handle_error,
+                )
+        except Exception as e:
+            print(f"[列表页] 解析失败: {e}")
+    
+    def parse_detail_page(self, response):
+        """
+        解析新闻详情页
+        
+        ==========================================
+        【boost_spider 的 SpiderResponse 优势】
+        ==========================================
+        在 Funboost 爬虫中，使用 boost_spider 的 RequestClient 发请求：
+        
+        from boost_spider import RequestClient
+        client = RequestClient(proxy_name_list=None, request_retry_times=3)
+        resp = client.get(url)  # 返回 SpiderResponse 对象
+        
+        SpiderResponse 兼具 requests.Response 的所有功能，同时增加：
+        - resp.xpath('//div[@class="xxx"]')  -> 类似 Scrapy selector
+        - resp.css('div.xxx')                -> CSS 选择器
+        - resp.resp_dict                     -> 自动解析 JSON
+        - resp.re_search / re_findall        -> 正则匹配
+        - resp.selector                      -> parsel.Selector 对象
+        
+        🌟 你羡慕的 Scrapy selector 功能，boost_spider 全都有！
+        🌟 而且 boost_spider 的 RequestClient 还内置了：
+           - 代理管理（多代理商轮换）
+           - Session 管理
+           - 请求重试    
+           - UA 随机化
+        """
+        news_id = response.meta.get('news_id')
+        title = response.meta.get('title')
+        
+        try:
+            news_detail = json.loads(response.text)
+            self.crawled_count['detail'] += 1
+            
+            content = news_detail.get('content', '')
+            author = news_detail.get('author', '未知')
+            publish_time = news_detail.get('publish_time', '未知')
+            
+            print("=" * 60)
+            print(f"[爬取成功] 新闻ID: {news_id}")
+            print(f"标题: {title}")
+            print(f"作者: {author}")
+            print(f"发布时间: {publish_time}")
+            print(f"正文预览: {content[:100]}...")
+            print("=" * 60)
+            
+            # 💔 Scrapy 需要 yield item 给 Pipeline 处理
+            # 🌟 Funboost 对比：sink.save("news_detail", data) 一行代码
+            yield {
+                'type': 'news_detail',
+                'news_id': news_id,
+                'title': title,
+                'author': author,
+                'publish_time': publish_time,
+                'content': content,
+            }
+            
+            # 请求评论页（前2页）
+            for page in range(1, 3):
+                comments_url = f"{BASE_URL}/news/{news_id}/comments?page={page}&size=10"
+                yield Request(
+                    url=comments_url,
+                    callback=self.parse_comments_page,
+                    meta={'news_id': news_id, 'title': title, 'page': page},
+                    errback=self.handle_error,
+                )
+                print(f"  -> 已发起: 爬取新闻{news_id}的第{page}页评论")
+                
+        except Exception as e:
+            print(f"[详情页] 解析失败 (ID: {news_id}): {e}")
+    
+    def parse_comments_page(self, response):
+        """
+        解析评论页（使用 XPath）
+        
+        ==========================================
+        【XPath/CSS 解析对比】
+        ==========================================
+        
+        Scrapy 内置强大的 Selector：
+          response.xpath('//div[@class="comment-item"]')
+          response.css('div.comment-item')
+        
+        🌟 boost_spider 的 SpiderResponse 同样支持：
+          resp.xpath('//div[@class="comment-item"]')
+          resp.css('div.comment-item')
+        
+        两者在解析能力上几乎一样强大！
+        但 boost_spider 的优势在于：
+          - 与 Funboost 分布式调度无缝集成
+          - RequestClient 内置代理/重试/UA管理
+          - 无需学习 Twisted 异步编程
+        """
+        news_id = response.meta.get('news_id')
+        title = response.meta.get('title')
+        page = response.meta.get('page')
+        
+        print(f"[评论页] 正在解析: 新闻{news_id} 第{page}页")
+        
+        # 使用 XPath 解析评论
+        comment_items = response.xpath('//div[@class="comment-item"]')
+        print(f"[评论页] 找到 {len(comment_items)} 条评论")
+        
+        comments = []
+        for item in comment_items:
+            comment_id = item.xpath('./@data-id').get()
+            author = item.xpath('.//span[@class="author"]/text()').get()
+            time_str = item.xpath('.//span[@class="time"]/text()').get()
+            content = item.xpath('.//p[@class="text"]/text()').get()
+            likes = item.xpath('.//span[@class="likes"]/text()').get()
+            
+            comment = {
+                'comment_id': comment_id,
+                'author': author,
+                'time': time_str,
+                'content': content,
+                'likes': likes,
+            }
+            comments.append(comment)
+            
+            print(f"  📝 评论#{comment_id} | {author} | {time_str}")
+            print(f"     内容: {content}")
+            print(f"     点赞: {likes}")
+        
+        self.crawled_count['comment'] += 1
+        
+        print("=" * 60)
+        print(f"[评论爬取成功] 新闻ID: {news_id}, 第{page}页")
+        print(f"标题: {title}")
+        print(f"共解析 {len(comments)} 条评论")
+        print("=" * 60)
+        
+        # ==========================================
+        # 【Scrapy 痛点 8】数据持久化需要 Pipeline
+        # ==========================================
+        # 💔 Scrapy：需要配置 ItemPipeline 处理数据
+        # 🌟 boost_spider 对比：
+        #    - DatasetSink：一行代码保存到 MySQL/PostgreSQL/SQLite
+        #    - MongoSink：一行代码保存到 MongoDB
+        #    - MysqlSink：直接保存到 MySQL
+        #
+        # 示例：
+        #   from boost_spider import DatasetSink
+        #   sink = DatasetSink('mysql://user:pass@host/db')
+        #   sink.save('comments', comment_data)
+        
+        yield {
+            'type': 'comments',
+            'news_id': news_id,
+            'page': page,
+            'comments': comments,
+        }
+    
+    def handle_error(self, failure):
+        """
+        错误处理
+        
+        ==========================================
+        【Scrapy 痛点 9】错误处理复杂
+        ==========================================
+        💔 Scrapy：需要配置 errback，处理 Twisted Failure 对象
+        🌟 Funboost：异常自动重试，max_retry_times=3
+                   抛出 ExceptionForRetry 触发重试
+                   抛出 ExceptionForRequeue 重新入队
+                   抛出 ExceptionForPushToDlxqueue 推送到死信队列
+        """
+        print(f"[错误] 请求失败: {failure.request.url}")
+        print(f"[错误] 原因: {failure.value}")
+    
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super().from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
+        return spider
+    
+    def spider_closed(self, spider):
+        """爬虫关闭时输出统计"""
+        print()
+        print("=" * 60)
+        print("爬虫运行结束 - 统计数据")
+        print("=" * 60)
+        print(f"列表页爬取: {self.crawled_count['list']} 页")
+        print(f"详情页爬取: {self.crawled_count['detail']} 篇")
+        print(f"评论页爬取: {self.crawled_count['comment']} 页")
+        print()
+        print("=" * 60)
+        print("⚠️ Scrapy 的局限性总结：")
+        print("=" * 60)
+        print("1. ❌ 无法外部动态注入任务（Funboost ✅ 可以）")
+        print("2. ❌ 分布式需要额外插件（Funboost ✅ 原生支持40+中间件）")
+        print("3. ❌ 精确流控困难（Funboost ✅ qps=5 精确控制）")
+        print("4. ❌ 任务不持久化（Funboost ✅ 支持断点续爬）")
+        print("5. ❌ 配置分散（Funboost ✅ 装饰器一处配置）")
+        print("6. ❌ callback 回调链复杂（Funboost ✅ 平铺直叙）")
+        print("=" * 60)
+
+
+# ========================================
+# 【Scrapy 痛点 10】启动方式固定
+# ========================================
+# 💔 Scrapy：需要使用 scrapy crawl spider_name 命令
+#           或者使用 CrawlerProcess 包装
+#
+# 🌟 Funboost 对比：
+#   crawl_list_page.consume()  # 启动消费
+#   BoostersManager.consume_group("news_crawler_group")  # 分组启动
+#   ctrl_c_recv()  # 阻塞主线程
+#
+# Funboost 可以更灵活地：
+#   - 单独启动某个消费函数
+#   - 按分组启动一组消费函数
+#   - 多进程启动提升性能
+
+if __name__ == "__main__":
+    print()
+    print("=" * 60)
+    print("         Scrapy 新闻爬虫 vs Funboost 爬虫")
+    print("=" * 60)
+    print()
+    print("⚠️ 请先启动 news_server.py：")
+    print("   cd demo_crawler")
+    print("   python news_server.py")
+    print()
+    print("📖 对比 Funboost 实现请查看：")
+    print("   funboost_imp/boost_spider_crawler.py")
+    print()
+    print("=" * 60)
+    print()
+    
+    # 使用 CrawlerProcess 运行爬虫
+    process = CrawlerProcess({
+        'USER_AGENT': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    })
+    
+    process.crawl(NewsSpider)
+    process.start()
+
+`````
+
+--- **end of file: demo_crawler/scrapy_imp/scrapy_spider_crawler.py** (project: funboost) --- 
+
+---
+
+
+--- **start of file: demo_crawler/threadpool_crawler_imp/threadpool_crawler.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `demo_crawler/threadpool_crawler_imp/threadpool_crawler.py`
+
+#### 📝 Module Docstring
+
+`````
+================================================================================
+        新闻爬虫 - 使用 ThreadPoolExecutor 原生线程池实现
+================================================================================
+
+🎯 本文件目的：
+   使用 Python 原生的 ThreadPoolExecutor 实现新闻爬虫，
+   与 Funboost + boost_spider 和 Scrapy 形成三方对比。
+
+================================================================================
+                    ⚠️ ThreadPoolExecutor 的局限性
+================================================================================
+
+📊 与 Funboost 对比：
+┌─────────────────────────┬────────────────────────────────┬────────────────────────────────┐
+│       对比项            │     ThreadPoolExecutor          │     Funboost + boost_spider    │
+├─────────────────────────┼────────────────────────────────┼────────────────────────────────┤
+│ 分布式能力              │ ❌ 仅单机，无法跨机器          │ ⭐ 40+ 中间件原生分布式         │
+│ 任务持久化              │ ❌ 进程死亡任务全部丢失        │ ⭐ 消息队列持久化，断点续爬     │
+│ 消息确认(ACK)           │ ❌ 不支持                      │ ⭐ 消息处理失败自动重新入队     │
+│ 精确流控(QPS)           │ ❌ 需要自己手动实现            │ ⭐ qps=5 一个参数搞定          │
+│ 分布式流控              │ ❌ 无法实现                    │ ⭐ 多机统一 QPS 限制           │
+│ 任务去重                │ ❌ 需要自己维护 set/bloom      │ ⭐ do_task_filtering=True      │
+│ 自动重试                │ ❌ 需要自己 try-except 封装    │ ⭐ max_retry_times=3           │
+│ 外部动态任务注入        │ ❌ 无法从外部注入任务          │ ⭐ HTTP API / RPC 随时注入     │
+│ 监控面板                │ ❌ 无                          │ ⭐ 内置 Web 管理面板           │
+│ RPC 获取结果            │ ❌ 需要自己实现                │ ⭐ is_using_rpc_mode=True      │
+│ 定时任务                │ ❌ 需要配合其他库              │ ⭐ 内置 APScheduler            │
+│ 代理/UA管理             │ ❌ 完全手动实现                │ ⭐ RequestClient 一行代码      │
+│ 数据保存                │ ❌ 完全手动实现                │ ⭐ DatasetSink 一行代码        │
+└─────────────────────────┴────────────────────────────────┴────────────────────────────────┘
+
+💔 ThreadPoolExecutor 的本质问题：
+   - 它只是一个"线程池"，不是任务调度框架
+   - 所有任务和状态都在内存中，进程一死全没了
+   - 适合简单的并发场景，不适合生产级爬虫
+
+================================================================================
+`````
+
+#### 📦 Imports
+
+- `import requests`
+- `from concurrent.futures import ThreadPoolExecutor`
+- `from concurrent.futures import as_completed`
+- `import time`
+- `import sqlite3`
+- `import os`
+- `import random`
+- `from threading import Lock`
+- `from lxml import etree`
+
+#### 🔧 Public Functions (8)
+
+- `def init_database()`
+  - *Line: 79*
+  - *初始化数据库*
+
+- `def save_news_to_db(news_data)`
+  - *Line: 110*
+  - *保存新闻到数据库*
+
+- `def save_comment_to_db(comment_data)`
+  - *Line: 123*
+  - *保存评论到数据库*
+
+- `def get_random_headers()`
+  - *Line: 148*
+  - *获取随机请求头*
+
+- `def request_with_retry(url, max_retries = 3)`
+  - *Line: 161*
+  - *带重试的请求函数*
+
+- `def crawl_list_page(page: int = 1, size: int = 10)`
+  - *Line: 179*
+  - **Docstring:**
+  `````
+  爬取新闻列表页
+  
+  💔 ThreadPoolExecutor 痛点 6：无法从外部动态注入任务
+  - 所有任务必须在代码中预先定义
+  - 无法通过 HTTP API 实时添加任务
+  
+  🌟 Funboost 对比：
+  - crawl_list_page.push(page=5) 随时注入
+  - funboost.faas HTTP API 动态注入
+  `````
+
+- `def crawl_detail_page(news_id: int, title: str)`
+  - *Line: 217*
+  - **Docstring:**
+  `````
+  爬取新闻详情页
+  
+  💔 ThreadPoolExecutor 痛点 8：需要手动实现任务去重
+  🌟 Funboost 对比：do_task_filtering=True 自动去重
+  `````
+
+- `def crawl_comments_page(news_id: int, title: str, page: int = 1, size: int = 10)`
+  - *Line: 274*
+  - **Docstring:**
+  `````
+  爬取新闻评论页
+  
+  💔 ThreadPoolExecutor 痛点 9：无法使用 xpath/css 解析
+  - 需要自己安装 lxml/parsel 并手动处理
+  
+  🌟 Funboost 对比：SpiderResponse.xpath() 开箱即用
+  `````
+
+
+---
+
+`````python
+# -*- coding: utf-8 -*-
+"""
+================================================================================
+        新闻爬虫 - 使用 ThreadPoolExecutor 原生线程池实现
+================================================================================
+
+🎯 本文件目的：
+   使用 Python 原生的 ThreadPoolExecutor 实现新闻爬虫，
+   与 Funboost + boost_spider 和 Scrapy 形成三方对比。
+
+================================================================================
+                    ⚠️ ThreadPoolExecutor 的局限性
+================================================================================
+
+📊 与 Funboost 对比：
+┌─────────────────────────┬────────────────────────────────┬────────────────────────────────┐
+│       对比项            │     ThreadPoolExecutor          │     Funboost + boost_spider    │
+├─────────────────────────┼────────────────────────────────┼────────────────────────────────┤
+│ 分布式能力              │ ❌ 仅单机，无法跨机器          │ ⭐ 40+ 中间件原生分布式         │
+│ 任务持久化              │ ❌ 进程死亡任务全部丢失        │ ⭐ 消息队列持久化，断点续爬     │
+│ 消息确认(ACK)           │ ❌ 不支持                      │ ⭐ 消息处理失败自动重新入队     │
+│ 精确流控(QPS)           │ ❌ 需要自己手动实现            │ ⭐ qps=5 一个参数搞定          │
+│ 分布式流控              │ ❌ 无法实现                    │ ⭐ 多机统一 QPS 限制           │
+│ 任务去重                │ ❌ 需要自己维护 set/bloom      │ ⭐ do_task_filtering=True      │
+│ 自动重试                │ ❌ 需要自己 try-except 封装    │ ⭐ max_retry_times=3           │
+│ 外部动态任务注入        │ ❌ 无法从外部注入任务          │ ⭐ HTTP API / RPC 随时注入     │
+│ 监控面板                │ ❌ 无                          │ ⭐ 内置 Web 管理面板           │
+│ RPC 获取结果            │ ❌ 需要自己实现                │ ⭐ is_using_rpc_mode=True      │
+│ 定时任务                │ ❌ 需要配合其他库              │ ⭐ 内置 APScheduler            │
+│ 代理/UA管理             │ ❌ 完全手动实现                │ ⭐ RequestClient 一行代码      │
+│ 数据保存                │ ❌ 完全手动实现                │ ⭐ DatasetSink 一行代码        │
+└─────────────────────────┴────────────────────────────────┴────────────────────────────────┘
+
+💔 ThreadPoolExecutor 的本质问题：
+   - 它只是一个"线程池"，不是任务调度框架
+   - 所有任务和状态都在内存中，进程一死全没了
+   - 适合简单的并发场景，不适合生产级爬虫
+
+================================================================================
+"""
+
+import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
+import sqlite3
+import os
+import random
+from threading import Lock
+
+# ================= 配置 =================
+BASE_URL = "http://127.0.0.1:7000"
+
+# ==========================================
+# 💔 ThreadPoolExecutor 痛点 1：需要自己创建和管理多个线程池
+# ==========================================
+# 每个爬取层级使用独立的线程池
+# 🌟 Funboost 对比：@boost 装饰器自动管理，无需手动创建线程池
+list_page_pool = ThreadPoolExecutor(max_workers=5, thread_name_prefix="list_page")
+detail_page_pool = ThreadPoolExecutor(max_workers=10, thread_name_prefix="detail_page")
+comments_page_pool = ThreadPoolExecutor(max_workers=15, thread_name_prefix="comments_page")
+
+# ==========================================
+# 💔 ThreadPoolExecutor 痛点 2：需要自己维护任务去重
+# ==========================================
+# 🌟 Funboost 对比：do_task_filtering=True 一个参数搞定
+crawled_detail_ids = set()
+crawled_detail_lock = Lock()
+
+crawled_comment_keys = set()
+crawled_comment_lock = Lock()
+
+# ==========================================
+# 💔 ThreadPoolExecutor 痛点 3：需要自己实现数据保存
+# ==========================================
+# 🌟 Funboost 对比：DatasetSink("sqlite:///data.db").save("table", data) 一行代码
+db_lock = Lock()
+db_path = os.path.join(os.path.dirname(__file__), 'threadpool_crawled_data.db')
+
+def init_database():
+    """初始化数据库"""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS news_detail (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            news_id INTEGER,
+            title TEXT,
+            author TEXT,
+            publish_time TEXT,
+            content TEXT
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            news_id INTEGER,
+            news_title TEXT,
+            page INTEGER,
+            comment_id TEXT,
+            author TEXT,
+            time TEXT,
+            content TEXT,
+            likes TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+    print("💔 [ThreadPool] 数据库初始化完成（需要自己写 ~30 行建表代码）")
+
+def save_news_to_db(news_data):
+    """保存新闻到数据库"""
+    with db_lock:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO news_detail (news_id, title, author, publish_time, content)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (news_data['news_id'], news_data['title'], news_data['author'],
+              news_data['publish_time'], news_data['content']))
+        conn.commit()
+        conn.close()
+
+def save_comment_to_db(comment_data):
+    """保存评论到数据库"""
+    with db_lock:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO comments (news_id, news_title, page, comment_id, author, time, content, likes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (comment_data['news_id'], comment_data['news_title'], comment_data['page'],
+              comment_data['comment_id'], comment_data['author'], comment_data['time'],
+              comment_data['content'], comment_data['likes']))
+        conn.commit()
+        conn.close()
+
+# ==========================================
+# 💔 ThreadPoolExecutor 痛点 4：需要自己实现动态 UA
+# ==========================================
+# 🌟 Funboost 对比：RequestClient(is_change_ua_every_request=True) 一个参数
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+]
+
+def get_random_headers():
+    """获取随机请求头"""
+    return {
+        'User-Agent': random.choice(USER_AGENTS),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+        'Referer': 'https://news.example.com/',
+    }
+
+# ==========================================
+# 💔 ThreadPoolExecutor 痛点 5：需要自己实现重试逻辑
+# ==========================================
+# 🌟 Funboost 对比：max_retry_times=3 一个参数搞定
+def request_with_retry(url, max_retries=3):
+    """带重试的请求函数"""
+    for i in range(max_retries):
+        try:
+            response = requests.get(url, headers=get_random_headers(), timeout=10)
+            response.raise_for_status()
+            return response
+        except Exception as e:
+            print(f"  💔 [ThreadPool] 请求失败 (第{i+1}次): {e}")
+            if i < max_retries - 1:
+                time.sleep(1)
+    return None
+
+
+# ==========================================
+# 爬虫函数定义
+# ==========================================
+
+def crawl_list_page(page: int = 1, size: int = 10):
+    """
+    爬取新闻列表页
+    
+    💔 ThreadPoolExecutor 痛点 6：无法从外部动态注入任务
+    - 所有任务必须在代码中预先定义
+    - 无法通过 HTTP API 实时添加任务
+    
+    🌟 Funboost 对比：
+    - crawl_list_page.push(page=5) 随时注入
+    - funboost.faas HTTP API 动态注入
+    """
+    url = f"{BASE_URL}/news/list?page={page}&size={size}"
+    print(f"[列表页] 正在爬取: {url}")
+    
+    response = request_with_retry(url)
+    if not response:
+        print(f"[列表页] 爬取失败: {url}")
+        return None
+    
+    news_list = response.json()
+    print(f"[列表页] 获取到 {len(news_list)} 条新闻")
+    
+    # 💔 痛点 7：需要手动收集 Future 并等待
+    # 🌟 Funboost 对比：crawl_detail_page.push(...) 自动进入队列
+    futures = []
+    for news_item in news_list:
+        news_id = news_item["id"]
+        title = news_item["title"]
+        print(f"  -> 发现新闻 [ID: {news_id}] {title}")
+        
+        # 使用详情页线程池提交任务
+        future = detail_page_pool.submit(crawl_detail_page, news_id, title)
+        futures.append(future)
+    
+    return {"page": page, "count": len(news_list), "futures": futures}
+
+
+def crawl_detail_page(news_id: int, title: str):
+    """
+    爬取新闻详情页
+    
+    💔 ThreadPoolExecutor 痛点 8：需要手动实现任务去重
+    🌟 Funboost 对比：do_task_filtering=True 自动去重
+    """
+    # 手动去重逻辑
+    with crawled_detail_lock:
+        if news_id in crawled_detail_ids:
+            print(f"  💔 [ThreadPool] 跳过已爬取: news_id={news_id}")
+            return None
+        crawled_detail_ids.add(news_id)
+    
+    url = f"{BASE_URL}/news/{news_id}"
+    print(f"[详情页] 正在爬取: {url}")
+    
+    response = request_with_retry(url)
+    if not response:
+        print(f"[详情页] 爬取失败 (ID: {news_id})")
+        return None
+    
+    news_detail = response.json()
+    
+    content = news_detail.get("content", "")
+    author = news_detail.get("author", "未知")
+    publish_time = news_detail.get("publish_time", "未知")
+    
+    print("=" * 60)
+    print(f"[爬取成功] 新闻ID: {news_id}")
+    print(f"标题: {title}")
+    print(f"作者: {author}")
+    print(f"发布时间: {publish_time}")
+    print(f"正文预览: {content[:100]}...")
+    print("=" * 60)
+    
+    # 保存到数据库
+    news_data = {
+        "news_id": news_id,
+        "title": title,
+        "author": author,
+        "publish_time": publish_time,
+        "content": content,
+    }
+    save_news_to_db(news_data)
+    print(f"  💔 [ThreadPool] 保存新闻到 SQLite（需要自己写保存函数）")
+    
+    # 提交评论页爬取任务
+    futures = []
+    for page in range(1, 3):
+        future = comments_page_pool.submit(crawl_comments_page, news_id, title, page)
+        futures.append(future)
+        print(f"  -> 已提交: 爬取新闻{news_id}的第{page}页评论")
+    
+    return {"news_id": news_id, "futures": futures}
+
+
+def crawl_comments_page(news_id: int, title: str, page: int = 1, size: int = 10):
+    """
+    爬取新闻评论页
+    
+    💔 ThreadPoolExecutor 痛点 9：无法使用 xpath/css 解析
+    - 需要自己安装 lxml/parsel 并手动处理
+    
+    🌟 Funboost 对比：SpiderResponse.xpath() 开箱即用
+    """
+    # 手动去重逻辑
+    cache_key = f"{news_id}_{page}"
+    with crawled_comment_lock:
+        if cache_key in crawled_comment_keys:
+            print(f"  💔 [ThreadPool] 跳过已爬取: {cache_key}")
+            return None
+        crawled_comment_keys.add(cache_key)
+    
+    url = f"{BASE_URL}/news/{news_id}/comments?page={page}&size={size}"
+    print(f"[评论页] 正在爬取: {url}")
+    
+    response = request_with_retry(url)
+    if not response:
+        print(f"[评论页] 爬取失败 (新闻ID: {news_id}, 第{page}页)")
+        return None
+    
+    # 💔 痛点 10：需要手动安装和使用 lxml/parsel 解析 HTML
+    # 🌟 Funboost 对比：resp.xpath('//div[@class="xxx"]') 开箱即用
+    from lxml import etree
+    html = etree.HTML(response.text)
+    comment_items = html.xpath('//div[@class="comment-item"]')
+    
+    print(f"[评论页] 找到 {len(comment_items)} 条评论")
+    
+    comments = []
+    for item in comment_items:
+        comment_id = item.get('data-id')
+        author = item.xpath('.//span[@class="author"]/text()')
+        author = author[0] if author else None
+        time_str = item.xpath('.//span[@class="time"]/text()')
+        time_str = time_str[0] if time_str else None
+        content = item.xpath('.//p[@class="text"]/text()')
+        content = content[0] if content else None
+        likes = item.xpath('.//span[@class="likes"]/text()')
+        likes = likes[0] if likes else None
+        
+        comment = {
+            "news_id": news_id,
+            "news_title": title,
+            "page": page,
+            "comment_id": comment_id,
+            "author": author,
+            "time": time_str,
+            "content": content,
+            "likes": likes,
+        }
+        comments.append(comment)
+        save_comment_to_db(comment)
+        
+        print(f"  📝 评论#{comment_id} | {author} | {time_str}")
+        print(f"     内容: {content}")
+        print(f"     点赞: {likes}")
+    
+    print("=" * 60)
+    print(f"[评论爬取成功] 新闻ID: {news_id}, 第{page}页")
+    print(f"标题: {title}")
+    print(f"共解析 {len(comments)} 条评论")
+    print(f"  💔 [ThreadPool] 保存 {len(comments)} 条评论到 SQLite")
+    print("=" * 60)
+    
+    return {"news_id": news_id, "page": page, "comments_count": len(comments)}
+
+
+# ================= 入口 =================
+if __name__ == "__main__":
+    print()
+    print("=" * 60)
+    print("  新闻爬虫 - ThreadPoolExecutor 原生线程池实现")
+    print("=" * 60)
+    print()
+    print("⚠️ 请先启动 news_server.py：")
+    print("   cd demo_crawler")
+    print("   python news_server.py")
+    print()
+    print("💔 ThreadPoolExecutor 的局限性：")
+    print("   - 仅单机，无法分布式")
+    print("   - 进程死亡任务全部丢失")
+    print("   - 需要手动实现：去重、重试、流控、数据保存...")
+    print()
+    print("=" * 60)
+    print()
+    
+    # 初始化数据库
+    init_database()
+    
+    start_time = time.time()
+    
+    # 💔 痛点 11：需要手动管理所有 Future
+    # 🌟 Funboost 对比：ctrl_c_recv() 阻塞即可
+    all_futures = []
+    
+    # 爬取前3页列表
+    for page in range(1, 4):
+        future = list_page_pool.submit(crawl_list_page, page, 5)
+        all_futures.append(future)
+    
+    # 等待所有任务完成
+    print("\n💔 [ThreadPool] 等待所有任务完成...")
+    for future in as_completed(all_futures):
+        try:
+            result = future.result()
+            if result and 'futures' in result:
+                all_futures.extend(result.get('futures', []))
+        except Exception as e:
+            print(f"💔 [ThreadPool] 任务异常: {e}")
+    
+    # 💔 痛点 12：需要手动关闭线程池
+    # 🌟 Funboost 对比：无需手动管理
+    list_page_pool.shutdown(wait=True)
+    detail_page_pool.shutdown(wait=True)
+    comments_page_pool.shutdown(wait=True)
+    
+    elapsed = time.time() - start_time
+    
+    print()
+    print("=" * 60)
+    print("爬虫运行结束 - ThreadPoolExecutor")
+    print("=" * 60)
+    print(f"耗时: {elapsed:.2f} 秒")
+    print()
+    print("💔 ThreadPoolExecutor 需要手动实现的功能：")
+    print("   1. 多个线程池的创建和管理")
+    print("   2. 任务去重（set + Lock）")
+    print("   3. 请求重试逻辑")
+    print("   4. 动态 UA 随机")
+    print("   5. 数据库保存（建表 + 写入）")
+    print("   6. HTML 解析（安装 lxml）")
+    print("   7. 等待所有 Future 完成")
+    print("   8. 关闭线程池")
+    print()
+    print("🌟 Funboost 只需要：")
+    print("   @boost(BoosterParams(...)) 装饰器 + .push() 调用")
+    print("=" * 60)
+
+`````
+
+--- **end of file: demo_crawler/threadpool_crawler_imp/threadpool_crawler.py** (project: funboost) --- 
+
+---
+
+
+--- **start of file: demo_crawler/threadpool_redis_crawler_imp/redis_threadpool_crawler.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `demo_crawler/threadpool_redis_crawler_imp/redis_threadpool_crawler.py`
+
+#### 📝 Module Docstring
+
+`````
+================================================================================
+     新闻爬虫 - 使用 Redis + ThreadPoolExecutor 手动实现分布式
+================================================================================
+
+🎯 本文件目的：
+   使用 Redis blpop + ThreadPoolExecutor 手动实现一个"分布式"爬虫，
+   展示如果不使用 Funboost，自己实现分布式调度有多麻烦。
+
+================================================================================
+                    ⚠️ 手动实现分布式的痛点
+================================================================================
+
+这个实现需要自己手动处理：
+1. Redis 连接管理
+2. 3 个 while True 循环监听队列
+3. 3 个独立的线程池
+4. JSON 序列化/反序列化
+5. 异常处理和重试逻辑
+6. 任务去重
+7. 数据保存
+8. 优雅退出
+
+💔 代码量：~400 行
+🌟 Funboost 相同功能：~100 行（3 个 @boost 装饰的函数）
+
+================================================================================
+`````
+
+#### 📦 Imports
+
+- `import json`
+- `import time`
+- `import threading`
+- `import sys`
+- `import requests`
+- `import sqlite3`
+- `import os`
+- `import random`
+- `from concurrent.futures import ThreadPoolExecutor`
+- `from threading import Lock`
+- `import redis`
+- `from lxml import etree`
+
+#### 🔧 Public Functions (13)
+
+- `def get_redis_client()`
+  - *Line: 75*
+
+- `def init_database()`
+  - *Line: 104*
+  - *初始化数据库*
+
+- `def save_news_to_db(news_data)`
+  - *Line: 135*
+
+- `def save_comment_to_db(comment_data)`
+  - *Line: 147*
+
+- `def get_random_headers()`
+  - *Line: 169*
+
+- `def request_with_retry(url, max_retries = 3)`
+  - *Line: 179*
+
+- `def process_list_page(msg_data)`
+  - *Line: 196*
+  - *处理列表页任务*
+
+- `def process_detail_page(msg_data)`
+  - *Line: 225*
+  - *处理详情页任务*
+
+- `def process_comments_page(msg_data)`
+  - *Line: 274*
+  - *处理评论页任务*
+
+- `def consume_list_page()`
+  - *Line: 339*
+  - *消费列表页队列*
+
+- `def consume_detail_page()`
+  - *Line: 358*
+  - *消费详情页队列*
+
+- `def consume_comments_page()`
+  - *Line: 375*
+  - *消费评论页队列*
+
+- `def publish_initial_tasks()`
+  - *Line: 397*
+  - *发布初始的列表页任务*
+
+
+---
+
+`````python
+# -*- coding: utf-8 -*-
+"""
+================================================================================
+     新闻爬虫 - 使用 Redis + ThreadPoolExecutor 手动实现分布式
+================================================================================
+
+🎯 本文件目的：
+   使用 Redis blpop + ThreadPoolExecutor 手动实现一个"分布式"爬虫，
+   展示如果不使用 Funboost，自己实现分布式调度有多麻烦。
+
+================================================================================
+                    ⚠️ 手动实现分布式的痛点
+================================================================================
+
+这个实现需要自己手动处理：
+1. Redis 连接管理
+2. 3 个 while True 循环监听队列
+3. 3 个独立的线程池
+4. JSON 序列化/反序列化
+5. 异常处理和重试逻辑
+6. 任务去重
+7. 数据保存
+8. 优雅退出
+
+💔 代码量：~400 行
+🌟 Funboost 相同功能：~100 行（3 个 @boost 装饰的函数）
+
+================================================================================
+"""
+
+import json
+import time
+import threading
+
+import sys
+import requests
+import sqlite3
+import os
+import random
+from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
+
+# ==========================================
+# 💔 痛点 1：需要自己安装和管理 Redis 连接
+# ==========================================
+# 🌟 Funboost 对比：broker_kind=BrokerEnum.REDIS_ACK_ABLE 一个参数搞定
+try:
+    import redis
+except ImportError:
+    print("请安装 redis: pip install redis")
+    sys.exit(1)
+
+# ================= 配置 =================
+BASE_URL = "http://127.0.0.1:7000"
+REDIS_HOST = "127.0.0.1"
+REDIS_PORT = 6379
+REDIS_DB = 0
+
+# Redis 队列名称
+QUEUE_LIST_PAGE = "crawler:list_page"
+QUEUE_DETAIL_PAGE = "crawler:detail_page"
+QUEUE_COMMENTS_PAGE = "crawler:comments_page"
+
+# ==========================================
+# 💔 痛点 2：需要自己创建 Redis 连接池
+# ==========================================
+# 🌟 Funboost 对比：自动管理连接池
+redis_pool = redis.ConnectionPool(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    db=REDIS_DB,
+    decode_responses=True
+)
+
+def get_redis_client():
+    return redis.Redis(connection_pool=redis_pool)
+
+# ==========================================
+# 💔 痛点 3：需要自己创建和管理多个线程池
+# ==========================================
+# 🌟 Funboost 对比：@boost 装饰器自动管理
+list_page_pool = ThreadPoolExecutor(max_workers=5, thread_name_prefix="list_page")
+detail_page_pool = ThreadPoolExecutor(max_workers=10, thread_name_prefix="detail_page")
+comments_page_pool = ThreadPoolExecutor(max_workers=15, thread_name_prefix="comments_page")
+
+
+
+# ==========================================
+# 💔 痛点 5：需要自己维护任务去重
+# ==========================================
+# 🌟 Funboost 对比：do_task_filtering=True 一个参数
+crawled_detail_ids = set()
+crawled_detail_lock = Lock()
+crawled_comment_keys = set()
+crawled_comment_lock = Lock()
+
+# ==========================================
+# 💔 痛点 6：需要自己实现数据保存
+# ==========================================
+# 🌟 Funboost 对比：DatasetSink.save() 一行代码
+db_lock = Lock()
+db_path = os.path.join(os.path.dirname(__file__), 'redis_threadpool_data.db')
+
+def init_database():
+    """初始化数据库"""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS news_detail (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            news_id INTEGER,
+            title TEXT,
+            author TEXT,
+            publish_time TEXT,
+            content TEXT
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            news_id INTEGER,
+            news_title TEXT,
+            page INTEGER,
+            comment_id TEXT,
+            author TEXT,
+            time TEXT,
+            content TEXT,
+            likes TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+    print("💔 [Redis+Pool] 数据库初始化完成")
+
+def save_news_to_db(news_data):
+    with db_lock:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO news_detail (news_id, title, author, publish_time, content)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (news_data['news_id'], news_data['title'], news_data['author'],
+              news_data['publish_time'], news_data['content']))
+        conn.commit()
+        conn.close()
+
+def save_comment_to_db(comment_data):
+    with db_lock:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO comments (news_id, news_title, page, comment_id, author, time, content, likes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (comment_data['news_id'], comment_data['news_title'], comment_data['page'],
+              comment_data['comment_id'], comment_data['author'], comment_data['time'],
+              comment_data['content'], comment_data['likes']))
+        conn.commit()
+        conn.close()
+
+# ==========================================
+# 💔 痛点 7：需要自己实现动态 UA
+# ==========================================
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+]
+
+def get_random_headers():
+    return {
+        'User-Agent': random.choice(USER_AGENTS),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+    }
+
+# ==========================================
+# 💔 痛点 8：需要自己实现请求重试
+# ==========================================
+def request_with_retry(url, max_retries=3):
+    for i in range(max_retries):
+        try:
+            response = requests.get(url, headers=get_random_headers(), timeout=10)
+            response.raise_for_status()
+            return response
+        except Exception as e:
+            print(f"  💔 请求失败 (第{i+1}次): {e}")
+            if i < max_retries - 1:
+                time.sleep(1)
+    return None
+
+
+# ==========================================
+# 爬虫处理函数
+# ==========================================
+
+def process_list_page(msg_data):
+    """处理列表页任务"""
+    page = msg_data.get('page', 1)
+    size = msg_data.get('size', 10)
+    
+    url = f"{BASE_URL}/news/list?page={page}&size={size}"
+    print(f"[列表页] 正在爬取: {url}")
+    
+    response = request_with_retry(url)
+    if not response:
+        print(f"[列表页] 爬取失败: {url}")
+        return
+    
+    news_list = response.json()
+    print(f"[列表页] 获取到 {len(news_list)} 条新闻")
+    
+    # 💔 痛点 9：需要手动序列化并推送到 Redis
+    # 🌟 Funboost 对比：crawl_detail_page.push(news_id=xxx)
+    r = get_redis_client()
+    for news_item in news_list:
+        news_id = news_item["id"]
+        title = news_item["title"]
+        print(f"  -> 发现新闻 [ID: {news_id}] {title}")
+        
+        # 手动 JSON 序列化并推送
+        task_data = json.dumps({"news_id": news_id, "title": title})
+        r.rpush(QUEUE_DETAIL_PAGE, task_data)
+
+
+def process_detail_page(msg_data):
+    """处理详情页任务"""
+    news_id = msg_data.get('news_id')
+    title = msg_data.get('title', '')
+    
+    # 手动去重
+    with crawled_detail_lock:
+        if news_id in crawled_detail_ids:
+            print(f"  💔 跳过已爬取: news_id={news_id}")
+            return
+        crawled_detail_ids.add(news_id)
+    
+    url = f"{BASE_URL}/news/{news_id}"
+    print(f"[详情页] 正在爬取: {url}")
+    
+    response = request_with_retry(url)
+    if not response:
+        print(f"[详情页] 爬取失败 (ID: {news_id})")
+        return
+    
+    news_detail = response.json()
+    
+    content = news_detail.get("content", "")
+    author = news_detail.get("author", "未知")
+    publish_time = news_detail.get("publish_time", "未知")
+    
+    print("=" * 60)
+    print(f"[爬取成功] 新闻ID: {news_id}")
+    print(f"标题: {title}")
+    print(f"作者: {author}")
+    print("=" * 60)
+    
+    # 保存到数据库
+    save_news_to_db({
+        "news_id": news_id,
+        "title": title,
+        "author": author,
+        "publish_time": publish_time,
+        "content": content,
+    })
+    
+    # 推送评论页任务到 Redis
+    r = get_redis_client()
+    for page in range(1, 3):
+        task_data = json.dumps({"news_id": news_id, "title": title, "page": page})
+        r.rpush(QUEUE_COMMENTS_PAGE, task_data)
+        print(f"  -> 已推送: 爬取新闻{news_id}的第{page}页评论")
+
+
+def process_comments_page(msg_data):
+    """处理评论页任务"""
+    news_id = msg_data.get('news_id')
+    title = msg_data.get('title', '')
+    page = msg_data.get('page', 1)
+    
+    # 手动去重
+    cache_key = f"{news_id}_{page}"
+    with crawled_comment_lock:
+        if cache_key in crawled_comment_keys:
+            print(f"  💔 跳过已爬取: {cache_key}")
+            return
+        crawled_comment_keys.add(cache_key)
+    
+    url = f"{BASE_URL}/news/{news_id}/comments?page={page}&size=10"
+    print(f"[评论页] 正在爬取: {url}")
+    
+    response = request_with_retry(url)
+    if not response:
+        print(f"[评论页] 爬取失败")
+        return
+    
+    # 解析 HTML
+    from lxml import etree
+    html = etree.HTML(response.text)
+    comment_items = html.xpath('//div[@class="comment-item"]')
+    
+    print(f"[评论页] 找到 {len(comment_items)} 条评论")
+    
+    for item in comment_items:
+        comment_id = item.get('data-id')
+        author = item.xpath('.//span[@class="author"]/text()')
+        author = author[0] if author else None
+        time_str = item.xpath('.//span[@class="time"]/text()')
+        time_str = time_str[0] if time_str else None
+        content = item.xpath('.//p[@class="text"]/text()')
+        content = content[0] if content else None
+        likes = item.xpath('.//span[@class="likes"]/text()')
+        likes = likes[0] if likes else None
+        
+        save_comment_to_db({
+            "news_id": news_id,
+            "news_title": title,
+            "page": page,
+            "comment_id": comment_id,
+            "author": author,
+            "time": time_str,
+            "content": content,
+            "likes": likes,
+        })
+        
+        print(f"  📝 评论#{comment_id} | {author}")
+    
+    print(f"[评论爬取成功] 新闻ID: {news_id}, 第{page}页, 共 {len(comment_items)} 条")
+
+
+# ==========================================
+# 💔 痛点 10：需要自己实现 3 个消费者循环
+# ==========================================
+# 🌟 Funboost 对比：
+#    crawl_list_page.consume()
+#    crawl_detail_page.consume()
+#    crawl_comments_page.consume()
+#    只需要 3 行！
+
+def consume_list_page():
+    """消费列表页队列"""
+    r = get_redis_client()
+    print(f"💔 [消费者] 开始监听队列: {QUEUE_LIST_PAGE}")
+    
+    while True:
+        try:
+            # blpop 阻塞等待，超时 1 秒
+            result = r.blpop(QUEUE_LIST_PAGE, timeout=1)
+            if result:
+                _, msg = result
+                msg_data = json.loads(msg)
+                # 提交到线程池
+                list_page_pool.submit(process_list_page, msg_data)
+        except Exception as e:
+            print(f"💔 [消费者] 列表页队列异常: {e}")
+            time.sleep(1)
+
+
+def consume_detail_page():
+    """消费详情页队列"""
+    r = get_redis_client()
+    print(f"💔 [消费者] 开始监听队列: {QUEUE_DETAIL_PAGE}")
+    
+    while True:
+        try:
+            result = r.blpop(QUEUE_DETAIL_PAGE, timeout=1)
+            if result:
+                _, msg = result
+                msg_data = json.loads(msg)
+                detail_page_pool.submit(process_detail_page, msg_data)
+        except Exception as e:
+            print(f"💔 [消费者] 详情页队列异常: {e}")
+            time.sleep(1)
+
+
+def consume_comments_page():
+    """消费评论页队列"""
+    r = get_redis_client()
+    print(f"💔 [消费者] 开始监听队列: {QUEUE_COMMENTS_PAGE}")
+    
+    while True:
+        try:
+            result = r.blpop(QUEUE_COMMENTS_PAGE, timeout=1)
+            if result:
+                _, msg = result
+                msg_data = json.loads(msg)
+                comments_page_pool.submit(process_comments_page, msg_data)
+        except Exception as e:
+            print(f"💔 [消费者] 评论页队列异常: {e}")
+            time.sleep(1)
+
+
+# ==========================================
+# 💔 痛点 11：需要自己发布初始任务
+# ==========================================
+# 🌟 Funboost 对比：crawl_list_page.push(page=1) 一行代码
+
+def publish_initial_tasks():
+    """发布初始的列表页任务"""
+    r = get_redis_client()
+    print("💔 [发布] 发布初始任务...")
+    
+    for page in range(1, 4):
+        task_data = json.dumps({"page": page, "size": 5})
+        r.rpush(QUEUE_LIST_PAGE, task_data)
+        print(f"  -> 已发布: 爬取第 {page} 页列表")
+
+
+# ================= 入口 =================
+if __name__ == "__main__":
+    print()
+    print("=" * 70)
+    print("  新闻爬虫 - Redis blpop + ThreadPoolExecutor 手动分布式实现")
+    print("=" * 70)
+    print()
+    print("⚠️ 请先启动：")
+    print("   1. Redis 服务器")
+    print("   2. news_server.py")
+    print()
+    print("💔 这个实现需要自己手动处理：")
+    print("   - Redis 连接管理")
+    print("   - 3 个 while True 消费者循环（永远等待消息）")
+    print("   - 3 个独立的线程池")
+    print("   - JSON 序列化/反序列化")
+    print("   - 异常处理、重试、去重、数据保存...")
+    print()
+    print("🌟 Funboost 对比：")
+    print("   @boost(BoosterParams(queue_name='xxx', broker_kind=BrokerEnum.REDIS_ACK_ABLE))")
+    print("   def crawl_page(...): ...")
+    print("   crawl_page.consume()  # 自动处理一切！永远等待消息！")
+    print()
+    print("=" * 70)
+    print()
+    
+    # 初始化数据库
+    init_database()
+    
+    # 💔 痛点 12：需要手动启动多个消费者线程
+    # 🌟 Funboost 对比：BoostersManager.consume_group("xxx") 一行代码
+    # 
+    # 注意：这里使用 daemon=False，让消费者线程永远运行
+    # 直到收到 Ctrl+C 信号才退出
+    consumer_threads = [
+        threading.Thread(target=consume_list_page, name="consumer_list", daemon=True),
+        threading.Thread(target=consume_detail_page, name="consumer_detail", daemon=True),
+        threading.Thread(target=consume_comments_page, name="consumer_comments", daemon=True),
+    ]
+    
+    for t in consumer_threads:
+        t.start()
+        print(f"💔 [启动] 消费者线程: {t.name}")
+    
+    time.sleep(1)
+    
+    # 发布初始任务（仅作为示例，实际生产环境可以通过其他方式发布任务）
+    publish_initial_tasks()
+    
+    print()
+    print("=" * 70)
+    print("� [永久运行模式] 消费者正在等待消息...")
+    print("   - 3 个 while True 循环持续监听 Redis 队列")
+    print("   - 随时可以从外部推送新任务到 Redis 队列")
+    print("   - 按 Ctrl+C 退出")
+    print("=" * 70)
+    print()
+    
+    # 永久等待
+    while True:
+        time.sleep(3600)
+
+    # ==========================================
+    # 以下为说明
+    # ==========================================
+    """
+    💔 手动实现分布式需要处理的痛点：
+       1. Redis 连接池管理
+       2. 多个线程池创建和管理
+       3. 多个 while True 消费者循环（永远等待）
+       4. JSON 序列化/反序列化
+       5. 任务去重（set + Lock）
+       6. 请求重试
+       7. 动态 UA
+       8. 数据库保存
+       9. HTML 解析
+       10. 初始任务发布
+       11. 消费者线程启动
+       12. 永久等待实现
+    """
+    print()
+    print("🌟 Funboost 只需要：")
+    print("   @boost(BoosterParams(...)) + .consume() + .push()")
+    print("   所有痛点自动处理！永远等待消息！")
+    print("=" * 70)
+
+`````
+
+--- **end of file: demo_crawler/threadpool_redis_crawler_imp/redis_threadpool_crawler.py** (project: funboost) --- 
 
 ---
 

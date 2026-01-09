@@ -1,39 +1,32 @@
-﻿# 🤖 AI Reading Guide for Project: funboost_docs
+﻿
+# 🤖 AI 上下文阅读协议 (由 nb_ai_context 生成)
 
-> **Important Notice for AI Models**: This document contains the complete source code and documentation for the `funboost_docs` project. Please read this guide carefully before analyzing the content.
+> **系统指令**：你正在解析一份由工具 **`nb_ai_context`** 自动生成的**结构化项目快照**。
+> **文档性质**：这**不是**一份普通的文档，而是专为 AI 大模型（LLM）设计的上下文数据流。它将项目文档、源代码和 AST 架构元数据进行了特殊的结构化合并。
 
-## 📖 Document Structure
+## 🧠 AI 认知与解析准则
 
-This markdown document is structured as follows:
+这份由 `nb_ai_context` 生成的文档是你的核心知识库。其中的内容是动态的——它可能包含完整的底层源码，也可能仅包含使用教程，或者是两者的混合。请遵循以下自适应阅读策略：
 
-1. **Project Summary** (`# markdown content namespace: xxx project summary`)
-   - Brief project description
-   - Core source files metadata (AST-parsed class/function signatures without full source code)
-   - File dependencies analysis
+### 1. 信息的层级与互补
+*   **文档即意图**：将 `README`、教程文档和 Docstrings 视为项目设计的**最高意图**。如果文档中详细描述了某个功能的用法，即使生成器没有包含其对应的源码实现，也请完全信任文档中的逻辑，并以此为基础进行回答。
+*   **源码即事实**：当遇到 `.py` 源码或 AST 元数据（类/函数签名）时，请以此作为实现细节、类型约束和语法准确性的**事实标准**。
+*   **缺失内容的推断**：如果教程演示了调用 `API.process()`，但本文档未包含 `API` 类的源码，**请勿认为该功能不存在**。你应该基于教程中的演示，合理推断该接口的输入输出和行为模式，并据此协助用户。
 
-2. **Project Root Files** (`# markdown content namespace: xxx Project Root Dir Some Files`)
-   - README.md, pyproject.toml, setup.py, etc.
+### 2. 文件边界与架构感知
+*   **上下文定界**：`nb_ai_context` 使用以下标记严格界定文件内容：
+    `--- **start of file: <路径>** ---` ... 内容 ... `--- **end of file: <路径>** ---`
+*   **结构可视化**：请利用“文件树 (File Tree)”章节来建立项目的宏观架构认知，即便某些文件未被展开显示。
+*   **依赖关系**：利用工具生成的“文件依赖分析”章节来理解模块间的引用关系，这有助于你在只有部分代码的情况下理清数据流向。
 
-3. **Source Code Sections** (`# markdown content namespace: xxx codes/examples/...`)
-   - File Tree: Shows directory structure
-   - Included Files: Lists all files in this section
-   - Full source code with AST metadata for Python files
-
-## 🔍 How to Identify File Boundaries
-
-- Each file starts with: `--- **start of file: <path>** (project: funboost_docs) ---`
-- Each file ends with: `--- **end of file: <path>** (project: funboost_docs) ---`
-- All file paths are relative to the project root
-
-## ⚠️ Important Notes
-
-1. **Do NOT hallucinate**: Only reference code, classes, functions, and APIs that actually exist in this document
-2. **Check file paths**: When suggesting code changes, always verify the file path exists in the File Tree
-3. **Respect the project structure**: The File Tree shows the actual directory layout
-4. **AST Metadata**: Python files include parsed metadata (imports, classes, methods) before the full source code
+### 3. 代码生成与交互
+*   **风格一致性**：在生成代码或解释逻辑时，请严格模仿文档中已有的代码风格和命名规范。
+*   **元数据利用**：对于仅展示 AST 元数据（如仅有类定义而无函数体）的 Python 文件，请将其视为有效的接口定义，确保你的代码调用符合这些签名约束。
+*   **事实锚定 (Fact Anchoring)**：生成代码时必须严格**锚定**在本文档提供的范围内。
+    *   涉及 API 调用时，必须基于**源码中的 AST 签名**或**教程中的演示示例**。
+    *   **严禁臆造**文档中既未定义、也未在教程中提及的类名、方法名或参数。确保每一个生成的 Token 都有文档依据。
 
 ---
-
 # markdown content namespace: funboost_docs project summary 
 
 
@@ -425,6 +418,8 @@ BoosterParams 是 funboost 最核心的入参模型，掌握了 BoosterParams �
 
 **Docstring:**
 `````
+掌握funboost 的精华就是知道 BoosterParams 的入参有哪些，如果知道有哪些入参字段，就掌握了funboost的 90% 用法。
+
 pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
 
 @boost的传参必须是此类或者继承此类,如果你不想每个装饰器入参都很多,你可以写一个子类继承BoosterParams, 传参这个子类,例如下面的 BoosterParamsComplete
@@ -448,7 +443,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `max_retry_times: int = 3`
 - `retry_interval: typing.Union[float, int] = 0`
 - `is_push_to_dlx_queue_when_retry_max_times: bool = False`
-- `consuming_function_decorator: typing.Optional[typing.Callable] = None`
+- `consuming_function_decorator: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `function_timeout: typing.Union[int, float, None] = None`
 - `is_support_remote_kill_task: bool = False`
 - `log_level: int = logging.DEBUG`
@@ -463,18 +458,18 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `do_task_filtering: bool = False`
 - `task_filtering_expire_seconds: int = 0`
 - `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=False, is_save_status=False, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)`
-- `user_custom_record_process_info_func: typing.Optional[typing.Callable] = None`
+- `user_custom_record_process_info_func: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `is_using_rpc_mode: bool = False`
 - `rpc_result_expire_seconds: int = 1800`
 - `rpc_timeout: int = 1800`
 - `delay_task_apscheduler_jobstores_kind: Literal['redis', 'memory'] = 'redis'`
 - `is_do_not_run_by_specify_time_effect: bool = False`
-- `do_not_run_by_specify_time: list = ['10:00:00', '22:00:00']`
+- `do_not_run_by_specify_time: list[str] = ['10:00:00', '22:00:00']`
 - `schedule_tasks_on_main_thread: bool = False`
 - `is_auto_start_consuming_message: bool = False`
 - `booster_group: typing.Union[str, None] = None`
-- `consuming_function: typing.Optional[typing.Callable] = None`
-- `consuming_function_raw: typing.Optional[typing.Callable] = None`
+- `consuming_function: typing.Optional[typing.Callable[..., typing.Any]] = None`
+- `consuming_function_raw: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `consuming_function_name: str = ''`
 - `broker_exclusive_config: dict = {}`
 - `should_check_publish_func_params: bool = True`
@@ -488,7 +483,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT`
 
 ##### 📌 `class BoosterParamsComplete(BoosterParams)`
-*Line: 261*
+*Line: 265*
 
 **Docstring:**
 `````
@@ -510,7 +505,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))`
 
 ##### 📌 `class TaskOptions(BaseJsonAbleModel)`
-*Line: 281*
+*Line: 285*
 
 **Docstring:**
 `````
@@ -541,7 +536,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `otel_context: typing.Optional[dict] = None`
 
 ##### 📌 `class PublisherParams(BaseJsonAbleModel)`
-*Line: 334*
+*Line: 338*
 
 **Class Variables (21):**
 - `queue_name: str`
@@ -553,7 +548,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `logger_name: str = ''`
 - `log_filename: typing.Optional[str] = None`
 - `clear_queue_within_init: bool = False`
-- `consuming_function: typing.Optional[typing.Callable] = None`
+- `consuming_function: typing.Optional[typing.Callable[..., typing.Any]] = None`
 - `broker_exclusive_config: dict = {}`
 - `should_check_publish_func_params: bool = True`
 - `manual_func_input_params: dict = {'is_manual_func_input_params': False, 'must_arg_name_list': [], 'optional_arg_name_list': []}`
@@ -636,6 +631,14 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 ##### 📌 `class ConcurrentModeEnum`
 *Line: 150*
 
+**Docstring:**
+`````
+funboost 支持多线程、gevent、eventlet、asyncio 单线程 并发模式。
+这里没有多进程枚举，是因为funboost 希望多进程和这些模式叠加并发，
+booster.mp_consume(8) 就是8进程叠加 n个线程或协程并发，
+funboost的多进程和多线程 asyncio是叠加的，不是互斥的。
+`````
+
 **Class Variables (6):**
 - `THREADING = 'threading'`
 - `GEVENT = 'gevent'`
@@ -645,7 +648,13 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `SOLO = SINGLE_THREAD`
 
 ##### 📌 `class FunctionKind`
-*Line: 161*
+*Line: 168*
+
+**Docstring:**
+`````
+funboost 比celery更强，funboost不仅支持函数和静态方法
+funboost也能直接支持@boost加到 类方法和实例方法上（但这需要按教程方式做，不能想当然的写）
+`````
 
 **Class Variables (4):**
 - `CLASS_METHOD = 'CLASS_METHOD'`
@@ -654,7 +663,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `COMMON_FUNCTION = 'COMMON_FUNCTION'`
 
 ##### 📌 `class ConstStrForClassMethod`
-*Line: 168*
+*Line: 179*
 
 **Class Variables (5):**
 - `FIRST_PARAM_NAME = 'first_param_name'`
@@ -664,7 +673,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `CLS_FILE = 'cls_file'`
 
 ##### 📌 `class RedisKeys`
-*Line: 176*
+*Line: 187*
 
 **Public Methods (9):**
 - `def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name)` `staticmethod`
@@ -701,7 +710,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `FUNBOOST_UNACK_REGISTRY_PREFIX = 'funboost_unack_registry:'`
 
 ##### 📌 `class ConsumingFuncInputParamsCheckerField`
-*Line: 240*
+*Line: 251*
 
 **Class Variables (6):**
 - `is_manual_func_input_params = 'is_manual_func_input_params'`
@@ -712,20 +721,20 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `func_position = 'func_position'`
 
 ##### 📌 `class MongoDbName`
-*Line: 249*
+*Line: 260*
 
 **Class Variables (2):**
 - `TASK_STATUS_DB = 'funboost_task_status'`
 - `MONGOMQ_DB = 'funboost_mongomq'`
 
 ##### 📌 `class StrConst`
-*Line: 253*
+*Line: 264*
 
 **Class Variables (1):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
 
 ##### 📌 `class EnvConst`
-*Line: 256*
+*Line: 267*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -1793,12 +1802,12 @@ care_project_name 的作用是：
 - `from funboost.core.booster import gen_pid_queue_name_key`
 - `from funboost.core.func_params_model import PublisherParams`
 - `from funboost.core.func_params_model import BoosterParams`
-- `from funboost.core.func_params_model import BaseJsonAbleModel`
 - `from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig`
 - `from funboost.core.consuming_func_iniput_params_check import FakeFunGenerator`
 - `from funboost.core.exceptions import QueueNameNotExists`
 - `from funboost.timing_job.timing_push import ApsJobAdder`
 - `from funboost.constant import EnvConst`
+- `from funboost.core.pydantic_compatible_base import get_cant_json_serializable_fields`
 
 #### 🏛️ Classes (5)
 
@@ -2023,7 +2032,7 @@ care_project_name 的作用是：
   `````
 - `def get_one_queue_params_use_cache(self) -> dict`
 - `def gen_booster_for_faas(self) -> Booster`
-- `def gen_publisher_for_faas(self) -> Booster`
+- `def gen_publisher_for_faas(self) -> AbstractPublisher`
 - `def generate_aps_job_adder(self, job_store_kind = 'redis', is_auto_start = True, is_auto_paused = True) -> ApsJobAdder`
 - `def get_one_queue_pause_flag(self) -> int`
   - *返回队列的暂停状态，-1 表示队列不存在，0 表示队列未暂停，1 表示队列已暂停*
@@ -3350,7 +3359,7 @@ if __name__ == '__main__':
 
 #### 🔧 Public Functions (1)
 
-- `def add(x, y = 10)` `boost(Project1BoosterParams(queue_name='test_funboost_faas_queue'))`
+- `def add(x: int, y: int = 10)` `boost(Project1BoosterParams(queue_name='test_funboost_faas_queue'))`
   - *Line: 6*
 
 
@@ -3362,7 +3371,7 @@ from funboost import boost, BoosterParams, BrokerEnum
 import time
 
 @boost(Project1BoosterParams(queue_name="test_funboost_faas_queue", ))
-def add(x, y=10,):
+def add(x:int, y:int=10,):
     time.sleep(1)
     print(f"add {x} + {y} = {x + y}")
     return x + y
@@ -3497,7 +3506,6 @@ def sub(a, b):
         ├── c12.md
         ├── c13.md
         ├── c14.md
-        ├── c14old.md
         ├── c15.md
         ├── c16.md
         ├── c2.md
@@ -3516,7 +3524,7 @@ def sub(a, b):
 ---
 
 
-## funboost_docs (relative dir: `source/articles`)  Included Files (total: 20 files)
+## funboost_docs (relative dir: `source/articles`)  Included Files (total: 19 files)
 
 
 - `source/articles/c0.md`
@@ -3532,8 +3540,6 @@ def sub(a, b):
 - `source/articles/c13.md`
 
 - `source/articles/c14.md`
-
-- `source/articles/c14old.md`
 
 - `source/articles/c15.md`
 
@@ -6250,645 +6256,6 @@ div> </div>
 ---
 
 
---- **start of file: source/articles/c14old.md** (project: funboost_docs) --- 
-
-`````markdown
-# 14 🏅[懒人必看章节] 利用ai来掌握 funboost 的 正确方式
-
-开门见山，**想靠ai用好 `funboost` ，只有这一条路最正确：**
-
-- 1.打开 Google AI Studio [https://aistudio.google.com/](https://aistudio.google.com/prompts/new_chat)。
-- 2.丢入 `funboost_all_docs_and_codes.md`。
-- 3.别在 IDE 里问，别在gemini官网问，否则 别怪AI 不行，是你不行！
-
-**如果你不能科学上网没有梯子，其他的也介绍了一些ai使用方式，请你务必看完本章节，别偷懒。**
-
-## 14.0 🤬 [高能预警]在此章节最开头，先允许我用最恶毒的语言来**刺激骂醒**一部分又懒又蠢的懒癌患者的大脑皮层！
-
-**说明：**   
-此段内容不是针对所有人，没有针对屏幕前的你，我要骂的是反复多次要求让他去仔细看文档14章节，他还是不愿意认真看的这种 **恨铁不成钢的超级无敌大懒猪**。
-
-> **致部分无可救药的懒癌晚期患者：**
->
-> 先让我骂一下一部分人是 **懒虫中的懒虫，蠢猪中的蠢猪，傻屌中的傻屌**，是 **大脑皮层光滑如镜的单细胞生物**，是 **浪费空气的造粪机器**，是 **无可救药的伸手党巨婴！**， **脖子上的脑袋纯粹是为了显高，视网膜纯粹是为了美观** 凸(艹皿艹 )
-
-如果不用最恶毒下流的语言来写教程，有些人看教程时候简直是在**打瞌睡**，要么心不在焉，要么企图偷懒一目十行，甚至大段大段地跳过，连教你怎么偷懒用ai掌握funboost都大段跳过！
-
-你连20分钟看第14章内容的时间都没有吗？教你偷懒的教程你还要偷懒。
-
-现在不像10年前，需要在大冬天坐冷板凳熬夜苦读 Django/Celery 几千页教程，**现在有 AI ！**
-你害怕吃苦、想偷懒，你就用 AI，AI 不怕吃苦！但是有的**极品懒癌**，连这一章的内容都不仔细阅读，连教你怎么偷懒的章节都要快速一目十行扫过？**你的脑子是装饰品吗？**
-
-### 14.0.1 🧠 脑残行为大赏
-
-虽然我都说了可以用 AI 来高效、无幻觉、准确掌握 `funboost` 任何公开教程和源码细节，而且**专门**写了这个章节教程。
-但一部分 **懒虫中的极品懒虫，蠢猪中的极品蠢猪**，连这章都不仔细读！
-
-1.  有问题来问我，我问：“为什么不用 AI 呢？建议先看下文档第14章。”
-2.  他还敢顶嘴说**“已经看过文档第14章”**。
-3.  结果我仔细追问，发现他完全是 **瞎几把乱用 AI**！
-
-教程中明确说了哪些是 **大错特错** 的用 AI 掌握 `funboost` 的方式，他偏偏还是这样用！这种做法极其浪费时间，**让我非常的生气恼火！** 😡
-
-我再仔细问他是怎么用的：
-*   他说直接问 AI 的；
-*   或者说已经把文档传给 AI 了。
-*   再问细节，他说是在 **DeepSeek / GPT / Claude 网页** 提问的；
-*   有的说在 **Cursor / Trae / Qoder** 这些 IDE 里面提问的。
-*   有的说在 **Claude-code / Gemini-cli** 这些命令行里面提问的。
-*   有的说用的 gemini-flash ，而没有按教程写的用 gemini-pro
-*   有的人使用 https://gemini.google.com ,而不是教程规定的 https://aistudio.google.com
-
-**此章节里面已经反复明确说了，这些全踏马是错误的让 AI 学习 funboost 的方式！你是瞎了吗？**
-
----
-
-### 14.0.2 🚫 别拿通用框架的经验来羞辱我的智商
-
-如果你是提问 AI：*“怎么使用 FastAPI / Django / Flask / Requests？”*
-这些大名鼎鼎的 Python 框架，任何 AI 大模型只要不是太水，你想怎么使用都可以，几乎都没问题。**你不需要我来充当 AI 教师爷教你怎么用 AI 掌握热门顶流框架。**
-
-👉 **但是！** 如果你想用 AI 掌握 `funboost`，就 **必须按照我说的方式来！**
-如果你不按我说的方式来，AI **绝无可能** 正确无幻觉掌握得了 `funboost`，到时候你还怪 AI 不行？**是你踏马的不行！**
-
----
-
-### 14.0.3 ❌ [严重警告] 懒癌患者请把下面这几点刻在脑门上！
-
-我踏马再在这里对一部分懒癌患者，把此章节内容中的**错误使用方式**再提前重复啰嗦一次：
-
-*   ❌ **错误一**：不上传我指定的 `funboost_all_docs_and_codes.md` 文档，直接在任何 AI 官网网页提问 `funboost` 知识。**这是最错误的方式**，包括 `gemini-3.0pro` 网页也不行！
-*   ❌ **错误二**：在 `Cursor` / `Trae` / `Qoder` 这类 AI IDE 的聊天框里面 `@funboost_all_docs_and_codes.md` 这个文件。**这也是大错特错的！** 原因我反复说了自己去细看——**因为文档太长，AI IDE 不会乖乖全量阅读，否则厂商会血亏！**
-*   ❌ **错误三**：上传文档给 `GPT` / `DeepSeek` / `Claude` 提问。**这也是错误方式！** 因为 `funboost_all_docs_and_codes.md` 需要 **800k tokens** 上下文，而这些模型最大才支持 128k-256k，压根不支持上传这么长的文档！有些网页就算上传成功，也是使用稀疏注意力或 RAG 切片**大段跳过**，**压根不能全局统筹、非常细致地掌握 funboost 的细节！**
-*   ❌ **错误四**：在 `Claude-code` 和 `Gemini-cli` 这种有 1M 上下文的命令行 AI 中，`@funboost_all_docs_and_codes.md` 这个文件。**这也是错误方式！** 原因我反复说了自己去细看，因为文档太长 AI agent 不会乖乖全量阅读，厂商亏不起！
-
----
-
-### 14.0.4 ✅ ai掌握funboost的唯一正确的路径
-
-**听好了，只有同时满足以下 5 个条件，AI 才能真正掌握 `funboost`：**
-
-1.  **按我说的做**（别自作聪明）；
-2.  使用**经过我实践实测的**工具；
-3.  大模型必须有 **原生 1000k 上下文或少部分rag平台**；
-4.  可以 **强迫投喂** `funboost_all_docs_and_codes.md` 文档，
-5.  投喂长文档后， AI 是 **全量乖乖阅读推理** 的（必须是乖乖全量阅读推理，这一点非常非常核心重要，你在cursor trae中提问长文档，那agent就是分多步骤阅读和检索关键字，又慢又不准，因为ai ide害怕全量阅读花太多tokens导致亏本）。
-
-**少一个条件，你就别来问我 funboost怎么使用，funboost为什么报错！**
-
-### 14.0.5 🤬 当我问你怎么使用ai时候，你最少要回答200字到底是怎么使用ai的，别踏马就简单的说:"我已经用ai来问funboost问题了"   
-
-**因为很多恨铁不成钢的懒虫，即使我反复要求他先仔细阅读第14章节，他还是不仔细阅读此章节的内容，这种懒虫我见过太多了**
-
-所以我要求你仔细回答是如何使用ai的，你要回答的包括：   
-- 1. 你是在网页还是ai ide问的，如果是网页请把网址发下     
-- 2. 你用的是什么大模型   
-- 3. 你上传文档了没，如果上传了文档请把文档名发下 ，我要确定你上传的是不是我指定的文档。（因为有的懒虫一意孤行不看此章节教程）  
-- 4. 你是怎么问的，如果可能，把提问问题也发一下。 【我要复制你的提问，我现在非常喜欢挑战nb_ai_context的能力上限，我要看看ai是不是真的掌握不了，还是我文档提示词工程的问题，  
-     还是你不按照教程第14章说的做。 （根据过往经验，几乎用户所有的问题，我直接在ai中输入并提问，ai都可以回答正确，是用户太几把懒了不认真看第14章，还踏马怪ai不行） 】 
-
-
-
-
-
-## 14.0.0b 推荐一个在ai时代 神级别黑科技掌握任意非知名的it项目的方式 nb_ai_context
-
-funboost 合并文档 `funboost_all_docs_and_codes.md` 就是使用 `nb_ai_context` 生成的
-
-[nb_ai_context地址](https://github.com/ydf0509/nb_ai_context)    
-
-用户也可以在 `nb_ai_context` 的readme里面去了解，为什么冷门it项目必须使用特殊的手段才能让ai无幻觉掌握用法和细节。    
-如果你是问ai ,怎么使用fastapi/django/flask/requests 这些大名鼎鼎的python框架 ，任何ai只要不是太水，几乎都没问题,不需要 nb_ai_context ， 
-不需要我教你怎么用ai 掌握 flask django fastapi。
-
-`nb_ai_context` 不仅可以生成funboost合并文档，让ai无幻觉掌握用法和细节， 也适用于任何冷门三方框架以及个人或公司的私有代码项目。  
-`nb_ai_context` 尤其是对python项目效果更佳，因为对python文件有专门额外的 ast解析。
-
-
-
-## 14.0.1 为什么要专门写第14章这个教程？
-
-有的人太懒惰了,不愿意吃苦阅读  `funboost` 的 `readthedocs` 教程,或者不清楚 `funboost` 实现的背后细节原理且不愿意分析框架源码,那就使用 ai 来替你搞定一切.  
-
-- **第一性原理:为什么要写第14章这个章节文档?**   
-因为无论是使用cursor trae qoder 这些ide,还是在各个大模型官方网页直接问 `funboost` 问题,都是大错特错的方式，必须提供完整的教程和源码上下文，ai大模型才能减少幻觉。
-
-| 大模型 | 网址                                                                                                                     | 评分 | 简要评价                                                                                                    |
-| --- |------------------------------------------------------------------------------------------------------------------------| --- |---------------------------------------------------------------------------------------------------------|
-| gemini-3.0pro | [Google AI Studio](https://aistudio.google.com/app/prompts)                                                            | 95 | 最强,知我心者gemini也。<br>1000k窗口,一次吞下源码和教程绰绰有余,<br>幻觉很少,能准确写代码并且不乱造方法名和入参,<br>跨章节全局连贯推理能力也非常强<br>真原生超长上下文秒RAG |
-| ima知识库 + deepseek v3.1 | [腾讯ima+funboost知识库](https://ima.qq.com/wiki/?shareId=aafc6364ae0f34ae237e4e2aa756e57d301d6461e51db030e0522cda3dc8729e) | 80 | 很强,rag能快速检索找到相关用法,<br>幻觉相对少,但全局连贯推理能力没有gemini的真1000K 上下文强                                               |
-| qwen3-max | [千问国际版](https://chat.qwen.ai/)                                                                                         | 75 | qwen3-max + 文档分块处理,实时rag ,<br>回答也还可以,可以掌握文档文字理念。                                                        |
-| 智谱清言 GLM4.6 | [智谱清言自定义funboost智能体](https://chatglm.cn/main/gdetail/69157797ad83dfcba0f454e7)                                         | 82 | 智谱清言的智能体，对于知识库功能，<br>比腾讯ima 自定义程度更高，<br>据说GLM4.6很强，用户可以亲自对比下ima+deepseek v3.1。                          |
-
-**章节目录**
-- 14.1 是最优先推荐使用 `google ai studio` 网页版提问 (1000k token上下文),而不是使用 `gemini-cli` 和 `gemini-code-assit` 和`cursor` 和 `trae` 阅读本地文档 
-   - google ai studio 真1000k全文推理，和gemini对话更有意思，有时能碰撞出思维的火花。 
-   - rag技术虽然回答快和准确，但感觉没什么意思，就是照着向量去检索然后照本宣科的回答，ai并没有多少自己的主见。 
-   - 即使都用 `gemini-3.0pro` 大模型 ，使用rag技术的  `google notebook lm` ，就是很无聊，没有 `google ai studio` 有意思。
-
-- 14.2 是推荐使用腾讯ima知识库 + deepseek v3.1大模型 (RAG技术),虽然deepseek 大模型只有128k token上下文,但是利用RAG技术,可以快速检索funboost用法 
-
-- 14.3 是使用 qwen 网页 https://chat.qwen.ai/ ,来阅读 funboost 文档  
-
-- 14.4 使用 智谱清言 GLM4.6 的 自定义funboost智能体来回答 funboost 问题，也是 rag技术
-
-- 14.10 是告诉你,为什么传统的基于字符串模糊匹配的搜索技术,被ai吊打
-
-### 14.0.2 **各个 ai 掌握 funboost 能力评分**
-
-超长上下文是 天才学霸记忆力超群能记下所有知识过目不忘；  
-rag是普通学生（记忆力能力不行） + 图书分类管理员，回答问题时候才临时抱佛脚去相关抽屉翻找书籍给答案，这种答案就不深度不连贯，不是全局视野。
-
-<h4> 14.1的 `google ai studio` + `gemini-3.0pro` , ai能力95分</h4>
-
-```
-最强,知我心者gemini也. 1000k窗口,一次吞下源码和教程绰绰有余,幻觉很少,能准确写代码并且不乱造方法名和入参,跨章节全局连贯推理能力也非常强
-
-gemini在以下方面都是最顶级的：
-1. 任何教程上已经明确写了的 funboost 用法；
-2. 文档全局跨章节的关联推理； 
-3. 对用户提问,回答的深度归纳能力;
-4. 拷问教程没写，需要阅读源码并总结的，
-   例如问 “funboost 源码是怎么实现 celery 作为 broker 的？”  ，
-   “funboost 源码是怎么实现 mysql cdc作为 broker 的？”，
-   “boost_spider” 为什么可以虐 xx 爬虫框架？“
-5. 让gemini实现扩展一个 新的 broker中间件种类;
-
-
-gemini-3.0pro 1000k上下文缺点是:
-据说1000k上下文服务端推理成本很高,是比128k 上下文 高10的二次方倍,但服务端推理成本高关我们什么事,反正google ai studio 是无限免费白嫖的.
-```
-
-<h4> 14.2的 `ima知识库` + `deepseek v3.1`,  ai能力80分  </h4>
-
-```
-很强,rag能快速检索找到相关用法,幻觉相对少,但全局连贯推理能力没有gemini的真1000K 上下文强, 
-实测rag技术还是不如gemini 1000k 超长上下文的大力出奇迹那么强悍,rag是次选,超长上下文才是王道.
-
-优点是： 一个知识库可以上传1个G的文档，相当于可以存放放几千本书，可以阅读500个funboost文档，然后对ai提问
-
-缺点1是： 知识库里面对deepseek提问，被默默地强制添加了提示词，提示词告诉了ai只能回答知识库中的知识，文档没明确提到的的都一律拒绝回答，
-例如你让 funboost 和 知名的rq  dramatiq feapder 比较一下，由于文档中没明确写这个内容，ima 就拒绝回答。
-
-缺点2是: rag感觉更适合文科文字知识回答，面对项目源码，多文件关联 ，函数层层调用的分析能力很弱，
-例如 a.py的 fun函 = 于b.py的fun函数 ,属于重定向了,rag居然不知道a.fun的入参从而乱造了几个入参,rag明显的没有 gemini3.0pro 超长上下文 强大。
-rag极度依赖 作者把文档写得很细很细，因为腾迅ima的rag为了怕ai瞎几把回答幻觉, 将默认提示词调教得非常严格防止幻觉，
-所以ai回答过于保守,不敢思维发散和推理总结,生怕回答错了。
-
-缺点3是: rag能快速检索召回找到具体用法,但是对冷门函数的入参如果在教程不反复啰嗦列举,如果只给了python源码,
-例如 a.py的 fun函 = 于b.py的fun函数，a.fun的入参还是会幻觉乱造，甚至连函数名都会似是而非乱造,给人90%意图准确,但10%细节又错误 的感觉,
-而python代码只要错一个字母,程序就会崩溃,不像回答文科文字答案容错率高宽容。
-```
-
-综上，RAG 本质是一种‘检索增强记忆’，不是‘理解增强推理’。面对函数调用链、参数传递等高依赖上下文的问题，长上下文模型始终是终极形态。
-
-<h4> 14.3的 `qwen 官方网页` + `qwen3-max`,  ai能力得分75分 </h4>
-
-```
-qwen3-max + 文档分块处理,实时rag ,回答也还可以,可以掌握文档文字理念。
-
-缺点是文档中的冷门边角知识,代码生成细节不好,不如gemini3.0pro强大。
-
-优点是 qwen3-max 网页,支持 20M 文档的上传,然后提问。 20M 足够容纳10个 funboost 框架源码和教程了.
-而gemini3.0pro 大约最大能支持 4M文档上传,就会超过1000k 上下文了。
-目前funboost 教程 + 源码 文件在2M以内，token 消费600k以内， 所以gemini-3.0pro 非常合适。
-```
-
-<h4> 14.4的 `智谱清言 GLM4.6` + `自定义funboost智能体`,  ai能力得分82分 </h4>
-
-智谱清言的智能体，对于知识库功能，比腾讯ima 自定义程度更高，回答引用了哪些内容更直观。  
-实测 回答问题和 腾讯ima + deepseek v3.1 相当.  
-
-<h4> 其他厂商的ai大模型针对掌握funboost知识都无法可用</h4>
-
-```
-funboost 教程加源码 是一个 2M markdown 单文件文档,需要600k token, 
-如果原生不支持1000k上下文,也不支持分块 rag ,那就无法可用。
-
-所以 gpt5 claude4  deepseek 豆包 智谱清言 kimi 都无法可用，不推荐用这些ai的官网来掌握 funboost 知识。
-```
-
-<h4> ai 选型小结:  </h4>
-
-```
-相比较 1000k token上下文的大模型和rag,优先选择 1000k token上下文的大模型,rag依赖文档写得很详细，适合检索召回, 
-rag全局统筹关联推理和自动阅读分析大项目跨文件的代码,没有原生支持1000k上下文的模型好.  
-原生长上下文除了更费钱废token,在各方面都比rag技术好,反正google ai studio 是免费白嫖的,所以优先使用这个.  
-```
-
-
-
-## 14.1 利用ai大模型来更好的掌握funboost的最佳方式是什么?  
-
-现在是ai时代,谁不用ai就太落伍吃亏了.   
-
-但是使用 ai 大模型也有技巧.  
-
-**第一性原理:使用google ai studio网页版+上传markdown+免费+1000k上下文+全文一次性阅读=幻觉率几乎没有**  
-**gemini-3.0pro 在上传 funboost_all_docs_and_codes.md 这文件后,对funboost的常规用法以及任何细节推理和funboost作者我本人不相上下,知我心者,gemini也**  
-
-### 14.1.1  强烈推荐选择 google ai studio + gemini 3.0pro 大模型  
-
-`gemini 3.0pro`大模型有`1000k token`上下文, 并且可以在 `google ai studio` 免费无限使用  
-
-funboost的教程需要300k token上下文,funboost的框架源码也需要300k token上下文,  
-`funboost_all_docs_and_codes.md` 这个文件需要大约600k token 上下文 ,全地球只有 `gemini 3.0pro` 能胜任完整阅读这个文档且免费且准确.  
-
-[https://aistudio.google.com/app/prompts](https://aistudio.google.com/app/prompts)  
-
-
-`claude4`写代码牛,是修改代码调用工具链强大,但是上下文只有200k,并且不免费,所以pass.  
-`gpt5` token上下文太短,也pass  
-
- **`funboost`知识就是ai大模型的试金石.**  ,使用长文档实测国产ai目前不行, `gemini-3.0pro` 经过实测,在`funboost`的文档推理上 是真正的遥遥领先。
-
-**只有google gemini 3.0pro 适合长文档一次性阅读**
-```  
-leetcode 一个题目,一般就不到10行文字,和 funboost这种 几万行的 教程 + 源码 文档相比,对ai的 要求不是一个级别.   
-LeetCode 测试的是在 封闭、小上下文 环境中解决孤立问题的能力。这就像要求一个学生解答一道定义清晰的数学题。   
-funboost 则要求理解一个 开放、大上下文 的复杂系统。这需要AI不仅能看懂每一行代码（“How”），   
-更能理解组件之间的相互作用、设计模式的应用、以及作者的设计哲学（“Why”），虽然ai不会真思考，但我在教程已经把why总结写得很详细很长了，gemini 不怕文档长。  
-```  
-
-**一个模型的真正实力，不应只看它在“闭卷考试”（Benchmark）上的分数，更要看它在“开卷项目”（真实世界问题）中的实际表现。**  
-
-
-### 14.1.2 强烈推荐在网页上传funboost文档提问!  
-
-强烈推荐在网页上传funboost文档提问,,不要使用`gemini-cli` 和 `gemini-code-assit` 和`cursor`阅读本地文档  
-
-**这是我实践得出来的经验,在网页提问markdown文档比gemini-cli阅读本地文件好**  
-
-推荐在 `google ai studio` 网页提问,而不是安装`gemini code assit`插件,让gemini在ide或者命令行中去阅读funboost的文档。  
-
-[https://aistudio.google.com/app/prompts](https://aistudio.google.com/app/prompts)  
-
-
-这似乎听起来反智,但实际上在网页上传文档并提问 `funboost` 问题,完爆 `gemini-cli` 和 `gemini-code-assit `阅读本机文件.  
-
-因为网页上是可以一次性阅读 40000 行 markdown 并推理,如果你在本地阅读,大模型工具调用链阅读文件,会每1次阅读最高2000行,  
-然后自动分多次阅读,这太浪费生命时间了,并且分多次阅读会触发使用大模型太频繁,导致自动切换到 `gemini-3.0flash`这个差劲大模型了。  
-
-`gemini-cli` 不擅长阅读本机超长文件,其实可以理解的,不然用户随便在一个有1000个文件的目录中,对gemini  
-说一句 `你阅读分析文件夹下所有文件`, `gemini-cli` 如果老老实实的执行,那`google`公司会亏得裤衩都没了,  
-你随便一个不到10个字的命令,就烧掉几百万token,相当于浪费了google 公司 50人民币的gpu推理成本,  
-所以`google`分2000行慢慢阅读文档,超频后就降智切换flash模型,甚至拒绝回答,来保护自己的算力不被滥用.  
-如果多次切割成2000行分批阅读，就是**管中窥豹**，对于理解像 `funboost` 这样逻辑连贯、前后关联的复杂框架是灾难性的。  
-
-实测,在`google ai studio` 的网页中,效果非常非常好,因为它是一次性阅读全文,不会每2000行来分批次慢慢阅读,   
-不管是对教内容程,还是对源码内容,`gemini-3.0pro`都推理的非常准确。  
-
-有的人太懒惰了,不愿意吃苦阅读  `funboost` 的 `readthedocs` 教程,或者不清楚 `funboost` 实现的背后细节原理且不愿意分析框架源码,  
-那么 把 `funboost_all_docs_and_codes.md` 这个文档上传到 `google ai studio` 并各种提问，就非常合适。  
-ai真的是生产力，人工需要阅读几天几夜的教程和框架源码，`gemini 3.0pro` 仅需不到1分钟就能分析的很准确。  
-
-###  14.1.2b 为什么不建议在cursor trae qoder 这些ai ide 阅读 funboost文档？
-
-**第一性原理:ai厂商早就预料到有坏蛋会恶意发起 Token DoS 攻击,让服务商血本无归**  
-```
-上面我已经说了,在cursor trae qoder 阅读 funboost文档,ide为了大模型调用的成本控制已经调了参数, 
-例如trae 对大文件需要自动分段阅读,每次只能阅读200行需要和ai交互多次,阅读4万行 代码 + 教程 ,需要调用200次ai,中途他会自动停止阅读的.
-
-那些说在ide阅读文档更好的人,请稍微用你的脑子好好想想,如果你的文件夹 dir1下有1000个100M的markdown文件,
-你对ai说 ,"请完整仔细阅读 dir1下所有文件内容,然后告诉我中心思想" ,你觉得ide和模型会乖乖听你这种无理要求吗? 
-你随便下个命令,ai需要花费 几十亿 token 来推理,浪费大模型厂商几百万人民币买显卡和电费, 别人ai公司难道没预料到会有这种坏蛋恶意滥用浪费大模型算力吗?
-如果有坏蛋让ai插件 "请阅读c盘下的所有深层级目录下所有文件内容" 呢?
-
-
-web里面,天然需要上传文件,而且上传时候就可以控制文件大小和数量,没有电脑本地那么容易恶意滥用浪费大模型算力.
-```
-
-### 14.1.2c 🛑 拒绝 Gemini 官网，✅ 拥抱 Google AI Studio
-
-**核心原则：请务必使用开发者专用的 [Google AI Studio](https://aistudio.google.com/)，而不是面向普通消费者的 [Gemini 官网](https://gemini.google.com/)。**
-
-虽然两者底层模型可能相同，但在处理 `funboost` 这种超长技术文档时，表现有着天壤之别。以下是三大核心理由：
-
-#### 14.1.2c.1 💰 理由一：真正的“白嫖”与额度优势
-
-| 平台 | Google AI Studio (推荐) | Gemini 官网 (不推荐) |
-| :--- | :--- | :--- |
-| **模型版本** | **Gemini 3.0 Pro** | Gemini Pro / Advanced |
-| **费用** | **免费** (且速率限制极高，普通人难触发上限) | Pro 模型通常需要订阅 Google One 会员 (付费) |
-| **性质** | 面向开发者，提供原始模型能力 | 面向大众，包含大量安全过滤和预设 |
-
-#### 14.1.2c.2 🧠 理由二：忠于文档 vs. 通用幻觉
-
-即使你拥有 Gemini 官网的会员，**AI Studio 的回答质量依然完胜**。
-
-*   **Google AI Studio (专家模式)**：
-    它会**严格基于你上传的文档**进行推理。对于 `funboost` 这种包含大量独创设计（如第6章的自问自答、特定配置写法）的框架，它能精准提取文档中的解决方案，而不是瞎猜。
-
-*   **Gemini 官网 (通用模式)**：
-    它倾向于使用训练数据中的“通用 Python/IT 知识”来回答。
-    > **后果**：当你问一个 `funboost` 特有的问题时，官网版可能会忽略文档中的特定解法，按常规逻辑去推测（胡编），导致回答虽然看起来通顺，但完全没有 Get 到框架的精髓。
-
-#### 14.1.2c.3 ⚡ 理由三：真·全量阅读 (Long Context) vs. 伪·检索切片 (RAG)
-
-这是最硬核的技术差异，直接决定了 AI 能否读懂 `funboost` 的源码架构。
-
-*   **文档体量**：`funboost_all_docs_and_codes.md` 约为 **800k tokens**。
-*   **Google AI Studio**：
-    *   **机制**：**原生超长上下文 (Native Long Context)**。
-    *   **效果**：它能**一次性吞下**整个文档，像一个过目不忘的天才，能关联文档开头和结尾的逻辑。这是真正的“全量阅读”。
-*   **Gemini 官网**：
-    *   **机制**：**混合模式 / RAG (检索增强)**。虽然它允许上传 20M 的文件，但为了响应速度和成本，它底层往往采用切片检索。
-    *   **效果**：它像一个“一目十行”的略读者，会**大量丢失细节**。对于代码这种逻辑严密的内容，丢失细节就是灾难。
-
-> **💡 黄金法则**：除非你的私有文档大到超过了模型窗口上限（如 >200万 tokens），否则**永远优先选择原生超长上下文，坚决抵制 RAG。**
-
----
-
-#### 14.1.2c.4 📸 提问时的“自证清白”
-
-为了确保你没有用错工具，当你向我反馈“AI 回答不对”时，**请务必提供截图**：
-
-1.  **不要只说**：“我用的 Gemini”。
-2.  **请展示网址**：我要看到浏览器地址栏是 `aistudio.google.com`。
-3.  **请展示模型**：我要看到你选的是 `Gemini 1.5 Pro`。
-
-> **⚠️ 警告**：如果你不听劝阻，非要去用 Cursor IDE、Trae 或者 Gemini 官网提问，导致 AI 回答错误，**请不要怪 AI 不行，那是你不行。**
-
-
-### 14.1.4 一定要上传markdown文档再提问  
-不要直接在ai大模型的网页或者app提问`funboost`知识  
-直接在网页提问,除了最简单的demo,写稍微深入一点的, 幻觉率太高了,所有ai几乎100%会意淫瞎造 `funboost`   
-不存在的 入参 /类 /函数.  甚至有的国产水货大模型,连最基础简单`funboost` demo都会幻觉乱写。  
-
-**要想让 AI 成为您学习 funboost 的得力助手，而不是一个满嘴跑火车的“猪队友”，最佳实践就是：打开 `Google AI Studio` 网站，将 `funboost_all_docs_and_codes.md` 文件上传，然后开始向一个已经“吃透”了 `funboost` 所有官方资料的 `Gemini 3.0 Pro` 专家提问。**  
-
-### 14.1.5 funboost 的 markdown文档地址说明  
-
-`funboost` 文档是托管在 `readthedocs` 网站,原始教程是分为了多个`markdown`文件  
-
-在`github`中有合并的`markdown`,分为2个文件.  
-一个是 `funboost_合并教程.md` , 这个是把 教程markdown文件合并成1个文件,方便一次性丢给`ai`,免得要多次上传。        
-另一个是 `funboost_all_docs_and_codes.md` ,  这个是包含了所有教程 + 所有 `funboost` 框架源码 ,更推荐把这个markdown丢给 ai ,反正`gemini` 1000k上下文无敌且免费,不用担心花自己`token`和`money`。   
-
-[https://github.com/ydf0509/funboost](https://github.com/ydf0509/funboost)  
-
-![1756373743657](image/c6/1756373743657.png)  
-
-#### 14.1.5.2 funboost的ai markdown文档是使用神级别 ai上下文生成工具 nb_ai_context 生成的
-
-为什么 funboost的这个合并单一markdown传给ai后，ai如此强悍无幻觉，一方面是`gemini`很强大，另一方面是因为 `nb_ai_context` 生成的上下文太好了。
-
-[nb_ai_context地址](https://github.com/ydf0509/nb_ai_context)
-
-安装 `nb_ai_context`： `pip install nb_ai_context`
-
-`nb_ai_context` 可以对任何it项目代码打包生成一个单一的markdown，传给ai后，效果非常强，吊打最知名的`repomix`。
-
-
-#### 14.1.5.3 公布 funboost ai上下文 markdown 文档的生成方式
-
-```python
-from nb_ai_context import AiMdGenerator,NbPath
-
-project_name="funboost"
-project_root=fr"D:\codes\{project_name}"
-
-project_summary = """
-- `funboost` 是python 全功能分布式函数调度框架
-- `funboost.faas` 是funboost的战略级核武器。使函数调度框架产生架构质变：从 Worker 到 Service
-
-- 以下一定要记住，最最重要的 类和函数如下：
-   - @boost(BoosterParams(...))  任意普通函数加上装饰器，变成分布式函数
-   - BoosterParams 装饰器入参控制大全，一定要学习这个类的所有入参配置；ai绝对不允许胡编乱造源码api和教程中不存在的BoosterParams字段入参。
-   - BrokerEnum：支持 40+ 种消息队列中间件。
-   - BoostersManager 管理分布式函数，高阶用法可能需要用到，例如启动一组消费函数，启动所有消费函数等。
-   - ApsJobAdder 类， 是定时任务的最重要使用方式的类
-   - ConcurrentModeEnum：funboost支持的并发模式。
-   
-
-"""
-
-
-boost_spider_summary = """
-- **`boost_spider` = `funboost` 的超跑引擎 + 一套为爬虫量身打造的瑞士军刀。所有仿scrapy api爬虫框架都还是处在变花样造一辆马车**
-
-- `boost_spider` 是增加了3个爬虫常用类，RequestClient  和  SpiderResponse  和 DatasetSink, 由funboost 驱动调度和并发。
-"""
-
-
-ai_md_codes = AiMdGenerator(
-    r"D:\codes\nb_ai_context\markdown_gen_files_git_ignore\ai_md_files\funboost_all_codes.md"
-).set_project_propery(project_name=project_name, project_root=project_root)
-
-ai_md_docs = AiMdGenerator(
-    r"D:\codes\nb_ai_context\markdown_gen_files_git_ignore\ai_md_files\funboost_all_docs.md"
-      ).set_project_propery(project_name="funboost_docs", project_root=r'D:\codes\funboost_docs')
-
-
-funboost_most_core_source_code_file_list=[
-        "funboost/__init__.py",
-        "funboost/core/booster.py",
-        "funboost/core/func_params_model.py",
-        "funboost/constant.py",
-        "funboost/timing_job/timing_push.py",
-        "funboost/funboost_config_deafult.py",
-        "funboost/core/current_task.py",
-        "funboost/core/cli/discovery_boosters.py",
-        
-        "funboost/core/msg_result_getter.py",
-        "funboost/publishers/base_publisher.py",
-        "funboost/consumers/base_consumer.py",
-        "funboost/core/active_cousumer_info_getter.py",
-        
-    ]
-
-(
-    ai_md_codes
-    .clear_text()
-    .add_ai_reading_guide()
-    .add_project_summary(
-        project_summary=project_summary, 
-        most_core_source_code_file_list=funboost_most_core_source_code_file_list)
-    .add_project_summary(
-        project_summary=boost_spider_summary, 
-        project_root=r"D:\codes\boost_spider",
-        most_core_source_code_file_list=[
-           "boost_spider/__init__.py",
-           "boost_spider/http/request_client.py",
-           "boost_spider/sink/dataset_sink.py",
-           "boost_spider/sink/json_sink.py",
-        
-    ])
-    .merge_from_dir(
-        relative_dir_name='examples',
-        use_gitignore=True,
-        as_title=f"{project_name} examples",
-        # 只包含 .py 和 .md 文件
-        should_include_suffixes=[".py", ".md", ".html"],
-        # 排除 __pycache__ 目录和特定的测试文件
-        excluded_dir_name_list=[],
-    )
-    .merge_from_dir(
-        relative_dir_name=project_name,
-        use_gitignore=True,
-        as_title=f"{project_name} codes",
-        # 只包含 .py 和 .md 文件
-        should_include_suffixes=[".py", ".md", ".html"],
-        # 排除 __pycache__ 目录和特定的测试文件
-        excluded_dir_name_list=[
-            r"funboost\utils\dependency_packages",
-            r"funboost\utils\dependency_packages_in_pythonpath",
-            r"funboost/utils/func_timeout",
-
-            r"funboost\funboost_web_manager\static",
-            r"funboost/concurrent_pool/backup"
-        ],
-    )
-    .merge_from_dir(
-        project_root=r"D:\codes\boost_spider",
-        relative_dir_name="boost_spider",
-        use_gitignore=True,
-        as_title="boost_spider codes",
-        # 只包含 .py 和 .md 文件
-        should_include_suffixes=[".py", ".md", ".html"],
-        # 排除 __pycache__ 目录和特定的测试文件
-        excluded_dir_name_list=[],
-    )
-    .get_textfile_info(is_show_info=True)
-)
-
-
-(
-    ai_md_docs
-    .clear_text()
-    .add_ai_reading_guide()
-    .add_project_summary(
-        project_summary=project_summary, 
-        project_root=r"D:\codes\funboost",
-        most_core_source_code_file_list=funboost_most_core_source_code_file_list
-    )
-    .add_project_summary(
-        project_summary=boost_spider_summary, 
-        project_root=r"D:\codes\boost_spider",
-        most_core_source_code_file_list=[
-           "boost_spider/__init__.py",
-           "boost_spider/http/request_client.py",
-           "boost_spider/sink/dataset_sink.py",
-           "boost_spider/sink/json_sink.py",
-        
-    ])
-    .merge_from_dir(
-        project_root=r"D:\codes\funboost",
-        relative_dir_name='examples',
-        use_gitignore=True,
-        as_title=f"{project_name} examples",
-        # 只包含 .py 和 .md 文件
-        should_include_suffixes=[".py", ".md", ".html"],
-        # 排除 __pycache__ 目录和特定的测试文件
-        excluded_dir_name_list=[],
-    )
-    .merge_from_dir(
-        project_root=r"D:\codes\funboost_docs",
-        relative_dir_name=r"source\articles",
-        use_gitignore=True,
-        as_title="funboost docs",
-        # 只包含 .py 和 .md 文件
-        should_include_suffixes=[".md"],
-        # 排除 __pycache__ 目录和特定的测试文件
-        excluded_dir_name_list=[],
-    )
-    .merge_from_files(
-        relative_file_name_list=["README.md"],
-        project_root=r"D:\codes\boost_spider",
-        as_title="boost_spider readme",
-    )
-    .get_textfile_info(is_show_info=True)
-)
-
-ai_md_docs_and_codes = NbPath(r'D:\codes\nb_ai_context\markdown_gen_files_git_ignore\ai_md_files','funboost_all_docs_and_codes.md').clear_text().merge_text_from_files([ai_md_docs,ai_md_codes])
-
-```
-
-### 14.1.6 google ai studio 提问方式截图  
-
-#### 14.1.6.1 对google ai studio 提问： 使用 AI  掌握 funboost的最好方式是什么，为什么？
-
-
-如果你还是害怕阅读教程，你忙的连喝口水的时间都没有，让ai学习 ai如何最好的掌握funboost知识。
-
-![alt text](image-2.png)
-
-
-#### 14.1.6.2 对google ai studio 提问： funboost 的定时器为什么不怕重复多点部署？
-
-这个答案需要ai高度的分析源码的能力
-
-![alt text](image-3.png)
-
-截图显示 `geimini` 的回答推理能力很强，能准确一阵见血找到funboost的定时器不怕重复部署的本质原因和相关实现的代码片段。
-
-
-
-
-
-## 14.2 使用腾讯 ima 知识库 + deepseek v3.1大模型 掌握 funboost
-
-
-
-### 14.2.1 为什么推荐使用腾讯 ima 知识库 + deepseek v3.1大模型
-
-google `gemini-3.0pro` 是上下文1000k能阅读长文档,免费白嫖, 缺点是google全家桶网站都被中国封杀了,部分用户始终无法掌握科学上网的方式,导致无法使用 `google ai studio` 和 `gemini-cli` 和 `gemini-code-assit` 
-
-所以新推荐这个方式,使用腾讯的 ima 知识库 + deepseek v3.1大模型, deepseek虽然自身只有128k上下文,但是配合 ima 知识库 RAG 检索技术,也可以掌握 funboost 知识,实测还可以.
-
-注意是让你使用 ima知识库 + deepseek v3.1大模型,而不是直接在 deepseek 网页里面去上传 funboost 教程文档再提问.
-
-### 14.2.2 提供现成的已创建好的ima知识库
-
-[【ima知识库】funboost 网页连接](https://ima.qq.com/wiki/?shareId=aafc6364ae0f34ae237e4e2aa756e57d301d6461e51db030e0522cda3dc8729e)
-
-<br><br>
-
-![ima知识库funboost二维码](img_ima.png)
-
-
-### 14.2.3 用户也可以在 ima 自己创建知识库
-
-用户可以自己创建知识库,将 `funboost_all_docs_and_codes.md` 这个文件上传到 ima 知识库,然后使用 deepseek v3.1大模型来提问.
-
-### 14.2.4 腾讯ima截图
-
-![img_83.png](img_83.png)
-
-
-## 14.3 使用 qwen 网页,来阅读 funboost 文档 (不能翻墙的人,用这个也还行)
-
-**注意要使用千问而不是通义：** 要使用https://chat.qwen.ai/ 而不是  https://www.tongyi.com/
-
-**第一性原理：** 现在有些大模型开始使用 实时的 文档分块 + 检索rag 技术,可以支持上传超长文档了，例如 gpt5 和 qwen3 。
-
-[qwen 官网 https://chat.qwen.ai/](https://chat.qwen.ai/)  Qwen 网页最大支持20M 文件上传   
-
-ai阅读一个 20M 的 markdown 教程文件,需要 5000k 上下文,远超当今大模型最大窗口的数十倍,但是有些大模型使用 实时的 文档分块 + 检索rag 技术,可以阅读超长文档,这一点比较赞,连 gemini 3.0pro 1000M上下文 都阅读不了4M以上的文档,但是qwen网页上 却可以支持最大上传阅读20M的长文档。
-
-最推荐 google ai studio +  gemini 3.0pro,因为是原生有1000k上下文，一个字不漏的推理,幻觉几乎没有; 如果不能翻墙,用qwen 实测回答funboost问题也还不错.
-
-## 14.4 使用 智谱清言 GLM4.6 的 自定义智能体来回答 funboost 问题，也是 rag技术
-
-- 使用的是在 智谱清言网站 创建的 智能体，已经将 python教程源码文档，添加到智能体的知识库了，所以用户不需要再上传文档了。  
-
-- 听说 GLM4.6 很牛逼突飞猛进是国产代码最强大模型，用户可以亲自对比下 ima+deepseek v3.1。
-
-- 智谱清言app 可定制性很高，例如可以支持长期记忆，可以通过智能体 自己搭建rag技术 ，deepseek太简陋了无法自定义，大家可以试试 。
-
-[使用 智谱清言 GLM4.6 的 自定义智能体来回答 funboost 问题](https://chatglm.cn/main/gdetail/69157797ad83dfcba0f454e7)
-
-
-
-
-div> </div>
-`````
-
---- **end of file: source/articles/c14old.md** (project: funboost_docs) --- 
-
----
-
-
 --- **start of file: source/articles/c15.md** (project: funboost_docs) --- 
 
 `````markdown
@@ -9490,6 +8857,8 @@ if __name__ == '__main__':
 
 class BoosterParams(BaseJsonAbleModel):
     """
+    掌握funboost 的精华就是知道 BoosterParams 的入参有哪些，如果知道有哪些入参字段，就掌握了funboost的 90% 用法。
+
     pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
 
     @boost的传参必须是此类或者继承此类,如果你不想每个装饰器入参都很多,你可以写一个子类继承BoosterParams, 传参这个子类,例如下面的 BoosterParamsComplete
@@ -9498,12 +8867,11 @@ class BoosterParams(BaseJsonAbleModel):
     queue_name: str  # 队列名字,必传项,每个函数要使用不同的队列名字.
     broker_kind: str = BrokerEnum.SQLITE_QUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html
 
-    """ project_name是项目名, 默认为None, 给booster设置所属项目名, 用于对于在redis保存的funboost信息中，根据项目名字查看相关队列。
+    """ project_name是项目名，属于管理层面的标签, 默认为None, 给booster设置所属项目名, 用于对于在redis保存的funboost信息中，根据项目名字查看相关队列。
     # 如果不设置很难从redis保存的funboost信息中，区分哪些队列名属于哪个项目。 主要是给web接口查看用。
     # 一个项目的队列名字有哪些，是保存在redis的set中，key为 f'funboost.project_name:{project_name}'
-    # 通常配合 CareProjectNameEnv.set($project_name) 使用 ，它可以让你在监控和管理时“只看自己的一亩三分地，避免被其他人的队列刷屏干扰。"""
+    # 通常配合 CareProjectNameEnv.set($project_name) 使用 ，它可以让你在监控和管理时“只看自己的一亩三分地“，避免被其他人的队列刷屏干扰。"""
     project_name: typing.Optional[str] = None
-
 
     """如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。
     具体看ThreadPoolExecutorShrinkAble的说明
@@ -9614,11 +8982,12 @@ class BoosterParams(BaseJsonAbleModel):
     # 每种中间件能传递的键值对可以看 funboost/core/broker_kind__exclusive_config_default.py 的 BROKER_EXCLUSIVE_CONFIG_DEFAULT 属性。
     """
     broker_exclusive_config: dict = {} 
-
+    
 
 
     should_check_publish_func_params: bool = True  # 消息发布时候是否校验消息发布内容,比如有的人发布消息,函数只接受a,b两个入参,他去传2个入参,或者传参不存在的参数名字; 如果消费函数加了装饰器 ，你非要写*args,**kwargs,那就需要关掉发布消息时候的函数入参检查
-   
+    manual_func_input_params :dict= {'is_manual_func_input_params': False,'must_arg_name_list':[],'optional_arg_name_list':[]} # 也可以手动指定函数入参字段，默认是根据消费函数def定义的入参来生成这个。
+
 
     consumer_override_cls: typing.Optional[typing.Type] = None  # 使用 consumer_override_cls 和 publisher_override_cls 来自定义重写或新增消费者 发布者,见文档4.21b介绍，
     publisher_override_cls: typing.Optional[typing.Type] = None
@@ -9645,7 +9014,17 @@ class BoosterParams(BaseJsonAbleModel):
     user_options: dict = {} # 用户自定义的配置,高级用户或者奇葩需求可以用得到,用户可以自由发挥,存放任何设置,例如配合 consumer_override_cls中读取 或 register_custom_broker 使用
     
     
-    auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.
+    auto_generate_info: dict = {}  # 自动生成的信息,不需要用户主动传参.例如包含 final_func_input_params_info 和 where_to_instantiate 等。
+    
+    """# is_fake_booster：是否是伪造的booster,
+    # 用于faas模式下，因为跨项目的faas管理只拿到了redis的一些基本元数据，没有booster的函数逻辑，
+    # 例如ApsJobAdder管理定时任务，需要booster，但没有真实的函数逻辑，
+    # 你可以看 SingleQueueConusmerParamsGetter.gen_booster_for_faas 的用法，目前主要是控制不要执行 BoostersManager.regist_booster
+    # 普通用户完全不用改这个参数。
+    """
+    is_fake_booster: bool = False
+    booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT  # 普通用户不用管不用改，用于隔离boosters注册。例如faas的是虚假的跨服务跨项目的booster，没有具体函数逻辑，不可污染真正的注册。
+    
     
     
    
@@ -14737,33 +14116,47 @@ celery的用户级自定义扩展就很麻烦很高难度了，必须依赖框�
 ### 4b.8.1 🚀 快速开始
 
 ```python
-from funboost import boost
+import time
+from funboost import boost, BrokerEnum
 from funboost.workflow import chain, group, chord, WorkflowBoosterParams
 
+
 # 1. 使用 WorkflowBoosterParams 定义任务
-@boost(WorkflowBoosterParams(queue_name='download_task'))
+@boost(WorkflowBoosterParams(queue_name='download_task',broker_kind=BrokerEnum.REDIS))
 def download(url):
+    time.sleep(1)
     return f'/downloads/{url}'
 
-@boost(WorkflowBoosterParams(queue_name='process_task'))
+
+@boost(WorkflowBoosterParams(queue_name='process_task',broker_kind=BrokerEnum.REDIS))
 def process(file_path, resolution='360p'):
+    time.sleep(2)
     return f'{file_path}_{resolution}'
 
-@boost(WorkflowBoosterParams(queue_name='notify_task'))
+
+@boost(WorkflowBoosterParams(queue_name='notify_task',broker_kind=BrokerEnum.REDIS))
 def notify(results, url):
+    time.sleep(1)
     return f'完成: {url} -> {results}'
 
-# 2. 构建工作流（声明式）
-workflow = chain(
-    download.s('video.mp4'),
-    chord(
-        group(process.s(resolution=r) for r in ['360p', '720p', '1080p']),
-        notify.s(url='video.mp4')
-    )
-)
 
-# 3. 执行
-result = workflow.apply()
+if __name__ == '__main__':
+    print('开始执行')
+    download.consume()
+    process.consume()
+    notify.consume()
+    # 2. 构建工作流（声明式）
+    workflow = chain(
+        download.s('video.mp4'),
+        chord(
+            group(process.s(resolution=r) for r in ['360p', '720p', '1080p']),
+            notify.s(url='video.mp4'),
+        )
+    )
+
+    # 3. 执行
+    result = workflow.apply()
+    print('工作流执行结果:', result)  # 阻塞等待结果
 ```
 
 ### 4b.8.2 📦 核心概念
@@ -14936,7 +14329,7 @@ funboost/workflow/
 
 **funboost自身也支持指标统计和上报**
 funboost自身内置了 MetricCalculation , 是自己实现的指标统计和上报，并且可以以曲线图的显示在funboost的web界面中。   
-但是现在 funboost 也支持 `prometheus` 指标监控，以便更好的对接你们自己的`grafana`运维系统，因为 `prometheus` 的指标协议 更通用，
+但是现在 funboost 也同时支持知名的 `prometheus` 指标监控，以便更好的对接你们自己的`grafana`运维系统，因为 `prometheus` 的指标协议 更通用，
 
 ### 4b.9.0 Funboost Prometheus 监控指标 Mixin
 

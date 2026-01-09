@@ -14,9 +14,32 @@ Funboost Workflow - 编排原语 (Primitives)
 """
 
 import typing
+import uuid
 from .signature import Signature
+from .workflow_mixin import WorkflowPublisherMixin
 from funboost.core.msg_result_getter import AsyncResult
 from funboost.core.function_result_status_saver import FunctionResultStatus
+
+
+def _ensure_workflow_context() -> bool:
+    """
+    确保存在工作流上下文，如果不存在则创建初始上下文
+    
+    :return: True 表示创建了新上下文（调用者需要在结束时清理），False 表示已存在上下文
+    """
+    existing = WorkflowPublisherMixin.get_workflow_context()
+    if existing:
+        return False  # 已存在，不需要创建
+    
+    # 创建初始工作流上下文
+    initial_ctx = {
+        'workflow_id': str(uuid.uuid4()),
+        'chain_depth': 0,
+        'current_task_id': None,
+        'parent_task_id': None,
+    }
+    WorkflowPublisherMixin.set_workflow_context(initial_ctx)
+    return True  # 新创建的，调用者需要清理
 
 
 class Chain:
@@ -64,20 +87,28 @@ class Chain:
         :param prev_result: 外部传入的初始结果（可选）
         :return: 最后一个任务的执行结果
         """
-        result = prev_result
-        result_status = None
+        # 确保存在工作流上下文（如果不存在则自动创建）
+        created_new_ctx = _ensure_workflow_context()
         
-        for task in self.tasks:
-            if isinstance(task, (Chain, Group, Chord)):
-                result_status = task.apply(prev_result=result)
-                result = result_status.result if isinstance(result_status, FunctionResultStatus) else result_status
-            elif isinstance(task, Signature):
-                result_status = task.apply(prev_result=result)
-                result = result_status.result
-            else:
-                raise TypeError(f"Unsupported task type: {type(task)}")
-        
-        return result_status
+        try:
+            result = prev_result
+            result_status = None
+            
+            for task in self.tasks:
+                if isinstance(task, (Chain, Group, Chord)):
+                    result_status = task.apply(prev_result=result)
+                    result = result_status.result if isinstance(result_status, FunctionResultStatus) else result_status
+                elif isinstance(task, Signature):
+                    result_status = task.apply(prev_result=result)
+                    result = result_status.result
+                else:
+                    raise TypeError(f"Unsupported task type: {type(task)}")
+            
+            return result_status
+        finally:
+            # 只有当本方法创建了上下文时才清理
+            if created_new_ctx:
+                WorkflowPublisherMixin.clear_workflow_context()
     
     def apply_async(self, prev_result=None) -> AsyncResult:
         """
@@ -149,30 +180,48 @@ class Group:
         if not self.tasks:
             return []
         
-        # 并行发布所有任务
-        async_results = []
-        for task in self.tasks:
-            if isinstance(task, Signature):
-                async_results.append(task.apply_async(prev_result))
-            elif isinstance(task, (Chain, Group, Chord)):
-                # 对于嵌套结构，同步执行（简化实现）
-                result = task.apply(prev_result)
-                # 包装成类似 AsyncResult 的结构以统一处理
-                async_results.append(_WrapperResult(result))
-            else:
-                raise TypeError(f"Unsupported task type: {type(task)}")
+        # 确保存在工作流上下文（如果不存在则自动创建）
+        created_new_ctx = _ensure_workflow_context()
         
-        # 等待所有结果
-        results = []
-        for ar in async_results:
-            if isinstance(ar, _WrapperResult):
-                results.append(ar.result)
-            else:
-                # AsyncResult
-                status = ar.wait_rpc_data_or_raise(raise_exception=True)
-                results.append(status.result)
-        
-        return results
+        try:
+            # 并行发布所有任务
+            async_results = []
+            for task in self.tasks:
+                if isinstance(task, Signature):
+                    async_results.append(task.apply_async(prev_result))
+                elif isinstance(task, (Chain, Group, Chord)):
+                    # 对于嵌套结构，同步执行（简化实现）
+                    result = task.apply(prev_result)
+                    # 包装成类似 AsyncResult 的结构以统一处理
+                    async_results.append(_WrapperResult(result))
+                else:
+                    raise TypeError(f"Unsupported task type: {type(task)}")
+            
+            # 等待所有结果
+            results = []
+            last_task_id = None
+            for ar in async_results:
+                if isinstance(ar, _WrapperResult):
+                    results.append(ar.result)
+                else:
+                    # AsyncResult
+                    status = ar.wait_rpc_data_or_raise(raise_exception=True)
+                    results.append(status.result)
+                    last_task_id = status.task_id
+            
+            # Group 完成后更新 workflow context
+            # 使用最后一个任务的 task_id 作为 current_task_id，
+            # 这样 chord callback 的 parent_task_id 能指向 group 中的某个任务
+            # 注意：_update_workflow_context_after_task 会同时递增 chain_depth
+            if last_task_id:
+                from .signature import _update_workflow_context_after_task
+                _update_workflow_context_after_task(last_task_id)
+            
+            return results
+        finally:
+            # 只有当本方法创建了上下文时才清理
+            if created_new_ctx:
+                WorkflowPublisherMixin.clear_workflow_context()
     
     def apply_async(self, prev_result=None) -> typing.List[AsyncResult]:
         """
@@ -246,11 +295,19 @@ class Chord:
         :param prev_result: 传递给 header 每个任务的初始结果
         :return: body 任务的执行结果
         """
-        # 1. 执行 header（并行）
-        header_results = self.header.apply(prev_result)
+        # 确保存在工作流上下文（如果不存在则自动创建）
+        created_new_ctx = _ensure_workflow_context()
         
-        # 2. 将 header 结果列表作为 body 的第一个参数执行
-        return self.body.apply(prev_result=header_results)
+        try:
+            # 1. 执行 header（并行）
+            header_results = self.header.apply(prev_result)
+            
+            # 2. 将 header 结果列表作为 body 的第一个参数执行
+            return self.body.apply(prev_result=header_results)
+        finally:
+            # 只有当本方法创建了上下文时才清理
+            if created_new_ctx:
+                WorkflowPublisherMixin.clear_workflow_context()
     
     def __repr__(self):
         return f"Chord(header={self.header}, body={self.body})"

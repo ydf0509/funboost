@@ -32,6 +32,12 @@ class ApsJobAdder:
         :param booster: A Booster object representing the function to be scheduled.
         :param job_store_kind: The type of job store to use. Default is 'memory'.
                                Can be 'memory' or 'redis'.
+        :param is_auto_start: 实例化时候，是否顺带启动定时器，这个在任何情况下请确保永远是True。如果是False，压根无法实现最基本的增删改查定时任务，更无法运行定时任务
+        :param is_auto_paused: 实例化时候，是否顺带暂停定时器。这个你可以自己按需选择，如果你希望当前程序里面只是增删改查定时计划，但不想真的运行定时任务函数，可以设置为True，暂停定时器执行函数。
+        
+        apscheduler 的 .start() 和 pause() 是两个独立的含义，不要以为他们是同一个操作的一对反义词。 
+        pause 对应的相反操作是 resume，前提条件是 apscheduler.start() 了，pause和resume才有意义。 
+        这些是 apscheduler 的原生概念，用户需要先学习 apscheduler 的基本概念和用法。
         """
         self.booster = booster
         self.job_store_kind = job_store_kind

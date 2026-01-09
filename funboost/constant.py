@@ -2,7 +2,7 @@
 
 
 
-class  BrokerEnum:
+class BrokerEnum:
     """
     在funboost中万物皆可为消息队列broker,funboost内置了所有 知名的正经经典消息队列作为broker,
     也支持了基于 内存 各种数据库 文件系统 tcp/udp/http这些socket 模拟作为broker.
@@ -148,17 +148,28 @@ class  BrokerEnum:
 
 
 class ConcurrentModeEnum:
+    """
+    funboost 支持多线程、gevent、eventlet、asyncio 单线程 并发模式。
+    这里没有多进程枚举，是因为funboost 希望多进程和这些模式叠加并发，
+    booster.mp_consume(8) 就是8进程叠加 n个线程或协程并发，
+    funboost的多进程和多线程 asyncio是叠加的，不是互斥的。
+    """
     THREADING = 'threading'  # 线程方式运行，兼容支持 async def 的异步函数。
     GEVENT = 'gevent'
     EVENTLET = 'eventlet'
     ASYNC = 'async'  # asyncio并发，适用于async def定义的函数。
     SINGLE_THREAD = 'single_thread'  # 如果你不想并发，不想预先从消息队列中间件拉取消息到python程序的内存queue队列缓冲中，那么就适合使用此并发模式。
     SOLO = SINGLE_THREAD
+    
 
 
 # is_fsdf_remote_run = 0
 
 class FunctionKind:
+    """
+    funboost 比celery更强，funboost不仅支持函数和静态方法
+    funboost也能直接支持@boost加到 类方法和实例方法上（但这需要按教程方式做，不能想当然的写）
+    """
     CLASS_METHOD = 'CLASS_METHOD'
     INSTANCE_METHOD = 'INSTANCE_METHOD'
     STATIC_METHOD = 'STATIC_METHOD'

@@ -34,7 +34,7 @@ from funboost.core.loggers import FunboostFileLoggerMixin,nb_log_config_default
 from funboost.core.serialization import Serialization
 from funboost.constant import RedisKeys
 from funboost.core.booster import  Booster,BoosterRegistry, booster_registry_default,gen_pid_queue_name_key
-from funboost.core.func_params_model import PublisherParams, BoosterParams, BaseJsonAbleModel
+from funboost.core.func_params_model import PublisherParams, BoosterParams
 from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig
 from funboost.core.consuming_func_iniput_params_check import FakeFunGenerator
 from funboost.core.exceptions import QueueNameNotExists
@@ -413,7 +413,6 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
     _lock_for_generate_publisher_booster = threading.Lock()
     
 
-
     def __init__(self,queue_name:str,care_project_name:typing.Optional[str]=None,is_use_local_booster:bool=None):
         RedisReportInfoGetterMixin._init(self,care_project_name)
         self.queue_name = queue_name
@@ -539,6 +538,23 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
     
 
    
+    @staticmethod
+    def _reset_non_json_serializable_fields(booster_params_from_redis: dict):
+        """
+        自动重置 BoosterParams 中所有不可JSON序列化的字段为 None
+        
+        注意：booster_params_from_redis 是从 Redis 取出的字典，不可json序列化的对象的值都是字符串形式
+        需要根据 BoosterParams 的类型定义，将不可序列化类型的字段重置为 None
+        """
+        # 获取不可序列化的字段名列表（带缓存）
+        from funboost.core.pydantic_compatible_base import get_cant_json_serializable_fields
+        non_serializable_fields = get_cant_json_serializable_fields(BoosterParams)
+        
+        # 重置这些字段为 None
+        for field_name in non_serializable_fields:
+            if field_name in booster_params_from_redis:
+                booster_params_from_redis[field_name] = None
+
     def _gen_booster_by_local_booster(self) -> Booster:
         # 使用本地booster，这种也可以，每个项目单独自己起一个 funboost web manager 就可以，
         # 启动  funboost web manager  之前，先导入相关的 booster所在模块,再调用 `start_funboost_web_manager()` 函数
@@ -572,23 +588,26 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
              if existing_booster and existing_booster.boost_params.broker_kind == current_broker_kind:
                  return existing_booster
 
+             # 自动重置所有不可JSON序列化的字段为None，(避免硬编码)
+             # 例如 user_custom_record_process_info_func  consumer_override_cls consuming_function_decorator 等等
+             self._reset_non_json_serializable_fields(booster_params)
+             
+             
              # 生成新的 booster
+             
+             # 手动设置需要的字段
              redis_final_func_input_params_info = booster_params['auto_generate_info']['final_func_input_params_info']
              fake_fun = FakeFunGenerator.gen_fake_fun_by_params(redis_final_func_input_params_info)
              booster_params['consuming_function'] = fake_fun
              booster_params['consuming_function_raw'] = fake_fun
-
-             booster_params['specify_concurrent_pool'] = None
-             booster_params['specify_async_loop'] = None
-             booster_params['consuming_function_decorator'] = None
-             booster_params['function_result_status_persistance_conf'] = FunctionResultStatusPersistanceConfig(is_save_status=False,is_save_result=False)
-             booster_params['user_custom_record_process_info_func'] = None
-             booster_params['consumer_override_cls'] = None
-             booster_params['publisher_override_cls'] = None
-
+             
              booster_params['is_fake_booster'] = True 
              # 关键：指定 registry，这样实例化时会自动注册到 booster_registry_for_faas，覆盖旧的 key
              booster_params['booster_registry_name'] = 'booster_registry_for_faas'
+
+             booster_params['function_result_status_persistance_conf'] = FunctionResultStatusPersistanceConfig(is_save_status=False,is_save_result=False)
+             
+             
 
              booster_params_model = BoosterParams(**booster_params)
              
@@ -602,7 +621,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
             return self._gen_booster_by_local_booster()
         return self._gen_booster_by_redis_meta_info()
     
-    def gen_publisher_for_faas(self)->Booster:
+    def gen_publisher_for_faas(self)->AbstractPublisher:
         booster = self.gen_booster_for_faas()
         return booster.publisher
     

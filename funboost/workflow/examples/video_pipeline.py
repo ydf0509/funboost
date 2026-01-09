@@ -40,6 +40,7 @@ def download_video(url: str) -> str:
     :param url: 视频 URL
     :return: 下载后的本地文件路径
     """
+    print(fct.full_msg)
     fct.logger.info(f'📥 开始下载视频: {url}')
     
     # 模拟下载耗时
@@ -60,6 +61,7 @@ def transform_video(video_file: str, resolution: str = '360p') -> str:
     :param resolution: 目标分辨率
     :return: 转码后的文件路径
     """
+    print(fct.full_msg)
     fct.logger.info(f'🔄 开始转码: {video_file} -> {resolution}')
     
     # 模拟转码耗时
@@ -80,6 +82,7 @@ def send_finish_msg(video_list: typing.List[str], url: str) -> str:
     :param url: 原始视频 URL
     :return: 完成消息
     """
+    print(fct.full_msg)
     fct.logger.info('📧 发送完成通知...')
     fct.logger.info(f'   原始视频: {url}')
     fct.logger.info(f'   转码结果: {video_list}')

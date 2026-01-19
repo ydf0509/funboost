@@ -76,8 +76,9 @@ export default function TimingJobsPage() {
 
   const { currentProject, careProjectName } = useProject();
   const { canExecute } = useActionPermissions("queue");
-  const projectLevel = currentProject?.permission_level ?? "read";
-  const canWriteProject = projectLevel === "write" || projectLevel === "admin";
+  // 当未选择具体项目时默认有写权限（全部项目模式）
+  const projectLevel = currentProject?.permission_level ?? "admin";
+  const canWriteProject = !currentProject || projectLevel === "write" || projectLevel === "admin";
   const canOperateQueue = canExecute && canWriteProject;
 
   const ensureOperatePermission = useCallback(() => {

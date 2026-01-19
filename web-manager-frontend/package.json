@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev -H 127.0.0.1",
     "build": "next build",
+    "build:deploy": "next build && rm -rf ../funboost/funboost_web_manager/static/frontend && cp -r out ../funboost/funboost_web_manager/static/frontend",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",

@@ -63,10 +63,10 @@ const nextConfig: NextConfig = {
   // 生产环境使用静态导出模式，输出到 Flask 静态目录
   output: isProd ? "export" : undefined,
 
-  // 生产环境直接输出到 Flask 静态目录
-  distDir: isProd
-    ? "../funboost/funboost_web_manager/static/frontend"
-    : ".next",
+  // 生产环境使用静态导出模式
+  // 注意：Next.js 16 Turbopack 不允许 distDir 指向项目外部
+  // 构建后需要将 out/ 目录内容复制到 Flask 静态目录
+  distDir: isProd ? "out" : ".next",
 
   // 禁用图片优化（静态导出不支持）
   images: {

@@ -47,7 +47,8 @@ test_txt_queue.txt
 **/node_modules/
 # Next.js build directory
 **/.next/
-
+web-manager-frontend/out
+web-manager-frontend/.next
 # Environment and security files
 .env
 .encryption_keys.json

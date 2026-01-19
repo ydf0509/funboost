@@ -103,17 +103,22 @@ python set_web_manage.py start --backend
 
 ## 生产构建
 
-### 构建前端
+### 构建并部署前端
 
 ```bash
-# 设置生产环境变量
-export NODE_ENV=production
-
-# 构建前端
-npm run build
+# 构建前端并复制到 Flask 静态目录
+npm run build:deploy
 ```
 
 构建产物将输出到 `../funboost/funboost_web_manager/static/frontend` 目录。
+
+### 仅构建（不部署）
+
+```bash
+npm run build
+```
+
+构建产物将输出到本地 `out/` 目录。
 
 ### 启动生产服务
 
@@ -144,6 +149,9 @@ npm run dev
 
 # 构建生产版本
 npm run build
+
+# 构建并部署到 Flask 静态目录
+npm run build:deploy
 
 # 启动生产服务器
 npm start

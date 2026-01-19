@@ -8,7 +8,6 @@ from funboost import (
     FunctionResultStatusPersistanceConfig,
 )
 
-from sdk import KingdeeClient, HupunClient, get_current_env
 
 
 class OrderProjectParams(BoosterParams):
@@ -45,42 +44,4 @@ def handle_order(doc_id: str, doc_type: str, operation_type: str, content: dict)
         f"[order] handling doc_id={doc_id}, type={doc_type}, op={operation_type}"
     )
 
-    try:
-        # 尝试获取 KingdeeClient 实例
-        kingdee_client = KingdeeClient.get_instance()
-    except ImportError as e:
-        # 如果缺少 K3Cloud SDK，记录错误并返回失败状态
-        fct.logger.error(f"K3Cloud SDK not available: {e}")
-        return {
-            "success": False,
-            "error": "K3Cloud SDK not installed",
-            "message": str(e),
-            "doc_id": doc_id,
-            "doc_type": doc_type,
-            "operation_type": operation_type
-        }
-
-    # 1. 定义业务对象标识
-    form_id = doc_type
-
-    # 2. 定义数据体
-    data = {
-        "Number": doc_id,  # 单据号
-        # "Id": "",               # 内码ID（可留空）
-        # "CreateOrgId": 0        # 可选
-    }
-
-    try:
-        response = kingdee_client.View(form_id, data)
-        print(response)
-        return response
-    except Exception as e:
-        fct.logger.error(f"Failed to process order {doc_id}: {e}")
-        return {
-            "success": False,
-            "error": "Failed to process order",
-            "message": str(e),
-            "doc_id": doc_id,
-            "doc_type": doc_type,
-            "operation_type": operation_type
-        }
+    return {"doc_id": doc_id, "status": "success", "message": f"Handled {doc_type} with operation {operation_type}"}

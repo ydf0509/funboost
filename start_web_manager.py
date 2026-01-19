@@ -12,15 +12,19 @@ load_dotenv()
 
 
 from funboost.funboost_web_manager.app import start_funboost_web_manager
+from funboost.core.cli.discovery_boosters import BoosterDiscovery
+import os
 
-from tasks import *  
+# 自动发现并注册 tasks 目录下的 @boost 函数
+project_root = os.path.dirname(os.path.abspath(__file__))
+BoosterDiscovery(
+    project_root_path=project_root,
+    booster_dirs=['tasks'],
+    max_depth=1,
+    py_file_re_str='process'  # 只扫描包含 'process' 的文件
+).auto_discovery()
+
 
 if __name__ == "__main__":
-    print("=" * 50)
-    print("启动 Funboost Web Manager (Debug 模式)")
-    print("访问地址: http://127.0.0.1:27018")
-    print("代码修改后会自动重载")
-    print("=" * 50)
 
-    # Debug 模式启动，支持自动 reload
     start_funboost_web_manager(block=True, debug=True)

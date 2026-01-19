@@ -104,8 +104,9 @@ export default function FunResultsPage() {
   // 获取当前项目
   const { currentProject, careProjectName } = useProject();
   const { canExecute } = useActionPermissions("queue");
-  const projectLevel = currentProject?.permission_level ?? "read";
-  const canWriteProject = projectLevel === "write" || projectLevel === "admin";
+  // 当未选择具体项目时默认有写权限（全部项目模式）
+  const projectLevel = currentProject?.permission_level ?? "admin";
+  const canWriteProject = !currentProject || projectLevel === "write" || projectLevel === "admin";
   const canOperateQueue = canExecute && canWriteProject;
 
   const { enabled: autoRefresh, toggle: toggleAutoRefresh } = useAutoRefresh(
@@ -285,383 +286,383 @@ export default function FunResultsPage() {
   return (
     <RequirePermission permissions={["queue:read"]} projectLevel="read">
       <div className="space-y-6">
-      {/* Action Bar */}
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={loadResults}>
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          数据刷新
-        </Button>
-        <div className="flex items-center gap-1 rounded-full border border-[hsl(var(--line))] p-0.5">
-          <span className="px-2 text-xs text-[hsl(var(--ink-muted))]">刷新间隔:</span>
-          {refreshIntervals.map((interval) => (
-            <button
-              key={interval.value}
-              onClick={() => setRefreshInterval(interval.value)}
-              className={`px-2 py-1 text-xs rounded-full transition ${refreshInterval === interval.value
-                ? "bg-[hsl(var(--accent))] text-white"
-                : "text-[hsl(var(--ink-muted))] hover:text-[hsl(var(--ink))]"
-                }`}
-            >
-              {interval.label}
-            </button>
-          ))}
-        </div>
-        <Button
-          variant={autoRefresh ? "primary" : "outline"}
-          size="sm"
-          onClick={toggleAutoRefresh}
-        >
-          <Clock className="h-4 w-4" />
-          自动刷新中
-        </Button>
-      </div>
-
-      {notice ? (
-        <Card className="border border-[hsl(var(--accent))]/30 bg-[hsl(var(--accent))]/10 text-sm text-[hsl(var(--accent-2))]">
-          {notice}
-        </Card>
-      ) : null}
-
-      {/* Filter Section */}
-      <Card>
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-[hsl(var(--ink-muted))]">队列名称</label>
-            <Select value={queue} onChange={(e) => setQueue(e.target.value)}>
-              {queues.map((item) => (
-                <option key={item.collection_name} value={item.collection_name}>
-                  {item.collection_name} (记录数: {formatNumber(item.count)})
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-[hsl(var(--ink-muted))]">起始时间</label>
-            <Input
-              type="datetime-local"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-[hsl(var(--ink-muted))]">截止时间</label>
-            <Input
-              type="datetime-local"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-[hsl(var(--ink-muted))]">运行状态</label>
-            <Select value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option value="all">全部</option>
-              <option value="2">成功</option>
-              <option value="3">失败</option>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-[hsl(var(--ink-muted))]">函数参数</label>
-            <Input
-              placeholder="输入参数搜索关键..."
-              value={functionParams}
-              onChange={(e) => setFunctionParams(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-[hsl(var(--ink-muted))]">Task ID</label>
-            <Input
-              placeholder="输入task_id..."
-              value={taskId}
-              onChange={(e) => setTaskId(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Quick Range + Min Cost + Search */}
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-[hsl(var(--ink-muted))]">快捷时间:</span>
-          {quickRanges.map((range) => {
-            const isActive = activeQuickRange === range.minutes;
-            return (
+        {/* Action Bar */}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={loadResults}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            数据刷新
+          </Button>
+          <div className="flex items-center gap-1 rounded-full border border-[hsl(var(--line))] p-0.5">
+            <span className="px-2 text-xs text-[hsl(var(--ink-muted))]">刷新间隔:</span>
+            {refreshIntervals.map((interval) => (
               <button
-                key={range.minutes}
-                onClick={() => {
-                  const end = new Date();
-                  const start = new Date(end.getTime() - range.minutes * 60 * 1000);
-                  setStartTime(toDateTimeInputValue(start));
-                  setEndTime(toDateTimeInputValue(end));
-                }}
-                className={`px-3 py-1.5 text-xs rounded-full border transition ${isActive
-                  ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))] text-white"
-                  : "border-[hsl(var(--line))] text-[hsl(var(--ink-muted))] hover:border-[hsl(var(--accent))] hover:text-[hsl(var(--accent))]"
+                key={interval.value}
+                onClick={() => setRefreshInterval(interval.value)}
+                className={`px-2 py-1 text-xs rounded-full transition ${refreshInterval === interval.value
+                  ? "bg-[hsl(var(--accent))] text-white"
+                  : "text-[hsl(var(--ink-muted))] hover:text-[hsl(var(--ink))]"
                   }`}
               >
-                近{range.label}
+                {interval.label}
               </button>
-            );
-          })}
-          <div className="flex-1" />
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-[hsl(var(--ink-muted))]">最小耗时(秒)</label>
-            <Input
-              className="w-20"
-              placeholder="如: 1"
-              value={minCost}
-              onChange={(e) => setMinCost(e.target.value)}
-            />
+            ))}
           </div>
-          <Button variant="primary" onClick={handleSearch}>
-            <Search className="h-4 w-4" />
-            查询
+          <Button
+            variant={autoRefresh ? "primary" : "outline"}
+            size="sm"
+            onClick={toggleAutoRefresh}
+          >
+            <Clock className="h-4 w-4" />
+            自动刷新中
           </Button>
         </div>
-      </Card>
 
-      {/* Statistics Cards */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="当前队列"
-          value={queue ? truncateText(queue, 20) : "-"}
-          helper="已选范围"
-        />
-        <StatCard
-          label="查询范围统计"
-          value={
-            stats ? (
-              <span>
-                <span className="text-[hsl(var(--success))]">成功: {formatNumber(stats.success_num)}</span>
-                {" / "}
-                <span className="text-[hsl(var(--danger))]">失败: {formatNumber(stats.fail_num)}</span>
-              </span>
-            ) : (
-              "-"
-            )
-          }
-          helper="时间范围内"
-        />
-        <StatCard
-          label="最近1分钟"
-          value={
-            <span>
-              <span className="text-[hsl(var(--success))]">成功: 0</span>
-              {" / "}
-              <span className="text-[hsl(var(--danger))]">失败: 0</span>
-            </span>
-          }
-          helper="10秒/刷新"
-        />
-        <StatCard
-          label="队列剩余消息"
-          value={msgCount !== null ? formatNumber(msgCount) : "-"}
-          helper="10秒/刷新"
-        />
-      </div>
+        {notice ? (
+          <Card className="border border-[hsl(var(--accent))]/30 bg-[hsl(var(--accent))]/10 text-sm text-[hsl(var(--accent-2))]">
+            {notice}
+          </Card>
+        ) : null}
 
-      {/* Results Table */}
-      <Card>
-        <div className="flex items-center justify-between mb-4">
-          <SectionHeader title="执行记录列表" subtitle="" />
-        </div>
-
-        <div className="overflow-x-auto">
-          {loading ? (
-            <div className="py-8 text-center text-sm text-[hsl(var(--ink-muted))]">
-              <RefreshCw className="h-8 w-8 mx-auto mb-2 animate-spin text-[hsl(var(--accent))]" />
-              正在加载结果...
+        {/* Filter Section */}
+        <Card>
+          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-[hsl(var(--ink-muted))]">队列名称</label>
+              <Select value={queue} onChange={(e) => setQueue(e.target.value)}>
+                {queues.map((item) => (
+                  <option key={item.collection_name} value={item.collection_name}>
+                    {item.collection_name} (记录数: {formatNumber(item.count)})
+                  </option>
+                ))}
+              </Select>
             </div>
-          ) : filteredResults.length === 0 ? (
-            <EmptyState title="暂无结果" subtitle="尝试调整时间范围或队列。" />
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="text-left text-xs uppercase tracking-wider text-[hsl(var(--ink-muted))] bg-[hsl(var(--sand-2))]">
-                <tr>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">函数名称</th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">Task ID</th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">函数入参</th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">函数结果</th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">发布时间</th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">开始时间</th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">耗时(秒)</th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">执行次数</th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">运行状态</th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">是否成功</th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">健康策略</th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">执行机器</th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">线程数</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[hsl(var(--line))]">
-                {filteredResults.map((row, index) => {
-                  const failed = !row.success;
-                  const running = row.run_status === "running";
-                  return (
-                    <tr
-                      key={`${row.task_id}-${index}`}
-                      className="hover:bg-[hsl(var(--sand-2))]/50 transition-colors"
-                    >
-                      {/* 函数名称 */}
-                      <td className="px-3 py-3 font-medium text-[hsl(var(--ink))] whitespace-nowrap max-w-[120px]">
-                        <span className="truncate block" title={row.function}>
-                          {row.function}
-                        </span>
-                      </td>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-[hsl(var(--ink-muted))]">起始时间</label>
+              <Input
+                type="datetime-local"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-[hsl(var(--ink-muted))]">截止时间</label>
+              <Input
+                type="datetime-local"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-[hsl(var(--ink-muted))]">运行状态</label>
+              <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+                <option value="all">全部</option>
+                <option value="2">成功</option>
+                <option value="3">失败</option>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-[hsl(var(--ink-muted))]">函数参数</label>
+              <Input
+                placeholder="输入参数搜索关键..."
+                value={functionParams}
+                onChange={(e) => setFunctionParams(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-[hsl(var(--ink-muted))]">Task ID</label>
+              <Input
+                placeholder="输入task_id..."
+                value={taskId}
+                onChange={(e) => setTaskId(e.target.value)}
+              />
+            </div>
+          </div>
 
-                      {/* Task ID */}
-                      <td className="px-3 py-3 text-xs text-[hsl(var(--ink-muted))] max-w-[180px]">
-                        <div className="flex items-center gap-1">
-                          <span className="truncate block" title={row.task_id}>
-                            {truncateText(row.task_id, 20)}
-                          </span>
-                          <button
-                            onClick={() => handleCopyTaskId(row.task_id)}
-                            className="p-1 rounded hover:bg-[hsl(var(--sand-2))] text-[hsl(var(--ink-muted))] hover:text-[hsl(var(--accent))]"
-                            title="复制 Task ID"
-                          >
-                            {copiedTaskId === row.task_id ? (
-                              <Check className="h-3 w-3 text-[hsl(var(--success))]" />
-                            ) : (
-                              <Copy className="h-3 w-3" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
+          {/* Quick Range + Min Cost + Search */}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs text-[hsl(var(--ink-muted))]">快捷时间:</span>
+            {quickRanges.map((range) => {
+              const isActive = activeQuickRange === range.minutes;
+              return (
+                <button
+                  key={range.minutes}
+                  onClick={() => {
+                    const end = new Date();
+                    const start = new Date(end.getTime() - range.minutes * 60 * 1000);
+                    setStartTime(toDateTimeInputValue(start));
+                    setEndTime(toDateTimeInputValue(end));
+                  }}
+                  className={`px-3 py-1.5 text-xs rounded-full border transition ${isActive
+                    ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))] text-white"
+                    : "border-[hsl(var(--line))] text-[hsl(var(--ink-muted))] hover:border-[hsl(var(--accent))] hover:text-[hsl(var(--accent))]"
+                    }`}
+                >
+                  近{range.label}
+                </button>
+              );
+            })}
+            <div className="flex-1" />
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-[hsl(var(--ink-muted))]">最小耗时(秒)</label>
+              <Input
+                className="w-20"
+                placeholder="如: 1"
+                value={minCost}
+                onChange={(e) => setMinCost(e.target.value)}
+              />
+            </div>
+            <Button variant="primary" onClick={handleSearch}>
+              <Search className="h-4 w-4" />
+              查询
+            </Button>
+          </div>
+        </Card>
 
-                      {/* 函数入参 */}
-                      <td className="px-3 py-3 max-w-[150px]">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-[hsl(var(--ink-muted))] truncate block max-w-[80px]">
-                            {truncateText(row.params_str, 20)}
-                          </span>
-                          {row.params_str && row.params_str !== "-" && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="p-1 h-auto"
-                              onClick={() => handleViewJson("函数入参", row.params_str)}
-                            >
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* 函数结果 */}
-                      <td className="px-3 py-3 max-w-[150px]">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-[hsl(var(--ink-muted))] truncate block max-w-[80px]">
-                            {truncateText(row.result || row.exception, 20)}
-                          </span>
-                          {(row.result || row.exception) && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="p-1 h-auto"
-                              onClick={() =>
-                                handleViewJson(
-                                  failed ? "异常信息" : "函数结果",
-                                  row.result || row.exception
-                                )
-                              }
-                            >
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* 发布时间 */}
-                      <td className="px-3 py-3 text-xs text-[hsl(var(--ink-muted))] whitespace-nowrap">
-                        {row.publish_time_format || "-"}
-                      </td>
-
-                      {/* 开始时间 */}
-                      <td className="px-3 py-3 text-xs text-[hsl(var(--ink-muted))] whitespace-nowrap">
-                        {row.time_start ? formatDateTime(row.time_start) : "-"}
-                      </td>
-
-                      {/* 耗时(秒) */}
-                      <td className="px-3 py-3 text-[hsl(var(--ink))] whitespace-nowrap">
-                        {row.time_cost?.toFixed(3) || "-"}
-                      </td>
-
-                      {/* 执行次数 */}
-                      <td className="px-3 py-3 text-center text-[hsl(var(--ink))]">
-                        {row.run_times || 1}
-                      </td>
-
-                      {/* 运行状态 */}
-                      <td className="px-3 py-3 whitespace-nowrap">
-                        <Badge tone={running ? "info" : "neutral"}>
-                          {row.run_status || "finish"}
-                        </Badge>
-                      </td>
-
-                      {/* 是否成功 */}
-                      <td className="px-3 py-3 whitespace-nowrap">
-                        {running ? (
-                          <span className="text-[hsl(var(--info))]">-</span>
-                        ) : failed ? (
-                          <Badge tone="danger">失败</Badge>
-                        ) : (
-                          <Badge tone="success">成功</Badge>
-                        )}
-                      </td>
-
-                      {/* 健康策略 */}
-                      <td className="px-3 py-3 text-center">
-                        {failed && row.params_str ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 px-2"
-                            onClick={() => handleRetry(row)}
-                            disabled={!canOperateQueue}
-                          >
-                            <Repeat className="h-3 w-3" />
-                            重试
-                          </Button>
-                        ) : (
-                          <span className="text-[hsl(var(--ink-muted))]">-</span>
-                        )}
-                      </td>
-
-                      {/* 执行机器 */}
-                      <td className="px-3 py-3 text-xs text-[hsl(var(--ink-muted))] whitespace-nowrap max-w-[120px]">
-                        <span className="truncate block" title={row.host_process}>
-                          {truncateText(row.host_process, 15) || "-"}
-                        </span>
-                      </td>
-
-                      {/* 场景数 */}
-                      <td className="px-3 py-3 text-center text-[hsl(var(--ink))]">
-                        {row.total_thread || "-"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
+        {/* Statistics Cards */}
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            label="当前队列"
+            value={queue ? truncateText(queue, 20) : "-"}
+            helper="已选范围"
+          />
+          <StatCard
+            label="查询范围统计"
+            value={
+              stats ? (
+                <span>
+                  <span className="text-[hsl(var(--success))]">成功: {formatNumber(stats.success_num)}</span>
+                  {" / "}
+                  <span className="text-[hsl(var(--danger))]">失败: {formatNumber(stats.fail_num)}</span>
+                </span>
+              ) : (
+                "-"
+              )
+            }
+            helper="时间范围内"
+          />
+          <StatCard
+            label="最近1分钟"
+            value={
+              <span>
+                <span className="text-[hsl(var(--success))]">成功: 0</span>
+                {" / "}
+                <span className="text-[hsl(var(--danger))]">失败: 0</span>
+              </span>
+            }
+            helper="10秒/刷新"
+          />
+          <StatCard
+            label="队列剩余消息"
+            value={msgCount !== null ? formatNumber(msgCount) : "-"}
+            helper="10秒/刷新"
+          />
         </div>
 
-        {/* 分页控件 */}
-        <Pagination
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalCount={totalCount}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          loading={loading}
-        />
-      </Card>
+        {/* Results Table */}
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <SectionHeader title="执行记录列表" subtitle="" />
+          </div>
 
-      {/* JSON Viewer Modal */}
-      <JsonViewerModal
-        open={jsonModalOpen}
-        title={jsonModalTitle}
-        content={jsonModalContent}
-        onClose={() => setJsonModalOpen(false)}
-      />
+          <div className="overflow-x-auto">
+            {loading ? (
+              <div className="py-8 text-center text-sm text-[hsl(var(--ink-muted))]">
+                <RefreshCw className="h-8 w-8 mx-auto mb-2 animate-spin text-[hsl(var(--accent))]" />
+                正在加载结果...
+              </div>
+            ) : filteredResults.length === 0 ? (
+              <EmptyState title="暂无结果" subtitle="尝试调整时间范围或队列。" />
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="text-left text-xs uppercase tracking-wider text-[hsl(var(--ink-muted))] bg-[hsl(var(--sand-2))]">
+                  <tr>
+                    <th className="px-3 py-3 font-medium whitespace-nowrap">函数名称</th>
+                    <th className="px-3 py-3 font-medium whitespace-nowrap">Task ID</th>
+                    <th className="px-3 py-3 font-medium whitespace-nowrap">函数入参</th>
+                    <th className="px-3 py-3 font-medium whitespace-nowrap">函数结果</th>
+                    <th className="px-3 py-3 font-medium whitespace-nowrap">发布时间</th>
+                    <th className="px-3 py-3 font-medium whitespace-nowrap">开始时间</th>
+                    <th className="px-3 py-3 font-medium whitespace-nowrap">耗时(秒)</th>
+                    <th className="px-3 py-3 font-medium whitespace-nowrap">执行次数</th>
+                    <th className="px-3 py-3 font-medium whitespace-nowrap">运行状态</th>
+                    <th className="px-3 py-3 font-medium whitespace-nowrap">是否成功</th>
+                    <th className="px-3 py-3 font-medium whitespace-nowrap">健康策略</th>
+                    <th className="px-3 py-3 font-medium whitespace-nowrap">执行机器</th>
+                    <th className="px-3 py-3 font-medium whitespace-nowrap">线程数</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[hsl(var(--line))]">
+                  {filteredResults.map((row, index) => {
+                    const failed = !row.success;
+                    const running = row.run_status === "running";
+                    return (
+                      <tr
+                        key={`${row.task_id}-${index}`}
+                        className="hover:bg-[hsl(var(--sand-2))]/50 transition-colors"
+                      >
+                        {/* 函数名称 */}
+                        <td className="px-3 py-3 font-medium text-[hsl(var(--ink))] whitespace-nowrap max-w-[120px]">
+                          <span className="truncate block" title={row.function}>
+                            {row.function}
+                          </span>
+                        </td>
+
+                        {/* Task ID */}
+                        <td className="px-3 py-3 text-xs text-[hsl(var(--ink-muted))] max-w-[180px]">
+                          <div className="flex items-center gap-1">
+                            <span className="truncate block" title={row.task_id}>
+                              {truncateText(row.task_id, 20)}
+                            </span>
+                            <button
+                              onClick={() => handleCopyTaskId(row.task_id)}
+                              className="p-1 rounded hover:bg-[hsl(var(--sand-2))] text-[hsl(var(--ink-muted))] hover:text-[hsl(var(--accent))]"
+                              title="复制 Task ID"
+                            >
+                              {copiedTaskId === row.task_id ? (
+                                <Check className="h-3 w-3 text-[hsl(var(--success))]" />
+                              ) : (
+                                <Copy className="h-3 w-3" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+
+                        {/* 函数入参 */}
+                        <td className="px-3 py-3 max-w-[150px]">
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-[hsl(var(--ink-muted))] truncate block max-w-[80px]">
+                              {truncateText(row.params_str, 20)}
+                            </span>
+                            {row.params_str && row.params_str !== "-" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 h-auto"
+                                onClick={() => handleViewJson("函数入参", row.params_str)}
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* 函数结果 */}
+                        <td className="px-3 py-3 max-w-[150px]">
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-[hsl(var(--ink-muted))] truncate block max-w-[80px]">
+                              {truncateText(row.result || row.exception, 20)}
+                            </span>
+                            {(row.result || row.exception) && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 h-auto"
+                                onClick={() =>
+                                  handleViewJson(
+                                    failed ? "异常信息" : "函数结果",
+                                    row.result || row.exception
+                                  )
+                                }
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* 发布时间 */}
+                        <td className="px-3 py-3 text-xs text-[hsl(var(--ink-muted))] whitespace-nowrap">
+                          {row.publish_time_format || "-"}
+                        </td>
+
+                        {/* 开始时间 */}
+                        <td className="px-3 py-3 text-xs text-[hsl(var(--ink-muted))] whitespace-nowrap">
+                          {row.time_start ? formatDateTime(row.time_start) : "-"}
+                        </td>
+
+                        {/* 耗时(秒) */}
+                        <td className="px-3 py-3 text-[hsl(var(--ink))] whitespace-nowrap">
+                          {row.time_cost?.toFixed(3) || "-"}
+                        </td>
+
+                        {/* 执行次数 */}
+                        <td className="px-3 py-3 text-center text-[hsl(var(--ink))]">
+                          {row.run_times || 1}
+                        </td>
+
+                        {/* 运行状态 */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          <Badge tone={running ? "info" : "neutral"}>
+                            {row.run_status || "finish"}
+                          </Badge>
+                        </td>
+
+                        {/* 是否成功 */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          {running ? (
+                            <span className="text-[hsl(var(--info))]">-</span>
+                          ) : failed ? (
+                            <Badge tone="danger">失败</Badge>
+                          ) : (
+                            <Badge tone="success">成功</Badge>
+                          )}
+                        </td>
+
+                        {/* 健康策略 */}
+                        <td className="px-3 py-3 text-center">
+                          {failed && row.params_str ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2"
+                              onClick={() => handleRetry(row)}
+                              disabled={!canOperateQueue}
+                            >
+                              <Repeat className="h-3 w-3" />
+                              重试
+                            </Button>
+                          ) : (
+                            <span className="text-[hsl(var(--ink-muted))]">-</span>
+                          )}
+                        </td>
+
+                        {/* 执行机器 */}
+                        <td className="px-3 py-3 text-xs text-[hsl(var(--ink-muted))] whitespace-nowrap max-w-[120px]">
+                          <span className="truncate block" title={row.host_process}>
+                            {truncateText(row.host_process, 15) || "-"}
+                          </span>
+                        </td>
+
+                        {/* 场景数 */}
+                        <td className="px-3 py-3 text-center text-[hsl(var(--ink))]">
+                          {row.total_thread || "-"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {/* 分页控件 */}
+          <Pagination
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalCount={totalCount}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            loading={loading}
+          />
+        </Card>
+
+        {/* JSON Viewer Modal */}
+        <JsonViewerModal
+          open={jsonModalOpen}
+          title={jsonModalTitle}
+          content={jsonModalContent}
+          onClose={() => setJsonModalOpen(false)}
+        />
       </div>
     </RequirePermission>
   );

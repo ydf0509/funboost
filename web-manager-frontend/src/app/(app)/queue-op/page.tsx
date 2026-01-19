@@ -90,8 +90,9 @@ export default function QueueOpPage() {
   // 获取当前项目
   const { currentProject, careProjectName } = useProject();
   const { canExecute } = useActionPermissions("queue");
-  const projectLevel = currentProject?.permission_level ?? "read";
-  const canWriteProject = projectLevel === "write" || projectLevel === "admin";
+  // 当未选择具体项目时默认有写权限（全部项目模式）
+  const projectLevel = currentProject?.permission_level ?? "admin";
+  const canWriteProject = !currentProject || projectLevel === "write" || projectLevel === "admin";
   const canOperateQueue = canExecute && canWriteProject;
   const canClearQueue = canOperateQueue;
 
@@ -120,13 +121,13 @@ export default function QueueOpPage() {
 
   useEffect(() => {
     fetchQueues();
-    
+
     // 监听关注项目变更事件，自动刷新队列数据
     const handleCareProjectChanged = () => {
       fetchQueues();
     };
     window.addEventListener("careProjectChanged", handleCareProjectChanged);
-    
+
     return () => {
       window.removeEventListener("careProjectChanged", handleCareProjectChanged);
     };

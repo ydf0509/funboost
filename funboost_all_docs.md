@@ -464,7 +464,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `rpc_timeout: int = 1800`
 - `delay_task_apscheduler_jobstores_kind: Literal['redis', 'memory'] = 'redis'`
 - `is_do_not_run_by_specify_time_effect: bool = False`
-- `do_not_run_by_specify_time: list[str] = ['10:00:00', '22:00:00']`
+- `do_not_run_by_specify_time: typing.List[str] = ['10:00:00', '22:00:00']`
 - `schedule_tasks_on_main_thread: bool = False`
 - `is_auto_start_consuming_message: bool = False`
 - `booster_group: typing.Union[str, None] = None`
@@ -483,7 +483,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT`
 
 ##### 📌 `class BoosterParamsComplete(BoosterParams)`
-*Line: 265*
+*Line: 269*
 
 **Docstring:**
 `````
@@ -505,7 +505,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))`
 
 ##### 📌 `class TaskOptions(BaseJsonAbleModel)`
-*Line: 285*
+*Line: 289*
 
 **Docstring:**
 `````
@@ -536,7 +536,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `otel_context: typing.Optional[dict] = None`
 
 ##### 📌 `class PublisherParams(BaseJsonAbleModel)`
-*Line: 338*
+*Line: 342*
 
 **Class Variables (21):**
 - `queue_name: str`
@@ -583,12 +583,13 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 用户也可以按照文档4.21章节,轻松扩展任何物质概念作为funboost的broker.
 `````
 
-**Class Variables (43):**
+**Class Variables (46):**
 - `EMPTY = 'EMPTY'`
 - `RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'`
 - `RABBITMQ = RABBITMQ_AMQPSTORM`
 - `RABBITMQ_COMPLEX_ROUTING = 'RABBITMQ_COMPLEX_ROUTING'`
 - `RABBITMQ_RABBITPY = 'RABBITMQ_RABBITPY'`
+- `RABBITMQ_AMQP = 'RABBITMQ_AMQP'`
 - `REDIS = 'REDIS'`
 - `REDIS_ACK_ABLE = 'REDIS_ACK_ABLE'`
 - `REIDS_ACK_USING_TIMEOUT = 'reids_ack_using_timeout'`
@@ -627,9 +628,11 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `RQ = 'RQ'`
 - `NAMEKO = 'NAMEKO'`
 - `MYSQL_CDC = 'MYSQL_CDC'`
+- `SQS = 'SQS'`
+- `POSTGRES = 'POSTGRES'`
 
 ##### 📌 `class ConcurrentModeEnum`
-*Line: 150*
+*Line: 165*
 
 **Docstring:**
 `````
@@ -648,7 +651,7 @@ funboost的多进程和多线程 asyncio是叠加的，不是互斥的。
 - `SOLO = SINGLE_THREAD`
 
 ##### 📌 `class FunctionKind`
-*Line: 168*
+*Line: 183*
 
 **Docstring:**
 `````
@@ -663,7 +666,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `COMMON_FUNCTION = 'COMMON_FUNCTION'`
 
 ##### 📌 `class ConstStrForClassMethod`
-*Line: 179*
+*Line: 194*
 
 **Class Variables (5):**
 - `FIRST_PARAM_NAME = 'first_param_name'`
@@ -673,7 +676,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `CLS_FILE = 'cls_file'`
 
 ##### 📌 `class RedisKeys`
-*Line: 187*
+*Line: 202*
 
 **Public Methods (9):**
 - `def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name)` `staticmethod`
@@ -710,7 +713,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `FUNBOOST_UNACK_REGISTRY_PREFIX = 'funboost_unack_registry:'`
 
 ##### 📌 `class ConsumingFuncInputParamsCheckerField`
-*Line: 251*
+*Line: 266*
 
 **Class Variables (6):**
 - `is_manual_func_input_params = 'is_manual_func_input_params'`
@@ -721,20 +724,20 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `func_position = 'func_position'`
 
 ##### 📌 `class MongoDbName`
-*Line: 260*
+*Line: 275*
 
 **Class Variables (2):**
 - `TASK_STATUS_DB = 'funboost_task_status'`
 - `MONGOMQ_DB = 'funboost_mongomq'`
 
 ##### 📌 `class StrConst`
-*Line: 264*
+*Line: 279*
 
 **Class Variables (1):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
 
 ##### 📌 `class EnvConst`
-*Line: 267*
+*Line: 282*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -794,6 +797,12 @@ ApsJobAdder(add_numbers,job_store_kind='memory').add_push_job(
   :param booster: A Booster object representing the function to be scheduled.
   :param job_store_kind: The type of job store to use. Default is 'memory'.
                          Can be 'memory' or 'redis'.
+  :param is_auto_start: 实例化时候，是否顺带启动定时器，这个在任何情况下请确保永远是True。如果是False，压根无法实现最基本的增删改查定时任务，更无法运行定时任务
+  :param is_auto_paused: 实例化时候，是否顺带暂停定时器。这个你可以自己按需选择，如果你希望当前程序里面只是增删改查定时计划，但不想真的运行定时任务函数，可以设置为True，暂停定时器执行函数。
+  
+  apscheduler 的 .start() 和 pause() 是两个独立的含义，不要以为他们是同一个操作的一对反义词。 
+  pause 对应的相反操作是 resume，前提条件是 apscheduler.start() 了，pause和resume才有意义。 
+  这些是 apscheduler 的原生概念，用户需要先学习 apscheduler 的基本概念和用法。
   `````
   - **Parameters:**
     - `self`
@@ -841,7 +850,7 @@ ApsJobAdder(add_numbers,job_store_kind='memory').add_push_job(
 #### 🔧 Public Functions (1)
 
 - `def sum_two_numbers(x, y)` `BoosterParams(queue_name='sum_queue3', broker_kind=BrokerEnum.REDIS)`
-  - *Line: 125*
+  - *Line: 131*
 
 
 ---
@@ -871,13 +880,13 @@ ApsJobAdder(add_numbers,job_store_kind='memory').add_push_job(
 如果@boost装饰器设置is_using_rpc_mode为True或者 is_using_distributed_frequency_control为True或do_task_filtering=True则需要把redis连接配置好，默认是False不强迫用户安装redis。
 `````
 
-**Class Variables (40):**
+**Class Variables (45):**
 - `MONGO_CONNECT_URL = f'mongodb://127.0.0.1:27017'`
 - `RABBITMQ_USER = 'rabbitmq_user'`
 - `RABBITMQ_PASS = 'rabbitmq_pass'`
 - `RABBITMQ_HOST = '127.0.0.1'`
 - `RABBITMQ_PORT = 5672`
-- `RABBITMQ_VIRTUAL_HOST = ''`
+- `RABBITMQ_VIRTUAL_HOST = '/'`
 - `RABBITMQ_URL = f'amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VIRTUAL_HOST}'`
 - `REDIS_HOST = '127.0.0.1'`
 - `REDIS_USERNAME = ''`
@@ -912,9 +921,14 @@ ApsJobAdder(add_numbers,job_store_kind='memory').add_push_job(
 - `CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/13'`
 - `DRAMATIQ_URL = RABBITMQ_URL`
 - `PULSAR_URL = 'pulsar://192.168.70.128:6650'`
+- `SQS_REGION_NAME = 'us-east-1'`
+- `SQS_AWS_ACCESS_KEY_ID = ''`
+- `SQS_AWS_SECRET_ACCESS_KEY = ''`
+- `SQS_ENDPOINT_URL = ''`
+- `POSTGRES_DSN = 'host=127.0.0.1 port=5432 dbname=funboost user=postgres password=123456'`
 
 ##### 📌 `class FunboostCommonConfig(DataClassBase)`
-*Line: 96*
+*Line: 106*
 
 **Class Variables (5):**
 - `NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = logging.Formatter(f'%(asctime)s-({nb_log_config_default.computer_ip},{nb_log_config_default.computer_name})-[p%(process)d_t%(thread)d] - %(name)s - "%(filename)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(task_id)s - %(message)s', '%Y-%m-%d %H:%M:%S')`
@@ -1388,8 +1402,6 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `from funboost.funboost_config_deafult import FunboostCommonConfig`
 - `from nb_libs.path_helper import PathHelper`
 - `from funboost.core.consuming_func_iniput_params_check import ConsumingFuncInputParamsChecker`
-- `import amqpstorm`
-- `from pikav1.exceptions import AMQPError as PikaAMQPError`
 
 #### 🏛️ Classes (1)
 
@@ -1663,7 +1675,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')`
 
 ##### 📌 `class ConcurrentModeDispatcher(FunboostFileLoggerMixin)`
-*Line: 1104*
+*Line: 1114*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumerx: AbstractConsumer)`
@@ -1677,7 +1689,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `def schedulal_task_with_no_block(self)`
 
 ##### 📌 `class MetricCalculation`
-*Line: 1210*
+*Line: 1220*
 
 **Docstring:**
 `````
@@ -1703,7 +1715,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 - `UNIT_TIME_FOR_COUNT = 10`
 
 ##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1301*
+*Line: 1311*
 
 **Docstring:**
 `````
@@ -1738,7 +1750,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 #### 🔧 Public Functions (1)
 
 - `def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3)`
-  - *Line: 1195*
+  - *Line: 1205*
   - **Docstring:**
   `````
   判断多个消费者是否消费完成了。
@@ -2130,6 +2142,7 @@ boost_spider
 #### 📦 Imports
 
 - `from boost_spider.http.request_client import RequestClient`
+- `from boost_spider.http.request_client import SpiderResponse`
 - `from boost_spider.sink.momgo_sink import MongoSink`
 - `from boost_spider.sink.mysql_sink import MysqlSink`
 - `from funboost import *`
@@ -3402,7 +3415,7 @@ def add(x:int, y:int=10,):
 
 **Class Variables (7):**
 - `project_name: str = 'test_project1'`
-- `broker_kind: str = BrokerEnum.REDIS`
+- `broker_kind: str = BrokerEnum.REDIS_BRPOP_LPUSH`
 - `is_send_consumer_heartbeat_to_redis: bool = True`
 - `is_using_rpc_mode: bool = True`
 - `booster_group: str = 'test_group1'`
@@ -3420,7 +3433,7 @@ from funboost import  BoosterParams, BrokerEnum, FunctionResultStatusPersistance
 
 class Project1BoosterParams(BoosterParams):
     project_name:str = 'test_project1'  # 核心配置，项目名，设置后，web接口就可以只关心某个项目下的队列，减少无关返回信息的干扰。
-    broker_kind:str = BrokerEnum.REDIS
+    broker_kind:str = BrokerEnum.REDIS_BRPOP_LPUSH
     is_send_consumer_heartbeat_to_redis : bool= True # 向redis发送心跳，这样才能从redis获取相关队列的运行信息。
     is_using_rpc_mode:bool = True # 必须设置这一个参数为True，才能支持rpc功能。
     booster_group : str = 'test_group1' # 方便按分组启动消费
@@ -6274,11 +6287,11 @@ div> </div>
 
 在传统架构中，后台任务队列（Worker）往往是孤独的“数据孤岛”。但在 Funboost 的世界里，**每一个函数都是一个潜在的服务**。
 
-| 🐢 传统模式 (Worker) | 🚀 Funboost FaaS 模式 (Service) |
-| :--- | :--- |
-| **被动消费**：只能默默等待队列里的消息。 | **主动响应**：可通过 HTTP 接口被外部系统直接唤醒。 |
-| **黑盒运行**：外界不知道它在干什么，进度如何。 | **透明可控**：外界可查询状态、获取结果、控制暂停/恢复。 |
-| **代码耦合**：Web 端需硬编码调用逻辑，改动需重启。 | **热插拔**：基于元数据驱动，Web 端**永不重启**，自动发现新函数。 |
+| 对比维度 | 🐢 传统模式 (Worker) | 🚀 Funboost FaaS 模式 (Service) |
+| :--- | :--- | :--- |
+| **触发方式** | **被动消费**：只能默默等待队列里的消息。 | **主动响应**：可通过 HTTP 接口被外部系统直接唤醒。 |
+| **可控性** | **黑盒运行**：外界不知道它在干什么，进度如何。 | **透明可控**：外界可查询状态、获取结果、控制暂停/恢复。 |
+| **灵活性** | **代码耦合**：Web 端需硬编码调用逻辑，改动需重启。 | **热插拔**：基于元数据驱动，Web 端**永不重启**，自动发现新函数。 |
 
 ---
 
@@ -6767,7 +6780,233 @@ requests.delete("http://faas-admin-server:8000/funboost/delete_timing_job",
 
 
 
+## 15.11 funboost.faas 为什么比传统Web框架写接口更爽？
 
+- funboost.faas (**降维打击**)：它彻底改变了后端开发的范式。
+  - 它消灭了 `Controller` 层、`Router` 层、`Serializer` 层。
+  - 它消灭了 “**重启服务**”这个动作。
+  - 这是对传统 MVC 开发模式`（Django/Flask）`的一次降维打击。一旦用习惯了 FaaS 这种**写完函数即接口**的爽快模式，就很难回得去写那些繁琐的样板代码了。
+
+### 15.11.1 传统 Django/Flask 的尴尬："脱了裤子放屁"
+
+Django 的视图函数一般不直接写复杂逻辑，因为**视图函数不能作为普通函数被复用调用**。所以你被迫要：
+
+```python
+# 视图函数 - 只是个"搬运工"，不能直接复用
+@api_view(['POST'])
+def calculate_score_view(request):
+    user_id = request.data['user_id']
+    weights = request.data['weights']
+    result = calculate_score(user_id, weights)  # 被迫多一层调用
+    return Response({'result': result})
+
+# 真正的业务逻辑 - 另外封装
+def calculate_score(user_id, weights):
+    # 复杂逻辑...
+    return score
+```
+
+**问题**：
+- 视图只是个"接收参数 → 调用函数 → 返回结果"的搬运工
+- 每个功能都要写两遍：一份业务函数 + 一份视图适配器
+- 还要配路由、写序列化器、写参数校验...
+
+---
+
+### 15.11.2 funboost.faas 的设计哲学：函数即接口
+
+```python
+# 这就是业务函数，同时也是 HTTP 接口，也能被其他代码直接调用
+@boost(BoosterParams(queue_name="calculate_score"))
+def calculate_score(user_id: int, weights: dict):
+    # 复杂逻辑...
+    return score
+
+# 直接当普通函数调用
+result = calculate_score(123, {"a": 0.5})
+
+# 通过队列异步调用
+calculate_score.push(123, {"a": 0.5})
+
+# 通过 HTTP 接口调用
+# POST /funboost/publish {"queue_name": "calculate_score", "msg_body": {...}}
+```
+
+**一个函数，三种调用方式**，没有"脱了裤子放屁"的中间层！
+
+---
+
+### 15.11.3 代码量对比
+
+| 功能点 | Django 需要写 | funboost 需要写 |
+|-------|-------------|----------------|
+| 业务函数 | ✅ 1份 | ✅ 1份 |
+| 视图/路由 | ❌ 额外1份 | 0（自动） |
+| 序列化器 | ❌ 额外1份 | 0（自动） |
+| 参数校验 | ❌ 额外写 | 0（根据函数签名自动） |
+| 接口文档 | ❌ 额外写 | 0（自动生成） |
+
+---
+
+### 15.11.4 上新功能流程对比
+
+| 对比维度 | 传统 Django/Flask | funboost.faas |
+|---------|------------------|---------------|
+| **上新功能流程** | 写视图函数 → 配路由 → 写序列化 → 写参数校验 → 重启服务 | 写 `@boost` 函数 → 部署上线 → **自动可调用** |
+| **接口文档** | 需要手写或用 Swagger 注解 | 自动从函数签名生成 |
+| **参数校验** | 手动写校验逻辑或用 Pydantic | 自动根据 `final_func_input_params_info` 校验 |
+| **Web服务重启** | **每次都要重启** | **永不重启**（热加载） |
+| **跨项目复用** | 需要打包成库或微服务 | 只要共享 Redis，任意项目都能调用 |
+
+---
+
+### 15.11.5 最爽的几个点
+
+#### 15.11.5.1 真正的"写完即上线"
+```python
+# 只写这个，部署上线后，HTTP接口马上就能调用
+@boost(BoosterParams(queue_name="new_feature"))
+def calculate_score(user_id: int, weights: dict):
+    return score
+```
+
+#### 15.11.5.2 Web 网关 = 万能入口
+**一个 `app.include_router(fastapi_router)` 搞定所有接口**，不用再纠结：
+- 这个接口用 GET 还是 POST？
+- URL 路径怎么设计？
+- 参数放 query 还是 body？
+
+#### 15.11.5.3 天然支持异步和 RPC
+传统视图函数要实现"提交任务 → 轮询结果"需要额外设计，funboost 直接内置：
+```python
+# need_result=True 一行搞定 RPC
+{"queue_name": "xxx", "msg_body": {...}, "need_result": true}
+```
+
+#### 15.11.5.4 跨团队协作超方便
+其他团队只需要知道 `queue_name` （入参格式能通过faas的接口传递queue_name获取），就能直接调用你的功能，不用关心：
+- 你用什么语言实现的
+- 你的服务部署在哪里
+- 你的服务有没有挂掉（消息队列会等你恢复）
+
+---
+
+### 15.11.6 什么场景传统方式更合适？
+
+| 场景 | 推荐方式 | 核心理由 |
+|-----|---------|---------|
+| 需要精细控制 HTTP 状态码/headers | 传统视图函数 | 框架原生能力，控制力更强 |
+| 需要实时流式响应（SSE/WebSocket） | 传统视图函数 | 需要长连接或特定协议支持 |
+| 需要复杂的中间件链条 | 传统视图函数 | 依赖特定 Web 框架生态 |
+| CPU 密集型异步任务 | funboost.faas ✅ | 不阻塞 Web 服务主线程 |
+| IO 密集型异步任务 | funboost.faas ✅ | 原生支持异步高并发 |
+| 跨服务编排调用 | funboost.faas ✅ | 队列解耦，天然分布式 |
+| 快速迭代上新功能 | funboost.faas ✅ | 写完即发，无需重启 |
+
+---
+
+### 15.11.7 本质区别
+
+> **Django/Flask 以"请求-响应"为中心，funboost 以"函数"为中心。**
+> 
+> 函数天然可复用，所以不需要适配层！
+
+这就是"函数即服务"(FaaS) 的魅力——**专注业务逻辑本身，基础设施全自动化**。
+
+
+
+## 15.12 funboost 微批消费
+
+微批消费者实现累积 N 条消息后批量处理的功能，适用于批量写入数据库、批量调用 API 等场景。
+
+*   **代码位置**: `funboost/contrib/override_publisher_consumer_cls/funboost_micro_batch_mixin.py`
+*   **使用demo**：`test_frame/test_micro_batch`
+
+### 15.12.1 使用方式
+
+```python
+# -*- coding: utf-8 -*-
+"""
+微批消费者测试
+
+测试 MicroBatchConsumerMixin 的功能：
+1. 基本功能测试：发布消息，验证批量处理
+2. 超时触发测试：不足 batch_size 时超时触发
+
+例如可以批量100条插入数据库，做数据库表同步性能好。
+"""
+from funboost import boost, BrokerEnum, BoosterParams,ctrl_c_recv
+from funboost.contrib.override_publisher_consumer_cls.funboost_micro_batch_mixin import (
+    MicroBatchConsumerMixin,
+)
+
+
+@boost(BoosterParams(
+    queue_name='test_micro_batch_queue',
+    broker_kind=BrokerEnum.MEMORY_QUEUE,
+    consumer_override_cls=MicroBatchConsumerMixin,
+    user_options={
+        'micro_batch_size': 10,        # 每批10条
+        'micro_batch_timeout': 3.0,    # 3秒超时
+    },
+    qps=100,
+    should_check_publish_func_params=False,  # 微批模式需要关闭入参校验
+))
+def batch_insert_task(items: list):
+    """
+    模拟批量插入任务
+    
+    :param items: 消息列表，每个元素是一个字典（函数参数）
+
+    items是例如 [{'x': 10, 'y': 20}, {'x': 11, 'y': 22}, {'x': 12, 'y': 24}, ...]
+    """
+    print(f"✅ 批量处理 {len(items)} 条消息: {items}")
+    return len(items)
+
+    
+if __name__ == '__main__':
+    # 运行基本测试
+    # 启动消费
+    batch_insert_task.consume() # 消费是自动微批操作
+    
+    print("发布 25 条消息，batch_size=10，预期触发 2 次完整批次 + 1 次超时批次")
+    print("=" * 60)
+    
+    # 发布 25 条消息, 之所以是25条，是为了让 21 - 25条消息触发 micro_batch_timeout 这个条件
+    for i in range(25):  
+        batch_insert_task.push(x=i, y=i * 2)  # 发布还是按照单条消息发布，消费是自动微批操作
+        print(f"发布消息: x={i}, y={i * 2}")
+    ctrl_c_recv()
+```
+
+### 15.12.2 核心原理
+
+1. **缓冲区累积**: 重写 `_submit_task` 方法，将消息累积到缓冲区
+2. **触发条件**: 达到 `batch_size` 条消息或超过 `timeout` 秒后触发批量处理
+3. **批量 ack/requeue**: 成功则批量确认，失败则批量重回队列
+4. **函数签名**: 消费函数的入参从单个对象变为 `list[dict]`
+
+### 15.12.3 适用场景
+
+| 场景 | 收益 |
+|------|------|
+| 批量写入数据库 | 减少 DB 连接开销，吞吐量提升 10-100 倍 |
+| 批量调用外部 API | 减少 HTTP 连接开销 |
+| 批量发送通知 | 合并推送，减少请求次数 |
+
+**举个例子：做数据同步：**
+```
+如果你不用funboost微批消费，mysql binlog 发送到kafka，  
+如果来一条消息就插入数据库，影响性能。  
+但如果你强硬等待n秒，压根不知道未来下一条消息是何时来，可能等1000秒都凑不齐100条，影响了实时性
+所以你还要写线程写定时器来执行并清空缓冲区，增加临时代码量。
+```
+
+### 15.12.4 战略意义
+
+- Funboost 的微批操作是一个**生产级的、高并发优化利器**。它极大地降低了“写批量处理逻辑”的复杂度，你不需要自己写缓冲区、不需要自己写定时器、不需要自己处理锁，只需要配置两个参数，就能把普通的消费者升级为“批量消费者”。 
+- 当你把 `Broker` 设置为 **`MEMORY_QUEUE`** (Python 原生 `queue.Queue`)，再配合 **`MicroBatchConsumerMixin`**，Funboost 瞬间就变成了一个**高性能的、进程内的、自动聚合缓冲器 (In-Memory Batch Aggregator)**。
+- 所以 funboost是万能的，你可以不用分布式也不用消息队列，但只要你有任何其中一个小需求，funboost都能用来使用，大大简化代码。
 
 `````
 
@@ -8809,6 +9048,11 @@ class BrokerEnum:
     funboost 有能力消费canal发到kafka的binlog消息,也能不依赖canal,自己捕获cdc数据
     """
     MYSQL_CDC = 'MYSQL_CDC'
+    
+    # aws sqs ，虽然 funboost 支持 kombu ，kombu支持sqs，所以 funboost间接支持了sqs，
+    # 但原生实现逻辑更清晰，比kombu性能更强
+    SQS = 'SQS' 
+    
 
 ```  
 

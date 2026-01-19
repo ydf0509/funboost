@@ -195,6 +195,22 @@ def regist_to_funboost(broker_kind: str):
         from funboost.publishers.http_publisher import HTTPPublisher
         register_custom_broker(broker_kind, HTTPPublisher, HTTPConsumer)
 
+    if broker_kind == BrokerEnum.SQS:
+        from funboost.consumers.sqs_consumer import SqsConsumer
+        from funboost.publishers.sqs_publisher import SqsPublisher
+        register_custom_broker(broker_kind, SqsPublisher, SqsConsumer)
+
+    if broker_kind == BrokerEnum.RABBITMQ_AMQP:
+        from funboost.publishers.rabbitmq_amqp_publisher import RabbitmqAmqpPublisher
+        from funboost.consumers.rabbitmq_amqp_consumer import RabbitmqAmqpConsumer
+        register_custom_broker(BrokerEnum.RABBITMQ_AMQP, RabbitmqAmqpPublisher, RabbitmqAmqpConsumer)
+
+    if broker_kind == BrokerEnum.POSTGRES:
+        from funboost.publishers.postgres_publisher import PostgresPublisher
+        from funboost.consumers.postgres_consumer import PostgresConsumer
+        register_custom_broker(BrokerEnum.POSTGRES, PostgresPublisher, PostgresConsumer)
+
+
 if __name__ == '__main__':
     import sys
 

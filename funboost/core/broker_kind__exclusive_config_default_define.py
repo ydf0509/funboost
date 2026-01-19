@@ -152,6 +152,17 @@ register_broker_exclusive_config_default(
 )
 
 
+# RABBITMQ_AMQP 使用 amqp 包，配置与 RABBITMQ_AMQPSTORM 一致
+register_broker_exclusive_config_default(
+    BrokerEnum.RABBITMQ_AMQP,
+    {
+        "queue_durable": True,
+        "x-max-priority": None,  # x-max-priority 是 rabbitmq的优先级队列配置，必须为整数，强烈建议要小于5。为None就代表队列不支持优先级。
+        "no_ack": False,
+    },
+)
+
+
 register_broker_exclusive_config_default(
     BrokerEnum.RABBITMQ_COMPLEX_ROUTING,
     {
@@ -228,3 +239,37 @@ register_broker_exclusive_config_default(
 )
 
 register_broker_exclusive_config_default(BrokerEnum.ZEROMQ, {"port": None})
+
+
+# AWS SQS 专有配置
+# wait_time_seconds: 长轮询等待时间（秒），最大20秒，0表示短轮询
+# max_number_of_messages: 每次 receive_message 拉取的最大消息数，范围1-10
+# visibility_timeout: 消息可见性超时（秒），消息被取出后在此时间内对其他消费者不可见
+# message_retention_period: 消息保留期（秒），默认14天(1209600秒)，范围60-1209600
+# content_based_deduplication: FIFO队列是否启用基于内容的去重，默认True
+register_broker_exclusive_config_default(
+    BrokerEnum.SQS,
+    {
+        "wait_time_seconds": 20,  # 长轮询等待时间，最大20秒
+        "max_number_of_messages": 10,  # 每次拉取的最大消息数，最大10
+        "visibility_timeout": 300,  # 可见性超时，默认5分钟
+        "message_retention_period": 1209600,  # 消息保留期，默认14天
+        "content_based_deduplication": True,  # FIFO队列是否启用基于内容的去重
+    },
+)
+
+
+# PostgreSQL 原生队列专有配置
+# 充分利用 PostgreSQL 的 FOR UPDATE SKIP LOCKED 和 LISTEN/NOTIFY 特性
+register_broker_exclusive_config_default(
+    BrokerEnum.POSTGRES,
+    {
+        "use_listen_notify": True,  # 是否使用 LISTEN/NOTIFY 实时推送，比轮询更高效
+        "poll_interval": 30,  # 轮询/等待通知的超时时间（秒）
+        "timeout_minutes": 10,  # 超时未确认的任务自动重回队列（分钟）
+        "min_connections": 2,  # 连接池最小连接数
+        "max_connections": 20,  # 连接池最大连接数
+        "priority": 0,  # 默认任务优先级
+    },
+)
+

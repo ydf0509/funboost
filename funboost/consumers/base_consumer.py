@@ -96,24 +96,26 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     BROKER_KIND = None
 
     @property
-    @decorators.synchronized
     def publisher_of_same_queue(self):
         if not self._publisher_of_same_queue:
-            self._publisher_of_same_queue = get_publisher(publisher_params=self.publisher_params)
+            with self._lock_for_get_publisher:
+                if not self._publisher_of_same_queue:
+                    self._publisher_of_same_queue = get_publisher(publisher_params=self.publisher_params)
         return self._publisher_of_same_queue
 
     def bulid_a_new_publisher_of_same_queue(self):
         return get_publisher(publisher_params=self.publisher_params)
 
     @property
-    @decorators.synchronized
     def publisher_of_dlx_queue(self):
         """ 死信队列发布者 """
         if not self._publisher_of_dlx_queue:
-            publisher_params_dlx = copy.copy(self.publisher_params)
-            publisher_params_dlx.queue_name = self._dlx_queue_name
-            publisher_params_dlx.consuming_function = None
-            self._publisher_of_dlx_queue = get_publisher(publisher_params=publisher_params_dlx)
+            with self._lock_for_get_publisher:
+                if not self._publisher_of_dlx_queue:
+                    publisher_params_dlx = copy.copy(self.publisher_params)
+                    publisher_params_dlx.queue_name = self._dlx_queue_name
+                    publisher_params_dlx.consuming_function = None
+                    self._publisher_of_dlx_queue = get_publisher(publisher_params=publisher_params_dlx)
         return self._publisher_of_dlx_queue
 
     @classmethod
@@ -203,7 +205,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._last_submit_task_timestamp = 0
         self._last_start_count_qps_timestamp = time.time()
         self._has_execute_times_in_recent_second = 0
-
+        
+        self._lock_for_get_publisher = Lock()
         self._publisher_of_same_queue = None  #
         self._dlx_queue_name = f'{self.queue_name}_dlx'
         self._publisher_of_dlx_queue = None  # 死信队列发布者
@@ -716,8 +719,11 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                             p.expire(task_id, self.consumer_params.rpc_result_expire_seconds)
                             p.execute()
                     except Exception:
+                        err_msg = f'设置rpc结果失败 {task_id} {current_function_result_status.get_status_dict(without_datetime_obj=True)}'
                         if i == redis_retry_times - 1:
-                            self.logger.error(f'设置rpc结果失败 {task_id} {current_function_result_status.get_status_dict(without_datetime_obj=True)}', exc_info=True)
+                            self.logger.critical(err_msg, exc_info=True)
+                        else:
+                            self.logger.error(err_msg, exc_info=True)
 
     # noinspection PyProtectedMember
     def _run(self, kw: dict, ):

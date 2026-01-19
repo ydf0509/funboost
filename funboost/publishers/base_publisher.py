@@ -381,13 +381,21 @@ def deco_mq_conn_error(f):
             try:
                 return f(self, *args, **kwargs)
             except Exception as e:
-                import amqpstorm
-                from pikav1.exceptions import AMQPError as PikaAMQPError
-                if isinstance(e, (PikaAMQPError, amqpstorm.AMQPError)):
-                    # except (PikaAMQPError, amqpstorm.AMQPError,) as e:  # except BaseException as e:   # 现在装饰器用到了绝大多出地方，单个异常类型不行。ex
-                    self.logger.error(f'中间件链接出错   ,方法 {f.__name__}  出错 ，{e}')
+                # 通过异常类的模块名和类名判断，不需要导入包
+                exc_module = type(e).__module__
+                exc_name = type(e).__name__
+                
+                # 只要是这些包的 AMQP/Connection 相关异常都重连
+                is_amqp_error = (
+                    ('amqpstorm' in exc_module or 'pika' in exc_module or 'amqp' in exc_module)
+                    and ('AMQP' in exc_name or 'Connection' in exc_name or 'Channel' in exc_name)
+                )
+                
+                if is_amqp_error:
+                    self.logger.error(f'中间件链接出错, 方法 {f.__name__} 出错, {e}')
                     self.init_broker()
                     return f(self, *args, **kwargs)
+                raise  # 其他异常继续抛出
             except BaseException as e:
                 self.logger.critical(e, exc_info=True)
 

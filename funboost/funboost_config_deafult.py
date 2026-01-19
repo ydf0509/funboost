@@ -32,7 +32,7 @@ class BrokerConnConfig(DataClassBase):
     RABBITMQ_PASS = 'rabbitmq_pass'
     RABBITMQ_HOST = '127.0.0.1'
     RABBITMQ_PORT = 5672
-    RABBITMQ_VIRTUAL_HOST = ''  # my_host # 这个是rabbitmq的虚拟子host用户自己创建的，如果你想直接用rabbitmq的根host而不是使用虚拟子host，这里写 空字符串 即可。
+    RABBITMQ_VIRTUAL_HOST = '/'  # my_host # 这个是rabbitmq的虚拟子host用户自己创建的，如果你想直接用rabbitmq的根host而不是使用虚拟子host，这里写 空字符串 即可。
     RABBITMQ_URL = f'amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VIRTUAL_HOST}'
 
     REDIS_HOST = '127.0.0.1'
@@ -91,6 +91,16 @@ class BrokerConnConfig(DataClassBase):
     DRAMATIQ_URL = RABBITMQ_URL
 
     PULSAR_URL = 'pulsar://192.168.70.128:6650'
+
+    # AWS SQS 配置
+    SQS_REGION_NAME = 'us-east-1'  # AWS 区域，例如 'us-east-1', 'ap-northeast-1', 'cn-north-1'
+    SQS_AWS_ACCESS_KEY_ID = ''  # AWS Access Key ID，留空则使用默认AWS凭证链（环境变量、~/.aws/credentials等）
+    SQS_AWS_SECRET_ACCESS_KEY = ''  # AWS Secret Access Key
+    SQS_ENDPOINT_URL = ''  # 可选，用于 LocalStack 本地测试或兼容S3 API的服务，例如 'http://localhost:4566'
+
+    # PostgreSQL 原生队列配置（利用 FOR UPDATE SKIP LOCKED + LISTEN/NOTIFY）
+    POSTGRES_DSN = 'host=127.0.0.1 port=5432 dbname=funboost user=postgres password=123456'
+
 
 
 class FunboostCommonConfig(DataClassBase):

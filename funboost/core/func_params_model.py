@@ -143,7 +143,7 @@ class BoosterParams(BaseJsonAbleModel):
 
     
     is_do_not_run_by_specify_time_effect: bool = False  # 是否使不运行的时间段生效
-    do_not_run_by_specify_time: list[str] = ['10:00:00', '22:00:00']  # 不运行的时间段,在这个时间段自动不运行函数.
+    do_not_run_by_specify_time: typing.List[str] = ['10:00:00', '22:00:00']  # 不运行的时间段,在这个时间段自动不运行函数.
 
     schedule_tasks_on_main_thread: bool = False  # 直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
 

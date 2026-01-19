@@ -694,30 +694,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 for key in can_not_json_serializable_keys:
                     function_only_params[key] = PickleHelper.to_obj(function_only_params[key])
             return function_only_params
-     
-    def _set_rpc_result(self,
-             task_id:str,
-             kw:dict,
-             current_function_result_status:FunctionResultStatus,
-             current_retry_times:int,
-             redis_retry_times:int=3,
-             ):
-        if self._get_priority_conf(kw, 'is_using_rpc_mode') is True:
-            max_retry_times = self._get_priority_conf(kw, 'max_retry_times')
-            # print(function_result_status.get_status_dict(without_datetime_obj=
-            if (current_function_result_status.success is False and current_retry_times == max_retry_times) or current_function_result_status.success is True:
-                for i in range(redis_retry_times):
-                    # 有人反馈这都会失败，加个重试
-                    try:
-                        with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
-                            current_function_result_status.rpc_result_expire_seconds = self.consumer_params.rpc_result_expire_seconds
-                            p.lpush(task_id,
-                                    Serialization.to_json_str(current_function_result_status.get_status_dict(without_datetime_obj=True)))
-                            p.expire(task_id, self.consumer_params.rpc_result_expire_seconds)
-                            p.execute()
-                    except Exception:
-                        if i == redis_retry_times - 1:
-                            self.logger.error(f'设置rpc结果失败 {task_id} {current_function_result_status.get_status_dict(without_datetime_obj=True)}', exc_info=True)
 
     # noinspection PyProtectedMember
     def _run(self, kw: dict, ):
@@ -764,7 +740,17 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 # self.error_file_logger.critical(msg=f'{log_msg} \n')
                 self.logger.critical(msg=log_msg)
 
-            self._set_rpc_result(task_id, kw, current_function_result_status, current_retry_times)
+            if self._get_priority_conf(kw, 'is_using_rpc_mode'):
+                # print(function_result_status.get_status_dict(without_datetime_obj=
+                if (current_function_result_status.success is False and current_retry_times == max_retry_times) or current_function_result_status.success is True:
+                    with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
+                        # RedisMixin().redis_db_frame.lpush(kw['body']['extra']['task_id'], json.dumps(function_result_status.get_status_dict(without_datetime_obj=True)))
+                        # RedisMixin().redis_db_frame.expire(kw['body']['extra']['task_id'], 600)
+                        current_function_result_status.rpc_result_expire_seconds = self.consumer_params.rpc_result_expire_seconds
+                        p.lpush(task_id,
+                                Serialization.to_json_str(current_function_result_status.get_status_dict(without_datetime_obj=True)))
+                        p.expire(task_id, self.consumer_params.rpc_result_expire_seconds)
+                        p.execute()
 
             with self._lock_for_count_execute_task_times_every_unit_time:
                 self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
@@ -926,7 +912,17 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self.logger.critical(msg=log_msg)
 
                 # self._confirm_consume(kw)  # 错得超过指定的次数了，就确认消费了。
-            await simple_run_in_executor(self._set_rpc_result, task_id, kw, current_function_result_status, current_retry_times)
+            if self._get_priority_conf(kw, 'is_using_rpc_mode'):
+                def push_result():
+                    with RedisMixin().redis_db_filter_and_rpc_result.pipeline() as p:
+                        current_function_result_status.rpc_result_expire_seconds = self.consumer_params.rpc_result_expire_seconds
+                        p.lpush(task_id,
+                                Serialization.to_json_str(current_function_result_status.get_status_dict(without_datetime_obj=True)))
+                        p.expire(task_id, self.consumer_params.rpc_result_expire_seconds)
+                        p.execute()
+
+                if (current_function_result_status.success is False and current_retry_times == max_retry_times) or current_function_result_status.success is True:
+                    await simple_run_in_executor(push_result)
             async with self._async_lock_for_count_execute_task_times_every_unit_time:
                 self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
 

@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --sand: 218 45% 96%;
+  --sand-2: 218 28% 92%;
+  --ink: 222 42% 12%;
+  --ink-muted: 217 16% 38%;
+  --accent: 217 90% 56%;
+  --accent-2: 188 86% 53%;
+  --accent-3: 38 92% 50%;
+  --card: 0 0% 100%;
+  --line: 220 18% 86%;
+  --success: 142 72% 36%;
+  --warning: 38 92% 50%;
+  --danger: 0 84% 60%;
+  --info: 199 89% 60%;
+  --shadow: 222 40% 8%;
+  --grid-line: 220 20% 88%;
+  --glass: 0.82;
+  --glow-1: 199 95% 60%;
+  --glow-2: 217 90% 62%;
+  --glow-3: 188 86% 45%;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --sand: 222 47% 8%;
+  --sand-2: 222 35% 12%;
+  --ink: 210 40% 96%;
+  --ink-muted: 215 18% 70%;
+  --accent: 199 89% 60%;
+  --accent-2: 188 86% 53%;
+  --accent-3: 38 92% 50%;
+  --card: 220 26% 14%;
+  --line: 220 18% 24%;
+  --success: 142 71% 45%;
+  --warning: 38 92% 50%;
+  --danger: 0 84% 70%;
+  --info: 214 95% 65%;
+  --shadow: 220 40% 2%;
+  --grid-line: 220 16% 25%;
+  --glass: 0.6;
+  --glow-1: 199 95% 55%;
+  --glow-2: 217 90% 60%;
+  --glow-3: 188 86% 40%;
+}
+
+@theme inline {
+  --color-sand: hsl(var(--sand));
+  --color-sand-2: hsl(var(--sand-2));
+  --color-ink: hsl(var(--ink));
+  --color-ink-muted: hsl(var(--ink-muted));
+  --color-accent: hsl(var(--accent));
+  --color-accent-2: hsl(var(--accent-2));
+  --color-accent-3: hsl(var(--accent-3));
+  --color-card: hsl(var(--card));
+  --color-line: hsl(var(--line));
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-danger: hsl(var(--danger));
+  --color-info: hsl(var(--info));
+  --color-shadow: hsl(var(--shadow));
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--line));
+  }
+
+  body {
+    background:
+      radial-gradient(1200px 700px at 12% -10%, hsl(var(--glow-2) / 0.2), transparent 60%),
+      radial-gradient(900px 600px at 90% -20%, hsl(var(--glow-1) / 0.18), transparent 55%),
+      radial-gradient(800px 520px at 80% 92%, hsl(var(--glow-3) / 0.16), transparent 60%),
+      linear-gradient(180deg, hsl(var(--sand)) 0%, hsl(var(--sand-2)) 100%);
+    color: hsl(var(--ink));
+    font-family: var(--font-body);
+    min-height: 100vh;
+    position: relative;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: linear-gradient(transparent 0, hsl(var(--grid-line) / 0.35) 1px),
+      linear-gradient(90deg, transparent 0, hsl(var(--grid-line) / 0.35) 1px);
+    background-size: 30px 30px;
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+    opacity: 0.35;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display), var(--font-body), sans-serif;
+    letter-spacing: 0.02em;
+  }
+
+  .glass-card {
+    background: hsl(var(--card) / var(--glass));
+    border: 1px solid hsl(var(--line));
+    box-shadow: 0 28px 60px -40px hsl(var(--shadow) / 0.6);
+    backdrop-filter: blur(18px);
+  }
+
+  .soft-shadow {
+    box-shadow: 0 12px 35px -25px hsl(var(--shadow) / 0.6);
+  }
+
+  .fade-in {
+    animation: fadeIn 0.6s ease-out both;
+  }
+
+  .rise-in {
+    animation: riseIn 0.6s ease-out both;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

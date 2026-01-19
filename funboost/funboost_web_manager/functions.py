@@ -103,23 +103,44 @@ def get_cols(col_name_search: str):
     return result
 
 
-def query_result(col_name, start_time, end_time, is_success, function_params: str, page, task_id: str = ''):
+def query_result(col_name, start_time, end_time, is_success='', function_params: str = '', page=0, task_id: str = '', page_size: int = 100):
     """
     查询函数执行结果
     
     Args:
         col_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
+        start_time: 开始时间
+        end_time: 结束时间
+        is_success: 运行状态筛选
+        function_params: 函数参数搜索
+        page: 页码 (0-based)
+        task_id: Task ID 搜索
+        page_size: 每页数量，默认 100
+    
+    Returns:
+        dict: {
+            "data": [...],
+            "total_count": N,
+            "page": P,
+            "page_size": S
+        }
     
     注意：因为多个队列可能共享同一个表，所以查询时必须加上 queue_name 条件
     """
     query_kw = copy.copy(locals())
     t0 = time.time()
     if not col_name:
-        return []
+        return {"data": [], "total_count": 0, "page": 0, "page_size": page_size}
+    
     db = MongoMixin().mongo_db_task_status
     
     # 根据队列名获取实际的 MongoDB 表名
     table_name = get_mongo_table_name_by_queue_name(col_name)
+    
+    # 确保 page_size 是整数且在合理范围内
+    page_size = int(page_size) if page_size else 100
+    page_size = max(1, min(page_size, 500))  # 限制在 1-500 之间
+    page = int(page) if page else 0
     
     # 基础条件：必须加上 queue_name，因为多个队列可能共享同一个表
     condition = {'queue_name': col_name}
@@ -137,17 +158,24 @@ def query_result(col_name, start_time, end_time, is_success, function_params: st
             condition.update({"success": True})
         elif is_success in ('3', 3, False):
             condition.update({"success": False})
-        if function_params.strip():
+        if function_params and function_params.strip():
             condition.update({'params_str': {'$regex': function_params.strip()}})
     
-    # nb_print(col_name)
-    # nb_print(condition)
-    # with decorators.TimerContextManager():
+    # 获取总数
+    collection = db.get_collection(table_name)
+    total_count = collection.count_documents(condition)
+    
     # 按时间逆序排序，最新的在前面
-    results = list(db.get_collection(table_name).find(condition, {'insert_time': 0, 'utime': 0}).sort([('time_start', -1)]).skip(int(page) * 100).limit(100))
-    # nb_print(results)
-    nb_print(time.time() -t0, query_kw, len(results), f'table: {table_name}')
-    return results
+    results = list(collection.find(condition, {'insert_time': 0, 'utime': 0}).sort([('time_start', -1)]).skip(page * page_size).limit(page_size))
+    
+    nb_print(time.time() - t0, query_kw, len(results), f'table: {table_name}', f'total: {total_count}')
+    
+    return {
+        "data": results,
+        "total_count": total_count,
+        "page": page,
+        "page_size": page_size
+    }
 
 
 def get_speed(col_name, start_time, end_time):

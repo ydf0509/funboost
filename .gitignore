@@ -41,3 +41,16 @@ nb_log_config.py
 queue_csv_files/test_csv_queue.csv
 test_txt_queue.txt
 /.*/
+
+
+# Frontend model folders
+**/node_modules/
+# Next.js build directory
+**/.next/
+
+# Environment and security files
+.env
+.encryption_keys.json
+
+
+web_manager_users.db

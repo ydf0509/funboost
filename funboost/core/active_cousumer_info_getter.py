@@ -34,7 +34,7 @@ from funboost.core.loggers import FunboostFileLoggerMixin,nb_log_config_default
 from funboost.core.serialization import Serialization
 from funboost.constant import RedisKeys
 from funboost.core.booster import  Booster,BoosterRegistry, booster_registry_default,gen_pid_queue_name_key
-from funboost.core.func_params_model import PublisherParams, BoosterParams
+from funboost.core.func_params_model import PublisherParams, BoosterParams, BaseJsonAbleModel
 from funboost.core.function_result_status_saver import FunctionResultStatusPersistanceConfig
 from funboost.core.consuming_func_iniput_params_check import FakeFunGenerator
 from funboost.core.exceptions import QueueNameNotExists
@@ -81,16 +81,17 @@ class RedisReportInfoGetterMixin:
     def get_all_queue_names(self) ->list:
         """获取所有队列名称，带30秒缓存（类级别缓存，所有实例共享）"""
         current_time = time.time()
-        
+
+        # care_project_name 有值时，使用按项目缓存，避免跨项目污染
+        if self.care_project_name:
+            return self.project_name_queues
+
         # 检查缓存是否有效
         if self._cache_all_queue_names is not None and (current_time - self._cache_all_queue_names_ts) < self._cache_ttl:
             return self._cache_all_queue_names
-        
+
         # 缓存失效，重新从redis获取
-        if self.care_project_name:
-            result = self.project_name_queues
-        else:
-            result = list(self.redis_db_frame.smembers(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES))
+        result = list(self.redis_db_frame.smembers(RedisKeys.FUNBOOST_ALL_QUEUE_NAMES))
         
         # 更新缓存
         self.__class__._cache_all_queue_names = result
@@ -148,6 +149,134 @@ class RedisReportInfoGetterMixin:
     def get_all_project_names(self):
         return list(self.redis_db_frame.smembers(RedisKeys.FUNBOOST_ALL_PROJECT_NAMES))
     
+    def remove_project_name(self, project_name: str, force: bool = False) -> dict:
+        """
+        安全地从 Redis 中删除项目名称
+        
+        安全检查（严格模式）：
+        1. 检查项目是否存在于 Redis 中
+        2. 检查项目是否有活跃的消费者 - 有活跃消费者绝对不能删除（即使 force=True）
+        3. 检查项目是否有关联的队列 - 有队列但无活跃消费者时，需要 force=True 才能删除
+        
+        删除规则：
+        - 有活跃消费者：绝对禁止删除，必须先停止所有消费者
+        - 有队列但无活跃消费者：需要 force=True 才能删除（相当于归档后删除）
+        - 无队列无消费者：可以直接删除
+        
+        Args:
+            project_name: 要删除的项目名称
+            force: 是否强制删除（仅对无活跃消费者但有队列的情况生效）
+            
+        Returns:
+            dict: {
+                "success": bool,        # 是否成功删除
+                "error": str|None,      # 错误信息
+                "project_existed": bool, # 项目是否存在于 Redis
+                "queue_count": int,     # 项目关联的队列数量
+                "active_consumer_count": int,  # 活跃消费者数量
+                "force_used": bool      # 是否使用了强制删除
+            }
+        """
+        result = self._build_initial_result(force)
+        
+        try:
+            # 1. 检查项目是否存在于 Redis 中
+            if not self._check_project_exists(project_name, result):
+                return result
+            
+            # 2. 收集项目状态信息
+            queues = self._get_project_queues(project_name, result)
+            self._count_active_consumers(project_name, queues, result)
+            
+            # 3. 执行安全检查
+            if not self._validate_deletion_safety(project_name, force, result):
+                return result
+            
+            # 4. 执行删除
+            self._execute_deletion(project_name, result)
+            
+            result["success"] = True
+            return result
+            
+        except Exception as e:
+            self.logger.exception(f"删除项目 '{project_name}' 时发生错误: {e}")
+            result["error"] = f"删除项目时发生错误: {str(e)}"
+            return result
+    
+    def _build_initial_result(self, force: bool) -> dict:
+        """构建初始结果字典"""
+        return {
+            "success": False,
+            "error": None,
+            "project_existed": False,
+            "queue_count": 0,
+            "active_consumer_count": 0,
+            "force_used": force
+        }
+    
+    def _check_project_exists(self, project_name: str, result: dict) -> bool:
+        """检查项目是否存在于 Redis 中"""
+        all_projects = self.get_all_project_names()
+        if project_name not in all_projects:
+            result["error"] = f"项目 '{project_name}' 不存在于 Redis 中"
+            return False
+        result["project_existed"] = True
+        return True
+    
+    def _get_project_queues(self, project_name: str, result: dict) -> list:
+        """获取项目关联的队列列表"""
+        project_queues_key = RedisKeys.gen_funboost_project_name_key(project_name)
+        queues = list(self.redis_db_frame.smembers(project_queues_key))
+        result["queue_count"] = len(queues)
+        return queues
+    
+    def _count_active_consumers(self, project_name: str, queues: list, result: dict) -> None:
+        """统计活跃消费者数量"""
+        if not queues:
+            return
+        
+        consumer_getter = ActiveCousumerProcessInfoGetter(care_project_name=project_name)
+        heartbeat_info = consumer_getter.get_all_hearbeat_info_partition_by_queue_name()
+        active_count = sum(len(consumers) for consumers in heartbeat_info.values())
+        result["active_consumer_count"] = active_count
+    
+    def _validate_deletion_safety(self, project_name: str, force: bool, result: dict) -> bool:
+        """验证删除操作的安全性"""
+        active_count = result["active_consumer_count"]
+        queue_count = result["queue_count"]
+        
+        # 有队列就绝对不能删除（不管有没有活跃消费者，不管 force 是什么）
+        if queue_count > 0:
+            if active_count > 0:
+                result["error"] = (
+                    f"项目 '{project_name}' 有 {queue_count} 个关联队列，"
+                    f"其中 {active_count} 个消费者正在运行，绝对禁止删除！"
+                )
+            else:
+                result["error"] = (
+                    f"项目 '{project_name}' 有 {queue_count} 个关联队列，绝对禁止删除！"
+                    f"只有完全没有队列的项目才能删除。"
+                )
+            self.logger.warning(f"拒绝删除项目 '{project_name}'：有 {queue_count} 个关联队列")
+            return False
+        
+        return True
+    
+    def _execute_deletion(self, project_name: str, result: dict) -> None:
+        """执行实际的删除操作"""
+        project_queues_key = RedisKeys.gen_funboost_project_name_key(project_name)
+        
+        # 从项目名称集合中删除
+        self.redis_db_frame.srem(RedisKeys.FUNBOOST_ALL_PROJECT_NAMES, project_name)
+        # 删除该项目关联的队列集合
+        self.redis_db_frame.delete(project_queues_key)
+        
+        self.logger.info(
+            f"已从 Redis 删除项目 '{project_name}'，"
+            f"关联队列数: {result['queue_count']}，"
+            f"活跃消费者数: 0，"
+            f"强制删除: {result['force_used']}"
+        )
     
     
 
@@ -413,6 +542,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
     _lock_for_generate_publisher_booster = threading.Lock()
     
 
+
     def __init__(self,queue_name:str,care_project_name:typing.Optional[str]=None,is_use_local_booster:bool=None):
         RedisReportInfoGetterMixin._init(self,care_project_name)
         self.queue_name = queue_name
@@ -538,23 +668,6 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
     
 
    
-    @staticmethod
-    def _reset_non_json_serializable_fields(booster_params_from_redis: dict):
-        """
-        自动重置 BoosterParams 中所有不可JSON序列化的字段为 None
-        
-        注意：booster_params_from_redis 是从 Redis 取出的字典，不可json序列化的对象的值都是字符串形式
-        需要根据 BoosterParams 的类型定义，将不可序列化类型的字段重置为 None
-        """
-        # 获取不可序列化的字段名列表（带缓存）
-        from funboost.core.pydantic_compatible_base import get_cant_json_serializable_fields
-        non_serializable_fields = get_cant_json_serializable_fields(BoosterParams)
-        
-        # 重置这些字段为 None
-        for field_name in non_serializable_fields:
-            if field_name in booster_params_from_redis:
-                booster_params_from_redis[field_name] = None
-
     def _gen_booster_by_local_booster(self) -> Booster:
         # 使用本地booster，这种也可以，每个项目单独自己起一个 funboost web manager 就可以，
         # 启动  funboost web manager  之前，先导入相关的 booster所在模块,再调用 `start_funboost_web_manager()` 函数
@@ -588,26 +701,23 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
              if existing_booster and existing_booster.boost_params.broker_kind == current_broker_kind:
                  return existing_booster
 
-             # 自动重置所有不可JSON序列化的字段为None，(避免硬编码)
-             # 例如 user_custom_record_process_info_func  consumer_override_cls consuming_function_decorator 等等
-             self._reset_non_json_serializable_fields(booster_params)
-             
-             
              # 生成新的 booster
-             
-             # 手动设置需要的字段
              redis_final_func_input_params_info = booster_params['auto_generate_info']['final_func_input_params_info']
              fake_fun = FakeFunGenerator.gen_fake_fun_by_params(redis_final_func_input_params_info)
              booster_params['consuming_function'] = fake_fun
              booster_params['consuming_function_raw'] = fake_fun
-             
+
+             booster_params['specify_concurrent_pool'] = None
+             booster_params['specify_async_loop'] = None
+             booster_params['consuming_function_decorator'] = None
+             booster_params['function_result_status_persistance_conf'] = FunctionResultStatusPersistanceConfig(is_save_status=False,is_save_result=False)
+             booster_params['user_custom_record_process_info_func'] = None
+             booster_params['consumer_override_cls'] = None
+             booster_params['publisher_override_cls'] = None
+
              booster_params['is_fake_booster'] = True 
              # 关键：指定 registry，这样实例化时会自动注册到 booster_registry_for_faas，覆盖旧的 key
              booster_params['booster_registry_name'] = 'booster_registry_for_faas'
-
-             booster_params['function_result_status_persistance_conf'] = FunctionResultStatusPersistanceConfig(is_save_status=False,is_save_result=False)
-             
-             
 
              booster_params_model = BoosterParams(**booster_params)
              
@@ -621,7 +731,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
             return self._gen_booster_by_local_booster()
         return self._gen_booster_by_redis_meta_info()
     
-    def gen_publisher_for_faas(self)->AbstractPublisher:
+    def gen_publisher_for_faas(self)->Booster:
         booster = self.gen_booster_for_faas()
         return booster.publisher
     

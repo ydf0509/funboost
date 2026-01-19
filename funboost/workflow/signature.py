@@ -13,25 +13,6 @@ Signature 表示一个"待执行"的任务，包含：
 import typing
 from funboost.core.msg_result_getter import AsyncResult
 from funboost.core.function_result_status_saver import FunctionResultStatus
-from .workflow_mixin import WorkflowPublisherMixin
-
-
-def _update_workflow_context_after_task(task_id: str):
-    """
-    任务完成后更新 workflow_context 的 current_task_id 和 chain_depth
-    
-    这解决了 primitives 编排场景下的问题：
-    - 发布者发布任务 A，等待 RPC 结果
-    - A 完成，发布者需要知道 A 的 task_id
-    - 发布者发布任务 B 时，B 的 parent_task_id 应该是 A 的 task_id
-    - 同时递增 chain_depth，使得 B 的层级比 A 深一层
-    """
-    ctx = WorkflowPublisherMixin.get_workflow_context()
-    if ctx:
-        ctx = ctx.copy()
-        ctx['current_task_id'] = task_id
-        ctx['chain_depth'] = ctx.get('chain_depth', 0) + 1  # 递增层级
-        WorkflowPublisherMixin.set_workflow_context(ctx)
 
 
 class Signature:
@@ -121,13 +102,7 @@ class Signature:
         """
         args = self._build_args(prev_result)
         async_result = self.booster.push(*args, **self.kwargs)
-        result_status = async_result.wait_rpc_data_or_raise(raise_exception=True)
-        
-        # 任务完成后，更新 workflow_context 的 current_task_id
-        # 这样下一个任务发布时，parent_task_id 就是当前任务的 task_id
-        _update_workflow_context_after_task(result_status.task_id)
-        
-        return result_status
+        return async_result.wait_rpc_data_or_raise(raise_exception=True)
     
     def apply_async(self, prev_result=None) -> AsyncResult:
         """

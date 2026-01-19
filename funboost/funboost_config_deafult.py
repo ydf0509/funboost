@@ -94,6 +94,11 @@ class BrokerConnConfig(DataClassBase):
 
 
 class FunboostCommonConfig(DataClassBase):
+    # Web Manager 用户数据库配置
+    # 支持 SQLite、MySQL、PostgreSQL 等 SQLAlchemy 兼容的数据库 URL 格式
+    # 默认使用 SQLite，数据库文件存放在项目根目录
+    WEB_MANAGER_DB_URL = 'sqlite:///./web_manager_users.db'
+
     # nb_log包的第几个日志模板，内置了7个模板，可以在你当前项目根目录下的nb_log_config.py文件扩展模板。
     # NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = 11  # 7是简短的不可跳转，5是可点击跳转的，11是可显示ip 进程 线程的模板,也可以亲自设置日志模板不传递数字。
     NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = logging.Formatter(

@@ -42,8 +42,6 @@ class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
 
 class BoosterParams(BaseJsonAbleModel):
     """
-    掌握funboost 的精华就是知道 BoosterParams 的入参有哪些，如果知道有哪些入参字段，就掌握了funboost的 90% 用法。
-
     pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file -> settings -> Plugins -> 输入 pydantic 搜索,点击安装 pydantic 插件.
 
     @boost的传参必须是此类或者继承此类,如果你不想每个装饰器入参都很多,你可以写一个子类继承BoosterParams, 传参这个子类,例如下面的 BoosterParamsComplete
@@ -90,7 +88,7 @@ class BoosterParams(BaseJsonAbleModel):
     is_push_to_dlx_queue_when_retry_max_times: bool = False  # 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
 
 
-    consuming_function_decorator: typing.Optional[typing.Callable[..., typing.Any]] = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
+    consuming_function_decorator: typing.Optional[typing.Callable] = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
     
     
     """
@@ -133,7 +131,7 @@ class BoosterParams(BaseJsonAbleModel):
     function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
         is_save_result=False, is_save_status=False, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)  # 是否保存函数的入参，运行结果和运行状态到mongodb。这一步用于后续的参数追溯，任务统计和web展示，需要安装mongo。
 
-    user_custom_record_process_info_func: typing.Optional[typing.Callable[..., typing.Any]] = None  # 提供一个用户自定义的保存消息处理记录到某个地方例如mysql数据库的函数，函数仅仅接受一个入参，入参类型是 FunctionResultStatus，用户可以打印参数
+    user_custom_record_process_info_func: typing.Optional[typing.Callable] = None  # 提供一个用户自定义的保存消息处理记录到某个地方例如mysql数据库的函数，函数仅仅接受一个入参，入参类型是 FunctionResultStatus，用户可以打印参数
 
     is_using_rpc_mode: bool = False  # 是否使用rpc模式，可以在发布端获取消费端的结果回调，但消耗一定性能，使用async_result.result时候会等待阻塞住当前线程。
     rpc_result_expire_seconds: int = 1800  # redis保存rpc结果的过期时间.
@@ -143,7 +141,7 @@ class BoosterParams(BaseJsonAbleModel):
 
     
     is_do_not_run_by_specify_time_effect: bool = False  # 是否使不运行的时间段生效
-    do_not_run_by_specify_time: list[str] = ['10:00:00', '22:00:00']  # 不运行的时间段,在这个时间段自动不运行函数.
+    do_not_run_by_specify_time: list = ['10:00:00', '22:00:00']  # 不运行的时间段,在这个时间段自动不运行函数.
 
     schedule_tasks_on_main_thread: bool = False  # 直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
 
@@ -155,8 +153,8 @@ class BoosterParams(BaseJsonAbleModel):
     # 用法见文档 4.2d.3 章节.   使用 BoostersManager ,通过 consume_group 启动一组消费函数
     booster_group:typing.Union[str, None] = None
 
-    consuming_function: typing.Optional[typing.Callable[..., typing.Any]] = None  # 消费函数,在@boost时候不用指定,因为装饰器知道下面的函数.
-    consuming_function_raw: typing.Optional[typing.Callable[..., typing.Any]] = None  # 不需要传递，自动生成
+    consuming_function: typing.Optional[typing.Callable] = None  # 消费函数,在@boost时候不用指定,因为装饰器知道下面的函数.
+    consuming_function_raw: typing.Optional[typing.Callable] = None  # 不需要传递，自动生成
     consuming_function_name: str = '' # 不需要传递，自动生成
 
     
@@ -208,11 +206,7 @@ class BoosterParams(BaseJsonAbleModel):
     # 普通用户完全不用改这个参数。
     """
     is_fake_booster: bool = False
-
-    # 普通用户不用管不用改，用于隔离boosters注册。例如faas的是虚假的跨服务跨项目的booster，没有具体函数逻辑，不可污染真正的注册。
-    # 如果你是想分组启动部分booster，那你应该用的是 booster_group 参数。
-    booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT  
-
+    booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT  # 普通用户不用管不用改，用于隔离boosters注册。例如faas的是虚假的跨服务跨项目的booster，没有具体函数逻辑，不可污染真正的注册。
     
 
     @compatible_root_validator(skip_on_failure=True, )
@@ -262,8 +256,6 @@ class BoosterParams(BaseJsonAbleModel):
         :return:
         """
         return funboost_lazy_impoter.boost(self)(func)
-
-
 
 
 class BoosterParamsComplete(BoosterParams):
@@ -353,7 +345,7 @@ class PublisherParams(BaseJsonAbleModel):
     logger_name: str = ''  # 队列消费者发布者的日志命名空间.
     log_filename: typing.Optional[str] = None
     clear_queue_within_init: bool = False  # with 语法发布时候,先清空消息队列
-    consuming_function: typing.Optional[typing.Callable[..., typing.Any]] = None  # consuming_function 作用是 inspect 模块获取函数的入参信息
+    consuming_function: typing.Optional[typing.Callable] = None  # consuming_function 作用是 inspect 模块获取函数的入参信息
 
     broker_exclusive_config: dict = {}
     

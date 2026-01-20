@@ -265,9 +265,10 @@ class ResultFromMongo(MongoMixin):
     print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c1').get_result())
     """
 
-    def __init__(self, task_id: str, ):
+    def __init__(self, task_id: str, mongo_col_name: str):
         self.task_id = task_id
-        self.col_name = task_id.split('_result:')[0]
+        # self.col_name = task_id.split('_result:')[0]
+        self.col_name = mongo_col_name
         self.mongo_row = None
         self._has_query = False
 

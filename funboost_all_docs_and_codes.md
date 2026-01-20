@@ -734,11 +734,12 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 ##### 📌 `class StrConst`
 *Line: 283*
 
-**Class Variables (1):**
+**Class Variables (2):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
+- `NO_RESULT = 'no_result'`
 
 ##### 📌 `class EnvConst`
-*Line: 286*
+*Line: 287*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -1216,6 +1217,7 @@ Funboost vs Celery 的架构差异：
 - `import typing`
 - `import json`
 - `from funboost.constant import MongoDbName`
+- `from funboost.constant import StrConst`
 - `from funboost.core.exceptions import FunboostWaitRpcResultTimeout`
 - `from funboost.core.exceptions import FunboostRpcResultError`
 - `from funboost.core.exceptions import HasNotAsyncResult`
@@ -1230,7 +1232,7 @@ Funboost vs Celery 的架构差异：
 #### 🏛️ Classes (4)
 
 ##### 📌 `class AsyncResult(RedisMixin)`
-*Line: 47*
+*Line: 46*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, task_id, timeout = 1800)`
@@ -1272,7 +1274,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class AioAsyncResult(AioRedisMixin)`
-*Line: 150*
+*Line: 149*
 
 **Docstring:**
 `````
@@ -1304,7 +1306,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class ResultFromMongo(MongoMixin)`
-*Line: 255*
+*Line: 254*
 
 **Docstring:**
 `````
@@ -1320,10 +1322,11 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 `````
 
 **🔧 Constructor (`__init__`):**
-- `def __init__(self, task_id: str)`
+- `def __init__(self, task_id: str, mongo_col_name: str)`
   - **Parameters:**
     - `self`
     - `task_id: str`
+    - `mongo_col_name: str`
 
 **Public Methods (3):**
 - `def query_result(self)`
@@ -1389,6 +1392,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `from funboost.core.func_params_model import TaskOptions`
 - `from funboost.core.function_result_status_saver import FunctionResultStatus`
 - `from funboost.core.helper_funs import MsgGenerater`
+- `from funboost.core.helper_funs import get_func_only_params`
 - `from funboost.core.loggers import develop_logger`
 - `from funboost.core.loggers import LoggerLevelSetterMixin`
 - `from funboost.core.loggers import FunboostFileLoggerMixin`
@@ -1502,7 +1506,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 #### 🔧 Public Functions (1)
 
 - `def deco_mq_conn_error(f)`
-  - *Line: 387*
+  - *Line: 383*
 
 
 ---
@@ -3896,47 +3900,71 @@ if __name__ == '__main__':
 
 ### 1.2.2 🚀 强大的任务控制功能矩阵
 
-Funboost 不仅仅是任务队列，它是一个全功能的任务调度平台。
 
-#### 🌐 分布式与中间件
-*   **多中间件支持**：支持 40+ 种中间件（Redis, RabbitMQ, Kafka, RocketMQ, SQL, 文件等）。
-*   **任务持久化**：依托中间件特性，天然支持任务持久化存储。
+Funboost 不止于任务队列，它是 **Python 函数的“钢铁侠战衣”**。
+以下矩阵涵盖从 **内核驱动** 到 **架构升维** 的 7 大维度，30+ 能力：
 
-#### ⚡ 并发与性能
-*   **全模式并发**：支持 `Threading`、`Gevent`、`Eventlet`、`Asyncio`、`Single_thread`。
-*   **多进程叠加**：支持在以上 5 种模式基础上叠加 **多进程**，榨干多核 CPU 性能。
+#### 🌌 维度一：架构跃迁 (Architecture & Connectivity)
+> **打破边界，连接一切，万物皆可计算。**
 
-#### 🕹️ 流量与频率控制
-*   **精准控频 (QPS)**：精确控制每秒运行次数（如 0.02次/秒 或 50次/秒），无视函数耗时波动。
-*   **分布式控频**：在多机、多容器环境下，严格控制全局总 QPS。
-*   **暂停/恢复**：支持从外部动态暂停或继续消费。
+| 功能模块 | 硬核特性描述 |
+| :--- | :--- |
+| **🌐 万能 Broker** | 支持 **40+** 种中间件：RabbitMQ, Kafka, RocketMQ, Pulsar, NATS, Redis (List/Stream/PubSub), SQL, NoSQL, 文件系统, TCP/UDP/HTTP。 |
+| **🏗️ FaaS 微服务化** | **架构质变**。通过 `funboost.faas`，消费函数 0 代码自动注册为 FastAPI/Flask/Django 路由，支持 **服务发现** 与 **热加载**。 |
+| **🧬 CDC 事件驱动** | **数据即信号**。支持 `MYSQL_CDC` (Binlog)，实现从“任务驱动”到“数据变更驱动”的范式转换，轻量级替代 Canal/Flink。 |
+| **🦖 框架吞噬** | **降维打击**。直接接管 Celery, Dramatiq, RQ, Huey 等框架作为底层驱动，只需使用 Funboost 极简 API。 |
+| **🔌 异构协议** | 支持 **gRPC** 双向通信，支持 **MQTT** 物联网协议，打通端云链路。 |
 
-#### 🛡️ 可靠性与容错
-*   **断点接续**：无惧断电或强制杀进程，依赖 **ACK 消费确认机制**，确保任务不丢失。
-*   **自动重试**：函数报错自动重试指定次数。
-*   **死信队列**：重试失败或主动抛出异常的消息自动进入 DLQ (Dead Letter Queue)。
-*   **重新入队**：支持主动将消息重新放回队列头部。
+#### ⚡ 维度二：性能核武 (Performance & Concurrency)
+> **榨干算力，突破 GIL，I/O 与 CPU 齐飞。**
 
-#### ⏰ 调度与时效
-*   **定时任务**：基于 `APScheduler`，支持间隔、CRON 等多种定时触发。
-*   **延时任务**：支持任务发布后延迟 N 秒执行。
-*   **时间窗口**：支持指定某些时间段（如白天）不运行任务。
-*   **超时熔断**：函数运行超时自动 Kill。
-*   **过期丢弃**：支持设置消息有效期，过期未消费自动丢弃。
+*   **💥 5+1 并发模式**：原生支持 `Threading`、`Gevent`、`Eventlet`、`Asyncio` (真·异步循环)、`Single_thread`。
+*   **🚀 多进程叠加**：支持 `mp_consume(n)`，在上述 5 种模式上叠加 **多进程**，彻底突破 GIL 锁限制，跑满多核 CPU。
+*   **📦 微批消费 (Micro-Batch)**：支持 `MicroBatchConsumerMixin`，自动聚合单条消息为批次处理（如批量写入 DB），吞吐量提升 10x-100x。
+*   **🏎️ 极速模式**：内存队列支持 `Ultra-Fast` 模式，跳过中间件序列化开销，进程内通信微秒级延迟。
 
-#### 📊 监控与运维
-*   **可视化 Web**：自带 Web 管理界面，查看队列状态、消费速度。
-*   **五彩日志**：集成 `nb_log`，提供多进程安全的切割日志与控制台高亮显示。
-*   **全链路追踪**：支持记录任务入参、结果、耗时、异常信息并持久化到 MongoDB/MySQL。
-*   **RPC 模式**：发布端可同步等待消费端的返回结果。
-*   **远程部署**：一行代码将函数自动部署到远程 Linux 服务器。
-*   **命令行 CLI**：支持通过命令行管理任务。
+#### 🛡️ 维度三：磐石可靠 (Reliability & Resilience)
+> **断电不丢，崩溃不乱，像数据库一样可靠。**
 
-> **🏆 稳定性承诺**
->
-> 能够直面百万级 C 端用户业务（App/小程序），连续 3 个季度稳定运行无事故。
-> **0 假死、0 崩溃、0 内存泄漏**。
-> Windows 与 Linux 行为 100% 一致（解决了 Celery 在 Windows 下的诸多痛点）。
+*   **❤️ 心跳级 ACK**：独创基于消费者心跳的 ACK 机制。精准识别进程崩溃或死锁，**秒级** 自动回收孤儿任务重发，绝不误判长耗时任务。
+*   **🔄 智能重试**：支持指数退避重试，支持自定义异常捕获。
+*   **☠️ 死信队列 (DLQ)**：重试耗尽或特定异常自动移入死信队列，保留现场。
+*   **💾 结果持久化**：全自动保存函数入参、执行结果、耗时、异常堆栈到 MongoDB/MySQL，数据可追溯。
+
+#### 🕹️ 维度四：极致控盘 (Control & Governance)
+> **上帝视角，精准流控，收放自如。**
+
+*   **⏱️ 精准 QPS**：令牌桶算法实现，支持小数级（如 0.1次/秒）和高频级（如 5000次/秒）精准控频。
+*   **🌍 分布式限流**：基于 Redis 协调，实现跨服务器、跨进程的 **全局 QPS 风控**。
+*   **🧩 消费分组**：支持 `consume_group`，按业务组启动消费者，适合大单体应用的精细化管理。
+*   **⏸️ 熔断与恢复**：支持运行时远程发送指令，**动态暂停/恢复** 指定队列的消费。
+*   **🛑 脚本流控**：支持 `wait_for_possible_has_finish_all_tasks`，脚本级阻塞等待任务清空（适合批处理作业）。
+
+#### 🎼 维度五：编排与调度 (Orchestration)
+> **从单一函数到复杂工作流。**
+
+*   **🎹 Workflow 编排**：支持类似 Celery Canvas 的 **Chain (串行)**、**Group (并行)**、**Chord (回调)** 声明式编排。
+*   **⏰ 定时任务**：深度集成 `APScheduler`，支持 Crontab/Interval/Date 触发，支持分布式防重执行。
+*   **⏳ 延时任务**：原生支持 `countdown` (倒计时) 和 `eta` (指定时间) 执行。
+*   **🕸️ 任务过滤**：基于函数入参指纹的去重（支持 TTL 有效期），天然免疫 URL 随机参数干扰。
+
+#### 🔭 维度六：全维可观测 (Observability & Ops)
+> **拒绝黑盒，一切尽在掌握。**
+
+*   **🕵️ OpenTelemetry**：原生集成 OTel，支持 Jaeger/SkyWalking **全链路追踪**，清晰展示跨服务、跨队列的调用链。
+*   **📊 Prometheus**：内置 Exporter，支持 HTTP Pull 和 PushGateway 模式，对接 Grafana 监控大屏。
+*   **🖥️ Web Manager**：开箱即用的可视化管理后台，实时监控积压、QPS、消费者状态。
+*   **📡 远程运维**：支持 `RemoteTaskKiller` 远程杀掉特定任务；支持 `fabric_deploy` 一键代码热部署到远程服务器。
+
+#### 🧬 维度七：极客体验 (Developer Experience)
+> **把简单留给用户，把复杂留给框架。**
+
+*   **🧠 FCT 上下文**：`from funboost import fct`。在函数深层任意位置获取当前任务 ID、发布时间、重试次数，无需传参。
+*   **🐍 全语法支持**：完美支持 **类方法 (classmethod)**、**实例方法 (instance method)**、**异步函数 (async def)**。
+*   **💉 深度 Hook**：提供 `consumer_override_cls` 接口，允许用户重写框架核心生命周期（如消息清洗 `_user_convert_msg_before_run`），支持 **任意非标准格式消息** 的消费。
+*   **🥒 万能参数**：支持 **Pickle 序列化**，允许传递自定义 Python 对象作为任务参数。
+
+
 
 
 ## 1.3 🚀 快速上手：你的第一个 Funboost 程序
@@ -7904,6 +7932,9 @@ celery的扩展就很垃圾了，必须依赖框架自身提前预留暴露了�
 
 **可以见文档 4b.7.3 funboost 和 celery 扩展 opentelemetry 的难度。**
 
+### 2.4.38 funboost支持微批消费
+
+funboost自带支持微批消费，celery不支持。见教程4b.10章节。
 
 ### 2.4.40 （王炸）funboost 支持celery作为broker_kind  
 
@@ -14663,7 +14694,7 @@ my_task.consume()
 
 这是一个消费侧优化能力，很多消息队列框架都不提供原生支持（需要用户自己实现累积条数+超时强制触发消费的逻辑），funboost 通过 `MicroBatchConsumerMixin` 将这个模式抽象成了可复用的组件。  
 即使你不用消息队列，你用 funboost + `MEMORY_QUEUE` 充当一个微批消费的工具，也是非常方便的。
-这进一步说明了funboost是万能框架，因为除了核心功能，他有很多强大又使用简单的方面。
+这进一步说明了funboost是万能框架，是把复杂留给框架把简单留给用户的框架，因为除了核心功能，他有很多强大又使用简单的小细节方面。
 
 ```python 
 # -*- coding: utf-8 -*-
@@ -14716,11 +14747,11 @@ if __name__ == '__main__':
         batch_insert_task.push(x=i, y=i * 2)  # 发布还是按照单条消息发布，消费是自动微批操作
         print(f"发布消息: x={i}, y={i * 2}")
     ctrl_c_recv()
-```
 
 
 ### 4b.10.2 如果每次临时手写微批操作，会怎么样？
 
+自己手写需要考虑缓冲聚合、超时检测、线程安全等问题。
 
 如果写得不好会出现：
 - 最尾部没被批量条数n整除的数据丢失
@@ -14738,7 +14769,8 @@ if __name__ == '__main__':
 这种不是微批消费，压根不需要依赖框架的微批功能，就是个普通的函数调用而已，只不过函数入参恰好是数组而已。
 
 你仔细好好想想吧，如果你这么发布，那相当于要在发布端去实现微批发布的功能，
-你一样还是要去写判断数组条数 + 单独线程定时超时强制触发的一大堆代码。
+你一样还是要去写判断数组条数 + 单独线程定时超时强制触发的一大堆代码。  
+更要命的是，如果发布端是处在几十台机器的几百个进程中，你如何写python代码去跨机器聚合成批量发布？  
 
 | 模式 | 做法 | 问题/结论 |
 |:---|:---|:---|
@@ -22372,11 +22404,12 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 ##### 📌 `class StrConst`
 *Line: 283*
 
-**Class Variables (1):**
+**Class Variables (2):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
+- `NO_RESULT = 'no_result'`
 
 ##### 📌 `class EnvConst`
-*Line: 286*
+*Line: 287*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -22854,6 +22887,7 @@ Funboost vs Celery 的架构差异：
 - `import typing`
 - `import json`
 - `from funboost.constant import MongoDbName`
+- `from funboost.constant import StrConst`
 - `from funboost.core.exceptions import FunboostWaitRpcResultTimeout`
 - `from funboost.core.exceptions import FunboostRpcResultError`
 - `from funboost.core.exceptions import HasNotAsyncResult`
@@ -22868,7 +22902,7 @@ Funboost vs Celery 的架构差异：
 #### 🏛️ Classes (4)
 
 ##### 📌 `class AsyncResult(RedisMixin)`
-*Line: 47*
+*Line: 46*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, task_id, timeout = 1800)`
@@ -22910,7 +22944,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class AioAsyncResult(AioRedisMixin)`
-*Line: 150*
+*Line: 149*
 
 **Docstring:**
 `````
@@ -22942,7 +22976,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class ResultFromMongo(MongoMixin)`
-*Line: 255*
+*Line: 254*
 
 **Docstring:**
 `````
@@ -22958,10 +22992,11 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 `````
 
 **🔧 Constructor (`__init__`):**
-- `def __init__(self, task_id: str)`
+- `def __init__(self, task_id: str, mongo_col_name: str)`
   - **Parameters:**
     - `self`
     - `task_id: str`
+    - `mongo_col_name: str`
 
 **Public Methods (3):**
 - `def query_result(self)`
@@ -23027,6 +23062,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `from funboost.core.func_params_model import TaskOptions`
 - `from funboost.core.function_result_status_saver import FunctionResultStatus`
 - `from funboost.core.helper_funs import MsgGenerater`
+- `from funboost.core.helper_funs import get_func_only_params`
 - `from funboost.core.loggers import develop_logger`
 - `from funboost.core.loggers import LoggerLevelSetterMixin`
 - `from funboost.core.loggers import FunboostFileLoggerMixin`
@@ -23140,7 +23176,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 #### 🔧 Public Functions (1)
 
 - `def deco_mq_conn_error(f)`
-  - *Line: 387*
+  - *Line: 383*
 
 
 ---
@@ -26254,11 +26290,12 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 ##### 📌 `class StrConst`
 *Line: 283*
 
-**Class Variables (1):**
+**Class Variables (2):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
+- `NO_RESULT = 'no_result'`
 
 ##### 📌 `class EnvConst`
-*Line: 286*
+*Line: 287*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -26552,6 +26589,7 @@ class MongoDbName:
 
 class StrConst:
     BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'
+    NO_RESULT = 'no_result'
 
 class EnvConst:
     FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'
@@ -47344,6 +47382,7 @@ if __name__ == '__main__':
 - `import typing`
 - `import json`
 - `from funboost.constant import MongoDbName`
+- `from funboost.constant import StrConst`
 - `from funboost.core.exceptions import FunboostWaitRpcResultTimeout`
 - `from funboost.core.exceptions import FunboostRpcResultError`
 - `from funboost.core.exceptions import HasNotAsyncResult`
@@ -47358,7 +47397,7 @@ if __name__ == '__main__':
 #### 🏛️ Classes (4)
 
 ##### 📌 `class AsyncResult(RedisMixin)`
-*Line: 47*
+*Line: 46*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, task_id, timeout = 1800)`
@@ -47400,7 +47439,7 @@ if __name__ == '__main__':
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class AioAsyncResult(AioRedisMixin)`
-*Line: 150*
+*Line: 149*
 
 **Docstring:**
 `````
@@ -47432,7 +47471,7 @@ if __name__ == '__main__':
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class ResultFromMongo(MongoMixin)`
-*Line: 255*
+*Line: 254*
 
 **Docstring:**
 `````
@@ -47448,10 +47487,11 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 `````
 
 **🔧 Constructor (`__init__`):**
-- `def __init__(self, task_id: str)`
+- `def __init__(self, task_id: str, mongo_col_name: str)`
   - **Parameters:**
     - `self`
     - `task_id: str`
+    - `mongo_col_name: str`
 
 **Public Methods (3):**
 - `def query_result(self)`
@@ -47495,7 +47535,7 @@ import time
 import typing
 import json
 
-from funboost.constant import MongoDbName
+from funboost.constant import MongoDbName, StrConst
 from funboost.core.exceptions import FunboostWaitRpcResultTimeout, FunboostRpcResultError, HasNotAsyncResult
 from funboost.utils.mongo_util import MongoMixin
 
@@ -47510,7 +47550,6 @@ from funboost.core.function_result_status_saver import FunctionResultStatus
 
 
 
-NO_RESULT = 'no_result'
 
 
 # LazyAsyncResult 已删除：AsyncResult 本身就是懒加载的
@@ -47755,9 +47794,10 @@ class ResultFromMongo(MongoMixin):
     print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c1').get_result())
     """
 
-    def __init__(self, task_id: str, ):
+    def __init__(self, task_id: str, mongo_col_name: str):
         self.task_id = task_id
-        self.col_name = task_id.split('_result:')[0]
+        # self.col_name = task_id.split('_result:')[0]
+        self.col_name = mongo_col_name
         self.mongo_row = None
         self._has_query = False
 
@@ -47768,12 +47808,12 @@ class ResultFromMongo(MongoMixin):
 
     def get_status_and_result(self):
         self.query_result()
-        return self.mongo_row or NO_RESULT
+        return self.mongo_row or StrConst.NO_RESULT
 
     def get_result(self):
         """以非阻塞等待的方式从funboost的状态结果持久化的mongodb数据库根据taskid获取结果"""
         self.query_result()
-        return (self.mongo_row or {}).get('result', NO_RESULT)
+        return (self.mongo_row or {}).get('result', StrConst.NO_RESULT)
 
 
 class FutureStatusResult:
@@ -47803,8 +47843,8 @@ class FutureStatusResult:
         return self.staus_result_obj
 
 if __name__ == '__main__':
-    print(ResultFromMongo('test_queue77h6_result:764a1ba2-14eb-49e2-9209-ac83fc5db1e8').get_status_and_result())
-    print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c1').get_result())
+    print(ResultFromMongo('764a1ba2-14eb-49e2-9209-ac83fc5db1e8','col1').get_status_and_result())
+    print(ResultFromMongo('5cdb4386-44cc-452f-97f4-9e5d2882a7c1','col2').get_result())
 
 `````
 
@@ -55685,6 +55725,7 @@ if __name__ == '__main__':
 - `from funboost.core.func_params_model import TaskOptions`
 - `from funboost.core.function_result_status_saver import FunctionResultStatus`
 - `from funboost.core.helper_funs import MsgGenerater`
+- `from funboost.core.helper_funs import get_func_only_params`
 - `from funboost.core.loggers import develop_logger`
 - `from funboost.core.loggers import LoggerLevelSetterMixin`
 - `from funboost.core.loggers import FunboostFileLoggerMixin`
@@ -55798,7 +55839,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 #### 🔧 Public Functions (1)
 
 - `def deco_mq_conn_error(f)`
-  - *Line: 387*
+  - *Line: 383*
 
 
 ---
@@ -55829,7 +55870,7 @@ from funboost.constant import ConstStrForClassMethod, FunctionKind
 from funboost.core.broker_kind__exclusive_config_default_define import generate_broker_exclusive_config
 from funboost.core.func_params_model import PublisherParams, TaskOptions
 from funboost.core.function_result_status_saver import FunctionResultStatus
-from funboost.core.helper_funs import MsgGenerater
+from funboost.core.helper_funs import MsgGenerater, get_func_only_params
 from funboost.core.loggers import develop_logger
 
 # from nb_log import LoggerLevelSetterMixin, LoggerMixin
@@ -55945,7 +55986,7 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         msg = Serialization.to_dict(msg)
         # 使用字典推导式代替 deepcopy，排除 extra 键
         raw_extra = msg.get('extra', {})
-        msg_function_kw = {k: v for k, v in msg.items() if k != 'extra'}
+        msg_function_kw = get_func_only_params(msg)
         self.check_func_msg_dict(msg_function_kw)
 
         if task_options:
@@ -56159,11 +56200,7 @@ The first argument of the push method must be the instance of the class.
         if self.publish_params_checker and self.publisher_params.should_check_publish_func_params:
             if not isinstance(msg_dict, dict):
                 raise ValueError(f"check_func_msg_dict 入参必须是字典, 当前是: {type(msg_dict)}")
-            # 优化：使用字典推导式代替 deepcopy + pop
-            if 'extra' in msg_dict:
-                msg_function_kw = {k: v for k, v in msg_dict.items() if k != 'extra'}
-            else:
-                msg_function_kw = msg_dict
+            msg_function_kw = get_func_only_params(msg_dict)
             self.publish_params_checker.check_func_msg_dict(msg_function_kw)
         return True
 

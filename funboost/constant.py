@@ -282,6 +282,7 @@ class MongoDbName:
 
 class StrConst:
     BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'
+    NO_RESULT = 'no_result'
 
 class EnvConst:
     FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'

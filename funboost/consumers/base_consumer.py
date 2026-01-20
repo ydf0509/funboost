@@ -56,7 +56,7 @@ from funboost.concurrent_pool.single_thread_executor import SoloExecutor
 
 from funboost.core.function_result_status_saver import ResultPersistenceHelper, FunctionResultStatus, RunStatus
 
-from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_publish_time, MsgGenerater
+from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_func_only_params, get_publish_time, MsgGenerater
 
 from funboost.concurrent_pool.async_helper import get_or_create_event_loop, simple_run_in_executor
 from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
@@ -510,7 +510,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
             return
-        function_only_params = delete_keys_and_return_new_dict(kw['body'], )
+        function_only_params = get_func_only_params(kw['body'], )
         kw['function_only_params'] = function_only_params
         if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
                 function_only_params, self._get_priority_conf(kw, 'filter_str')):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
@@ -519,12 +519,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             return
         publish_time = get_publish_time(kw['body'])
         msg_expire_seconds_priority = self._get_priority_conf(kw, 'msg_expire_seconds')
-        if msg_expire_seconds_priority and time.time() - msg_expire_seconds_priority > publish_time:
-            self.logger.warning(
-                f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(time.time() - publish_time, 4)} 秒 ,'
-                f'超过了指定的 {msg_expire_seconds_priority} 秒，丢弃任务')
-            self._confirm_consume(kw)
-            return
+        if msg_expire_seconds_priority:
+            # 优化：只调用一次 time.time()
+            current_time = time.time()
+            if current_time - msg_expire_seconds_priority > publish_time:
+                self.logger.warning(
+                    f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(current_time - publish_time, 4)} 秒 ,'
+                    f'超过了指定的 {msg_expire_seconds_priority} 秒，丢弃任务')
+                self._confirm_consume(kw)
+                return
 
         msg_eta = self._get_priority_conf(kw, 'eta')
         msg_countdown = self._get_priority_conf(kw, 'countdown')
@@ -549,8 +552,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             #                                    misfire_grace_time=misfire_grace_time)
 
             # 这种方式是延时任务重新以普通任务方式发送到消息队列
-            msg_no_delay = copy.deepcopy(kw['body'])
-            self.__delete_eta_countdown(msg_no_delay)
+            # 优化：使用浅拷贝 + extra 字典推导式，避免完整 deepcopy
+            body = kw['body']
+            if isinstance(body, str):
+                body = Serialization.to_dict(body)
+            # 浅拷贝消息，对 extra 字典做特殊处理（排除延时相关键）
+            msg_no_delay = dict(body)
+            if 'extra' in msg_no_delay:
+                # 创建新的 extra 字典，排除延时任务相关的键
+                msg_no_delay['extra'] = {k: v for k, v in msg_no_delay['extra'].items() 
+                                         if k not in ('eta', 'countdown', 'misfire_grace_time')}
             # print(msg_no_delay)
             # 数据库作为apscheduler的jobstores时候， 不能用 self.pbulisher_of_same_queue.publish，self不能序列化
             self._delay_task_scheduler.add_job(self._push_apscheduler_task_to_broker, 'date', run_date=run_date,
@@ -617,9 +628,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 time.sleep((1 - (time.time() - self._last_start_count_qps_timestamp)) * 1)
 
     def _print_message_get_from_broker(self, msg, broker_name=None):
-        # print(999)
-        if self.consumer_params.is_show_message_get_from_broker:
-            # self.logger.debug(f'从 {broker_name} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
+        # 优化：先检查日志级别和配置，避免不必要的字符串格式化和 JSON 序列化
+        if self.consumer_params.is_show_message_get_from_broker and self.logger.isEnabledFor(logging.DEBUG):
             self.logger.debug(f'从 {broker_name or self.consumer_params.broker_kind} 中间件 的 {self._queue_name} 中取出的消息是 {Serialization.to_json_str(msg)}')
 
     def _get_priority_conf(self, kw: dict, broker_task_config_key: str):
@@ -814,7 +824,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 function_run = kill_remote_task.kill_fun_deco(task_id)(function_run)  # 用杀死装饰器包装起来在另一个线程运行函数,以便等待远程杀死。
             function_result_status.result = function_run(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params, kw['body']['extra']))
             function_result_status.success = True
-            if self.consumer_params.log_level <= logging.DEBUG:
+            # 优化：使用 isEnabledFor 检查日志级别，避免不必要的字符串格式化
+            if self.logger.isEnabledFor(logging.DEBUG):
                 result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 {function_only_params} , '
@@ -975,7 +986,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 rs = await asyncio.wait_for(corotinue_obj, timeout=self.consumer_params.function_timeout)
             function_result_status.result = rs
             function_result_status.success = True
-            if self.consumer_params.log_level <= logging.DEBUG:
+            # 优化：使用 isEnabledFor 检查日志级别，避免不必要的字符串格式化
+            if self.logger.isEnabledFor(logging.DEBUG):
                 result_str_to_be_print = str(rs)[:100] if len(str(rs)) < 100 else str(rs)[:100] + '  。。。。。  '
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,'

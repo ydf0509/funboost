@@ -6,7 +6,7 @@ import uuid
 
 from funboost import AbstractConsumer
 from funboost.core.funboost_time import FunboostTime
-from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_publish_time
+from funboost.core.helper_funs import get_func_only_params, get_publish_time
 
 
 class PauseConsumer(AbstractConsumer):
@@ -20,7 +20,7 @@ class PauseConsumer(AbstractConsumer):
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
             return
-        function_only_params = delete_keys_and_return_new_dict(kw['body'], )
+        function_only_params = get_func_only_params(kw['body'], )
         if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
                 function_only_params):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
             self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')

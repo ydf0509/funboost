@@ -24,13 +24,14 @@
 """
 
 import asyncio
-import inspect
 import threading
 import time
+import typing
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.constant import ConcurrentModeEnum,BrokerEnum
 from funboost.core.func_params_model import BoosterParams
+from funboost.core.helper_funs import get_func_only_params
 
 
 class MicroBatchConsumerMixin(AbstractConsumer):
@@ -115,8 +116,8 @@ class MicroBatchConsumerMixin(AbstractConsumer):
             return
         
         # 提取函数参数
-        from funboost.core.helper_funs import delete_keys_and_return_new_dict
-        function_only_params = delete_keys_and_return_new_dict(kw['body'])
+        
+        function_only_params = get_func_only_params(kw['body'])
         kw['function_only_params'] = function_only_params
         
         # 累积到缓冲区
@@ -238,11 +239,11 @@ class MicroBatchConsumerMixin(AbstractConsumer):
 
 
 class MicroBatchBoosterParams(BoosterParams):
-    broker_kind:str=BrokerEnum.MEMORY_QUEUE,
-    consumer_override_cls:AbstractConsumer=MicroBatchConsumerMixin,
-    user_options:dict ={
+    broker_kind: str = BrokerEnum.MEMORY_QUEUE
+    consumer_override_cls: typing.Optional[typing.Type] = MicroBatchConsumerMixin  # 类型与父类保持一致
+    user_options: dict = {
         'micro_batch_size': 10,        # 每批10条
         'micro_batch_timeout': 1.0,    # 1秒超时
-    },
-    qps:float=100,
-    should_check_publish_func_params:bool=False,  # 微批模式需要关闭入参校验
+    }
+    qps: float = 100
+    should_check_publish_func_params: bool = False  # 微批模式需要关闭入参校验

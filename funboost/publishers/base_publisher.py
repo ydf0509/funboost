@@ -23,7 +23,7 @@ from funboost.constant import ConstStrForClassMethod, FunctionKind
 from funboost.core.broker_kind__exclusive_config_default_define import generate_broker_exclusive_config
 from funboost.core.func_params_model import PublisherParams, TaskOptions
 from funboost.core.function_result_status_saver import FunctionResultStatus
-from funboost.core.helper_funs import MsgGenerater
+from funboost.core.helper_funs import MsgGenerater, get_func_only_params
 from funboost.core.loggers import develop_logger
 
 # from nb_log import LoggerLevelSetterMixin, LoggerMixin
@@ -74,6 +74,11 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         atexit.register(self._at_exit)
         if publisher_params.clear_queue_within_init:
             self.clear()
+        
+        # 优化：缓存包装后的 _publish_impl 方法，避免每次发布都重新应用装饰器
+        self._wrapped_publish_impl = decorators.handle_exception(
+            retry_times=10, is_throw_error=True, time_sleep=0.1
+        )(self._publish_impl)
     
     @property
     def final_func_input_params_info(self):
@@ -129,14 +134,12 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _convert_msg(self, msg: typing.Union[str, dict], task_id=None,
                      task_options: TaskOptions = None) -> (typing.Dict, typing.Dict, typing.Dict, str):
         """
-        
+        优化：减少不必要的深拷贝，使用字典推导式创建 msg_function_kw
         """
         msg = Serialization.to_dict(msg)
-        msg_function_kw = copy.deepcopy(msg)
-        raw_extra = {}
-        if 'extra' in msg:
-            msg_function_kw.pop('extra')
-            raw_extra = msg['extra']
+        # 使用字典推导式代替 deepcopy，排除 extra 键
+        raw_extra = msg.get('extra', {})
+        msg_function_kw = get_func_only_params(msg)
         self.check_func_msg_dict(msg_function_kw)
 
         if task_options:
@@ -177,7 +180,12 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         java可以这样通过http接口或者funboost.faas  来发布消息 {"user_id":123,"name":"张三","extra": {"task_id":"1234567890","max_retry_times":3}} 
 
         """
-        msg = copy.deepcopy(msg)  # 字典是可变对象,不要改变影响用户自身的传参字典. 用户可能继续使用这个传参字典.
+        # 优化：使用浅拷贝代替深拷贝，_convert_msg 内部不再做拷贝
+        # 对于嵌套的 extra 字典，在需要修改时会创建新字典
+        if isinstance(msg, str):
+            msg = Serialization.to_dict(msg)
+        else:
+            msg = dict(msg)  # 浅拷贝，不改变用户传入的原始字典
         msg, msg_function_kw, extra_params, task_id = self._convert_msg(msg, task_id, task_options)
         t_start = time.time()
 
@@ -193,21 +201,29 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             new_msg['extra']['can_not_json_serializable_keys'] = can_not_json_serializable_keys
             msg_json = Serialization.to_json_str(new_msg)
         # print(msg_json)
-        decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
-            self._publish_impl)(msg_json)
+        # 优化：使用缓存的包装方法，避免每次重新应用装饰器
+        self._wrapped_publish_impl(msg_json)
 
-        self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_json if self.publisher_params.publish_msg_log_use_full_msg else msg_function_kw}',
-                          extra={'task_id': task_id} # 发布日志中显示task_id，方便排查问题。
-                          )  # 显示msg太长了。
-        with self._lock_for_count:
-            self.count_per_minute += 1
-            self.publish_msg_num_total += 1
-            if time.time() - self._current_time > 10:
-                self.logger.info(
-                    f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 队列中')
-                self._init_count()
+        # 优化：先获取当前时间用于后续判断，减少 time.time() 调用
+        current_time = time.time()
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(current_time - t_start, 4)}秒  {msg_json if self.publisher_params.publish_msg_log_use_full_msg else msg_function_kw}',
+                              extra={'task_id': task_id})
+        
+        # 优化：减少锁内操作，先计数再判断是否需要输出日志
+        self.count_per_minute += 1
+        self.publish_msg_num_total += 1
+        # 每10秒输出一次统计日志，减少锁竞争
+        if current_time - self._current_time > 10:
+            with self._lock_for_count:
+                # 双重检查，避免多线程重复输出
+                if current_time - self._current_time > 10:
+                    self.logger.info(
+                        f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 队列中')
+                    self._init_count()
         self._after_publish(msg, msg_function_kw, task_id)
-        return AsyncResult(task_id,timeout=self.publisher_params.rpc_timeout)
+        # AsyncResult 本身就是懒加载的，只有访问 result 等属性时才建立 redis 连接
+        return AsyncResult(task_id, timeout=self.publisher_params.rpc_timeout)
     
     def _after_publish(self, msg: dict, msg_function_kw: dict, task_id: str):
         """发布消息后的钩子方法，子类可以覆写此方法来实现自定义逻辑，例如记录指标"""
@@ -215,8 +231,8 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def send_msg(self, msg: typing.Union[dict, str]):
         """直接发送任意原始的消息内容到消息队列,不生成辅助参数,无视函数入参名字,不校验入参个数和键名"""
-        decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
-            self._publish_impl)(Serialization.to_json_str(msg))
+        # 优化：使用缓存的包装方法
+        self._wrapped_publish_impl(Serialization.to_json_str(msg))
 
     @staticmethod
     def __get_cls_file(cls: type):
@@ -333,15 +349,11 @@ The first argument of the push method must be the instance of the class.
         async_result = await simple_run_in_executor(self.publish, msg, task_id, task_options)
         return AioAsyncResult(async_result.task_id, timeout=async_result.timeout)
 
-    def check_func_msg_dict(self,msg_dict:dict):
+    def check_func_msg_dict(self, msg_dict: dict):
         if self.publish_params_checker and self.publisher_params.should_check_publish_func_params:
-            if not isinstance(msg_dict,dict):
+            if not isinstance(msg_dict, dict):
                 raise ValueError(f"check_func_msg_dict 入参必须是字典, 当前是: {type(msg_dict)}")
-            if 'extra' in msg_dict:
-                msg_function_kw = copy.deepcopy(msg_dict)
-                msg_function_kw.pop('extra')
-            else:
-                msg_function_kw = msg_dict
+            msg_function_kw = get_func_only_params(msg_dict)
             self.publish_params_checker.check_func_msg_dict(msg_function_kw)
         return True
 

@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:36
-import json
-from queue import Queue,SimpleQueue
-from funboost.constant import BrokerEnum
+from queue import Queue
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.queues.memory_queues_map import PythonQueues
 
@@ -20,9 +18,6 @@ class LocalPythonQueueConsumer(AbstractConsumer):
     def _dispatch_task(self):
         while True:
             task = self.local_python_queue.get()
-            if isinstance(task, dict):
-                task = json.dumps(task)
-            # self.logger.debug(f'从当前python解释器内部的 [{self._queue_name}] 队列中 取出的消息是：  {json.dumps(task)}  ')
             kw = {'body': task}
             self._submit_task(kw)
 

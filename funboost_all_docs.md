@@ -583,7 +583,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 用户也可以按照文档4.21章节,轻松扩展任何物质概念作为funboost的broker.
 `````
 
-**Class Variables (46):**
+**Class Variables (47):**
 - `EMPTY = 'EMPTY'`
 - `RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'`
 - `RABBITMQ = RABBITMQ_AMQPSTORM`
@@ -599,6 +599,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `REDIS_PUBSUB = 'REDIS_PUBSUB'`
 - `MEMORY_QUEUE = 'MEMORY_QUEUE'`
 - `LOCAL_PYTHON_QUEUE = MEMORY_QUEUE`
+- `FASTEST_MEM_QUEUE = 'FASTEST_MEM_QUEUE'`
 - `RABBITMQ_PIKA = 'RABBITMQ_PIKA'`
 - `MONGOMQ = 'MONGOMQ'`
 - `SQLITE_QUEUE = 'sqlite3'`
@@ -632,7 +633,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `POSTGRES = 'POSTGRES'`
 
 ##### 📌 `class ConcurrentModeEnum`
-*Line: 165*
+*Line: 169*
 
 **Docstring:**
 `````
@@ -651,7 +652,7 @@ funboost的多进程和多线程 asyncio是叠加的，不是互斥的。
 - `SOLO = SINGLE_THREAD`
 
 ##### 📌 `class FunctionKind`
-*Line: 183*
+*Line: 187*
 
 **Docstring:**
 `````
@@ -666,7 +667,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `COMMON_FUNCTION = 'COMMON_FUNCTION'`
 
 ##### 📌 `class ConstStrForClassMethod`
-*Line: 194*
+*Line: 198*
 
 **Class Variables (5):**
 - `FIRST_PARAM_NAME = 'first_param_name'`
@@ -676,7 +677,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `CLS_FILE = 'cls_file'`
 
 ##### 📌 `class RedisKeys`
-*Line: 202*
+*Line: 206*
 
 **Public Methods (9):**
 - `def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name)` `staticmethod`
@@ -713,7 +714,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `FUNBOOST_UNACK_REGISTRY_PREFIX = 'funboost_unack_registry:'`
 
 ##### 📌 `class ConsumingFuncInputParamsCheckerField`
-*Line: 266*
+*Line: 270*
 
 **Class Variables (6):**
 - `is_manual_func_input_params = 'is_manual_func_input_params'`
@@ -724,20 +725,20 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `func_position = 'func_position'`
 
 ##### 📌 `class MongoDbName`
-*Line: 275*
+*Line: 279*
 
 **Class Variables (2):**
 - `TASK_STATUS_DB = 'funboost_task_status'`
 - `MONGOMQ_DB = 'funboost_mongomq'`
 
 ##### 📌 `class StrConst`
-*Line: 279*
+*Line: 283*
 
 **Class Variables (1):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
 
 ##### 📌 `class EnvConst`
-*Line: 282*
+*Line: 286*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -1229,7 +1230,7 @@ Funboost vs Celery 的架构差异：
 #### 🏛️ Classes (4)
 
 ##### 📌 `class AsyncResult(RedisMixin)`
-*Line: 41*
+*Line: 47*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, task_id, timeout = 1800)`
@@ -1271,7 +1272,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class AioAsyncResult(AioRedisMixin)`
-*Line: 144*
+*Line: 150*
 
 **Docstring:**
 `````
@@ -1303,7 +1304,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class ResultFromMongo(MongoMixin)`
-*Line: 249*
+*Line: 255*
 
 **Docstring:**
 `````
@@ -1331,7 +1332,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
   - *以非阻塞等待的方式从funboost的状态结果持久化的mongodb数据库根据taskid获取结果*
 
 ##### 📌 `class FutureStatusResult`
-*Line: 283*
+*Line: 289*
 
 **Docstring:**
 `````
@@ -1501,7 +1502,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 #### 🔧 Public Functions (1)
 
 - `def deco_mq_conn_error(f)`
-  - *Line: 371*
+  - *Line: 387*
 
 
 ---
@@ -1572,6 +1573,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `from funboost.core.function_result_status_saver import FunctionResultStatus`
 - `from funboost.core.function_result_status_saver import RunStatus`
 - `from funboost.core.helper_funs import delete_keys_and_return_new_dict`
+- `from funboost.core.helper_funs import get_func_only_params`
 - `from funboost.core.helper_funs import get_publish_time`
 - `from funboost.core.helper_funs import MsgGenerater`
 - `from funboost.concurrent_pool.async_helper import get_or_create_event_loop`
@@ -1675,7 +1677,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')`
 
 ##### 📌 `class ConcurrentModeDispatcher(FunboostFileLoggerMixin)`
-*Line: 1114*
+*Line: 1126*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumerx: AbstractConsumer)`
@@ -1689,7 +1691,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `def schedulal_task_with_no_block(self)`
 
 ##### 📌 `class MetricCalculation`
-*Line: 1220*
+*Line: 1232*
 
 **Docstring:**
 `````
@@ -1715,7 +1717,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 - `UNIT_TIME_FOR_COUNT = 10`
 
 ##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1311*
+*Line: 1323*
 
 **Docstring:**
 `````
@@ -1750,7 +1752,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 #### 🔧 Public Functions (1)
 
 - `def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3)`
-  - *Line: 1205*
+  - *Line: 1217*
   - **Docstring:**
   `````
   判断多个消费者是否消费完成了。
@@ -8175,6 +8177,30 @@ def task_fun():  # 空函数,即使这样每秒钟也突破不了400次运行.
 这样运行你的`celery`项目才能达到每分钟执行100万个消息. 
 
 
+### 2.6.9 2026-01 funboost极限性能优化，发布和消费性能提升120%
+
+funboost 之前教程中大部分文案写的是：  
+funboost发布性能是celery的22倍，消费性能是celery的46倍。  
+
+经过极限优化后，现在funboost发布性能是celery的50倍，消费性能是celery的100倍。  
+
+
+**注意：**
+```
+funboost 说的发布性能是celery的m倍，消费性能是celery的n倍，不是指的执行任何用户的函数逻辑，
+都是差距这么大，这怎么可能，那不是逆天突破物理规律了吗。  
+说的是执行一个最简单的 def fun():pass 这种类似的超级简单的函数。  
+
+就像测试flask django fastapi 的web框架基准性能，永远是接口直接return hello world，
+不加复杂的业务逻辑。
+```  
+
+**优化点包括：**
+```
+去掉不必要的deepcopy 
+哪怕是性能消耗很小的属性都用惰性生成
+变量尽量复用，不要重新生成
+```
 
 
 ## 2.7 rq  celery  funboost 段位比较
@@ -14631,14 +14657,101 @@ my_task.consume()
 - funboost_publish_total: 发布消息计数 (labels: queue)
 
 
+## 4b.10 funboost支持微批消费
+
+**微批的核心是**：生产者是单个单个地提交任务，但是消费者自动将多个任务聚合起来，一次性消费。
+
+这是一个消费侧优化能力，很多消息队列框架都不提供原生支持（需要用户自己实现累积条数+超时强制触发消费的逻辑），funboost 通过 `MicroBatchConsumerMixin` 将这个模式抽象成了可复用的组件。  
+即使你不用消息队列，你用 funboost + `MEMORY_QUEUE` 充当一个微批消费的工具，也是非常方便的。
+这进一步说明了funboost是万能框架，因为除了核心功能，他有很多强大又使用简单的方面。
+
+```python 
+# -*- coding: utf-8 -*-
+# @Author  : AI Assistan
+"""
+微批消费者测试
+
+测试 MicroBatchConsumerMixin 的功能：
+1. 基本功能测试：发布消息，验证批量处理
+2. 超时触发测试：不足 batch_size 时超时触发
+
+例如可以批量100条插入数据库，做数据库表同步性能好。
+"""
+from funboost import boost, BrokerEnum,ctrl_c_recv
+from funboost.contrib.override_publisher_consumer_cls.funboost_micro_batch_mixin import (
+    MicroBatchConsumerMixin,MicroBatchBoosterParams
+)
 
 
+@boost(MicroBatchBoosterParams(
+    queue_name='test_micro_batch_queue',
+    broker_kind=BrokerEnum.MEM_QUEUE,
+    user_options={
+        'micro_batch_size': 10,        # 每批10条强制触发用户函数
+        'micro_batch_timeout': 3.0,    # 如果不足n条，3秒超时强制触发用户函数
+    },
+))
+def batch_insert_task(items: list):
+    """
+    模拟批量插入任务
+    
+    :param items: 消息列表，每个元素是一个字典（函数参数）
+    
+    items是例如 [{'x': 10, 'y': 20}, {'x': 11, 'y': 22}, {'x': 12, 'y': 24}, ...]
+    """
+    print(f"✅ 批量处理 {len(items)} 条消息: {items}")
+    return len(items)
+
+    
+if __name__ == '__main__':
+    # 运行基本测试
+    # 启动消费
+    batch_insert_task.consume() # 消费是自动微批操作
+    
+    print("发布 25 条消息，batch_size=10，预期触发 2 次完整批次 + 1 次超时批次")
+    print("=" * 60)
+    
+    # 发布 25 条消息, 之所以是25条，是为了让 21 - 25条消息触发 micro_batch_timeout 这个条件
+    for i in range(25):  
+        batch_insert_task.push(x=i, y=i * 2)  # 发布还是按照单条消息发布，消费是自动微批操作
+        print(f"发布消息: x={i}, y={i * 2}")
+    ctrl_c_recv()
+```
 
 
+### 4b.10.2 如果每次临时手写微批操作，会怎么样？
 
 
+如果写得不好会出现：
+- 最尾部没被批量条数n整除的数据丢失
+- 无超时机制
+- 线程不安全
+
+就算写得好，每次也要临时罗里吧嗦写一大堆代码，为了一个微批功能，最起码要写80行代码， 
+因为微批消费为了超时强制触发，100%需要有一个独立的后台检查机制（通常是单独的线程，或者异步协程）。
+
+### 4b.10.3 什么样的不叫微批操作？
+
+例如你的函数定义入参是 item_list, 
+你在发布时候，就已经是发布一个数组了，而不是一个一个的元素发布。 
+例如：`{item_list:[{"x":1,"y":2},{"x":2,"y":4},{"x":3,"y":6},{"x":4,"y":8},{"x":5,"y":10},....]}`  
+这种不是微批消费，压根不需要依赖框架的微批功能，就是个普通的函数调用而已，只不过函数入参恰好是数组而已。
+
+你仔细好好想想吧，如果你这么发布，那相当于要在发布端去实现微批发布的功能，
+你一样还是要去写判断数组条数 + 单独线程定时超时强制触发的一大堆代码。
+
+| 模式 | 做法 | 问题/结论 |
+|:---|:---|:---|
+| 发布时就是数组 | 发布端先聚合成数组再发布 | ❌ 问题转移到发布端，还是要写一堆聚合代码 |
+| 单条发布 + 消费侧聚合 | 单条发布，消费端自动聚合 | ✅ funboost 微批功能，开箱即用 |
 
 
+#### 4b.10.3.2 妙用：用微批功能做发布端聚合（如果你真的想微批发布的话）
+
+如果你真的想在发布时就整理成数组再发布，你照样可以复用 funboost 的微批功能！  
+此时你的 boost 函数 + `BrokerEnum.MEM_QUEUE` 充当**本地聚合器**，自动聚合多条数据后再 push 到真正的消息队列。  
+
+这样就避免了自己写一堆聚合批次的代码，**一鱼两吃**。 
 
 
 
@@ -17362,9 +17475,25 @@ funboost 去掉了ack机制的unack消息重回队列的通过 redis.scan 命令
 
 ```
 在旧版本中（BrokerEnum.REDIS_ACK_ABLE 等确认消费模式），当需要查找掉线消费者的遗留任务（unack 队列）
-或者清空队列时，框架需要找到所有类似的unack队列名字
+或者清空队列时，框架需要找到所有类似的unack队列名字 
  self.redis_db_frame.scan(0, f'{self._queue_name}__unack_id_*', count=self.SCAN_COUNT)
 ```
+
+## 7.61 2026-01 funboost极限性能优化，发布和消费性能提升120%
+
+运行`def fun(): pass`的函数，  
+
+funboost 之前教程中大部分文案写的是：  
+funboost发布性能是celery的22倍，消费性能是celery的46倍。  
+
+经过极限优化后，现在funboost发布性能是celery的50倍，消费性能是celery的100倍。  
+
+## 7.62 2026-01 funboost消费新增支持微批消费
+
+**微批的核心是**：生产者单个单个地提交任务，但是消费者自动将多个任务聚合起来，一次性消费。
+
+这是一个消费侧优化能力，很多消息队列框架都不提供原生支持（需要用户自己实现累积条数+超时强制触发消费的逻辑），funboost 通过 `MicroBatchConsumerMixin` 将这个模式抽象成了可复用的组件。  
+即使你不用消息队列，你用 funboost + `MEMORY_QUEUE` 充当一个微批消费的工具，也是非常方便的。
 `````
 
 --- **end of file: source/articles/c7.md** (project: funboost_docs) --- 

@@ -22,6 +22,12 @@ from funboost.core.function_result_status_saver import FunctionResultStatus
 
 NO_RESULT = 'no_result'
 
+
+# LazyAsyncResult 已删除：AsyncResult 本身就是懒加载的
+# RedisMixin 的 redis_db_filter_and_rpc_result 使用 @cached_method_result
+# 只有在访问 status_and_result 等属性时才会建立 Redis 连接
+
+
 def _judge_rpc_function_result_status_obj(status_and_result_obj:FunctionResultStatus,raise_exception:bool):
     if status_and_result_obj is None:
         raise FunboostWaitRpcResultTimeout(f'wait rpc data timeout for task_id:{status_and_result_obj.task_id}')

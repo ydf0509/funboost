@@ -241,6 +241,19 @@ register_broker_exclusive_config_default(
 register_broker_exclusive_config_default(BrokerEnum.ZEROMQ, {"port": None})
 
 
+# 高性能内存队列专有配置
+# pull_msg_batch_size: 每次批量拉取的消息数量，默认1（单条拉取）
+# ultra_fast_mode: 极速模式，跳过大部分框架开销，性能提升 3-10 倍
+#   注意：极速模式不支持重试、过滤、延时任务、RPC、结果持久化等功能
+register_broker_exclusive_config_default(
+    BrokerEnum.FASTEST_MEM_QUEUE,
+    {
+        "pull_msg_batch_size": 1,  # 默认单条拉取，批量建议设置 100-5000
+        "ultra_fast_mode": False,  # 极速模式，跳过框架开销
+    },
+)
+
+
 # AWS SQS 专有配置
 # wait_time_seconds: 长轮询等待时间（秒），最大20秒，0表示短轮询
 # max_number_of_messages: 每次 receive_message 拉取的最大消息数，范围1-10

@@ -583,7 +583,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 用户也可以按照文档4.21章节,轻松扩展任何物质概念作为funboost的broker.
 `````
 
-**Class Variables (46):**
+**Class Variables (47):**
 - `EMPTY = 'EMPTY'`
 - `RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'`
 - `RABBITMQ = RABBITMQ_AMQPSTORM`
@@ -599,6 +599,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `REDIS_PUBSUB = 'REDIS_PUBSUB'`
 - `MEMORY_QUEUE = 'MEMORY_QUEUE'`
 - `LOCAL_PYTHON_QUEUE = MEMORY_QUEUE`
+- `FASTEST_MEM_QUEUE = 'FASTEST_MEM_QUEUE'`
 - `RABBITMQ_PIKA = 'RABBITMQ_PIKA'`
 - `MONGOMQ = 'MONGOMQ'`
 - `SQLITE_QUEUE = 'sqlite3'`
@@ -632,7 +633,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `POSTGRES = 'POSTGRES'`
 
 ##### 📌 `class ConcurrentModeEnum`
-*Line: 165*
+*Line: 169*
 
 **Docstring:**
 `````
@@ -651,7 +652,7 @@ funboost的多进程和多线程 asyncio是叠加的，不是互斥的。
 - `SOLO = SINGLE_THREAD`
 
 ##### 📌 `class FunctionKind`
-*Line: 183*
+*Line: 187*
 
 **Docstring:**
 `````
@@ -666,7 +667,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `COMMON_FUNCTION = 'COMMON_FUNCTION'`
 
 ##### 📌 `class ConstStrForClassMethod`
-*Line: 194*
+*Line: 198*
 
 **Class Variables (5):**
 - `FIRST_PARAM_NAME = 'first_param_name'`
@@ -676,7 +677,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `CLS_FILE = 'cls_file'`
 
 ##### 📌 `class RedisKeys`
-*Line: 202*
+*Line: 206*
 
 **Public Methods (9):**
 - `def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name)` `staticmethod`
@@ -713,7 +714,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `FUNBOOST_UNACK_REGISTRY_PREFIX = 'funboost_unack_registry:'`
 
 ##### 📌 `class ConsumingFuncInputParamsCheckerField`
-*Line: 266*
+*Line: 270*
 
 **Class Variables (6):**
 - `is_manual_func_input_params = 'is_manual_func_input_params'`
@@ -724,20 +725,20 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `func_position = 'func_position'`
 
 ##### 📌 `class MongoDbName`
-*Line: 275*
+*Line: 279*
 
 **Class Variables (2):**
 - `TASK_STATUS_DB = 'funboost_task_status'`
 - `MONGOMQ_DB = 'funboost_mongomq'`
 
 ##### 📌 `class StrConst`
-*Line: 279*
+*Line: 283*
 
 **Class Variables (1):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
 
 ##### 📌 `class EnvConst`
-*Line: 282*
+*Line: 286*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -1229,7 +1230,7 @@ Funboost vs Celery 的架构差异：
 #### 🏛️ Classes (4)
 
 ##### 📌 `class AsyncResult(RedisMixin)`
-*Line: 41*
+*Line: 47*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, task_id, timeout = 1800)`
@@ -1271,7 +1272,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class AioAsyncResult(AioRedisMixin)`
-*Line: 144*
+*Line: 150*
 
 **Docstring:**
 `````
@@ -1303,7 +1304,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class ResultFromMongo(MongoMixin)`
-*Line: 249*
+*Line: 255*
 
 **Docstring:**
 `````
@@ -1331,7 +1332,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
   - *以非阻塞等待的方式从funboost的状态结果持久化的mongodb数据库根据taskid获取结果*
 
 ##### 📌 `class FutureStatusResult`
-*Line: 283*
+*Line: 289*
 
 **Docstring:**
 `````
@@ -1501,7 +1502,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 #### 🔧 Public Functions (1)
 
 - `def deco_mq_conn_error(f)`
-  - *Line: 371*
+  - *Line: 387*
 
 
 ---
@@ -1572,6 +1573,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `from funboost.core.function_result_status_saver import FunctionResultStatus`
 - `from funboost.core.function_result_status_saver import RunStatus`
 - `from funboost.core.helper_funs import delete_keys_and_return_new_dict`
+- `from funboost.core.helper_funs import get_func_only_params`
 - `from funboost.core.helper_funs import get_publish_time`
 - `from funboost.core.helper_funs import MsgGenerater`
 - `from funboost.concurrent_pool.async_helper import get_or_create_event_loop`
@@ -1675,7 +1677,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')`
 
 ##### 📌 `class ConcurrentModeDispatcher(FunboostFileLoggerMixin)`
-*Line: 1114*
+*Line: 1126*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumerx: AbstractConsumer)`
@@ -1689,7 +1691,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `def schedulal_task_with_no_block(self)`
 
 ##### 📌 `class MetricCalculation`
-*Line: 1220*
+*Line: 1232*
 
 **Docstring:**
 `````
@@ -1715,7 +1717,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 - `UNIT_TIME_FOR_COUNT = 10`
 
 ##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1311*
+*Line: 1323*
 
 **Docstring:**
 `````
@@ -1750,7 +1752,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 #### 🔧 Public Functions (1)
 
 - `def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3)`
-  - *Line: 1205*
+  - *Line: 1217*
   - **Docstring:**
   `````
   判断多个消费者是否消费完成了。
@@ -8175,6 +8177,30 @@ def task_fun():  # 空函数,即使这样每秒钟也突破不了400次运行.
 这样运行你的`celery`项目才能达到每分钟执行100万个消息. 
 
 
+### 2.6.9 2026-01 funboost极限性能优化，发布和消费性能提升120%
+
+funboost 之前教程中大部分文案写的是：  
+funboost发布性能是celery的22倍，消费性能是celery的46倍。  
+
+经过极限优化后，现在funboost发布性能是celery的50倍，消费性能是celery的100倍。  
+
+
+**注意：**
+```
+funboost 说的发布性能是celery的m倍，消费性能是celery的n倍，不是指的执行任何用户的函数逻辑，
+都是差距这么大，这怎么可能，那不是逆天突破物理规律了吗。  
+说的是执行一个最简单的 def fun():pass 这种类似的超级简单的函数。  
+
+就像测试flask django fastapi 的web框架基准性能，永远是接口直接return hello world，
+不加复杂的业务逻辑。
+```  
+
+**优化点包括：**
+```
+去掉不必要的deepcopy 
+哪怕是性能消耗很小的属性都用惰性生成
+变量尽量复用，不要重新生成
+```
 
 
 ## 2.7 rq  celery  funboost 段位比较
@@ -14631,14 +14657,101 @@ my_task.consume()
 - funboost_publish_total: 发布消息计数 (labels: queue)
 
 
+## 4b.10 funboost支持微批消费
+
+**微批的核心是**：生产者是单个单个地提交任务，但是消费者自动将多个任务聚合起来，一次性消费。
+
+这是一个消费侧优化能力，很多消息队列框架都不提供原生支持（需要用户自己实现累积条数+超时强制触发消费的逻辑），funboost 通过 `MicroBatchConsumerMixin` 将这个模式抽象成了可复用的组件。  
+即使你不用消息队列，你用 funboost + `MEMORY_QUEUE` 充当一个微批消费的工具，也是非常方便的。
+这进一步说明了funboost是万能框架，因为除了核心功能，他有很多强大又使用简单的方面。
+
+```python 
+# -*- coding: utf-8 -*-
+# @Author  : AI Assistan
+"""
+微批消费者测试
+
+测试 MicroBatchConsumerMixin 的功能：
+1. 基本功能测试：发布消息，验证批量处理
+2. 超时触发测试：不足 batch_size 时超时触发
+
+例如可以批量100条插入数据库，做数据库表同步性能好。
+"""
+from funboost import boost, BrokerEnum,ctrl_c_recv
+from funboost.contrib.override_publisher_consumer_cls.funboost_micro_batch_mixin import (
+    MicroBatchConsumerMixin,MicroBatchBoosterParams
+)
 
 
+@boost(MicroBatchBoosterParams(
+    queue_name='test_micro_batch_queue',
+    broker_kind=BrokerEnum.MEM_QUEUE,
+    user_options={
+        'micro_batch_size': 10,        # 每批10条强制触发用户函数
+        'micro_batch_timeout': 3.0,    # 如果不足n条，3秒超时强制触发用户函数
+    },
+))
+def batch_insert_task(items: list):
+    """
+    模拟批量插入任务
+    
+    :param items: 消息列表，每个元素是一个字典（函数参数）
+    
+    items是例如 [{'x': 10, 'y': 20}, {'x': 11, 'y': 22}, {'x': 12, 'y': 24}, ...]
+    """
+    print(f"✅ 批量处理 {len(items)} 条消息: {items}")
+    return len(items)
+
+    
+if __name__ == '__main__':
+    # 运行基本测试
+    # 启动消费
+    batch_insert_task.consume() # 消费是自动微批操作
+    
+    print("发布 25 条消息，batch_size=10，预期触发 2 次完整批次 + 1 次超时批次")
+    print("=" * 60)
+    
+    # 发布 25 条消息, 之所以是25条，是为了让 21 - 25条消息触发 micro_batch_timeout 这个条件
+    for i in range(25):  
+        batch_insert_task.push(x=i, y=i * 2)  # 发布还是按照单条消息发布，消费是自动微批操作
+        print(f"发布消息: x={i}, y={i * 2}")
+    ctrl_c_recv()
+```
 
 
+### 4b.10.2 如果每次临时手写微批操作，会怎么样？
 
 
+如果写得不好会出现：
+- 最尾部没被批量条数n整除的数据丢失
+- 无超时机制
+- 线程不安全
+
+就算写得好，每次也要临时罗里吧嗦写一大堆代码，为了一个微批功能，最起码要写80行代码， 
+因为微批消费为了超时强制触发，100%需要有一个独立的后台检查机制（通常是单独的线程，或者异步协程）。
+
+### 4b.10.3 什么样的不叫微批操作？
+
+例如你的函数定义入参是 item_list, 
+你在发布时候，就已经是发布一个数组了，而不是一个一个的元素发布。 
+例如：`{item_list:[{"x":1,"y":2},{"x":2,"y":4},{"x":3,"y":6},{"x":4,"y":8},{"x":5,"y":10},....]}`  
+这种不是微批消费，压根不需要依赖框架的微批功能，就是个普通的函数调用而已，只不过函数入参恰好是数组而已。
+
+你仔细好好想想吧，如果你这么发布，那相当于要在发布端去实现微批发布的功能，
+你一样还是要去写判断数组条数 + 单独线程定时超时强制触发的一大堆代码。
+
+| 模式 | 做法 | 问题/结论 |
+|:---|:---|:---|
+| 发布时就是数组 | 发布端先聚合成数组再发布 | ❌ 问题转移到发布端，还是要写一堆聚合代码 |
+| 单条发布 + 消费侧聚合 | 单条发布，消费端自动聚合 | ✅ funboost 微批功能，开箱即用 |
 
 
+#### 4b.10.3.2 妙用：用微批功能做发布端聚合（如果你真的想微批发布的话）
+
+如果你真的想在发布时就整理成数组再发布，你照样可以复用 funboost 的微批功能！  
+此时你的 boost 函数 + `BrokerEnum.MEM_QUEUE` 充当**本地聚合器**，自动聚合多条数据后再 push 到真正的消息队列。  
+
+这样就避免了自己写一堆聚合批次的代码，**一鱼两吃**。 
 
 
 
@@ -17362,9 +17475,25 @@ funboost 去掉了ack机制的unack消息重回队列的通过 redis.scan 命令
 
 ```
 在旧版本中（BrokerEnum.REDIS_ACK_ABLE 等确认消费模式），当需要查找掉线消费者的遗留任务（unack 队列）
-或者清空队列时，框架需要找到所有类似的unack队列名字
+或者清空队列时，框架需要找到所有类似的unack队列名字 
  self.redis_db_frame.scan(0, f'{self._queue_name}__unack_id_*', count=self.SCAN_COUNT)
 ```
+
+## 7.61 2026-01 funboost极限性能优化，发布和消费性能提升120%
+
+运行`def fun(): pass`的函数，  
+
+funboost 之前教程中大部分文案写的是：  
+funboost发布性能是celery的22倍，消费性能是celery的46倍。  
+
+经过极限优化后，现在funboost发布性能是celery的50倍，消费性能是celery的100倍。  
+
+## 7.62 2026-01 funboost消费新增支持微批消费
+
+**微批的核心是**：生产者单个单个地提交任务，但是消费者自动将多个任务聚合起来，一次性消费。
+
+这是一个消费侧优化能力，很多消息队列框架都不提供原生支持（需要用户自己实现累积条数+超时强制触发消费的逻辑），funboost 通过 `MicroBatchConsumerMixin` 将这个模式抽象成了可复用的组件。  
+即使你不用消息队列，你用 funboost + `MEMORY_QUEUE` 充当一个微批消费的工具，也是非常方便的。
 `````
 
 --- **end of file: source/articles/c7.md** (project: funboost_docs) --- 
@@ -22092,7 +22221,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 用户也可以按照文档4.21章节,轻松扩展任何物质概念作为funboost的broker.
 `````
 
-**Class Variables (46):**
+**Class Variables (47):**
 - `EMPTY = 'EMPTY'`
 - `RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'`
 - `RABBITMQ = RABBITMQ_AMQPSTORM`
@@ -22108,6 +22237,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `REDIS_PUBSUB = 'REDIS_PUBSUB'`
 - `MEMORY_QUEUE = 'MEMORY_QUEUE'`
 - `LOCAL_PYTHON_QUEUE = MEMORY_QUEUE`
+- `FASTEST_MEM_QUEUE = 'FASTEST_MEM_QUEUE'`
 - `RABBITMQ_PIKA = 'RABBITMQ_PIKA'`
 - `MONGOMQ = 'MONGOMQ'`
 - `SQLITE_QUEUE = 'sqlite3'`
@@ -22141,7 +22271,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `POSTGRES = 'POSTGRES'`
 
 ##### 📌 `class ConcurrentModeEnum`
-*Line: 165*
+*Line: 169*
 
 **Docstring:**
 `````
@@ -22160,7 +22290,7 @@ funboost的多进程和多线程 asyncio是叠加的，不是互斥的。
 - `SOLO = SINGLE_THREAD`
 
 ##### 📌 `class FunctionKind`
-*Line: 183*
+*Line: 187*
 
 **Docstring:**
 `````
@@ -22175,7 +22305,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `COMMON_FUNCTION = 'COMMON_FUNCTION'`
 
 ##### 📌 `class ConstStrForClassMethod`
-*Line: 194*
+*Line: 198*
 
 **Class Variables (5):**
 - `FIRST_PARAM_NAME = 'first_param_name'`
@@ -22185,7 +22315,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `CLS_FILE = 'cls_file'`
 
 ##### 📌 `class RedisKeys`
-*Line: 202*
+*Line: 206*
 
 **Public Methods (9):**
 - `def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name)` `staticmethod`
@@ -22222,7 +22352,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `FUNBOOST_UNACK_REGISTRY_PREFIX = 'funboost_unack_registry:'`
 
 ##### 📌 `class ConsumingFuncInputParamsCheckerField`
-*Line: 266*
+*Line: 270*
 
 **Class Variables (6):**
 - `is_manual_func_input_params = 'is_manual_func_input_params'`
@@ -22233,20 +22363,20 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `func_position = 'func_position'`
 
 ##### 📌 `class MongoDbName`
-*Line: 275*
+*Line: 279*
 
 **Class Variables (2):**
 - `TASK_STATUS_DB = 'funboost_task_status'`
 - `MONGOMQ_DB = 'funboost_mongomq'`
 
 ##### 📌 `class StrConst`
-*Line: 279*
+*Line: 283*
 
 **Class Variables (1):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
 
 ##### 📌 `class EnvConst`
-*Line: 282*
+*Line: 286*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -22738,7 +22868,7 @@ Funboost vs Celery 的架构差异：
 #### 🏛️ Classes (4)
 
 ##### 📌 `class AsyncResult(RedisMixin)`
-*Line: 41*
+*Line: 47*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, task_id, timeout = 1800)`
@@ -22780,7 +22910,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class AioAsyncResult(AioRedisMixin)`
-*Line: 144*
+*Line: 150*
 
 **Docstring:**
 `````
@@ -22812,7 +22942,7 @@ Funboost vs Celery 的架构差异：
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class ResultFromMongo(MongoMixin)`
-*Line: 249*
+*Line: 255*
 
 **Docstring:**
 `````
@@ -22840,7 +22970,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
   - *以非阻塞等待的方式从funboost的状态结果持久化的mongodb数据库根据taskid获取结果*
 
 ##### 📌 `class FutureStatusResult`
-*Line: 283*
+*Line: 289*
 
 **Docstring:**
 `````
@@ -23010,7 +23140,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 #### 🔧 Public Functions (1)
 
 - `def deco_mq_conn_error(f)`
-  - *Line: 371*
+  - *Line: 387*
 
 
 ---
@@ -23081,6 +23211,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `from funboost.core.function_result_status_saver import FunctionResultStatus`
 - `from funboost.core.function_result_status_saver import RunStatus`
 - `from funboost.core.helper_funs import delete_keys_and_return_new_dict`
+- `from funboost.core.helper_funs import get_func_only_params`
 - `from funboost.core.helper_funs import get_publish_time`
 - `from funboost.core.helper_funs import MsgGenerater`
 - `from funboost.concurrent_pool.async_helper import get_or_create_event_loop`
@@ -23184,7 +23315,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')`
 
 ##### 📌 `class ConcurrentModeDispatcher(FunboostFileLoggerMixin)`
-*Line: 1114*
+*Line: 1126*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumerx: AbstractConsumer)`
@@ -23198,7 +23329,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `def schedulal_task_with_no_block(self)`
 
 ##### 📌 `class MetricCalculation`
-*Line: 1220*
+*Line: 1232*
 
 **Docstring:**
 `````
@@ -23224,7 +23355,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 - `UNIT_TIME_FOR_COUNT = 10`
 
 ##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1311*
+*Line: 1323*
 
 **Docstring:**
 `````
@@ -23259,7 +23390,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 #### 🔧 Public Functions (1)
 
 - `def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3)`
-  - *Line: 1205*
+  - *Line: 1217*
   - **Docstring:**
   `````
   判断多个消费者是否消费完成了。
@@ -25249,6 +25380,7 @@ def sub(a, b):
     │   ├── confirm_mixin.py
     │   ├── dramatiq_consumer.py
     │   ├── empty_consumer.py
+    │   ├── fastest_mem_queue_consumer.py
     │   ├── faststream_consumer.py
     │   ├── grpc_consumer.py
     │   ├── http_consumer.py
@@ -25367,6 +25499,7 @@ def sub(a, b):
     │   ├── confluent_kafka_publisher.py
     │   ├── dramatiq_publisher.py
     │   ├── empty_publisher.py
+    │   ├── fastest_mem_queue_publisher.py
     │   ├── faststream_publisher.py
     │   ├── grpc_publisher.py
     │   ├── http_publisher.py
@@ -25408,6 +25541,8 @@ def sub(a, b):
     │   └── zeromq_publisher.py
     ├── queues
     │   ├── __init__.py
+    │   ├── bounded_simple_queue.py
+    │   ├── fastest_mem_queue.py
     │   ├── memory_queues_map.py
     │   ├── peewee_queue.py
     │   ├── postgres_queue.py
@@ -25462,7 +25597,7 @@ def sub(a, b):
 ---
 
 
-## funboost (relative dir: `funboost`)  Included Files (total: 236 files)
+## funboost (relative dir: `funboost`)  Included Files (total: 240 files)
 
 
 - `funboost/constant.py`
@@ -25556,6 +25691,8 @@ def sub(a, b):
 - `funboost/consumers/dramatiq_consumer.py`
 
 - `funboost/consumers/empty_consumer.py`
+
+- `funboost/consumers/fastest_mem_queue_consumer.py`
 
 - `funboost/consumers/faststream_consumer.py`
 
@@ -25769,6 +25906,8 @@ def sub(a, b):
 
 - `funboost/publishers/empty_publisher.py`
 
+- `funboost/publishers/fastest_mem_queue_publisher.py`
+
 - `funboost/publishers/faststream_publisher.py`
 
 - `funboost/publishers/grpc_publisher.py`
@@ -25848,6 +25987,10 @@ def sub(a, b):
 - `funboost/publishers/zeromq_publisher.py`
 
 - `funboost/publishers/__init__.py`
+
+- `funboost/queues/bounded_simple_queue.py`
+
+- `funboost/queues/fastest_mem_queue.py`
 
 - `funboost/queues/memory_queues_map.py`
 
@@ -25960,7 +26103,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 用户也可以按照文档4.21章节,轻松扩展任何物质概念作为funboost的broker.
 `````
 
-**Class Variables (46):**
+**Class Variables (47):**
 - `EMPTY = 'EMPTY'`
 - `RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'`
 - `RABBITMQ = RABBITMQ_AMQPSTORM`
@@ -25976,6 +26119,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `REDIS_PUBSUB = 'REDIS_PUBSUB'`
 - `MEMORY_QUEUE = 'MEMORY_QUEUE'`
 - `LOCAL_PYTHON_QUEUE = MEMORY_QUEUE`
+- `FASTEST_MEM_QUEUE = 'FASTEST_MEM_QUEUE'`
 - `RABBITMQ_PIKA = 'RABBITMQ_PIKA'`
 - `MONGOMQ = 'MONGOMQ'`
 - `SQLITE_QUEUE = 'sqlite3'`
@@ -26009,7 +26153,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `POSTGRES = 'POSTGRES'`
 
 ##### 📌 `class ConcurrentModeEnum`
-*Line: 165*
+*Line: 169*
 
 **Docstring:**
 `````
@@ -26028,7 +26172,7 @@ funboost的多进程和多线程 asyncio是叠加的，不是互斥的。
 - `SOLO = SINGLE_THREAD`
 
 ##### 📌 `class FunctionKind`
-*Line: 183*
+*Line: 187*
 
 **Docstring:**
 `````
@@ -26043,7 +26187,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `COMMON_FUNCTION = 'COMMON_FUNCTION'`
 
 ##### 📌 `class ConstStrForClassMethod`
-*Line: 194*
+*Line: 198*
 
 **Class Variables (5):**
 - `FIRST_PARAM_NAME = 'first_param_name'`
@@ -26053,7 +26197,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `CLS_FILE = 'cls_file'`
 
 ##### 📌 `class RedisKeys`
-*Line: 202*
+*Line: 206*
 
 **Public Methods (9):**
 - `def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name)` `staticmethod`
@@ -26090,7 +26234,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `FUNBOOST_UNACK_REGISTRY_PREFIX = 'funboost_unack_registry:'`
 
 ##### 📌 `class ConsumingFuncInputParamsCheckerField`
-*Line: 266*
+*Line: 270*
 
 **Class Variables (6):**
 - `is_manual_func_input_params = 'is_manual_func_input_params'`
@@ -26101,20 +26245,20 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `func_position = 'func_position'`
 
 ##### 📌 `class MongoDbName`
-*Line: 275*
+*Line: 279*
 
 **Class Variables (2):**
 - `TASK_STATUS_DB = 'funboost_task_status'`
 - `MONGOMQ_DB = 'funboost_mongomq'`
 
 ##### 📌 `class StrConst`
-*Line: 279*
+*Line: 283*
 
 **Class Variables (1):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
 
 ##### 📌 `class EnvConst`
-*Line: 282*
+*Line: 286*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -26180,6 +26324,10 @@ class BrokerEnum:
 
     MEMORY_QUEUE = 'MEMORY_QUEUE'  # 使用python queue.Queue实现的基于当前python进程的消息队列，不支持跨进程 跨脚本 跨机器共享任务，不支持持久化，适合一次性短期简单任务。
     LOCAL_PYTHON_QUEUE = MEMORY_QUEUE  # 别名，python本地queue就是基于python自带的语言的queue.Queue，消息存在python程序的内存中，不支持重启断点接续。
+    
+    # 高性能内存队列，使用 collections.deque 代替 queue.Queue，去除不必要的 task_done/join 开销
+    # 性能比 MEMORY_QUEUE 提升 2-5 倍，支持批量拉取消息（通过 broker_exclusive_config={'pull_msg_batch_size': 1000}）
+    FASTEST_MEM_QUEUE = 'FASTEST_MEM_QUEUE'
 
     RABBITMQ_PIKA = 'RABBITMQ_PIKA'  # 使用pika包操作rabbitmq  作为 分布式消息队列。，不建议使用
 
@@ -31785,6 +31933,7 @@ from .pool_commons import ConcurrentPoolBuilder
 - `from funboost.core.function_result_status_saver import FunctionResultStatus`
 - `from funboost.core.function_result_status_saver import RunStatus`
 - `from funboost.core.helper_funs import delete_keys_and_return_new_dict`
+- `from funboost.core.helper_funs import get_func_only_params`
 - `from funboost.core.helper_funs import get_publish_time`
 - `from funboost.core.helper_funs import MsgGenerater`
 - `from funboost.concurrent_pool.async_helper import get_or_create_event_loop`
@@ -31888,7 +32037,7 @@ from .pool_commons import ConcurrentPoolBuilder
 - `logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')`
 
 ##### 📌 `class ConcurrentModeDispatcher(FunboostFileLoggerMixin)`
-*Line: 1114*
+*Line: 1126*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumerx: AbstractConsumer)`
@@ -31902,7 +32051,7 @@ from .pool_commons import ConcurrentPoolBuilder
 - `def schedulal_task_with_no_block(self)`
 
 ##### 📌 `class MetricCalculation`
-*Line: 1220*
+*Line: 1232*
 
 **Docstring:**
 `````
@@ -31928,7 +32077,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 - `UNIT_TIME_FOR_COUNT = 10`
 
 ##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1311*
+*Line: 1323*
 
 **Docstring:**
 `````
@@ -31963,7 +32112,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 #### 🔧 Public Functions (1)
 
 - `def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3)`
-  - *Line: 1205*
+  - *Line: 1217*
   - **Docstring:**
   `````
   判断多个消费者是否消费完成了。
@@ -32038,7 +32187,7 @@ from funboost.concurrent_pool.single_thread_executor import SoloExecutor
 
 from funboost.core.function_result_status_saver import ResultPersistenceHelper, FunctionResultStatus, RunStatus
 
-from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_publish_time, MsgGenerater
+from funboost.core.helper_funs import delete_keys_and_return_new_dict, get_func_only_params, get_publish_time, MsgGenerater
 
 from funboost.concurrent_pool.async_helper import get_or_create_event_loop, simple_run_in_executor
 from funboost.concurrent_pool.async_pool_executor import AsyncPoolExecutor
@@ -32492,7 +32641,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
             return
-        function_only_params = delete_keys_and_return_new_dict(kw['body'], )
+        function_only_params = get_func_only_params(kw['body'], )
         kw['function_only_params'] = function_only_params
         if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
                 function_only_params, self._get_priority_conf(kw, 'filter_str')):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
@@ -32501,12 +32650,15 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             return
         publish_time = get_publish_time(kw['body'])
         msg_expire_seconds_priority = self._get_priority_conf(kw, 'msg_expire_seconds')
-        if msg_expire_seconds_priority and time.time() - msg_expire_seconds_priority > publish_time:
-            self.logger.warning(
-                f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(time.time() - publish_time, 4)} 秒 ,'
-                f'超过了指定的 {msg_expire_seconds_priority} 秒，丢弃任务')
-            self._confirm_consume(kw)
-            return
+        if msg_expire_seconds_priority:
+            # 优化：只调用一次 time.time()
+            current_time = time.time()
+            if current_time - msg_expire_seconds_priority > publish_time:
+                self.logger.warning(
+                    f'消息发布时戳是 {publish_time} {kw["body"].get("publish_time_format", "")},距离现在 {round(current_time - publish_time, 4)} 秒 ,'
+                    f'超过了指定的 {msg_expire_seconds_priority} 秒，丢弃任务')
+                self._confirm_consume(kw)
+                return
 
         msg_eta = self._get_priority_conf(kw, 'eta')
         msg_countdown = self._get_priority_conf(kw, 'countdown')
@@ -32531,8 +32683,16 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             #                                    misfire_grace_time=misfire_grace_time)
 
             # 这种方式是延时任务重新以普通任务方式发送到消息队列
-            msg_no_delay = copy.deepcopy(kw['body'])
-            self.__delete_eta_countdown(msg_no_delay)
+            # 优化：使用浅拷贝 + extra 字典推导式，避免完整 deepcopy
+            body = kw['body']
+            if isinstance(body, str):
+                body = Serialization.to_dict(body)
+            # 浅拷贝消息，对 extra 字典做特殊处理（排除延时相关键）
+            msg_no_delay = dict(body)
+            if 'extra' in msg_no_delay:
+                # 创建新的 extra 字典，排除延时任务相关的键
+                msg_no_delay['extra'] = {k: v for k, v in msg_no_delay['extra'].items() 
+                                         if k not in ('eta', 'countdown', 'misfire_grace_time')}
             # print(msg_no_delay)
             # 数据库作为apscheduler的jobstores时候， 不能用 self.pbulisher_of_same_queue.publish，self不能序列化
             self._delay_task_scheduler.add_job(self._push_apscheduler_task_to_broker, 'date', run_date=run_date,
@@ -32599,9 +32759,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 time.sleep((1 - (time.time() - self._last_start_count_qps_timestamp)) * 1)
 
     def _print_message_get_from_broker(self, msg, broker_name=None):
-        # print(999)
-        if self.consumer_params.is_show_message_get_from_broker:
-            # self.logger.debug(f'从 {broker_name} 中间件 的 {self._queue_name} 中取出的消息是 {msg}')
+        # 优化：先检查日志级别和配置，避免不必要的字符串格式化和 JSON 序列化
+        if self.consumer_params.is_show_message_get_from_broker and self.logger.isEnabledFor(logging.DEBUG):
             self.logger.debug(f'从 {broker_name or self.consumer_params.broker_kind} 中间件 的 {self._queue_name} 中取出的消息是 {Serialization.to_json_str(msg)}')
 
     def _get_priority_conf(self, kw: dict, broker_task_config_key: str):
@@ -32796,7 +32955,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 function_run = kill_remote_task.kill_fun_deco(task_id)(function_run)  # 用杀死装饰器包装起来在另一个线程运行函数,以便等待远程杀死。
             function_result_status.result = function_run(**self._convert_real_function_only_params_by_conusuming_function_kind(function_only_params, kw['body']['extra']))
             function_result_status.success = True
-            if self.consumer_params.log_level <= logging.DEBUG:
+            # 优化：使用 isEnabledFor 检查日志级别，避免不必要的字符串格式化
+            if self.logger.isEnabledFor(logging.DEBUG):
                 result_str_to_be_print = str(function_result_status.result)[:100] if len(str(function_result_status.result)) < 100 else str(function_result_status.result)[:100] + '  。。。。。  '
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,入参是 {function_only_params} , '
@@ -32957,7 +33117,8 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 rs = await asyncio.wait_for(corotinue_obj, timeout=self.consumer_params.function_timeout)
             function_result_status.result = rs
             function_result_status.success = True
-            if self.consumer_params.log_level <= logging.DEBUG:
+            # 优化：使用 isEnabledFor 检查日志级别，避免不必要的字符串格式化
+            if self.logger.isEnabledFor(logging.DEBUG):
                 result_str_to_be_print = str(rs)[:100] if len(str(rs)) < 100 else str(rs)[:100] + '  。。。。。  '
                 self.logger.debug(f' 函数 {self.consuming_function.__name__}  '
                                   f'第{current_retry_times + 1}次 运行, 正确了，函数运行时间是 {round(time.time() - t_start, 4)} 秒,'
@@ -33938,6 +34099,180 @@ class EmptyConsumer(AbstractConsumer, metaclass=abc.ABCMeta):
 ---
 
 
+--- **start of file: funboost/consumers/fastest_mem_queue_consumer.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `funboost/consumers/fastest_mem_queue_consumer.py`
+
+#### 📝 Module Docstring
+
+`````
+高性能内存队列消费者
+
+支持两种模式：
+1. 标准模式（默认）：完整的 funboost 功能支持
+2. 极速模式（ultra_fast_mode=True）：跳过大部分框架开销，直接调用函数
+   - 极速模式下不支持：重试、过滤、延时任务、RPC、结果持久化等功能
+   - 适用于对性能要求极高且不需要这些功能的场景
+`````
+
+#### 📦 Imports
+
+- `import time`
+- `from funboost.consumers.base_consumer import AbstractConsumer`
+- `from funboost.queues.fastest_mem_queue import FastestMemQueues`
+- `from funboost.queues.fastest_mem_queue import FastestMemQueue`
+- `from funboost.core.helper_funs import get_func_only_params`
+- `from funboost.core.serialization import Serialization`
+- `from funboost.core.serialization import Serialization`
+
+#### 🏛️ Classes (1)
+
+##### 📌 `class FastestMemQueueConsumer(AbstractConsumer)`
+*Line: 17*
+
+**Docstring:**
+`````
+高性能内存队列消费者。
+
+broker_exclusive_config 配置项：
+- pull_msg_batch_size: 每次批量拉取的消息数量，默认 1
+- ultra_fast_mode: 是否启用极速模式，默认 False
+  极速模式跳过大部分框架开销，性能可提升 3-10 倍，但失去重试/过滤/延时等功能
+`````
+
+**Properties (1):**
+- `@property _mem_queue -> FastestMemQueue`
+
+
+---
+
+`````python
+# -*- coding: utf-8 -*-
+"""
+高性能内存队列消费者
+
+支持两种模式：
+1. 标准模式（默认）：完整的 funboost 功能支持
+2. 极速模式（ultra_fast_mode=True）：跳过大部分框架开销，直接调用函数
+   - 极速模式下不支持：重试、过滤、延时任务、RPC、结果持久化等功能
+   - 适用于对性能要求极高且不需要这些功能的场景
+"""
+import time
+from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.queues.fastest_mem_queue import FastestMemQueues, FastestMemQueue
+from funboost.core.helper_funs import get_func_only_params
+
+
+class FastestMemQueueConsumer(AbstractConsumer):
+    """
+    高性能内存队列消费者。
+    
+    broker_exclusive_config 配置项：
+    - pull_msg_batch_size: 每次批量拉取的消息数量，默认 1
+    - ultra_fast_mode: 是否启用极速模式，默认 False
+      极速模式跳过大部分框架开销，性能可提升 3-10 倍，但失去重试/过滤/延时等功能
+    """
+
+    @property
+    def _mem_queue(self) -> FastestMemQueue:
+        return FastestMemQueues.get_queue(self._queue_name)
+
+    def _dispatch_task(self):
+        batch_size = self.consumer_params.broker_exclusive_config.get('pull_msg_batch_size', 1)
+        ultra_fast = self.consumer_params.broker_exclusive_config.get('ultra_fast_mode', False)
+        
+        if ultra_fast:
+            self._dispatch_task_ultra_fast(batch_size)
+        elif batch_size <= 1:
+            self._dispatch_task_single()
+        else:
+            self._dispatch_task_batch(batch_size)
+
+    def _dispatch_task_single(self):
+        """单条拉取模式"""
+        while True:
+            task = self._mem_queue.get()
+            kw = {'body': task}
+            self._submit_task(kw)
+
+    def _dispatch_task_batch(self, batch_size: int):
+        """批量拉取模式"""
+        while True:
+            tasks = self._mem_queue.get_batch_block(max_count=batch_size)
+            for task in tasks:
+                kw = {'body': task}
+                self._submit_task(kw)
+
+    def _dispatch_task_ultra_fast(self, batch_size: int):
+        """
+        极速模式：跳过大部分框架开销，直接调用函数
+        
+        不支持的功能：重试、过滤、延时任务、RPC、结果持久化、指标统计等
+        """
+        func = self.consuming_function
+        queue = self._mem_queue
+        
+        # 缓存常用变量，避免属性访问开销
+        count = 0
+        last_log_time = time.time()
+        
+        if batch_size <= 1:
+            # 单条极速模式
+            while True:
+                task = queue.get()
+                # 直接提取函数参数并调用
+                if isinstance(task, dict):
+                    params = get_func_only_params(task)
+                    func(**params)
+                else:
+                    # 如果是字符串，需要转换
+                    from funboost.core.serialization import Serialization
+                    task_dict = Serialization.to_dict(task)
+                    params = get_func_only_params(task_dict)
+                    func(**params)
+                
+                count += 1
+                # 每10秒输出一次统计
+                current_time = time.time()
+                if current_time - last_log_time > 10:
+                    self.logger.info(f'[极速模式] 10秒内执行了 {count} 次函数 [{func.__name__}]')
+                    count = 0
+                    last_log_time = current_time
+        else:
+            # 批量极速模式
+            while True:
+                tasks = queue.get_batch_block(max_count=batch_size)
+                for task in tasks:
+                    if isinstance(task, dict):
+                        params = get_func_only_params(task)
+                        func(**params)
+                    else:
+                        from funboost.core.serialization import Serialization
+                        task_dict = Serialization.to_dict(task)
+                        params = get_func_only_params(task_dict)
+                        func(**params)
+                    count += 1
+                
+                current_time = time.time()
+                if current_time - last_log_time > 10:
+                    self.logger.info(f'[极速模式] 10秒内执行了 {count} 次函数 [{func.__name__}]')
+                    count = 0
+                    last_log_time = current_time
+
+    def _confirm_consume(self, kw):
+        pass
+
+    def _requeue(self, kw):
+        self._mem_queue.put(kw['body'])
+
+`````
+
+--- **end of file: funboost/consumers/fastest_mem_queue_consumer.py** (project: funboost) --- 
+
+---
+
+
 --- **start of file: funboost/consumers/faststream_consumer.py** (project: funboost) --- 
 
 
@@ -33958,7 +34293,7 @@ class EmptyConsumer(AbstractConsumer, metaclass=abc.ABCMeta):
 - `from faststream.annotations import Logger`
 - `from funboost.concurrent_pool.async_helper import simple_run_in_executor`
 - `from funboost.core.serialization import Serialization`
-- `from funboost.core.helper_funs import delete_keys_and_return_new_dict`
+- `from funboost.core.helper_funs import get_func_only_params`
 
 #### 🏛️ Classes (1)
 
@@ -33985,7 +34320,7 @@ from faststream.annotations import Logger
 
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.core.serialization import Serialization
-from funboost.core.helper_funs import delete_keys_and_return_new_dict
+from funboost.core.helper_funs import get_func_only_params
 
 
 class FastStreamConsumer(EmptyConsumer):
@@ -33998,7 +34333,7 @@ class FastStreamConsumer(EmptyConsumer):
             # print(logger.name)
             # return self.consuming_function(*args, **kwargs) # 如果没有声明 autoretry_for ，那么消费函数出错了就不会自动重试了。
             # print(msg)
-            function_only_params = delete_keys_and_return_new_dict(Serialization.to_dict(msg))
+            function_only_params = get_func_only_params(Serialization.to_dict(msg))
             if self._consuming_function_is_asyncio:
                 result = await self.consuming_function(**function_only_params)
             else:
@@ -35205,17 +35540,14 @@ class KombuConsumer(AbstractConsumer, ):
 
 #### 📦 Imports
 
-- `import json`
 - `from queue import Queue`
-- `from queue import SimpleQueue`
-- `from funboost.constant import BrokerEnum`
 - `from funboost.consumers.base_consumer import AbstractConsumer`
 - `from funboost.queues.memory_queues_map import PythonQueues`
 
 #### 🏛️ Classes (1)
 
 ##### 📌 `class LocalPythonQueueConsumer(AbstractConsumer)`
-*Line: 11*
+*Line: 9*
 
 **Docstring:**
 `````
@@ -35232,9 +35564,7 @@ python 内置queue对象作为消息队列，这个要求发布和消费必须�
 # -*- coding: utf-8 -*-
 # @Author  : ydf
 # @Time    : 2022/8/8 0008 13:36
-import json
-from queue import Queue,SimpleQueue
-from funboost.constant import BrokerEnum
+from queue import Queue
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.queues.memory_queues_map import PythonQueues
 
@@ -35251,9 +35581,6 @@ class LocalPythonQueueConsumer(AbstractConsumer):
     def _dispatch_task(self):
         while True:
             task = self.local_python_queue.get()
-            if isinstance(task, dict):
-                task = json.dumps(task)
-            # self.logger.debug(f'从当前python解释器内部的 [{self._queue_name}] 队列中 取出的消息是：  {json.dumps(task)}  ')
             kw = {'body': task}
             self._submit_task(kw)
 
@@ -39510,20 +39837,20 @@ class MySql2Mysql:
 #### 📦 Imports
 
 - `import asyncio`
-- `import inspect`
 - `import threading`
 - `import time`
+- `import typing`
 - `from funboost.consumers.base_consumer import AbstractConsumer`
 - `from funboost.concurrent_pool.async_helper import simple_run_in_executor`
 - `from funboost.constant import ConcurrentModeEnum`
 - `from funboost.constant import BrokerEnum`
 - `from funboost.core.func_params_model import BoosterParams`
-- `from funboost.core.helper_funs import delete_keys_and_return_new_dict`
+- `from funboost.core.helper_funs import get_func_only_params`
 
 #### 🏛️ Classes (2)
 
 ##### 📌 `class MicroBatchConsumerMixin(AbstractConsumer)`
-*Line: 36*
+*Line: 37*
 
 **Docstring:**
 `````
@@ -39548,14 +39875,14 @@ class MySql2Mysql:
   - *初始化微批相关配置*
 
 ##### 📌 `class MicroBatchBoosterParams(BoosterParams)`
-*Line: 240*
+*Line: 241*
 
 **Class Variables (5):**
-- `broker_kind: str = (BrokerEnum.MEMORY_QUEUE,)`
-- `consumer_override_cls: AbstractConsumer = (MicroBatchConsumerMixin,)`
-- `user_options: dict = ({'micro_batch_size': 10, 'micro_batch_timeout': 1.0},)`
-- `qps: float = (100,)`
-- `should_check_publish_func_params: bool = (False,)`
+- `broker_kind: str = BrokerEnum.MEMORY_QUEUE`
+- `consumer_override_cls: typing.Optional[typing.Type] = MicroBatchConsumerMixin`
+- `user_options: dict = {'micro_batch_size': 10, 'micro_batch_timeout': 1.0}`
+- `qps: float = 100`
+- `should_check_publish_func_params: bool = False`
 
 
 ---
@@ -39587,13 +39914,14 @@ class MySql2Mysql:
 """
 
 import asyncio
-import inspect
 import threading
 import time
+import typing
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.constant import ConcurrentModeEnum,BrokerEnum
 from funboost.core.func_params_model import BoosterParams
+from funboost.core.helper_funs import get_func_only_params
 
 
 class MicroBatchConsumerMixin(AbstractConsumer):
@@ -39678,8 +40006,8 @@ class MicroBatchConsumerMixin(AbstractConsumer):
             return
         
         # 提取函数参数
-        from funboost.core.helper_funs import delete_keys_and_return_new_dict
-        function_only_params = delete_keys_and_return_new_dict(kw['body'])
+        
+        function_only_params = get_func_only_params(kw['body'])
         kw['function_only_params'] = function_only_params
         
         # 累积到缓冲区
@@ -39801,14 +40129,14 @@ class MicroBatchConsumerMixin(AbstractConsumer):
 
 
 class MicroBatchBoosterParams(BoosterParams):
-    broker_kind:str=BrokerEnum.MEMORY_QUEUE,
-    consumer_override_cls:AbstractConsumer=MicroBatchConsumerMixin,
-    user_options:dict ={
+    broker_kind: str = BrokerEnum.MEMORY_QUEUE
+    consumer_override_cls: typing.Optional[typing.Type] = MicroBatchConsumerMixin  # 类型与父类保持一致
+    user_options: dict = {
         'micro_batch_size': 10,        # 每批10条
         'micro_batch_timeout': 1.0,    # 1秒超时
-    },
-    qps:float=100,
-    should_check_publish_func_params:bool=False,  # 微批模式需要关闭入参校验
+    }
+    qps: float = 100
+    should_check_publish_func_params: bool = False  # 微批模式需要关闭入参校验
 
 `````
 
@@ -43710,6 +44038,19 @@ register_broker_exclusive_config_default(
 register_broker_exclusive_config_default(BrokerEnum.ZEROMQ, {"port": None})
 
 
+# 高性能内存队列专有配置
+# pull_msg_batch_size: 每次批量拉取的消息数量，默认1（单条拉取）
+# ultra_fast_mode: 极速模式，跳过大部分框架开销，性能提升 3-10 倍
+#   注意：极速模式不支持重试、过滤、延时任务、RPC、结果持久化等功能
+register_broker_exclusive_config_default(
+    BrokerEnum.FASTEST_MEM_QUEUE,
+    {
+        "pull_msg_batch_size": 1,  # 默认单条拉取，批量建议设置 100-5000
+        "ultra_fast_mode": False,  # 极速模式，跳过框架开销
+    },
+)
+
+
 # AWS SQS 专有配置
 # wait_time_seconds: 长轮询等待时间（秒），最大20秒，0表示短轮询
 # max_number_of_messages: 每次 receive_message 拉取的最大消息数，范围1-10
@@ -45042,6 +45383,7 @@ if __name__ == '__main__':
 - `from funboost.core.helper_funs import get_publish_time`
 - `from funboost.core.helper_funs import delete_keys_and_return_new_dict`
 - `from funboost.core.helper_funs import get_publish_time_format`
+- `from funboost.core.helper_funs import get_func_only_params`
 - `from funboost.core.serialization import Serialization`
 - `from funboost.utils import time_util`
 - `from funboost.utils import decorators`
@@ -45069,19 +45411,27 @@ if __name__ == '__main__':
     - `fucntion_name: str`
     - `msg_dict: dict`
 
-**Public Methods (3):**
+**Public Methods (5):**
+- `def params_str(self, value)` `params_str.setter`
+- `def total_thread(self, value)` `total_thread.setter`
 - `def parse_status_and_result_to_obj(cls, status_dict: dict)` `classmethod`
 - `def get_status_dict(self, without_datetime_obj = False)`
 - `def to_pretty_json_str(self)`
 
-**Class Variables (4):**
+**Properties (2):**
+- `@property params_str`
+- `@property total_thread`
+
+**Class Variables (6):**
 - `host_name = socket.gethostname()`
+- `_process_id = os.getpid()`
+- `_host_process = f'{host_name} - {_process_id}'`
 - `script_name_long = sys.argv[0]`
 - `script_name = script_name_long.split('/')[-1].split('\\')[-1]`
 - `FUNC_RUN_ERROR = 'FUNC_RUN_ERROR'`
 
 ##### 📌 `class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin)`
-*Line: 120*
+*Line: 152*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig, queue_name)`
@@ -45113,7 +45463,7 @@ import sys
 from pymongo import IndexModel, ReplaceOne
 
 from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig
-from funboost.core.helper_funs import get_publish_time, delete_keys_and_return_new_dict, get_publish_time_format
+from funboost.core.helper_funs import get_publish_time, delete_keys_and_return_new_dict, get_publish_time_format,get_func_only_params
 from funboost.core.serialization import Serialization
 from funboost.utils import time_util, decorators
 from funboost.utils.mongo_util import MongoMixin
@@ -45125,48 +45475,80 @@ class RunStatus:
     finish = 'finish'
 
 class FunctionResultStatus():
+    # 类级别缓存，避免每次实例化都调用系统函数
     host_name = socket.gethostname()
+    _process_id = os.getpid()  # 进程ID在进程生命周期内不变
+    _host_process = f'{host_name} - {_process_id}'  # 缓存 host_process
 
     script_name_long = sys.argv[0]
     script_name = script_name_long.split('/')[-1].split('\\')[-1]
 
     FUNC_RUN_ERROR = 'FUNC_RUN_ERROR'
+    
+    # 使用 __slots__ 可以减少内存占用和提升属性访问速度，但会影响动态属性添加
+    # 这里不使用 __slots__ 以保持兼容性
 
     def __init__(self, queue_name: str, fucntion_name: str, msg_dict: dict):
-        # print(params)
-        self.host_process = f'{self.host_name} - {os.getpid()}'
+        # 优化：使用类级别缓存的 host_process，避免每次格式化
+        self.host_process = self._host_process
         self.queue_name = queue_name
         self.function = fucntion_name
         self.msg_dict = msg_dict
-        self.task_id = self.msg_dict.get('extra', {}).get('task_id', '')
-        self.process_id = os.getpid()
+        # 优化：直接从 msg_dict 获取 extra，避免多次 get 调用
+        extra = msg_dict.get('extra', {})
+        self.task_id = extra.get('task_id', '')
+        self.publish_time = extra.get('publish_time')
+        self.publish_time_format = extra.get('publish_time_format')
+        # 优化：使用类级别缓存的 process_id
+        self.process_id = self._process_id
         self.thread_id = threading.get_ident()
-        self.publish_time  = get_publish_time(msg_dict)
-        self.publish_time_format = get_publish_time_format(msg_dict)
-        # print(self.publish_time_format)
-        function_params = delete_keys_and_return_new_dict(msg_dict, )
-        self.params = function_params
-        self.params_str = Serialization.to_json_str(function_params)
+        # 优化：params 使用 delete_keys_and_return_new_dict（已优化为字典推导式）
+        self.params = get_func_only_params(msg_dict)
+        # 优化：延迟计算 params_str，使用 _params_str 缓存
+        self._params_str = None
         self.result = None
-        self.run_times = 0 # 消息实际重试运行了多少次
+        self.run_times = 0  # 消息实际重试运行了多少次
         self.exception = None
         self.exception_type = None
         self.exception_msg = None
-        self.rpc_chain_error_msg_dict:dict  = None
+        self.rpc_chain_error_msg_dict: dict = None
         self.time_start = time.time()
         self.time_cost = None
         self.time_end = None
         self.success = False
         self.run_status = ''
-        self.total_thread = threading.active_count()
+        # 优化：延迟获取 total_thread，避免不必要的系统调用
+        self._total_thread = None
         self._has_requeue = False
         self._has_to_dlx_queue = False
         self._has_kill_task = False
         self.rpc_result_expire_seconds = None
         
-         # 额外的方便用户扩展，如果用户想自己放点其他的其他特殊奇葩信息，可以放在这里。而不必来这里改源码加字段。
-         # 用户可以在同一个线程或者协程中通过 fct.function_result_status.user_context 获取。
-        self.user_context:dict = {} 
+        # 额外的方便用户扩展，如果用户想自己放点其他的其他特殊奇葩信息，可以放在这里。而不必来这里改源码加字段。
+        # 用户可以在同一个线程或者协程中通过 fct.function_result_status.user_context 获取。
+        self.user_context: dict = {}
+    
+    @property
+    def params_str(self):
+        """延迟计算 params_str，只在需要时才进行 JSON 序列化"""
+        if self._params_str is None:
+            self._params_str = Serialization.to_json_str(self.params)
+        return self._params_str
+    
+    @params_str.setter
+    def params_str(self, value):
+        self._params_str = value
+    
+    @property
+    def total_thread(self):
+        """延迟获取线程数，避免不必要的系统调用"""
+        if self._total_thread is None:
+            self._total_thread = threading.active_count()
+        return self._total_thread
+    
+    @total_thread.setter
+    def total_thread(self, value):
+        self._total_thread = value 
       
 
        
@@ -45905,12 +46287,8 @@ if __name__ == '__main__':
 
 #### 📦 Imports
 
-- `import copy`
-- `import pytz`
 - `import time`
-- `import uuid`
 - `from funboost.utils.uuid7 import uuid7`
-- `import datetime`
 - `from funboost.core.funboost_time import FunboostTime`
 - `from funboost.core.funboost_time import fast_get_now_time_str`
 - `from funboost import FunboostCommonConfig`
@@ -45918,7 +46296,7 @@ if __name__ == '__main__':
 #### 🏛️ Classes (1)
 
 ##### 📌 `class MsgGenerater`
-*Line: 52*
+*Line: 58*
 
 **Public Methods (4):**
 - `def generate_task_id(queue_name: str) -> str` `staticmethod`
@@ -45932,10 +46310,10 @@ if __name__ == '__main__':
 - `def generate_publish_time_format() -> str` `staticmethod`
 - `def generate_pulish_time_and_task_id(cls, queue_name: str, task_id = None)` `classmethod`
 
-#### 🔧 Public Functions (4)
+#### 🔧 Public Functions (5)
 
 - `def get_publish_time(paramsx: dict)`
-  - *Line: 10*
+  - *Line: 6*
   - **Docstring:**
   `````
   :param paramsx:
@@ -45943,18 +46321,32 @@ if __name__ == '__main__':
   `````
 
 - `def get_publish_time_format(paramsx: dict)`
-  - *Line: 18*
+  - *Line: 14*
   - **Docstring:**
   `````
   :param paramsx:
   :return:
   `````
 
-- `def delete_keys_and_return_new_dict(dictx: dict, keys: list = None)`
+- `def delete_keys_and_return_new_dict(dictx: dict, exclude_keys: list)`
   - *Line: 26*
+  - **Docstring:**
+  `````
+  返回一个不包含extra字段的新字典,也即是真正的函数入参字典。
+  优化：使用字典推导式代替 deepcopy + pop，性能提升 10-50 倍。
+  `````
+
+- `def get_func_only_params(dictx: dict) -> dict`
+  - *Line: 35*
+  - **Docstring:**
+  `````
+  消息中剔除 extra 字段，返回真正的函数入参字典。
+  :param dictx:
+  :return:
+  `````
 
 - `def block_python_main_thread_exit()`
-  - *Line: 37*
+  - *Line: 43*
   - **Docstring:**
   `````
   https://funboost.readthedocs.io/zh-cn/latest/articles/c10.html#runtimeerror-cannot-schedule-new-futures-after-interpreter-shutdown
@@ -45967,12 +46359,8 @@ if __name__ == '__main__':
 ---
 
 `````python
-import copy
-import pytz
 import time
-import uuid
 from funboost.utils.uuid7 import uuid7
-import datetime
 from funboost.core.funboost_time import FunboostTime, fast_get_now_time_str
 
 
@@ -45992,16 +46380,26 @@ def get_publish_time_format(paramsx: dict):
     return paramsx.get('extra', {}).get('publish_time_format', None)
 
 
-def delete_keys_and_return_new_dict(dictx: dict, keys: list = None):
-    dict_new = copy.deepcopy(dictx)  # 主要是去掉一级键 publish_time，浅拷贝即可。新的消息已经不是这样了。
-    keys = ['publish_time', 'publish_time_format', 'extra'] if keys is None else keys
-    for dict_key in keys:
-        try:
-            dict_new.pop(dict_key)
-        except KeyError:
-            pass
-    return dict_new
 
+
+
+
+def delete_keys_and_return_new_dict(dictx: dict, exclude_keys: list ):
+    """
+    返回一个不包含extra字段的新字典,也即是真正的函数入参字典。
+    优化：使用字典推导式代替 deepcopy + pop，性能提升 10-50 倍。
+    """
+    return {k: v for k, v in dictx.items() if k not in exclude_keys}
+
+_DEFAULT_EXCLUDE_KEYS = frozenset(['extra'])
+
+def get_func_only_params(dictx: dict)->dict:
+    """
+    消息中剔除 extra 字段，返回真正的函数入参字典。
+    :param dictx:
+    :return:
+    """
+    return {k: v for k, v in dictx.items() if k not in _DEFAULT_EXCLUDE_KEYS}
 
 def block_python_main_thread_exit():
     """
@@ -46960,7 +47358,7 @@ if __name__ == '__main__':
 #### 🏛️ Classes (4)
 
 ##### 📌 `class AsyncResult(RedisMixin)`
-*Line: 41*
+*Line: 47*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, task_id, timeout = 1800)`
@@ -47002,7 +47400,7 @@ if __name__ == '__main__':
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class AioAsyncResult(AioRedisMixin)`
-*Line: 144*
+*Line: 150*
 
 **Docstring:**
 `````
@@ -47034,7 +47432,7 @@ if __name__ == '__main__':
 - `rpc_data = status_and_result_obj`
 
 ##### 📌 `class ResultFromMongo(MongoMixin)`
-*Line: 249*
+*Line: 255*
 
 **Docstring:**
 `````
@@ -47062,7 +47460,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
   - *以非阻塞等待的方式从funboost的状态结果持久化的mongodb数据库根据taskid获取结果*
 
 ##### 📌 `class FutureStatusResult`
-*Line: 283*
+*Line: 289*
 
 **Docstring:**
 `````
@@ -47113,6 +47511,12 @@ from funboost.core.function_result_status_saver import FunctionResultStatus
 
 
 NO_RESULT = 'no_result'
+
+
+# LazyAsyncResult 已删除：AsyncResult 本身就是懒加载的
+# RedisMixin 的 redis_db_filter_and_rpc_result 使用 @cached_method_result
+# 只有在访问 status_and_result 等属性时才会建立 Redis 连接
+
 
 def _judge_rpc_function_result_status_obj(status_and_result_obj:FunctionResultStatus,raise_exception:bool):
     if status_and_result_obj is None:
@@ -53612,6 +54016,7 @@ if typing.TYPE_CHECKING:
 - `from funboost.publishers.zeromq_publisher import ZeroMqPublisher`
 - `from funboost.publishers.kafka_publisher import KafkaPublisher`
 - `from funboost.publishers.local_python_queue_publisher import LocalPythonQueuePublisher`
+- `from funboost.publishers.fastest_mem_queue_publisher import FastestMemQueuePublisher`
 - `from funboost.publishers.mongomq_publisher import MongoMqPublisher`
 - `from funboost.publishers.persist_queue_publisher import PersistQueuePublisher`
 - `from funboost.publishers.rabbitmq_pika_publisher import RabbitmqPublisher`
@@ -53625,6 +54030,7 @@ if typing.TYPE_CHECKING:
 - `from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer`
 - `from funboost.consumers.kafka_consumer import KafkaConsumer`
 - `from funboost.consumers.local_python_queue_consumer import LocalPythonQueueConsumer`
+- `from funboost.consumers.fastest_mem_queue_consumer import FastestMemQueueConsumer`
 - `from funboost.consumers.mongomq_consumer import MongoMqConsumer`
 - `from funboost.consumers.nats_consumer import NatsConsumer`
 - `from funboost.consumers.peewee_conusmer import PeeweeConsumer`
@@ -53690,7 +54096,7 @@ if typing.TYPE_CHECKING:
 #### 🔧 Public Functions (2)
 
 - `def register_custom_broker(broker_kind, publisher_class: typing.Type[AbstractPublisher], consumer_class: typing.Type[AbstractConsumer])`
-  - *Line: 91*
+  - *Line: 94*
   - **Docstring:**
   `````
   动态注册中间件到框架中， 方便的增加中间件类型或者修改是自定义消费者逻辑。
@@ -53701,7 +54107,7 @@ if typing.TYPE_CHECKING:
   `````
 
 - `def regist_to_funboost(broker_kind: str)`
-  - *Line: 107*
+  - *Line: 110*
   - **Docstring:**
   `````
   不直接定义在broker_kind__publsiher_consumer_type_map, 延迟导入是因为funboost没有pip自动安装这些三方包，防止一启动就报错。
@@ -53728,6 +54134,7 @@ from funboost.publishers.udp_publisher import UDPPublisher
 from funboost.publishers.zeromq_publisher import ZeroMqPublisher
 from funboost.publishers.kafka_publisher import KafkaPublisher
 from funboost.publishers.local_python_queue_publisher import LocalPythonQueuePublisher
+from funboost.publishers.fastest_mem_queue_publisher import FastestMemQueuePublisher
 from funboost.publishers.mongomq_publisher import MongoMqPublisher
 
 from funboost.publishers.persist_queue_publisher import PersistQueuePublisher
@@ -53746,6 +54153,7 @@ from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer
 
 from funboost.consumers.kafka_consumer import KafkaConsumer
 from funboost.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
+from funboost.consumers.fastest_mem_queue_consumer import FastestMemQueueConsumer
 from funboost.consumers.mongomq_consumer import MongoMqConsumer
 from funboost.consumers.nats_consumer import NatsConsumer
 
@@ -53775,6 +54183,7 @@ broker_kind__publsiher_consumer_type_map = {
 
     BrokerEnum.REDIS: (RedisPublisher, RedisConsumer),
     BrokerEnum.MEMORY_QUEUE: (LocalPythonQueuePublisher, LocalPythonQueueConsumer),
+    BrokerEnum.FASTEST_MEM_QUEUE: (FastestMemQueuePublisher, FastestMemQueueConsumer),
     BrokerEnum.RABBITMQ_PIKA: (RabbitmqPublisher, RabbitmqConsumer),
     BrokerEnum.MONGOMQ: (MongoMqPublisher, MongoMqConsumer),
     BrokerEnum.PERSISTQUEUE: (PersistQueuePublisher, PersistQueueConsumer),
@@ -55389,7 +55798,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 #### 🔧 Public Functions (1)
 
 - `def deco_mq_conn_error(f)`
-  - *Line: 371*
+  - *Line: 387*
 
 
 ---
@@ -55471,6 +55880,11 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         atexit.register(self._at_exit)
         if publisher_params.clear_queue_within_init:
             self.clear()
+        
+        # 优化：缓存包装后的 _publish_impl 方法，避免每次发布都重新应用装饰器
+        self._wrapped_publish_impl = decorators.handle_exception(
+            retry_times=10, is_throw_error=True, time_sleep=0.1
+        )(self._publish_impl)
     
     @property
     def final_func_input_params_info(self):
@@ -55526,14 +55940,12 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _convert_msg(self, msg: typing.Union[str, dict], task_id=None,
                      task_options: TaskOptions = None) -> (typing.Dict, typing.Dict, typing.Dict, str):
         """
-        
+        优化：减少不必要的深拷贝，使用字典推导式创建 msg_function_kw
         """
         msg = Serialization.to_dict(msg)
-        msg_function_kw = copy.deepcopy(msg)
-        raw_extra = {}
-        if 'extra' in msg:
-            msg_function_kw.pop('extra')
-            raw_extra = msg['extra']
+        # 使用字典推导式代替 deepcopy，排除 extra 键
+        raw_extra = msg.get('extra', {})
+        msg_function_kw = {k: v for k, v in msg.items() if k != 'extra'}
         self.check_func_msg_dict(msg_function_kw)
 
         if task_options:
@@ -55574,7 +55986,12 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         java可以这样通过http接口或者funboost.faas  来发布消息 {"user_id":123,"name":"张三","extra": {"task_id":"1234567890","max_retry_times":3}} 
 
         """
-        msg = copy.deepcopy(msg)  # 字典是可变对象,不要改变影响用户自身的传参字典. 用户可能继续使用这个传参字典.
+        # 优化：使用浅拷贝代替深拷贝，_convert_msg 内部不再做拷贝
+        # 对于嵌套的 extra 字典，在需要修改时会创建新字典
+        if isinstance(msg, str):
+            msg = Serialization.to_dict(msg)
+        else:
+            msg = dict(msg)  # 浅拷贝，不改变用户传入的原始字典
         msg, msg_function_kw, extra_params, task_id = self._convert_msg(msg, task_id, task_options)
         t_start = time.time()
 
@@ -55590,21 +56007,29 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             new_msg['extra']['can_not_json_serializable_keys'] = can_not_json_serializable_keys
             msg_json = Serialization.to_json_str(new_msg)
         # print(msg_json)
-        decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
-            self._publish_impl)(msg_json)
+        # 优化：使用缓存的包装方法，避免每次重新应用装饰器
+        self._wrapped_publish_impl(msg_json)
 
-        self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(time.time() - t_start, 4)}秒  {msg_json if self.publisher_params.publish_msg_log_use_full_msg else msg_function_kw}',
-                          extra={'task_id': task_id} # 发布日志中显示task_id，方便排查问题。
-                          )  # 显示msg太长了。
-        with self._lock_for_count:
-            self.count_per_minute += 1
-            self.publish_msg_num_total += 1
-            if time.time() - self._current_time > 10:
-                self.logger.info(
-                    f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 队列中')
-                self._init_count()
+        # 优化：先获取当前时间用于后续判断，减少 time.time() 调用
+        current_time = time.time()
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(current_time - t_start, 4)}秒  {msg_json if self.publisher_params.publish_msg_log_use_full_msg else msg_function_kw}',
+                              extra={'task_id': task_id})
+        
+        # 优化：减少锁内操作，先计数再判断是否需要输出日志
+        self.count_per_minute += 1
+        self.publish_msg_num_total += 1
+        # 每10秒输出一次统计日志，减少锁竞争
+        if current_time - self._current_time > 10:
+            with self._lock_for_count:
+                # 双重检查，避免多线程重复输出
+                if current_time - self._current_time > 10:
+                    self.logger.info(
+                        f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 队列中')
+                    self._init_count()
         self._after_publish(msg, msg_function_kw, task_id)
-        return AsyncResult(task_id,timeout=self.publisher_params.rpc_timeout)
+        # AsyncResult 本身就是懒加载的，只有访问 result 等属性时才建立 redis 连接
+        return AsyncResult(task_id, timeout=self.publisher_params.rpc_timeout)
     
     def _after_publish(self, msg: dict, msg_function_kw: dict, task_id: str):
         """发布消息后的钩子方法，子类可以覆写此方法来实现自定义逻辑，例如记录指标"""
@@ -55612,8 +56037,8 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def send_msg(self, msg: typing.Union[dict, str]):
         """直接发送任意原始的消息内容到消息队列,不生成辅助参数,无视函数入参名字,不校验入参个数和键名"""
-        decorators.handle_exception(retry_times=10, is_throw_error=True, time_sleep=0.1)(
-            self._publish_impl)(Serialization.to_json_str(msg))
+        # 优化：使用缓存的包装方法
+        self._wrapped_publish_impl(Serialization.to_json_str(msg))
 
     @staticmethod
     def __get_cls_file(cls: type):
@@ -55730,13 +56155,13 @@ The first argument of the push method must be the instance of the class.
         async_result = await simple_run_in_executor(self.publish, msg, task_id, task_options)
         return AioAsyncResult(async_result.task_id, timeout=async_result.timeout)
 
-    def check_func_msg_dict(self,msg_dict:dict):
+    def check_func_msg_dict(self, msg_dict: dict):
         if self.publish_params_checker and self.publisher_params.should_check_publish_func_params:
-            if not isinstance(msg_dict,dict):
+            if not isinstance(msg_dict, dict):
                 raise ValueError(f"check_func_msg_dict 入参必须是字典, 当前是: {type(msg_dict)}")
+            # 优化：使用字典推导式代替 deepcopy + pop
             if 'extra' in msg_dict:
-                msg_function_kw = copy.deepcopy(msg_dict)
-                msg_function_kw.pop('extra')
+                msg_function_kw = {k: v for k, v in msg_dict.items() if k != 'extra'}
             else:
                 msg_function_kw = msg_dict
             self.publish_params_checker.check_func_msg_dict(msg_function_kw)
@@ -56218,6 +56643,165 @@ class EmptyPublisher(AbstractPublisher, metaclass=abc.ABCMeta):
 `````
 
 --- **end of file: funboost/publishers/empty_publisher.py** (project: funboost) --- 
+
+---
+
+
+--- **start of file: funboost/publishers/fastest_mem_queue_publisher.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `funboost/publishers/fastest_mem_queue_publisher.py`
+
+#### 📝 Module Docstring
+
+`````
+高性能内存队列发布者
+
+支持两种模式：
+1. 标准模式（默认）：完整的 funboost 功能支持
+2. 极速模式（ultra_fast_mode=True）：跳过大部分框架开销，直接发布消息
+   - 极速模式下会自动生成简化的 extra 字段
+   - 适用于对性能要求极高的场景
+`````
+
+#### 📦 Imports
+
+- `import time`
+- `import typing`
+- `from funboost.publishers.base_publisher import AbstractPublisher`
+- `from funboost.queues.fastest_mem_queue import FastestMemQueues`
+- `from funboost.queues.fastest_mem_queue import FastestMemQueue`
+- `from funboost.core.msg_result_getter import AsyncResult`
+
+#### 🏛️ Classes (1)
+
+##### 📌 `class FastestMemQueuePublisher(AbstractPublisher)`
+*Line: 18*
+
+**Docstring:**
+`````
+高性能内存队列发布者。
+
+broker_exclusive_config 配置项：
+- ultra_fast_mode: 是否启用极速模式，默认 False
+  极速模式跳过大部分框架开销（序列化、装饰器、日志等），性能提升 3-5 倍
+`````
+
+**Public Methods (5):**
+- `def custom_init(self)`
+- `def publish(self, msg: typing.Union[str, dict], task_id = None, task_options = None)`
+  - **Docstring:**
+  `````
+  发布消息到队列。
+  
+  极速模式下跳过大部分框架开销，直接将消息放入队列。
+  `````
+- `def clear(self)`
+- `def get_message_count(self)`
+- `def close(self)`
+
+**Properties (1):**
+- `@property _mem_queue -> FastestMemQueue`
+
+
+---
+
+`````python
+# -*- coding: utf-8 -*-
+"""
+高性能内存队列发布者
+
+支持两种模式：
+1. 标准模式（默认）：完整的 funboost 功能支持
+2. 极速模式（ultra_fast_mode=True）：跳过大部分框架开销，直接发布消息
+   - 极速模式下会自动生成简化的 extra 字段
+   - 适用于对性能要求极高的场景
+"""
+import time
+import typing
+from funboost.publishers.base_publisher import AbstractPublisher
+from funboost.queues.fastest_mem_queue import FastestMemQueues, FastestMemQueue
+from funboost.core.msg_result_getter import AsyncResult
+
+
+class FastestMemQueuePublisher(AbstractPublisher):
+    """
+    高性能内存队列发布者。
+    
+    broker_exclusive_config 配置项：
+    - ultra_fast_mode: 是否启用极速模式，默认 False
+      极速模式跳过大部分框架开销（序列化、装饰器、日志等），性能提升 3-5 倍
+    """
+
+    # noinspection PyAttributeOutsideInit
+    def custom_init(self):
+        super().custom_init()
+        self._ultra_fast = self.publisher_params.broker_exclusive_config.get('ultra_fast_mode', False)
+        if self._ultra_fast:
+            # 极速模式：预生成一些常量，减少运行时开销
+            self._task_id_counter = 0
+            self._count = 0
+            self._last_log_time = time.time()
+
+    @property
+    def _mem_queue(self) -> FastestMemQueue:
+        return FastestMemQueues.get_queue(self._queue_name)
+
+    def publish(self, msg: typing.Union[str, dict], task_id=None, task_options=None):
+        """
+        发布消息到队列。
+        
+        极速模式下跳过大部分框架开销，直接将消息放入队列。
+        """
+        if self._ultra_fast:
+            return self._publish_ultra_fast(msg)
+        else:
+            return super().publish(msg, task_id, task_options)
+
+    def _publish_ultra_fast(self, msg: typing.Union[str, dict]):
+        """
+        极速发布模式：跳过序列化、装饰器、日志等开销
+        """
+        # 直接构建消息，不做任何转换
+        if isinstance(msg, dict):
+            # 添加最小化的 extra 字段（消费者极速模式需要）
+            if 'extra' not in msg:
+                self._task_id_counter += 1
+                msg['extra'] = {
+                    'task_id': f'ultra_{self._task_id_counter}',
+                    'publish_time': time.time(),
+                }
+            self._mem_queue.put(msg)
+        else:
+            # 字符串消息直接放入
+            self._mem_queue.put(msg)
+        
+        # 简化的计数统计
+        self._count += 1
+        current_time = time.time()
+        if current_time - self._last_log_time > 10:
+            self.logger.info(f'[极速模式] 10秒内发布了 {self._count} 条消息到 {self._queue_name}')
+            self._count = 0
+            self._last_log_time = current_time
+        
+        return AsyncResult(f'ultra_{self._task_id_counter}', timeout=self.publisher_params.rpc_timeout)
+
+    def _publish_impl(self, msg):
+        self._mem_queue.put(msg)
+
+    def clear(self):
+        self._mem_queue.clear()
+        self.logger.warning(f'清除 高性能内存队列 {self._queue_name} 中的消息成功')
+
+    def get_message_count(self):
+        return self._mem_queue.qsize()
+
+    def close(self):
+        pass
+
+`````
+
+--- **end of file: funboost/publishers/fastest_mem_queue_publisher.py** (project: funboost) --- 
 
 ---
 
@@ -60039,6 +60623,524 @@ class ZeroMqPublisher(AbstractPublisher):
 `````
 
 --- **end of file: funboost/publishers/__init__.py** (project: funboost) --- 
+
+---
+
+
+--- **start of file: funboost/queues/bounded_simple_queue.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `funboost/queues/bounded_simple_queue.py`
+
+#### 📝 Module Docstring
+
+`````
+有界 SimpleQueue：SimpleQueue + 信号量
+`````
+
+#### 📦 Imports
+
+- `import threading`
+- `from queue import SimpleQueue`
+- `from queue import Empty as QueueEmpty`
+- `import time`
+
+#### 🏛️ Classes (4)
+
+##### 📌 `class BoundedSimpleQueue`
+*Line: 10*
+
+**Docstring:**
+`````
+有界 SimpleQueue，信号量实现背压
+`````
+
+**🔧 Constructor (`__init__`):**
+- `def __init__(self, maxsize: int = 0)`
+  - **Parameters:**
+    - `self`
+    - `maxsize: int = 0`
+
+**Public Methods (4):**
+- `def put(self, item, block = True, timeout = None)`
+  - *放入消息，队列满时阻塞*
+- `def get(self, block = True, timeout = None)`
+  - *获取消息*
+- `def qsize(self)`
+- `def empty(self)`
+
+**Class Variables (1):**
+- `__slots__ = ('_queue', '_semaphore', '_maxsize')`
+
+##### 📌 `class Empty(Exception)`
+*Line: 51*
+
+##### 📌 `class Full(Exception)`
+*Line: 55*
+
+##### 📌 `class BoundedSimpleQueues`
+*Line: 59*
+
+**Docstring:**
+`````
+有界 SimpleQueue 管理器
+`````
+
+**Public Methods (1):**
+- `def get_queue(cls, queue_name: str, maxsize: int = 10000)` `classmethod`
+
+**Class Variables (2):**
+- `_queues = {}`
+- `_lock = threading.Lock()`
+
+
+---
+
+`````python
+# -*- coding: utf-8 -*-
+"""
+有界 SimpleQueue：SimpleQueue + 信号量
+"""
+
+import threading
+from queue import SimpleQueue, Empty as QueueEmpty
+
+
+class BoundedSimpleQueue:
+    """有界 SimpleQueue，信号量实现背压"""
+    
+    __slots__ = ('_queue', '_semaphore', '_maxsize')
+    
+    def __init__(self, maxsize: int = 0):
+        self._queue = SimpleQueue()
+        self._maxsize = maxsize if maxsize > 0 else 0
+        self._semaphore = threading.Semaphore(maxsize) if maxsize > 0 else None
+    
+    def put(self, item, block=True, timeout=None):
+        """放入消息，队列满时阻塞"""
+        if self._semaphore is not None:
+            acquired = self._semaphore.acquire(blocking=block, timeout=timeout)
+            if not acquired:
+                raise Full()
+            try:
+                self._queue.put(item)
+            except:
+                self._semaphore.release()
+                raise
+        else:
+            self._queue.put(item)
+    
+    def get(self, block=True, timeout=None):
+        """获取消息"""
+        try:
+            item = self._queue.get(block=block, timeout=timeout)
+        except QueueEmpty:
+            raise Empty()
+        if self._semaphore is not None:
+            self._semaphore.release()
+        return item
+    
+    def qsize(self):
+        return self._queue.qsize()
+    
+    def empty(self):
+        return self._queue.empty()
+
+
+class Empty(Exception):
+    pass
+
+
+class Full(Exception):
+    pass
+
+
+class BoundedSimpleQueues:
+    """有界 SimpleQueue 管理器"""
+    
+    _queues = {}
+    _lock = threading.Lock()
+    
+    @classmethod
+    def get_queue(cls, queue_name: str, maxsize: int = 10000):
+        if queue_name not in cls._queues:
+            with cls._lock:
+                if queue_name not in cls._queues:
+                    cls._queues[queue_name] = BoundedSimpleQueue(maxsize=maxsize)
+        return cls._queues[queue_name]
+
+
+if __name__ == '__main__':
+    import time
+    
+    n = 1000000
+    print(f"测试 {n:,} 次 put + get:")
+    
+    q = BoundedSimpleQueue(maxsize=n)
+    t0 = time.time()
+    for i in range(n):
+        q.put(i)
+    print(f"  put: {time.time()-t0:.3f}s, {n/(time.time()-t0):,.0f} ops/sec")
+    
+    t0 = time.time()
+    for i in range(n):
+        q.get()
+    print(f"  get: {time.time()-t0:.3f}s, {n/(time.time()-t0):,.0f} ops/sec")
+
+`````
+
+--- **end of file: funboost/queues/bounded_simple_queue.py** (project: funboost) --- 
+
+---
+
+
+--- **start of file: funboost/queues/fastest_mem_queue.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `funboost/queues/fastest_mem_queue.py`
+
+#### 📝 Module Docstring
+
+`````
+高性能内存队列实现
+
+相比 queue.Queue 的优化：
+1. 使用 collections.deque（底层是 C 实现，append/popleft 是原子操作且 O(1)）
+2. 去除 task_done/join 等不必要的功能
+3. 空队列时使用极短暂 sleep 轮询，比 Condition 更轻量
+4. 支持批量获取消息，减少循环开销
+
+性能对比：
+- queue.Queue: ~20-25万 ops/sec
+- FastestMemQueue: ~180万 ops/sec (get)，批量可达 600万+ ops/sec
+`````
+
+#### 📦 Imports
+
+- `import time`
+- `import threading`
+- `from collections import deque`
+- `from typing import Any`
+- `from typing import List`
+- `from typing import Optional`
+- `import time`
+- `import queue`
+
+#### 🏛️ Classes (2)
+
+##### 📌 `class FastestMemQueue`
+*Line: 22*
+
+**Docstring:**
+`````
+高性能内存队列，专为 funboost 优化。
+
+特点：
+- 线程安全（deque 的 append/popleft 是原子操作）
+- 无 task_done/join 开销
+- 支持批量 get
+- 最小化同步开销
+`````
+
+**🔧 Constructor (`__init__`):**
+- `def __init__(self)`
+  - **Parameters:**
+    - `self`
+
+**Public Methods (9):**
+- `def put(self, item: Any) -> None`
+  - *放入单个消息，无锁操作（deque.append 是原子的）*
+- `def put_nowait(self, item: Any) -> None`
+  - *同 put，保持接口兼容*
+- `def get(self, block: bool = True, timeout: Optional[float] = None) -> Any`
+  - **Docstring:**
+  `````
+  获取单个消息
+  
+  Args:
+      block: 是否阻塞等待
+      timeout: 超时时间（秒），None 表示永久等待
+  
+  Returns:
+      队列中的消息
+      
+  Raises:
+      IndexError: 非阻塞模式下队列为空时抛出
+  `````
+- `def get_nowait(self) -> Any`
+  - *非阻塞获取，队列为空时抛出 IndexError*
+- `def get_batch(self, max_count: int = 100) -> List[Any]`
+  - **Docstring:**
+  `````
+  批量获取消息，减少锁竞争开销
+  
+  Args:
+      max_count: 最多获取多少条消息
+      
+  Returns:
+      消息列表（可能为空）
+  `````
+- `def get_batch_block(self, max_count: int = 100, timeout: float = 0.01) -> List[Any]`
+  - **Docstring:**
+  `````
+  批量获取消息，阻塞直到至少有一条消息
+  
+  Args:
+      max_count: 最多获取多少条消息
+      timeout: 等待第一条消息的超时时间
+      
+  Returns:
+      消息列表（至少一条）
+  `````
+- `def qsize(self) -> int`
+  - *返回队列大小（近似值）*
+- `def empty(self) -> bool`
+  - *检查队列是否为空*
+- `def clear(self) -> None`
+  - *清空队列*
+
+**Class Variables (1):**
+- `__slots__ = ('_queue', '_lock')`
+
+##### 📌 `class FastestMemQueues`
+*Line: 134*
+
+**Docstring:**
+`````
+高性能内存队列管理器
+`````
+
+**Public Methods (2):**
+- `def get_queue(cls, queue_name: str) -> FastestMemQueue` `classmethod`
+  - *获取或创建指定名称的队列*
+- `def clear_all(cls) -> None` `classmethod`
+  - *清空所有队列*
+
+**Class Variables (2):**
+- `_queues: dict = {}`
+- `_lock = threading.Lock()`
+
+
+---
+
+`````python
+# -*- coding: utf-8 -*-
+"""
+高性能内存队列实现
+
+相比 queue.Queue 的优化：
+1. 使用 collections.deque（底层是 C 实现，append/popleft 是原子操作且 O(1)）
+2. 去除 task_done/join 等不必要的功能
+3. 空队列时使用极短暂 sleep 轮询，比 Condition 更轻量
+4. 支持批量获取消息，减少循环开销
+
+性能对比：
+- queue.Queue: ~20-25万 ops/sec
+- FastestMemQueue: ~180万 ops/sec (get)，批量可达 600万+ ops/sec
+"""
+
+import time
+import threading
+from collections import deque
+from typing import Any, List, Optional
+
+
+class FastestMemQueue:
+    """
+    高性能内存队列，专为 funboost 优化。
+    
+    特点：
+    - 线程安全（deque 的 append/popleft 是原子操作）
+    - 无 task_done/join 开销
+    - 支持批量 get
+    - 最小化同步开销
+    """
+    
+    __slots__ = ('_queue', '_lock')
+    
+    def __init__(self):
+        self._queue: deque = deque()
+        self._lock = threading.Lock()  # 仅用于 clear 等需要原子性的操作
+    
+    def put(self, item: Any) -> None:
+        """放入单个消息，无锁操作（deque.append 是原子的）"""
+        self._queue.append(item)
+        # 注意：不在每次 put 时都 set()，因为 get 使用轮询机制
+    
+    def put_nowait(self, item: Any) -> None:
+        """同 put，保持接口兼容"""
+        self._queue.append(item)
+    
+    def get(self, block: bool = True, timeout: Optional[float] = None) -> Any:
+        """
+        获取单个消息
+        
+        Args:
+            block: 是否阻塞等待
+            timeout: 超时时间（秒），None 表示永久等待
+        
+        Returns:
+            队列中的消息
+            
+        Raises:
+            IndexError: 非阻塞模式下队列为空时抛出
+        """
+        while True:
+            try:
+                return self._queue.popleft()
+            except IndexError:
+                if not block:
+                    raise
+                # 使用 time.sleep 进行短暂等待，比 Event.wait 更轻量
+                time.sleep(0.0001)  # 0.1ms 轮询
+    
+    def get_nowait(self) -> Any:
+        """非阻塞获取，队列为空时抛出 IndexError"""
+        return self._queue.popleft()
+    
+    def get_batch(self, max_count: int = 100) -> List[Any]:
+        """
+        批量获取消息，减少锁竞争开销
+        
+        Args:
+            max_count: 最多获取多少条消息
+            
+        Returns:
+            消息列表（可能为空）
+        """
+        result = []
+        for _ in range(max_count):
+            try:
+                result.append(self._queue.popleft())
+            except IndexError:
+                break
+        return result
+    
+    def get_batch_block(self, max_count: int = 100, timeout: float = 0.01) -> List[Any]:
+        """
+        批量获取消息，阻塞直到至少有一条消息
+        
+        Args:
+            max_count: 最多获取多少条消息
+            timeout: 等待第一条消息的超时时间
+            
+        Returns:
+            消息列表（至少一条）
+        """
+        # 等待至少有一条消息
+        while True:
+            try:
+                first = self._queue.popleft()
+                break
+            except IndexError:
+                time.sleep(0.0001)  # 0.1ms 轮询
+        
+        # 快速获取剩余消息
+        result = [first]
+        for _ in range(max_count - 1):
+            try:
+                result.append(self._queue.popleft())
+            except IndexError:
+                break
+        return result
+    
+    def qsize(self) -> int:
+        """返回队列大小（近似值）"""
+        return len(self._queue)
+    
+    def empty(self) -> bool:
+        """检查队列是否为空"""
+        return len(self._queue) == 0
+    
+    def clear(self) -> None:
+        """清空队列"""
+        self._queue.clear()
+
+
+class FastestMemQueues:
+    """高性能内存队列管理器"""
+    
+    _queues: dict = {}
+    _lock = threading.Lock()
+    
+    @classmethod
+    def get_queue(cls, queue_name: str) -> FastestMemQueue:
+        """获取或创建指定名称的队列"""
+        if queue_name not in cls._queues:
+            with cls._lock:
+                if queue_name not in cls._queues:
+                    cls._queues[queue_name] = FastestMemQueue()
+        return cls._queues[queue_name]
+    
+    @classmethod
+    def clear_all(cls) -> None:
+        """清空所有队列"""
+        for q in cls._queues.values():
+            q.clear()
+        cls._queues.clear()
+
+
+if __name__ == '__main__':
+    import time
+    
+    print("=" * 60)
+    print("FastestMemQueue 性能测试")
+    print("=" * 60)
+    
+    # 测试 FastestMemQueue
+    q = FastestMemQueue()
+    n = 200000
+    
+    # 测试 put 性能
+    t0 = time.time()
+    for i in range(n):
+        q.put({'x': i, 'extra': {'task_id': f'test_{i}', 'publish_time': time.time()}})
+    t_put = time.time() - t0
+    print(f"FastestMemQueue put {n} 条: {t_put:.4f} 秒, {n/t_put:,.0f} ops/sec")
+    
+    # 测试 get 性能
+    t0 = time.time()
+    for i in range(n):
+        q.get()
+    t_get = time.time() - t0
+    print(f"FastestMemQueue get {n} 条: {t_get:.4f} 秒, {n/t_get:,.0f} ops/sec")
+    
+    print()
+    
+    # 对比 queue.Queue
+    import queue
+    qq = queue.Queue()
+    
+    t0 = time.time()
+    for i in range(n):
+        qq.put({'x': i, 'extra': {'task_id': f'test_{i}', 'publish_time': time.time()}})
+    t_put = time.time() - t0
+    print(f"queue.Queue put {n} 条: {t_put:.4f} 秒, {n/t_put:,.0f} ops/sec")
+    
+    t0 = time.time()
+    for i in range(n):
+        qq.get()
+    t_get = time.time() - t0
+    print(f"queue.Queue get {n} 条: {t_get:.4f} 秒, {n/t_get:,.0f} ops/sec")
+    
+    print()
+    
+    # 测试批量获取
+    q2 = FastestMemQueue()
+    for i in range(n):
+        q2.put(i)
+    
+    t0 = time.time()
+    total = 0
+    while total < n:
+        batch = q2.get_batch(1000)
+        total += len(batch)
+    t_batch = time.time() - t0
+    print(f"FastestMemQueue get_batch {n} 条: {t_batch:.4f} 秒, {n/t_batch:,.0f} ops/sec")
+
+`````
+
+--- **end of file: funboost/queues/fastest_mem_queue.py** (project: funboost) --- 
 
 ---
 

@@ -9,7 +9,7 @@ import json
 
 from funboost.core.current_task import fct
 from funboost.core.function_result_status_saver import FunctionResultStatus, RunStatus
-from funboost.core.helper_funs import delete_keys_and_return_new_dict
+from funboost.core.helper_funs import get_func_only_params
 from funboost.core.serialization import Serialization
 from funboost.utils.redis_manager import RedisMixin
 from funboost.consumers.base_consumer import *
@@ -78,7 +78,7 @@ class MostFastConsumer(AbstractConsumer):
             self._requeue(kw)
             time.sleep(self.time_interval_for_check_do_not_run_time)
             return
-        function_only_params = delete_keys_and_return_new_dict(kw['body'], )
+        function_only_params = get_func_only_params(kw['body'], )
         if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
                 function_only_params,self._get_priority_conf(kw, 'filter_str')):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
             self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
@@ -162,7 +162,7 @@ class MostFastConsumer(AbstractConsumer):
             max_retry_times = self._get_priority_conf(kw, 'max_retry_times')
             current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
             current_retry_times = 0
-            function_only_params = delete_keys_and_return_new_dict(kw['body'])
+            function_only_params = get_func_only_params(kw['body'])
             for current_retry_times in range(max_retry_times + 1):
                 current_function_result_status.run_times = current_retry_times + 1
                 current_function_result_status.run_status = RunStatus.running
@@ -221,7 +221,7 @@ class MostFastConsumer(AbstractConsumer):
      # noinspection PyProtectedMember
     def _run_consuming_function_with_confirm_and_retry(self, kw: dict, current_retry_times,
                                                        function_result_status: FunctionResultStatus, ):
-        function_only_params = delete_keys_and_return_new_dict(kw['body']) if self._do_not_delete_extra_from_msg is False else kw['body']
+        function_only_params = get_func_only_params(kw['body']) if self._do_not_delete_extra_from_msg is False else kw['body']
         task_id = kw['body']['extra']['task_id']
         t_start = time.time()
 

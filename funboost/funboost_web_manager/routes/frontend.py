@@ -114,11 +114,19 @@ def serve_frontend(path: str):
     服务前端页面和静态文件
     
     处理逻辑：
-    1. 尝试直接返回请求的文件
-    2. 尝试添加 .html 后缀
-    3. 尝试作为目录，返回 index.html
-    4. 回退到首页（SPA 路由）
+    1. 排除 API 和 FAAS 路由（让其他蓝图处理）
+    2. 尝试直接返回请求的文件
+    3. 尝试添加 .html 后缀
+    4. 尝试作为目录，返回 index.html
+    5. 回退到首页（SPA 路由）
     """
+    # 排除 FAAS 蓝图路由（兼容上游仓库）
+    # 这些路由应该由其他蓝图处理，不应该被前端 catch-all 拦截
+    if path.startswith('funboost/') or path.startswith('api/') or path.startswith('admin/'):
+        # 返回 404，让 Flask 继续查找其他路由
+        from flask import abort
+        abort(404)
+    
     frontend_dir = get_frontend_dir()
     
     # 检查前端是否已构建

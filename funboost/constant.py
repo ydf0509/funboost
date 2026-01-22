@@ -33,6 +33,8 @@ class  BrokerEnum:
 
     RABBITMQ_RABBITPY = 'RABBITMQ_RABBITPY'  # 使用 rabbitpy 包操作rabbitmq  作为 分布式消息队列，支持消费确认，不建议使用
 
+    RABBITMQ_AMQP = 'RABBITMQ_AMQP'  # 使用 amqp 包操作 rabbitmq，Celery/Kombu 底层客户端，性能比 pika 更好
+
     """
     以下是各种redis数据结构和各种方式来实现作为消息队列的,redis简直被作者玩出花来了.
     因为redis本身是缓存数据库,不是消息队列,redis没有实现经典AMQP协议,所以redis是模拟消息队列不是真消息队列.
@@ -52,6 +54,10 @@ class  BrokerEnum:
 
     MEMORY_QUEUE = 'MEMORY_QUEUE'  # 使用python queue.Queue实现的基于当前python进程的消息队列，不支持跨进程 跨脚本 跨机器共享任务，不支持持久化，适合一次性短期简单任务。
     LOCAL_PYTHON_QUEUE = MEMORY_QUEUE  # 别名，python本地queue就是基于python自带的语言的queue.Queue，消息存在python程序的内存中，不支持重启断点接续。
+    
+    # 高性能内存队列，使用 collections.deque 代替 queue.Queue，去除不必要的 task_done/join 开销
+    # 性能比 MEMORY_QUEUE 提升 2-5 倍，支持批量拉取消息（通过 broker_exclusive_config={'pull_msg_batch_size': 1000}）
+    FASTEST_MEM_QUEUE = 'FASTEST_MEM_QUEUE'
 
     RABBITMQ_PIKA = 'RABBITMQ_PIKA'  # 使用pika包操作rabbitmq  作为 分布式消息队列。，不建议使用
 
@@ -144,6 +150,19 @@ class  BrokerEnum:
     funboost 有能力消费canal发到kafka的binlog消息,也能不依赖canal,自己捕获cdc数据
     """
     MYSQL_CDC = 'MYSQL_CDC'
+    
+    SQS = 'SQS' # aws sqs ，虽然 funboost 支持 kombu ，kombu支持sqs，所以 funboost间接支持了sqs，但原生实现逻辑更清晰，比kombu性能更强
+    
+    """
+    原生 PostgreSQL 中间件，充分利用 PostgreSQL 独有特性：
+    1. FOR UPDATE SKIP LOCKED - 高并发无锁竞争，多消费者不阻塞
+    2. LISTEN/NOTIFY - 原生发布订阅机制，实时推送无需轮询
+    3. 支持任务优先级
+    相比 SQLACHEMY 通用实现性能更好，实时性更强
+    """
+    POSTGRES = 'POSTGRES'
+
+    
 
 
 
@@ -252,6 +271,7 @@ class MongoDbName:
 
 class StrConst:
     BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'
+    NO_RESULT = 'no_result'
 
 class EnvConst:
     FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'

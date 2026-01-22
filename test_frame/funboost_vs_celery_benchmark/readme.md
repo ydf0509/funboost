@@ -34,3 +34,10 @@
 `funboost`在同样的硬件环境和测试条件下（win11 + python3.9 + 本机redis中间件 + AMD R7 5800H CPU + 单线程并发模式 + 相同消费函数），\
 无论是在消息发布还是消费方面都大幅优于`celery`，`funboost`是`celery`的发布性能是`22`倍，`funboost` 消费性能是`celery`的`46`倍 ，\
 所以`funboost`性能不是比`celery`高百分之多少这种级别,而是高了一个数量级，`funboost`性能是毫无争议的绝对的遥遥领先。
+
+
+### 2.6.5 2026-01月 最新性能对比
+
+运行 `def  fun(x):pass`   的函数,    
+funboost消费性能是celery的100倍,  
+发布性能是celery的50倍  

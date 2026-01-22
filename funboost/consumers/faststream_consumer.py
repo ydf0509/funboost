@@ -10,7 +10,7 @@ from faststream.annotations import Logger
 
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
 from funboost.core.serialization import Serialization
-from funboost.core.helper_funs import delete_keys_and_return_new_dict
+from funboost.core.helper_funs import get_func_only_params
 
 
 class FastStreamConsumer(EmptyConsumer):
@@ -23,7 +23,7 @@ class FastStreamConsumer(EmptyConsumer):
             # print(logger.name)
             # return self.consuming_function(*args, **kwargs) # 如果没有声明 autoretry_for ，那么消费函数出错了就不会自动重试了。
             # print(msg)
-            function_only_params = delete_keys_and_return_new_dict(Serialization.to_dict(msg))
+            function_only_params = get_func_only_params(Serialization.to_dict(msg))
             if self._consuming_function_is_asyncio:
                 result = await self.consuming_function(**function_only_params)
             else:

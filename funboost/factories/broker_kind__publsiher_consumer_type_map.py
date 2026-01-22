@@ -13,6 +13,7 @@ from funboost.publishers.udp_publisher import UDPPublisher
 from funboost.publishers.zeromq_publisher import ZeroMqPublisher
 from funboost.publishers.kafka_publisher import KafkaPublisher
 from funboost.publishers.local_python_queue_publisher import LocalPythonQueuePublisher
+from funboost.publishers.fastest_mem_queue_publisher import FastestMemQueuePublisher
 from funboost.publishers.mongomq_publisher import MongoMqPublisher
 
 from funboost.publishers.persist_queue_publisher import PersistQueuePublisher
@@ -31,6 +32,7 @@ from funboost.consumers.redis_pubsub_consumer import RedisPbSubConsumer
 
 from funboost.consumers.kafka_consumer import KafkaConsumer
 from funboost.consumers.local_python_queue_consumer import LocalPythonQueueConsumer
+from funboost.consumers.fastest_mem_queue_consumer import FastestMemQueueConsumer
 from funboost.consumers.mongomq_consumer import MongoMqConsumer
 from funboost.consumers.nats_consumer import NatsConsumer
 
@@ -60,6 +62,7 @@ broker_kind__publsiher_consumer_type_map = {
 
     BrokerEnum.REDIS: (RedisPublisher, RedisConsumer),
     BrokerEnum.MEMORY_QUEUE: (LocalPythonQueuePublisher, LocalPythonQueueConsumer),
+    BrokerEnum.FASTEST_MEM_QUEUE: (FastestMemQueuePublisher, FastestMemQueueConsumer),
     BrokerEnum.RABBITMQ_PIKA: (RabbitmqPublisher, RabbitmqConsumer),
     BrokerEnum.MONGOMQ: (MongoMqPublisher, MongoMqConsumer),
     BrokerEnum.PERSISTQUEUE: (PersistQueuePublisher, PersistQueueConsumer),
@@ -194,6 +197,22 @@ def regist_to_funboost(broker_kind: str):
         from funboost.consumers.http_consumer import HTTPConsumer
         from funboost.publishers.http_publisher import HTTPPublisher
         register_custom_broker(broker_kind, HTTPPublisher, HTTPConsumer)
+
+    if broker_kind == BrokerEnum.SQS:
+        from funboost.consumers.sqs_consumer import SqsConsumer
+        from funboost.publishers.sqs_publisher import SqsPublisher
+        register_custom_broker(broker_kind, SqsPublisher, SqsConsumer)
+
+    if broker_kind == BrokerEnum.RABBITMQ_AMQP:
+        from funboost.publishers.rabbitmq_amqp_publisher import RabbitmqAmqpPublisher
+        from funboost.consumers.rabbitmq_amqp_consumer import RabbitmqAmqpConsumer
+        register_custom_broker(BrokerEnum.RABBITMQ_AMQP, RabbitmqAmqpPublisher, RabbitmqAmqpConsumer)
+
+    if broker_kind == BrokerEnum.POSTGRES:
+        from funboost.publishers.postgres_publisher import PostgresPublisher
+        from funboost.consumers.postgres_consumer import PostgresConsumer
+        register_custom_broker(BrokerEnum.POSTGRES, PostgresPublisher, PostgresConsumer)
+
 
 if __name__ == '__main__':
     import sys

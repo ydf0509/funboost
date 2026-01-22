@@ -1,5 +1,6 @@
 
 
+import typing
 import uuid
 import datetime
 import time
@@ -18,7 +19,7 @@ class FunboostException(Exception):
     default_error_data = None
     enable_trace_id = False
 
-    def __init__(self, message=None, code=None, error_data:dict=None, trace_id=None):
+    def __init__(self, message=None, code=None, error_data:typing.Optional[dict]=None, trace_id=None):
         # 允许实例覆盖默认字段
         self.message = message or self.default_message
         self.code = code if code is not None else self.default_code

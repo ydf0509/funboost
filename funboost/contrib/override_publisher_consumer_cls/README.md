@@ -44,3 +44,55 @@ Funboost 的 OTel 实现写得**非常出色，且极其重要**。它是 Funboo
 这一实现完美诠释了 Funboost 在架构设计上的**高可扩展性与自定义能力**。
 在 Celery 中，若想手动侵入核心链路来实现类似 `funboost_otel_mixin.py` 的上下文注入功能，通常需要深入研究复杂的 Signal 信号机制、自定义 Task 类甚至魔改底层 Kombu 库，实现门槛极高且难以维护。
 而在 Funboost 中，得益于开放的 `override_cls` 接口，开发者仅需通过标准的 **OOP 继承与 Mixin 模式** 即可轻松切入框架核心流程，实现从简单的日志记录到复杂的全链路追踪等任意定制化需求。
+
+---
+
+# 3.1 funboost_micro_batch_mixin.py，微批消费者 Mixin
+
+微批消费者实现累积 N 条消息后批量处理的功能，适用于批量写入数据库、批量调用 API 等场景。
+
+*   **代码位置**: `funboost/contrib/override_publisher_consumer_cls/funboost_micro_batch_mixin.py`
+*   **使用demo**：`test_frame/test_micro_batch`
+
+## 3.1.1 使用方式
+
+```python
+from funboost import boost, BoosterParams
+from funboost.contrib.override_publisher_consumer_cls.funboost_micro_batch_mixin import MicroBatchConsumerMixin
+
+@boost(BoosterParams(
+    queue_name='batch_insert_queue',
+    consumer_override_cls=MicroBatchConsumerMixin,
+    user_options={
+        'micro_batch_size': 100,       # 累积100条消息后处理
+        'micro_batch_timeout': 5.0,    # 或等待5秒后处理
+    },
+    should_check_publish_func_params=False, # 必须关闭入参校验
+))
+def batch_insert_to_db(items: list):
+    """
+    items 是一个列表，包含最多 100 个消息的函数参数
+    """
+    db.bulk_insert(items)
+    print(f"批量插入 {len(items)} 条记录")
+```
+
+## 3.1.2 核心原理
+
+1. **缓冲区累积**: 重写 `_submit_task` 方法，将消息累积到缓冲区
+2. **触发条件**: 达到 `batch_size` 条消息或超过 `timeout` 秒后触发批量处理
+3. **批量 ack/requeue**: 成功则批量确认，失败则批量重回队列
+4. **函数签名**: 消费函数的入参从单个对象变为 `list[dict]`
+
+## 3.1.3 适用场景
+
+| 场景 | 收益 |
+|------|------|
+| 批量写入数据库 | 减少 DB 连接开销，吞吐量提升 10-100 倍 |
+| 批量调用外部 API | 减少 HTTP 连接开销 |
+| 批量发送通知 | 合并推送，减少请求次数 |
+
+## 3.1.4 战略意义
+
+- Funboost 的微批操作是一个**生产级的、高并发优化利器**。它极大地降低了“写批量处理逻辑”的复杂度，你不需要自己写缓冲区、不需要自己写定时器、不需要自己处理锁，只需要配置两个参数，就能把普通的消费者升级为“批量消费者”。 
+- 当你把 `Broker` 设置为 **`MEMORY_QUEUE`** (Python 原生 `queue.Queue`)，再配合 **`MicroBatchConsumerMixin`**，Funboost 瞬间就变成了一个**高性能的、进程内的、自动聚合缓冲器 (In-Memory Batch Aggregator)**。

@@ -5,7 +5,7 @@ import time
 import typing
 import json
 
-from funboost.constant import MongoDbName
+from funboost.constant import MongoDbName, StrConst
 from funboost.core.exceptions import FunboostWaitRpcResultTimeout, FunboostRpcResultError, HasNotAsyncResult
 from funboost.utils.mongo_util import MongoMixin
 
@@ -20,7 +20,12 @@ from funboost.core.function_result_status_saver import FunctionResultStatus
 
 
 
-NO_RESULT = 'no_result'
+
+
+# LazyAsyncResult 已删除：AsyncResult 本身就是懒加载的
+# RedisMixin 的 redis_db_filter_and_rpc_result 使用 @cached_method_result
+# 只有在访问 status_and_result 等属性时才会建立 Redis 连接
+
 
 def _judge_rpc_function_result_status_obj(status_and_result_obj:FunctionResultStatus,raise_exception:bool):
     if status_and_result_obj is None:
@@ -259,9 +264,10 @@ class ResultFromMongo(MongoMixin):
     print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c1').get_result())
     """
 
-    def __init__(self, task_id: str, ):
+    def __init__(self, task_id: str, mongo_col_name: str):
         self.task_id = task_id
-        self.col_name = task_id.split('_result:')[0]
+        # self.col_name = task_id.split('_result:')[0]
+        self.col_name = mongo_col_name
         self.mongo_row = None
         self._has_query = False
 
@@ -272,12 +278,12 @@ class ResultFromMongo(MongoMixin):
 
     def get_status_and_result(self):
         self.query_result()
-        return self.mongo_row or NO_RESULT
+        return self.mongo_row or StrConst.NO_RESULT
 
     def get_result(self):
         """以非阻塞等待的方式从funboost的状态结果持久化的mongodb数据库根据taskid获取结果"""
         self.query_result()
-        return (self.mongo_row or {}).get('result', NO_RESULT)
+        return (self.mongo_row or {}).get('result', StrConst.NO_RESULT)
 
 
 class FutureStatusResult:
@@ -307,5 +313,5 @@ class FutureStatusResult:
         return self.staus_result_obj
 
 if __name__ == '__main__':
-    print(ResultFromMongo('test_queue77h6_result:764a1ba2-14eb-49e2-9209-ac83fc5db1e8').get_status_and_result())
-    print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c1').get_result())
+    print(ResultFromMongo('764a1ba2-14eb-49e2-9209-ac83fc5db1e8','col1').get_status_and_result())
+    print(ResultFromMongo('5cdb4386-44cc-452f-97f4-9e5d2882a7c1','col2').get_result())

@@ -23,6 +23,7 @@ get_funboost_file_logger('pikav1', log_level_int=20)
 class RabbitmqConsumer(AbstractConsumer):
     """
     使用pika包实现的。
+    pika包 子线程去使用chanel执行ack，由于跨线程操作chanel报错，比较麻烦。
     """
 
 

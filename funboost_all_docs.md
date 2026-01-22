@@ -1385,6 +1385,7 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `from threading import Lock`
 - `import nb_log`
 - `from funboost.concurrent_pool.async_helper import simple_run_in_executor`
+- `from funboost.constant import BrokerEnum`
 - `from funboost.constant import ConstStrForClassMethod`
 - `from funboost.constant import FunctionKind`
 - `from funboost.core.broker_kind__exclusive_config_default_define import generate_broker_exclusive_config`
@@ -1506,7 +1507,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 #### 🔧 Public Functions (1)
 
 - `def deco_mq_conn_error(f)`
-  - *Line: 383*
+  - *Line: 393*
 
 
 ---
@@ -1681,7 +1682,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')`
 
 ##### 📌 `class ConcurrentModeDispatcher(FunboostFileLoggerMixin)`
-*Line: 1126*
+*Line: 1129*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumerx: AbstractConsumer)`
@@ -1695,7 +1696,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `def schedulal_task_with_no_block(self)`
 
 ##### 📌 `class MetricCalculation`
-*Line: 1232*
+*Line: 1235*
 
 **Docstring:**
 `````
@@ -1721,7 +1722,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 - `UNIT_TIME_FOR_COUNT = 10`
 
 ##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1323*
+*Line: 1326*
 
 **Docstring:**
 `````
@@ -1756,7 +1757,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 #### 🔧 Public Functions (1)
 
 - `def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3)`
-  - *Line: 1217*
+  - *Line: 1220*
   - **Docstring:**
   `````
   判断多个消费者是否消费完成了。
@@ -3898,71 +3899,62 @@ if __name__ == '__main__':
         f.push(i)
 ```
 
-### 1.2.2 🚀 强大的任务控制功能矩阵
+### 1.2.2 🚀 任务控制功能矩阵
 
+Funboost 将分布式系统的复杂性封装于内核，向下屏蔽基础设施差异，向上提供标准化的调度原语。以下是框架核心能力的 **7 维全景视图**：
 
-Funboost 不止于任务队列，它是 **Python 函数的“钢铁侠战衣”**。
-以下矩阵涵盖从 **内核驱动** 到 **架构升维** 的 7 大维度，30+ 能力：
+#### 🌌 维度一：连接与架构 (Connectivity & Architecture)
 
-#### 🌌 维度一：架构跃迁 (Architecture & Connectivity)
-> **打破边界，连接一切，万物皆可计算。**
-
-| 功能模块 | 硬核特性描述 |
+| 能力模块 | 技术特性说明 |
 | :--- | :--- |
-| **🌐 万能 Broker** | 支持 **40+** 种中间件：RabbitMQ, Kafka, RocketMQ, Pulsar, NATS, Redis (List/Stream/PubSub), SQL, NoSQL, 文件系统, TCP/UDP/HTTP。 |
-| **🏗️ FaaS 微服务化** | **架构质变**。通过 `funboost.faas`，消费函数 0 代码自动注册为 FastAPI/Flask/Django 路由，支持 **服务发现** 与 **热加载**。 |
-| **🧬 CDC 事件驱动** | **数据即信号**。支持 `MYSQL_CDC` (Binlog)，实现从“任务驱动”到“数据变更驱动”的范式转换，轻量级替代 Canal/Flink。 |
-| **🦖 框架吞噬** | **降维打击**。直接接管 Celery, Dramatiq, RQ, Huey 等框架作为底层驱动，只需使用 Funboost 极简 API。 |
-| **🔌 异构协议** | 支持 **gRPC** 双向通信，支持 **MQTT** 物联网协议，打通端云链路。 |
+| **Broker 适配** | **40+ 协议支持**：RabbitMQ, Kafka, RocketMQ, Pulsar, NATS, Redis (List/Stream/PubSub), SQL/NoSQL, 文件系统, TCP/UDP/HTTP。 |
+| **FaaS 微服务** | **自动路由**：通过 `funboost.faas`，消费函数自动注册为 FastAPI/Flask/Django 接口；支持 **服务发现** 与 **热更新**。 |
+| **CDC 事件驱动** | **Binlog 监听**：支持 `MYSQL_CDC`，实现数据库变更实时触发函数执行，轻量级替代 Canal/Flink 组件。 |
+| **框架托管** | **无缝兼容**：支持接管 Celery, Dramatiq, RQ, Huey 等框架作为底层驱动，统一上层 API。 |
+| **异构通信** | **多协议支持**：支持 gRPC 双向通信与 MQTT 物联网协议集成。 |
 
-#### ⚡ 维度二：性能核武 (Performance & Concurrency)
-> **榨干算力，突破 GIL，I/O 与 CPU 齐飞。**
+#### ⚡ 维度二：并发与吞吐 (Concurrency & Throughput)
 
-*   **💥 5+1 并发模式**：原生支持 `Threading`、`Gevent`、`Eventlet`、`Asyncio` (真·异步循环)、`Single_thread`。
-*   **🚀 多进程叠加**：支持 `mp_consume(n)`，在上述 5 种模式上叠加 **多进程**，彻底突破 GIL 锁限制，跑满多核 CPU。
-*   **📦 微批消费 (Micro-Batch)**：支持 `MicroBatchConsumerMixin`，自动聚合单条消息为批次处理（如批量写入 DB），吞吐量提升 10x-100x。
-*   **🏎️ 极速模式**：内存队列支持 `Ultra-Fast` 模式，跳过中间件序列化开销，进程内通信微秒级延迟。
+*   **混合并发模型**：原生支持 `Threading`、`Gevent`、`Eventlet`、`Asyncio` (原生事件循环)、`Single_thread` 五种模式。
+*   **多进程叠加**：支持 `mp_consume(n)`，在上述并发模式之上叠加 **多进程**，突破 GIL 限制，充分利用多核 CPU。
+*   **微批处理 (Micro-Batch)**：提供 `MicroBatchConsumerMixin`，支持自动缓冲聚合单条消息进行批量处理（如批量 DB 写入），显著提升 I/O 吞吐。
+*   **零拷贝模式**：内存队列支持 `Ultra-Fast` 模式，跳过序列化开销，实现进程内微秒级通信。
 
-#### 🛡️ 维度三：磐石可靠 (Reliability & Resilience)
-> **断电不丢，崩溃不乱，像数据库一样可靠。**
+#### 🛡️ 维度三：可靠性保障 (Reliability)
 
-*   **❤️ 心跳级 ACK**：独创基于消费者心跳的 ACK 机制。精准识别进程崩溃或死锁，**秒级** 自动回收孤儿任务重发，绝不误判长耗时任务。
-*   **🔄 智能重试**：支持指数退避重试，支持自定义异常捕获。
-*   **☠️ 死信队列 (DLQ)**：重试耗尽或特定异常自动移入死信队列，保留现场。
-*   **💾 结果持久化**：全自动保存函数入参、执行结果、耗时、异常堆栈到 MongoDB/MySQL，数据可追溯。
+*   **心跳级 ACK**：基于消费者心跳检测的 ACK 机制。可识别进程僵死或崩溃，**秒级**回收并重发未确认任务，避免长耗时任务被误判。
+*   **异常重试**：支持指数退避策略，支持针对特定异常类型的重试配置。
+*   **死信队列 (DLQ)**：重试耗尽或捕获特定异常后，自动将消息移交死信队列，保障现场数据不丢失。
+*   **全量持久化**：支持将函数入参、执行结果、耗时、异常堆栈自动持久化至 MongoDB/MySQL，实现数据可回溯。
 
-#### 🕹️ 维度四：极致控盘 (Control & Governance)
-> **上帝视角，精准流控，收放自如。**
+#### 🕹️ 维度四：流量治理 (Traffic Governance)
 
-*   **⏱️ 精准 QPS**：令牌桶算法实现，支持小数级（如 0.1次/秒）和高频级（如 5000次/秒）精准控频。
-*   **🌍 分布式限流**：基于 Redis 协调，实现跨服务器、跨进程的 **全局 QPS 风控**。
-*   **🧩 消费分组**：支持 `consume_group`，按业务组启动消费者，适合大单体应用的精细化管理。
-*   **⏸️ 熔断与恢复**：支持运行时远程发送指令，**动态暂停/恢复** 指定队列的消费。
-*   **🛑 脚本流控**：支持 `wait_for_possible_has_finish_all_tasks`，脚本级阻塞等待任务清空（适合批处理作业）。
+*   **精准控频**：funboost自己实现控频，支持小数级（如 0.00001次/秒）至高频级（如 50000次/秒）的 **QPS 速率限制**。
+*   **分布式限流**：基于funboost的Redis 心跳信息协调，实现跨服务器、跨容器的 **全局流量控制**。
+*   **分组消费**：支持 `consume_group`，按业务组别启动消费者，实现大单体应用的资源隔离。
+*   **熔断管理**：支持运行时动态下发指令，实时 **暂停/恢复** 指定队列的消费。
+*   **批处理流控**：提供 `wait_for_possible_has_finish_all_tasks`，支持脚本级的**任务清空等待**。
 
-#### 🎼 维度五：编排与调度 (Orchestration)
-> **从单一函数到复杂工作流。**
+#### 🎼 维度五：调度与编排 (Scheduling & Orchestration)
 
-*   **🎹 Workflow 编排**：支持类似 Celery Canvas 的 **Chain (串行)**、**Group (并行)**、**Chord (回调)** 声明式编排。
-*   **⏰ 定时任务**：深度集成 `APScheduler`，支持 Crontab/Interval/Date 触发，支持分布式防重执行。
-*   **⏳ 延时任务**：原生支持 `countdown` (倒计时) 和 `eta` (指定时间) 执行。
-*   **🕸️ 任务过滤**：基于函数入参指纹的去重（支持 TTL 有效期），天然免疫 URL 随机参数干扰。
+*   **Workflow 编排**：内置声明式编排原语，支持 **Chain (串行)**、**Group (并行)**、**Chord (回调)** 模式。
+*   **分布式定时**：集成 `APScheduler`，支持 Crontab/Interval/Date 触发器，利用分布式锁防止多实例重复执行。
+*   **延时任务**：原生支持 `countdown` (相对时间) 和 `eta` (绝对时间) 的延迟调度。
+*   **任务去重**：基于函数入参指纹进行去重（支持 TTL 有效期），屏蔽 URL 随机参数干扰。
 
-#### 🔭 维度六：全维可观测 (Observability & Ops)
-> **拒绝黑盒，一切尽在掌握。**
+#### 🔭 维度六：可观测性 (Observability)
 
-*   **🕵️ OpenTelemetry**：原生集成 OTel，支持 Jaeger/SkyWalking **全链路追踪**，清晰展示跨服务、跨队列的调用链。
-*   **📊 Prometheus**：内置 Exporter，支持 HTTP Pull 和 PushGateway 模式，对接 Grafana 监控大屏。
-*   **🖥️ Web Manager**：开箱即用的可视化管理后台，实时监控积压、QPS、消费者状态。
-*   **📡 远程运维**：支持 `RemoteTaskKiller` 远程杀掉特定任务；支持 `fabric_deploy` 一键代码热部署到远程服务器。
+*   **链路追踪**：原生集成 **OpenTelemetry**，支持接入 Jaeger/SkyWalking，自动注入 Context 实现跨组件全链路追踪。
+*   **指标监控**：内置 **Prometheus** Exporter，支持 Pull 和 PushGateway 模式，通过 Grafana 展示实时指标。
+*   **Web 控制台**：自带可视化管理界面，支持查看积压量、QPS 曲线、消费者元数据。
+*   **远程运维**：支持 `RemoteTaskKiller` 终止特定执行中的任务；支持 `fabric_deploy` 实现代码热部署。
 
-#### 🧬 维度七：极客体验 (Developer Experience)
-> **把简单留给用户，把复杂留给框架。**
+#### 🧬 维度七：开发体验 (Developer Experience)
 
-*   **🧠 FCT 上下文**：`from funboost import fct`。在函数深层任意位置获取当前任务 ID、发布时间、重试次数，无需传参。
-*   **🐍 全语法支持**：完美支持 **类方法 (classmethod)**、**实例方法 (instance method)**、**异步函数 (async def)**。
-*   **💉 深度 Hook**：提供 `consumer_override_cls` 接口，允许用户重写框架核心生命周期（如消息清洗 `_user_convert_msg_before_run`），支持 **任意非标准格式消息** 的消费。
-*   **🥒 万能参数**：支持 **Pickle 序列化**，允许传递自定义 Python 对象作为任务参数。
+*   **FCT 上下文**：提供 `from funboost import fct` 全局对象，在函数调用链任意位置获取 TaskID、重试次数等元数据。
+*   **全语法支持**：完整支持 **类方法 (classmethod)**、**实例方法 (instance method)**、**异步函数 (async def)** 作为消费主体。
+*   **生命周期 Hook**：提供 `consumer_override_cls` 接口，支持重写消息清洗、结果回调等核心逻辑，兼容 **非标准格式消息**，**支持重写任何任意父类方法**。
+*   **对象传输**：支持 Pickle 序列化选项，允许直接传递自定义 Python 对象作为任务参数。
 
 
 
@@ -8208,7 +8200,7 @@ def task_fun():  # 空函数,即使这样每秒钟也突破不了400次运行.
 这样运行你的`celery`项目才能达到每分钟执行100万个消息. 
 
 
-### 2.6.9 2026-01 funboost极限性能优化，发布和消费性能提升120%
+### 2.6.9 【！更新】2026-01最新funboost极限性能优化，发布和消费性能提升120%
 
 funboost 之前教程中大部分文案写的是：  
 funboost发布性能是celery的22倍，消费性能是celery的46倍。  
@@ -14747,7 +14739,7 @@ if __name__ == '__main__':
         batch_insert_task.push(x=i, y=i * 2)  # 发布还是按照单条消息发布，消费是自动微批操作
         print(f"发布消息: x={i}, y={i * 2}")
     ctrl_c_recv()
-
+```
 
 ### 4b.10.2 如果每次临时手写微批操作，会怎么样？
 

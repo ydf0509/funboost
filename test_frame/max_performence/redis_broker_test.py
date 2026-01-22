@@ -4,7 +4,7 @@ import datetime
 from funboost import boost, BoosterParams, BrokerEnum,ConcurrentModeEnum
 
 
-total_cnt = 200000
+total_cnt = 300000
 
 class GlobalVars:
     t_start_publish = None
@@ -26,15 +26,16 @@ def f(x):
         print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], x)
 
 if __name__ == '__main__':
-    time.sleep(5)
-    for i in range(200001):
+    time.sleep(10)
+    for i in range(total_cnt+1):
         if i == 0:
             GlobalVars.t_start_publish = time.time()
         if i == total_cnt:
             GlobalVars.t_end_publish = time.time()
         if i % 10000 == 0:
             print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], i)
-        f.push(i)
+        # f.push(i)
+        f.publish({'x':i})
      
     f.consume()
     

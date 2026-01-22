@@ -1,5 +1,5 @@
 import time
-from funboost.utils.uuid7 import uuid7
+from funboost.utils import uuid7 
 from funboost.core.funboost_time import FunboostTime, fast_get_now_time_str
 
 
@@ -64,9 +64,7 @@ class MsgGenerater:
         UUIDv7 = “像 UUID 一样全局唯一 + 像雪花 ID 一样按时间递增”
         """
         # return f'{queue_name}_result:{uuid.uuid4()}'
-        uuid7_obj =  uuid7()
-        return str(uuid7_obj) # uuid7 对数据库顺序更友好
-
+        return uuid7.uuid7_str()
 
     @staticmethod
     def generate_publish_time() -> float:

@@ -39,7 +39,7 @@ class FunctionResultStatus():
     # 使用 __slots__ 可以减少内存占用和提升属性访问速度，但会影响动态属性添加
     # 这里不使用 __slots__ 以保持兼容性
 
-    def __init__(self, queue_name: str, fucntion_name: str, msg_dict: dict):
+    def __init__(self, queue_name: str, fucntion_name: str, msg_dict: dict, function_only_params: dict = None):
         # 优化：使用类级别缓存的 host_process，避免每次格式化
         self.host_process = self._host_process
         self.queue_name = queue_name
@@ -53,8 +53,8 @@ class FunctionResultStatus():
         # 优化：使用类级别缓存的 process_id
         self.process_id = self._process_id
         self.thread_id = threading.get_ident()
-        # 优化：params 使用 delete_keys_and_return_new_dict（已优化为字典推导式）
-        self.params = get_func_only_params(msg_dict)
+        # 优化：如果已经传入 function_only_params，直接使用，避免重复计算
+        self.params = function_only_params if function_only_params is not None else get_func_only_params(msg_dict)
         # 优化：延迟计算 params_str，使用 _params_str 缓存
         self._params_str = None
         self.result = None

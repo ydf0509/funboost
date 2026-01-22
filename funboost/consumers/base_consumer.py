@@ -492,7 +492,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             extra['task_id'] = MsgGenerater.generate_task_id(self._queue_name)
         if 'publish_time' not in extra:
             extra['publish_time'] = MsgGenerater.generate_publish_time()
-        if 'publish_time_format':
+        if 'publish_time_format' not in extra:  # 修复 bug: 原来是 if 'publish_time_format': 永远为 True
             extra['publish_time_format'] = MsgGenerater.generate_publish_time_format()
         return msg
 
@@ -738,7 +738,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     # noinspection PyProtectedMember
     def _run(self, kw: dict, ):
         # print(kw)
-        current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
+        # 优化：传入已经计算好的 function_only_params，避免重复计算
+        function_only_params = kw['function_only_params']
+        current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], function_only_params)
         fct_context = FctContext(function_result_status=current_function_result_status,
                                  logger=self.logger, )
         set_fct_context(fct_context)
@@ -748,7 +750,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             t_start_run_fun = time.time()
             max_retry_times = self._get_priority_conf(kw, 'max_retry_times')
             current_retry_times = 0
-            function_only_params = kw['function_only_params']
             for current_retry_times in range(max_retry_times + 1):
                 current_function_result_status.run_times = current_retry_times + 1
                 current_function_result_status.run_status = RunStatus.running
@@ -901,7 +902,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         真asyncio并发,是单个loop里面运行无数协程,
         伪asyncio并发是在每个线程启动一个临时的loop,每个loop仅仅运行一个协程,然后等待这个协程结束,这完全违背了 asyncio 的核心初心理念,这种比多线程性能本身还差.
         """
-        current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], )
+        # 优化：传入已经计算好的 function_only_params，避免重复计算
+        function_only_params = kw['function_only_params']
+        current_function_result_status = FunctionResultStatus(self.queue_name, self.consuming_function.__name__, kw['body'], function_only_params)
         fct_context = FctContext(function_result_status=current_function_result_status,
                                  logger=self.logger, )
         set_fct_context(fct_context)

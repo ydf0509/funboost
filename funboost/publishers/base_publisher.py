@@ -19,7 +19,7 @@ from threading import Lock
 
 import nb_log
 from funboost.concurrent_pool.async_helper import simple_run_in_executor
-from funboost.constant import ConstStrForClassMethod, FunctionKind
+from funboost.constant import BrokerEnum, ConstStrForClassMethod, FunctionKind
 from funboost.core.broker_kind__exclusive_config_default_define import generate_broker_exclusive_config
 from funboost.core.func_params_model import PublisherParams, TaskOptions
 from funboost.core.function_result_status_saver import FunctionResultStatus
@@ -75,10 +75,17 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         if publisher_params.clear_queue_within_init:
             self.clear()
         
-        # 优化：缓存包装后的 _publish_impl 方法，避免每次发布都重新应用装饰器
-        self._wrapped_publish_impl = decorators.handle_exception(
-            retry_times=10, is_throw_error=True, time_sleep=0.1
-        )(self._publish_impl)
+        # 
+        self._is_memory_queue = self.publisher_params.broker_kind in [BrokerEnum.MEMORY_QUEUE, BrokerEnum.FASTEST_MEM_QUEUE]
+        
+        # 优化：内存队列不需要装饰器（不会有网络异常），直接调用更快
+        if self._is_memory_queue:
+            self._wrapped_publish_impl = self._publish_impl
+        else:
+            # 优化：缓存包装后的 _publish_impl 方法，避免每次发布都重新应用装饰器
+            self._wrapped_publish_impl = decorators.handle_exception(
+                retry_times=10, is_throw_error=True, time_sleep=0.1
+            )(self._publish_impl)
     
     @property
     def final_func_input_params_info(self):
@@ -189,17 +196,20 @@ class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         msg, msg_function_kw, extra_params, task_id = self._convert_msg(msg, task_id, task_options)
         t_start = time.time()
 
-        try:
-            msg_json = Serialization.to_json_str(msg)
-        except Exception as e:
-            can_not_json_serializable_keys = Serialization.find_can_not_json_serializable_keys(msg)
-            self.logger.warning(f'msg 中包含不能序列化的键: {can_not_json_serializable_keys}')
-            # raise ValueError(f'msg 中包含不能序列化的键: {can_not_json_serializable_keys}')
-            new_msg = copy.deepcopy(Serialization.to_dict(msg))
-            for key in can_not_json_serializable_keys:
-                new_msg[key] = PickleHelper.to_str(new_msg[key])
-            new_msg['extra']['can_not_json_serializable_keys'] = can_not_json_serializable_keys
-            msg_json = Serialization.to_json_str(new_msg)
+        if self._is_memory_queue: # 内存队列不需要序列化
+            msg_json =msg
+        else:
+            try:
+                msg_json = Serialization.to_json_str(msg)
+            except Exception as e:
+                can_not_json_serializable_keys = Serialization.find_can_not_json_serializable_keys(msg)
+                self.logger.warning(f'msg 中包含不能序列化的键: {can_not_json_serializable_keys}')
+                # raise ValueError(f'msg 中包含不能序列化的键: {can_not_json_serializable_keys}')
+                new_msg = copy.deepcopy(Serialization.to_dict(msg))
+                for key in can_not_json_serializable_keys:
+                    new_msg[key] = PickleHelper.to_str(new_msg[key])
+                new_msg['extra']['can_not_json_serializable_keys'] = can_not_json_serializable_keys
+                msg_json = Serialization.to_json_str(new_msg)
         # print(msg_json)
         # 优化：使用缓存的包装方法，避免每次重新应用装饰器
         self._wrapped_publish_impl(msg_json)

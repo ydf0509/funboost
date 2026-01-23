@@ -1,0 +1,13 @@
+
+
+
+
+最开始的的 funboost web manager 是直接基于 flask 开发的，
+并且以前是什么队列名字，就保存到什么mongo的collection中，而且以前的 只有查询函数结果表的功能，没有查询redis的那些队列的统计信息的功能
+所以前端和接口很多col_name参数，
+
+
+现在因为 FunctionResultStatusPersistanceConfig 可以设置table_name 就是mongo的collection名字，所以不一定queue_name就是col_name，
+所以我希望很多后端和前端的col_name传参改成queue_name
+
+你帮我详细指定一个计划可能修改的地方很多。

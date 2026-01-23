@@ -27,7 +27,7 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
                                                                     # broker_exclusive_config=self.consumer_params.broker_exclusive_config))
         rp = self.bulid_a_new_publisher_of_same_queue()
         rp.init_broker()
-        rp.channel_wrapper_by_ampqstormbaic.qos(self.consumer_params.concurrent_num)
+        rp.channel_wrapper_by_ampqstormbaic.qos(max(10,self.consumer_params.concurrent_num * 2))
         rp.channel_wrapper_by_ampqstormbaic.consume(callback=callback, queue=self.queue_name, no_ack=self.consumer_params.broker_exclusive_config['no_ack'],
                                                     )
         self._rp = rp

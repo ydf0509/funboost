@@ -96,7 +96,7 @@ setup(
         'nb_time>=2.7',
         "pymongo>=4.6.3",  # 3.5.1  -> 4.0.2
         'AMQPStorm==2.10.6',
-        'rabbitpy==2.0.1',
+        # 'rabbitpy==2.0.1',
         'decorator==5.1.1',
         'tomorrow3==1.1.0',
         'persist-queue>=0.4.2',

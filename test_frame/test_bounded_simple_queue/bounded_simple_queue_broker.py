@@ -13,7 +13,7 @@
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.factories.broker_kind__publsiher_consumer_type_map import register_custom_broker
-from funboost.queues.bounded_simple_queue import BoundedSimpleQueues, BoundedSimpleQueue
+from test_frame.test_bounded_simple_queue.bounded_simple_queue import BoundedSimpleQueues, BoundedSimpleQueue
 from funboost.core.broker_kind__exclusive_config_default_define import register_broker_exclusive_config_default
 
 

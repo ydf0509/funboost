@@ -21,7 +21,7 @@ from funboost.publishers.persist_queue_publisher import PersistQueuePublisher
 from funboost.publishers.rabbitmq_pika_publisher import RabbitmqPublisher
 
 from funboost.publishers.redis_publisher import RedisPublisher
-from funboost.publishers.rocketmq_publisher import RocketmqPublisher
+
 from funboost.publishers.redis_stream_publisher import RedisStreamPublisher
 from funboost.publishers.mqtt_publisher import MqttPublisher
 from funboost.publishers.httpsqs_publisher import HttpsqsPublisher
@@ -43,7 +43,7 @@ from funboost.consumers.rabbitmq_pika_consumer import RabbitmqConsumer
 from funboost.consumers.redis_brpoplpush_consumer import RedisBrpopLpushConsumer
 from funboost.consumers.redis_consumer import RedisConsumer
 from funboost.consumers.redis_consumer_ack_able import RedisConsumerAckAble
-from funboost.consumers.rocketmq_consumer import RocketmqConsumer
+
 from funboost.consumers.redis_stream_consumer import RedisStreamConsumer
 from funboost.consumers.tcp_consumer import TCPConsumer
 from funboost.consumers.txt_file_consumer import TxtFileConsumer
@@ -69,7 +69,7 @@ broker_kind__publsiher_consumer_type_map = {
     BrokerEnum.KAFKA: (KafkaPublisher, KafkaConsumer),
     BrokerEnum.REDIS_ACK_ABLE: (RedisPublisher, RedisConsumerAckAble),
     BrokerEnum.REDIS_PRIORITY: (RedisPriorityPublisher, RedisPriorityConsumer),
-    BrokerEnum.ROCKETMQ: (RocketmqPublisher, RocketmqConsumer),
+
     BrokerEnum.REDIS_STREAM: (RedisStreamPublisher, RedisStreamConsumer),
     BrokerEnum.ZEROMQ: (ZeroMqPublisher, ZeroMqConsumer),
     BrokerEnum.REDIS_BRPOP_LPUSH: (RedisPublisherLpush, RedisBrpopLpushConsumer),
@@ -212,7 +212,12 @@ def regist_to_funboost(broker_kind: str):
         from funboost.publishers.postgres_publisher import PostgresPublisher
         from funboost.consumers.postgres_consumer import PostgresConsumer
         register_custom_broker(BrokerEnum.POSTGRES, PostgresPublisher, PostgresConsumer)
-
+        
+    if broker_kind == BrokerEnum.ROCKETMQ:
+        from funboost.publishers.rocketmq_publisher import RocketmqPublisher
+        from funboost.consumers.rocketmq_consumer import RocketmqConsumer
+        register_custom_broker(BrokerEnum.ROCKETMQ, RocketmqPublisher, RocketmqConsumer)
+       
 
 if __name__ == '__main__':
     import sys

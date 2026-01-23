@@ -4,10 +4,14 @@
 import threading
 import time
 from funboost.funboost_config_deafult import BrokerConnConfig
-
 from funboost.publishers.base_publisher import AbstractPublisher
 
+from funboost.utils import system_util
 
+if system_util.is_windows():
+    raise ImportError('rocketmq包 只支持linux和mac')
+
+from rocketmq.client import Producer,Message
 
 class RocketmqPublisher(AbstractPublisher, ):
     _group_id__rocketmq_producer = {}
@@ -15,12 +19,6 @@ class RocketmqPublisher(AbstractPublisher, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        try:
-            from rocketmq.client import Producer
-        except BaseException as e:
-            # print(traceback.format_exc())
-            raise ImportError(f'rocketmq包 只支持linux和mac {str(e)}')
-
         group_id = f'g-{self._queue_name}'
         with self._lock_for_create_producer:
             if group_id not in self.__class__._group_id__rocketmq_producer:  # 同一个进程中创建多个同组消费者会报错。
@@ -33,11 +31,6 @@ class RocketmqPublisher(AbstractPublisher, ):
             self._producer = producer
 
     def _publish_impl(self, msg):
-        try:
-            from rocketmq.client import Message
-        except BaseException as e:
-            # print(traceback.format_exc())
-            raise ImportError(f'rocketmq包 只支持linux和mac {str(e)}')
         rocket_msg = Message(self._queue_name)
         # rocket_msg.set_keys(msg)  # 利于检索
         # rocket_msg.set_tags('XXX')

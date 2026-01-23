@@ -13,7 +13,6 @@ import { TimingJobsHeader } from "@/components/timing-jobs/TimingJobsHeader";
 import { TimingJobsHelpModal } from "@/components/timing-jobs/TimingJobsHelpModal";
 import { TimingJobsTable } from "@/components/timing-jobs/TimingJobsTable";
 import {
-  AUTO_REFRESH_INTERVAL_MS,
   DEFAULT_PAGE_SIZE,
   JOB_STORE_KIND,
 } from "@/components/timing-jobs/constants";
@@ -35,6 +34,7 @@ import {
   validateKwargs,
 } from "@/components/timing-jobs/utils";
 import { useActionPermissions } from "@/hooks/useActionPermissions";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { useProject } from "@/contexts/ProjectContext";
 
 type Notice = {
@@ -57,7 +57,6 @@ export default function TimingJobsPage() {
   const [search, setSearch] = useState("");
   const [notice, setNotice] = useState<Notice | null>(null);
   const [loading, setLoading] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(false);
   const [page, setPage] = useState(1);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -73,6 +72,7 @@ export default function TimingJobsPage() {
 
   const [helpOpen, setHelpOpen] = useState(false);
   const [schedulerStatuses, setSchedulerStatuses] = useState<Record<string, SchedulerStatusInfo>>({});
+  const [batchLoading, setBatchLoading] = useState(false);
 
   const { currentProject, careProjectName } = useProject();
   const { canExecute } = useActionPermissions("queue");
@@ -184,12 +184,15 @@ export default function TimingJobsPage() {
     loadAvailableQueues();
   }, [loadJobs, loadAvailableQueues]);
 
-  useEffect(() => {
-    if (!autoRefresh) return;
-    loadJobs();
-    const interval = setInterval(loadJobs, AUTO_REFRESH_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [autoRefresh, loadJobs]);
+  // 自动刷新
+  const { enabled: autoRefresh, toggle: toggleAutoRefresh, intervalMs, setIntervalMs } = useAutoRefresh(
+    loadJobs,
+    false,
+    30000  // 默认 30 秒
+  );
+
+  // 当前间隔（秒）
+  const refreshInterval = intervalMs / 1000;
 
   useEffect(() => {
     setPage(1);
@@ -288,6 +291,65 @@ export default function TimingJobsPage() {
       running,
     };
   }, [jobs, queueOptions]);
+
+  // 判断是否全部调度器都在运行
+  const allSchedulersRunning = useMemo(() => {
+    const queueNames = queueOptions.map((q) => q.name);
+    if (queueNames.length === 0) return false;
+    return queueNames.every((name) => schedulerStatuses[name]?.status === "running");
+  }, [queueOptions, schedulerStatuses]);
+
+  // 一键启动/暂停全部调度器
+  const handleBatchToggle = async () => {
+    if (!ensureOperatePermission()) return;
+
+    const queueNames = queueOptions.map((q) => q.name);
+    if (queueNames.length === 0) return;
+
+    const action = allSchedulersRunning ? "pause" : "resume";
+    const actionText = allSchedulersRunning ? "暂停" : "启动";
+    
+    if (!confirm(`确定要${actionText}全部 ${queueNames.length} 个队列的调度器吗？`)) return;
+
+    setBatchLoading(true);
+    try {
+      const endpoint = allSchedulersRunning ? "pause_scheduler" : "resume_scheduler";
+      const results = await Promise.allSettled(
+        queueNames.map((queueName) =>
+          funboostFetch(
+            `/funboost/${endpoint}?queue_name=${encodeURIComponent(queueName)}&job_store_kind=${JOB_STORE_KIND}`,
+            { method: "POST" }
+          )
+        )
+      );
+
+      const successCount = results.filter((r) => r.status === "fulfilled").length;
+      const failCount = results.filter((r) => r.status === "rejected").length;
+
+      if (failCount > 0) {
+        setNotice({
+          type: "warning",
+          message: `${actionText}完成：成功 ${successCount} 个，失败 ${failCount} 个。`,
+        });
+      } else {
+        setNotice({
+          type: "success",
+          message: `已${actionText}全部 ${successCount} 个队列的调度器。`,
+        });
+      }
+
+      // 刷新状态
+      loadSchedulerStatuses(queueNames);
+      loadJobs();
+    } catch (error) {
+      setNotice({
+        type: "error",
+        message: error instanceof Error ? error.message : `${actionText}失败。`,
+      });
+    } finally {
+      setBatchLoading(false);
+    }
+  };
 
   const openForm = (job?: TimingJob) => {
     if (!ensureOperatePermission()) {
@@ -534,15 +596,20 @@ export default function TimingJobsPage() {
           search={search}
           loading={loading}
           autoRefresh={autoRefresh}
+          refreshInterval={refreshInterval}
           canOperate={canOperateQueue}
+          allRunning={allSchedulersRunning}
+          batchLoading={batchLoading}
           onQueueChange={setQueueFilter}
           onStatusChange={setStatusFilter}
           onSearchChange={setSearch}
           onAdd={() => openForm()}
           onRefresh={refreshJobs}
-          onToggleAutoRefresh={() => setAutoRefresh((prev) => !prev)}
+          onToggleAutoRefresh={toggleAutoRefresh}
+          onRefreshIntervalChange={(value) => setIntervalMs(value * 1000)}
           onDeleteAll={deleteAllJobs}
           onShowHelp={() => setHelpOpen(true)}
+          onBatchToggle={handleBatchToggle}
         />
 
         {notice && (

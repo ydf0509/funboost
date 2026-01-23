@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Clock } from "lucide-react";
 
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { Button } from "@/components/ui/Button";
@@ -13,6 +13,14 @@ import { QueueTimeSeriesChart } from "@/components/charts/QueueTimeSeriesChart";
 import { apiFetch } from "@/lib/api";
 import { formatNumber, toDateTimeInputValue } from "@/lib/format";
 import { useProject } from "@/contexts/ProjectContext";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+
+const refreshIntervals = [
+  { value: 5, label: "5秒" },
+  { value: 10, label: "10秒" },
+  { value: 30, label: "30秒" },
+  { value: 60, label: "60秒" },
+];
 
 type QueueOption = {
   collection_name: string;
@@ -120,23 +128,72 @@ export default function ConsumeSpeedPage() {
     loadChartData(startTime, endTime, chartSamples);
   }, [loadChartData, startTime, endTime, chartSamples]);
 
-  // 计算统计数据
-  const qps = useMemo(() => {
-    if (chartData.length === 0) return 0;
-    const totalSuccess = chartData.reduce((sum, p) => sum + (p.report_data.history_run_count ?? 0), 0);
-    const totalFail = chartData.reduce((sum, p) => sum + (p.report_data.history_run_fail_count ?? 0), 0);
-    const start = chartData[0].report_ts * 1000;
-    const end = chartData[chartData.length - 1].report_ts * 1000;
-    const seconds = Math.max((end - start) / 1000, 1);
-    return (totalSuccess + totalFail) / seconds;
+  // 自动刷新
+  const { enabled: autoRefresh, toggle: toggleAutoRefresh, intervalMs, setIntervalMs } = useAutoRefresh(
+    handleRefresh,
+    false,
+    30000  // 默认 30 秒
+  );
+
+  // 当前间隔（秒）
+  const refreshInterval = intervalMs / 1000;
+
+  // 计算统计数据 - history_run_count 是累计值，需要用最后一个点减去第一个点
+  const stats = useMemo(() => {
+    if (chartData.length === 0) {
+      return { totalSuccess: 0, totalFail: 0, qps: 0 };
+    }
+    
+    const first = chartData[0];
+    const last = chartData[chartData.length - 1];
+    
+    // 时间段内的增量 = 最后一个点的累计值 - 第一个点的累计值
+    const totalSuccess = Math.max(0, (last.report_data.history_run_count ?? 0) - (first.report_data.history_run_count ?? 0));
+    const totalFail = Math.max(0, (last.report_data.history_run_fail_count ?? 0) - (first.report_data.history_run_fail_count ?? 0));
+    
+    // 计算时间段秒数
+    const seconds = Math.max(last.report_ts - first.report_ts, 1);
+    const qps = (totalSuccess + totalFail) / seconds;
+    
+    return { totalSuccess, totalFail, qps };
   }, [chartData]);
 
-  const totalSuccess = chartData.reduce((sum, p) => sum + (p.report_data.history_run_count ?? 0), 0);
-  const totalFail = chartData.reduce((sum, p) => sum + (p.report_data.history_run_fail_count ?? 0), 0);
+  const { totalSuccess, totalFail, qps } = stats;
 
   return (
     <RequirePermission permissions={["queue:read"]} projectLevel="read">
       <div className="space-y-6">
+      {/* Action Bar */}
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={chartLoading}>
+          <RefreshCw className={`h-4 w-4 ${chartLoading ? "animate-spin" : ""}`} />
+          数据刷新
+        </Button>
+        <div className="flex items-center gap-1 rounded-full border border-[hsl(var(--line))] p-0.5">
+          <span className="px-2 text-xs text-[hsl(var(--ink-muted))]">刷新间隔:</span>
+          {refreshIntervals.map((interval) => (
+            <button
+              key={interval.value}
+              onClick={() => setIntervalMs(interval.value * 1000)}
+              className={`px-2 py-1 text-xs rounded-full transition cursor-pointer ${refreshInterval === interval.value
+                ? "bg-[hsl(var(--accent))] text-white"
+                : "text-[hsl(var(--ink-muted))] hover:text-[hsl(var(--ink))]"
+              }`}
+            >
+              {interval.label}
+            </button>
+          ))}
+        </div>
+        <Button
+          variant={autoRefresh ? "primary" : "outline"}
+          size="sm"
+          onClick={toggleAutoRefresh}
+        >
+          <Clock className="h-4 w-4" />
+          {autoRefresh ? "刷新中..." : "已暂停"}
+        </Button>
+      </div>
+
       {/* 通知消息 */}
       {notice && (
         <Card className="border border-[hsl(var(--accent))]/30 bg-[hsl(var(--accent))]/10 text-sm text-[hsl(var(--accent-2))]">
@@ -169,15 +226,6 @@ export default function ConsumeSpeedPage() {
                 </option>
               ))}
             </Select>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={chartLoading}
-              className="cursor-pointer"
-            >
-              <RefreshCw className={`h-4 w-4 ${chartLoading ? "animate-spin" : ""}`} />
-            </Button>
           </div>
         </div>
 

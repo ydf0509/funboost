@@ -8,6 +8,8 @@ const variants = {
     "border border-[hsl(var(--line))] text-[hsl(var(--ink))] hover:border-[hsl(var(--accent))] hover:text-[hsl(var(--accent))]",
   ghost: "text-[hsl(var(--ink))] hover:bg-[hsl(var(--sand-2))]",
   danger: "bg-[hsl(var(--danger))] text-white hover:bg-[hsl(var(--danger))]/90",
+  success: "bg-[hsl(var(--success))] text-white hover:bg-[hsl(var(--success))]/90",
+  warning: "bg-[hsl(var(--warning))] text-white hover:bg-[hsl(var(--warning))]/90",
 };
 
 const sizes = {

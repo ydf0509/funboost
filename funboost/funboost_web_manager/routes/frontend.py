@@ -122,8 +122,8 @@ def serve_frontend(path: str):
     """
     # 排除 FAAS 蓝图路由（兼容上游仓库）
     # 这些路由应该由其他蓝图处理，不应该被前端 catch-all 拦截
-    if path.startswith('funboost/') or path.startswith('api/') or path.startswith('admin/'):
-        # 返回 404，让 Flask 继续查找其他路由
+    # 注意：只排除后端 API 路由，不排除前端页面路由
+    if path.startswith('funboost/') or path.startswith('api/'):
         from flask import abort
         abort(404)
     

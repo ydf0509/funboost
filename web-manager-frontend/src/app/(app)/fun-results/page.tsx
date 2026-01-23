@@ -88,7 +88,6 @@ export default function FunResultsPage() {
   const [msgCount, setMsgCount] = useState<number | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [refreshInterval, setRefreshInterval] = useState(30);
   const [copiedTaskId, setCopiedTaskId] = useState<string | null>(null);
 
   // 分页状态
@@ -109,11 +108,14 @@ export default function FunResultsPage() {
   const canWriteProject = !currentProject || projectLevel === "write" || projectLevel === "admin";
   const canOperateQueue = canExecute && canWriteProject;
 
-  const { enabled: autoRefresh, toggle: toggleAutoRefresh } = useAutoRefresh(
+  const { enabled: autoRefresh, toggle: toggleAutoRefresh, intervalMs, setIntervalMs } = useAutoRefresh(
     () => loadResults(),
     false,
-    refreshInterval * 1000
+    30000  // 默认 30 秒
   );
+
+  // 当前间隔（秒）
+  const refreshInterval = intervalMs / 1000;
 
   useEffect(() => {
     const now = new Date();
@@ -297,7 +299,7 @@ export default function FunResultsPage() {
             {refreshIntervals.map((interval) => (
               <button
                 key={interval.value}
-                onClick={() => setRefreshInterval(interval.value)}
+                onClick={() => setIntervalMs(interval.value * 1000)}
                 className={`px-2 py-1 text-xs rounded-full transition ${refreshInterval === interval.value
                   ? "bg-[hsl(var(--accent))] text-white"
                   : "text-[hsl(var(--ink-muted))] hover:text-[hsl(var(--ink))]"
@@ -313,7 +315,7 @@ export default function FunResultsPage() {
             onClick={toggleAutoRefresh}
           >
             <Clock className="h-4 w-4" />
-            自动刷新中
+            {autoRefresh ? "刷新中..." : "已暂停"}
           </Button>
         </div>
 

@@ -29,7 +29,7 @@ from flask_login import login_user, logout_user, login_required, LoginManager, U
 import nb_log
 from funboost import (
     nb_print,
-    ActiveCousumerProcessInfoGetter,
+    # ActiveCousumerProcessInfoGetter,  # 已迁移到 faas/flask_adapter.py
     # BoostersManager,  # 未使用
     # PublisherParams,  # 未使用
     # RedisMixin,  # 已废弃的 pause/resume 路由使用，现已注释
@@ -156,7 +156,7 @@ def index():
 @login_required
 def query_cols_view():
     nb_print(request.args)
-    return jsonify(get_cols(request.args.get("col_name_search")))
+    return jsonify(get_cols(request.args.get("queue_name_search")))
 
 
 @app.route("/query_result")
@@ -171,30 +171,22 @@ def speed_stats():
     return jsonify(get_speed(**request.values.to_dict()))
 
 
-# 以下路由已废弃，功能已迁移到 consume_speed_curve，前端不再使用
-# @app.route("/speed_statistic_for_echarts")
-# @login_required
-# def speed_statistic_for_echarts():
-#     stat = Statistic(request.args.get("col_name"))
-#     stat.build_result()
-#     return jsonify(stat.result)
-
 
 @app.route("/consume_speed_curve")
 @login_required
 def consume_speed_curve():
     """获取消费速率曲线数据"""
     from funboost.funboost_web_manager.functions import get_consume_speed_curve
-    col_name = request.args.get("col_name")
+    queue_name = request.args.get("queue_name")
     start_time = request.args.get("start_time")
     end_time = request.args.get("end_time")
     granularity = request.args.get("granularity", "auto")
     
-    if not col_name or not start_time or not end_time:
-        return jsonify({"error": "缺少必要参数: col_name, start_time, end_time"})
+    if not queue_name or not start_time or not end_time:
+        return jsonify({"error": "缺少必要参数: queue_name, start_time, end_time"})
     
     try:
-        result = get_consume_speed_curve(col_name, start_time, end_time, granularity)
+        result = get_consume_speed_curve(queue_name, start_time, end_time, granularity)
         return jsonify(result)
     except Exception as e:
         import traceback
@@ -211,95 +203,6 @@ def serve_template(template):
         return render_template(template)
     except Exception as e:
         return f"Template not found: {template}", 404
-
-
-@app.route("/running_consumer/hearbeat_info_by_queue_name")
-def hearbeat_info_by_queue_name():
-    queue_name = request.args.get("queue_name")
-    if queue_name in ("所有", None, ""):
-        info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
-        ret_list = []
-        for queue_name, dic in info_map.items():
-            ret_list.extend(dic)
-        return jsonify(ret_list)
-    else:
-        return jsonify(
-            ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_queue_name(queue_name)
-        )
-
-
-@app.route("/running_consumer/hearbeat_info_by_ip")
-def hearbeat_info_by_ip():
-    ip = request.args.get("ip")
-    if ip in ("所有", None, ""):
-        info_map = (
-            ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_ip()
-        )
-        ret_list = []
-        for queue_name, dic in info_map.items():
-            ret_list.extend(dic)
-        return jsonify(ret_list)
-    else:
-        return jsonify(
-            ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_ip(ip)
-        )
-
-
-@app.route("/running_consumer/hearbeat_info_partion_by_queue_name")
-def hearbeat_info_partion_by_queue_name():
-    info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
-    ret_list = []
-    total_count = 0
-    for k, v in info_map.items():
-        ret_list.append({"collection_name": k, "count": len(v)})
-        total_count += len(v)
-    ret_list = sorted(ret_list, key=lambda x: x["collection_name"])
-    ret_list.insert(0, {"collection_name": "所有", "count": total_count})
-    return jsonify(ret_list)
-
-
-@app.route("/running_consumer/hearbeat_info_partion_by_ip")
-def hearbeat_info_partion_by_ip():
-    info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_ip()
-    ret_list = []
-    total_count = 0
-    for k, v in info_map.items():
-        ret_list.append({"collection_name": k, "count": len(v)})
-        total_count += len(v)
-    ret_list = sorted(ret_list, key=lambda x: x["collection_name"])
-    ret_list.insert(0, {"collection_name": "所有", "count": total_count})
-    print(ret_list)
-    return jsonify(ret_list)
-
-
-@app.route("/queue/params_and_active_consumers")
-def get_queues_params_and_active_consumers():
-    return jsonify(
-        QueuesConusmerParamsGetter().get_queues_params_and_active_consumers()
-    )
-
-
-
-
-
-# 以下两个路由已废弃，前端没有使用（暂停/恢复消费功能可能在其他地方实现）
-# @app.route("/queue/pause/<queue_name>", methods=["POST"])
-# def pause_cousume(queue_name):
-#     RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name, "1")
-#     return jsonify({"success": True})
-
-
-# @app.route("/queue/resume/<queue_name>", methods=["POST"])
-# def resume_consume(queue_name):
-#     RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name, "0")
-#     return jsonify({"success": True})
-
-
-@app.route("/queue/get_msg_num_all_queues", methods=["GET"])
-def get_msg_num_all_queues():
-    """这个是通过消费者周期每隔10秒上报到redis的，性能好。不需要实时获取每个消息队列，直接从redis读取所有队列的消息数量"""
-    return jsonify(QueuesConusmerParamsGetter().get_msg_num(ignore_report_ts=True))
-
 
 
 @app.route("/queue/get_time_series_data/<queue_name>", methods=["GET"])

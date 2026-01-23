@@ -17,7 +17,7 @@ import traceback
 from flask import Blueprint, request, jsonify
 
 from funboost import AsyncResult, TaskOptions
-from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter, QueuesConusmerParamsGetter, CareProjectNameEnv
+from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter, QueuesConusmerParamsGetter, CareProjectNameEnv, ActiveCousumerProcessInfoGetter
 from funboost.faas.faas_util import gen_aps_job_adder
 from funboost.core.loggers import get_funboost_file_logger
 
@@ -1263,6 +1263,200 @@ def get_all_project_names():
                 "project_names": [],
                 "count": 0
             }
+        }), 500
+
+
+# ==================== 运行中消费者信息接口 ====================
+
+@flask_blueprint.route("/running_consumer/hearbeat_info_by_queue_name", methods=['GET'])
+def hearbeat_info_by_queue_name():
+    """
+    按队列名获取消费者心跳信息
+    
+    查询参数:
+        queue_name: 队列名称（可选，不传或传"所有"则返回所有消费者）
+    
+    返回:
+        消费者心跳信息列表
+    """
+    try:
+        queue_name = request.args.get("queue_name")
+        if queue_name in ("所有", None, ""):
+            info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
+            ret_list = []
+            for q_name, dic in info_map.items():
+                ret_list.extend(dic)
+            return jsonify({
+                "succ": True,
+                "msg": "获取成功",
+                "data": ret_list
+            })
+        else:
+            data = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_queue_name(queue_name)
+            return jsonify({
+                "succ": True,
+                "msg": "获取成功",
+                "data": data
+            })
+    except Exception as e:
+        logger.exception(f'获取消费者心跳信息失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"获取消费者心跳信息失败: {str(e)}",
+            "data": []
+        }), 500
+
+
+@flask_blueprint.route("/running_consumer/hearbeat_info_by_ip", methods=['GET'])
+def hearbeat_info_by_ip():
+    """
+    按 IP 获取消费者心跳信息
+    
+    查询参数:
+        ip: IP 地址（可选，不传或传"所有"则返回所有消费者）
+    
+    返回:
+        消费者心跳信息列表
+    """
+    try:
+        ip = request.args.get("ip")
+        if ip in ("所有", None, ""):
+            info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_ip()
+            ret_list = []
+            for q_name, dic in info_map.items():
+                ret_list.extend(dic)
+            return jsonify({
+                "succ": True,
+                "msg": "获取成功",
+                "data": ret_list
+            })
+        else:
+            data = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_ip(ip)
+            return jsonify({
+                "succ": True,
+                "msg": "获取成功",
+                "data": data
+            })
+    except Exception as e:
+        logger.exception(f'获取消费者心跳信息失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"获取消费者心跳信息失败: {str(e)}",
+            "data": []
+        }), 500
+
+
+@flask_blueprint.route("/running_consumer/hearbeat_info_partion_by_queue_name", methods=['GET'])
+def hearbeat_info_partion_by_queue_name():
+    """
+    按队列名分组统计消费者数量
+    
+    返回:
+        队列名列表及每个队列的消费者数量，第一项为"所有"表示总数
+    """
+    try:
+        info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
+        ret_list = []
+        total_count = 0
+        for k, v in info_map.items():
+            ret_list.append({"collection_name": k, "count": len(v)})
+            total_count += len(v)
+        ret_list = sorted(ret_list, key=lambda x: x["collection_name"])
+        ret_list.insert(0, {"collection_name": "所有", "count": total_count})
+        return jsonify({
+            "succ": True,
+            "msg": "获取成功",
+            "data": ret_list
+        })
+    except Exception as e:
+        logger.exception(f'获取消费者分组统计失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"获取消费者分组统计失败: {str(e)}",
+            "data": []
+        }), 500
+
+
+@flask_blueprint.route("/running_consumer/hearbeat_info_partion_by_ip", methods=['GET'])
+def hearbeat_info_partion_by_ip():
+    """
+    按 IP 分组统计消费者数量
+    
+    返回:
+        IP 列表及每个 IP 的消费者数量，第一项为"所有"表示总数
+    """
+    try:
+        info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_ip()
+        ret_list = []
+        total_count = 0
+        for k, v in info_map.items():
+            ret_list.append({"collection_name": k, "count": len(v)})
+            total_count += len(v)
+        ret_list = sorted(ret_list, key=lambda x: x["collection_name"])
+        ret_list.insert(0, {"collection_name": "所有", "count": total_count})
+        return jsonify({
+            "succ": True,
+            "msg": "获取成功",
+            "data": ret_list
+        })
+    except Exception as e:
+        logger.exception(f'获取消费者分组统计失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"获取消费者分组统计失败: {str(e)}",
+            "data": []
+        }), 500
+
+
+@flask_blueprint.route("/queues_params_and_active_consumers", methods=['GET'])
+def get_queues_params_and_active_consumers():
+    """
+    获取所有队列的参数配置和活跃消费者信息
+    
+    返回:
+        所有队列的配置参数及其活跃消费者列表
+    """
+    try:
+        data = QueuesConusmerParamsGetter().get_queues_params_and_active_consumers()
+        return jsonify({
+            "succ": True,
+            "msg": "获取成功",
+            "data": data
+        })
+    except Exception as e:
+        logger.exception(f'获取队列参数和活跃消费者失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"获取队列参数和活跃消费者失败: {str(e)}",
+            "data": {}
+        }), 500
+
+
+@flask_blueprint.route("/get_msg_num_all_queues", methods=['GET'])
+def get_msg_num_all_queues():
+    """
+    批量获取所有队列的消息数量
+    
+    说明:
+        这个是通过消费者周期每隔10秒上报到redis的，性能好。
+        不需要实时获取每个消息队列，直接从redis读取所有队列的消息数量。
+    
+    返回:
+        {queue_name: msg_count, ...}
+    """
+    try:
+        data = QueuesConusmerParamsGetter().get_msg_num(ignore_report_ts=True)
+        return jsonify({
+            "succ": True,
+            "msg": "获取成功",
+            "data": data
+        })
+    except Exception as e:
+        logger.exception(f'获取所有队列消息数量失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"获取所有队列消息数量失败: {str(e)}",
+            "data": {}
         }), 500
 
 

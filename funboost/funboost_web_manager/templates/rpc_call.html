@@ -658,7 +658,7 @@
 
                     <div class="form-group">
                         <label class="form-label"><i class="fa fa-list-alt"></i>选择队列</label>
-                        <select class="form-control" id="col_name_search" style="width: 100%;">
+                        <select class="form-control" id="queue_name_search" style="width: 100%;">
                             <option value="">请选择队列名字...</option>
                         </select>
                     </div>
@@ -828,7 +828,7 @@
 
     <script>
         var allQueues = [];
-        var currentColName;
+        var currentQueueName;
         var rpc_last_auto_filled_template = "";
         var rpc_is_auto_filled = false;
         var rpc_last_selected_queue = "";
@@ -1096,27 +1096,29 @@
             resetRpcFuncParamsUI();
 
             $.ajax({
-                url: "{{ url_for('get_msg_num_all_queues')}}",
+                url: "{{ url_for('funboost.get_msg_num_all_queues')}}",
                 data: {},
                 async: true,
-                success: function (result) {
+                success: function (response) {
+                    // 兼容新旧格式
+                    var result = response.data || response;
                     var html = '<option value="">请选择队列名字...</option>';
                     for (var queueName in result) {
                         var msgCount = result[queueName];
                         html += '<option value="' + queueName + '">' + queueName + ' (消息数:' + msgCount + ')</option>';
                     }
-                    $("#col_name_search").html(html);
+                    $("#queue_name_search").html(html);
 
-                    $("#col_name_search").select2({
+                    $("#queue_name_search").select2({
                         placeholder: "请输入队列名称搜索...",
                         allowClear: true,
                         width: '100%',
                         minimumResultsForSearch: 0
                     });
 
-                    $("#col_name_search").on('change', function () {
+                    $("#queue_name_search").on('change', function () {
                         var selectedQueue = $(this).val();
-                        currentColName = selectedQueue;
+                        currentQueueName = selectedQueue;
                         var prevQueue = rpc_last_selected_queue;
                         rpc_last_selected_queue = selectedQueue || "";
                         loadRpcTemplateAndParamsInfo(selectedQueue, prevQueue);
@@ -1127,7 +1129,7 @@
 
         $(document).ready(function() {
             $("#send_btn").click(function() {
-                var queueName = $("#col_name_search").val();
+                var queueName = $("#queue_name_search").val();
                 var messageContent = $("#message_content").val();
                 
                 if (!queueName) { alert("请先选择队列名称"); return; }

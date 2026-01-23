@@ -382,7 +382,7 @@
                     <div class="control-row">
                         <div class="control-group" style="flex: 1; min-width: 300px;">
                             <label><i class="fa fa-database"></i> 队列名称</label>
-                            <select class="form-control" id="col_name_search" style="width: 100%;">
+                            <select class="form-control" id="queue_name_search" style="width: 100%;">
                                 <option value="">请选择队列...</option>
                             </select>
                         </div>
@@ -447,7 +447,7 @@
     </div>
 
     <script>
-        var currentColName = '';
+        var currentQueueName = '';
         var chartInstance = null;
         
         // 显示帮助弹窗
@@ -505,7 +505,7 @@
             // 加载队列列表
             $.ajax({
                 url: "{{ url_for('query_cols_view')}}",
-                data: { col_name_search: '' },
+                data: { queue_name_search: '' },
                 async: true,
                 success: function(result) {
                     var html = '<option value="">请选择队列...</option>';
@@ -513,19 +513,19 @@
                         html += '<option value="' + item.collection_name + '">' +
                             item.collection_name + ' (记录数: ' + item.count + ')</option>';
                     }
-                    $("#col_name_search").html(html);
+                    $("#queue_name_search").html(html);
                     
                     // 初始化 Select2
-                    $("#col_name_search").select2({
+                    $("#queue_name_search").select2({
                         placeholder: "请输入队列名称搜索...",
                         allowClear: true,
                         width: '100%'
                     });
                     
-                    $("#col_name_search").on('change', function() {
-                        currentColName = $(this).val();
+                    $("#queue_name_search").on('change', function() {
+                        currentQueueName = $(this).val();
                         // 切换队列时立即触发生成近60分钟曲线
-                        if (currentColName) {
+                        if (currentQueueName) {
                             // 重置快捷按钮到60分钟
                             $('.btn-time').removeClass('active');
                             $('.btn-time[data-minutes="60"]').addClass('active');
@@ -542,7 +542,7 @@
                 var minutes = parseInt($(this).data('minutes'));
                 setDefaultTime(minutes);
                 // 如果已选择队列，立即查询
-                if (currentColName) {
+                if (currentQueueName) {
                     queryByMinutes(minutes);
                 } else {
                     alert('请先选择队列名称');
@@ -552,7 +552,7 @@
         
         // 按分钟数查询（用于快捷按钮和队列切换）
         function queryByMinutes(minutes) {
-            if (!currentColName) {
+            if (!currentQueueName) {
                 alert('请先选择队列名称');
                 return;
             }
@@ -565,7 +565,7 @@
         
         // 自定义时间范围查询（用于查询按钮）
         function queryCustomTimeRange() {
-            if (!currentColName) {
+            if (!currentQueueName) {
                 alert('请先选择队列名称');
                 return;
             }
@@ -605,7 +605,7 @@
             $.ajax({
                 url: "{{ url_for('consume_speed_curve') }}",
                 data: {
-                    col_name: currentColName,
+                    queue_name: currentQueueName,
                     start_time: startTime,
                     end_time: endTime,
                     granularity: 'auto'
@@ -657,7 +657,7 @@
             
             var option = {
                 title: {
-                    text: '消费速率趋势 - ' + currentColName,
+                    text: '消费速率趋势 - ' + currentQueueName,
                     subtext: data.start_time + ' 至 ' + data.end_time + ' (粒度: ' + data.granularity + ')',
                     left: 'center',
                     textStyle: {

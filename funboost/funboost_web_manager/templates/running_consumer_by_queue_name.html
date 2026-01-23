@@ -352,7 +352,7 @@
         <!-- 查询面板 -->
         <div class="query-panel">
             <label><i class="fa fa-list-alt" style="margin-right: 6px;"></i>选择队列：</label>
-            <select class="form-control" id="col_name_search" style="width: 380px;">
+            <select class="form-control" id="queue_name_search" style="width: 380px;">
                 <option value="">全部队列</option>
             </select>
             <button type="button" class="btn-query" onclick="query()">
@@ -377,7 +377,7 @@
 
     <script>
         var allQueues = [];
-        var currentColName = '';
+        var currentQueueName = '';
         var table = null;
 
         $(document).ready(function () {
@@ -387,9 +387,10 @@
 
         function loadQueueList() {
             $.ajax({
-                url: "{{ url_for('hearbeat_info_partion_by_queue_name')}}",
-                data: { col_name_search: '' },
-                success: function (result) {
+                url: "{{ url_for('funboost.hearbeat_info_partion_by_queue_name')}}",
+                data: { queue_name_search: '' },
+                success: function (response) {
+                    var result = response.data || response;  // 兼容新旧格式
                     allQueues = result;
                     
                     var totalQueues = 0, totalConsumers = 0;
@@ -408,23 +409,23 @@
                     
                     $('#total_queue_count').text(totalQueues);
                     $('#total_consumer_count').text(totalConsumers);
-                    $("#col_name_search").html(html);
+                    $("#queue_name_search").html(html);
 
-                    $("#col_name_search").select2({
+                    $("#queue_name_search").select2({
                         placeholder: "搜索队列名...",
                         allowClear: true,
                         width: '380px'
                     });
 
-                    $("#col_name_search").on('change', function () {
-                        currentColName = $(this).val();
+                    $("#queue_name_search").on('change', function () {
+                        currentQueueName = $(this).val();
                         query();  // 选择变化时自动查询
                     });
 
                     // 检查浏览器是否记住了上次选择的值
-                    var rememberedValue = $("#col_name_search").val();
+                    var rememberedValue = $("#queue_name_search").val();
                     if (rememberedValue) {
-                        currentColName = rememberedValue;
+                        currentQueueName = rememberedValue;
                     }
 
                     query();
@@ -436,9 +437,10 @@
 
         function query() {
             $.ajax({
-                url: "{{ url_for('hearbeat_info_by_queue_name')}}",
-                data: { queue_name: currentColName },
-                success: function (result) {
+                url: "{{ url_for('funboost.hearbeat_info_by_queue_name')}}",
+                data: { queue_name: currentQueueName },
+                success: function (response) {
+                    var result = response.data || response;  // 兼容新旧格式
                     if (!result || result.length === 0) {
                         $('#result-table').hide();
                         $('#empty_state').show();

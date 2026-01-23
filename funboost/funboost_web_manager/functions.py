@@ -36,19 +36,10 @@ def get_mongo_table_name_by_queue_name(queue_name: str) -> str:
     Returns:
         MongoDB 表名
     """
-    try:
-        queue_params = SingleQueueConusmerParamsGetter(queue_name).get_one_queue_params_use_cache()
-        # print(queue_params,type(queue_params))
-        if queue_params:
-            persistance_conf = queue_params.get('function_result_status_persistance_conf', {})
-            # print(persistance_conf,type(persistance_conf))
-            table_name = persistance_conf.get('table_name')
-            if table_name:
-                return table_name
-    except Exception as e:
-        nb_print(f'获取队列 {queue_name} 的表名失败: {e}')
-    # 默认使用 queue_name 作为表名
-    return queue_name
+    queue_params = SingleQueueConusmerParamsGetter(queue_name).get_one_queue_params_use_cache()
+    persistance_conf = queue_params['function_result_status_persistance_conf']
+    table_name = persistance_conf['table_name'] or queue_name
+    return table_name 
 
 
 def get_all_queue_table_info() -> dict:
@@ -59,18 +50,15 @@ def get_all_queue_table_info() -> dict:
         {queue_name: table_name, ...}
     """
     result = {}
-    try:
-        queues_config = QueuesConusmerParamsGetter().get_queues_params()
-        for queue_name, params in queues_config.items():
-            persistance_conf = params.get('function_result_status_persistance_conf', {})
-            table_name = persistance_conf.get('table_name') or queue_name
-            result[queue_name] = table_name
-    except Exception as e:
-        nb_print(f'获取所有队列表名映射失败: {e}')
+    queues_config = QueuesConusmerParamsGetter().get_queues_params()
+    for queue_name, params in queues_config.items():
+        persistance_conf = params['function_result_status_persistance_conf']
+        table_name = persistance_conf['table_name'] or queue_name
+        result[queue_name] = table_name 
     return result
 
 
-def get_cols(col_name_search: str):
+def get_cols(queue_name_search: str):
     """
     获取队列列表，并返回每个队列对应的 MongoDB 表的记录数
     
@@ -85,7 +73,7 @@ def get_cols(col_name_search: str):
     result = []
     for queue_name, table_name in queue_table_map.items():
         # 根据搜索条件过滤
-        if col_name_search and col_name_search not in queue_name:
+        if queue_name_search and queue_name_search not in queue_name:
             continue
         
         try:
@@ -103,26 +91,26 @@ def get_cols(col_name_search: str):
     return result
 
 
-def query_result(col_name, start_time, end_time, is_success, function_params: str, page, task_id: str = ''):
+def query_result(queue_name, start_time, end_time, is_success, function_params: str, page, task_id: str = ''):
     """
     查询函数执行结果
     
     Args:
-        col_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
+        queue_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
     
     注意：因为多个队列可能共享同一个表，所以查询时必须加上 queue_name 条件
     """
     query_kw = copy.copy(locals())
     t0 = time.time()
-    if not col_name:
+    if not queue_name:
         return []
     db = MongoMixin().mongo_db_task_status
     
     # 根据队列名获取实际的 MongoDB 表名
-    table_name = get_mongo_table_name_by_queue_name(col_name)
+    table_name = get_mongo_table_name_by_queue_name(queue_name)
     
     # 基础条件：必须加上 queue_name，因为多个队列可能共享同一个表
-    condition = {'queue_name': col_name}
+    condition = {'queue_name': queue_name}
     
     # 如果传了 task_id，忽略其他条件（时间、运行状态等），直接根据 task_id 查询
     if task_id and task_id.strip():
@@ -150,23 +138,23 @@ def query_result(col_name, start_time, end_time, is_success, function_params: st
     return results
 
 
-def get_speed(col_name, start_time, end_time):
+def get_speed(queue_name, start_time, end_time):
     """
     获取指定时间范围内的消费速率统计
     
     Args:
-        col_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
+        queue_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
     
     注意：因为多个队列可能共享同一个表，所以查询时必须加上 queue_name 条件
     """
     db = MongoMixin().mongo_db_task_status
     
     # 根据队列名获取实际的 MongoDB 表名
-    table_name = get_mongo_table_name_by_queue_name(col_name)
+    table_name = get_mongo_table_name_by_queue_name(queue_name)
     
     # 基础条件：必须加上 queue_name，因为多个队列可能共享同一个表
     condition = {
-        'queue_name': col_name,
+        'queue_name': queue_name,
         'insert_time': {'$gt': time_util.DatetimeConverter(start_time).datetime_obj,
                         '$lt': time_util.DatetimeConverter(end_time).datetime_obj},
     }
@@ -185,12 +173,12 @@ def get_speed(col_name, start_time, end_time):
 
 
 
-def get_consume_speed_curve(col_name: str, start_time: str, end_time: str, granularity: str = 'auto'):
+def get_consume_speed_curve(queue_name: str, start_time: str, end_time: str, granularity: str = 'auto'):
     """
     获取消费速率曲线数据
     
     Args:
-        col_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
+        queue_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
         start_time: 开始时间，格式 'YYYY-MM-DD HH:MM:SS'
         end_time: 结束时间，格式 'YYYY-MM-DD HH:MM:SS'
         granularity: 时间粒度，'second', 'minute', 'hour', 'day' 或 'auto'
@@ -208,7 +196,7 @@ def get_consume_speed_curve(col_name: str, start_time: str, end_time: str, granu
     db = MongoMixin().mongo_db_task_status
     
     # 根据队列名获取实际的 MongoDB 表名
-    table_name = get_mongo_table_name_by_queue_name(col_name)
+    table_name = get_mongo_table_name_by_queue_name(queue_name)
     
     start_dt = time_util.DatetimeConverter(start_time).datetime_obj
     end_dt = time_util.DatetimeConverter(end_time).datetime_obj
@@ -266,7 +254,7 @@ def get_consume_speed_curve(col_name: str, start_time: str, end_time: str, granu
         
         # 基础条件：必须加上 queue_name，因为多个队列可能共享同一个表
         condition_base = {
-            'queue_name': col_name,
+            'queue_name': queue_name,
             'insert_time': {'$gte': current, '$lt': next_time}
         }
         
@@ -299,14 +287,3 @@ def get_consume_speed_curve(col_name: str, start_time: str, end_time: str, granu
 
 if __name__ == '__main__':
     pass
-    # print(get_cols('4'))
-    # pprint(query_result('queue_test54_task_status', '2019-09-15 00:00:00', '2019-09-25 00:00:00', True, '999', 0))
-    # print(json.dumps(query_result(**{'col_name': 'queue_test56', 'start_time': '2019-09-18 16:03:29', 'end_time': '2019-09-21 16:03:29', 'is_success': '1', 'function_params': '', 'page': '0'}))[:1000])
-    # nb_print(get_speed_last_minute('queue_test54'))
-
-    # nb_print(get_speed('queue_test56', '2019-09-18 16:03:29', '2019-09-23 16:03:29'))
-    # stat = Statistic('queue_test_f01t')
-    # stat.build_result()
-    # nb_print(stat.result)
-    
-    # res = rpc_call('queue_test_g02t',{'x':1,'y':2},True,60)

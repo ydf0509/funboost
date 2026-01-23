@@ -1036,9 +1036,11 @@
         }
 
         var table = new Tabulator("#queue-table", {
-            ajaxURL: "/queue/params_and_active_consumers",
+            ajaxURL: "/funboost/queues_params_and_active_consumers",
             ajaxResponse: function(url, params, response) {
-                const tableData = Object.entries(response).map(([queue_name, data]) => ({
+                // 兼容新旧格式：新格式有 data 字段，旧格式直接返回数据
+                const actualData = response.data || response;
+                const tableData = Object.entries(actualData).map(([queue_name, data]) => ({
                     queue_name: queue_name,
                     broker_kind: data.queue_params.broker_kind,
                     consuming_function_name: data.queue_params.consuming_function_name,
@@ -1468,9 +1470,11 @@
 
         function showConsumerDetails(consumers, queueName) {
             $.ajax({
-                url: '/running_consumer/hearbeat_info_by_queue_name',
+                url: '/funboost/running_consumer/hearbeat_info_by_queue_name',
                 data: { queue_name: queueName },
-                success: function(consumers) {
+                success: function(response) {
+                    // 兼容新旧格式
+                    var consumers = response.data || response;
                     let consumerRows = '';
                     consumers.forEach(consumer => {
                         consumerRows += `

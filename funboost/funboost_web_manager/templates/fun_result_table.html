@@ -1209,7 +1209,7 @@
             <div class="query-row">
                 <div class="query-group queue-select">
                     <label><i class="fa fa-database"></i> 队列名称</label>
-                    <select class="form-control" id="col_name_search">
+                    <select class="form-control" id="queue_name_search">
                         <option value="">请选择队列...</option>
                     </select>
                 </div>
@@ -1344,7 +1344,7 @@
 
     <script>
         var allQueues = [];
-        var currentColName;
+        var currentQueueName;
         var runStatus = 1;
         var iid;
         var refreshInterval = 30000; // 默认30秒
@@ -1375,14 +1375,14 @@
 
         // 执行查询
         function doQuery() {
-            if (!currentColName) {
+            if (!currentQueueName) {
                 alert('请先选择队列名称');
                 return;
             }
             $('#table_container').show();
             $('#empty_state').hide();
             startRun();
-            queryResult(currentColName, 0, true);
+            queryResult(currentQueueName, 0, true);
         }
 
         // 初始化
@@ -1420,7 +1420,7 @@
             // 加载队列列表
             $.ajax({
                 url: "{{ url_for('query_cols_view')}}",
-                data: { col_name_search: '' },
+                data: { queue_name_search: '' },
                 async: true,
                 success: function(result) {
                     allQueues = result;
@@ -1431,27 +1431,27 @@
                         html += '<option value="' + item.collection_name + '">' +
                             item.collection_name + ' (记录数: ' + item.count + ')</option>';
                     }
-                    $("#col_name_search").html(html);
+                    $("#queue_name_search").html(html);
 
                     // 如果有保存的队列且存在于列表中，恢复选择
                     if (savedQueue && queueNames.indexOf(savedQueue) !== -1) {
-                        $("#col_name_search").val(savedQueue);
+                        $("#queue_name_search").val(savedQueue);
                     }
 
                     // 初始化 Select2
-                    $("#col_name_search").select2({
+                    $("#queue_name_search").select2({
                         placeholder: "请输入队列名称搜索...",
                         allowClear: true,
                         width: '100%'
                     });
 
                     // 监听选择变化，同时保存到 localStorage
-                    $("#col_name_search").on('change', function() {
-                        currentColName = $(this).val();
-                        $('#stat_queue').text(currentColName || '未选择');
+                    $("#queue_name_search").on('change', function() {
+                        currentQueueName = $(this).val();
+                        $('#stat_queue').text(currentQueueName || '未选择');
                         // 保存到 localStorage
-                        if (currentColName) {
-                            localStorage.setItem('funboost_last_queue', currentColName);
+                        if (currentQueueName) {
+                            localStorage.setItem('funboost_last_queue', currentQueueName);
                             // 立即更新队列剩余消息数量
                             updateMsgCount();
                         } else {
@@ -1460,14 +1460,14 @@
                     });
 
                     // 如果有已选择的队列，自动触发查询
-                    var initialQueue = $("#col_name_search").val();
+                    var initialQueue = $("#queue_name_search").val();
                     if (initialQueue) {
-                        currentColName = initialQueue;
-                        $('#stat_queue').text(currentColName);
+                        currentQueueName = initialQueue;
+                        $('#stat_queue').text(currentQueueName);
                         // 自动触发查询
                         $('#table_container').show();
                         $('#empty_state').hide();
-                        queryResult(currentColName, 0, true);
+                        queryResult(currentQueueName, 0, true);
                         // 初始化时获取队列剩余消息数量
                         updateMsgCount();
                     }
@@ -1481,10 +1481,10 @@
                 var minutes = parseInt($(this).data('minutes'));
                 setQuickTime(minutes);
                 // 如果已选择队列，立即触发查询
-                if (currentColName) {
+                if (currentQueueName) {
                     $('#table_container').show();
                     $('#empty_state').hide();
-                    queryResult(currentColName, 0, true);
+                    queryResult(currentQueueName, 0, true);
                 }
             });
 
@@ -1510,8 +1510,8 @@
         });
 
         // 查询结果
-        function queryResult(col_name, page, manualOperate) {
-            if (currentColName === undefined || !currentColName) {
+        function queryResult(queue_name, page, manualOperate) {
+            if (currentQueueName === undefined || !currentQueueName) {
                 return;
             }
 
@@ -1528,7 +1528,7 @@
             $.ajax({
                 url: "{{ url_for('query_result_view')}}",
                 data: {
-                    col_name: col_name,
+                    queue_name: queue_name,
                     start_time: $("#start_time").val(),
                     end_time: $("#end_time").val(),
                     is_success: $("#sucess_status").val(),
@@ -1620,7 +1620,7 @@
                         if (item.success === false && item.run_status === 'finish' && item.params_str) {
                             var paramsForRerun = item.params_str.replace(/'/g, "\\'").replace(/\n/g, "\\n").replace(/"/g, "&quot;");
                             var taskIdForRerun = (item.task_id || '').replace(/'/g, "\\'");
-                            taskIdContent += '<div class="copy-btn-wrapper"><button class="btn-rerun" onclick="rerunTask(this, \'' + currentColName + '\', \'' + paramsForRerun + '\', \'' + taskIdForRerun + '\')"><i class="fa fa-refresh"></i> 重新运行</button></div>';
+                            taskIdContent += '<div class="copy-btn-wrapper"><button class="btn-rerun" onclick="rerunTask(this, \'' + currentQueueName + '\', \'' + paramsForRerun + '\', \'' + taskIdForRerun + '\')"><i class="fa fa-refresh"></i> 重新运行</button></div>';
                         }
 
                         html += '<tr class="' + rowClass + '" onclick="selectRow(this)">' +
@@ -1781,14 +1781,14 @@
 
         // 更新统计文本
         function updateQueryText() {
-            if (currentColName === undefined || !currentColName) {
+            if (currentQueueName === undefined || !currentQueueName) {
                 return;
             }
 
             $.ajax({
                 url: "{{ url_for('speed_stats')}}",
                 data: {
-                    col_name: currentColName,
+                    queue_name: currentQueueName,
                     start_time: $("#start_time").val(),
                     end_time: $("#end_time").val()
                 },
@@ -1800,7 +1800,7 @@
 
         // 更新最近1分钟统计
         function updateTopText() {
-            if (currentColName === undefined || !currentColName) {
+            if (currentQueueName === undefined || !currentQueueName) {
                 return;
             }
             var t1 = new Date(new Date().getTime() - 60000);
@@ -1808,7 +1808,7 @@
             $.ajax({
                 url: "{{ url_for('speed_stats')}}",
                 data: {
-                    col_name: currentColName,
+                    queue_name: currentQueueName,
                     start_time: dateToString(t1),
                     end_time: dateToString(t2)
                 },
@@ -1821,13 +1821,13 @@
 
         // 更新队列剩余消息数量
         function updateMsgCount() {
-            if (currentColName === undefined || !currentColName) {
+            if (currentQueueName === undefined || !currentQueueName) {
                 $('#stat_msg_count').text('-');
                 return;
             }
             $.ajax({
                 url: '/funboost/get_msg_count',
-                data: { queue_name: currentColName },
+                data: { queue_name: currentQueueName },
                 success: function(result) {
                     if (result && result.succ && result.data) {
                         var count = result.data.count;
@@ -1857,13 +1857,13 @@
 
         // 自动刷新
         function autoFreshResult() {
-            if (currentColName === undefined || !currentColName) {
+            if (currentQueueName === undefined || !currentQueueName) {
                 return;
             }
             // 更新截止时间为当前时间，确保能获取最新数据
             var now = new Date();
             $('#end_time').val(dateToString(now));
-            queryResult(currentColName, 0, false);
+            queryResult(currentQueueName, 0, false);
         }
 
         // 开始刷新

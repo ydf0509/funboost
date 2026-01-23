@@ -5,15 +5,9 @@
 启动、停止服务
 """
 
-import sys
 import time
-from pathlib import Path
-from typing import Optional
 
-# 添加项目根目录到 path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
-
-from scripts.cli.utils import Console, Platform, ProcessManager
+from ..utils import Console, Platform, ProcessManager
 
 
 class ServiceCommand:
@@ -71,7 +65,7 @@ class ServiceCommand:
         Console.info("启动后端服务...")
         
         python = Platform.find_python()
-        project_root = Platform.PROJECT_ROOT
+        project_root = Platform.get_project_root()
         log_file = project_root / 'logs' / 'backend.log'
         
         pid = ProcessManager.start_background_process(
@@ -135,7 +129,8 @@ class ServiceCommand:
             Console.error("npm 未找到")
             return False
         
-        log_file = Platform.PROJECT_ROOT / 'logs' / 'frontend.log'
+        project_root = Platform.get_project_root()
+        log_file = project_root / 'logs' / 'frontend.log'
         
         # 使用 npm run dev
         if Platform.is_windows():
@@ -229,4 +224,3 @@ class ServiceCommand:
             Console.success("服务已停止")
         
         return True
-    

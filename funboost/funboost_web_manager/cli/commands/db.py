@@ -5,16 +5,12 @@
 初始化、迁移、备份、恢复数据库
 """
 
-import sys
 import shutil
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
 
-# 添加项目根目录到 path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
-
-from scripts.cli.utils import Console, Platform
+from ..utils import Console, Platform
 
 
 class DbCommand:
@@ -204,7 +200,7 @@ class DbCommand:
         
         if not db_path.exists():
             Console.error("数据库不存在，请先运行初始化")
-            Console.hint("运行: python manage.py db init")
+            Console.hint("运行: python -m funboost.funboost_web_manager.cli db init")
             return False
         
         try:
@@ -231,7 +227,7 @@ class DbCommand:
         
         if not db_path.exists():
             Console.error("数据库不存在")
-            Console.hint("运行: python manage.py db init")
+            Console.hint("运行: python -m funboost.funboost_web_manager.cli db init")
             return False
         
         try:

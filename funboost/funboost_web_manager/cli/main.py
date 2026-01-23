@@ -7,16 +7,12 @@ CLI 主程序
 
 import sys
 import argparse
-from pathlib import Path
 
-# 添加项目根目录到 path
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
-
-from scripts.cli.utils import Console, Platform
+from .utils import Console
+from . import __version__
 
 
-VERSION = "1.0.0"
+VERSION = __version__
 
 
 def show_banner():
@@ -46,7 +42,7 @@ def show_menu():
 
 def handle_menu_choice(choice: str) -> bool:
     """处理菜单选择"""
-    from scripts.cli.commands import DbCommand, UserCommand, ServiceCommand
+    from .commands import DbCommand, UserCommand, ServiceCommand
     
     if choice == '1':
         return ServiceCommand.stop()
@@ -68,7 +64,7 @@ def handle_menu_choice(choice: str) -> bool:
 
 def handle_db_menu() -> bool:
     """数据库管理子菜单"""
-    from scripts.cli.commands import DbCommand
+    from .commands import DbCommand
     
     Console.title("数据库管理")
     print()
@@ -105,7 +101,7 @@ def handle_db_menu() -> bool:
 
 def handle_user_menu() -> bool:
     """用户管理子菜单"""
-    from scripts.cli.commands import UserCommand
+    from .commands import UserCommand
     
     Console.title("用户管理")
     print()
@@ -169,17 +165,17 @@ def interactive_mode():
 def create_parser() -> argparse.ArgumentParser:
     """创建命令行解析器"""
     parser = argparse.ArgumentParser(
-        prog='manage.py',
+        prog='python -m funboost.funboost_web_manager.cli',
         description='Funboost Web Manager 管理工具',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  python manage.py                    # 交互式菜单
-  python manage.py init               # 一键初始化
-  python manage.py start              # 启动所有服务
-  python manage.py stop               # 停止所有服务
-  python manage.py db init            # 初始化数据库
-  python manage.py user create        # 创建用户
+  python -m funboost.funboost_web_manager.cli                    # 交互式菜单
+  python -m funboost.funboost_web_manager.cli init               # 一键初始化
+  python -m funboost.funboost_web_manager.cli start              # 启动所有服务
+  python -m funboost.funboost_web_manager.cli stop               # 停止所有服务
+  python -m funboost.funboost_web_manager.cli db init            # 初始化数据库
+  python -m funboost.funboost_web_manager.cli user create        # 创建用户
         """
     )
     
@@ -242,7 +238,7 @@ def main():
         return
     
     # 导入命令模块
-    from scripts.cli.commands import InitCommand, DbCommand, UserCommand, ServiceCommand
+    from .commands import InitCommand, DbCommand, UserCommand, ServiceCommand
     
     # 处理命令
     try:
@@ -296,7 +292,6 @@ def main():
             else:
                 parser.parse_args(['user', '--help'])
                 success = True
-        
         
         else:
             parser.print_help()

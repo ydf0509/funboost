@@ -7,10 +7,9 @@
 
 import os
 import json
-import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
-from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import dataclass
 
 from .platform import Platform
 
@@ -183,7 +182,7 @@ class ConfigManager:
             config_file: 配置文件路径（相对于项目根目录）
             env_file: 环境变量文件路径（相对于项目根目录）
         """
-        self.project_root = Platform.PROJECT_ROOT
+        self.project_root = Platform.get_project_root()
         self.config_file = self.project_root / (config_file or self.DEFAULT_CONFIG_FILE)
         self.env_file = self.project_root / (env_file or self.DEFAULT_ENV_FILE)
         

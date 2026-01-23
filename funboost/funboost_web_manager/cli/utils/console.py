@@ -57,7 +57,7 @@ class Console:
         
         # Unix 系统检查 TERM
         return hasattr(sys.stdout, 'isatty') and sys.stdout.isatty()
-    
+
     @classmethod
     def disable_color(cls):
         """禁用颜色输出"""

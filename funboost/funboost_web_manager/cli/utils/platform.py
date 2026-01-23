@@ -16,8 +16,55 @@ from typing import Optional, Tuple
 class Platform:
     """跨平台工具类"""
     
-    # 项目根目录
-    PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+    # 缓存的项目根目录
+    _project_root: Optional[Path] = None
+    
+    @classmethod
+    def get_project_root(cls) -> Path:
+        """
+        获取项目根目录
+
+        优先级：
+        1. 环境变量 FUNBOOST_PROJECT_ROOT
+        2. 向上遍历查找包含标识文件的目录
+        3. 当前工作目录
+        """
+        if cls._project_root is not None:
+            return cls._project_root
+
+        # 检查环境变量
+        env_root = os.environ.get('FUNBOOST_PROJECT_ROOT')
+        if env_root:
+            cls._project_root = Path(env_root)
+            return cls._project_root
+
+        # 向上遍历查找
+        markers = ['funboost_config.py', '.git', 'setup.py', 'pyproject.toml']
+        current = Path.cwd()
+
+        for _ in range(10):  # 最多向上 10 层
+            for marker in markers:
+                if (current / marker).exists():
+                    cls._project_root = current
+                    return cls._project_root
+            parent = current.parent
+            if parent == current:
+                break
+            current = parent
+
+        # 默认使用当前目录
+        cls._project_root = Path.cwd()
+        return cls._project_root
+
+    @classmethod
+    def set_project_root(cls, path: Path) -> None:
+        """手动设置项目根目录"""
+        cls._project_root = path
+    
+    @classmethod
+    def reset_project_root(cls) -> None:
+        """重置项目根目录缓存（主要用于测试）"""
+        cls._project_root = None
     
     @classmethod
     def is_windows(cls) -> bool:
@@ -77,11 +124,13 @@ class Platform:
         
         优先使用虚拟环境中的 Python
         """
+        project_root = cls.get_project_root()
+        
         # 虚拟环境路径
         if cls.is_windows():
-            venv_python = cls.PROJECT_ROOT / '.venv' / 'Scripts' / 'python.exe'
+            venv_python = project_root / '.venv' / 'Scripts' / 'python.exe'
         else:
-            venv_python = cls.PROJECT_ROOT / '.venv' / 'bin' / 'python'
+            venv_python = project_root / '.venv' / 'bin' / 'python'
         
         if venv_python.exists():
             return str(venv_python)
@@ -91,10 +140,12 @@ class Platform:
     @classmethod
     def find_pip(cls) -> str:
         """查找 pip"""
+        project_root = cls.get_project_root()
+        
         if cls.is_windows():
-            venv_pip = cls.PROJECT_ROOT / '.venv' / 'Scripts' / 'pip.exe'
+            venv_pip = project_root / '.venv' / 'Scripts' / 'pip.exe'
         else:
-            venv_pip = cls.PROJECT_ROOT / '.venv' / 'bin' / 'pip'
+            venv_pip = project_root / '.venv' / 'bin' / 'pip'
         
         if venv_pip.exists():
             return str(venv_pip)
@@ -163,13 +214,13 @@ class Platform:
     @classmethod
     def venv_exists(cls) -> bool:
         """检查虚拟环境是否存在"""
-        venv_path = cls.PROJECT_ROOT / '.venv'
+        venv_path = cls.get_project_root() / '.venv'
         return venv_path.exists() and venv_path.is_dir()
     
     @classmethod
     def create_venv(cls) -> bool:
         """创建虚拟环境"""
-        venv_path = cls.PROJECT_ROOT / '.venv'
+        venv_path = cls.get_project_root() / '.venv'
         
         try:
             subprocess.run(
@@ -234,31 +285,31 @@ class Platform:
     @classmethod
     def get_env_file_path(cls) -> Path:
         """获取 .env 文件路径"""
-        return cls.PROJECT_ROOT / '.env'
+        return cls.get_project_root() / '.env'
     
     @classmethod
     def get_env_example_path(cls) -> Path:
         """获取 .env.example 文件路径"""
-        return cls.PROJECT_ROOT / '.env.example'
+        return cls.get_project_root() / '.env.example'
     
     @classmethod
     def get_requirements_path(cls) -> Path:
         """获取 requirements.txt 路径"""
-        return cls.PROJECT_ROOT / 'requirements.txt'
+        return cls.get_project_root() / 'requirements.txt'
     
     @classmethod
     def get_frontend_dir(cls) -> Path:
         """获取前端目录"""
-        return cls.PROJECT_ROOT / 'web-manager-frontend'
+        return cls.get_project_root() / 'web-manager-frontend'
     
     @classmethod
     def get_database_path(cls) -> Path:
         """获取数据库文件路径"""
-        return cls.PROJECT_ROOT / 'web_manager_users.db'
+        return cls.get_project_root() / 'web_manager_users.db'
     
     @classmethod
     def get_backup_dir(cls) -> Path:
         """获取备份目录"""
-        backup_dir = cls.PROJECT_ROOT / 'backups'
+        backup_dir = cls.get_project_root() / 'backups'
         backup_dir.mkdir(exist_ok=True)
         return backup_dir

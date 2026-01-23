@@ -5,15 +5,11 @@
 创建、删除、重置密码等用户操作
 """
 
-import sys
 import json
 from datetime import datetime
 from pathlib import Path
 
-# 添加项目根目录到 path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
-
-from scripts.cli.utils import Console, Platform
+from ..utils import Console, Platform
 
 
 class UserCommand:
@@ -27,7 +23,7 @@ class UserCommand:
         db_path = Platform.get_database_path()
         if not db_path.exists():
             Console.error("数据库不存在，请先初始化")
-            Console.hint("运行: python manage.py db init")
+            Console.hint("运行: python -m funboost.funboost_web_manager.cli db init")
             return False
         
         if config_file:

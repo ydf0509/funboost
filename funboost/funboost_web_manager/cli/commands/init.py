@@ -5,16 +5,9 @@
 一键初始化整个项目环境
 """
 
-import sys
 import shutil
-from pathlib import Path
 
-# 添加项目根目录到 path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
-
-from scripts.cli.utils import Console, Platform
-from scripts.cli.commands.db import DbCommand
-from scripts.cli.commands.user import UserCommand
+from ..utils import Console, Platform
 
 
 class InitCommand:
@@ -126,7 +119,7 @@ class InitCommand:
         Console.title("初始化完成！")
         
         Console.info("下一步:")
-        Console.item("启动服务: python manage.py start")
+        Console.item("启动服务: python -m funboost.funboost_web_manager.cli start")
         Console.item(f"访问前端: http://127.0.0.1:3000")
         Console.item(f"访问后端: http://127.0.0.1:27018")
         
@@ -144,9 +137,10 @@ class InitCommand:
         Console.info("安装 Python 依赖...")
         
         pip = Platform.find_pip()
+        project_root = Platform.get_project_root()
         success, output = Platform.run_command(
             [pip, 'install', '-r', str(requirements)],
-            cwd=Platform.PROJECT_ROOT,
+            cwd=project_root,
             capture=True,
             timeout=600
         )

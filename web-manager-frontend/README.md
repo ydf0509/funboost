@@ -28,9 +28,36 @@ cd web-manager-frontend
 npm install
 ```
 
-### 2. 配置后端数据库
+### 2. 启动服务
 
-在 `funboost_config.py` 中配置数据库 URL：
+**开发模式**（前后端分离）：
+
+```bash
+# 终端 1：启动前端
+npm run dev
+
+# 终端 2：启动后端（任选一种方式）
+
+# 方式 A：直接运行模块
+python -m funboost.funboost_web_manager.app
+
+# 方式 B：在代码中启动
+python -c "from funboost.funboost_web_manager.app import start_funboost_web_manager; start_funboost_web_manager(block=True)"
+```
+
+**生产模式**：
+
+```bash
+# 构建前端并部署到 Flask 静态目录
+npm run build:deploy
+
+# 启动后端（使用 gunicorn 性能更好）
+gunicorn -w 4 --threads=30 --bind 0.0.0.0:27018 funboost.funboost_web_manager.app:app
+```
+
+### 3. 数据库配置（可选）
+
+后端启动时会自动初始化数据库和默认用户。如需自定义数据库，在 `funboost_config.py` 中配置：
 
 ```python
 class FunboostCommonConfig:
@@ -39,35 +66,6 @@ class FunboostCommonConfig:
 
     # 或 MySQL
     # WEB_MANAGER_DB_URL = 'mysql+pymysql://user:password@localhost:3306/funboost_web_manager'
-```
-
-初始化数据库并创建管理员：
-
-```bash
-python set_web_manage.py db init
-python set_web_manage.py user create
-```
-
-### 3. 启动服务
-
-**开发模式**（前后端分离）：
-
-```bash
-# 终端 1：启动前端
-npm run dev
-
-# 终端 2：启动后端
-python set_web_manage.py start --backend
-```
-
-**生产模式**（一键启动）：
-
-```bash
-# 构建前端并部署到 Flask 静态目录
-npm run build:deploy
-
-# 启动服务
-python set_web_manage.py start
 ```
 
 ## 📦 可用命令
@@ -82,7 +80,17 @@ python set_web_manage.py start
 
 ## 🔧 环境变量
 
-在 `.env.local` 中配置：
+后端支持以下环境变量配置：
+
+```bash
+export FUNBOOST_WEB_HOST=0.0.0.0           # 监听地址
+export FUNBOOST_WEB_PORT=27018             # 监听端口
+export FUNBOOST_DEBUG=true                 # 调试模式
+export FUNBOOST_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+export FUNBOOST_FRONTEND_ENABLED=true      # 是否启用前端服务
+```
+
+前端在 `.env.local` 中配置：
 
 ```env
 BACKEND_PORT=27018
@@ -104,7 +112,7 @@ ALLOWED_HOSTS=localhost,127.0.0.1,your-domain.com
 
 检查：
 
-1. 后端服务是否已启动 (`python set_web_manage.py start --backend`)
+1. 后端服务是否已启动
 2. `BACKEND_PORT` 环境变量是否正确
 3. `ALLOWED_HOSTS` 是否包含当前访问的域名
 
@@ -119,6 +127,5 @@ ALLOWED_HOSTS=localhost,127.0.0.1,your-domain.com
 ## 📚 更多文档
 
 - [Funboost 完整文档](https://funboost.readthedocs.io/zh-cn/latest/index.html)
-- [Web Manager 使用指南](https://funboost.readthedocs.io/zh-cn/latest/articles/c13.html)
 - [AI 辅助学习指南](https://funboost.readthedocs.io/zh-cn/latest/articles/c14.html)
 

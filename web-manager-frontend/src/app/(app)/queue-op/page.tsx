@@ -3,14 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { RequirePermission } from "@/components/auth/RequirePermission";
-import { Button } from "@/components/ui/Button";
-import { Modal } from "@/components/ui/Modal";
 import { StatCard } from "@/components/ui/StatCard";
-import { QueueTimeSeriesChart } from "@/components/charts/QueueTimeSeriesChart";
 import { JsonViewerModal } from "@/components/ui/JsonViewerModal";
 import { ToastContainer } from "@/components/ui/Toast";
 import { apiFetch, funboostFetch } from "@/lib/api";
-import { toDateTimeInputValue } from "@/lib/format";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { useActionPermissions } from "@/hooks/useActionPermissions";
 import { useProject } from "@/contexts/ProjectContext";
@@ -19,15 +15,15 @@ import { useToast } from "@/hooks/useToast";
 import {
   QueueFilters,
   QueueTable,
-  curveSamplesOptions,
+  QueueInsightModal,
 } from "@/components/queue-op";
 import type {
   QueueInfo,
   QueueRow,
-  QueueTimeSeriesPoint,
   SortField,
   SortDirection,
 } from "@/components/queue-op";
+import type { InsightTab } from "@/components/queue-op/QueueInsightModal";
 
 export default function QueueOpPage() {
   const [queues, setQueues] = useState<QueueRow[]>([]);
@@ -40,14 +36,8 @@ export default function QueueOpPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   // Modal states
-  const [modalQueue, setModalQueue] = useState<QueueRow | null>(null);
-  const [consumerDetails, setConsumerDetails] = useState<Record<string, unknown>[] | null>(null);
-  const [chartQueue, setChartQueue] = useState<QueueRow | null>(null);
-  const [chartData, setChartData] = useState<QueueTimeSeriesPoint[]>([]);
-  const [chartSamples, setChartSamples] = useState(360);
-  const [chartLoading, setChartLoading] = useState(false);
-  const [chartStartTime, setChartStartTime] = useState(() => toDateTimeInputValue(new Date(Date.now() - 3600 * 1000)));
-  const [chartEndTime, setChartEndTime] = useState(() => toDateTimeInputValue(new Date()));
+  const [insightQueue, setInsightQueue] = useState<QueueRow | null>(null);
+  const [insightTab, setInsightTab] = useState<InsightTab>("overview");
   const [jsonModalOpen, setJsonModalOpen] = useState(false);
   const [jsonModalTitle, setJsonModalTitle] = useState("");
   const [jsonModalContent, setJsonModalContent] = useState("");
@@ -212,35 +202,9 @@ export default function QueueOpPage() {
     setJsonModalOpen(true);
   };
 
-  const loadConsumers = async (queue: QueueRow) => {
-    setModalQueue(queue);
-    try {
-      let url = `/running_consumer/hearbeat_info_by_queue_name?queue_name=${encodeURIComponent(queue.queue_name)}`;
-      if (currentProject?.id) url += `&project_id=${currentProject.id}`;
-      const data = await apiFetch<Record<string, unknown>[]>(url);
-      setConsumerDetails(data);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "加载消费者失败。");
-    }
-  };
-
-  const loadChartData = async (queue?: QueueRow) => {
-    const targetQueue = queue || chartQueue;
-    if (!targetQueue) return;
-    if (queue) setChartQueue(queue);
-    setChartLoading(true);
-    try {
-      const startTs = Math.floor(new Date(chartStartTime).getTime() / 1000);
-      const endTs = Math.floor(new Date(chartEndTime).getTime() / 1000);
-      let url = `/queue/get_time_series_data/${encodeURIComponent(targetQueue.queue_name)}?start_ts=${startTs}&end_ts=${endTs}&curve_samples_count=${chartSamples}`;
-      if (currentProject?.id) url += `&project_id=${currentProject.id}`;
-      const data = await apiFetch<QueueTimeSeriesPoint[]>(url);
-      setChartData(data);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "加载曲线数据失败。");
-    } finally {
-      setChartLoading(false);
-    }
+  const openInsight = (queue: QueueRow, tab: InsightTab = "overview") => {
+    setInsightQueue(queue);
+    setInsightTab(tab);
   };
 
   return (
@@ -283,66 +247,21 @@ export default function QueueOpPage() {
           onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(0); }}
           onSort={handleSort}
           onViewConfig={openQueueConfig}
-          onViewChart={loadChartData}
-          onViewConsumers={loadConsumers}
+          onViewChart={(queue) => openInsight(queue, "speed")}
+          onViewConsumers={(queue) => openInsight(queue, "consumers")}
+          onOpenInsight={(queue) => openInsight(queue, "overview")}
           onQueueAction={handleQueueAction}
         />
 
         <JsonViewerModal open={jsonModalOpen} title={jsonModalTitle} content={jsonModalContent} onClose={() => setJsonModalOpen(false)} />
 
-        <Modal
-          open={modalQueue !== null}
-          title={modalQueue ? `消费者详情: ${modalQueue.queue_name}` : ""}
-          onClose={() => { setModalQueue(null); setConsumerDetails(null); }}
-          footer={<Button variant="outline" onClick={() => setModalQueue(null)}>关闭</Button>}
-        >
-          {modalQueue && (
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--ink-muted))]">队列参数</p>
-                <pre className="mt-2 rounded-2xl bg-[hsl(var(--sand-2))] p-4 text-xs overflow-auto max-h-48">
-                  {JSON.stringify(modalQueue.queue_params ?? {}, null, 2)}
-                </pre>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--ink-muted))]">
-                  活跃消费者 ({consumerDetails?.length ?? modalQueue.active_consumers?.length ?? 0})
-                </p>
-                {consumerDetails ? (
-                  <pre className="mt-2 rounded-2xl bg-[hsl(var(--sand-2))] p-4 text-xs overflow-auto max-h-80">
-                    {JSON.stringify(consumerDetails, null, 2)}
-                  </pre>
-                ) : (
-                  <p className="mt-2 text-sm text-[hsl(var(--ink-muted))]">正在加载...</p>
-                )}
-              </div>
-            </div>
-          )}
-        </Modal>
-
-        <Modal
-          open={chartQueue !== null}
-          title=""
-          onClose={() => setChartQueue(null)}
-          size="xl"
-          footer={<Button variant="outline" onClick={() => setChartQueue(null)}>关闭</Button>}
-        >
-          {chartQueue && (
-            <QueueTimeSeriesChart
-              queueName={chartQueue.queue_name}
-              data={chartData}
-              loading={chartLoading}
-              startTime={chartStartTime}
-              endTime={chartEndTime}
-              sampleCount={chartSamples}
-              sampleOptions={curveSamplesOptions}
-              onStartTimeChange={setChartStartTime}
-              onEndTimeChange={setChartEndTime}
-              onSampleCountChange={setChartSamples}
-              onRefresh={() => loadChartData()}
-            />
-          )}
-        </Modal>
+        <QueueInsightModal
+          open={insightQueue !== null}
+          queue={insightQueue}
+          activeTab={insightTab}
+          onTabChange={setInsightTab}
+          onClose={() => setInsightQueue(null)}
+        />
 
         <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
       </div>

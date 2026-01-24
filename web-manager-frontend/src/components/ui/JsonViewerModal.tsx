@@ -8,24 +8,32 @@ import { Button } from "./Button";
 type JsonViewerModalProps = {
     open: boolean;
     title: string;
-    content: string;
+    content: unknown;
     onClose: () => void;
 };
 
 // Parse and format JSON safely
-function parseJson(content: string): { data: unknown; error: string | null } {
-    if (!content || content.trim() === "" || content === "-") {
+function parseJson(content: unknown): { data: unknown; error: string | null } {
+    // Handle non-string content (objects, arrays, etc.)
+    if (content !== null && typeof content === "object") {
+        return { data: content, error: null };
+    }
+    
+    // Convert to string for further processing
+    const strContent = typeof content === "string" ? content : String(content ?? "");
+    
+    if (!strContent || strContent.trim() === "" || strContent === "-") {
         return { data: null, error: "No content" };
     }
     try {
-        return { data: JSON.parse(content), error: null };
+        return { data: JSON.parse(strContent), error: null };
     } catch {
         // Try to unescape if it's a JSON string containing escaped JSON
         try {
-            const unescaped = JSON.parse(`"${content.replace(/"/g, '\\"')}"`);
+            const unescaped = JSON.parse(`"${strContent.replace(/"/g, '\\"')}"`);
             return { data: JSON.parse(unescaped), error: null };
         } catch {
-            return { data: content, error: null };
+            return { data: strContent, error: null };
         }
     }
 }
@@ -163,11 +171,13 @@ export function JsonViewerModal({ open, title, content, onClose }: JsonViewerMod
     const { data, error } = useMemo(() => parseJson(content), [content]);
 
     const formattedJson = useMemo(() => {
-        if (error || data === null) return content;
+        if (error || data === null) {
+            return typeof content === "string" ? content : JSON.stringify(content, null, 2);
+        }
         try {
             return JSON.stringify(data, null, 2);
         } catch {
-            return content;
+            return typeof content === "string" ? content : String(content);
         }
     }, [data, error, content]);
 
@@ -244,7 +254,7 @@ export function JsonViewerModal({ open, title, content, onClose }: JsonViewerMod
                         </pre>
                     ) : (
                         <pre className="font-mono text-sm whitespace-pre-wrap break-all text-[hsl(var(--ink))]">
-                            {content || "-"}
+                            {typeof content === "string" ? (content || "-") : JSON.stringify(content, null, 2)}
                         </pre>
                     )}
                 </div>

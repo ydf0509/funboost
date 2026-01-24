@@ -10,6 +10,7 @@ const sizes = {
   md: "max-w-xl",
   lg: "max-w-3xl",
   xl: "max-w-5xl",
+  xxl: "max-w-[92vw] 2xl:max-w-6xl",
 };
 
 type ModalProps = {
@@ -21,9 +22,11 @@ type ModalProps = {
   size?: keyof typeof sizes;
   /** Optional subtitle for additional context */
   subtitle?: string;
+  /** Optional content max height (e.g. '75vh') */
+  contentMaxHeight?: string;
 };
 
-export function Modal({ open, title, onClose, children, footer, size = "lg", subtitle }: ModalProps) {
+export function Modal({ open, title, onClose, children, footer, size = "lg", subtitle, contentMaxHeight = "70vh" }: ModalProps) {
   // Handle ESC key to close modal
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === "Escape") onClose();
@@ -90,12 +93,13 @@ export function Modal({ open, title, onClose, children, footer, size = "lg", sub
         </div>
         
         {/* Content area with custom scrollbar */}
-        <div 
+        <div
           className={clsx(
-            "max-h-[65vh] overflow-y-auto py-4 text-sm text-[hsl(var(--ink))]",
+            "overflow-y-auto py-4 text-sm text-[hsl(var(--ink))]",
             "scrollbar-thin scrollbar-thumb-[hsl(var(--line))] scrollbar-track-transparent",
             "pr-2 -mr-2" // Offset for scrollbar
           )}
+          style={{ maxHeight: contentMaxHeight }}
         >
           {children}
         </div>

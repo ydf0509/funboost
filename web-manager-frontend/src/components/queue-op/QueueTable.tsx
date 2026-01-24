@@ -1,6 +1,6 @@
 "use client";
 
-import { ChartLine, ChevronDown, ChevronUp, Eye, Info, Pause, Play, RefreshCw, Trash2 } from "lucide-react";
+import { ChartLine, ChevronDown, ChevronUp, Eye, Gauge, Info, Pause, Play, RefreshCw, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -25,6 +25,7 @@ type QueueTableProps = {
   onViewConfig: (queue: QueueRow) => void;
   onViewChart: (queue: QueueRow) => void;
   onViewConsumers: (queue: QueueRow) => void;
+  onOpenInsight: (queue: QueueRow) => void;
   onQueueAction: (queue: QueueRow, action: "clear" | "pause" | "resume") => void;
 };
 
@@ -44,6 +45,7 @@ export function QueueTable({
   onViewConfig,
   onViewChart,
   onViewConsumers,
+  onOpenInsight,
   onQueueAction,
 }: QueueTableProps) {
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -77,6 +79,7 @@ export function QueueTable({
           <table className="w-full text-sm">
             <thead className="text-left text-xs uppercase tracking-wider text-[hsl(var(--ink-muted))] bg-[hsl(var(--sand-2))]">
               <tr>
+                <th className="px-3 py-3 font-medium whitespace-nowrap">洞察</th>
                 <SortableHeader field="queue_name">名称</SortableHeader>
                 <SortableHeader field="active_consumers">消费者数量</SortableHeader>
                 <th className="px-3 py-3 font-medium whitespace-nowrap">Broker类型</th>
@@ -100,6 +103,17 @@ export function QueueTable({
 
                 return (
                   <tr key={queue.queue_name} className="hover:bg-[hsl(var(--sand-2))]/50 transition-colors">
+                    <td className="px-3 py-3">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => onOpenInsight(queue)}
+                      >
+                        <Gauge className="h-3 w-3" />
+                        洞察
+                      </Button>
+                    </td>
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-[hsl(var(--ink))]">{queue.queue_name}</span>

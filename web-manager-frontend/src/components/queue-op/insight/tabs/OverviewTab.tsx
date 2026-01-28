@@ -23,7 +23,7 @@ export function OverviewTab({ queue, onOpenJson }: OverviewTabProps) {
     const last10Fail = queue.all_consumers_last_x_s_execute_count_fail ?? 0;
     const qps = last10 / 10;
     const failRate = last10 ? (last10Fail / last10) * 100 : 0;
-    const backlog = queue.msg_num_in_broker ?? 0;
+    const backlog = queue.msg_num_in_broker;
     const avgTime = queue.all_consumers_avarage_function_spend_time_from_start ?? 0;
     return { qps, failRate, backlog, avgTime };
   }, [queue]);
@@ -33,7 +33,16 @@ export function OverviewTab({ queue, onOpenJson }: OverviewTabProps) {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="QPS" value={overviewStats.qps.toFixed(2)} helper="近10秒均值" tone="info" />
         <StatCard label="失败率" value={`${overviewStats.failRate.toFixed(1)}%`} helper="近10秒" tone="danger" />
-        <StatCard label="积压" value={formatNumber(overviewStats.backlog)} helper="消息数" tone="warning" />
+        <StatCard
+          label="积压"
+          value={
+            overviewStats.backlog === undefined || overviewStats.backlog === null || overviewStats.backlog < 0
+              ? "-"
+              : formatNumber(overviewStats.backlog)
+          }
+          helper="消息数"
+          tone="warning"
+        />
         <StatCard label="平均耗时" value={`${overviewStats.avgTime.toFixed(3)}s`} helper="累计" tone="success" />
       </div>
 

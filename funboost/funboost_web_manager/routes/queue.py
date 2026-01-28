@@ -21,17 +21,19 @@ Requirements:
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
 
-from funboost import ActiveCousumerProcessInfoGetter
+from funboost import ActiveCousumerProcessInfoGetter, AsyncResult, TaskOptions
 from funboost.core.active_cousumer_info_getter import (
     QueuesConusmerParamsGetter,
     SingleQueueConusmerParamsGetter,
 )
 from funboost.utils.redis_manager import RedisMixin
-from funboost.constant import RedisKeys
+from funboost.constant import RedisKeys, BrokerEnum
 from funboost.funboost_web_manager.services.project_service import ProjectService
 from funboost.funboost_web_manager.routes.utils import require_permission
 
 import nb_log
+import time
+import json
 
 # 获取日志记录器
 logger = nb_log.get_logger("queue_routes")
@@ -116,6 +118,136 @@ def _normalize_queue_names(queue_names) -> set:
         else:
             normalized.add(str(name))
     return normalized
+
+
+def _hmget_dict(redis_key: str, fields: list) -> dict:
+    """
+    Safe hmget -> dict conversion that preserves field/value alignment.
+    Redis hmget returns a list aligned with `fields` (may contain None).
+    """
+    if not fields:
+        return {}
+    values = RedisMixin().redis_db_frame.hmget(redis_key, fields)
+    return {k: v for k, v in zip(fields, values) if v is not None}
+
+
+def _hmget_int_dict(redis_key: str, fields: list) -> dict:
+    raw = _hmget_dict(redis_key, fields)
+    ret = {}
+    for k, v in raw.items():
+        try:
+            if isinstance(v, bytes):
+                v = v.decode()
+            ret[str(k.decode() if isinstance(k, bytes) else k)] = int(v)
+        except Exception:
+            # Ignore non-int values
+            continue
+    return ret
+
+
+def _hmget_msg_num_dict(fields: list, ignore_report_ts: bool = True) -> dict:
+    """
+    Get msg_num_in_broker for queues from RedisKeys.QUEUE__MSG_COUNT_MAP.
+    Values are JSON strings stored by consumers' heartbeat reporter.
+    """
+    raw = _hmget_dict(RedisKeys.QUEUE__MSG_COUNT_MAP, fields)
+    now = time.time()
+    ret: dict[str, int] = {}
+    for k, v in raw.items():
+        try:
+            qn = k.decode() if isinstance(k, bytes) else str(k)
+            payload = v.decode() if isinstance(v, bytes) else v
+            info = json.loads(payload)
+            if ignore_report_ts or (
+                info.get("report_ts", 0) > now - 15 and info.get("last_get_msg_num_ts", 0) > now - 1200
+            ):
+                if "msg_num_in_broker" in info:
+                    ret[qn] = info["msg_num_in_broker"]
+        except Exception:
+            continue
+    return ret
+
+
+def _hmget_msg_info_dict(fields: list) -> dict:
+    """
+    Get msg_count info payloads for queues from RedisKeys.QUEUE__MSG_COUNT_MAP.
+    Returns a dict: {queue_name: {"msg_num_in_broker": int, "last_get_msg_num_ts": float, "report_ts": float}}
+    """
+    raw = _hmget_dict(RedisKeys.QUEUE__MSG_COUNT_MAP, fields)
+    ret: dict[str, dict] = {}
+    for k, v in raw.items():
+        try:
+            qn = k.decode() if isinstance(k, bytes) else str(k)
+            payload = v.decode() if isinstance(v, bytes) else v
+            info = json.loads(payload)
+            if isinstance(info, dict):
+                ret[qn] = info
+        except Exception:
+            continue
+    return ret
+
+
+def _save_msg_count_info(queue_name: str, msg_num_in_broker: int):
+    """
+    Update RedisKeys.QUEUE__MSG_COUNT_MAP using the same structure as consumers' heartbeat reporter.
+    This allows WebManager to refresh stale msg_num_in_broker on-demand without changing consumer code.
+    """
+    now = time.time()
+    dic = {
+        "msg_num_in_broker": msg_num_in_broker,
+        "last_get_msg_num_ts": now,
+        "report_ts": now,
+    }
+    try:
+        RedisMixin().redis_db_frame.hset(
+            RedisKeys.QUEUE__MSG_COUNT_MAP, queue_name, json.dumps(dic)
+        )
+    except Exception:
+        # Best-effort: do not fail the request if Redis write fails.
+        logger.debug("save msg_count info failed", exc_info=True)
+
+
+def _get_unack_count(queue_name: str) -> int:
+    """
+    For ack-able redis consumers, unacked tasks are stored in separate zset/list keys.
+    Sum those to avoid showing 0 while tasks are executing.
+    """
+    try:
+        registry_key = RedisKeys.gen_funboost_unack_registry_key_by_queue_name(queue_name)
+        unack_keys = RedisMixin().redis_db_frame.smembers(registry_key) or []
+        total = 0
+        for key in unack_keys:
+            key_str = key.decode() if isinstance(key, bytes) else str(key)
+            key_type = RedisMixin().redis_db_frame.type(key_str)
+            if isinstance(key_type, bytes):
+                key_type = key_type.decode()
+            if key_type == "zset":
+                total += RedisMixin().redis_db_frame.zcard(key_str)
+            elif key_type == "list":
+                total += RedisMixin().redis_db_frame.llen(key_str)
+        return total
+    except Exception:
+        logger.debug("get unack count failed", exc_info=True)
+        return 0
+
+
+def _get_realtime_msg_count(queue_name: str, broker_kind) -> int:
+    """
+    Get realtime msg count from broker, with ack-able redis unack补偿.
+    Returns -1 if broker doesn't support counting and no unack data is available.
+    """
+    publisher = SingleQueueConusmerParamsGetter(queue_name).gen_publisher_for_faas()
+    count = publisher.get_message_count()
+    ackable_kinds = {
+        BrokerEnum.REDIS_ACK_ABLE,
+        BrokerEnum.REDIS_BRPOP_LPUSH,
+        BrokerEnum.REIDS_ACK_USING_TIMEOUT,
+        BrokerEnum.REDIS_PRIORITY,
+    }
+    unack = _get_unack_count(queue_name) if broker_kind in ackable_kinds else 0
+    if count == -1:
+        return unack if unack > 0 else -1
+    return count + unack
 
 
 def _check_queue_in_project(queue_name: str, project_code: str):
@@ -471,11 +603,53 @@ def get_queues_params_and_active_consumers():
         logger.debug(f"获取队列参数和活跃消费者，项目代码: {project_code}")
 
     # 使用 care_project_name 参数进行项目过滤
-    return jsonify(
-        QueuesConusmerParamsGetter(
-            care_project_name=project_code
-        ).get_queues_params_and_active_consumers()
-    )
+    # NOTE: funboost.core.active_cousumer_info_getter.hmget_many_by_all_queue_names 会在 hmget 返回 None 时
+    #       破坏字段对齐，导致 pause_flag / msg_num 等映射错位。这里在 WebManager 层做一次纠偏，避免 UI 显示异常。
+    data = QueuesConusmerParamsGetter(
+        care_project_name=project_code
+    ).get_queues_params_and_active_consumers()
+
+    queue_names = list(data.keys())
+    pause_map = _hmget_int_dict(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_names)
+    msg_info_map = _hmget_msg_info_dict(queue_names)
+    msg_num_map = _hmget_msg_num_dict(queue_names, ignore_report_ts=True)
+    run_count_map = _hmget_int_dict(RedisKeys.FUNBOOST_QUEUE__RUN_COUNT_MAP, queue_names)
+    run_fail_count_map = _hmget_int_dict(RedisKeys.FUNBOOST_QUEUE__RUN_FAIL_COUNT_MAP, queue_names)
+    now = time.time()
+
+    for qn in queue_names:
+        qn_str = qn.decode() if isinstance(qn, bytes) else str(qn)
+        item = data.get(qn)
+        if not isinstance(item, dict):
+            continue
+        item["pause_flag"] = pause_map.get(qn_str, item.get("pause_flag", -1))
+        if qn_str in msg_num_map:
+            item["msg_num_in_broker"] = msg_num_map[qn_str]
+        item["history_run_count"] = run_count_map.get(qn_str, item.get("history_run_count"))
+        item["history_run_fail_count"] = run_fail_count_map.get(qn_str, item.get("history_run_fail_count"))
+
+        # Fix "msg_num_in_broker looks wrong while consumers are running":
+        # Consumers only refresh msg_num_in_broker periodically (often minutes),
+        # so for active queues we opportunistically fetch a real-time count when the report is stale.
+        try:
+            has_active_consumers = bool(item.get("active_consumers"))
+            if not has_active_consumers:
+                continue
+            info = msg_info_map.get(qn_str, {}) if isinstance(msg_info_map, dict) else {}
+            last_get_ts = float(info.get("last_get_msg_num_ts") or 0)
+            # If no recent update, query broker directly for this queue.
+            if now - last_get_ts > 30:
+                broker_kind = None
+                if isinstance(item.get("queue_params"), dict):
+                    broker_kind = item["queue_params"].get("broker_kind")
+                real_count = _get_realtime_msg_count(qn_str, broker_kind)
+                item["msg_num_in_broker"] = real_count
+                _save_msg_count_info(qn_str, real_count)
+        except Exception:
+            # Keep the existing value when real-time count fails (network/broker issues).
+            logger.debug("refresh real-time msg count failed", exc_info=True)
+
+    return jsonify(data)
 
 
 @queue_bp.route("/queue/get_msg_num_all_queues", methods=["GET"])
@@ -515,11 +689,144 @@ def get_msg_num_all_queues():
         logger.debug(f"获取所有队列消息数量，项目代码: {project_code}")
 
     # 使用 care_project_name 参数进行项目过滤
-    return jsonify(
-        QueuesConusmerParamsGetter(care_project_name=project_code).get_msg_num(
-            ignore_report_ts=True
-        )
+    # NOTE: 避免 hmget_many_by_all_queue_names 的字段错位问题，改为在路由层用 hmget + zip 保持对齐。
+    queue_names = list(
+        QueuesConusmerParamsGetter(care_project_name=project_code).get_all_queue_names()
     )
+    return jsonify(_hmget_msg_num_dict(queue_names, ignore_report_ts=True))
+
+
+@queue_bp.route("/queue/get_msg_num_by_queue_names", methods=["POST"])
+@login_required
+@require_permission("queue:read")
+def get_msg_num_by_queue_names():
+    """
+    Realtime message count for specified queues (best-effort).
+
+    Unlike /queue/get_msg_num_all_queues (fast cache from Redis heartbeat),
+    this endpoint queries the broker via publisher.get_message_count() so it can
+    be used to "force refresh" stale counts.
+
+    Body JSON:
+        {"queue_names": ["q1", "q2", ...]}
+
+    Query:
+        project_id: optional
+    """
+    project_id = request.args.get("project_id")
+    has_access, error_response = _check_project_access(project_id, required_level="read")
+    if not has_access:
+        return error_response
+
+    project_code = _get_project_code(project_id)
+
+    body = request.get_json(silent=True) or {}
+    queue_names = body.get("queue_names") or body.get("queues") or []
+    if not isinstance(queue_names, list):
+        return jsonify({"success": False, "error": "queue_names 必须是列表"}), 400
+
+    # Basic abuse protection.
+    if len(queue_names) > 200:
+        return jsonify({"success": False, "error": "一次最多查询 200 个队列"}), 400
+
+    # Project isolation: check once.
+    allowed = None
+    if project_code:
+        allowed = _normalize_queue_names(
+            QueuesConusmerParamsGetter(care_project_name=project_code).get_all_queue_names()
+        )
+
+    ret: dict[str, int] = {}
+    for qn in queue_names:
+        qn_str = qn.decode() if isinstance(qn, bytes) else str(qn)
+        if allowed is not None and qn_str not in allowed:
+            # Skip unauthorized queues silently to avoid leaking names.
+            continue
+        try:
+            broker_kind = SingleQueueConusmerParamsGetter(qn_str).get_one_queue_params_use_cache().get("broker_kind")
+            count = _get_realtime_msg_count(qn_str, broker_kind)
+            ret[qn_str] = count
+            _save_msg_count_info(qn_str, count)
+        except Exception:
+            ret[qn_str] = -1
+            logger.debug(f"get_message_count failed for queue={qn_str}", exc_info=True)
+
+    return jsonify(ret)
+
+
+@queue_bp.route("/queue/publish", methods=["POST"])
+@login_required
+@require_permission("queue:execute")
+def publish_msg():
+    """
+    发布消息接口（Web Manager 版）
+
+    请求体示例:
+    {
+        "queue_name": "test_queue",
+        "msg_body": {"x": 1, "y": 2},
+        "need_result": true,
+        "timeout": 60,
+        "task_id": "optional",
+        "project_id": 1
+    }
+
+    说明:
+    - msg_body 必须是 dict，但允许空对象 {}（适配无参函数）。
+    - need_result=true 时启用 RPC 模式并阻塞等待结果。
+    """
+    status_and_result = None
+    task_id = None
+    try:
+        data = request.get_json(silent=True) or {}
+        project_id = request.args.get("project_id") or data.get("project_id")
+
+        has_access, error_response = _check_project_access(
+            project_id, required_level="write"
+        )
+        if not has_access:
+            return error_response
+
+        queue_name = data.get("queue_name")
+        msg_body = data.get("msg_body")
+        need_result = data.get("need_result", False)
+        timeout = data.get("timeout", 60)
+        task_id_param = data.get("task_id")
+
+        if not queue_name:
+            return jsonify({"success": False, "error": "queue_name 字段必填"}), 400
+
+        project_code = _get_project_code(project_id)
+        has_queue_access, queue_error = _check_queue_in_project(queue_name, project_code)
+        if not has_queue_access:
+            return queue_error
+
+        if msg_body is None or not isinstance(msg_body, dict):
+            return jsonify({"success": False, "error": "msg_body 必须是字典类型"}), 400
+
+        publisher = SingleQueueConusmerParamsGetter(queue_name).gen_publisher_for_faas()
+
+        if need_result:
+            async_result = publisher.publish(
+                msg_body,
+                task_id=task_id_param,
+                task_options=TaskOptions(is_using_rpc_mode=True),
+            )
+            task_id = async_result.task_id
+            status_and_result = AsyncResult(task_id, timeout=timeout).status_and_result
+        else:
+            async_result = publisher.publish(msg_body, task_id=task_id_param)
+            task_id = async_result.task_id
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"{queue_name} 队列,消息发布成功",
+                "data": {"task_id": task_id, "status_and_result": status_and_result},
+            }
+        )
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @queue_bp.route("/queue/get_time_series_data/<queue_name>", methods=["GET"])

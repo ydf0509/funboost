@@ -57,3 +57,7 @@ web-manager-frontend/.next
 
 web_manager_users.db
 backups
+AGENTS.md
+.envrc
+package-lock.json
+package.json

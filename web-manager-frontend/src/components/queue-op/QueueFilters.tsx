@@ -13,6 +13,7 @@ type QueueFiltersProps = {
   onSearchChange: (value: string) => void;
   onActiveOnlyChange: (value: boolean) => void;
   loading: boolean;
+  msgCountLoading: boolean;
   autoRefresh: boolean;
   refreshInterval: number;
   canOperateQueue: boolean;
@@ -29,6 +30,7 @@ export function QueueFilters({
   onSearchChange,
   onActiveOnlyChange,
   loading,
+  msgCountLoading,
   autoRefresh,
   refreshInterval,
   canOperateQueue,
@@ -48,15 +50,21 @@ export function QueueFilters({
               placeholder="请输入队列名称搜索..."
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-64"
+              className="w-full sm:w-64"
             />
           </div>
           <Toggle checked={activeOnly} onChange={onActiveOnlyChange} label="仅显示消费队列" />
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={onRefreshAllMsgCounts} className="cursor-pointer">
-            <RefreshCw className="h-4 w-4" />
-            刷新消息数量
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onRefreshAllMsgCounts}
+            className="cursor-pointer"
+            disabled={msgCountLoading}
+          >
+            <RefreshCw className={`h-4 w-4 ${msgCountLoading ? "animate-spin" : ""}`} />
+            刷新堆积消息
           </Button>
           <Button
             variant="primary"

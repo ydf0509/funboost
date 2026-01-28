@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, Clock, Copy, Eye, RefreshCw } from "lucide-react";
 
 import { Badge } from "@/components/ui/Badge";
@@ -13,7 +13,7 @@ import { Select } from "@/components/ui/Select";
 import { StatCard } from "@/components/ui/StatCard";
 
 import { apiFetch, buildQuery, funboostFetch } from "@/lib/api";
-import { formatNumber, toBackendDateTime, toDateTimeInputValue } from "@/lib/format";
+import { formatDateTimeSeconds, formatNumber, toBackendDateTime, toDateTimeInputValue } from "@/lib/format";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 import { refreshIntervals, resultQuickRanges } from "../constants";
@@ -29,6 +29,7 @@ type ResultsTabProps = {
 export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }: ResultsTabProps) {
   const [results, setResults] = useState<ResultRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const [status, setStatus] = useState("all");
   const [functionParams, setFunctionParams] = useState("");
   const [taskId, setTaskId] = useState("");
@@ -41,15 +42,18 @@ export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }
   const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   const [copiedTaskId, setCopiedTaskId] = useState<string | null>(null);
+  const suppressNextAutoLoadRef = useRef(false);
 
-  const loadResults = useCallback(async () => {
-    if (!queueName || !startTime || !endTime) return;
+  const loadResults = useCallback(async (options?: { endTimeOverride?: string }) => {
+    const effectiveEndTime = options?.endTimeOverride ?? endTime;
+    if (!queueName || !startTime || !effectiveEndTime) return;
     setLoading(true);
+    setNotice(null);
     try {
       const query = buildQuery({
         col_name: queueName,
         start_time: toBackendDateTime(startTime),
-        end_time: toBackendDateTime(endTime),
+        end_time: toBackendDateTime(effectiveEndTime),
         is_success: status === "all" ? "" : status,
         function_params: functionParams,
         task_id: taskId,
@@ -64,7 +68,7 @@ export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }
       const statQuery = buildQuery({
         col_name: queueName,
         start_time: toBackendDateTime(startTime),
-        end_time: toBackendDateTime(endTime),
+        end_time: toBackendDateTime(effectiveEndTime),
         project_id: projectId || "",
       });
       const statData = await apiFetch<SpeedStats>(`/speed_stats?${statQuery}`);
@@ -74,24 +78,45 @@ export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }
         `/funboost/get_msg_count?queue_name=${encodeURIComponent(queueName)}${projectId ? `&project_id=${projectId}` : ""}`
       );
       setMsgCount(msgData.count);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "加载结果失败。");
     } finally {
       setLoading(false);
     }
   }, [queueName, startTime, endTime, status, functionParams, taskId, currentPage, pageSize, projectId]);
 
+  const runAutoRefresh = useCallback(() => {
+    const now = toDateTimeInputValue(new Date());
+    // Auto refresh updates endTime, which would otherwise trigger the auto-load effect again.
+    suppressNextAutoLoadRef.current = true;
+    setEndTime(now);
+    loadResults({ endTimeOverride: now });
+    // If endTime doesn't change (minute precision), the effect won't run to clear this flag.
+    setTimeout(() => {
+      suppressNextAutoLoadRef.current = false;
+    }, 0);
+  }, [loadResults]);
+
   const { enabled: autoRefresh, toggle: toggleAutoRefresh, intervalMs, setIntervalMs } = useAutoRefresh(
-    loadResults,
+    runAutoRefresh,
     false,
     30000
   );
 
   const refreshInterval = intervalMs / 1000;
 
+  const handleToggleAutoRefresh = () => {
+    if (!autoRefresh) {
+      runAutoRefresh();
+    }
+    toggleAutoRefresh();
+  };
+
   useEffect(() => {
     if (!queueName) return;
     const now = new Date();
-    const start = new Date(now.getTime() - 60 * 60 * 1000);
-    setStartTime(toDateTimeInputValue(start));
+    // Use local midnight to avoid timezone-shift showing 1969 in some environments.
+    setStartTime(toDateTimeInputValue(new Date(1970, 0, 1, 0, 0, 0)));
     setEndTime(toDateTimeInputValue(now));
     setCurrentPage(0);
     setStatus("all");
@@ -101,14 +126,21 @@ export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }
   }, [queueName]);
 
   useEffect(() => {
+    if (suppressNextAutoLoadRef.current) {
+      suppressNextAutoLoadRef.current = false;
+      return;
+    }
     if (queueName && startTime && endTime) {
       loadResults();
     }
   }, [queueName, startTime, endTime, loadResults]);
 
   const handleSearch = () => {
+    if (currentPage === 0) {
+      loadResults();
+      return;
+    }
     setCurrentPage(0);
-    loadResults();
   };
 
   const handleCopyTaskId = async (id: string) => {
@@ -119,16 +151,38 @@ export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }
 
   const handleRetry = async (row: ResultRow) => {
     if (!canOperateQueue) return;
-    const msgBody = JSON.parse(row.params_str || "{}");
-    await funboostFetch("/funboost/publish", {
-      method: "POST",
-      json: {
-        queue_name: queueName,
-        msg_body: msgBody,
-        task_id: row.task_id,
-        project_id: projectId,
-      },
-    });
+    let msgBody: unknown;
+    try {
+      msgBody = JSON.parse(row.params_str || "{}");
+    } catch (err) {
+      setNotice("重试失败：参数不是合法 JSON。");
+      return;
+    }
+    if (!msgBody || typeof msgBody !== "object" || Array.isArray(msgBody)) {
+      setNotice("重试失败：msg_body 必须是 JSON 对象。");
+      return;
+    }
+    try {
+      const response = await apiFetch<{
+        success: boolean;
+        data?: { task_id?: string };
+        error?: string;
+        message?: string;
+      }>("/queue/publish", {
+        method: "POST",
+        json: {
+          queue_name: queueName,
+          msg_body: msgBody,
+          task_id: row.task_id,
+          project_id: projectId,
+        },
+      });
+      if (!response.success) {
+        throw new Error(response.error || response.message || "重试失败。");
+      }
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "重试失败。");
+    }
   };
 
   const filteredResults = useMemo(() => {
@@ -149,7 +203,7 @@ export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={loadResults} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={() => loadResults()} disabled={loading}>
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           数据刷新
         </Button>
@@ -168,11 +222,17 @@ export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }
             </button>
           ))}
         </div>
-        <Button variant={autoRefresh ? "primary" : "outline"} size="sm" onClick={toggleAutoRefresh}>
+        <Button variant={autoRefresh ? "primary" : "outline"} size="sm" onClick={handleToggleAutoRefresh}>
           <Clock className="h-4 w-4" />
           {autoRefresh ? "刷新中..." : "已暂停"}
         </Button>
       </div>
+
+      {notice ? (
+        <Card className="border border-[hsl(var(--accent))]/30 bg-[hsl(var(--accent))]/10 text-sm text-[hsl(var(--accent-2))]">
+          {notice}
+        </Card>
+      ) : null}
 
       <Card>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -260,13 +320,15 @@ export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }
           ) : filteredResults.length === 0 ? (
             <div className="py-8 text-center text-sm text-[hsl(var(--ink-muted))]">暂无结果</div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[980px] md:min-w-[1120px] xl:min-w-[1280px]">
               <thead className="text-left text-xs uppercase tracking-wider text-[hsl(var(--ink-muted))] bg-[hsl(var(--sand-2))]">
                 <tr>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">函数</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap hidden lg:table-cell">函数</th>
                   <th className="px-3 py-3 font-medium whitespace-nowrap">Task ID</th>
                   <th className="px-3 py-3 font-medium whitespace-nowrap">参数</th>
                   <th className="px-3 py-3 font-medium whitespace-nowrap">结果/异常</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">发布时间</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">开始时间</th>
                   <th className="px-3 py-3 font-medium whitespace-nowrap">耗时</th>
                   <th className="px-3 py-3 font-medium whitespace-nowrap">状态</th>
                   <th className="px-3 py-3 font-medium whitespace-nowrap">操作</th>
@@ -278,12 +340,12 @@ export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }
                   const running = row.run_status === "running";
                   return (
                     <tr key={`${row.task_id}-${index}`} className="hover:bg-[hsl(var(--sand-2))]/50 transition-colors">
-                      <td className="px-3 py-3 font-medium text-[hsl(var(--ink))] whitespace-nowrap max-w-[160px]">
+                      <td className="px-3 py-3 font-medium text-[hsl(var(--ink))] whitespace-nowrap max-w-[220px] hidden lg:table-cell">
                         <span className="truncate block" title={row.function}>{row.function}</span>
                       </td>
-                      <td className="px-3 py-3 text-xs text-[hsl(var(--ink-muted))] max-w-[180px]">
+                      <td className="px-3 py-3 text-xs text-[hsl(var(--ink-muted))] max-w-[240px]">
                         <div className="flex items-center gap-1">
-                          <span className="truncate block" title={row.task_id}>{truncateText(row.task_id, 20)}</span>
+                          <span className="truncate block" title={row.task_id}>{truncateText(row.task_id, 28)}</span>
                           <button
                             onClick={() => handleCopyTaskId(row.task_id)}
                             className="p-1 rounded hover:bg-[hsl(var(--sand-2))] text-[hsl(var(--ink-muted))] hover:text-[hsl(var(--accent))]"
@@ -297,10 +359,10 @@ export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }
                           </button>
                         </div>
                       </td>
-                      <td className="px-3 py-3 max-w-[160px]">
+                      <td className="px-3 py-3 max-w-[260px]">
                         <div className="flex items-center gap-1">
-                          <span className="text-xs text-[hsl(var(--ink-muted))] truncate block max-w-[80px]">
-                            {truncateText(row.params_str, 20)}
+                          <span className="text-xs text-[hsl(var(--ink-muted))] truncate block max-w-[180px]">
+                            {truncateText(row.params_str, 32)}
                           </span>
                           {row.params_str && row.params_str !== "-" && (
                             <Button variant="ghost" size="sm" className="p-1 h-auto" onClick={() => onOpenJson("函数入参", row.params_str)}>
@@ -309,10 +371,10 @@ export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-3 max-w-[160px]">
+                      <td className="px-3 py-3 max-w-[260px]">
                         <div className="flex items-center gap-1">
-                          <span className="text-xs text-[hsl(var(--ink-muted))] truncate block max-w-[80px]">
-                            {truncateText(row.result || row.exception, 20)}
+                          <span className="text-xs text-[hsl(var(--ink-muted))] truncate block max-w-[200px]">
+                            {truncateText(row.result || row.exception, 32)}
                           </span>
                           {(row.result || row.exception) && (
                             <Button
@@ -325,6 +387,12 @@ export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }
                             </Button>
                           )}
                         </div>
+                      </td>
+                      <td className="px-3 py-3 text-xs text-[hsl(var(--ink-muted))] whitespace-nowrap">
+                        {formatDateTimeSeconds(row.publish_time_format)}
+                      </td>
+                      <td className="px-3 py-3 text-xs text-[hsl(var(--ink-muted))] whitespace-nowrap">
+                        {formatDateTimeSeconds(row.time_start)}
                       </td>
                       <td className="px-3 py-3 text-[hsl(var(--ink))] whitespace-nowrap">
                         {row.time_cost?.toFixed(3) || "-"}s

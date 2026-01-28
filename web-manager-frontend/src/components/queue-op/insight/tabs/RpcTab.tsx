@@ -11,16 +11,17 @@ import { JsonViewer } from "@/components/ui/JsonViewer";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Toggle } from "@/components/ui/Toggle";
 
-import { funboostFetch } from "@/lib/api";
+import { apiFetch, funboostFetch } from "@/lib/api";
 
 import type { ParamInfo } from "../types";
 
 type RpcTabProps = {
   queueName: string;
+  projectId?: string;
   canOperateQueue: boolean;
 };
 
-export function RpcTab({ queueName, canOperateQueue }: RpcTabProps) {
+export function RpcTab({ queueName, projectId, canOperateQueue }: RpcTabProps) {
   const [payload, setPayload] = useState("{}");
   const [needResult, setNeedResult] = useState(true);
   const [timeout, setTimeoutValue] = useState(60);
@@ -32,6 +33,8 @@ export function RpcTab({ queueName, canOperateQueue }: RpcTabProps) {
   const [funcName, setFuncName] = useState<string>("-");
   const [paramInfo, setParamInfo] = useState<ParamInfo | null>(null);
   const [runInfo, setRunInfo] = useState<Record<string, unknown> | null>(null);
+  const [payloadError, setPayloadError] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const hasConsumers = useMemo(() => {
     return ((runInfo as { active_consumers?: unknown[] })?.active_consumers ?? []).length > 0;
@@ -80,24 +83,45 @@ export function RpcTab({ queueName, canOperateQueue }: RpcTabProps) {
 
   const handleSend = async () => {
     if (!canOperateQueue) return;
+    setPayloadError(null);
+    setSendError(null);
+    let msgBody: unknown;
+    try {
+      msgBody = JSON.parse(payload || "{}");
+    } catch (err) {
+      setPayloadError("JSON 解析失败，请检查格式。");
+      return;
+    }
+    if (!msgBody || typeof msgBody !== "object" || Array.isArray(msgBody)) {
+      setPayloadError("msg_body 必须是 JSON 对象。");
+      return;
+    }
     try {
       setSending(true);
       setResult(null);
-      const msgBody = JSON.parse(payload || "{}");
-      const data = await funboostFetch<{ task_id: string; status_and_result: Record<string, unknown> }>(
-        "/funboost/publish",
-        {
-          method: "POST",
-          json: {
-            queue_name: queueName,
-            msg_body: msgBody,
-            need_result: needResult,
-            timeout,
-          },
-        }
-      );
-      setResult({ task_id: data.task_id, ...data.status_and_result });
-      setTaskQuery(data.task_id);
+      const response = await apiFetch<{
+        success: boolean;
+        data?: { task_id?: string; status_and_result?: Record<string, unknown> };
+        error?: string;
+        message?: string;
+      }>("/queue/publish", {
+        method: "POST",
+        json: {
+          queue_name: queueName,
+          msg_body: msgBody,
+          need_result: needResult,
+          timeout,
+          project_id: projectId,
+        },
+      });
+      if (!response.success) {
+        throw new Error(response.error || response.message || "发送失败。");
+      }
+      const taskId = response.data?.task_id || "";
+      setResult({ task_id: taskId, ...(response.data?.status_and_result || {}) });
+      if (taskId) setTaskQuery(taskId);
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : "发送失败。");
     } finally {
       setSending(false);
     }
@@ -136,8 +160,14 @@ export function RpcTab({ queueName, canOperateQueue }: RpcTabProps) {
               <textarea
                 className="w-full min-h-[180px] rounded-xl border border-[hsl(var(--line))] bg-[hsl(var(--sand))] p-3 text-xs font-mono"
                 value={payload}
-                onChange={(e) => setPayload(e.target.value)}
+                onChange={(e) => {
+                  setPayload(e.target.value);
+                  if (payloadError) setPayloadError(null);
+                }}
               />
+              {payloadError && (
+                <div className="text-xs text-[hsl(var(--danger))]">{payloadError}</div>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Toggle checked={needResult} onChange={setNeedResult} label="需要结果" />
@@ -150,6 +180,9 @@ export function RpcTab({ queueName, canOperateQueue }: RpcTabProps) {
                 发送 RPC
               </Button>
             </div>
+            {sendError && (
+              <div className="text-xs text-[hsl(var(--danger))]">{sendError}</div>
+            )}
           </div>
         </Card>
 

@@ -264,6 +264,12 @@ describe('Permission Tree Utils - Property-Based Tests', () => {
           fc.string({ minLength: 1, maxLength: 10 }),
           (tree, query) => {
             const filtered = filterPermissionTree(tree, query);
+
+            // Whitespace-only query is treated as empty query (no filtering).
+            if (!query.trim()) {
+              return filtered === tree;
+            }
+
             const normalizedQuery = query.toLowerCase();
             
             // All permissions in filtered tree should match the query

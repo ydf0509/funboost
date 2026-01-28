@@ -60,6 +60,13 @@ function generateHostRewrites(source: string, extraHas?: RouteHas[]): Rewrite[] 
 }
 
 const nextConfig: NextConfig = {
+  // Next.js 16 Turbopack 会尝试推断 monorepo root；本仓库同时存在多个 lockfile，
+  // 可能导致推断到仓库根目录，从而在构建时错误地从根目录解析依赖（例如 tailwindcss）。
+  // 显式指定 root 为前端项目目录，避免出现 "Can't resolve 'tailwindcss'" 等错误。
+  turbopack: {
+    root: __dirname,
+  },
+
   // 生产环境使用静态导出模式，输出到 Flask 静态目录
   output: isProd ? "export" : undefined,
 
@@ -139,4 +146,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-

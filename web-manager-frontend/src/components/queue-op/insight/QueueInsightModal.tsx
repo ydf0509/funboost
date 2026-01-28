@@ -10,6 +10,7 @@ import { JsonViewerModal } from "@/components/ui/JsonViewerModal";
 
 import { useActionPermissions } from "@/hooks/useActionPermissions";
 import { useProject } from "@/contexts/ProjectContext";
+import { formatNumber } from "@/lib/format";
 
 import type { QueueRow } from "@/components/queue-op/types";
 import type { InsightTab } from "./types";
@@ -53,6 +54,9 @@ export function QueueInsightModal({ open, queue, activeTab, onTabChange, onClose
     { id: "rpc", label: "RPC", icon: <Terminal className="h-4 w-4" /> },
     { id: "consumers", label: "消费者", icon: <Users className="h-4 w-4" /> },
   ];
+  const msgNum = queue.msg_num_in_broker;
+  const msgNumDisplay =
+    msgNum === undefined || msgNum === null || msgNum < 0 ? "-" : formatNumber(msgNum);
 
   return (
     <>
@@ -78,8 +82,10 @@ export function QueueInsightModal({ open, queue, activeTab, onTabChange, onClose
               <Badge tone={(queue.active_consumers?.length ?? 0) > 0 ? "success" : "neutral"}>
                 {queue.active_consumers?.length ?? 0}
               </Badge>
-              <span className="ml-2">消息:</span>
-              <Badge tone="warning">{queue.msg_num_in_broker ?? 0}</Badge>
+              <span className="ml-2">堆积:</span>
+              <Badge tone={msgNumDisplay === "-" ? "neutral" : "warning"} title={msgNumDisplay === "-" ? "未上报/统计不可用" : undefined}>
+                {msgNumDisplay}
+              </Badge>
             </div>
             <Button variant="outline" onClick={onClose}>关闭</Button>
           </div>
@@ -126,6 +132,7 @@ export function QueueInsightModal({ open, queue, activeTab, onTabChange, onClose
           {activeTab === "rpc" && (
             <RpcTab
               queueName={queue.queue_name}
+              projectId={currentProject?.id?.toString()}
               canOperateQueue={canOperateQueue}
             />
           )}

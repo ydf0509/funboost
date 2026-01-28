@@ -28,6 +28,7 @@ import type { InsightTab } from "@/components/queue-op/QueueInsightModal";
 export default function QueueOpPage() {
   const [queues, setQueues] = useState<QueueRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [msgCountLoading, setMsgCountLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [activeOnly, setActiveOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -43,11 +44,12 @@ export default function QueueOpPage() {
   const [jsonModalContent, setJsonModalContent] = useState("");
 
   const { currentProject, careProjectName } = useProject();
-  const { canExecute } = useActionPermissions("queue");
+  const { canExecute, canDelete } = useActionPermissions("queue");
   const projectLevel = currentProject?.permission_level ?? "admin";
   const canWriteProject = !currentProject || projectLevel === "write" || projectLevel === "admin";
   const canOperateQueue = canExecute && canWriteProject;
   const canClearQueue = canOperateQueue;
+  const canDeleteQueue = canDelete && canWriteProject;
 
   const toast = useToast();
   const toastRef = useRef(toast);
@@ -111,13 +113,25 @@ export default function QueueOpPage() {
         case "all_consumers_last_execute_task_time": aVal = a.all_consumers_last_execute_task_time ?? 0; bVal = b.all_consumers_last_execute_task_time ?? 0; break;
       }
       if (typeof aVal === "string" && typeof bVal === "string") {
-        return sortDirection === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        const primary = sortDirection === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        return primary !== 0 ? primary : a.queue_name.localeCompare(b.queue_name);
       }
-      return sortDirection === "asc" ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
+      const primary =
+        sortDirection === "asc"
+          ? (aVal as number) - (bVal as number)
+          : (bVal as number) - (aVal as number);
+      return primary !== 0 ? primary : a.queue_name.localeCompare(b.queue_name);
     });
   }, [filteredQueues, sortField, sortDirection]);
 
   const totalCount = sortedQueues.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  useEffect(() => {
+    const maxPage = Math.max(0, totalPages - 1);
+    if (currentPage > maxPage) {
+      setCurrentPage(maxPage);
+    }
+  }, [currentPage, totalPages]);
   const paginatedQueues = useMemo(() => {
     const start = currentPage * pageSize;
     return sortedQueues.slice(start, start + pageSize);
@@ -134,21 +148,33 @@ export default function QueueOpPage() {
   };
 
   const refreshAllMsgCounts = async () => {
+    if (msgCountLoading) return;
     try {
-      const updated = await Promise.all(
-        queues.map(async (queue) => {
-          try {
-            let url = `/funboost/get_msg_count?queue_name=${encodeURIComponent(queue.queue_name)}`;
-            if (currentProject?.id) url += `&project_id=${currentProject.id}`;
-            const data = await funboostFetch<{ count: number }>(url);
-            return { ...queue, msg_num_in_broker: data.count };
-          } catch { return queue; }
-        })
+      setMsgCountLoading(true);
+      const allQueueNames = queues.map((q) => q.queue_name);
+      const queueNamesToRefresh =
+        allQueueNames.length > 200 ? paginatedQueues.map((q) => q.queue_name) : allQueueNames;
+      let url = "/queue/get_msg_num_by_queue_names";
+      if (currentProject?.id) url += `?project_id=${currentProject.id}`;
+      const counts = await apiFetch<Record<string, number>>(url, {
+        method: "POST",
+        json: { queue_names: queueNamesToRefresh },
+      });
+      setQueues((prev) =>
+        prev.map((queue) => ({
+          ...queue,
+          msg_num_in_broker: counts[queue.queue_name] ?? queue.msg_num_in_broker,
+        }))
       );
-      setQueues(updated);
-      toast.success("消息数量已刷新。");
+      if (allQueueNames.length > 200) {
+        toast.success("队列较多，已仅刷新当前页堆积消息。");
+      } else {
+        toast.success("堆积消息已实时刷新。");
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "刷新失败。");
+    } finally {
+      setMsgCountLoading(false);
     }
   };
 
@@ -166,8 +192,9 @@ export default function QueueOpPage() {
     }
   };
 
-  const handleQueueAction = async (queue: QueueRow, action: "clear" | "pause" | "resume") => {
+  const handleQueueAction = async (queue: QueueRow, action: "clear" | "pause" | "resume" | "delete") => {
     try {
+      let successMessage = "操作已完成。";
       if ((action === "pause" || action === "resume") && !canOperateQueue) {
         toast.warning("当前项目无写权限。");
         return;
@@ -176,21 +203,44 @@ export default function QueueOpPage() {
         toast.warning("当前项目无写权限。");
         return;
       }
+      if (action === "delete" && !canDeleteQueue) {
+        toast.warning("当前项目无删除权限。");
+        return;
+      }
       if (action === "clear") {
-        await funboostFetch("/funboost/clear_queue", { method: "POST", json: { queue_name: queue.queue_name, project_id: currentProject?.id } });
+        if (!confirm(`确定要清空队列 ${queue.queue_name} 吗？此操作不可撤销。`)) return;
+        await funboostFetch("/funboost/clear_queue", { method: "POST", json: { queue_name: queue.queue_name } });
+        successMessage = "已清空。";
+        // Avoid full refresh to keep table order stable; update only the affected row.
+        setQueues((prev) =>
+          prev.map((q) => (q.queue_name === queue.queue_name ? { ...q, msg_num_in_broker: 0 } : q))
+        );
+      }
+      if (action === "delete") {
+        if (!confirm(`确定要删除队列 ${queue.queue_name} 吗？此操作将从队列列表中移除且不可恢复。`)) return;
+        await funboostFetch("/funboost/deprecate_queue", { method: "DELETE", json: { queue_name: queue.queue_name } });
+        successMessage = "队列已删除。";
+        setQueues((prev) => prev.filter((q) => q.queue_name !== queue.queue_name));
       }
       if (action === "pause") {
         let url = `/queue/pause/${encodeURIComponent(queue.queue_name)}`;
         if (currentProject?.id) url += `?project_id=${currentProject.id}`;
         await apiFetch(url, { method: "POST" });
+        successMessage = "队列已暂停。";
+        setQueues((prev) =>
+          prev.map((q) => (q.queue_name === queue.queue_name ? { ...q, pause_flag: 1 } : q))
+        );
       }
       if (action === "resume") {
         let url = `/queue/resume/${encodeURIComponent(queue.queue_name)}`;
         if (currentProject?.id) url += `?project_id=${currentProject.id}`;
         await apiFetch(url, { method: "POST" });
+        successMessage = "队列已恢复。";
+        setQueues((prev) =>
+          prev.map((q) => (q.queue_name === queue.queue_name ? { ...q, pause_flag: 0 } : q))
+        );
       }
-      await fetchQueues();
-      toast.success("操作已完成。");
+      toast.success(successMessage);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "操作失败。");
     }
@@ -223,6 +273,7 @@ export default function QueueOpPage() {
           onSearchChange={setSearch}
           onActiveOnlyChange={setActiveOnly}
           loading={loading}
+          msgCountLoading={msgCountLoading}
           autoRefresh={autoRefresh}
           refreshInterval={refreshInterval}
           canOperateQueue={canOperateQueue}
@@ -243,12 +294,11 @@ export default function QueueOpPage() {
           sortDirection={sortDirection}
           canOperateQueue={canOperateQueue}
           canClearQueue={canClearQueue}
+          canDeleteQueue={canDeleteQueue}
           onPageChange={setCurrentPage}
           onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(0); }}
           onSort={handleSort}
           onViewConfig={openQueueConfig}
-          onViewChart={(queue) => openInsight(queue, "speed")}
-          onViewConsumers={(queue) => openInsight(queue, "consumers")}
           onOpenInsight={(queue) => openInsight(queue, "overview")}
           onQueueAction={handleQueueAction}
         />

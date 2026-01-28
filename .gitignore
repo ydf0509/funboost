@@ -1,4 +1,5 @@
 # Created by .ignore support plugin (hsz.mobi)
+.DS_Store
 .idea/
 env_hotels/
 henv/
@@ -41,3 +42,22 @@ nb_log_config.py
 queue_csv_files/test_csv_queue.csv
 test_txt_queue.txt
 /.*/
+
+
+# Frontend model folders
+**/node_modules/
+# Next.js build directory
+**/.next/
+web-manager-frontend/out
+web-manager-frontend/.next
+# Environment and security files
+.env
+.encryption_keys.json
+
+
+web_manager_users.db
+backups
+AGENTS.md
+.envrc
+package-lock.json
+package.json

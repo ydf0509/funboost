@@ -1,0 +1,1564 @@
+# -*- coding: utf-8 -*-
+# @Author  : kiro
+# @Time    : 2026/1/13
+"""
+Web Manager 用户数据模型模块
+
+本模块提供 SQLAlchemy ORM 模型和数据库操作函数，用于管理 funboost_web_manager 的用户数据。
+支持 SQLite、MySQL、PostgreSQL 等 SQLAlchemy 兼容的数据库。
+"""
+
+from datetime import datetime
+from enum import Enum
+from threading import Lock
+from typing import Optional, Dict, Any
+
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, Table, ForeignKey, Text, UniqueConstraint
+from sqlalchemy.orm import sessionmaker, declarative_base, relationship
+from sqlalchemy.exc import IntegrityError
+
+Base = declarative_base()
+
+
+class ActionType(str, Enum):
+    """标准操作类型枚举
+    
+    定义权限系统支持的标准操作类型，用于细粒度权限控制。
+    继承自 str 和 Enum，使得枚举值可以直接作为字符串使用。
+    
+    Attributes:
+        CREATE: 创建操作
+        READ: 读取/查看操作
+        UPDATE: 更新/编辑操作
+        DELETE: 删除操作
+        EXECUTE: 执行操作（如执行任务、运行命令等）
+        EXPORT: 导出操作
+    """
+    CREATE = 'create'
+    READ = 'read'
+    UPDATE = 'update'
+    DELETE = 'delete'
+    EXECUTE = 'execute'
+    EXPORT = 'export'
+
+
+# 操作类型显示名称映射
+ACTION_TYPE_DISPLAY = {
+    'create': '创建',
+    'read': '查看',
+    'update': '编辑',
+    'delete': '删除',
+    'execute': '执行',
+    'export': '导出',
+}
+
+
+# 关联表：用户-角色多对多关系
+user_roles = Table('user_roles', Base.metadata,
+    Column('user_id', Integer, ForeignKey('web_manager_users.id'), primary_key=True),
+    Column('role_id', Integer, ForeignKey('roles.id'), primary_key=True)
+)
+
+# 关联表：角色-权限多对多关系
+role_permissions = Table('role_permissions', Base.metadata,
+    Column('role_id', Integer, ForeignKey('roles.id'), primary_key=True),
+    Column('permission_id', Integer, ForeignKey('permissions.id'), primary_key=True)
+)
+
+# 关联表：角色-项目多对多关系
+role_projects = Table('role_projects', Base.metadata,
+    Column('role_id', Integer, ForeignKey('roles.id'), primary_key=True),
+    Column('project_id', Integer, ForeignKey('projects.id'), primary_key=True)
+)
+
+
+class WebManagerUser(Base):
+    """Web Manager 用户模型
+    
+    Attributes:
+        id: 自增主键
+        user_name: 用户名，唯一索引
+        password: 密码（支持 bcrypt 哈希和明文兼容）
+        email: 邮箱地址
+        status: 用户状态 (active, disabled, locked)
+        force_password_change: 是否强制修改密码
+        failed_login_count: 登录失败次数
+        locked_until: 锁定到期时间
+        created_at: 创建时间
+        updated_at: 更新时间
+        roles: 用户角色（多对多关系）
+    """
+    __tablename__ = 'web_manager_users'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_name = Column(String(64), unique=True, nullable=False, index=True)
+    password = Column(String(128), nullable=False)
+    email = Column(String(128), nullable=True)
+    status = Column(String(20), default='active')  # active, disabled, locked
+    force_password_change = Column(Boolean, default=False)
+    failed_login_count = Column(Integer, default=0)
+    locked_until = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # 多对多关系：用户-角色
+    roles = relationship('Role', secondary=user_roles, back_populates='users')
+    
+    # 一对多关系：用户 -> 用户项目关联
+    user_projects = relationship('UserProject', back_populates='user', cascade='all, delete-orphan')
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典格式，保持与原有 users 列表格式兼容"""
+        return {
+            'id': self.id,  # 返回数据库主键，用于项目用户管理等功能
+            'user_name': self.user_name,
+            'password': self.password,
+            'email': self.email,
+            'status': self.status,
+            'force_password_change': self.force_password_change,
+            'failed_login_count': self.failed_login_count,
+            'locked_until': self.locked_until.isoformat() if self.locked_until else None,
+            'roles': [role.name for role in self.roles] if self.roles else []
+        }
+    
+    def __repr__(self) -> str:
+        return f"<WebManagerUser(user_name='{self.user_name}', status='{self.status}')>"
+
+
+class Role(Base):
+    """角色模型
+    
+    Attributes:
+        id: 自增主键
+        name: 角色名称，唯一
+        description: 角色描述
+        is_builtin: 是否为内置角色（内置角色不可删除）
+        created_at: 创建时间
+        permissions: 角色权限（多对多关系）
+        users: 拥有此角色的用户（多对多关系）
+        projects: 角色关联的项目（多对多关系）
+    """
+    __tablename__ = 'roles'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(64), unique=True, nullable=False)
+    description = Column(String(256), nullable=True)
+    is_builtin = Column(Boolean, default=False)  # 内置角色不可删除
+    created_at = Column(DateTime, default=datetime.now)
+    
+    # 多对多关系
+    permissions = relationship('Permission', secondary=role_permissions, back_populates='roles')
+    users = relationship('WebManagerUser', secondary=user_roles, back_populates='roles')
+    projects = relationship('Project', secondary=role_projects, back_populates='roles')
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典格式"""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'is_builtin': self.is_builtin,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'permissions': [perm.code for perm in self.permissions] if self.permissions else [],
+            'projects': [{'id': p.id, 'code': p.code, 'name': p.name} for p in self.projects] if self.projects else []
+        }
+    
+    def __repr__(self) -> str:
+        return f"<Role(name='{self.name}', builtin={self.is_builtin})>"
+
+
+class PermissionCategory(Base):
+    """权限分类模型（增强版）
+    
+    支持多层级结构：通过 parent_code 实现子分类。
+    用于将权限按功能模块分组，以树形结构展示。
+    
+    Attributes:
+        id: 自增主键
+        code: 分类代码，唯一 (e.g., 'user', 'role', 'queue')
+        name: 分类名称 (e.g., '用户管理', '角色管理')
+        description: 分类描述
+        sort_order: 排序顺序，用于控制显示顺序
+        icon: 图标（emoji 或图标类名）
+        parent_code: 父分类代码，null 表示顶级分类
+        created_at: 创建时间
+        parent: 父分类（自引用关系）
+        subcategories: 子分类列表（自引用关系）
+        permissions: 该分类下的权限列表（一对多关系）
+    """
+    __tablename__ = 'permission_categories'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    code = Column(String(64), unique=True, nullable=False, index=True)
+    name = Column(String(64), nullable=False)
+    description = Column(String(256), nullable=True)
+    sort_order = Column(Integer, default=0)
+    icon = Column(String(16), nullable=True)
+    parent_code = Column(String(64), ForeignKey('permission_categories.code'), nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.now)
+    
+    # 自引用关系：子分类
+    parent = relationship('PermissionCategory', remote_side=[code], backref='subcategories', foreign_keys=[parent_code])
+    # 一对多关系：分类 -> 权限
+    permissions = relationship('Permission', back_populates='category', order_by='Permission.sort_order')
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典格式"""
+        return {
+            'id': self.id,
+            'code': self.code,
+            'name': self.name,
+            'description': self.description,
+            'sort_order': self.sort_order,
+            'icon': self.icon,
+            'parent_code': self.parent_code,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+    
+    def to_tree_dict(self) -> Dict[str, Any]:
+        """转换为树形结构字典格式（包含子分类和权限列表）"""
+        return {
+            'code': self.code,
+            'name': self.name,
+            'description': self.description,
+            'sort_order': self.sort_order,
+            'icon': self.icon,
+            'parent_code': self.parent_code,
+            'subcategories': [sub.to_tree_dict() for sub in self.subcategories] if self.subcategories else [],
+            'permissions': [perm.to_dict() for perm in self.permissions] if self.permissions else []
+        }
+    
+    def is_subcategory(self) -> bool:
+        """判断是否为子分类（parent_code 非空）"""
+        return self.parent_code is not None
+    
+    def __repr__(self) -> str:
+        return f"<PermissionCategory(code='{self.code}', name='{self.name}', parent_code={self.parent_code!r})>"
+
+
+class Permission(Base):
+    """权限模型（增强版）
+    
+    支持细粒度权限控制，包括操作类型和项目作用域。
+    
+    Attributes:
+        id: 自增主键
+        code: 权限代码，唯一 (e.g., 'user:read', 'user:write', 'projectA:queue:task:create')
+        name: 权限名称
+        description: 权限描述
+        category_code: 所属分类代码（外键）
+        sort_order: 排序顺序，用于控制在分类内的显示顺序
+        action_type: 操作类型 (create, read, update, delete, execute, export)，支持索引查询
+        project_scope: 项目作用域，null 表示全局权限，非空表示项目特定权限
+        roles: 拥有此权限的角色（多对多关系）
+        category: 所属分类（多对一关系）
+    """
+    __tablename__ = 'permissions'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    code = Column(String(128), unique=True, nullable=False, index=True)  # 扩展长度以支持更长的权限代码
+    name = Column(String(128), nullable=False)
+    description = Column(String(256), nullable=True)
+    category_code = Column(String(64), ForeignKey('permission_categories.code'), nullable=True, index=True)
+    sort_order = Column(Integer, default=0)
+    
+    # 新增字段：操作类型和项目作用域
+    action_type = Column(String(32), nullable=True, index=True)  # create, read, update, delete, execute, export
+    project_scope = Column(String(64), nullable=True, index=True)  # 项目作用域，null 表示全局
+    
+    # 多对多关系
+    roles = relationship('Role', secondary=role_permissions, back_populates='permissions')
+    # 多对一关系：权限 -> 分类
+    category = relationship('PermissionCategory', back_populates='permissions')
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典格式
+        
+        Returns:
+            包含所有权限字段的字典，包括新增的 action_type 和 project_scope 字段
+        """
+        return {
+            'id': self.id,
+            'code': self.code,
+            'name': self.name,
+            'description': self.description,
+            'category_code': self.category_code,
+            'sort_order': self.sort_order,
+            'action_type': self.action_type,
+            'action_type_display': ACTION_TYPE_DISPLAY.get(self.action_type, self.action_type) if self.action_type else None,
+            'project_scope': self.project_scope
+        }
+    
+    def is_global(self) -> bool:
+        """判断是否为全局权限（project_scope 为空）
+        
+        Returns:
+            True 如果是全局权限，False 如果是项目特定权限
+        """
+        return self.project_scope is None
+    
+    def is_project_specific(self) -> bool:
+        """判断是否为项目特定权限（project_scope 非空）
+        
+        Returns:
+            True 如果是项目特定权限，False 如果是全局权限
+        """
+        return self.project_scope is not None
+    
+    def __repr__(self) -> str:
+        return f"<Permission(code='{self.code}', name='{self.name}', action_type={self.action_type!r}, project_scope={self.project_scope!r})>"
+
+
+class PermissionTemplate(Base):
+    """权限模板模型
+    
+    用于快速配置角色权限，支持预定义模板和自定义模板。
+    支持模板继承，子模板可以继承父模板的所有权限。
+    
+    预定义模板包括：
+    - 只读用户 (readonly): 只有查看权限
+    - 操作员 (operator): 查看和执行权限
+    - 管理员 (admin): 所有权限
+    - 项目管理员 (project_admin): 项目级别的所有权限
+    
+    Attributes:
+        id: 自增主键
+        code: 模板代码，唯一标识 (e.g., 'readonly', 'operator', 'admin')
+        name: 模板名称 (e.g., '只读用户', '操作员', '管理员')
+        description: 模板描述
+        permissions: 权限代码列表，JSON 数组格式存储
+        parent_template_code: 父模板代码，用于模板继承
+        is_builtin: 是否为内置模板（内置模板不可删除）
+        created_at: 创建时间
+    """
+    __tablename__ = 'permission_templates'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    code = Column(String(64), unique=True, nullable=False, index=True)
+    name = Column(String(64), nullable=False)
+    description = Column(String(256), nullable=True)
+    permissions = Column(Text, nullable=False)  # JSON array of permission codes
+    parent_template_code = Column(String(64), nullable=True, index=True)  # 继承的父模板
+    is_builtin = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.now)
+    
+    def get_permissions(self) -> list:
+        """获取模板包含的权限列表（不包含继承的权限）
+        
+        Returns:
+            权限代码字符串列表，如果 permissions 为空则返回空列表
+        """
+        import json
+        if not self.permissions:
+            return []
+        try:
+            return json.loads(self.permissions)
+        except (json.JSONDecodeError, TypeError):
+            return []
+    
+    def get_all_permissions(self, session) -> list:
+        """获取包含继承的所有权限
+        
+        递归获取父模板的权限，合并后返回去重的权限列表。
+        支持多级继承（如：管理员 extends 操作员 extends 只读用户）。
+        
+        Args:
+            session: SQLAlchemy 数据库会话，用于查询父模板
+            
+        Returns:
+            包含所有权限（含继承）的字符串列表，已去重
+        """
+        # 获取当前模板的权限
+        perms = set(self.get_permissions())
+        
+        # 如果有父模板，递归获取父模板的权限
+        if self.parent_template_code:
+            parent = session.query(PermissionTemplate).filter_by(
+                code=self.parent_template_code
+            ).first()
+            if parent:
+                # 递归获取父模板的所有权限并合并
+                perms.update(parent.get_all_permissions(session))
+        
+        return list(perms)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典格式
+        
+        Returns:
+            包含所有模板字段的字典
+        """
+        return {
+            'id': self.id,
+            'code': self.code,
+            'name': self.name,
+            'description': self.description,
+            'permissions': self.get_permissions(),
+            'parent_template_code': self.parent_template_code,
+            'is_builtin': self.is_builtin,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+    
+    def to_dict_with_all_permissions(self, session) -> Dict[str, Any]:
+        """转换为字典格式（包含继承的所有权限）
+        
+        Args:
+            session: SQLAlchemy 数据库会话，用于查询父模板
+            
+        Returns:
+            包含所有模板字段的字典，permissions 字段包含继承的权限
+        """
+        result = self.to_dict()
+        result['all_permissions'] = self.get_all_permissions(session)
+        return result
+    
+    def __repr__(self) -> str:
+        return f"<PermissionTemplate(code='{self.code}', name='{self.name}', parent={self.parent_template_code!r})>"
+
+
+class LoginAttempt(Base):
+    """登录尝试记录模型
+    
+    Attributes:
+        id: 自增主键
+        user_id: 用户ID（外键，可为空，因为可能是不存在的用户名）
+        user_name: 尝试登录的用户名
+        ip_address: 登录IP地址
+        user_agent: 用户代理字符串
+        success: 登录是否成功
+        created_at: 创建时间（带索引）
+    """
+    __tablename__ = 'login_attempts'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('web_manager_users.id'), nullable=True)
+    user_name = Column(String(64), nullable=False)  # 记录尝试的用户名
+    ip_address = Column(String(45), nullable=False)  # 支持 IPv6
+    user_agent = Column(String(256), nullable=True)
+    success = Column(Boolean, nullable=False)
+    created_at = Column(DateTime, default=datetime.now, index=True)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典格式"""
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'user_name': self.user_name,
+            'ip_address': self.ip_address,
+            'user_agent': self.user_agent,
+            'success': self.success,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+    
+    def __repr__(self) -> str:
+        return f"<LoginAttempt(user='{self.user_name}', success={self.success}, ip='{self.ip_address}')>"
+
+
+class PasswordResetToken(Base):
+    """密码重置令牌模型
+    
+    Attributes:
+        id: 自增主键
+        user_id: 用户ID（外键）
+        token: 重置令牌，唯一且带索引
+        expires_at: 过期时间
+        used: 是否已使用
+        created_at: 创建时间
+    """
+    __tablename__ = 'password_reset_tokens'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('web_manager_users.id'), nullable=False)
+    token = Column(String(64), unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    used = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.now)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典格式"""
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'token': self.token,
+            'expires_at': self.expires_at.isoformat() if self.expires_at else None,
+            'used': self.used,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+    
+    def __repr__(self) -> str:
+        return f"<PasswordResetToken(user_id={self.user_id}, used={self.used}, expires={self.expires_at})>"
+
+
+class AuditLog(Base):
+    """审计日志模型
+    
+    Attributes:
+        id: 自增主键
+        event_type: 事件类型（带索引）
+        user_name: 用户名（带索引，可为空）
+        ip_address: IP地址
+        user_agent: 用户代理字符串
+        details: 事件详情（JSON格式）
+        created_at: 创建时间（带索引）
+    """
+    __tablename__ = 'audit_logs'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    event_type = Column(String(64), nullable=False, index=True)
+    user_name = Column(String(64), nullable=True, index=True)
+    ip_address = Column(String(45), nullable=True)
+    user_agent = Column(String(256), nullable=True)
+    details = Column(Text, nullable=True)  # JSON 格式
+    created_at = Column(DateTime, default=datetime.now, index=True)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典格式"""
+        return {
+            'id': self.id,
+            'event_type': self.event_type,
+            'user_name': self.user_name,
+            'ip_address': self.ip_address,
+            'user_agent': self.user_agent,
+            'details': self.details,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+    
+    def __repr__(self) -> str:
+        return f"<AuditLog(event='{self.event_type}', user='{self.user_name}', time={self.created_at})>"
+
+
+class EmailConfig(Base):
+    """邮件配置模型
+    
+    Attributes:
+        id: 自增主键
+        smtp_host: SMTP服务器地址
+        smtp_port: SMTP端口
+        smtp_username: SMTP用户名
+        smtp_password: SMTP密码（加密存储）
+        use_tls: 是否使用TLS
+        use_ssl: 是否使用SSL
+        sender_name: 发件人名称
+        sender_email: 发件人邮箱
+        updated_at: 更新时间
+    """
+    __tablename__ = 'email_config'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    smtp_host = Column(String(128), nullable=False)
+    smtp_port = Column(Integer, default=587)
+    smtp_username = Column(String(128), nullable=True)
+    smtp_password = Column(String(256), nullable=True)  # 加密存储
+    use_tls = Column(Boolean, default=True)
+    use_ssl = Column(Boolean, default=False)
+    sender_name = Column(String(64), nullable=True)
+    sender_email = Column(String(128), nullable=False)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典格式"""
+        return {
+            'id': self.id,
+            'smtp_host': self.smtp_host,
+            'smtp_port': self.smtp_port,
+            'smtp_username': self.smtp_username,
+            'smtp_password': '***' if self.smtp_password else None,  # 不暴露密码
+            'use_tls': self.use_tls,
+            'use_ssl': self.use_ssl,
+            'sender_name': self.sender_name,
+            'sender_email': self.sender_email,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
+    def __repr__(self) -> str:
+        return f"<EmailConfig(host='{self.smtp_host}', port={self.smtp_port})>"
+
+
+class SystemConfig(Base):
+    """系统配置模型
+    
+    Attributes:
+        id: 自增主键
+        key: 配置键，唯一
+        value: 配置值
+        description: 配置描述
+        updated_at: 更新时间
+    """
+    __tablename__ = 'system_config'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    key = Column(String(64), unique=True, nullable=False)
+    value = Column(String(256), nullable=True)
+    description = Column(String(256), nullable=True)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典格式"""
+        return {
+            'id': self.id,
+            'key': self.key,
+            'value': self.value,
+            'description': self.description,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
+    def __repr__(self) -> str:
+        return f"<SystemConfig(key='{self.key}', value='{self.value}')>"
+
+
+class Project(Base):
+    """项目模型
+    
+    用于实现多项目数据隔离，允许不同项目的队列数据相互独立。
+    用户可以被分配特定项目的访问权限。
+    
+    Attributes:
+        id: 自增主键
+        name: 项目名称，唯一，用于显示
+        code: 项目代码，唯一，用于权限标识（如 projectA:queue:read）
+        description: 项目描述
+        status: 项目状态 (active, archived)
+        created_at: 创建时间
+        updated_at: 更新时间
+        user_projects: 用户-项目关联关系（一对多）
+        roles: 关联的角色（多对多关系）
+    
+    Requirements:
+        - US-1.1: 创建、编辑和删除项目
+        - US-1.2: 为项目设置名称、描述和状态
+    """
+    __tablename__ = 'projects'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(64), unique=True, nullable=False, index=True)
+    code = Column(String(32), unique=True, nullable=False, index=True)
+    description = Column(String(256), nullable=True)
+    status = Column(String(20), default='active')  # active, archived
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # 一对多关系：项目 -> 用户项目关联
+    user_projects = relationship('UserProject', back_populates='project', cascade='all, delete-orphan')
+    # 多对多关系：项目 -> 角色
+    roles = relationship('Role', secondary=role_projects, back_populates='projects')
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典格式
+        
+        Returns:
+            包含所有项目字段的字典
+        """
+        return {
+            'id': self.id,
+            'name': self.name,
+            'code': self.code,
+            'description': self.description,
+            'status': self.status,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
+    def is_active(self) -> bool:
+        """判断项目是否为活跃状态
+        
+        Returns:
+            True 如果项目状态为 active，否则 False
+        """
+        return self.status == 'active'
+    
+    def is_archived(self) -> bool:
+        """判断项目是否已归档
+        
+        Returns:
+            True 如果项目状态为 archived，否则 False
+        """
+        return self.status == 'archived'
+    
+    def __repr__(self) -> str:
+        return f"<Project(name='{self.name}', code='{self.code}', status='{self.status}')>"
+
+
+class UserProject(Base):
+    """用户-项目关联模型
+    
+    用于实现用户与项目的多对多关系，并记录用户在项目中的权限级别。
+    支持细粒度的项目级权限控制。
+    
+    Attributes:
+        id: 自增主键
+        user_id: 用户ID（外键，关联 web_manager_users.id）
+        project_id: 项目ID（外键，关联 projects.id）
+        permission_level: 权限级别 (read, write, admin)
+        created_at: 创建时间
+        user: 关联的用户对象（多对一关系）
+        project: 关联的项目对象（多对一关系）
+    
+    唯一约束:
+        (user_id, project_id) - 确保每个用户在每个项目中只有一条记录
+    
+    Requirements:
+        - US-2.1: 将用户分配到特定项目
+        - US-2.2: 为用户设置项目级别的权限
+    """
+    __tablename__ = 'user_projects'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('web_manager_users.id'), nullable=False, index=True)
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False, index=True)
+    permission_level = Column(String(20), default='read', nullable=False)  # read, write, admin
+    created_at = Column(DateTime, default=datetime.now)
+    
+    # 唯一约束：确保每个用户在每个项目中只有一条记录
+    __table_args__ = (
+        UniqueConstraint('user_id', 'project_id', name='uq_user_project'),
+    )
+    
+    # 多对一关系
+    user = relationship('WebManagerUser', back_populates='user_projects')
+    project = relationship('Project', back_populates='user_projects')
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典格式
+        
+        Returns:
+            包含所有字段的字典，包括关联的用户名和项目名
+        """
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'project_id': self.project_id,
+            'permission_level': self.permission_level,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'user_name': self.user.user_name if self.user else None,
+            'project_name': self.project.name if self.project else None,
+            'project_code': self.project.code if self.project else None
+        }
+    
+    def has_read_access(self) -> bool:
+        """判断是否有读取权限
+        
+        Returns:
+            True 如果权限级别为 read、write 或 admin
+        """
+        return self.permission_level in ('read', 'write', 'admin')
+    
+    def has_write_access(self) -> bool:
+        """判断是否有写入权限
+        
+        Returns:
+            True 如果权限级别为 write 或 admin
+        """
+        return self.permission_level in ('write', 'admin')
+    
+    def has_admin_access(self) -> bool:
+        """判断是否有管理权限
+        
+        Returns:
+            True 如果权限级别为 admin
+        """
+        return self.permission_level == 'admin'
+    
+    def __repr__(self) -> str:
+        return f"<UserProject(user_id={self.user_id}, project_id={self.project_id}, level='{self.permission_level}')>"
+
+
+# 数据库引擎和会话工厂（支持多个数据库URL）
+_engines = {}  # 存储不同URL对应的引擎
+_session_factories = {}  # 存储不同URL对应的会话工厂
+_engine_lock = Lock()
+
+
+def get_db_url() -> str:
+    """获取数据库 URL
+    
+    优先从 funboost_config.py 的 FunboostCommonConfig 读取 WEB_MANAGER_DB_URL，
+    如果读取失败则使用默认的 SQLite 数据库路径。
+    
+    Returns:
+        数据库连接 URL 字符串
+    """
+    try:
+        from funboost.funboost_config_deafult import FunboostCommonConfig
+        return getattr(FunboostCommonConfig, 'WEB_MANAGER_DB_URL', 
+                      'sqlite:///./web_manager_users.db')
+    except Exception:
+        return 'sqlite:///./web_manager_users.db'
+
+
+def get_engine(db_url: Optional[str] = None):
+    """获取数据库引擎（支持多个数据库URL）
+    
+    Args:
+        db_url: 可选的数据库 URL，如果不提供则从配置获取
+        
+    Returns:
+        SQLAlchemy Engine 实例
+    """
+    global _engines
+    url = db_url or get_db_url()
+    
+    with _engine_lock:
+        if url not in _engines:
+            # SQLite 需要特殊的连接参数
+            connect_args = {}
+            if url.startswith('sqlite'):
+                connect_args = {
+                    'timeout': 30,  # 等待锁的超时时间（秒）
+                    'check_same_thread': False  # 允许多线程访问
+                }
+            _engines[url] = create_engine(
+                url,
+                pool_pre_ping=True,  # 连接池健康检查
+                echo=False,
+                connect_args=connect_args
+            )
+    return _engines[url]
+
+
+def get_session(db_url: Optional[str] = None):
+    """获取数据库会话
+    
+    Args:
+        db_url: 可选的数据库 URL，如果不提供则从配置获取
+        
+    Returns:
+        SQLAlchemy Session 实例
+    """
+    global _session_factories
+    url = db_url or get_db_url()
+    
+    # 先获取 engine
+    engine = get_engine(url)
+    
+    with _engine_lock:
+        if url not in _session_factories:
+            _session_factories[url] = sessionmaker(bind=engine)
+    
+    return _session_factories[url]()
+
+
+def reset_engine():
+    """重置数据库引擎和会话工厂（主要用于测试）"""
+    global _engines, _session_factories
+    with _engine_lock:
+        for engine in _engines.values():
+            engine.dispose()
+        _engines.clear()
+        _session_factories.clear()
+
+
+def init_db(db_url: Optional[str] = None) -> None:
+    """初始化数据库表
+    
+    如果表不存在则创建。
+    
+    Args:
+        db_url: 可选的数据库 URL，如果不提供则从配置获取
+    """
+    engine = get_engine(db_url)
+    Base.metadata.create_all(engine)
+
+
+def init_default_users(db_url: Optional[str] = None, create_defaults: bool = True) -> None:
+    """初始化默认用户
+    
+    如果用户不存在则创建，已存在则跳过（幂等操作）。
+    默认用户包括：Tom、user、admin
+    新创建的用户密码使用 bcrypt 哈希存储
+    对于已存在的用户，如果密码是明文格式，标记为需要升级
+    
+    Args:
+        db_url: 可选的数据库 URL，如果不提供则从配置获取
+        create_defaults: 是否创建默认用户，False 时只处理现有用户的升级
+    """
+    # 导入密码服务
+    from funboost.funboost_web_manager.services.password_service import PasswordService
+    
+    if not create_defaults:
+        # 只处理现有用户的密码升级，不创建新的默认用户
+        session = get_session(db_url)
+        try:
+            users = session.query(WebManagerUser).all()
+            for user in users:
+                if not _is_password_hashed(user.password):
+                    user.force_password_change = True
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+        return
+    
+    default_users = [
+        {"user_name": "Tom", "password": "111111", "email": None},
+        {"user_name": "user", "password": "mtfy123", "email": None},
+        {"user_name": "admin", "password": "123456", "email": "qiannanlin@fxwljy.com"},
+    ]
+    
+    session = get_session(db_url)
+    try:
+        for user_data in default_users:
+            existing = session.query(WebManagerUser).filter_by(
+                user_name=user_data['user_name']
+            ).first()
+            if not existing:
+                # 创建新用户，使用哈希密码
+                hashed_password = PasswordService.hash_password(user_data['password'])
+                user = WebManagerUser(
+                    user_name=user_data['user_name'],
+                    password=hashed_password,  # 使用哈希密码
+                    email=user_data['email'],
+                    force_password_change=True  # 仍然强制修改密码（安全考虑）
+                )
+                session.add(user)
+            else:
+                # 检查现有用户是否需要升级
+                if not _is_password_hashed(existing.password):
+                    existing.force_password_change = True
+                    if user_data['email'] and not existing.email:
+                        existing.email = user_data['email']
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def _is_password_hashed(password: str) -> bool:
+    """检查密码是否已经是哈希格式"""
+    return password.startswith('$2b$') or password.startswith('$2a$')
+
+
+def migrate_database(db_url: Optional[str] = None) -> None:
+    """数据库迁移脚本
+    
+    处理从旧版本到新版本的数据库升级：
+    1. 创建所有新表
+    2. 为现有表添加新列（如果不存在）
+    3. 为现有用户添加新字段的默认值
+    4. 标记明文密码用户需要强制修改密码
+    5. 初始化默认权限分类（含子分类）
+    6. 初始化默认权限（含 action_type）
+    7. 初始化默认角色
+    8. 为admin用户分配admin角色
+    9. 初始化系统配置
+    10. 初始化默认权限模板
+    
+    新增字段处理：
+    - permission_categories.parent_code: 支持子分类
+    - permissions.action_type: 操作类型
+    - permissions.project_scope: 项目作用域
+    
+    Args:
+        db_url: 可选的数据库 URL，如果不提供则从配置获取
+        
+    Requirements:
+    - 1.1: 支持三级层次结构 Category > Subcategory > Permission_Item
+    - 2.1: 定义标准操作类型 create, read, update, delete, execute, export
+    - 14.1: 提供预定义权限模板
+    """
+    from sqlalchemy import inspect, text
+    
+    engine = get_engine(db_url)
+    session = get_session(db_url)
+    
+    try:
+        # 1. 创建所有表（如果不存在）
+        init_db(db_url)
+        
+        # 1.1 创建 role_projects 关联表（如果不存在）
+        inspector = inspect(engine)
+        if 'role_projects' not in inspector.get_table_names():
+            with engine.connect() as conn:
+                conn.execute(text('''
+                    CREATE TABLE IF NOT EXISTS role_projects (
+                        role_id INTEGER NOT NULL,
+                        project_id INTEGER NOT NULL,
+                        PRIMARY KEY (role_id, project_id),
+                        FOREIGN KEY (role_id) REFERENCES roles(id),
+                        FOREIGN KEY (project_id) REFERENCES projects(id)
+                    )
+                '''))
+                conn.commit()
+        
+        # 2. 检查并添加 permissions 表的新列
+        inspector = inspect(engine)
+        if 'permissions' in inspector.get_table_names():
+            existing_columns = [col['name'] for col in inspector.get_columns('permissions')]
+            
+            # 添加 category_code 列（如果不存在）
+            if 'category_code' not in existing_columns:
+                with engine.connect() as conn:
+                    conn.execute(text('ALTER TABLE permissions ADD COLUMN category_code VARCHAR(64)'))
+                    conn.commit()
+            
+            # 添加 sort_order 列（如果不存在）
+            if 'sort_order' not in existing_columns:
+                with engine.connect() as conn:
+                    conn.execute(text('ALTER TABLE permissions ADD COLUMN sort_order INTEGER DEFAULT 0'))
+                    conn.commit()
+            
+            # 添加 action_type 列（如果不存在）- 新增字段
+            if 'action_type' not in existing_columns:
+                with engine.connect() as conn:
+                    conn.execute(text('ALTER TABLE permissions ADD COLUMN action_type VARCHAR(32)'))
+                    conn.commit()
+            
+            # 添加 project_scope 列（如果不存在）- 新增字段
+            if 'project_scope' not in existing_columns:
+                with engine.connect() as conn:
+                    conn.execute(text('ALTER TABLE permissions ADD COLUMN project_scope VARCHAR(64)'))
+                    conn.commit()
+        
+        # 3. 检查并添加 permission_categories 表的新列
+        if 'permission_categories' in inspector.get_table_names():
+            existing_columns = [col['name'] for col in inspector.get_columns('permission_categories')]
+            
+            # 添加 parent_code 列（如果不存在）- 支持子分类
+            if 'parent_code' not in existing_columns:
+                with engine.connect() as conn:
+                    conn.execute(text('ALTER TABLE permission_categories ADD COLUMN parent_code VARCHAR(64)'))
+                    conn.commit()
+        
+        # 4. 检查并更新现有用户的新字段
+        users = session.query(WebManagerUser).all()
+        for user in users:
+            # 如果是明文密码，标记需要强制修改
+            if not _is_password_hashed(user.password):
+                user.force_password_change = True
+            
+            # 确保状态字段有默认值
+            if not user.status:
+                user.status = 'active'
+            
+            # 确保失败计数有默认值
+            if user.failed_login_count is None:
+                user.failed_login_count = 0
+        
+        # 5. 初始化默认权限分类（必须在权限之前，支持子分类）
+        _init_default_categories(session)
+        
+        # 6. 初始化默认权限（含 action_type）
+        _init_default_permissions(session)
+        
+        # 7. 为现有权限自动分配分类和操作类型
+        _auto_assign_permission_categories(session)
+        _auto_assign_permission_action_types(session)
+        
+        # 8. 初始化默认角色
+        _init_default_roles(session)
+        
+        # 9. 为admin用户分配admin角色
+        _assign_admin_role(session)
+        
+        # 10. 初始化系统配置
+        _init_system_config(session)
+        
+        # 11. 初始化默认权限模板
+        _init_default_permission_templates(session)
+        
+        # 12. 初始化默认项目并将现有用户添加到默认项目
+        _init_default_project(session)
+        
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+# 默认权限分类配置（增强版：支持多层级结构）
+# 支持三级层次结构：Category > Subcategory > Permission_Item
+# 通过 parent_code 字段实现子分类关系
+DEFAULT_PERMISSION_CATEGORIES = [
+    # 顶级分类
+    {"code": "system", "name": "系统管理", "description": "系统级别管理功能", "sort_order": 1, "icon": "⚙️", "parent_code": None},
+    {"code": "queue", "name": "队列管理", "description": "消息队列操作", "sort_order": 2, "icon": "📦", "parent_code": None},
+    {"code": "monitor", "name": "监控", "description": "系统监控功能", "sort_order": 3, "icon": "📊", "parent_code": None},
+    
+    # 系统管理子分类
+    {"code": "user", "name": "用户管理", "description": "用户账户相关权限", "sort_order": 1, "icon": "👤", "parent_code": "system"},
+    {"code": "role", "name": "角色管理", "description": "角色和权限配置", "sort_order": 2, "icon": "🎭", "parent_code": "system"},
+    {"code": "audit", "name": "审计日志", "description": "系统审计和日志查看", "sort_order": 3, "icon": "📋", "parent_code": "system"},
+    {"code": "config", "name": "系统配置", "description": "系统设置和配置", "sort_order": 4, "icon": "🔧", "parent_code": "system"},
+    {"code": "project", "name": "项目管理", "description": "项目管理相关权限", "sort_order": 5, "icon": "📁", "parent_code": "system"},
+    
+    # 队列管理子分类
+    {"code": "queue:task", "name": "任务管理", "description": "队列任务操作", "sort_order": 1, "icon": "📝", "parent_code": "queue"},
+    {"code": "queue:consumer", "name": "消费者管理", "description": "消费者操作", "sort_order": 2, "icon": "🔄", "parent_code": "queue"},
+    
+    # 开发工具分类
+    {"code": "devtools", "name": "开发工具", "description": "开发和调试工具", "sort_order": 4, "icon": "🛠️", "parent_code": None},
+    
+    # 开发工具子分类
+    {"code": "code_editor", "name": "代码编辑器", "description": "在线代码编辑和执行", "sort_order": 1, "icon": "📝", "parent_code": "devtools"},
+]
+
+# 默认权限配置（增强版：包含 action_type 字段）
+# 支持标准操作类型：create, read, update, delete, execute, export
+DEFAULT_PERMISSIONS = [
+    # 用户管理权限
+    {"code": "user:create", "name": "创建用户", "description": "创建新用户账户", "category_code": "user", "action_type": "create", "sort_order": 1},
+    {"code": "user:read", "name": "查看用户", "description": "查看用户列表和详情", "category_code": "user", "action_type": "read", "sort_order": 2},
+    {"code": "user:update", "name": "编辑用户", "description": "编辑用户信息", "category_code": "user", "action_type": "update", "sort_order": 3},
+    {"code": "user:delete", "name": "删除用户", "description": "删除用户账户", "category_code": "user", "action_type": "delete", "sort_order": 4},
+    {"code": "user:export", "name": "导出用户", "description": "导出用户数据", "category_code": "user", "action_type": "export", "sort_order": 5},
+    
+    # 角色管理权限
+    {"code": "role:create", "name": "创建角色", "description": "创建新角色", "category_code": "role", "action_type": "create", "sort_order": 1},
+    {"code": "role:read", "name": "查看角色", "description": "查看角色列表和详情", "category_code": "role", "action_type": "read", "sort_order": 2},
+    {"code": "role:update", "name": "编辑角色", "description": "编辑角色信息和权限", "category_code": "role", "action_type": "update", "sort_order": 3},
+    {"code": "role:delete", "name": "删除角色", "description": "删除角色", "category_code": "role", "action_type": "delete", "sort_order": 4},
+    
+    # 审计日志权限
+    {"code": "audit:read", "name": "查看审计日志", "description": "查看系统审计日志", "category_code": "audit", "action_type": "read", "sort_order": 1},
+    {"code": "audit:export", "name": "导出审计日志", "description": "导出审计日志数据", "category_code": "audit", "action_type": "export", "sort_order": 2},
+    
+    # 系统配置权限
+    {"code": "config:read", "name": "查看系统配置", "description": "查看系统配置", "category_code": "config", "action_type": "read", "sort_order": 1},
+    {"code": "config:update", "name": "修改系统配置", "description": "修改系统配置", "category_code": "config", "action_type": "update", "sort_order": 2},
+    
+    # 项目管理权限
+    {"code": "project:create", "name": "创建项目", "description": "创建新项目", "category_code": "project", "action_type": "create", "sort_order": 1},
+    {"code": "project:read", "name": "查看项目", "description": "查看项目列表和详情", "category_code": "project", "action_type": "read", "sort_order": 2},
+    {"code": "project:update", "name": "编辑项目", "description": "编辑项目信息", "category_code": "project", "action_type": "update", "sort_order": 3},
+    {"code": "project:delete", "name": "删除项目", "description": "删除项目", "category_code": "project", "action_type": "delete", "sort_order": 4},
+    {"code": "project:admin", "name": "项目管理员", "description": "管理项目用户和权限", "category_code": "project", "action_type": "execute", "sort_order": 5},
+    
+    # 队列管理权限
+    {"code": "queue:read", "name": "查看队列", "description": "查看队列状态", "category_code": "queue", "action_type": "read", "sort_order": 1},
+    {"code": "queue:execute", "name": "执行队列操作", "description": "执行队列相关操作", "category_code": "queue", "action_type": "execute", "sort_order": 2},
+    {"code": "queue:task:create", "name": "创建任务", "description": "创建队列任务", "category_code": "queue:task", "action_type": "create", "sort_order": 1},
+    {"code": "queue:task:read", "name": "查看任务", "description": "查看队列任务", "category_code": "queue:task", "action_type": "read", "sort_order": 2},
+    {"code": "queue:task:delete", "name": "删除任务", "description": "删除队列任务", "category_code": "queue:task", "action_type": "delete", "sort_order": 3},
+    
+    # 代码编辑器权限
+    {"code": "code_editor:read", "name": "查看代码", "description": "查看代码文件和编辑器界面", "category_code": "code_editor", "action_type": "read", "sort_order": 1},
+    {"code": "code_editor:write", "name": "编辑代码", "description": "创建、编辑、删除代码文件", "category_code": "code_editor", "action_type": "update", "sort_order": 2},
+    {"code": "code_editor:execute", "name": "执行代码", "description": "运行代码文件", "category_code": "code_editor", "action_type": "execute", "sort_order": 3},
+]
+
+# 默认权限模板配置
+# 支持模板继承：通过 parent_template_code 实现
+DEFAULT_PERMISSION_TEMPLATES = [
+    {
+        "code": "viewer",
+        "name": "只读用户",
+        "description": "只能查看，不能修改",
+        "permissions": ["user:read", "role:read", "audit:read", "config:read", "queue:read", "queue:task:read"],
+        "parent_template_code": None,
+        "is_builtin": True
+    },
+    {
+        "code": "operator",
+        "name": "操作员",
+        "description": "可以执行队列操作",
+        "permissions": ["queue:execute", "queue:task:create", "queue:task:delete"],
+        "parent_template_code": "viewer",
+        "is_builtin": True
+    },
+    {
+        "code": "admin",
+        "name": "管理员",
+        "description": "拥有所有权限",
+        "permissions": ["user:*", "role:*", "audit:*", "config:*", "queue:*", "project:*", "code_editor:*"],
+        "parent_template_code": None,
+        "is_builtin": True
+    },
+    {
+        "code": "project_admin",
+        "name": "项目管理员",
+        "description": "项目级别的管理权限",
+        "permissions": ["queue:*", "queue:task:*"],
+        "parent_template_code": "viewer",
+        "is_builtin": True
+    }
+]
+
+
+def _init_default_categories(session) -> None:
+    """初始化默认权限分类（幂等操作）
+    
+    支持多层级结构：先创建顶级分类，再创建子分类。
+    通过 parent_code 字段实现分类层级关系。
+    """
+    # 分离顶级分类和子分类，确保先创建顶级分类
+    top_level_categories = [cat for cat in DEFAULT_PERMISSION_CATEGORIES if cat.get('parent_code') is None]
+    sub_categories = [cat for cat in DEFAULT_PERMISSION_CATEGORIES if cat.get('parent_code') is not None]
+    
+    # 先创建顶级分类
+    for cat_data in top_level_categories:
+        existing = session.query(PermissionCategory).filter_by(code=cat_data['code']).first()
+        if not existing:
+            category = PermissionCategory(**cat_data)
+            session.add(category)
+        else:
+            # 更新现有分类的字段（如果需要）
+            if existing.icon != cat_data.get('icon'):
+                existing.icon = cat_data.get('icon')
+            if existing.sort_order != cat_data.get('sort_order', 0):
+                existing.sort_order = cat_data.get('sort_order', 0)
+    
+    # 提交顶级分类，确保外键约束可以满足
+    session.flush()
+    
+    # 再创建子分类
+    for cat_data in sub_categories:
+        existing = session.query(PermissionCategory).filter_by(code=cat_data['code']).first()
+        if not existing:
+            category = PermissionCategory(**cat_data)
+            session.add(category)
+        else:
+            # 更新现有分类的字段（如果需要）
+            if existing.parent_code != cat_data.get('parent_code'):
+                existing.parent_code = cat_data.get('parent_code')
+            if existing.icon != cat_data.get('icon'):
+                existing.icon = cat_data.get('icon')
+            if existing.sort_order != cat_data.get('sort_order', 0):
+                existing.sort_order = cat_data.get('sort_order', 0)
+
+
+def _auto_assign_permission_categories(session) -> None:
+    """为现有权限自动分配分类
+    
+    根据权限代码前缀（如 user:read -> user）自动分配到对应分类
+    """
+    permissions = session.query(Permission).filter(Permission.category_code.is_(None)).all()
+    for perm in permissions:
+        # 从权限代码提取分类代码（如 user:read -> user）
+        if ':' in perm.code:
+            category_code = perm.code.split(':')[0]
+            # 检查分类是否存在
+            category = session.query(PermissionCategory).filter_by(code=category_code).first()
+            if category:
+                perm.category_code = category_code
+
+
+def _auto_assign_permission_action_types(session) -> None:
+    """为现有权限自动分配操作类型
+    
+    根据权限代码后缀（如 user:read -> read）自动分配操作类型。
+    支持标准操作类型：create, read, update, delete, execute, export
+    以及旧版本的 write 类型（映射到 update）。
+    
+    Requirements:
+    - 2.1: 定义标准操作类型
+    - 2.4: 从权限代码提取操作类型
+    """
+    # 标准操作类型
+    standard_action_types = {'create', 'read', 'update', 'delete', 'execute', 'export'}
+    # 旧版本操作类型映射
+    legacy_action_mapping = {
+        'write': 'update',  # 旧版 write 映射到 update
+    }
+    
+    permissions = session.query(Permission).filter(Permission.action_type.is_(None)).all()
+    for perm in permissions:
+        if ':' in perm.code:
+            # 从权限代码提取操作类型（最后一段）
+            action = perm.code.split(':')[-1]
+            
+            # 检查是否为标准操作类型
+            if action in standard_action_types:
+                perm.action_type = action
+            # 检查是否为旧版操作类型
+            elif action in legacy_action_mapping:
+                perm.action_type = legacy_action_mapping[action]
+            # 其他自定义操作类型保持原样
+            else:
+                perm.action_type = action
+
+
+def _init_default_permissions(session) -> None:
+    """初始化默认权限（包含分类、操作类型和排序信息）
+    
+    使用 DEFAULT_PERMISSIONS 配置，支持：
+    - category_code: 权限所属分类
+    - action_type: 操作类型（create, read, update, delete, execute, export）
+    - sort_order: 排序顺序
+    - project_scope: 项目作用域（可选）
+    """
+    for perm_data in DEFAULT_PERMISSIONS:
+        existing = session.query(Permission).filter_by(code=perm_data['code']).first()
+        if not existing:
+            permission = Permission(**perm_data)
+            session.add(permission)
+        else:
+            # 更新现有权限的字段（如果未设置或需要更新）
+            if existing.category_code is None and 'category_code' in perm_data:
+                existing.category_code = perm_data['category_code']
+            if existing.sort_order == 0 and 'sort_order' in perm_data:
+                existing.sort_order = perm_data['sort_order']
+            # 更新 action_type（新增字段）
+            if existing.action_type is None and 'action_type' in perm_data:
+                existing.action_type = perm_data['action_type']
+            # 更新 project_scope（新增字段）
+            if existing.project_scope is None and 'project_scope' in perm_data:
+                existing.project_scope = perm_data.get('project_scope')
+            # 更新描述（如果为空）
+            if existing.description is None and 'description' in perm_data:
+                existing.description = perm_data['description']
+
+
+def _init_default_roles(session) -> None:
+    """初始化默认角色
+    
+    使用新的细粒度权限代码（包含 action_type）。
+    """
+    default_roles = [
+        {
+            "name": "admin",
+            "description": "系统管理员，拥有所有权限",
+            "is_builtin": True,
+            "permissions": [
+                "user:create", "user:read", "user:update", "user:delete", "user:export",
+                "role:create", "role:read", "role:update", "role:delete",
+                "audit:read", "audit:export",
+                "config:read", "config:update",
+                "project:create", "project:read", "project:update", "project:delete", "project:admin",
+                "queue:read", "queue:execute",
+                "queue:task:create", "queue:task:read", "queue:task:delete",
+                "code_editor:read", "code_editor:write", "code_editor:execute"
+            ]
+        },
+        {
+            "name": "operator",
+            "description": "操作员，可以管理队列",
+            "is_builtin": True,
+            "permissions": [
+                "user:read",
+                "queue:read", "queue:execute",
+                "queue:task:create", "queue:task:read", "queue:task:delete"
+            ]
+        },
+        {
+            "name": "viewer",
+            "description": "只读用户，只能查看",
+            "is_builtin": True,
+            "permissions": [
+                "user:read", "role:read", "audit:read", "config:read",
+                "queue:read", "queue:task:read"
+            ]
+        }
+    ]
+    
+    for role_data in default_roles:
+        existing = session.query(Role).filter_by(name=role_data['name']).first()
+        if not existing:
+            role = Role(
+                name=role_data['name'],
+                description=role_data['description'],
+                is_builtin=role_data['is_builtin']
+            )
+            
+            # 分配权限
+            for perm_code in role_data['permissions']:
+                permission = session.query(Permission).filter_by(code=perm_code).first()
+                if permission:
+                    role.permissions.append(permission)
+            
+            session.add(role)
+
+
+def _assign_admin_role(session) -> None:
+    """为admin用户分配admin角色"""
+    admin_user = session.query(WebManagerUser).filter_by(user_name='admin').first()
+    admin_role = session.query(Role).filter_by(name='admin').first()
+    
+    if admin_user and admin_role:
+        # 检查是否已经有admin角色
+        if admin_role not in admin_user.roles:
+            admin_user.roles.append(admin_role)
+
+
+def _init_system_config(session) -> None:
+    """初始化系统配置"""
+    default_configs = [
+        {"key": "audit_retention_days", "value": "30", "description": "审计日志保留天数"}
+    ]
+    
+    for config_data in default_configs:
+        existing = session.query(SystemConfig).filter_by(key=config_data['key']).first()
+        if not existing:
+            config = SystemConfig(**config_data)
+            session.add(config)
+
+
+def _init_default_permission_templates(session) -> None:
+    """初始化默认权限模板（幂等操作）
+    
+    创建预定义的权限模板，支持模板继承。
+    模板包括：只读用户、操作员、管理员、项目管理员
+    
+    Requirements:
+    - 14.1: 提供预定义权限模板
+    """
+    import json
+    
+    for template_data in DEFAULT_PERMISSION_TEMPLATES:
+        existing = session.query(PermissionTemplate).filter_by(code=template_data['code']).first()
+        if not existing:
+            template = PermissionTemplate(
+                code=template_data['code'],
+                name=template_data['name'],
+                description=template_data.get('description'),
+                permissions=json.dumps(template_data['permissions']),
+                parent_template_code=template_data.get('parent_template_code'),
+                is_builtin=template_data.get('is_builtin', False)
+            )
+            session.add(template)
+        else:
+            # 更新现有模板的字段（如果需要）
+            if existing.description != template_data.get('description'):
+                existing.description = template_data.get('description')
+            if existing.parent_template_code != template_data.get('parent_template_code'):
+                existing.parent_template_code = template_data.get('parent_template_code')
+            # 更新权限列表（仅对内置模板）
+            if existing.is_builtin:
+                existing.permissions = json.dumps(template_data['permissions'])
+
+
+def _init_default_project(session) -> None:
+    """初始化默认项目并将现有用户添加到默认项目（幂等操作）
+    
+    创建默认项目 "default"（code: "default", name: "默认项目"），
+    并将所有现有用户添加到默认项目，以保持向后兼容。
+    
+    迁移策略：
+    1. 创建默认项目（如果不存在）
+    2. 将所有现有用户添加到默认项目（permission_level="admin"）
+    3. 确保操作幂等（可多次运行而不产生重复数据）
+    
+    Requirements:
+    - AC-1: 项目 CRUD - 创建默认项目
+    - 迁移策略: 将所有用户添加到默认项目（保持向后兼容）
+    """
+    # 1. 创建默认项目（如果不存在）
+    default_project = session.query(Project).filter_by(code='default').first()
+    if not default_project:
+        default_project = Project(
+            name='默认项目',
+            code='default',
+            description='系统默认项目，用于向后兼容',
+            status='active'
+        )
+        session.add(default_project)
+        # 刷新以获取自动生成的 id
+        session.flush()
+    
+    # 2. 将所有现有用户添加到默认项目（如果尚未添加）
+    all_users = session.query(WebManagerUser).all()
+    for user in all_users:
+        # 检查用户是否已经在默认项目中
+        existing_user_project = session.query(UserProject).filter_by(
+            user_id=user.id,
+            project_id=default_project.id
+        ).first()
+        
+        if not existing_user_project:
+            # 添加用户到默认项目，权限级别为 admin（保持向后兼容）
+            user_project = UserProject(
+                user_id=user.id,
+                project_id=default_project.id,
+                permission_level='admin'
+            )
+            session.add(user_project)
+
+
+def query_user_by_name(user_name: str, db_url: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """根据用户名查询用户
+    
+    Args:
+        user_name: 要查询的用户名
+        db_url: 可选的数据库 URL，如果不提供则从配置获取
+        
+    Returns:
+        用户字典（包含 id、user_name、password），如果不存在返回 None
+    """
+    session = get_session(db_url)
+    try:
+        user = session.query(WebManagerUser).filter_by(user_name=user_name).first()
+        return user.to_dict() if user else None
+    finally:
+        session.close()
+
+
+def query_user_by_id(user_id: str, db_url: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """根据用户ID查询用户
+    
+    注意：为保持与原有 Flask-Login 集成兼容，user_id 实际上是 user_name
+    
+    Args:
+        user_id: 用户ID（即 user_name）
+        db_url: 可选的数据库 URL，如果不提供则从配置获取
+        
+    Returns:
+        用户字典（包含 id、user_name、password），如果不存在返回 None
+    """
+    return query_user_by_name(user_id, db_url)
+
+
+def add_user(user_name: str, password: str, email: str = None, 
+             status: str = 'active', force_password_change: bool = False,
+             db_url: Optional[str] = None) -> WebManagerUser:
+    """添加新用户
+    
+    Args:
+        user_name: 用户名
+        password: 密码（如果不是哈希格式，将自动哈希）
+        email: 邮箱地址
+        status: 用户状态，默认为 'active'
+        force_password_change: 是否强制修改密码，默认为 False
+        db_url: 可选的数据库 URL，如果不提供则从配置获取
+        
+    Returns:
+        创建的用户对象
+        
+    Raises:
+        IntegrityError: 如果用户名已存在
+    """
+    # 导入密码服务
+    from funboost.funboost_web_manager.services.password_service import PasswordService
+    
+    session = get_session(db_url)
+    try:
+        # 如果密码不是哈希格式，进行哈希
+        if not PasswordService.is_hashed(password):
+            password = PasswordService.hash_password(password)
+        
+        user = WebManagerUser(
+            user_name=user_name, 
+            password=password,
+            email=email,
+            status=status,
+            force_password_change=force_password_change
+        )
+        session.add(user)
+        session.commit()
+        # 刷新以获取自动生成的字段
+        session.refresh(user)
+        return user
+    except IntegrityError:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def count_users(db_url: Optional[str] = None) -> int:
+    """统计用户数量
+    
+    Args:
+        db_url: 可选的数据库 URL，如果不提供则从配置获取
+        
+    Returns:
+        用户总数
+    """
+    session = get_session(db_url)
+    try:
+        return session.query(WebManagerUser).count()
+    finally:
+        session.close()

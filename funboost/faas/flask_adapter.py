@@ -1161,14 +1161,18 @@ def get_care_project_name():
     """
     try:
         care_project_name = CareProjectNameEnv.get()
-        
-        return jsonify({
+
+        response = jsonify({
             "succ": True,
             "msg": "获取成功",
             "data": {
                 "care_project_name": care_project_name
             }
         })
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
         
     except Exception as e:
         logger.exception(f'获取 care_project_name 失败: {str(e)}')
@@ -1244,8 +1248,8 @@ def get_all_project_names():
     try:
         # 使用 QueuesConusmerParamsGetter 获取所有项目名称
         project_names = QueuesConusmerParamsGetter().get_all_project_names()
-        
-        return jsonify({
+
+        response = jsonify({
             "succ": True,
             "msg": "获取成功",
             "data": {
@@ -1253,6 +1257,10 @@ def get_all_project_names():
                 "count": len(project_names) if project_names else 0
             }
         })
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
         
     except Exception as e:
         logger.exception(f'获取项目名称列表失败: {str(e)}')
@@ -1263,6 +1271,90 @@ def get_all_project_names():
                 "project_names": [],
                 "count": 0
             }
+        }), 500
+
+
+@flask_blueprint.route("/remove_project_name", methods=['DELETE', 'POST'])
+def remove_project_name():
+    """
+    安全地从 Redis 中删除项目名称
+    
+    安全检查：
+    1. 检查项目是否存在于 Redis 中
+    2. 检查项目是否有关联的队列
+    3. 检查项目是否有活跃的消费者
+    4. 如果有队列或活跃消费者，需要 force=true 才能删除
+    
+    请求参数 (JSON 或 Query):
+        project_name: 要删除的项目名称（必填）
+        force: 是否强制删除（可选，默认 false）
+    
+    返回:
+        {
+            "succ": True,
+            "msg": "项目 'xxx' 已从 Redis 中删除",
+            "data": {
+                "project_name": "xxx",
+                "success": True,
+                "project_existed": True,
+                "queue_count": 0,
+                "active_consumer_count": 0,
+                "force_used": False
+            }
+        }
+    """
+    try:
+        # 从 JSON body 或 query 参数获取项目名称
+        project_name = None
+        force = False
+        
+        if request.is_json:
+            project_name = request.json.get('project_name')
+            force = request.json.get('force', False)
+        if not project_name:
+            project_name = request.args.get('project_name')
+        if not force:
+            force_str = request.args.get('force', 'false')
+            force = force_str.lower() in ('true', '1', 'yes')
+        
+        if not project_name:
+            return jsonify({
+                "succ": False,
+                "msg": "缺少 project_name 参数",
+                "data": None
+            }), 400
+        
+        # 使用 QueuesConusmerParamsGetter 安全删除项目名称
+        getter = QueuesConusmerParamsGetter()
+        result = getter.remove_project_name(project_name, force=force)
+        
+        if result["success"]:
+            return jsonify({
+                "succ": True,
+                "msg": f"项目 '{project_name}' 已从 Redis 中删除",
+                "data": {
+                    "project_name": project_name,
+                    **result
+                }
+            })
+        else:
+            # 项目不存在或有活跃队列/消费者
+            status_code = 400 if result.get("project_existed") else 404
+            return jsonify({
+                "succ": False,
+                "msg": result.get("error", "删除失败"),
+                "data": {
+                    "project_name": project_name,
+                    **result
+                }
+            }), status_code
+        
+    except Exception as e:
+        logger.exception(f'删除项目名称失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"删除项目名称失败: {str(e)}",
+            "data": None
         }), 500
 
 

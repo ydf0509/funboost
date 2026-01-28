@@ -1,0 +1,5 @@
+1:"$Sreact.fragment"
+2:I[97367,["/_next/static/chunks/4fd93823156e59e8.js"],"OutletBoundary"]
+3:"$Sreact.suspense"
+0:{"buildId":"rxqFqEO7WAL-T2alJ2tjq","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"space-y-8","children":["$","div",null,{"className":"grid gap-4 md:grid-cols-2","children":[["$","div",null,{"className":"rounded-3xl p-6 glass-card","children":[["$","h3",null,{"className":"font-display text-lg text-[hsl(var(--ink))]","children":"任务结果与消费速率"}],["$","p",null,{"className":"mt-3 text-sm text-[hsl(var(--ink-muted))]","children":"这些页面依赖 MongoDB 持久化。请在后端开启函数结果持久化，才能展示队列结果与速率曲线。"}]]}],["$","div",null,{"className":"rounded-3xl p-6 glass-card","children":[["$","h3",null,{"className":"font-display text-lg text-[hsl(var(--ink))]","children":"运行消费者与队列运维"}],["$","p",null,{"className":"mt-3 text-sm text-[hsl(var(--ink-muted))]","children":"消费者心跳数据存储在 Redis。启用心跳上报后，可展示实时队列指标与消费者状态。"}]]}]]}]}],null,["$","$L2",null,{"children":["$","$3",null,{"name":"Next.MetadataOutlet","children":"$@4"}]}]]}],"loading":null,"isPartial":false}
+4:null

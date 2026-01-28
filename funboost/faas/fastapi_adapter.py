@@ -29,7 +29,7 @@ from funboost import AioAsyncResult, AsyncResult, TaskOptions, BoosterParams, Bo
 
 from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter, QueuesConusmerParamsGetter,CareProjectNameEnv
 from funboost.core.exceptions import FunboostException
-from fastapi import FastAPI, APIRouter, Query, Request
+from fastapi import FastAPI, APIRouter, Query, Request, Response
 from fastapi.responses import JSONResponse
 
 
@@ -1590,13 +1590,17 @@ class AllProjectNamesData(BaseModel):
 
 @fastapi_router.get("/get_care_project_name", response_model=BaseResponse[CareProjectNameData])
 @handle_funboost_exceptions
-def get_care_project_name():
+def get_care_project_name(response: Response):
     """
     获取当前的 care_project_name 设置
     
     返回:
         care_project_name: 当前设置的项目名称，None 表示不限制（显示全部）
     """
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+
     care_project_name = CareProjectNameEnv.get()
     
     return BaseResponse(
@@ -1640,7 +1644,7 @@ def set_care_project_name(request: SetCareProjectNameRequest):
 
 @fastapi_router.get("/get_all_project_names", response_model=BaseResponse[AllProjectNamesData])
 @handle_funboost_exceptions
-def get_all_project_names():
+def get_all_project_names(response: Response):
     """
     获取所有已注册的项目名称列表
     
@@ -1648,6 +1652,10 @@ def get_all_project_names():
         project_names: 项目名称列表（按字母排序）
         count: 项目数量
     """
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+
     # 使用 QueuesConusmerParamsGetter 获取所有项目名称
     project_names = QueuesConusmerParamsGetter().get_all_project_names()
     

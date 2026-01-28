@@ -6,7 +6,6 @@ from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.publishers.persist_queue_publisher import PersistQueuePublisher
 from funboost.core.func_params_model import PublisherParams
-from persistqueue import Empty
 
 class PersistQueueConsumer(AbstractConsumer):
     """
@@ -16,10 +15,7 @@ class PersistQueueConsumer(AbstractConsumer):
     def _dispatch_task(self):
         pub = PersistQueuePublisher(publisher_params=PublisherParams(queue_name=self.queue_name))
         while True:
-            try:
-                item = pub.queue.get(timeout=0.5)
-            except Empty:
-                continue
+            item = pub.queue.get()
             # self.logger.debug(f'从本地持久化sqlite的 [{self._queue_name}] 队列中 取出的消息是：   {item}  ')
             kw = {'body': item, 'q': pub.queue, 'item': item}
             self._submit_task(kw)

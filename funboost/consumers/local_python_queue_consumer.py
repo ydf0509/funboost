@@ -13,7 +13,8 @@ class LocalPythonQueueConsumer(AbstractConsumer):
 
     @property
     def local_python_queue(self) -> Queue:
-        return PythonQueues.get_queue(self._queue_name)
+        maxsize = self.consumer_params.broker_exclusive_config['maxsize']
+        return PythonQueues.get_queue(self._queue_name, maxsize=maxsize)
 
     def _dispatch_task(self):
         while True:
@@ -26,4 +27,5 @@ class LocalPythonQueueConsumer(AbstractConsumer):
 
     def _requeue(self, kw):
         self.local_python_queue.put(kw['body'])
+
 

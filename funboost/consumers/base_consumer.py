@@ -31,7 +31,13 @@ import inspect
 from functools import wraps
 import threading
 from threading import Lock
+import threading
+from threading import Lock
 import asyncio
+
+from croniter import croniter, CroniterBadCronError
+from cron_descriptor import get_description, Options
+
 
 import nb_log
 from funboost.core.current_task import FctContext,set_fct_context
@@ -92,7 +98,7 @@ class GlobalVars:
 
 # noinspection DuplicatedCode
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
-    time_interval_for_check_do_not_run_time = 60
+    _time_interval_for_check_allow_run_by_cron = 60
     BROKER_KIND = None
 
     @property
@@ -205,6 +211,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._last_submit_task_timestamp = 0
         self._last_start_count_qps_timestamp = time.time()
         self._has_execute_times_in_recent_second = 0
+        
+        self._last_judge_is_allow_run_by_cron_time = 0
+        self._last_judge_is_allow_run_by_cron_result = True
         
         self._lock_for_get_publisher = Lock()
         self._publisher_of_same_queue = None  #
@@ -359,6 +368,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             return __keep_circulating
 
         return _keep_circulating
+    
+    def _before_start_consuming_message_hook(self):
+        pass
 
     # noinspection PyAttributeOutsideInit
     def start_consuming_message(self):
@@ -391,6 +403,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.consumer_params.is_show_message_get_from_broker = True  # 方便用户看到从消息队列取出来的消息的task_id,然后使用task_id杀死运行中的消息。
         if self.consumer_params.do_task_filtering:
             self._redis_filter.delete_expire_filter_task_cycle()  # 这个默认是RedisFilter类，是个pass不运行。所以用别的消息中间件模式，不需要安装和配置redis。
+        self._before_start_consuming_message_hook()
         if self.consumer_params.schedule_tasks_on_main_thread:
             self.keep_circulating(1, daemon=False)(self._dispatch_task)()
         else:
@@ -506,9 +519,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _submit_task(self, kw):
         kw['body'] = self._convert_msg_before_run(kw['body'])
         self._print_message_get_from_broker(kw['body'])
-        if self._judge_is_daylight():
+        self._judge_is_allow_run_by_cron()
+        if self._last_judge_is_allow_run_by_cron_result is False:
             self._requeue(kw)
-            time.sleep(self.time_interval_for_check_do_not_run_time)
+            time.sleep(self._time_interval_for_check_allow_run_by_cron)
             return
         function_only_params = get_func_only_params(kw['body'], )
         kw['function_only_params'] = function_only_params
@@ -1085,13 +1099,34 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """从远程机器可以设置队列为暂停消费状态，funboost框架会自动继续消费，此功能需要配置好redis"""
         RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, self.queue_name, '0')
 
-    @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)
-    def _judge_is_daylight(self):
-        if self.consumer_params.is_do_not_run_by_specify_time_effect and (
-                self.consumer_params.do_not_run_by_specify_time[0] < time_util.DatetimeConverter().time_str < self.consumer_params.do_not_run_by_specify_time[1]):
-            self.logger.warning(
-                f'现在时间是 {time_util.DatetimeConverter()} ，现在时间是在 {self.consumer_params.do_not_run_by_specify_time} 之间，不运行')
-            return True
+    
+    def _judge_is_allow_run_by_cron(self):
+        allow_run_time_cron = self.consumer_params.allow_run_time_cron
+        if allow_run_time_cron is None:
+            self._last_judge_is_allow_run_by_cron_result = True
+            return
+        else:
+            if time.time() - self._last_judge_is_allow_run_by_cron_time < self._time_interval_for_check_allow_run_by_cron:
+                return 
+            try:
+                if croniter.match(allow_run_time_cron, datetime.datetime.now()):
+                    self._last_judge_is_allow_run_by_cron_result = True
+                else:
+                    try:
+                        opts = Options()
+                        # opts.locale_code = 'zh_CN' # 使用英文描述
+                        opts.use_24hour_time_format = True
+                        cron_desc = get_description(allow_run_time_cron, opts)
+                        human_msg = f'({cron_desc}) '
+                    except Exception:
+                        human_msg = ''
+                    self.logger.warning(f'当前时间 {time_util.DatetimeConverter()} 不在 allow_run_time_cron [{allow_run_time_cron}] {human_msg}允许的运行范围内，所以暂停运行')
+                    self._last_judge_is_allow_run_by_cron_result = False
+            except (Exception,BaseException) as e:
+                self.logger.error(f'cron表达式配置错误 {e}')
+                self._last_judge_is_allow_run_by_cron_result = True
+        self._last_judge_is_allow_run_by_cron_time = time.time()
+        
 
     def wait_for_possible_has_finish_all_tasks(self, minutes: int = 3):
         """

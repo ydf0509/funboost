@@ -79,7 +79,8 @@ class BrokerEnum:
     SQLACHEMY = 'SQLACHEMY'  # 基于SQLACHEMY 的连接作为分布式消息队列中间件支持持久化和消费确认。支持mysql oracle sqlserver等5种数据库。
 
     ROCKETMQ = 'ROCKETMQ'  # 基于 rocketmq 作为分布式消息队列，这个中间件必须在linux下运行，win不支持。
-
+    ROCKETMQ5 = 'ROCKETMQ5'  # 基于 rocketmq 5.x 作为分布式消息队列，使用SimpleConsumer类，适合独立单条ack
+    
     ZEROMQ = 'ZEROMQ'  # 基于zeromq作为分布式消息队列，不需要安装中间件，可以支持跨机器但不支持持久化。
 
 
@@ -161,6 +162,10 @@ class BrokerEnum:
     相比 SQLACHEMY 通用实现性能更好，实时性更强
     """
     POSTGRES = 'POSTGRES'
+    
+    WATCHDOG = 'WATCHDOG' # 使用python watchdog 库监控文件夹文件变更事件,自动触发python函数消费。支持已存在文件和防抖，原生watchdog不支持。
+    
+    WEBSOCKET = 'WEBSOCKET' # 使用websocket作为broker,支持实时双向通信  
 
     
 

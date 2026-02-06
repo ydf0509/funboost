@@ -286,3 +286,34 @@ register_broker_exclusive_config_default(
     },
 )
 
+
+# 内存队列(MEMORY_QUEUE/LOCAL_PYTHON_QUEUE)专有配置
+# maxsize: 队列最大容量，0表示无界队列（默认），正整数表示有界队列
+#   当队列已满时，put操作会阻塞直到有空位
+register_broker_exclusive_config_default(
+    BrokerEnum.MEMORY_QUEUE,
+    {
+        "maxsize": 0,  # 队列最大容量，0表示无界队列
+    },
+)
+
+
+# RocketMQ 5.x 专有配置
+# 使用 rocketmq-python-client 包（pip install rocketmq-python-client）
+# 基于 gRPC 协议，纯 Python 实现，支持 Windows/Linux/macOS
+# SimpleConsumer 模式：支持单条消息乱序 ACK，不依赖 offset
+register_broker_exclusive_config_default(
+    BrokerEnum.ROCKETMQ5,
+    {
+        "endpoints": "127.0.0.1:8081",  # RocketMQ 5.x gRPC Proxy 端点地址
+        "consumer_group": "funboost_consumer_group",  # 消费者组名
+        "access_key": None,  # 访问密钥（可选，阿里云等需要）
+        "secret_key": None,  # 密钥（可选）
+        "namespace": None,  # 命名空间（可选）
+        "invisible_duration": 15,  # 消息不可见时间（秒），消息取出后在此时间内对其他消费者不可见
+        "max_message_num": 32,  # 每次拉取的最大消息数
+        "tag": "*",  # 消息过滤 tag，'*' 表示不过滤
+        "namesrv_addr": None,  # NameServer 地址，用于自动创建 Topic，默认从 endpoints 推断
+        "cluster_name": "DefaultCluster",  # 集群名称，用于自动创建 Topic
+    },
+)

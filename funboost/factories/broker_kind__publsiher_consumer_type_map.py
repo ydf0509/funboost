@@ -217,9 +217,23 @@ def regist_to_funboost(broker_kind: str):
         from funboost.publishers.rocketmq_publisher import RocketmqPublisher
         from funboost.consumers.rocketmq_consumer import RocketmqConsumer
         register_custom_broker(BrokerEnum.ROCKETMQ, RocketmqPublisher, RocketmqConsumer)
-       
+    if broker_kind == BrokerEnum.ROCKETMQ5:
+        from funboost.publishers.rocketmq5_publisher import Rocketmq5Publisher
+        from funboost.consumers.rocketmq5_consumer import Rocketmq5Consumer
+        register_custom_broker(BrokerEnum.ROCKETMQ5, Rocketmq5Publisher, Rocketmq5Consumer)
+        
+    if broker_kind == BrokerEnum.WATCHDOG:
+        from funboost.contrib.register_custom_broker_contrib  import watchdog_broker
+        # 无需调用 register_custom_broker ，已经在 watchdog_broker.py 中注册了
+        
+    if broker_kind == BrokerEnum.WEBSOCKET:
+        from funboost.contrib.register_custom_broker_contrib import websocket_broker
+        # 无需调用 register_custom_broker ，已经在 websocket_broker.py 中注册了
+        
+        
 
 if __name__ == '__main__':
     import sys
 
     print(sys.modules)
+    

@@ -1,4 +1,6 @@
 import time
+import typing
+from funboost.core.serialization import Serialization
 from funboost.utils import uuid7 
 from funboost.core.funboost_time import FunboostTime, fast_get_now_time_str
 
@@ -18,9 +20,9 @@ def get_publish_time_format(paramsx: dict):
     """
     return paramsx.get('extra', {}).get('publish_time_format', None)
 
-
-
-
+def get_task_id(msg:typing.Union[dict,str]):
+    msg_dict = Serialization.to_dict(msg)
+    return msg_dict.get('extra', {}).get('task_id', None)
 
 
 def delete_keys_and_return_new_dict(dictx: dict, exclude_keys: list ):
@@ -39,6 +41,8 @@ def get_func_only_params(dictx: dict)->dict:
     :return:
     """
     return {k: v for k, v in dictx.items() if k not in _DEFAULT_EXCLUDE_KEYS}
+
+
 
 def block_python_main_thread_exit():
     """

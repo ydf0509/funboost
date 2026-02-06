@@ -361,7 +361,7 @@ class QueuesConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Funboost
             }
         return queue_params_and_active_consumers
     
-    def cycle_get_queues_params_and_active_consumers_and_report(self,daemon=False):
+    def cycle_get_queues_params_and_active_consumers_and_report(self,daemon=True):
         time_interval = 10
         report_uuid = str(uuid.uuid4()) 
         def _inner():

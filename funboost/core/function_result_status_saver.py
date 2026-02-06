@@ -117,10 +117,15 @@ class FunctionResultStatus():
         for k, v in self.__dict__.items():
             if not k.startswith('_'):
                 item[k] = v
+                
+        item['params_str'] = self.params_str 
+        item['total_thread'] = self.total_thread
+
         item['host_name'] = self.host_name
         item['host_process'] = self.host_process
         item['script_name'] = self.script_name
         item['script_name_long'] = self.script_name_long
+        
         # item.pop('time_start')
         datetime_str = time_util.DatetimeConverter().datetime_str
         try:

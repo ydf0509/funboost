@@ -118,6 +118,9 @@ setup(
         'fire',
         'pydantic',
         'orjson',
+        'croniter',
+        'cron-descriptor',
+        "async-timeout",
         "async-timeout",
         "typing-extensions",
         

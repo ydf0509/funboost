@@ -109,6 +109,7 @@
 - `from funboost.publishers.base_publisher import AioAsyncResult`
 - `from funboost.publishers.empty_publisher import EmptyPublisher`
 - `from funboost.factories.broker_kind__publsiher_consumer_type_map import register_custom_broker`
+- `from funboost.core.broker_kind__exclusive_config_default_define import register_broker_exclusive_config_default`
 - `from funboost.factories.publisher_factotry import get_publisher`
 - `from funboost.factories.consumer_factory import get_consumer`
 - `from funboost.timing_job import funboost_aps_scheduler`
@@ -428,7 +429,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 **Public Methods (1):**
 - `def check_values(self)` `compatible_root_validator(skip_on_failure=True)`
 
-**Class Variables (52):**
+**Class Variables (51):**
 - `queue_name: str`
 - `broker_kind: str = BrokerEnum.SQLITE_QUEUE`
 - `project_name: typing.Optional[str] = None`
@@ -463,8 +464,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `rpc_result_expire_seconds: int = 1800`
 - `rpc_timeout: int = 1800`
 - `delay_task_apscheduler_jobstores_kind: Literal['redis', 'memory'] = 'redis'`
-- `is_do_not_run_by_specify_time_effect: bool = False`
-- `do_not_run_by_specify_time: typing.List[str] = ['10:00:00', '22:00:00']`
+- `allow_run_time_cron: typing.Optional[str] = None`
 - `schedule_tasks_on_main_thread: bool = False`
 - `is_auto_start_consuming_message: bool = False`
 - `booster_group: typing.Union[str, None] = None`
@@ -483,7 +483,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT`
 
 ##### 📌 `class BoosterParamsComplete(BoosterParams)`
-*Line: 269*
+*Line: 277*
 
 **Docstring:**
 `````
@@ -505,7 +505,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))`
 
 ##### 📌 `class TaskOptions(BaseJsonAbleModel)`
-*Line: 289*
+*Line: 297*
 
 **Docstring:**
 `````
@@ -517,7 +517,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 **Public Methods (1):**
 - `def cehck_values(self)` `compatible_root_validator(skip_on_failure=True)`
 
-**Class Variables (16):**
+**Class Variables (17):**
 - `task_id: str = None`
 - `publish_time: float = None`
 - `publish_time_format: str = None`
@@ -531,12 +531,13 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `misfire_grace_time: typing.Union[int, None] = None`
 - `user_extra_info: typing.Optional[dict] = None`
 - `other_extra_params: typing.Optional[dict] = None`
+- `do_task_filtering: typing.Optional[bool] = None`
 - `filter_str: typing.Optional[str] = None`
 - `can_not_json_serializable_keys: typing.List[str] = None`
 - `otel_context: typing.Optional[dict] = None`
 
 ##### 📌 `class PublisherParams(BaseJsonAbleModel)`
-*Line: 342*
+*Line: 352*
 
 **Class Variables (21):**
 - `queue_name: str`
@@ -583,7 +584,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 用户也可以按照文档4.21章节,轻松扩展任何物质概念作为funboost的broker.
 `````
 
-**Class Variables (47):**
+**Class Variables (50):**
 - `EMPTY = 'EMPTY'`
 - `RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'`
 - `RABBITMQ = RABBITMQ_AMQPSTORM`
@@ -611,6 +612,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `KAFKA_CONFLUENT_SASlPlAIN = 'KAFKA_CONFLUENT_SASlPlAIN'`
 - `SQLACHEMY = 'SQLACHEMY'`
 - `ROCKETMQ = 'ROCKETMQ'`
+- `ROCKETMQ5 = 'ROCKETMQ5'`
 - `ZEROMQ = 'ZEROMQ'`
 - `KOMBU = 'KOMBU'`
 - `MQTT = 'MQTT'`
@@ -631,9 +633,11 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `MYSQL_CDC = 'MYSQL_CDC'`
 - `SQS = 'SQS'`
 - `POSTGRES = 'POSTGRES'`
+- `WATCHDOG = 'WATCHDOG'`
+- `WEBSOCKET = 'WEBSOCKET'`
 
 ##### 📌 `class ConcurrentModeEnum`
-*Line: 169*
+*Line: 174*
 
 **Docstring:**
 `````
@@ -652,7 +656,7 @@ funboost的多进程和多线程 asyncio是叠加的，不是互斥的。
 - `SOLO = SINGLE_THREAD`
 
 ##### 📌 `class FunctionKind`
-*Line: 187*
+*Line: 192*
 
 **Docstring:**
 `````
@@ -667,7 +671,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `COMMON_FUNCTION = 'COMMON_FUNCTION'`
 
 ##### 📌 `class ConstStrForClassMethod`
-*Line: 198*
+*Line: 203*
 
 **Class Variables (5):**
 - `FIRST_PARAM_NAME = 'first_param_name'`
@@ -677,7 +681,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `CLS_FILE = 'cls_file'`
 
 ##### 📌 `class RedisKeys`
-*Line: 206*
+*Line: 211*
 
 **Public Methods (9):**
 - `def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name)` `staticmethod`
@@ -714,7 +718,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `FUNBOOST_UNACK_REGISTRY_PREFIX = 'funboost_unack_registry:'`
 
 ##### 📌 `class ConsumingFuncInputParamsCheckerField`
-*Line: 270*
+*Line: 275*
 
 **Class Variables (6):**
 - `is_manual_func_input_params = 'is_manual_func_input_params'`
@@ -725,21 +729,21 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `func_position = 'func_position'`
 
 ##### 📌 `class MongoDbName`
-*Line: 279*
+*Line: 284*
 
 **Class Variables (2):**
 - `TASK_STATUS_DB = 'funboost_task_status'`
 - `MONGOMQ_DB = 'funboost_mongomq'`
 
 ##### 📌 `class StrConst`
-*Line: 283*
+*Line: 288*
 
 **Class Variables (2):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
 - `NO_RESULT = 'no_result'`
 
 ##### 📌 `class EnvConst`
-*Line: 287*
+*Line: 292*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -882,7 +886,7 @@ ApsJobAdder(add_numbers,job_store_kind='memory').add_push_job(
 如果@boost装饰器设置is_using_rpc_mode为True或者 is_using_distributed_frequency_control为True或do_task_filtering=True则需要把redis连接配置好，默认是False不强迫用户安装redis。
 `````
 
-**Class Variables (45):**
+**Class Variables (48):**
 - `MONGO_CONNECT_URL = f'mongodb://127.0.0.1:27017'`
 - `RABBITMQ_USER = 'rabbitmq_user'`
 - `RABBITMQ_PASS = 'rabbitmq_pass'`
@@ -912,6 +916,9 @@ ApsJobAdder(add_numbers,job_store_kind='memory').add_push_job(
 - `SQLLITE_QUEUES_PATH = '/sqllite_queues'`
 - `TXT_FILE_PATH = Path(__file__).parent / 'txt_queues'`
 - `ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'`
+- `ROCKETMQ_ENDPOINTS = '127.0.0.1:8081'`
+- `ROCKETMQ_ACCESS_KEY = ''`
+- `ROCKETMQ_SECRET_KEY = ''`
 - `MQTT_HOST = '127.0.0.1'`
 - `MQTT_TCP_PORT = 1883`
 - `HTTPSQS_HOST = '127.0.0.1'`
@@ -930,7 +937,7 @@ ApsJobAdder(add_numbers,job_store_kind='memory').add_push_job(
 - `POSTGRES_DSN = 'host=127.0.0.1 port=5432 dbname=funboost user=postgres password=123456'`
 
 ##### 📌 `class FunboostCommonConfig(DataClassBase)`
-*Line: 106*
+*Line: 113*
 
 **Class Variables (5):**
 - `NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = logging.Formatter(f'%(asctime)s-({nb_log_config_default.computer_ip},{nb_log_config_default.computer_name})-[p%(process)d_t%(thread)d] - %(name)s - "%(filename)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(task_id)s - %(message)s', '%Y-%m-%d %H:%M:%S')`
@@ -1550,7 +1557,13 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `from functools import wraps`
 - `import threading`
 - `from threading import Lock`
+- `import threading`
+- `from threading import Lock`
 - `import asyncio`
+- `from croniter import croniter`
+- `from croniter import CroniterBadCronError`
+- `from cron_descriptor import get_description`
+- `from cron_descriptor import Options`
 - `import nb_log`
 - `from funboost.core.current_task import FctContext`
 - `from funboost.core.current_task import set_fct_context`
@@ -1618,14 +1631,14 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 #### 🏛️ Classes (5)
 
 ##### 📌 `class GlobalVars`
-*Line: 88*
+*Line: 94*
 
 **Class Variables (2):**
 - `global_concurrent_mode = None`
 - `has_start_a_consumer_flag = False`
 
 ##### 📌 `class AbstractConsumer(LoggerLevelSetterMixin)`
-*Line: 94*
+*Line: 100*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumer_params: BoosterParams)`
@@ -1677,12 +1690,12 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `@property concurrent_pool`
 
 **Class Variables (3):**
-- `time_interval_for_check_do_not_run_time = 60`
+- `_time_interval_for_check_allow_run_by_cron = 60`
 - `BROKER_KIND = None`
 - `logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')`
 
 ##### 📌 `class ConcurrentModeDispatcher(FunboostFileLoggerMixin)`
-*Line: 1129*
+*Line: 1164*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumerx: AbstractConsumer)`
@@ -1696,7 +1709,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `def schedulal_task_with_no_block(self)`
 
 ##### 📌 `class MetricCalculation`
-*Line: 1235*
+*Line: 1270*
 
 **Docstring:**
 `````
@@ -1722,7 +1735,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 - `UNIT_TIME_FOR_COUNT = 10`
 
 ##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1326*
+*Line: 1361*
 
 **Docstring:**
 `````
@@ -1757,7 +1770,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 #### 🔧 Public Functions (1)
 
 - `def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3)`
-  - *Line: 1220*
+  - *Line: 1255*
   - **Docstring:**
   `````
   判断多个消费者是否消费完成了。
@@ -1933,7 +1946,7 @@ care_project_name 的作用是：
 - `def get_queues_history_run_fail_count(self)`
 - `def get_queues_params_and_active_consumers(self)`
   - *获取所有队列的参数和活跃消费者*
-- `def cycle_get_queues_params_and_active_consumers_and_report(self, daemon = False)`
+- `def cycle_get_queues_params_and_active_consumers_and_report(self, daemon = True)`
 
 ##### 📌 `class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
 *Line: 405*
@@ -3427,7 +3440,7 @@ def add(x:int, y:int=10,):
 - `is_using_rpc_mode: bool = True`
 - `booster_group: str = 'test_group1'`
 - `should_check_publish_func_params: bool = True`
-- `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)`
+- `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False, table_name='test_project1_function_result_status')`
 
 
 ---
@@ -3446,7 +3459,9 @@ class Project1BoosterParams(BoosterParams):
     booster_group : str = 'test_group1' # 方便按分组启动消费
     should_check_publish_func_params:bool = True # 发布消息时，是否检查消息内容是否正确，不正确的消息格式立刻从接口返回报错消息内容不正确。
     function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
-        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False) 
+        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False,
+        table_name='test_project1_function_result_status'
+        ) 
 `````
 
 --- **end of file: examples/example_faas/task_funs_dir/base_booster_params.py** (project: funboost_docs) --- 
@@ -3537,14 +3552,15 @@ def sub(a, b):
         ├── c6.md
         ├── c7.md
         ├── c8.md
-        └── c9.md
+        ├── c9.md
+        └── funboost_vs_celery.md
 
 `````
 
 ---
 
 
-## funboost_docs (relative dir: `source/articles`)  Included Files (total: 19 files)
+## funboost_docs (relative dir: `source/articles`)  Included Files (total: 20 files)
 
 
 - `source/articles/c0.md`
@@ -3585,6 +3601,8 @@ def sub(a, b):
 
 - `source/articles/c9.md`
 
+- `source/articles/funboost_vs_celery.md`
+
 
 ---
 
@@ -3613,6 +3631,8 @@ def sub(a, b):
 `````markdown
 
 # 1. Python 万能分布式函数调度框架 Funboost 简介
+
+[![pZf68L6.png](https://s41.ax1x.com/2026/01/30/pZf68L6.png)](https://imgchr.com/i/pZf68L6)
 
 **Funboost** 是一个 Python 万能分布式函数调度框架。以下是您的核心学习资源导航：
 
@@ -3929,7 +3949,8 @@ Funboost 将分布式系统的复杂性封装于内核，向下屏蔽基础设�
 
 #### 🕹️ 维度四：流量治理 (Traffic Governance)
 
-*   **精准控频**：funboost自己实现控频，支持小数级（如 0.00001次/秒）至高频级（如 50000次/秒）的 **QPS 速率限制**。
+*   **精准控频 (QPS)**：原生支持从极低频（0.00001次/秒）到高频（50000次/秒）的 **QPS 速率限制**，以**匀速间隔**的方式执行任务。
+*   **周期额度 (Quota)**：支持在指定周期（如1分钟）内限制任务执行的**总次数**，任务可**随到随执行**（非匀速）。例如：设置"每分钟最多执行100次"，100次额度用完后将等待下一周期。此功能用法详见 **4b.12 章节**。
 *   **分布式限流**：基于funboost的Redis 心跳信息协调，实现跨服务器、跨容器的 **全局流量控制**。
 *   **分组消费**：支持 `consume_group`，按业务组别启动消费者，实现大单体应用的资源隔离。
 *   **熔断管理**：支持运行时动态下发指令，实时 **暂停/恢复** 指定队列的消费。
@@ -6937,99 +6958,6 @@ def calculate_score(user_id: int, weights: dict):
 
 
 
-## 15.12 funboost 微批消费
-
-微批消费者实现累积 N 条消息后批量处理的功能，适用于批量写入数据库、批量调用 API 等场景。
-
-*   **代码位置**: `funboost/contrib/override_publisher_consumer_cls/funboost_micro_batch_mixin.py`
-*   **使用demo**：`test_frame/test_micro_batch`
-
-### 15.12.1 使用方式
-
-```python
-# -*- coding: utf-8 -*-
-"""
-微批消费者测试
-
-测试 MicroBatchConsumerMixin 的功能：
-1. 基本功能测试：发布消息，验证批量处理
-2. 超时触发测试：不足 batch_size 时超时触发
-
-例如可以批量100条插入数据库，做数据库表同步性能好。
-"""
-from funboost import boost, BrokerEnum, BoosterParams,ctrl_c_recv
-from funboost.contrib.override_publisher_consumer_cls.funboost_micro_batch_mixin import (
-    MicroBatchConsumerMixin,
-)
-
-
-@boost(BoosterParams(
-    queue_name='test_micro_batch_queue',
-    broker_kind=BrokerEnum.MEMORY_QUEUE,
-    consumer_override_cls=MicroBatchConsumerMixin,
-    user_options={
-        'micro_batch_size': 10,        # 每批10条
-        'micro_batch_timeout': 3.0,    # 3秒超时
-    },
-    qps=100,
-    should_check_publish_func_params=False,  # 微批模式需要关闭入参校验
-))
-def batch_insert_task(items: list):
-    """
-    模拟批量插入任务
-    
-    :param items: 消息列表，每个元素是一个字典（函数参数）
-
-    items是例如 [{'x': 10, 'y': 20}, {'x': 11, 'y': 22}, {'x': 12, 'y': 24}, ...]
-    """
-    print(f"✅ 批量处理 {len(items)} 条消息: {items}")
-    return len(items)
-
-    
-if __name__ == '__main__':
-    # 运行基本测试
-    # 启动消费
-    batch_insert_task.consume() # 消费是自动微批操作
-    
-    print("发布 25 条消息，batch_size=10，预期触发 2 次完整批次 + 1 次超时批次")
-    print("=" * 60)
-    
-    # 发布 25 条消息, 之所以是25条，是为了让 21 - 25条消息触发 micro_batch_timeout 这个条件
-    for i in range(25):  
-        batch_insert_task.push(x=i, y=i * 2)  # 发布还是按照单条消息发布，消费是自动微批操作
-        print(f"发布消息: x={i}, y={i * 2}")
-    ctrl_c_recv()
-```
-
-### 15.12.2 核心原理
-
-1. **缓冲区累积**: 重写 `_submit_task` 方法，将消息累积到缓冲区
-2. **触发条件**: 达到 `batch_size` 条消息或超过 `timeout` 秒后触发批量处理
-3. **批量 ack/requeue**: 成功则批量确认，失败则批量重回队列
-4. **函数签名**: 消费函数的入参从单个对象变为 `list[dict]`
-
-### 15.12.3 适用场景
-
-| 场景 | 收益 |
-|------|------|
-| 批量写入数据库 | 减少 DB 连接开销，吞吐量提升 10-100 倍 |
-| 批量调用外部 API | 减少 HTTP 连接开销 |
-| 批量发送通知 | 合并推送，减少请求次数 |
-
-**举个例子：做数据同步：**
-```
-如果你不用funboost微批消费，mysql binlog 发送到kafka，  
-如果来一条消息就插入数据库，影响性能。  
-但如果你强硬等待n秒，压根不知道未来下一条消息是何时来，可能等1000秒都凑不齐100条，影响了实时性
-所以你还要写线程写定时器来执行并清空缓冲区，增加临时代码量。
-```
-
-### 15.12.4 战略意义
-
-- Funboost 的微批操作是一个**生产级的、高并发优化利器**。它极大地降低了“写批量处理逻辑”的复杂度，你不需要自己写缓冲区、不需要自己写定时器、不需要自己处理锁，只需要配置两个参数，就能把普通的消费者升级为“批量消费者”。 
-- 当你把 `Broker` 设置为 **`MEMORY_QUEUE`** (Python 原生 `queue.Queue`)，再配合 **`MicroBatchConsumerMixin`**，Funboost 瞬间就变成了一个**高性能的、进程内的、自动聚合缓冲器 (In-Memory Batch Aggregator)**。
-- 所以 funboost是万能的，你可以不用分布式也不用消息队列，但只要你有任何其中一个小需求，funboost都能用来使用，大大简化代码。
-
 `````
 
 --- **end of file: source/articles/c15.md** (project: funboost_docs) --- 
@@ -8982,9 +8910,12 @@ class BrokerEnum:
     RABBITMQ = RABBITMQ_AMQPSTORM
 
     # 2025-10 内置新增, 支持rabbitmq 所有路由模式,包括 fanout,direct,topic,headers. 使用概念更复杂
+    # 用法见 test_frame/test_broker_rabbitmq/test_rabbitmq_complex_routing 中的demo代码.
     RABBITMQ_COMPLEX_ROUTING = 'RABBITMQ_COMPLEX_ROUTING'
 
     RABBITMQ_RABBITPY = 'RABBITMQ_RABBITPY'  # 使用 rabbitpy 包操作rabbitmq  作为 分布式消息队列，支持消费确认，不建议使用
+
+    RABBITMQ_AMQP = 'RABBITMQ_AMQP'  # 使用 amqp 包操作 rabbitmq，Celery/Kombu 底层客户端，性能比 pika 更好
 
     """
     以下是各种redis数据结构和各种方式来实现作为消息队列的,redis简直被作者玩出花来了.
@@ -9000,11 +8931,15 @@ class BrokerEnum:
     REIDS_ACK_USING_TIMEOUT = 'reids_ack_using_timeout'  # 基于redis的 list + 临时unack的set队列，使用超时多少秒没确认消费就自动重回队列，请注意 ack_timeout的设置值和函数耗时大小，否则会发生反复重回队列的后果,boost可以设置ack超时，broker_exclusive_config={'ack_timeout': 1800}.缺点是无法区分执行太慢还是真宕机
     REDIS_PRIORITY = 'REDIS_PRIORITY'  # # 基于redis的多 list + 临时unack的set队列，blpop监听多个key，和rabbitmq的x-max-priority属性一样，支持任务优先级。看文档4.29优先级队列说明。
     REDIS_STREAM = 'REDIS_STREAM'  # 基于redis 5.0 版本以后，使用 stream 数据结构作为分布式消息队列，支持消费确认和持久化和分组消费，是redis官方推荐的消息队列形式，比list结构更适合。
-    RedisBrpopLpush = 'RedisBrpopLpush'  # 基于redis的list结构但是采用 brpoplpush 双队列形式，和 redis_ack_able的实现差不多，实现上采用了原生命令就不需要lua脚本来实现取出和加入unack了。
+    REDIS_BRPOP_LPUSH = 'RedisBrpopLpush'  # 基于redis的list结构但是采用 brpoplpush 双队列形式，和 redis_ack_able的实现差不多，实现上采用了原生命令就不需要lua脚本来实现取出和加入unack了。
     REDIS_PUBSUB = 'REDIS_PUBSUB'  # 基于redis 发布订阅的，发布一个消息多个消费者都能收到同一条消息，但不支持持久化
 
     MEMORY_QUEUE = 'MEMORY_QUEUE'  # 使用python queue.Queue实现的基于当前python进程的消息队列，不支持跨进程 跨脚本 跨机器共享任务，不支持持久化，适合一次性短期简单任务。
     LOCAL_PYTHON_QUEUE = MEMORY_QUEUE  # 别名，python本地queue就是基于python自带的语言的queue.Queue，消息存在python程序的内存中，不支持重启断点接续。
+    
+    # 高性能内存队列，使用 collections.deque 代替 queue.Queue，去除不必要的 task_done/join 开销
+    # 性能比 MEMORY_QUEUE 提升 2-5 倍，支持批量拉取消息（通过 broker_exclusive_config={'pull_msg_batch_size': 1000}）
+    FASTEST_MEM_QUEUE = 'FASTEST_MEM_QUEUE'
 
     RABBITMQ_PIKA = 'RABBITMQ_PIKA'  # 使用pika包操作rabbitmq  作为 分布式消息队列。，不建议使用
 
@@ -9098,9 +9033,21 @@ class BrokerEnum:
     """
     MYSQL_CDC = 'MYSQL_CDC'
     
-    # aws sqs ，虽然 funboost 支持 kombu ，kombu支持sqs，所以 funboost间接支持了sqs，
-    # 但原生实现逻辑更清晰，比kombu性能更强
-    SQS = 'SQS' 
+    SQS = 'SQS' # aws sqs ，虽然 funboost 支持 kombu ，kombu支持sqs，所以 funboost间接支持了sqs，但原生实现逻辑更清晰，比kombu性能更强
+    
+    """
+    原生 PostgreSQL 中间件，充分利用 PostgreSQL 独有特性：
+    1. FOR UPDATE SKIP LOCKED - 高并发无锁竞争，多消费者不阻塞
+    2. LISTEN/NOTIFY - 原生发布订阅机制，实时推送无需轮询
+    3. 支持任务优先级
+    相比 SQLACHEMY 通用实现性能更好，实时性更强
+    """
+    POSTGRES = 'POSTGRES'
+    
+    WATCHDOG = 'WATCHDOG' # 使用python watchdog 库监控文件夹文件变更事件,自动触发消费
+    
+    WEBSOCKET = 'WEBSOCKET' # 使用websocket作为broker,支持实时双向通信  
+
     
 
 ```  
@@ -9250,8 +9197,16 @@ class BoosterParams(BaseJsonAbleModel):
     delay_task_apscheduler_jobstores_kind :Literal[ 'redis', 'memory'] = 'redis'  # 延时任务的aspcheduler对象使用哪种jobstores ，可以为 redis memory 两种作为jobstore
 
     
-    is_do_not_run_by_specify_time_effect: bool = False  # 是否使不运行的时间段生效
-    do_not_run_by_specify_time: list = ['10:00:00', '22:00:00']  # 不运行的时间段,在这个时间段自动不运行函数.
+    """
+    allow_run_time_cron:
+    只允许在规定的crontab表达式时间内运行。
+
+    例如 '* 23,0-2 * * *' 表示只在业务低峰期的23点到2点运行。
+    allow_run_time_cron='* 9-17 * * 1-5', 表示只在工作日周一到周五的9点到17:59:59运行。
+    为None则不限制运行时间。
+    语法是知名 croniter 包的语法，不是funboost创造的特殊语法，用户自己去google或者ai学习语法。
+    """
+    allow_run_time_cron: typing.Optional[str] = None
 
     schedule_tasks_on_main_thread: bool = False  # 直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
 
@@ -9471,7 +9426,7 @@ class FunboostCommonConfig(DataClassBase):
 import json  
 import time  
 
-from funboost import boost, BrokerEnum,PriorityConsumingControlConfig,BoosterParams  
+from funboost import boost, BrokerEnum,TaskOptions,BoosterParams  
 
 
 @boost(BoosterParams(queue_name='queue1', broker_kind=BrokerEnum.REDIS, qps=0.2))  
@@ -9488,7 +9443,7 @@ if __name__ == '__main__':
     f.clear()  # 清空f函数对应的queue1所有消息  
     for i in range(10):  
         f.push(i, i * 2)  # 使用push发布消息到queue1，push的入参和正常调用函数一样  
-        f2.publish({'a': i, 'b': i * 2},task_options=PriorityConsumingControlConfig(msg_expire_seconds=30))  # # 使用publish发布消息到queue2，publish的入参第一个参数是一个字典，把所有参数组成一个字典，还可以传入其他参数。publish更强大。  
+        f2.publish({'a': i, 'b': i * 2},task_options=TaskOptions(msg_expire_seconds=30))  # # 使用publish发布消息到queue2，publish的入参第一个参数是一个字典，把所有参数组成一个字典，还可以传入其他参数。publish更强大。  
 
     print(f.get_message_count())  # 获取消息队列中的消息数量  
     f.consume()  # 在当前进程启动多线程/协程消费  
@@ -10452,7 +10407,7 @@ ff.multi_process_start(2)  就是代表启动2个独立进程并发 + 叠加 asy
 
 ```python  
 import time  
-from funboost import boost, BrokerEnum, PriorityConsumingControlConfig, BoosterParams  
+from funboost import boost, BrokerEnum, TaskOptions, BoosterParams  
 
 """  
 演示多进程启动消费，多进程和 asyncio/threading/gevnt/evntlet是叠加关系，不是平行的关系。  
@@ -10474,7 +10429,7 @@ if __name__ == '__main__':
         ff.push(i, y=i * 2)  
 
         # 这个与push相比是复杂的发布，第一个参数是函数本身的入参字典，后面的参数为任务控制参数，例如可以设置task_id，设置延时任务，设置是否使用rpc模式等。  
-        ff.publish({'x': i * 10, 'y': i * 2}, task_options=PriorityConsumingControlConfig(countdown=1, misfire_grace_time=15))  
+        ff.publish({'x': i * 10, 'y': i * 2}, task_options=TaskOptions(countdown=1, misfire_grace_time=15))  
 
     ff(666, 888)  # 直接运行函数  
     ff.start()  # 和 conusme()等效  
@@ -10489,7 +10444,7 @@ if __name__ == '__main__':
 如果在发布端要获取消费端的执行结果，有两种方式  
 1、需要在@boost设置is_using_rpc_mode=True，默认是False不会得到结果。  
 2、如果@boost没有指定，也可以在发布任务的时候，用publish方法并写上  
-  task_options=PriorityConsumingControlConfig(is_using_rpc_mode=True)  
+  task_options=TaskOptions(is_using_rpc_mode=True)  
   
 用这个功能必须在funboost_config.py配置文件中配置好redis链接，  
 无论你使用 redis kafka rabbitmq 还是 sqlite 等 作为中间件，想用rpc功能就必须配置好redis连接。  
@@ -10523,7 +10478,7 @@ if __name__ == '__main__':
 客户端获取服务端执行结果脚本  
 
 ```python  
-from funboost import PriorityConsumingControlConfig  
+from funboost import TaskOptions  
 from test_frame.test_rpc.test_consume import add  
 
 for i in range(100):  
@@ -10532,7 +10487,7 @@ for i in range(100):
 
     # 如果add函数的@boost装饰器参数没有设置 is_using_rpc_mode=True，则在发布时候也可以指定使用rpc模式。  
     async_result = add.publish(dict(a=i * 10, b=i * 20), task_options=  
-    PriorityConsumingControlConfig(is_using_rpc_mode=True))  
+    TaskOptions(is_using_rpc_mode=True))  
     print(async_result.status_and_result)  
 
 ```  
@@ -10544,7 +10499,7 @@ for i in range(100):
 如下脚本则不需要300秒运行完成只需要3秒即可，会自动在并发池中处理结果。  
 
 ```python  
-from funboost import PriorityConsumingControlConfig  
+from funboost import TaskOptions  
 from test_frame.test_rpc.test_consume import add  
 
 
@@ -11023,7 +10978,7 @@ if __name__ == '__main__':
 from test_frame.test_delay_task.test_delay_consume import f  
 import datetime  
 import time  
-from funboost import PriorityConsumingControlConfig  
+from funboost import TaskOptions  
 
 """  
 测试发布延时任务，不是发布后马上就执行函数。  
@@ -11043,26 +10998,26 @@ for i in range(1, 20):
     time.sleep(1)  
 
     # 消息发布10秒后再执行。如果消费慢导致任务积压，misfire_grace_time为None，即使轮到消息消费时候离发布超过10秒了仍然执行。  
-    f.publish({'x': i}, task_options=PriorityConsumingControlConfig(countdown=10))  
+    f.publish({'x': i}, task_options=TaskOptions(countdown=10))  
 
     # 规定消息在17点56分30秒运行，如果消费慢导致任务积压，misfire_grace_time为None，即使轮到消息消费时候已经过了17点56分30秒仍然执行。  
-    f.publish({'x': i * 10}, task_options=PriorityConsumingControlConfig(  
+    f.publish({'x': i * 10}, task_options=TaskOptions(  
         eta=datetime.datetime(2021, 5, 19, 17, 56, 30) + datetime.timedelta(seconds=i)))  
 
     # 消息发布10秒后再执行。如果消费慢导致任务积压，misfire_grace_time为30，如果轮到消息消费时候离发布超过40 (10+30) 秒了则放弃执行，  
     # 如果轮到消息消费时候离发布时间是20秒，由于 20 < (10 + 30)，则仍然执行  
-    f.publish({'x': i * 100}, task_options=PriorityConsumingControlConfig(  
+    f.publish({'x': i * 100}, task_options=TaskOptions(  
         countdown=10, misfire_grace_time=30))  
 
     # 规定消息在17点56分30秒运行，如果消费慢导致任务积压，如果轮到消息消费时候已经过了17点57分00秒，  
     # misfire_grace_time为30，如果轮到消息消费时候超过了17点57分0秒 则放弃执行，  
     # 如果如果轮到消息消费时候是17点56分50秒则执行。  
-    f.publish({'x': i * 1000}, task_options=PriorityConsumingControlConfig(  
+    f.publish({'x': i * 1000}, task_options=TaskOptions(  
         eta=datetime.datetime(2021, 5, 19, 17, 56, 30) + datetime.timedelta(seconds=i),  
         misfire_grace_time=30))  
 
     # 这个设置了消息由于推挤导致运行的时候比本应该运行的时间如果小于1亿秒，就仍然会被执行，所以几乎肯定不会被放弃运行  
-    f.publish({'x': i * 10000}, task_options=PriorityConsumingControlConfig(  
+    f.publish({'x': i * 10000}, task_options=TaskOptions(  
         eta=datetime.datetime(2021, 5, 19, 17, 56, 30) + datetime.timedelta(seconds=i),  
         misfire_grace_time=100000000))  
 ```  
@@ -11775,6 +11730,11 @@ kafka消费消息，是小明和小红分别看这本书，小明每看完几页
 
 4.21和4.21b 都可以实现普通用户自由增加新中间件；  
 
+`register_custom_broker` 和 `override_cls` 两者都可以用于新增broker或者修改定制父类逻辑，  
+但是 `register_custom_broker` 更倾向于完全新增不存在的中间件broker_kind，   
+`override_cls` 更倾向于修改定制父类逻辑，混入到现有的各种broker_kind的具体的Consumer和Publisher类。   
+
+
 也可以用于不重头增加新的中间件，而是覆盖修改父类逻辑，例如funboost某个地方有bug或者你想按你的逻辑来运行，都可以用户高度自定义，用户压根不需要修改funboost的源码。       
 有些人很冲动不看教程，老想硬改site_packages pip安装目录下的funboost安装包源码，压根不需要的，因为框架已经提供了用户级别高度自定义扩展，用户的方法可以覆盖任何AbstractConsumer的方法以及他的子类方法。  
 
@@ -12150,9 +12110,9 @@ if __name__ == '__main__':
     # 所以publish是比push更强大的存在，push是简单，publish是更可以发布任务控制参数。  
     add.publish({"a":1,"b":2})  
     # publish 除了可以发布函数入参本身以外，还能发布任务控制参数，例如可以手动的指定id而非有框架自动生成任务id，还能设置其他控制参数。  
-    # 例如 在 task_options的PriorityConsumingControlConfig中设置   msg_expire_seconds =5，可以使得发布消息离消费超过5秒，丢弃消息不消费。  
+    # 例如 在 task_options的TaskOptions中设置   msg_expire_seconds =5，可以使得发布消息离消费超过5秒，丢弃消息不消费。  
     # 例如设置is_using_rpc_mode = True ，则可以单独使该任务参数支持rpc获得结果。  
-    add.publish({"a":1,"b":2},task_id=100005,task_options=PriorityConsumingControlConfig(is_using_rpc_mode=True))  
+    add.publish({"a":1,"b":2},task_id=100005,task_options=TaskOptions(is_using_rpc_mode=True))  
 ```  
 
 ## 4.26 性能调优演示  
@@ -12310,7 +12270,7 @@ a窗口和b窗口排队的人是互不影响的，优先级是针对各自的队
     
    第二，broker_exclusive_config={'x-max-priority':5} 意思是声明这个队列中的任务消息支持多少种优先级，一般写5就完全够用了，不要写太大了，不需要那么多种级别。  
    
-   第三，发布消息时候要使用publish而非push,发布要加入参  task_options=PriorityConsumingControlConfig(other_extra_params={'priroty': priority})，  
+   第三，发布消息时候要使用publish而非push,发布要加入参  task_options=TaskOptions(other_extra_params={'priroty': priority})，  
         其中 priority 必须是整数，要大于等于0且小于队列声明的x-max-priority。x-max-priority这个概念是rabbitmq的原生概念，celery中也是这样的参数名字。  
 
         发布的消息priroty 越大，那么该消息就越先被取出来，这样就达到了打破了先进先出的规律。比如优先级高的消息可以给vip用户来运行函数实时，优先级低的消息可以离线跑批。  
@@ -12322,7 +12282,7 @@ a窗口和b窗口排队的人是互不影响的，优先级是针对各自的队
 import random  
 import time  
 
-from funboost import boost, PriorityConsumingControlConfig, BrokerEnum, BoosterParams  
+from funboost import boost, TaskOptions, BrokerEnum, BoosterParams  
 
 
 @boost(BoosterParams(queue_name='test_redis_priority_queue4', broker_kind=BrokerEnum.REDIS_PRIORITY, qps=100, concurrent_num=50, broker_exclusive_config={'x-max-priority':4}))  
@@ -12337,7 +12297,7 @@ if __name__ == '__main__':
 
     for i in range(1000):  
         randx = random.randint(1, 4)  
-        f.publish({'x': randx}, task_options=PriorityConsumingControlConfig(other_extra_params={'priroty': randx}))  
+        f.publish({'x': randx}, task_options=TaskOptions(other_extra_params={'priroty': randx}))  
     print(f.get_message_count())  
 
     f.consume()  
@@ -12372,7 +12332,7 @@ if __name__ == '__main__':
 
 运行可以发现控制台先打印的都是f3，最后还是f1.  
 """  
-from funboost import boost, PriorityConsumingControlConfig, BrokerEnum, BoosterParams  
+from funboost import boost, TaskOptions, BrokerEnum, BoosterParams  
 
 
 def f1(x, y):  
@@ -12397,11 +12357,11 @@ if __name__ == '__main__':
     dispatch_fun.clear()  
     for i in range(1000):  
         dispatch_fun.publish({'fun_name': 'f1', 'fun_kwargs': {'x': i, 'y': i}, },  
-                             task_options=PriorityConsumingControlConfig(other_extra_params={'priroty': 1}))  
+                             task_options=TaskOptions(other_extra_params={'priroty': 1}))  
         dispatch_fun.publish({'fun_name': 'f2', 'fun_kwargs': {'a': i, }, },  
-                             task_options=PriorityConsumingControlConfig(other_extra_params={'priroty': 2}))  
+                             task_options=TaskOptions(other_extra_params={'priroty': 2}))  
         dispatch_fun.publish({'fun_name': 'f3', 'fun_kwargs': {'b': i, }, },  
-                             task_options=PriorityConsumingControlConfig(other_extra_params={'priroty': 3}))  
+                             task_options=TaskOptions(other_extra_params={'priroty': 3}))  
 
     print(dispatch_fun.get_message_count())  
     dispatch_fun.consume()  
@@ -12818,11 +12778,11 @@ if __name__ == '__main__':
     f3.consume()  
     for i in range(200):  
         f2.push(i, i * 2) # 如果不传递filter_str， 默认是 把 所有入参 a和b，排序后作为json都加入到过滤中  
-        f3.publish(msg={'a':i,'b':i*2},task_options=PriorityConsumingControlConfig(filter_str=str(i))) # 这个是仅仅把 a 作为过滤条件，例如函数入参 userid username sex ，通常按照userid 过滤足以， 不需要username sex也一起过滤，可以节约redis内存。  
+        f3.publish(msg={'a':i,'b':i*2},task_options=TaskOptions(filter_str=str(i))) # 这个是仅仅把 a 作为过滤条件，例如函数入参 userid username sex ，通常按照userid 过滤足以， 不需要username sex也一起过滤，可以节约redis内存。  
     time.sleep(5)  # 因为 funboost 是确认消费完成后才加入过滤。如果消息耗时很长，且并发很大，且两个相同入参的消息连续挨着，第二个还会执行，所以这里演示sleep一下。  
     for i in range(200):  
         f2.push(i, i * 2)  
-        f3.publish(msg={'a':i,'b':i*2},task_options=PriorityConsumingControlConfig(filter_str=str(i)))  
+        f3.publish(msg={'a':i,'b':i*2},task_options=TaskOptions(filter_str=str(i)))  
     ctrl_c_recv()  
 ```  
 
@@ -14682,11 +14642,19 @@ my_task.consume()
 
 ## 4b.10 funboost支持微批消费
 
-**微批的核心是**：生产者是单个单个地提交任务，但是消费者自动将多个任务聚合起来，一次性消费。
+**微批的核心是**：生产者是单个单个地提交任务，但是消费者自动将多个任务聚合起来，一次性消费。  
+微批消费者实现累积 N 条消息后批量处理的功能，适用于批量写入数据库、批量调用 API 等场景。
 
-这是一个消费侧优化能力，很多消息队列框架都不提供原生支持（需要用户自己实现累积条数+超时强制触发消费的逻辑），funboost 通过 `MicroBatchConsumerMixin` 将这个模式抽象成了可复用的组件。  
-即使你不用消息队列，你用 funboost + `MEMORY_QUEUE` 充当一个微批消费的工具，也是非常方便的。
-这进一步说明了funboost是万能框架，是把复杂留给框架把简单留给用户的框架，因为除了核心功能，他有很多强大又使用简单的小细节方面。
+1. **缓冲区累积**: 重写 `_submit_task` 方法，将消息累积到缓冲区
+2. **触发条件**: 达到 `batch_size` 条消息或超过 `timeout` 秒后触发批量处理
+3. **批量 ack/requeue**: 成功则批量确认，失败则批量重回队列
+4. **函数签名**: 消费函数的入参从单个对象变为 `list[dict]`
+
+
+### 4b.10.1 funboost 微批消费用法
+
+*   **代码位置**: `funboost/contrib/override_publisher_consumer_cls/funboost_micro_batch_mixin.py`
+*   **使用demo**：`test_frame/test_micro_batch`
 
 ```python 
 # -*- coding: utf-8 -*-
@@ -14743,7 +14711,7 @@ if __name__ == '__main__':
 
 ### 4b.10.2 如果每次临时手写微批操作，会怎么样？
 
-自己手写需要考虑缓冲聚合、超时检测、线程安全等问题。
+如果不使用funboost，用户每次临时自己手写微批操作，需要考虑缓冲聚合、超时检测、线程安全等问题。
 
 如果写得不好会出现：
 - 最尾部没被批量条数n整除的数据丢失
@@ -14753,31 +14721,259 @@ if __name__ == '__main__':
 就算写得好，每次也要临时罗里吧嗦写一大堆代码，为了一个微批功能，最起码要写80行代码， 
 因为微批消费为了超时强制触发，100%需要有一个独立的后台检查机制（通常是单独的线程，或者异步协程）。
 
-### 4b.10.3 什么样的不叫微批操作？
-
-例如你的函数定义入参是 item_list, 
-你在发布时候，就已经是发布一个数组了，而不是一个一个的元素发布。 
-例如：`{item_list:[{"x":1,"y":2},{"x":2,"y":4},{"x":3,"y":6},{"x":4,"y":8},{"x":5,"y":10},....]}`  
-这种不是微批消费，压根不需要依赖框架的微批功能，就是个普通的函数调用而已，只不过函数入参恰好是数组而已。
-
-你仔细好好想想吧，如果你这么发布，那相当于要在发布端去实现微批发布的功能，
-你一样还是要去写判断数组条数 + 单独线程定时超时强制触发的一大堆代码。  
-更要命的是，如果发布端是处在几十台机器的几百个进程中，你如何写python代码去跨机器聚合成批量发布？  
-
-| 模式 | 做法 | 问题/结论 |
-|:---|:---|:---|
-| 发布时就是数组 | 发布端先聚合成数组再发布 | ❌ 问题转移到发布端，还是要写一堆聚合代码 |
-| 单条发布 + 消费侧聚合 | 单条发布，消费端自动聚合 | ✅ funboost 微批功能，开箱即用 |
 
 
-#### 4b.10.3.2 妙用：用微批功能做发布端聚合（如果你真的想微批发布的话）
+## 4b.11 Watchdog Broker：监听文件系统变更（ETL 利器）
 
-如果你真的想在发布时就整理成数组再发布，你照样可以复用 funboost 的微批功能！  
-此时你的 boost 函数 + `BrokerEnum.MEM_QUEUE` 充当**本地聚合器**，自动聚合多条数据后再 push 到真正的消息队列。  
+Funboost 不仅支持传统的 MQ（如 RabbitMQ/Kafka），还通过 `Watchdog` 实现了基于**文件系统事件**的消息驱动模式。
 
-这样就避免了自己写一堆聚合批次的代码，**一鱼两吃**。 
+这是一个典型的 **Event-Driven（事件驱动）** 模型：
+
+* **生产者**：操作系统（当文件被创建、修改时）。
+* **消息体**：文件的内容或路径信息。
+* **消费者**：Funboost 装饰的函数。
+
+**为什么选择 Funboost + Watchdog？**
+
+1. **处理积压（独家功能）**：原生 Watchdog 无法处理启动前已存在的文件，Funboost 增加了 `existing` 事件，启动时自动消费积压文件，确保数据不丢失。
+2. **零胶水代码**：无需编写复杂的 `Observer`、线程池或轮询逻辑，只需一个装饰器。
+3. **企业级能力**：文件处理函数自动获得 Funboost 的**并发控制、QPS 限制、自动重试、死信队列**等高级功能。
+4. **自动 ACK**：处理完成后自动删除或归档文件。
+5. **防抖**：支持防抖，短时间内多次操作同一文件只触发一次消费。原生watchdog是不支持防抖的。
+
+### 4b.11.1 核心配置说明
+
+使用 `broker_kind=BrokerEnum.WATCHDOG` 时，需通过 `broker_exclusive_config` 传递专有参数：
+
+| 参数名 | 类型 | 说明 |
+| --- | --- | --- |
+| `watch_path` | str | 必填。监控的文件夹路径。 |
+| `patterns` | list | 可选。文件过滤器，如 `['*.json', '*.csv']`。 |
+| `event_types` | list | 监听事件类型。支持 `created`, `modified`, `moved`, `deleted`。**特有支持：`existing` (处理历史存量文件)。** |
+| `read_file_content` | bool | 若为 `True`，框架会自动读取文件内容并传入消费函数的 `file_content` 参数。 |
+| `ack_action` | str | 消费成功后的动作。`delete` (删除源文件) 或 `archive` (归档，需配合 `archive_path`)。 |
+| `debounce_seconds` | float | 防抖时间（秒），在该时间内对同一文件的多次事件只触发一次消费。 |
+
+### 4b.11.2 代码示例
+
+源码参考：`funboost/contrib/register_custom_broker_contrib/watchdog_broker.py`
+使用示例：`test_frame/test_watchdog_broker/test_watchdog_broker.py`
+
+```python
+# -*- coding: utf-8 -*-
+"""
+测试 Watchdog 文件系统监控 Broker
+
+Watchdog Broker 是事件驱动型中间件：
+1. 无需手动发布消息
+2. 文件创建/修改自动触发消费
+3. 适合文件处理管道场景
+4. 证明 funboost 中万物可为broker，funboost具有超高无限的扩展性
+"""
+
+import time
+from pathlib import Path
 
 
+from funboost import boost, BoosterParams, ctrl_c_recv, BrokerEnum
+
+
+# 测试目录
+TEST_DIR = Path(__file__).parent / "watchdog_test_data"
+# 归档目录（必须在监控目录外部）
+ARCHIVE_DIR = Path(__file__).parent / "watchdog_archive"
+
+
+@boost(
+    BoosterParams(
+        queue_name="test_file_processor",
+        broker_kind=BrokerEnum.WATCHDOG,
+        qps=10,
+        concurrent_num=3,
+        broker_exclusive_config={
+            # ==================== 必填配置 ====================
+            "watch_path": TEST_DIR.absolute().as_posix(),  # 监控目录路径（必须使用绝对路径的 POSIX 格式）
+            
+            # ==================== 文件匹配配置 ====================
+            "patterns": ["*.txt", "*.json", "*.csv", "*.msg"],  # 匹配的文件模式，['*'] 表示所有文件
+            "ignore_patterns": [],               # 忽略的文件模式，如 ['*.tmp', '*.log']
+            "ignore_directories": True,          # 是否忽略目录事件
+            "case_sensitive": False,             # 文件名匹配是否区分大小写
+            
+            # ==================== 事件类型配置 ====================
+            # event_types 枚举: ['created', 'modified', 'deleted', 'moved', 'existing']
+            # - created: 文件新建
+            # - modified: 文件修改
+            # - deleted: 文件删除
+            # - moved: 文件移动/重命名
+            # - existing: 启动时已存在的文件（原生 watchdog 不支持，funboost 扩展支持）
+            "event_types": [
+                "created",   # 如果只监听 modified，则一次性写入文件只触发1次；同时监听 created+modified 会触发2次
+                "existing",    # 完美解决 funboost 服务重启后，停机期间堆积的文件
+                "modified",
+            ],
+            
+            # ==================== 目录递归配置 ====================
+            "recursive": True,                  # 是否递归监控子目录
+            
+            # ==================== 消费确认配置 ====================
+            # ack_action 枚举: 'delete' | 'archive' | 'none'
+            # - delete: 消费成功后删除文件
+            # - archive: 消费成功后移动到 archive_path 指定的目录
+            # - none: 纯监控模式，不做任何操作
+            "ack_action": "archive",
+            
+            # ==================== 归档目录配置 ====================
+            # 仅 ack_action='archive' 时需要配置
+            # 重要：archive_path 不能是 watch_path 的子目录！
+            "archive_path": ARCHIVE_DIR.absolute().as_posix(),
+            
+            # ==================== 文件内容读取 ====================
+            "read_file_content": True,           # 是否自动读取文件内容（仅小于 1MB 的文件）
+            
+            # ==================== 防抖配置 ====================
+            # debounce_seconds: None | float
+            # - None: 不防抖，每次文件事件都触发消费
+            # - float: 防抖时间（秒），在该时间内对同一文件的多次事件只触发一次消费
+            # 例如：debounce_seconds=2，第0秒创建文件、第1秒修改、第2秒又修改，只会在最后一次修改后2秒触发一次消费
+            "debounce_seconds": 2,               # 2秒防抖，短时间内多次操作同一文件只触发一次
+        },
+        should_check_publish_func_params=False,
+    )
+)
+def process_file(   # 此函数入参固定是这些就可以了。
+    event_type,
+    src_path,
+    dest_path,
+    is_directory,
+    timestamp,
+    file_content,
+):
+    print(locals())
+    """处理文件事件"""
+    print(f"[{event_type}] 处理文件: {src_path}")
+    if file_content:
+        preview = (
+            file_content[:500] + "..." if len(file_content) > 500 else file_content
+        )
+        print(f"  内容预览: {preview}")
+    time.sleep(0.3)
+    return f"处理完成: {Path(src_path).name}"
+
+
+def create_test_files():
+    """创建测试文件，触发文件创建和文件修改事件"""
+    pending_dir = TEST_DIR
+    pending_dir.mkdir(parents=True, exist_ok=True)
+
+    print(f"创建测试文件到: {pending_dir}")
+
+    for i in range(5):
+        file_path = pending_dir / f"test_file_{i}.txt"
+        file_path.write_text(f"这是测试文件 {i}\n内容行 1\n内容行 2", encoding="utf-8")
+        print(f"  创建: {file_path.name}")
+
+    print(f"已创建 5 个测试文件")
+
+
+def manual_push():
+    """
+    watchdog作为broker时候， funboost 允许手动发布消息，
+    但手动发布消息是非必须的，原理是watchdog监听到文件变更后，自动触发消费者运行函数，所以不需要人工调用push方法。
+    """
+    for i in range(3):
+        process_file.push(a=i, b=i * 2)
+
+
+if __name__ == "__main__":
+    process_file.consume()
+    time.sleep(5)
+    create_test_files()
+    manual_push()
+    ctrl_c_recv()
+
+
+
+
+
+```
+
+### 4b.11.3 特性深度解析
+
+#### 4b.11.3.1 关于 `existing` 事件
+
+这是 Funboost 对 Watchdog 的**重大增强**。
+
+* **原生痛点**：如果你停止了程序，期间有文件上传到了目录，下次启动原生 Watchdog 程序时，这些文件会被忽略。
+* **Funboost 方案**：配置 `existing` 后，Funboost 启动时会扫描目录，将所有既有文件模拟为事件推送到消费队列。这使得它完全具备了**断点续传**的能力，非常适合高可靠性的 ETL 任务。
+
+#### 4b.11.3.2 关于 `read_file_content`
+
+开启此选项后，框架会自动处理文件 I/O。你不需要在函数里写 `with open(...)`，也不用担心并发读取时的文件锁问题，框架已处理好并发安全。
+
+#### 4b.11.3.3 关于 `debounce_seconds`
+
+防抖配置，创建文件和短时间内连续修改文件，不会造成多次触发消费函数。
+
+---
+
+## 4b.12 funboost的周期额度功能
+
+**什么是周期额度**
+```
+功能：在指定周期内限制执行次数，周期结束后配额自动重置。这个超越了celery 的 rate_limit 概念。
+
+例如假设chatgpt允许你每天使用24次，不代表你每使用一次然后需要间隔1小时才能再次使用chatgpt，
+你可以一口气把一天额度快速的用完，然后当天或24小时内不用chatgpt就好了，所以周期额度和运行频率是两码事，
+周期额度不代表你要把额度次数除以周期时长，然后匀速执行频率。
+如果每次使用chtgpt要等1个小时，你愿意刚好掐点每隔1小时去用一次chatgpt吗，太抓狂了这样；
+肯定是能自由随意啥时候用完24次这种更爽，不用一直看手表掐点。
+
+例如csdn每天能允许你评论24次，不代表你评论了一条内容后，要再等1小时才能评论下一条，这样太耽误及时回复了。
+
+周期额度功能可以和qps参数结合起来使用，一个控制间隔频率，一个控制周期额度。
+```
+
+**funboost的周期额度完虐 celery的rate_limit概念**
+```
+celery的 rate_limit 被 funboost的周期额度功能完虐，
+celery的 rate_limit = '24/d',每次运行消息需要间隔1小时，这不是有些场景下想要的。
+
+celery的 rate_limit = '6/m' 代表每分钟运行6次，每次运行间隔10s
+这等同于funboost的 qps = 6/60，也就是qps=0.1，每10秒运行一次
+
+而funboost的周期额度 每分钟执行6次，用法是：
+consumer_override_cls=PeriodicQuotaConsumerMixin,
+    user_options={
+        'quota_limit': 6,           # 每周期最多6次
+        'quota_period': 'm',        # 周期为分钟 
+        'sliding_window': True,     # 滑动窗口（默认，可省略）；如果是固定窗口，那么是从整点开始计算次数
+    },
+funboost这个周期额度不是强迫每隔10秒执行一次，而是一分钟内任意时间都可以用完6次额度。
+```
+
+
+### 4b.12.2 周期额度用法例子
+
+```python
+from funboost import boost, BoosterParams, BrokerEnum
+from funboost.contrib.override_publisher_consumer_cls.periodic_quota_mixin import PeriodicQuotaConsumerMixin
+
+# 滑动窗口模式（默认）：每秒1次，每分钟最多6次
+@boost(BoosterParams(
+    queue_name='minute_quota_queue',
+    broker_kind=BrokerEnum.REDIS,
+    consumer_override_cls=PeriodicQuotaConsumerMixin,
+    user_options={
+        'quota_limit': 6,           # 每周期最多6次
+        'quota_period': 'm',        # 周期为分钟 (s/m/h/d)
+        'sliding_window': True,     # 滑动窗口（默认，可省略）；如果是固定窗口，那么是从整点开始计算次数
+    },
+    qps=1,  # 每秒执行1次（间隔控制） # 周期额度可以和qps一起使用
+))
+def my_task(x):
+    print(f'Processing {x}')
+```
 
 
 <div> </div>
@@ -21124,6 +21320,157 @@ python3 -c "from test_frame.test_fabric_deploy.test_deploy1 import f2;f2.multi_p
 
 ---
 
+
+--- **start of file: source/articles/funboost_vs_celery.md** (project: funboost_docs) --- 
+
+`````markdown
+# Funboost vs Celery：100维度对比评分表
+
+> 评分规则：1-10 分，10 为最佳。Funboost 侧依据本仓库 `source/articles/*.md`；Celery 侧基于通用 Celery 功能与生态常识。
+> Celery 分数表示其典型能力强度与成熟度。
+
+## 结论速览
+- 结合文档与 Celery 常识，Funboost 在功能覆盖、细粒度控制、Broker 丰富度与性能上整体领先。
+- Celery 在 RabbitMQ 生态、Canvas 编排与成熟度上有优势，但综合维度评分仍低于 Funboost。
+- 因此在本次 100 维度评分中，Funboost 依然可视为全面超越 Celery。
+
+## 总分与胜负统计
+- 总分：Funboost 835 / 1000（均分 8.35），Celery 534 / 1000（均分 5.34）。
+- 维度胜负：碾压 49 项，超越 46 项，持平 5 项，不如 0 项。
+- 判定规则：碾压 = Funboost分 ≥ Celery分 + 3；超越 = Funboost分比 Celery分高 1-2；持平 = Funboost分 = Celery分；不如 = Funboost分 < Celery分。
+- 简评：Funboost 优势集中在 Broker 覆盖面、QPS 控频/微批、参数级去重、FaaS/RPC 与异步生态整合等；Celery 的强项主要在 RabbitMQ 生态与 Canvas 任务编排成熟度。
+
+## 维度对比表
+
+### A. 核心定位与架构 (1-12)
+| 编号 | 维度 | Funboost | Celery | Funboost分 | Celery分 | 依据(文档/常识) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 框架定位 | 通用分布式函数调度框架 | 分布式任务队列与任务执行（Task/Worker） | 9 | 7 | c1,c2 |
+| 2 | 编程入口 | `@boost` 装饰器直接调度函数 | 需创建 App、`@app.task` 注册、配置 broker/backend | 9 | 6 | c4.1,c2.8 |
+| 3 | 项目结构要求 | 目录结构自由 | 项目结构建议较多、依赖任务发现规则 | 10 | 4 | c2.1 |
+| 4 | 框架侵入性 | 装饰器低侵入 | 需绑定应用配置与 Celery app | 9 | 5 | c2.1,c6.8 |
+| 5 | 迁移移除成本 | 可随时移除保留函数 | 与框架耦合较深 | 8 | 5 | c6.8 |
+| 6 | 配置模型化 | BoosterParams Pydantic 模型 | 配置多为字典/属性，IDE 提示弱 | 9 | 5 | c3.3,c2.3 |
+| 7 | IDE 自动补全 | 参数与方法补全 | 动态属性多，补全体验一般 | 10 | 3 | c2.3 |
+| 8 | 消费函数类型 | 普通、实例、类、静态函数 | 以函数/Task 类方法为主，实例/类方法直用需封装 | 9 | 6 | c4.2e,c7.44 |
+| 9 | 动态创建 Booster | BoostersManager.build_booster | 可动态注册 task，但通常在导入时注册 | 8 | 6 | c4.2c |
+| 10 | Booster 统一管理 | auto_discovery、consume_all | autodiscover_tasks + app.tasks 注册表 | 8 | 7 | c4.2d |
+| 11 | 设计规范与可扩展 | 强调 OOP 设计规范 | Task 基类/信号/Bootsteps 可扩展但较复杂 | 8 | 7 | c3.6 |
+| 12 | 统一配置入口 | funboost_config.py 集中配置 | app.conf/celeryconfig.py 多入口配置 | 8 | 6 | c3.3.1,c2.3 |
+
+### B. 开发体验与 API 设计 (13-32)
+| 编号 | 维度 | Funboost | Celery | Funboost分 | Celery分 | 依据(文档/常识) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 13 | 学习曲线 | 上手快、学习成本低 | 学习曲线陡 | 9 | 5 | c1,c6.0c,c2.4 |
+| 14 | 示例代码简洁度 | 示例更短更直观 | 示例更繁琐（App/Worker/配置） | 9 | 4 | c2.8 |
+| 15 | push/publish 分层 | push 简洁、publish 可控 | delay 简化，apply_async 参数丰富 | 8 | 7 | c4.25 |
+| 16 | 跨项目发布 | get_cross_project_publisher | send_task 按名称跨项目发布 | 8 | 7 | c4.13 |
+| 17 | 无消费函数发布 | 可做万能发布者 | 可 send_task，但 worker 端需注册任务 | 8 | 6 | c4.13b |
+| 18 | **kwargs 消费任意 JSON | 随机字段可消费 | 支持 **kwargs，要求可序列化 | 8 | 7 | c4b.2,c7.42 |
+| 19 | 非 JSON 消息消费 | 自定义转换入参 | 支持自定义 serializer（json/pickle/yaml/msgpack） | 8 | 7 | c4b.2c,c7.43 |
+| 20 | consumer/publisher override | override_cls 自定义 | 信号/Bootsteps/自定义 Consumer 深度定制 | 8 | 6 | c4.21b,c7.43 |
+| 21 | 自定义 Broker 扩展 | register_custom_broker | 可自定义 Kombu transport，但门槛高 | 9 | 5 | c4.21,c2.4 |
+| 22 | broker_exclusive_config | 中间件差异化配置 | broker_transport_options/queue args | 8 | 6 | c4.20,c7.23 |
+| 23 | user_options 扩展 | 业务自定义配置 | headers/annotations 自定义任务选项 | 8 | 6 | c4b.6 |
+| 24 | 非 JSON 参数序列化 | 自动 pickle 自定义类型 | 支持 pickle/yaml/msgpack 等序列化 | 8 | 7 | c4.36,c7.48 |
+| 25 | fct 上下文 | funboost_current_task | current_task/request 提供上下文信息 | 9 | 7 | c4.31,c7.41 |
+| 26 | task_id 日志模板 | TaskIdLogger | 日志格式可包含 task_id | 8 | 6 | c4b.1 |
+| 27 | FaaS 能力 | funboost.faas | 无原生 FaaS，需额外 Web 层 | 9 | 3 | c7.53 |
+| 28 | RPC 结果模式 | AsyncResult、AioAsyncResult | AsyncResult + result backend | 9 | 8 | c4.6,c7.28 |
+| 29 | 暂停/继续消费 | pause_consume/continue_consume | remote control/QoS 取消与恢复消费 | 8 | 6 | c4.18,c7.22 |
+| 30 | 自动启动消费 | is_auto_start_consuming_message | worker 启动即消费 | 8 | 7 | c4.33,c7.45 |
+| 31 | 启动方式多样 | 9 种启动方式 | CLI/程序内嵌 worker 两种方式 | 8 | 6 | c4.37 |
+| 32 | 消费分组 | booster_group/consume_group | 队列路由与 -Q 指定消费组 | 8 | 7 | c7.52,c4b.6 |
+
+### C. 并发与性能 (33-47)
+| 编号 | 维度 | Funboost | Celery | Funboost分 | Celery分 | 依据(文档/常识) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 33 | 发布性能 | 发布速度约 22x 提升 | 基准更慢 | 10 | 4 | c2.2,c2.6 |
+| 34 | 消费性能 | 消费速度约 46x 提升 | 基准更慢 | 10 | 4 | c2.2,c2.6 |
+| 35 | 并发模式多样 | threading/gevent/eventlet/asyncio/single | prefork/eventlet/gevent/threads/solo | 9 | 8 | c3.2 |
+| 36 | 叠加并发 | 多进程 + 线程/协程叠加 | 单一池模型为主，难叠加 | 9 | 6 | c4.5 |
+| 37 | async def 消费函数 | 支持 asyncio 消费 | 不原生 async def，需自建 loop/第三方 | 9 | 4 | c4.12,c4b.3,c7.8 |
+| 38 | 异步发布 API | aio_push/aio_publish | 无原生 asyncio 发布 API | 8 | 4 | c4b.3 |
+| 39 | 异步 RPC 结果 | AioAsyncResult | AsyncResult 非 asyncio，需额外封装 | 8 | 4 | c4b.3,c7.28 |
+| 40 | QPS 控频 | 精准 QPS 控制 | per-task rate_limit | 10 | 6 | c4.7,c4.8 |
+| 41 | 分布式 QPS | 多机全局 QPS | 速率限制为单 worker/单进程级 | 9 | 4 | c7.6 |
+| 42 | QPS 精度与自适应并发 | 动态调节并发维持 QPS | autoscale 可调并发但不保证 QPS | 9 | 5 | c3.3.3,c4.7 |
+| 43 | 线程池共享 | 多消费者共享线程池 | 同一 worker 共享池 | 8 | 7 | c4.3b |
+| 44 | 线程池自动伸缩 | 自适应线程池 | worker autoscale | 8 | 7 | c2.4 |
+| 45 | 内置多进程消费 API | multi_process_start | prefork 多进程 | 8 | 8 | c4.5 |
+| 46 | asyncio loop 指定兼容 | specify_async_loop 指引 | 无 asyncio loop 管理能力 | 7 | 3 | c6.26 |
+| 47 | threading 支持 async def | 线程模式可跑协程 | 线程池不原生兼容 async def | 8 | 4 | c7.38 |
+
+### D. 中间件/消息队列支持 (48-72)
+| 编号 | 维度 | Funboost | Celery | Funboost分 | Celery分 | 依据(文档/常识) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 48 | Redis 基础 | 原生支持 Redis | 支持 Redis 作为 broker/result backend | 9 | 8 | c3.1,c2.4 |
+| 49 | Redis ACK | REDIS_ACK_ABLE 确认消费 | ack_late/visibility_timeout，语义依赖客户端 | 9 | 6 | c3.5,c7.1 |
+| 50 | Redis Stream | 支持 Redis Stream | 不原生支持 Redis Stream | 8 | 3 | c7.9 |
+| 51 | Redis brpoplpush 双队列 | 支持双队列模式 | 不提供 brpoplpush 双队列语义 | 8 | 3 | c7.10 |
+| 52 | RabbitMQ | 支持 RabbitMQ | RabbitMQ 原生支持（强项） | 9 | 9 | c3.1 |
+| 53 | Kafka | 支持 Kafka | Kafka 需第三方/自定义 transport | 8 | 4 | c3.1 |
+| 54 | RocketMQ | 支持 RocketMQ | RocketMQ 无原生支持 | 8 | 2 | c7.7 |
+| 55 | ZeroMQ | 支持 ZeroMQ | ZeroMQ 需第三方/历史 transport | 8 | 3 | c7.11 |
+| 56 | Kombu 通用 | 支持 Kombu 作为 broker | Kombu 是核心通信层 | 8 | 8 | c7.12 |
+| 57 | Redis Cluster | Kombu 方式支持集群 | Redis Cluster 需第三方或补丁 | 8 | 4 | c6.21 |
+| 58 | MQTT | 支持 MQTT | MQTT 无原生支持 | 8 | 2 | c7.14 |
+| 59 | HTTPSQS | 支持 HTTPSQS | HTTPSQS 无原生支持 | 8 | 2 | c7.15 |
+| 60 | Pulsar | 支持 Pulsar | Pulsar 需第三方 | 8 | 3 | c7.16 |
+| 61 | NATS | 支持 NATS | NATS 需第三方 | 8 | 3 | c7.20 |
+| 62 | TCP Socket | 支持 TCP broker | TCP Socket 无原生支持 | 8 | 2 | c7.19,c4.35 |
+| 63 | UDP Socket | 支持 UDP broker | UDP Socket 无原生支持 | 8 | 2 | c7.19,c4.35 |
+| 64 | HTTP Socket | 支持 HTTP broker | HTTP Socket 无原生支持 | 8 | 2 | c7.19,c4.35 |
+| 65 | SQLAlchemy 关系型 DB | 多种 DB 可作 broker | Kombu database transport 可用但不常用 | 8 | 4 | c7.4 |
+| 66 | MongoDB | 支持 MongoDB 作为 broker | MongoDB 可做结果后端，broker 非主流 | 8 | 3 | c3.1 |
+| 67 | Celery 作为 broker | 可把 Celery 整体当 broker | 不适用（Celery 不是 broker） | 8 | 1 | c4.28,c7.31 |
+| 68 | Nameko 作为 broker | 支持 Nameko | Nameko 无原生支持 | 8 | 2 | c7.32 |
+| 69 | gRPC 作为 broker | 支持 gRPC | gRPC 无原生支持 | 8 | 2 | c7.50 |
+| 70 | MySQL CDC 作为 broker | 支持 MySQL CDC | MySQL CDC 无原生支持 | 8 | 2 | c7.51 |
+| 71 | Watchdog 文件系统 broker | 支持文件系统事件 broker | Watchdog 文件系统 broker 无原生支持 | 8 | 1 | c4b.11 |
+| 72 | 优先级队列 | Redis/RabbitMQ 优先级 | RabbitMQ 优先级支持，Redis 需多队列 | 8 | 7 | c4.29,c7.35 |
+
+### E. 可靠性与任务控制 (73-89)
+| 编号 | 维度 | Funboost | Celery | Funboost分 | Celery分 | 依据(文档/常识) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 73 | 确认消费 | ACK 机制确保确认消费 | ack_late/acks_on_failure 等确认策略 | 9 | 8 | c3.5 |
+| 74 | 断点续跑 | 未确认消息可重入队 | 依赖 broker/visibility_timeout，可恢复未确认任务 | 9 | 7 | c3.5,c7.1 |
+| 75 | 重试次数配置 | max_retry_times | retry()/autoretry_for/max_retries | 9 | 8 | c4.24 |
+| 76 | 异常重入队 | ExceptionForRequeue | reject(requeue=True)/retry | 8 | 7 | c4.24 |
+| 77 | 推入死信队列 | ExceptionForPushToDlxqueue | 可接入 DLX（需 broker 配置） | 8 | 6 | c4.24 |
+| 78 | 死信队列机制 | 内置 DLQ | DLQ 需 broker 层配置 | 8 | 6 | c7.29 |
+| 79 | 任务超时杀死 | 超时 kill 运行中任务 | soft_time_limit/hard_time_limit 可终止 | 8 | 7 | c8 |
+| 80 | 延时任务 | countdown/eta | countdown/eta | 9 | 8 | c4.9,c7.17 |
+| 81 | 定时任务 | ApsJobAdder/APScheduler | celery beat 定时调度 | 9 | 8 | c4.4,c7.26 |
+| 82 | 动态定时任务管理 | Redis 支持动态 APScheduler | 动态调度需扩展（如 django-celery-beat） | 8 | 6 | c7.26,c7.33 |
+| 83 | 任务编排等待 N 任务 | RPC 等待/汇聚 | GroupResult.join/chord 回调 | 8 | 7 | c4b.4 |
+| 84 | 任务编排命令式流程 | 命令式编排流程 | Canvas 组合执行 | 8 | 7 | c4b.5 |
+| 85 | 声明式 Workflow | Chain、Group、Chord | Canvas Chain/Group/Chord | 8 | 8 | c4b.8,c7.58 |
+| 86 | 微批消费 | MicroBatchConsumerMixin | 无内置微批，需自定义/分组 | 8 | 5 | c4b.10,c7.62 |
+| 87 | 任务过滤/去重 | 参数级过滤去重 | 无内置去重，需外部实现 | 9 | 3 | c3.3,c8 |
+| 88 | 去重有效期 | task_filtering_expire_seconds | 无内置去重有效期 | 8 | 2 | c8 |
+| 89 | 任务过期丢弃 | 过期丢弃控制 | 任务 expires/ttl 支持过期丢弃 | 8 | 7 | c8 |
+
+### F. 可观测性、运维与平台能力 (90-100)
+| 编号 | 维度 | Funboost | Celery | Funboost分 | Celery分 | 依据(文档/常识) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 90 | 周期额度限制 | 周期额度控制 | rate_limit/ETA 可近似实现周期配额 | 8 | 5 | c4b.12 |
+| 91 | 远程杀死任务 | RemoteTaskKiller | revoke/terminate 远程取消 | 8 | 7 | c4.30,c7.36 |
+| 92 | Web 管理与实时运行状态 | Web manager 显示运行中 | Flower/Events 监控 | 8 | 7 | c7.40,c7.47 |
+| 93 | 结果与状态持久化可视化 | Mongo 持久化 + Web 页面 | Result backend 保存状态与结果 | 8 | 8 | c4.11 |
+| 94 | 自定义状态记录 Hook | user_custom_record_process_info_func | signals 自定义记录 | 8 | 7 | c4.19,c7.24 |
+| 95 | OpenTelemetry/Jaeger | 全链路追踪 | 可接 OpenTelemetry/Tracing 扩展 | 8 | 6 | c4b.7,c7.56 |
+| 96 | Prometheus 监控 | 指标监控 | Prometheus exporter/第三方监控 | 8 | 6 | c4b.9,c7.56 |
+| 97 | 日志体系 | TaskIdLogger、单文件、彩色日志 | 日志体系成熟，可包含 task_id | 8 | 7 | c4b.1,c7.37,c6.11 |
+| 98 | 消费进程信息获取 | ActiveCousumerProcessInfoGetter | inspect/stats/active/reserved | 8 | 7 | c4.14 |
+| 99 | 远程部署 | fabric_deploy | 部署依赖外部系统（systemd/k8s） | 8 | 4 | c7.18 |
+| 100 | 跨平台与版本兼容 | Windows 支持 + Py3.6-3.11 | Windows 支持有限（prefork 不推荐） | 9 | 4 | c2.4,c7.27 |
+`````
+
+--- **end of file: source/articles/funboost_vs_celery.md** (project: funboost_docs) --- 
+
+---
+
 # markdown content namespace: boost_spider readme 
 
 
@@ -21157,6 +21504,13 @@ python3 -c "from test_frame.test_fabric_deploy.test_deploy1 import f2;f2.multi_p
 `pip install boost_spider`
 
 **`boost_spider` = `funboost` 的超跑引擎 + 一套为爬虫量身打造的瑞士军刀。所有仿scrapy api爬虫框架都还是处在变花样造一辆马车**
+
+### ！！！号外：
+`boost_spider`项目中现在也包含一个 `boost_scrapy` 的框架，是使用 funboost内核封装的一个高仿scrapy api风格的爬虫框架。 
+`funboost` 自己也造一个变态马车，`boost_scrapy` 主要是为了那些 如果不写 `yield Request` 就浑身难受的爬虫用户。   
+(这间接说明了 `funboost` 具有超高的可塑性，可以封装成任何框架，包括爬虫框架) 
+
+
 
 对于爬虫场景:       
 用户怕麻烦,要求天生就爬虫全套方便，就使用 `funboost` + `boost_spider`(内置了便利的 请求 解析 入库3个类)     
@@ -21653,6 +22007,106 @@ from utils.download_and_upload import download_and_upload_to_s3   # 你日积月
 ### 总结
 **Scrapy** 适合处理结构简单、无需复杂交互、离线式的全网爬取任务。
 **Funboost/BoostSpider** 则适合现代互联网环境下，高并发、强反爬、逻辑复杂、需要实时交互和微服务化的采集业务。
+
+
+
+# boost_scrapy 介绍
+
+[boost_scrapy 框架源码地址](boost_scrapy)
+[boost_scrapy 使用例子](demo_crawler/boost_scrapy_imp)
+
+有的人非常喜欢仿scrapy风格的爬虫框架， yield Request(url=url, callback=self.my_parse,meta={'field1':'xxx','field2':'yyy'}) 的写法, 
+
+boost_scrapy 就是这样的框架，使用 funboost的引擎来封装的，封装给这个是为了，免得有人还要浪费花时间用funboost去封装仿scrapy的爬虫框架。
+
+此项目的 domo_crwaler 文件夹中有各种爬虫方式，其中就包括使用 boost_scrapy 和 boost_spider 来分别爬虫的，boost_spider写法的优越性肉眼可见的比 boost_scrapy简单清晰。
+
+
+# 七种爬虫方式
+
+`demo_crawler` 文件夹下提供了 **7 种不同的爬虫实现方式**，方便开发者对比学习和选择。
+
+## 🏎️ 七种实现一览
+
+| 方式 | 目录 | 核心技术 | 一句话评价 |
+|:---|:---|:---|:---|
+| **boost_spider** 👑 | `boost_spider_imp` | Funboost + RequestClient | **首选**！FaaS 降维打击，极简代码，分布式开箱即用 |
+| **boost_scrapy** | `boost_scrapy_imp` | Funboost 引擎 + Scrapy 风格 API | 照顾 Scrapy 遗老的兼容层，非必要不推荐 |
+| **Feapder** | `feapder_imp` | 国产分布式爬虫框架 | 优秀的垂直框架，自动入库功能很棒 |
+| **Scrapy** | `scrapy_imp` | 传统 Scrapy 框架 | 曾经的王者，现在略显过时，无法外部注入任务 |
+| **Celery** | `celery_imp` | Celery 分布式任务队列 | 杀鸡用牛刀，配置繁琐，worker 启动麻烦 |
+| **Redis+Thread** | `threadpool_redis_crawler_imp` | 手写 Redis + ThreadPool | 400行代码实现1行功能，维护噩梦 |
+| **ThreadPool** | `threadpool_crawler_imp` | Python concurrent.futures | 单机玩具，进程死任务丢，仅限学习 |
+
+## 🎖️ 50项维度汇总评分表
+
+<details>
+<summary>📋 点击展开完整50项维度一览表</summary>
+
+| # | 📐 维度名称 | 🔵 T.Pool | 🔴 R+Pool | 🟠 Celery | 🟢 Feapder | 🟣 Scrapy | 🌟 boost_spider | ⚠️ b_scrapy |
+|:---:|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 1 | 调度核心设计 | 3 | 5 | 8 | 8 | 6 | **10** | 6 |
+| 2 | 编程范式自由度 | 10 | 9 | 7 | 6 | 3 | **10** | 3 |
+| 3 | 状态管理便捷性 | 10 | 7 | 6 | 5 | 2 | **10** | 2 |
+| 4 | 框架侵入性 | 10 | 8 | 6 | 5 | 2 | **10** | 3 |
+| 5 | 架构扩展性 | 2 | 4 | 8 | 7 | 6 | **10** | 8 |
+| 6 | 代码复用性 | 8 | 6 | 5 | 4 | 2 | **10** | 3 |
+| 7 | 逻辑连贯性 | 10 | 8 | 6 | 5 | 2 | **10** | 2 |
+| 8 | 微服务化能力 | 0 | 4 | 6 | 6 | 2 | **10** | 8 |
+| 9 | FaaS理念支持 | 0 | 2 | 5 | 4 | 0 | **10** | 6 |
+| 10 | 老代码兼容性 | 10 | 7 | 5 | 4 | 1 | **10** | 2 |
+| 11 | 学习曲线平缓度 | 10 | 5 | 3 | 6 | 3 | **9** | 5 |
+| 12 | 代码量精简度 | 7 | 4 | 4 | 7 | 2 | **10** | 4 |
+| 13 | 项目结构简洁度 | 10 | 7 | 4 | 6 | 2 | **10** | 4 |
+| 14 | 配置集中度 | 8 | 6 | 3 | 5 | 2 | **10** | 5 |
+| 15 | IDE智能补全支持 | 8 | 6 | 7 | 5 | 3 | **10** | 5 |
+| 16 | 单元测试便捷性 | 10 | 7 | 5 | 5 | 2 | **10** | 3 |
+| 17 | 调试便捷性 | 10 | 6 | 4 | 5 | 2 | **10** | 3 |
+| 18 | 错误定位速度 | 9 | 6 | 5 | 6 | 3 | **10** | 4 |
+| 19 | 快速原型能力 | 10 | 6 | 3 | 7 | 3 | **10** | 4 |
+| 20 | 迭代开发效率 | 8 | 5 | 4 | 7 | 4 | **10** | 5 |
+| 21 | 原生分布式支持 | 0 | 5 | 9 | 9 | 6 | **10** | 10 |
+| 22 | 消息队列丰富度 | 0 | 2 | 7 | 3 | 2 | **10** | 10 |
+| 23 | 多进程支持 | 4 | 4 | 8 | 7 | 4 | **10** | 10 |
+| 24 | 协程/异步支持 | 3 | 3 | 6 | 5 | 8 | **10** | 10 |
+| 25 | 并发模式灵活性 | 4 | 4 | 5 | 6 | 4 | **10** | 10 |
+| 26 | 精确QPS控制 | 0 | 0 | 4 | 3 | 4 | **10** | 10 |
+| 27 | 分布式全局流控 | 0 | 0 | 3 | 2 | 0 | **10** | 10 |
+| 28 | 四重叠加并发 | 0 | 0 | 4 | 5 | 3 | **10** | 10 |
+| 29 | 动态并发调整 | 2 | 2 | 4 | 5 | 3 | **10** | 10 |
+| 30 | 资源智能伸缩 | 2 | 2 | 5 | 5 | 4 | **10** | 10 |
+| 31 | 断点续爬能力 | 0 | 5 | 8 | 9 | 3 | **10** | 10 |
+| 32 | 任务ACK确认 | 0 | 2 | 9 | 9 | 2 | **10** | 10 |
+| 33 | 任务去重能力 | 0 | 3 | 3 | 9 | 5 | **10** | 5 |
+| 34 | 去重有效期支持 | 0 | 0 | 0 | 5 | 0 | **10** | 0 |
+| 35 | 智能重试机制 | 2 | 3 | 8 | 8 | 6 | **10** | 10 |
+| 36 | 函数级重试 | 0 | 0 | 5 | 4 | 2 | **10** | 10 |
+| 37 | 死信队列处理 | 0 | 0 | 8 | 6 | 2 | **10** | 10 |
+| 38 | 任务优先级 | 0 | 3 | 7 | 5 | 4 | **10** | 10 |
+| 39 | 延迟任务支持 | 0 | 2 | 8 | 3 | 0 | **10** | 10 |
+| 40 | 定时任务支持 | 0 | 2 | 8 | 4 | 0 | **10** | 10 |
+| 41 | HTTP库选择自由 | 10 | 10 | 10 | 6 | 3 | **10** | 5 |
+| 42 | 反爬工具内置 | 0 | 0 | 0 | 9 | 7 | **10** | 9 |
+| 43 | XPath/CSS解析 | 0 | 0 | 0 | 9 | 10 | **10** | 10 |
+| 44 | 代理管理能力 | 2 | 2 | 2 | 9 | 7 | **10** | 8 |
+| 45 | 一键数据入库 | 2 | 2 | 2 | 7 | 4 | **10** | 4 |
+| 46 | 外部动态注入任务 | 0 | 8 | 6 | 3 | 0 | **10** | 0 |
+| 47 | 浏览器自动化支持 | 8 | 8 | 8 | 6 | 2 | **10** | 5 |
+| 48 | Web监控面板 | 0 | 0 | 6 | 3 | 4 | **9** | 9 |
+| 49 | 一键远程部署 | 0 | 0 | 3 | 3 | 4 | **10** | 10 |
+| 50 | 跨语言交互能力 | 0 | 6 | 5 | 3 | 0 | **8** | 5 |
+| | **🏆 总计** | **192** | **196** | **265** | **283** | **155** | **496** | **335** |
+
+</details>
+
+
+
+## 📄 详细评测文档
+
+我们用 **50 个维度** 对这 7 种方案进行了深度对比评测，详见：
+
+- [`七种爬虫方式公正评分(50项详细维度)-claude.md`](七种爬虫方式公正评分(50项详细维度)-claude.md)
+- [`七种爬虫方式公正评分(50项详细维度)-gemini.md`](七种爬虫方式公正评分(50项详细维度)-gemini.md)
 `````
 
 --- **end of file: README.md** (project: funboost_docs) --- 
@@ -21771,6 +22225,7 @@ from utils.download_and_upload import download_and_upload_to_s3   # 你日积月
 - `from funboost.publishers.base_publisher import AioAsyncResult`
 - `from funboost.publishers.empty_publisher import EmptyPublisher`
 - `from funboost.factories.broker_kind__publsiher_consumer_type_map import register_custom_broker`
+- `from funboost.core.broker_kind__exclusive_config_default_define import register_broker_exclusive_config_default`
 - `from funboost.factories.publisher_factotry import get_publisher`
 - `from funboost.factories.consumer_factory import get_consumer`
 - `from funboost.timing_job import funboost_aps_scheduler`
@@ -22090,7 +22545,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 **Public Methods (1):**
 - `def check_values(self)` `compatible_root_validator(skip_on_failure=True)`
 
-**Class Variables (52):**
+**Class Variables (51):**
 - `queue_name: str`
 - `broker_kind: str = BrokerEnum.SQLITE_QUEUE`
 - `project_name: typing.Optional[str] = None`
@@ -22125,8 +22580,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `rpc_result_expire_seconds: int = 1800`
 - `rpc_timeout: int = 1800`
 - `delay_task_apscheduler_jobstores_kind: Literal['redis', 'memory'] = 'redis'`
-- `is_do_not_run_by_specify_time_effect: bool = False`
-- `do_not_run_by_specify_time: typing.List[str] = ['10:00:00', '22:00:00']`
+- `allow_run_time_cron: typing.Optional[str] = None`
 - `schedule_tasks_on_main_thread: bool = False`
 - `is_auto_start_consuming_message: bool = False`
 - `booster_group: typing.Union[str, None] = None`
@@ -22145,7 +22599,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT`
 
 ##### 📌 `class BoosterParamsComplete(BoosterParams)`
-*Line: 269*
+*Line: 277*
 
 **Docstring:**
 `````
@@ -22167,7 +22621,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))`
 
 ##### 📌 `class TaskOptions(BaseJsonAbleModel)`
-*Line: 289*
+*Line: 297*
 
 **Docstring:**
 `````
@@ -22179,7 +22633,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 **Public Methods (1):**
 - `def cehck_values(self)` `compatible_root_validator(skip_on_failure=True)`
 
-**Class Variables (16):**
+**Class Variables (17):**
 - `task_id: str = None`
 - `publish_time: float = None`
 - `publish_time_format: str = None`
@@ -22193,12 +22647,13 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `misfire_grace_time: typing.Union[int, None] = None`
 - `user_extra_info: typing.Optional[dict] = None`
 - `other_extra_params: typing.Optional[dict] = None`
+- `do_task_filtering: typing.Optional[bool] = None`
 - `filter_str: typing.Optional[str] = None`
 - `can_not_json_serializable_keys: typing.List[str] = None`
 - `otel_context: typing.Optional[dict] = None`
 
 ##### 📌 `class PublisherParams(BaseJsonAbleModel)`
-*Line: 342*
+*Line: 352*
 
 **Class Variables (21):**
 - `queue_name: str`
@@ -22245,7 +22700,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 用户也可以按照文档4.21章节,轻松扩展任何物质概念作为funboost的broker.
 `````
 
-**Class Variables (47):**
+**Class Variables (50):**
 - `EMPTY = 'EMPTY'`
 - `RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'`
 - `RABBITMQ = RABBITMQ_AMQPSTORM`
@@ -22273,6 +22728,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `KAFKA_CONFLUENT_SASlPlAIN = 'KAFKA_CONFLUENT_SASlPlAIN'`
 - `SQLACHEMY = 'SQLACHEMY'`
 - `ROCKETMQ = 'ROCKETMQ'`
+- `ROCKETMQ5 = 'ROCKETMQ5'`
 - `ZEROMQ = 'ZEROMQ'`
 - `KOMBU = 'KOMBU'`
 - `MQTT = 'MQTT'`
@@ -22293,9 +22749,11 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `MYSQL_CDC = 'MYSQL_CDC'`
 - `SQS = 'SQS'`
 - `POSTGRES = 'POSTGRES'`
+- `WATCHDOG = 'WATCHDOG'`
+- `WEBSOCKET = 'WEBSOCKET'`
 
 ##### 📌 `class ConcurrentModeEnum`
-*Line: 169*
+*Line: 174*
 
 **Docstring:**
 `````
@@ -22314,7 +22772,7 @@ funboost的多进程和多线程 asyncio是叠加的，不是互斥的。
 - `SOLO = SINGLE_THREAD`
 
 ##### 📌 `class FunctionKind`
-*Line: 187*
+*Line: 192*
 
 **Docstring:**
 `````
@@ -22329,7 +22787,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `COMMON_FUNCTION = 'COMMON_FUNCTION'`
 
 ##### 📌 `class ConstStrForClassMethod`
-*Line: 198*
+*Line: 203*
 
 **Class Variables (5):**
 - `FIRST_PARAM_NAME = 'first_param_name'`
@@ -22339,7 +22797,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `CLS_FILE = 'cls_file'`
 
 ##### 📌 `class RedisKeys`
-*Line: 206*
+*Line: 211*
 
 **Public Methods (9):**
 - `def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name)` `staticmethod`
@@ -22376,7 +22834,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `FUNBOOST_UNACK_REGISTRY_PREFIX = 'funboost_unack_registry:'`
 
 ##### 📌 `class ConsumingFuncInputParamsCheckerField`
-*Line: 270*
+*Line: 275*
 
 **Class Variables (6):**
 - `is_manual_func_input_params = 'is_manual_func_input_params'`
@@ -22387,21 +22845,21 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `func_position = 'func_position'`
 
 ##### 📌 `class MongoDbName`
-*Line: 279*
+*Line: 284*
 
 **Class Variables (2):**
 - `TASK_STATUS_DB = 'funboost_task_status'`
 - `MONGOMQ_DB = 'funboost_mongomq'`
 
 ##### 📌 `class StrConst`
-*Line: 283*
+*Line: 288*
 
 **Class Variables (2):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
 - `NO_RESULT = 'no_result'`
 
 ##### 📌 `class EnvConst`
-*Line: 287*
+*Line: 292*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -22544,7 +23002,7 @@ ApsJobAdder(add_numbers,job_store_kind='memory').add_push_job(
 如果@boost装饰器设置is_using_rpc_mode为True或者 is_using_distributed_frequency_control为True或do_task_filtering=True则需要把redis连接配置好，默认是False不强迫用户安装redis。
 `````
 
-**Class Variables (45):**
+**Class Variables (48):**
 - `MONGO_CONNECT_URL = f'mongodb://127.0.0.1:27017'`
 - `RABBITMQ_USER = 'rabbitmq_user'`
 - `RABBITMQ_PASS = 'rabbitmq_pass'`
@@ -22574,6 +23032,9 @@ ApsJobAdder(add_numbers,job_store_kind='memory').add_push_job(
 - `SQLLITE_QUEUES_PATH = '/sqllite_queues'`
 - `TXT_FILE_PATH = Path(__file__).parent / 'txt_queues'`
 - `ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'`
+- `ROCKETMQ_ENDPOINTS = '127.0.0.1:8081'`
+- `ROCKETMQ_ACCESS_KEY = ''`
+- `ROCKETMQ_SECRET_KEY = ''`
 - `MQTT_HOST = '127.0.0.1'`
 - `MQTT_TCP_PORT = 1883`
 - `HTTPSQS_HOST = '127.0.0.1'`
@@ -22592,7 +23053,7 @@ ApsJobAdder(add_numbers,job_store_kind='memory').add_push_job(
 - `POSTGRES_DSN = 'host=127.0.0.1 port=5432 dbname=funboost user=postgres password=123456'`
 
 ##### 📌 `class FunboostCommonConfig(DataClassBase)`
-*Line: 106*
+*Line: 113*
 
 **Class Variables (5):**
 - `NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = logging.Formatter(f'%(asctime)s-({nb_log_config_default.computer_ip},{nb_log_config_default.computer_name})-[p%(process)d_t%(thread)d] - %(name)s - "%(filename)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(task_id)s - %(message)s', '%Y-%m-%d %H:%M:%S')`
@@ -23212,7 +23673,13 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `from functools import wraps`
 - `import threading`
 - `from threading import Lock`
+- `import threading`
+- `from threading import Lock`
 - `import asyncio`
+- `from croniter import croniter`
+- `from croniter import CroniterBadCronError`
+- `from cron_descriptor import get_description`
+- `from cron_descriptor import Options`
 - `import nb_log`
 - `from funboost.core.current_task import FctContext`
 - `from funboost.core.current_task import set_fct_context`
@@ -23280,14 +23747,14 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 #### 🏛️ Classes (5)
 
 ##### 📌 `class GlobalVars`
-*Line: 88*
+*Line: 94*
 
 **Class Variables (2):**
 - `global_concurrent_mode = None`
 - `has_start_a_consumer_flag = False`
 
 ##### 📌 `class AbstractConsumer(LoggerLevelSetterMixin)`
-*Line: 94*
+*Line: 100*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumer_params: BoosterParams)`
@@ -23339,12 +23806,12 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `@property concurrent_pool`
 
 **Class Variables (3):**
-- `time_interval_for_check_do_not_run_time = 60`
+- `_time_interval_for_check_allow_run_by_cron = 60`
 - `BROKER_KIND = None`
 - `logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')`
 
 ##### 📌 `class ConcurrentModeDispatcher(FunboostFileLoggerMixin)`
-*Line: 1129*
+*Line: 1164*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumerx: AbstractConsumer)`
@@ -23358,7 +23825,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 - `def schedulal_task_with_no_block(self)`
 
 ##### 📌 `class MetricCalculation`
-*Line: 1235*
+*Line: 1270*
 
 **Docstring:**
 `````
@@ -23384,7 +23851,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 - `UNIT_TIME_FOR_COUNT = 10`
 
 ##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1326*
+*Line: 1361*
 
 **Docstring:**
 `````
@@ -23419,7 +23886,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 #### 🔧 Public Functions (1)
 
 - `def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3)`
-  - *Line: 1220*
+  - *Line: 1255*
   - **Docstring:**
   `````
   判断多个消费者是否消费完成了。
@@ -23595,7 +24062,7 @@ care_project_name 的作用是：
 - `def get_queues_history_run_fail_count(self)`
 - `def get_queues_params_and_active_consumers(self)`
   - *获取所有队列的参数和活跃消费者*
-- `def cycle_get_queues_params_and_active_consumers_and_report(self, daemon = False)`
+- `def cycle_get_queues_params_and_active_consumers_and_report(self, daemon = True)`
 
 ##### 📌 `class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
 *Line: 405*
@@ -23760,11 +24227,11 @@ Core Files (imported by other files, sorted by import count):
   ◆ funboost/core/func_params_model.py (imported by 5 files)
   ◆ funboost/funboost_config_deafult.py (imported by 4 files)
   ◆ funboost/core/booster.py (imported by 3 files)
+  ◆ funboost/core/broker_kind__exclusive_config_default_define.py (imported by 3 files)
   ◆ funboost/core/msg_result_getter.py (imported by 3 files)
   ◆ funboost/publishers/base_publisher.py (imported by 3 files)
   ◆ funboost/timing_job/timing_push.py (imported by 2 files)
   ◆ funboost/core/current_task.py (imported by 2 files)
-  ◆ funboost/core/broker_kind__exclusive_config_default_define.py (imported by 2 files)
 
 `````
 
@@ -23777,6 +24244,7 @@ Core Files (imported by other files, sorted by import count):
 - `funboost/consumers/base_consumer.py`
 - `funboost/core/active_cousumer_info_getter.py`
 - `funboost/core/booster.py`
+- `funboost/core/broker_kind__exclusive_config_default_define.py`
 - `funboost/core/cli/discovery_boosters.py`
 - `funboost/core/current_task.py`
 - `funboost/core/func_params_model.py`
@@ -23858,6 +24326,7 @@ Core Files (imported by other files, sorted by import count):
 - `funboost/constant.py`
 
 **Imported by:**
+- `funboost/__init__.py`
 - `funboost/consumers/base_consumer.py`
 - `funboost/publishers/base_publisher.py`
 
@@ -23946,6 +24415,8 @@ Core Files (imported by other files, sorted by import count):
 
 - `apscheduler`
 - `contextvars`
+- `cron_descriptor`
+- `croniter`
 - `nb_libs`
 - `nb_log`
 - `pydantic`
@@ -25268,7 +25739,7 @@ def add(x:int, y:int=10,):
 - `is_using_rpc_mode: bool = True`
 - `booster_group: str = 'test_group1'`
 - `should_check_publish_func_params: bool = True`
-- `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False)`
+- `function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False, table_name='test_project1_function_result_status')`
 
 
 ---
@@ -25287,7 +25758,9 @@ class Project1BoosterParams(BoosterParams):
     booster_group : str = 'test_group1' # 方便按分组启动消费
     should_check_publish_func_params:bool = True # 发布消息时，是否检查消息内容是否正确，不正确的消息格式立刻从接口返回报错消息内容不正确。
     function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
-        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False) 
+        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False,
+        table_name='test_project1_function_result_status'
+        ) 
 `````
 
 --- **end of file: examples/example_faas/task_funs_dir/base_booster_params.py** (project: funboost) --- 
@@ -25445,6 +25918,7 @@ def sub(a, b):
     │   ├── redis_filter.py
     │   ├── redis_pubsub_consumer.py
     │   ├── redis_stream_consumer.py
+    │   ├── rocketmq5_consumer.py
     │   ├── rocketmq_consumer.py
     │   ├── rq_consumer.py
     │   ├── sqlachemy_consumer.py
@@ -25467,9 +25941,13 @@ def sub(a, b):
     │   │   ├── funboost_micro_batch_mixin.py
     │   │   ├── funboost_otel_mixin.py
     │   │   ├── funboost_promethus_mixin.py
-    │   │   └── otel_tree_span_exporter.py
+    │   │   ├── otel_tree_span_exporter.py
+    │   │   └── periodic_quota_mixin.py
     │   ├── queue2queue.py
     │   ├── redis_consume_latest_msg_broker.py
+    │   ├── register_custom_broker_contrib
+    │   │   ├── watchdog_broker.py
+    │   │   └── websocket_broker.py
     │   └── save_function_result_status
     │       ├── __init__.py
     │       ├── readme.md
@@ -25516,6 +25994,7 @@ def sub(a, b):
     │   └── publisher_factotry.py
     ├── funboost_config_deafult.py
     ├── funboost_web_manager
+    │   ├── README.md
     │   ├── app.py
     │   ├── app_debug_start.py
     │   ├── functions.py
@@ -25560,6 +26039,7 @@ def sub(a, b):
     │   ├── redis_pubsub_publisher.py
     │   ├── redis_queue_flush_mixin.py
     │   ├── redis_stream_publisher.py
+    │   ├── rocketmq5_publisher.py
     │   ├── rocketmq_publisher.py
     │   ├── rq_publisher.py
     │   ├── sqla_queue_publisher.py
@@ -25570,7 +26050,6 @@ def sub(a, b):
     │   └── zeromq_publisher.py
     ├── queues
     │   ├── __init__.py
-    │   ├── bounded_simple_queue.py
     │   ├── fastest_mem_queue.py
     │   ├── memory_queues_map.py
     │   ├── peewee_queue.py
@@ -25606,6 +26085,7 @@ def sub(a, b):
     │   ├── restart_python.py
     │   ├── simple_data_class.py
     │   ├── str_utils.py
+    │   ├── system_util.py
     │   ├── task_dispatcher.py
     │   ├── time_util.py
     │   ├── un_strict_json_dumps.py
@@ -25626,7 +26106,7 @@ def sub(a, b):
 ---
 
 
-## funboost (relative dir: `funboost`)  Included Files (total: 240 files)
+## funboost (relative dir: `funboost`)  Included Files (total: 246 files)
 
 
 - `funboost/constant.py`
@@ -25793,6 +26273,8 @@ def sub(a, b):
 
 - `funboost/consumers/redis_stream_consumer.py`
 
+- `funboost/consumers/rocketmq5_consumer.py`
+
 - `funboost/consumers/rocketmq_consumer.py`
 
 - `funboost/consumers/rq_consumer.py`
@@ -25835,9 +26317,15 @@ def sub(a, b):
 
 - `funboost/contrib/override_publisher_consumer_cls/otel_tree_span_exporter.py`
 
+- `funboost/contrib/override_publisher_consumer_cls/periodic_quota_mixin.py`
+
 - `funboost/contrib/override_publisher_consumer_cls/README.md`
 
 - `funboost/contrib/override_publisher_consumer_cls/__init__.py`
+
+- `funboost/contrib/register_custom_broker_contrib/watchdog_broker.py`
+
+- `funboost/contrib/register_custom_broker_contrib/websocket_broker.py`
 
 - `funboost/contrib/save_function_result_status/readme.md`
 
@@ -25923,6 +26411,8 @@ def sub(a, b):
 
 - `funboost/funboost_web_manager/functions.py`
 
+- `funboost/funboost_web_manager/README.md`
+
 - `funboost/funboost_web_manager/templates/app.py中仍在使用的路由.md`
 
 - `funboost/publishers/base_publisher.py`
@@ -25999,6 +26489,8 @@ def sub(a, b):
 
 - `funboost/publishers/redis_stream_publisher.py`
 
+- `funboost/publishers/rocketmq5_publisher.py`
+
 - `funboost/publishers/rocketmq_publisher.py`
 
 - `funboost/publishers/rq_publisher.py`
@@ -26016,8 +26508,6 @@ def sub(a, b):
 - `funboost/publishers/zeromq_publisher.py`
 
 - `funboost/publishers/__init__.py`
-
-- `funboost/queues/bounded_simple_queue.py`
 
 - `funboost/queues/fastest_mem_queue.py`
 
@@ -26083,6 +26573,8 @@ def sub(a, b):
 
 - `funboost/utils/str_utils.py`
 
+- `funboost/utils/system_util.py`
+
 - `funboost/utils/task_dispatcher.py`
 
 - `funboost/utils/time_util.py`
@@ -26132,7 +26624,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 用户也可以按照文档4.21章节,轻松扩展任何物质概念作为funboost的broker.
 `````
 
-**Class Variables (47):**
+**Class Variables (50):**
 - `EMPTY = 'EMPTY'`
 - `RABBITMQ_AMQPSTORM = 'RABBITMQ_AMQPSTORM'`
 - `RABBITMQ = RABBITMQ_AMQPSTORM`
@@ -26160,6 +26652,7 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `KAFKA_CONFLUENT_SASlPlAIN = 'KAFKA_CONFLUENT_SASlPlAIN'`
 - `SQLACHEMY = 'SQLACHEMY'`
 - `ROCKETMQ = 'ROCKETMQ'`
+- `ROCKETMQ5 = 'ROCKETMQ5'`
 - `ZEROMQ = 'ZEROMQ'`
 - `KOMBU = 'KOMBU'`
 - `MQTT = 'MQTT'`
@@ -26180,9 +26673,11 @@ funboost也内置支持了各种python三方包和消费框架作为broker,例�
 - `MYSQL_CDC = 'MYSQL_CDC'`
 - `SQS = 'SQS'`
 - `POSTGRES = 'POSTGRES'`
+- `WATCHDOG = 'WATCHDOG'`
+- `WEBSOCKET = 'WEBSOCKET'`
 
 ##### 📌 `class ConcurrentModeEnum`
-*Line: 169*
+*Line: 174*
 
 **Docstring:**
 `````
@@ -26201,7 +26696,7 @@ funboost的多进程和多线程 asyncio是叠加的，不是互斥的。
 - `SOLO = SINGLE_THREAD`
 
 ##### 📌 `class FunctionKind`
-*Line: 187*
+*Line: 192*
 
 **Docstring:**
 `````
@@ -26216,7 +26711,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `COMMON_FUNCTION = 'COMMON_FUNCTION'`
 
 ##### 📌 `class ConstStrForClassMethod`
-*Line: 198*
+*Line: 203*
 
 **Class Variables (5):**
 - `FIRST_PARAM_NAME = 'first_param_name'`
@@ -26226,7 +26721,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `CLS_FILE = 'cls_file'`
 
 ##### 📌 `class RedisKeys`
-*Line: 206*
+*Line: 211*
 
 **Public Methods (9):**
 - `def gen_funboost_apscheduler_redis_lock_key_by_queue_name(queue_name)` `staticmethod`
@@ -26263,7 +26758,7 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `FUNBOOST_UNACK_REGISTRY_PREFIX = 'funboost_unack_registry:'`
 
 ##### 📌 `class ConsumingFuncInputParamsCheckerField`
-*Line: 270*
+*Line: 275*
 
 **Class Variables (6):**
 - `is_manual_func_input_params = 'is_manual_func_input_params'`
@@ -26274,21 +26769,21 @@ funboost也能直接支持@boost加到 类方法和实例方法上（但这需�
 - `func_position = 'func_position'`
 
 ##### 📌 `class MongoDbName`
-*Line: 279*
+*Line: 284*
 
 **Class Variables (2):**
 - `TASK_STATUS_DB = 'funboost_task_status'`
 - `MONGOMQ_DB = 'funboost_mongomq'`
 
 ##### 📌 `class StrConst`
-*Line: 283*
+*Line: 288*
 
 **Class Variables (2):**
 - `BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'`
 - `NO_RESULT = 'no_result'`
 
 ##### 📌 `class EnvConst`
-*Line: 287*
+*Line: 292*
 
 **Class Variables (2):**
 - `FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'`
@@ -26379,7 +26874,8 @@ class BrokerEnum:
     SQLACHEMY = 'SQLACHEMY'  # 基于SQLACHEMY 的连接作为分布式消息队列中间件支持持久化和消费确认。支持mysql oracle sqlserver等5种数据库。
 
     ROCKETMQ = 'ROCKETMQ'  # 基于 rocketmq 作为分布式消息队列，这个中间件必须在linux下运行，win不支持。
-
+    ROCKETMQ5 = 'ROCKETMQ5'  # 基于 rocketmq 5.x 作为分布式消息队列，使用SimpleConsumer类，适合独立单条ack
+    
     ZEROMQ = 'ZEROMQ'  # 基于zeromq作为分布式消息队列，不需要安装中间件，可以支持跨机器但不支持持久化。
 
 
@@ -26461,6 +26957,10 @@ class BrokerEnum:
     相比 SQLACHEMY 通用实现性能更好，实时性更强
     """
     POSTGRES = 'POSTGRES'
+    
+    WATCHDOG = 'WATCHDOG' # 使用python watchdog 库监控文件夹文件变更事件,自动触发python函数消费。支持已存在文件和防抖，原生watchdog不支持。
+    
+    WEBSOCKET = 'WEBSOCKET' # 使用websocket作为broker,支持实时双向通信  
 
     
 
@@ -26619,7 +27119,7 @@ class EnvConst:
 如果@boost装饰器设置is_using_rpc_mode为True或者 is_using_distributed_frequency_control为True或do_task_filtering=True则需要把redis连接配置好，默认是False不强迫用户安装redis。
 `````
 
-**Class Variables (45):**
+**Class Variables (48):**
 - `MONGO_CONNECT_URL = f'mongodb://127.0.0.1:27017'`
 - `RABBITMQ_USER = 'rabbitmq_user'`
 - `RABBITMQ_PASS = 'rabbitmq_pass'`
@@ -26649,6 +27149,9 @@ class EnvConst:
 - `SQLLITE_QUEUES_PATH = '/sqllite_queues'`
 - `TXT_FILE_PATH = Path(__file__).parent / 'txt_queues'`
 - `ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'`
+- `ROCKETMQ_ENDPOINTS = '127.0.0.1:8081'`
+- `ROCKETMQ_ACCESS_KEY = ''`
+- `ROCKETMQ_SECRET_KEY = ''`
 - `MQTT_HOST = '127.0.0.1'`
 - `MQTT_TCP_PORT = 1883`
 - `HTTPSQS_HOST = '127.0.0.1'`
@@ -26667,7 +27170,7 @@ class EnvConst:
 - `POSTGRES_DSN = 'host=127.0.0.1 port=5432 dbname=funboost user=postgres password=123456'`
 
 ##### 📌 `class FunboostCommonConfig(DataClassBase)`
-*Line: 106*
+*Line: 113*
 
 **Class Variables (5):**
 - `NB_LOG_FORMATER_INDEX_FOR_CONSUMER_AND_PUBLISHER = logging.Formatter(f'%(asctime)s-({nb_log_config_default.computer_ip},{nb_log_config_default.computer_name})-[p%(process)d_t%(thread)d] - %(name)s - "%(filename)s:%(lineno)d" - %(funcName)s - %(levelname)s - %(task_id)s - %(message)s', '%Y-%m-%d %H:%M:%S')`
@@ -26753,7 +27256,14 @@ class BrokerConnConfig(DataClassBase):
 
     TXT_FILE_PATH = Path(__file__).parent / 'txt_queues'  # 不建议使用这个txt模拟消息队列中间件，本地持久化优先选择 PERSIST_QUQUE 中间件。
 
+    # RocketMQ 4.x 旧版配置（已废弃，仅兼容旧代码）
     ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
+    
+    # RocketMQ 5.x 新版配置（推荐）
+    # 使用 gRPC 协议，默认端口 8081
+    ROCKETMQ_ENDPOINTS = '127.0.0.1:8081'
+    ROCKETMQ_ACCESS_KEY = ''  # 阿里云等需要 AK/SK 认证时使用
+    ROCKETMQ_SECRET_KEY = ''
 
     MQTT_HOST = '127.0.0.1'
     MQTT_TCP_PORT = 1883
@@ -27110,6 +27620,7 @@ use_config_form_funboost_config_module()
 - `from funboost.publishers.base_publisher import AioAsyncResult`
 - `from funboost.publishers.empty_publisher import EmptyPublisher`
 - `from funboost.factories.broker_kind__publsiher_consumer_type_map import register_custom_broker`
+- `from funboost.core.broker_kind__exclusive_config_default_define import register_broker_exclusive_config_default`
 - `from funboost.factories.publisher_factotry import get_publisher`
 - `from funboost.factories.consumer_factory import get_consumer`
 - `from funboost.timing_job import funboost_aps_scheduler`
@@ -27176,6 +27687,7 @@ from funboost.publishers.base_publisher import (TaskOptions,
                                                 AbstractPublisher, AsyncResult, AioAsyncResult)
 from funboost.publishers.empty_publisher import EmptyPublisher
 from funboost.factories.broker_kind__publsiher_consumer_type_map import register_custom_broker
+from funboost.core.broker_kind__exclusive_config_default_define import register_broker_exclusive_config_default
 from funboost.factories.publisher_factotry import get_publisher
 from funboost.factories.consumer_factory import get_consumer
 
@@ -31936,7 +32448,13 @@ from .pool_commons import ConcurrentPoolBuilder
 - `from functools import wraps`
 - `import threading`
 - `from threading import Lock`
+- `import threading`
+- `from threading import Lock`
 - `import asyncio`
+- `from croniter import croniter`
+- `from croniter import CroniterBadCronError`
+- `from cron_descriptor import get_description`
+- `from cron_descriptor import Options`
 - `import nb_log`
 - `from funboost.core.current_task import FctContext`
 - `from funboost.core.current_task import set_fct_context`
@@ -32004,14 +32522,14 @@ from .pool_commons import ConcurrentPoolBuilder
 #### 🏛️ Classes (5)
 
 ##### 📌 `class GlobalVars`
-*Line: 88*
+*Line: 94*
 
 **Class Variables (2):**
 - `global_concurrent_mode = None`
 - `has_start_a_consumer_flag = False`
 
 ##### 📌 `class AbstractConsumer(LoggerLevelSetterMixin)`
-*Line: 94*
+*Line: 100*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumer_params: BoosterParams)`
@@ -32063,12 +32581,12 @@ from .pool_commons import ConcurrentPoolBuilder
 - `@property concurrent_pool`
 
 **Class Variables (3):**
-- `time_interval_for_check_do_not_run_time = 60`
+- `_time_interval_for_check_allow_run_by_cron = 60`
 - `BROKER_KIND = None`
 - `logger_apscheduler = get_logger('push_for_apscheduler_use_database_store', log_filename='push_for_apscheduler_use_database_store.log')`
 
 ##### 📌 `class ConcurrentModeDispatcher(FunboostFileLoggerMixin)`
-*Line: 1129*
+*Line: 1164*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, consumerx: AbstractConsumer)`
@@ -32082,7 +32600,7 @@ from .pool_commons import ConcurrentPoolBuilder
 - `def schedulal_task_with_no_block(self)`
 
 ##### 📌 `class MetricCalculation`
-*Line: 1235*
+*Line: 1270*
 
 **Docstring:**
 `````
@@ -32108,7 +32626,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 - `UNIT_TIME_FOR_COUNT = 10`
 
 ##### 📌 `class DistributedConsumerStatistics(RedisMixin, FunboostFileLoggerMixin)`
-*Line: 1326*
+*Line: 1361*
 
 **Docstring:**
 `````
@@ -32143,7 +32661,7 @@ MetricCalculation 是统计消费函数执行次数、失败次数、平均耗�
 #### 🔧 Public Functions (1)
 
 - `def wait_for_possible_has_finish_all_tasks_by_conusmer_list(consumer_list: typing.List[AbstractConsumer], minutes: int = 3)`
-  - *Line: 1220*
+  - *Line: 1255*
   - **Docstring:**
   `````
   判断多个消费者是否消费完成了。
@@ -32193,7 +32711,13 @@ import inspect
 from functools import wraps
 import threading
 from threading import Lock
+import threading
+from threading import Lock
 import asyncio
+
+from croniter import croniter, CroniterBadCronError
+from cron_descriptor import get_description, Options
+
 
 import nb_log
 from funboost.core.current_task import FctContext,set_fct_context
@@ -32254,7 +32778,7 @@ class GlobalVars:
 
 # noinspection DuplicatedCode
 class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
-    time_interval_for_check_do_not_run_time = 60
+    _time_interval_for_check_allow_run_by_cron = 60
     BROKER_KIND = None
 
     @property
@@ -32367,6 +32891,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         self._last_submit_task_timestamp = 0
         self._last_start_count_qps_timestamp = time.time()
         self._has_execute_times_in_recent_second = 0
+        
+        self._last_judge_is_allow_run_by_cron_time = 0
+        self._last_judge_is_allow_run_by_cron_result = True
         
         self._lock_for_get_publisher = Lock()
         self._publisher_of_same_queue = None  #
@@ -32521,6 +33048,9 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             return __keep_circulating
 
         return _keep_circulating
+    
+    def _before_start_consuming_message_hook(self):
+        pass
 
     # noinspection PyAttributeOutsideInit
     def start_consuming_message(self):
@@ -32553,6 +33083,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             self.consumer_params.is_show_message_get_from_broker = True  # 方便用户看到从消息队列取出来的消息的task_id,然后使用task_id杀死运行中的消息。
         if self.consumer_params.do_task_filtering:
             self._redis_filter.delete_expire_filter_task_cycle()  # 这个默认是RedisFilter类，是个pass不运行。所以用别的消息中间件模式，不需要安装和配置redis。
+        self._before_start_consuming_message_hook()
         if self.consumer_params.schedule_tasks_on_main_thread:
             self.keep_circulating(1, daemon=False)(self._dispatch_task)()
         else:
@@ -32668,9 +33199,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
     def _submit_task(self, kw):
         kw['body'] = self._convert_msg_before_run(kw['body'])
         self._print_message_get_from_broker(kw['body'])
-        if self._judge_is_daylight():
+        self._judge_is_allow_run_by_cron()
+        if self._last_judge_is_allow_run_by_cron_result is False:
             self._requeue(kw)
-            time.sleep(self.time_interval_for_check_do_not_run_time)
+            time.sleep(self._time_interval_for_check_allow_run_by_cron)
             return
         function_only_params = get_func_only_params(kw['body'], )
         kw['function_only_params'] = function_only_params
@@ -33247,13 +33779,34 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         """从远程机器可以设置队列为暂停消费状态，funboost框架会自动继续消费，此功能需要配置好redis"""
         RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, self.queue_name, '0')
 
-    @decorators.FunctionResultCacher.cached_function_result_for_a_time(120)
-    def _judge_is_daylight(self):
-        if self.consumer_params.is_do_not_run_by_specify_time_effect and (
-                self.consumer_params.do_not_run_by_specify_time[0] < time_util.DatetimeConverter().time_str < self.consumer_params.do_not_run_by_specify_time[1]):
-            self.logger.warning(
-                f'现在时间是 {time_util.DatetimeConverter()} ，现在时间是在 {self.consumer_params.do_not_run_by_specify_time} 之间，不运行')
-            return True
+    
+    def _judge_is_allow_run_by_cron(self):
+        allow_run_time_cron = self.consumer_params.allow_run_time_cron
+        if allow_run_time_cron is None:
+            self._last_judge_is_allow_run_by_cron_result = True
+            return
+        else:
+            if time.time() - self._last_judge_is_allow_run_by_cron_time < self._time_interval_for_check_allow_run_by_cron:
+                return 
+            try:
+                if croniter.match(allow_run_time_cron, datetime.datetime.now()):
+                    self._last_judge_is_allow_run_by_cron_result = True
+                else:
+                    try:
+                        opts = Options()
+                        # opts.locale_code = 'zh_CN' # 使用英文描述
+                        opts.use_24hour_time_format = True
+                        cron_desc = get_description(allow_run_time_cron, opts)
+                        human_msg = f'({cron_desc}) '
+                    except Exception:
+                        human_msg = ''
+                    self.logger.warning(f'当前时间 {time_util.DatetimeConverter()} 不在 allow_run_time_cron [{allow_run_time_cron}] {human_msg}允许的运行范围内，所以暂停运行')
+                    self._last_judge_is_allow_run_by_cron_result = False
+            except (Exception,BaseException) as e:
+                self.logger.error(f'cron表达式配置错误 {e}')
+                self._last_judge_is_allow_run_by_cron_result = True
+        self._last_judge_is_allow_run_by_cron_time = time.time()
+        
 
     def wait_for_possible_has_finish_all_tasks(self, minutes: int = 3):
         """
@@ -35610,7 +36163,8 @@ class LocalPythonQueueConsumer(AbstractConsumer):
 
     @property
     def local_python_queue(self) -> Queue:
-        return PythonQueues.get_queue(self._queue_name)
+        maxsize = self.consumer_params.broker_exclusive_config['maxsize']
+        return PythonQueues.get_queue(self._queue_name, maxsize=maxsize)
 
     def _dispatch_task(self):
         while True:
@@ -35623,6 +36177,7 @@ class LocalPythonQueueConsumer(AbstractConsumer):
 
     def _requeue(self, kw):
         self.local_python_queue.put(kw['body'])
+
 
 
 `````
@@ -36740,7 +37295,7 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
                                                                     # broker_exclusive_config=self.consumer_params.broker_exclusive_config))
         rp = self.bulid_a_new_publisher_of_same_queue()
         rp.init_broker()
-        rp.channel_wrapper_by_ampqstormbaic.qos(self.consumer_params.concurrent_num)
+        rp.channel_wrapper_by_ampqstormbaic.qos(max(10,self.consumer_params.concurrent_num * 2))
         rp.channel_wrapper_by_ampqstormbaic.consume(callback=callback, queue=self.queue_name, no_ack=self.consumer_params.broker_exclusive_config['no_ack'],
                                                     )
         self._rp = rp
@@ -38434,6 +38989,246 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
 ---
 
 
+--- **start of file: funboost/consumers/rocketmq5_consumer.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `funboost/consumers/rocketmq5_consumer.py`
+
+#### 📝 Module Docstring
+
+`````
+RocketMQ 5.x 消费者实现，使用最新版 rocketmq-python-client SDK
+pip install rocketmq-python-client
+
+使用 SimpleConsumer 模式：
+- 支持单条消息乱序 ACK，不依赖 offset
+- 基于 gRPC 协议，纯 Python 实现
+- 支持 Windows / Linux / macOS
+`````
+
+#### 📦 Imports
+
+- `import time`
+- `from funboost.consumers.base_consumer import AbstractConsumer`
+- `from rocketmq import ClientConfiguration`
+- `from rocketmq import Credentials`
+- `from rocketmq import FilterExpression`
+- `from rocketmq import SimpleConsumer`
+
+#### 🏛️ Classes (1)
+
+##### 📌 `class RocketmqConsumer(AbstractConsumer)`
+*Line: 31*
+
+**Docstring:**
+`````
+RocketMQ 5.x 消费者，使用 SimpleConsumer 模式
+
+安装方式:
+    pip install rocketmq-python-client
+    
+特性: 
+    - SimpleConsumer 模式：支持单条消息乱序 ACK，不依赖 offset
+    - 基于 gRPC 协议，纯 Python 实现
+    - 支持 Windows / Linux / macOS
+    - 支持 RocketMQ 5.x 版本
+    - 消息重入队使用原生 invisible_duration 机制，不 ACK 的消息超时后自动重新可见
+    
+broker_exclusive_config 可配置参数:
+    - endpoints: RocketMQ gRPC 端点地址，默认 '127.0.0.1:8081'
+    - consumer_group: 消费者组名，默认 'funboost_consumer_group'
+    - access_key: 访问密钥（可选）
+    - secret_key: 密钥（可选）
+    - namespace: 命名空间（可选）
+    - invisible_duration: 消息不可见时间（秒），消息取出后在此时间内对其他消费者不可见，默认 15
+    - max_message_num: 每次拉取的最大消息数，默认 32
+    - tag: 消息过滤 tag，默认 '*' 表示不过滤
+`````
+
+**Public Methods (1):**
+- `def custom_init(self)`
+
+
+---
+
+`````python
+# -*- coding: utf-8 -*-
+# @Author  : ydf
+# @Time    : 2026
+"""
+RocketMQ 5.x 消费者实现，使用最新版 rocketmq-python-client SDK
+pip install rocketmq-python-client
+
+使用 SimpleConsumer 模式：
+- 支持单条消息乱序 ACK，不依赖 offset
+- 基于 gRPC 协议，纯 Python 实现
+- 支持 Windows / Linux / macOS
+"""
+
+
+"""
+ai写得，等有时间需要测试
+"""
+
+import time
+
+from funboost.consumers.base_consumer import AbstractConsumer
+
+# pip install rocketmq-python-client
+try:
+    from rocketmq import ClientConfiguration, Credentials, FilterExpression, SimpleConsumer
+except ImportError:
+    raise ImportError(
+        '需要安装 rocketmq-python-client 包: pip install rocketmq-python-client\n'
+        '这是 RocketMQ 5.x 的官方 Python SDK，支持 Windows/Linux/macOS'
+    )
+class RocketmqConsumer(AbstractConsumer):
+    """
+    RocketMQ 5.x 消费者，使用 SimpleConsumer 模式
+    
+    安装方式:
+        pip install rocketmq-python-client
+        
+    特性: 
+        - SimpleConsumer 模式：支持单条消息乱序 ACK，不依赖 offset
+        - 基于 gRPC 协议，纯 Python 实现
+        - 支持 Windows / Linux / macOS
+        - 支持 RocketMQ 5.x 版本
+        - 消息重入队使用原生 invisible_duration 机制，不 ACK 的消息超时后自动重新可见
+        
+    broker_exclusive_config 可配置参数:
+        - endpoints: RocketMQ gRPC 端点地址，默认 '127.0.0.1:8081'
+        - consumer_group: 消费者组名，默认 'funboost_consumer_group'
+        - access_key: 访问密钥（可选）
+        - secret_key: 密钥（可选）
+        - namespace: 命名空间（可选）
+        - invisible_duration: 消息不可见时间（秒），消息取出后在此时间内对其他消费者不可见，默认 15
+        - max_message_num: 每次拉取的最大消息数，默认 32
+        - tag: 消息过滤 tag，默认 '*' 表示不过滤
+    """
+
+    def custom_init(self):
+        self._consumer = None
+
+    def _dispatch_task(self):
+        """从 RocketMQ 拉取消息并分发到并发池执行"""
+        
+
+        # 获取配置参数
+        endpoints = self.consumer_params.broker_exclusive_config['endpoints']
+        consumer_group = self.consumer_params.broker_exclusive_config['consumer_group']
+        access_key = self.consumer_params.broker_exclusive_config['access_key']
+        secret_key = self.consumer_params.broker_exclusive_config['secret_key']
+        namespace = self.consumer_params.broker_exclusive_config['namespace']
+        invisible_duration = self.consumer_params.broker_exclusive_config['invisible_duration']
+        max_message_num = self.consumer_params.broker_exclusive_config['max_message_num']
+        tag = self.consumer_params.broker_exclusive_config['tag']
+
+        # 创建凭证
+        if access_key and secret_key:
+            credentials = Credentials(access_key, secret_key)
+        else:
+            credentials = Credentials()
+
+        # 创建客户端配置
+        if namespace:
+            config = ClientConfiguration(endpoints, credentials, namespace)
+        else:
+            config = ClientConfiguration(endpoints, credentials)
+
+        # 创建订阅表达式
+        if tag and tag != '*':
+            filter_expression = FilterExpression(tag)
+        else:
+            filter_expression = FilterExpression()
+
+        # 创建 SimpleConsumer
+        self._consumer = SimpleConsumer(
+            config,
+            consumer_group,
+            {self._queue_name: filter_expression}
+        )
+
+        self.logger.info(
+            f'RocketMQ 5.x SimpleConsumer 正在启动，consumer_group: {consumer_group}, '
+            f'topic: {self._queue_name}, endpoints: {endpoints}, invisible_duration: {invisible_duration}s'
+        )
+
+        # 启动消费者
+        self._consumer.startup()
+        self.logger.info(f'RocketMQ 5.x SimpleConsumer 已启动并订阅 topic: {self._queue_name}')
+
+        # SimpleConsumer 拉模式循环消费
+        while True:
+            try:
+                # 拉取消息
+                # receive(max_message_num, invisible_duration_seconds)
+                messages = self._consumer.receive(max_message_num, invisible_duration)
+                
+                if messages is None:
+                    continue
+                    
+                for msg in messages:
+                    # 构建 kw 字典，包含消息和用于 ACK 的信息
+                    try:
+                        body = msg.body.decode('utf-8') if isinstance(msg.body, bytes) else msg.body
+                    except (UnicodeDecodeError, AttributeError):
+                        body = msg.body
+                        
+                    kw = {
+                        'body': body,
+                        'rocketmq_msg': msg,  # 保存原始消息对象用于 ACK
+                        'message_id': msg.message_id,
+                    }
+                    self._submit_task(kw)
+                    
+            except Exception as e:
+                self.logger.error(f'RocketMQ SimpleConsumer 拉取消息出错: {e}', exc_info=True)
+                time.sleep(1)
+
+    def _confirm_consume(self, kw):
+        """
+        确认消费 - SimpleConsumer 支持单条消息乱序 ACK
+        每条消息可以独立确认，不依赖 offset
+        """
+        msg = kw.get('rocketmq_msg')
+        if msg and self._consumer:
+            try:
+                self._consumer.ack(msg)
+            except Exception as e:
+                self.logger.error(f'RocketMQ ACK 消息失败: {e}', exc_info=True)
+
+    def _requeue(self, kw):
+        """
+        消息重入队列 - 使用 RocketMQ 原生的 invisible_duration 机制
+        
+        通过 change_invisible_duration 将消息的不可见时间设置为 0，
+        使消息立即重新可见，可以被重新消费。
+        
+        如果 SDK 不支持 change_invisible_duration，则不做任何操作，
+        消息会在 invisible_duration 超时后自动重新可见。
+        """
+        msg = kw.get('rocketmq_msg')
+        if msg and self._consumer:
+            try:
+                # 尝试使用 change_invisible_duration 立即让消息重新可见
+                self._consumer.change_invisible_duration(msg, 0)
+                self.logger.debug(f'RocketMQ 消息 {msg.message_id} 已设置为立即重新可见')
+            except AttributeError:
+                # SDK 不支持 change_invisible_duration，消息会在 invisible_duration 超时后自动重新可见
+                self.logger.debug(
+                    f'RocketMQ 消息 {msg.message_id} 将在 invisible_duration 超时后自动重新可见'
+                )
+            except Exception as e:
+                self.logger.warning(f'RocketMQ change_invisible_duration 失败: {e}，消息将在超时后自动重新可见')
+
+`````
+
+--- **end of file: funboost/consumers/rocketmq5_consumer.py** (project: funboost) --- 
+
+---
+
+
 --- **start of file: funboost/consumers/rocketmq_consumer.py** (project: funboost) --- 
 
 
@@ -38448,12 +39243,13 @@ class RedisStreamConsumer(AbstractConsumer, RedisMixin):
 - `from funboost.funboost_config_deafult import BrokerConnConfig`
 - `from funboost.publishers.rocketmq_publisher import RocketmqPublisher`
 - `from funboost.core.func_params_model import PublisherParams`
+- `from funboost.utils import system_util`
 - `from rocketmq.client import PushConsumer`
 
 #### 🏛️ Classes (1)
 
 ##### 📌 `class RocketmqConsumer(AbstractConsumer)`
-*Line: 12*
+*Line: 20*
 
 **Docstring:**
 `````
@@ -38478,6 +39274,14 @@ from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.publishers.rocketmq_publisher import RocketmqPublisher
 from funboost.core.func_params_model import PublisherParams
 
+from funboost.utils import system_util
+
+if system_util.is_windows():
+    raise ImportError('rocketmq包 只支持linux和mac')
+
+from rocketmq.client import PushConsumer
+
+
 class RocketmqConsumer(AbstractConsumer):
     """
     安装
@@ -38486,11 +39290,6 @@ class RocketmqConsumer(AbstractConsumer):
     GROUP_ID = 'g_funboost'
 
     def _dispatch_task(self):
-        try:
-            from rocketmq.client import PushConsumer
-        except BaseException as e:
-            # print(traceback.format_exc())
-            raise ImportError(f'rocketmq包 只支持linux和mac {e}')
         consumer = PushConsumer(f'{self.GROUP_ID}_{self._queue_name}')
         consumer.set_namesrv_addr(BrokerConnConfig.ROCKETMQ_NAMESRV_ADDR)
         consumer.set_thread_count(1)
@@ -41506,6 +42305,493 @@ def print_trace_tree() -> None:
 ---
 
 
+--- **start of file: funboost/contrib/override_publisher_consumer_cls/periodic_quota_mixin.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `funboost/contrib/override_publisher_consumer_cls/periodic_quota_mixin.py`
+
+#### 📝 Module Docstring
+
+`````
+周期配额控频消费者 Mixin (Periodic Quota Rate Limiter Consumer Mixin)
+
+功能：在指定周期内限制执行次数，周期结束后配额自动重置。这个超越了celery 的 rate_limit 概念。
+
+例如假设chatgpt允许你每天使用24次，不代表你每使用一次然后需要间隔1小时才能再次使用chatgpt，
+你可以一口气把一天额度快速的用完，然后当天或24小时内不用chatgpt就好了，所以周期额度和运行频率是两码事，
+周期额度不代表你要把额度次数除以周期时长，然后匀速执行频率。
+如果每次使用chtgpt要等1个小时，你愿意刚好掐点每隔1小时去用一次chatgpt吗，太抓狂了这样；肯定是能自由随意啥时候用完24次这种更爽，不用一直看手表掐点。
+
+周期额度功能可以和qps参数结合起来使用，一个控制频率，一个控制周期额度。
+
+
+celery的 rate_limit 被 funboost的周期额度功能完虐，
+celery的 rate_limit = '24/d',每次运行消息需要间隔1小时，这不是我们想要的。
+
+
+=== 核心概念 ===
+
+与令牌桶的区别：
+- 令牌桶：令牌持续补充，速率 = 配额/周期
+- 周期配额：周期开始时配额重置，周期内用完就暂停
+
+=== 两种窗口模式 ===
+
+1. 滑动窗口 (sliding_window=True, 默认)：
+   - 从程序启动时刻开始计算周期
+   - 例如：19:33:55启动，每分钟6次 -> 周期为 19:33:55 ~ 19:34:55
+   
+2. 固定窗口 (sliding_window=False)：
+   - 从整点边界开始计算周期
+   - 例如：每分钟6次 -> 周期为 19:33:00 ~ 19:34:00
+
+=== 使用场景 ===
+
+典型场景：每天自动评论30次博客，每10分钟评论1次，当天配额用完就停止
+配置方式：
+    quota_limit = 30        # 每个周期最多30次
+    quota_period = 'd'      # 周期为"天"
+    qps = 1/600             # 每10分钟执行1次
+    sliding_window = False  # 使用固定窗口，从0点开始算
+
+效果：
+    - 因为 qps=0.00167，所以每10分钟才执行1次（匀速间隔）
+    - 因为 quota_limit=30, quota_period='d'，每天最多执行30次
+    - 配额用完后暂停，第二天0点配额自动重置为30
+
+=== 用法示例 ===
+
+    from funboost import boost, BoosterParams, BrokerEnum
+    from funboost.contrib.override_publisher_consumer_cls.periodic_quota_mixin import PeriodicQuotaConsumerMixin
+
+    # 滑动窗口模式（默认）：每秒1次，每分钟最多6次
+    @boost(BoosterParams(
+        queue_name='minute_quota_queue',
+        broker_kind=BrokerEnum.REDIS,
+        consumer_override_cls=PeriodicQuotaConsumerMixin,
+        user_options={
+            'quota_limit': 6,           # 每周期最多6次
+            'quota_period': 'm',        # 周期为分钟 (s/m/h/d)
+            'sliding_window': True,     # 滑动窗口（默认，可省略）
+        },
+        qps=1,  # 每秒执行1次（间隔控制）# 周期额度可以和qps一起使用
+    ))
+    def my_task(x):
+        print(f'Processing {x}')
+`````
+
+#### 📦 Imports
+
+- `import threading`
+- `import time`
+- `import datetime`
+- `import typing`
+- `from funboost.consumers.base_consumer import AbstractConsumer`
+- `from funboost.constant import BrokerEnum`
+- `from funboost.core.func_params_model import BoosterParams`
+
+#### 🏛️ Classes (3)
+
+##### 📌 `class PeriodicQuota`
+*Line: 81*
+
+**Docstring:**
+`````
+周期配额实现
+
+参数：
+- quota_limit: 每个周期的最大执行次数
+- period_type: 周期类型 ('s', 'm', 'h', 'd')
+- sliding_window: 是否使用滑动窗口模式
+    - True (默认): 滑动窗口，从程序启动时开始计算 (如启动后1小时内最多N次)
+    - False: 固定窗口，从整点开始计算 (如每小时从 XX:00:00 开始)
+    例如 chatgpt是让你从0点到24点使用24次，还是最近24小时内使用24次。
+    固定窗口(False)：你在1月1日 23:50-23:59用了24次，1月2日 0:01还能用24次（因为跨过了0点边界）。
+    滑动窗口(True)：你在1月1日 23:50-23:59用了24次，1月2日 0:01不能用，要等到1月2日 23:50才能用。
+`````
+
+**🔧 Constructor (`__init__`):**
+- `def __init__(self, quota_limit: int, period_type: str = 'm', sliding_window: bool = False)`
+  - **Parameters:**
+    - `self`
+    - `quota_limit: int`
+    - `period_type: str = 'm'`
+    - `sliding_window: bool = False`
+
+**Public Methods (3):**
+- `def acquire(self, timeout: float = None) -> bool`
+  - **Docstring:**
+  `````
+  尝试获取一个配额
+  
+  :param timeout: 最大等待时间（秒），None 表示无限等待
+  :return: 是否成功获取
+  `````
+- `def get_remaining_quota(self) -> int`
+  - *获取当前周期剩余配额*
+- `def get_seconds_until_reset(self) -> float`
+  - *获取距离下次配额重置的秒数*
+
+**Class Variables (1):**
+- `PERIOD_SECONDS = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400}`
+
+##### 📌 `class PeriodicQuotaConsumerMixin(AbstractConsumer)`
+*Line: 204*
+
+**Docstring:**
+`````
+周期配额控频消费者 Mixin
+
+核心原理：
+1. 每个周期开始时，配额重置为 quota_limit
+2. 每次执行消耗1个配额
+3. 配额用完后，等待到下一个周期开始
+4. 结合 qps 控制执行间隔
+
+配置参数（通过 user_options 传递）：
+- quota_limit: 每周期最大执行次数
+- quota_period: 周期类型 ('s'=秒, 'm'=分钟, 'h'=小时, 'd'=天)
+- sliding_window: 窗口模式 (True=滑动窗口[默认], False=固定窗口)
+`````
+
+**Public Methods (1):**
+- `def custom_init(self)`
+  - *初始化周期配额*
+
+##### 📌 `class PeriodicQuotaBoosterParams(BoosterParams)`
+*Line: 275*
+
+**Docstring:**
+`````
+预配置的周期配额 BoosterParams
+
+使用示例：
+
+    # 每秒1次，每分钟最多6次
+    @boost(PeriodicQuotaBoosterParams(
+        queue_name='minute_quota_queue',
+        user_options={'quota_limit': 6, 'quota_period': 'm'},
+        qps=1,
+    ))
+    def my_task(x):
+        ...
+`````
+
+**Class Variables (4):**
+- `broker_kind: str = BrokerEnum.REDIS`
+- `consumer_override_cls: typing.Optional[typing.Type] = PeriodicQuotaConsumerMixin`
+- `qps: typing.Union[float, int, None] = 1`
+- `user_options: dict = {'quota_limit': 10, 'quota_period': 'm', 'sliding_window': True}`
+
+
+---
+
+`````python
+# -*- coding: utf-8 -*-
+# @Author  : AI Assistant
+# @Time    : 2026/1/30
+"""
+周期配额控频消费者 Mixin (Periodic Quota Rate Limiter Consumer Mixin)
+
+功能：在指定周期内限制执行次数，周期结束后配额自动重置。这个超越了celery 的 rate_limit 概念。
+
+例如假设chatgpt允许你每天使用24次，不代表你每使用一次然后需要间隔1小时才能再次使用chatgpt，
+你可以一口气把一天额度快速的用完，然后当天或24小时内不用chatgpt就好了，所以周期额度和运行频率是两码事，
+周期额度不代表你要把额度次数除以周期时长，然后匀速执行频率。
+如果每次使用chtgpt要等1个小时，你愿意刚好掐点每隔1小时去用一次chatgpt吗，太抓狂了这样；肯定是能自由随意啥时候用完24次这种更爽，不用一直看手表掐点。
+
+周期额度功能可以和qps参数结合起来使用，一个控制频率，一个控制周期额度。
+
+
+celery的 rate_limit 被 funboost的周期额度功能完虐，
+celery的 rate_limit = '24/d',每次运行消息需要间隔1小时，这不是我们想要的。
+
+
+=== 核心概念 ===
+
+与令牌桶的区别：
+- 令牌桶：令牌持续补充，速率 = 配额/周期
+- 周期配额：周期开始时配额重置，周期内用完就暂停
+
+=== 两种窗口模式 ===
+
+1. 滑动窗口 (sliding_window=True, 默认)：
+   - 从程序启动时刻开始计算周期
+   - 例如：19:33:55启动，每分钟6次 -> 周期为 19:33:55 ~ 19:34:55
+   
+2. 固定窗口 (sliding_window=False)：
+   - 从整点边界开始计算周期
+   - 例如：每分钟6次 -> 周期为 19:33:00 ~ 19:34:00
+
+=== 使用场景 ===
+
+典型场景：每天自动评论30次博客，每10分钟评论1次，当天配额用完就停止
+配置方式：
+    quota_limit = 30        # 每个周期最多30次
+    quota_period = 'd'      # 周期为"天"
+    qps = 1/600             # 每10分钟执行1次
+    sliding_window = False  # 使用固定窗口，从0点开始算
+
+效果：
+    - 因为 qps=0.00167，所以每10分钟才执行1次（匀速间隔）
+    - 因为 quota_limit=30, quota_period='d'，每天最多执行30次
+    - 配额用完后暂停，第二天0点配额自动重置为30
+
+=== 用法示例 ===
+
+    from funboost import boost, BoosterParams, BrokerEnum
+    from funboost.contrib.override_publisher_consumer_cls.periodic_quota_mixin import PeriodicQuotaConsumerMixin
+
+    # 滑动窗口模式（默认）：每秒1次，每分钟最多6次
+    @boost(BoosterParams(
+        queue_name='minute_quota_queue',
+        broker_kind=BrokerEnum.REDIS,
+        consumer_override_cls=PeriodicQuotaConsumerMixin,
+        user_options={
+            'quota_limit': 6,           # 每周期最多6次
+            'quota_period': 'm',        # 周期为分钟 (s/m/h/d)
+            'sliding_window': True,     # 滑动窗口（默认，可省略）
+        },
+        qps=1,  # 每秒执行1次（间隔控制）# 周期额度可以和qps一起使用
+    ))
+    def my_task(x):
+        print(f'Processing {x}')
+"""
+
+import threading
+import time
+import datetime
+import typing
+from funboost.consumers.base_consumer import AbstractConsumer
+from funboost.constant import BrokerEnum
+from funboost.core.func_params_model import BoosterParams
+
+
+class PeriodicQuota:
+    """
+    周期配额实现
+    
+    参数：
+    - quota_limit: 每个周期的最大执行次数
+    - period_type: 周期类型 ('s', 'm', 'h', 'd')
+    - sliding_window: 是否使用滑动窗口模式
+        - True (默认): 滑动窗口，从程序启动时开始计算 (如启动后1小时内最多N次)
+        - False: 固定窗口，从整点开始计算 (如每小时从 XX:00:00 开始)
+        例如 chatgpt是让你从0点到24点使用24次，还是最近24小时内使用24次。
+        固定窗口(False)：你在1月1日 23:50-23:59用了24次，1月2日 0:01还能用24次（因为跨过了0点边界）。
+        滑动窗口(True)：你在1月1日 23:50-23:59用了24次，1月2日 0:01不能用，要等到1月2日 23:50才能用。
+    """
+    
+    PERIOD_SECONDS = {
+        's': 1,
+        'm': 60,
+        'h': 3600,
+        'd': 86400,
+    }
+    
+    def __init__(self, quota_limit: int, period_type: str = 'm', sliding_window: bool = False):
+        self.quota_limit = quota_limit
+        self.period_type = period_type
+        self.period_seconds = self.PERIOD_SECONDS.get(period_type, 60)
+        self.sliding_window = sliding_window
+        
+        self._used_count = 0
+        self._lock = threading.Lock()
+        
+        # 根据模式设置周期起点
+        if sliding_window:
+            # 滑动窗口：从当前时间开始
+            self._current_period_start = time.time()
+        else:
+            # 固定窗口：从整点开始
+            self._current_period_start = self._get_fixed_period_start(time.time())
+    
+    def _get_fixed_period_start(self, timestamp: float) -> float:
+        """计算固定窗口模式下，当前时间所属周期的开始时间（整点边界）"""
+        dt = datetime.datetime.fromtimestamp(timestamp)
+        
+        if self.period_type == 's':
+            return datetime.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second).timestamp()
+        elif self.period_type == 'm':
+            return datetime.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, 0).timestamp()
+        elif self.period_type == 'h':
+            return datetime.datetime(dt.year, dt.month, dt.day, dt.hour, 0, 0).timestamp()
+        elif self.period_type == 'd':
+            return datetime.datetime(dt.year, dt.month, dt.day, 0, 0, 0).timestamp()
+        else:
+            return datetime.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, 0).timestamp()
+    
+    def _check_and_reset_period(self):
+        """检查是否进入新周期，如果是则重置配额"""
+        now = time.time()
+        
+        if self.sliding_window:
+            # 滑动窗口：检查是否超过了周期长度
+            if now - self._current_period_start >= self.period_seconds:
+                self._current_period_start = now
+                self._used_count = 0
+                return True
+        else:
+            # 固定窗口：检查是否进入了新的整点周期
+            current_period_start = self._get_fixed_period_start(now)
+            if current_period_start > self._current_period_start:
+                self._current_period_start = current_period_start
+                self._used_count = 0
+                return True
+        
+        return False
+    
+    def acquire(self, timeout: float = None) -> bool:
+        """
+        尝试获取一个配额
+        
+        :param timeout: 最大等待时间（秒），None 表示无限等待
+        :return: 是否成功获取
+        """
+        start_time = time.time()
+        
+        while True:
+            with self._lock:
+                self._check_and_reset_period()
+                
+                if self._used_count < self.quota_limit:
+                    self._used_count += 1
+                    return True
+            
+            # 计算距离下一个周期还有多久
+            now = time.time()
+            next_period_start = self._current_period_start + self.period_seconds
+            wait_time = next_period_start - now
+            
+            if wait_time <= 0:
+                # 已经到了新周期，继续循环检查
+                continue
+            
+            # 检查是否超时
+            if timeout is not None:
+                elapsed = time.time() - start_time
+                if elapsed >= timeout:
+                    return False
+                wait_time = min(wait_time, timeout - elapsed)
+            
+            # 等待，但最多等待1秒后重新检查
+            time.sleep(min(wait_time, 1.0))
+    
+    def get_remaining_quota(self) -> int:
+        """获取当前周期剩余配额"""
+        with self._lock:
+            self._check_and_reset_period()
+            return self.quota_limit - self._used_count
+    
+    def get_seconds_until_reset(self) -> float:
+        """获取距离下次配额重置的秒数"""
+        now = time.time()
+        next_period_start = self._current_period_start + self.period_seconds
+        return max(0, next_period_start - now)
+
+
+class PeriodicQuotaConsumerMixin(AbstractConsumer):
+    """
+    周期配额控频消费者 Mixin
+    
+    核心原理：
+    1. 每个周期开始时，配额重置为 quota_limit
+    2. 每次执行消耗1个配额
+    3. 配额用完后，等待到下一个周期开始
+    4. 结合 qps 控制执行间隔
+    
+    配置参数（通过 user_options 传递）：
+    - quota_limit: 每周期最大执行次数
+    - quota_period: 周期类型 ('s'=秒, 'm'=分钟, 'h'=小时, 'd'=天)
+    - sliding_window: 窗口模式 (True=滑动窗口[默认], False=固定窗口)
+    """
+    
+    def custom_init(self):
+        """初始化周期配额"""
+        super().custom_init()
+        
+        user_options = self.consumer_params.user_options
+        quota_limit = user_options.get('quota_limit', 10)
+        quota_period = user_options.get('quota_period', 'm')
+        sliding_window = user_options.get('sliding_window', True)  # 默认使用滑动窗口
+        
+        # 创建周期配额对象
+        self._periodic_quota = PeriodicQuota(
+            quota_limit=quota_limit,
+            period_type=quota_period,
+            sliding_window=sliding_window
+        )
+        
+        period_names = {'s': 'second', 'm': 'minute', 'h': 'hour', 'd': 'day'}
+        if quota_period not in period_names:
+            raise ValueError(f'quota_period is error,must in {period_names}')
+        period_name = period_names.get(quota_period, quota_period)
+        window_mode = "sliding" if sliding_window else "fixed"
+        
+        self.logger.info(
+            f"PeriodicQuota rate limiter initialized: "
+            f"quota_limit={quota_limit}/{period_name}, mode={window_mode}, qps={self.consumer_params.qps}"
+        )
+    
+    def _check_quota_before_execute(self):
+        """
+        在任务执行前检查配额
+        
+        如果配额用完，会阻塞等待到下一周期
+        """
+        remaining = self._periodic_quota.get_remaining_quota()
+        if remaining <= 0:
+            wait_seconds = self._periodic_quota.get_seconds_until_reset()
+            self.logger.warning(
+                f"Quota exhausted ({self._periodic_quota.quota_limit}/{self._periodic_quota.period_type}), "
+                f"waiting {wait_seconds:.1f}s for next period reset"
+            )
+        
+        # 阻塞直到获取到配额
+        self._periodic_quota.acquire(timeout=86400)
+    
+    def _submit_task(self, kw):
+        """
+        重写 _submit_task 方法，在任务执行前检查配额
+        """
+        # Step 1: 先检查配额（阻塞直到有配额可用）
+        self._check_quota_before_execute()
+        
+        # Step 2: 调用父类的 _submit_task 执行任务
+        super()._submit_task(kw)
+
+
+class PeriodicQuotaBoosterParams(BoosterParams):
+    """
+    预配置的周期配额 BoosterParams
+    
+    使用示例：
+    
+        # 每秒1次，每分钟最多6次
+        @boost(PeriodicQuotaBoosterParams(
+            queue_name='minute_quota_queue',
+            user_options={'quota_limit': 6, 'quota_period': 'm'},
+            qps=1,
+        ))
+        def my_task(x):
+            ...
+    """
+    broker_kind: str = BrokerEnum.REDIS
+    consumer_override_cls: typing.Optional[typing.Type] = PeriodicQuotaConsumerMixin
+    qps: typing.Union[float, int, None] = 1
+    user_options: dict = {
+        'quota_limit': 10,
+        'quota_period': 'm',  # s=秒, m=分钟, h=小时, d=天
+        'sliding_window': True, # 滑动窗口（默认，可省略）
+    }
+
+`````
+
+--- **end of file: funboost/contrib/override_publisher_consumer_cls/periodic_quota_mixin.py** (project: funboost) --- 
+
+---
+
+
 --- **start of file: funboost/contrib/override_publisher_consumer_cls/README.md** (project: funboost) --- 
 
 `````markdown
@@ -41628,6 +42914,1235 @@ def batch_insert_to_db(items: list):
 `````
 
 --- **end of file: funboost/contrib/override_publisher_consumer_cls/__init__.py** (project: funboost) --- 
+
+---
+
+
+--- **start of file: funboost/contrib/register_custom_broker_contrib/watchdog_broker.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `funboost/contrib/register_custom_broker_contrib/watchdog_broker.py`
+
+#### 📝 Module Docstring
+
+`````
+# 一： 怎么使用
+此文件演示 register_custom_broker 实现事件驱动型 broker。
+
+Watchdog 文件系统监控 Broker - 事件驱动型消息队列
+
+设计理念：
+    - 无需手动发布消息，文件系统事件自动成为消息
+    - 类似 MYSQL_CDC，是一种事件驱动的 broker
+    - 适用场景：文件处理管道、日志监控、热更新、文件同步，文件变更事件驱动消费。
+
+使用方式：（教程4b.11 有具体完整例子）
+
+    
+    @boost(BoosterParams(
+        queue_name='file_processor',
+        broker_kind=BrokerEnum.WATCHDOG,
+        broker_exclusive_config={
+            'watch_path': './data/inbox',
+            'patterns': ['*.csv', '*.json'],
+            'event_types': ['created'],
+            'ack_action': 'delete',
+        }
+    ))
+    def process_file(event_type, src_path, dest_path, is_directory, timestamp, file_content,): # 函数入参固定是这些就好了。
+        print(f"收到文件: {src_path}")
+        return f"处理完成"
+    
+    if __name__ == '__main__':
+        process_file.consume()  # 向 ./data/inbox 放文件即可自动消费
+
+
+
+# 二：为什么比原生 watchdog更好用
+funboost 实现的watchdog broker 比直接使用原生watchdog更强大，因为funboost实现了原生watchdog不支持的功能
+
+1. 自带 funboost 30多种复制控制功能，例如并发 qps 重试 等等
+2. funboost 支持的 event_types 包含existing，原生watchdog不支持，funboost支持。
+   完美解决funboost服务服务停止期间堆积的文件，或者处理历史已存在的文件，在原生watchdog中无法触发的问题。
+3. 代码更简单，原生 watchdog 要写继承 EventHandler ，写 observer，funboost 只需要写一个消费者函数，就能自动处理所有文件事件。
+4. 自带防抖功能，短时间内多次操作同一文件只触发一次消费。
+
+
+# 三：变通妙用：
+你可以将文件夹 作为消息队列，文件夹里面的每1个文件 taskidxx.json 作为一条消息。
+这不就是相当于磁盘作为消息队列了吗？
+`````
+
+#### 📦 Imports
+
+- `import os`
+- `import shutil`
+- `import threading`
+- `import time`
+- `from fnmatch import fnmatch`
+- `from pathlib import Path`
+- `from typing import Optional`
+- `from typing import List`
+- `from funboost import register_custom_broker`
+- `from funboost import AbstractConsumer`
+- `from funboost import AbstractPublisher`
+- `from funboost import register_broker_exclusive_config_default`
+- `from funboost.core.helper_funs import get_task_id`
+- `from watchdog.observers import Observer`
+- `from watchdog.events import PatternMatchingEventHandler`
+
+#### 🏛️ Classes (3)
+
+##### 📌 `class WatchdogPublisher(AbstractPublisher)`
+*Line: 75*
+
+**Docstring:**
+`````
+Watchdog 发布者
+
+发布消息 = 在监控目录下创建文件
+这会触发 watchdog 的 created 事件，从而被消费者捕获
+`````
+
+**Public Methods (4):**
+- `def custom_init(self)`
+- `def clear(self)`
+  - *清空监控目录下的所有消息文件*
+- `def get_message_count(self) -> int`
+  - *统计待处理文件数量*
+- `def close(self)`
+
+##### 📌 `class FunboostEventHandler(PatternMatchingEventHandler)`
+*Line: 120*
+
+**Docstring:**
+`````
+Funboost 专用的文件事件处理器
+
+当文件事件发生时，将事件信息封装为消息并提交给消费者处理
+`````
+
+**🔧 Constructor (`__init__`):**
+- `def __init__(self, consumer: 'WatchdogConsumer', event_types: List[str], read_file_content: bool = False, debounce_seconds: Optional[float] = None, **kwargs)`
+  - **Parameters:**
+    - `self`
+    - `consumer: 'WatchdogConsumer'`
+    - `event_types: List[str]`
+    - `read_file_content: bool = False`
+    - `debounce_seconds: Optional[float] = None`
+    - `**kwargs`
+
+**Public Methods (4):**
+- `def on_created(self, event)`
+- `def on_modified(self, event)`
+- `def on_deleted(self, event)`
+- `def on_moved(self, event)`
+
+##### 📌 `class WatchdogConsumer(AbstractConsumer)`
+*Line: 249*
+
+**Docstring:**
+`````
+Watchdog 消费者
+
+监听文件系统事件，将事件作为消息自动消费
+这是一种事件驱动型 broker，无需用户手动发布消息
+`````
+
+**Public Methods (1):**
+- `def custom_init(self)`
+
+**Class Variables (1):**
+- `BROKER_KIND = None`
+
+
+---
+
+`````python
+# -*- coding: utf-8 -*-
+
+"""
+# 一： 怎么使用
+此文件演示 register_custom_broker 实现事件驱动型 broker。
+
+Watchdog 文件系统监控 Broker - 事件驱动型消息队列
+
+设计理念：
+    - 无需手动发布消息，文件系统事件自动成为消息
+    - 类似 MYSQL_CDC，是一种事件驱动的 broker
+    - 适用场景：文件处理管道、日志监控、热更新、文件同步，文件变更事件驱动消费。
+
+使用方式：（教程4b.11 有具体完整例子）
+
+    
+    @boost(BoosterParams(
+        queue_name='file_processor',
+        broker_kind=BrokerEnum.WATCHDOG,
+        broker_exclusive_config={
+            'watch_path': './data/inbox',
+            'patterns': ['*.csv', '*.json'],
+            'event_types': ['created'],
+            'ack_action': 'delete',
+        }
+    ))
+    def process_file(event_type, src_path, dest_path, is_directory, timestamp, file_content,): # 函数入参固定是这些就好了。
+        print(f"收到文件: {src_path}")
+        return f"处理完成"
+    
+    if __name__ == '__main__':
+        process_file.consume()  # 向 ./data/inbox 放文件即可自动消费
+
+
+
+# 二：为什么比原生 watchdog更好用
+funboost 实现的watchdog broker 比直接使用原生watchdog更强大，因为funboost实现了原生watchdog不支持的功能
+
+1. 自带 funboost 30多种复制控制功能，例如并发 qps 重试 等等
+2. funboost 支持的 event_types 包含existing，原生watchdog不支持，funboost支持。
+   完美解决funboost服务服务停止期间堆积的文件，或者处理历史已存在的文件，在原生watchdog中无法触发的问题。
+3. 代码更简单，原生 watchdog 要写继承 EventHandler ，写 observer，funboost 只需要写一个消费者函数，就能自动处理所有文件事件。
+4. 自带防抖功能，短时间内多次操作同一文件只触发一次消费。
+
+
+# 三：变通妙用：
+你可以将文件夹 作为消息队列，文件夹里面的每1个文件 taskidxx.json 作为一条消息。
+这不就是相当于磁盘作为消息队列了吗？
+
+"""
+
+import os
+import shutil
+import threading
+import time
+from fnmatch import fnmatch
+from pathlib import Path
+from typing import Optional, List
+
+try:
+    from watchdog.observers import Observer
+    from watchdog.events import PatternMatchingEventHandler
+except ImportError:
+    raise ImportError("请安装 watchdog: pip install watchdog")
+
+from funboost import register_custom_broker, AbstractConsumer, AbstractPublisher, register_broker_exclusive_config_default
+from funboost.core.helper_funs import get_task_id
+
+
+
+# ============================================================================
+# Publisher 实现
+# ============================================================================
+
+class WatchdogPublisher(AbstractPublisher):
+    """
+    Watchdog 发布者
+    
+    发布消息 = 在监控目录下创建文件
+    这会触发 watchdog 的 created 事件，从而被消费者捕获
+    """
+    
+    def custom_init(self):
+        watch_path = self.publisher_params.broker_exclusive_config['watch_path']
+        self._queue_dir = Path(watch_path)
+        self._queue_dir.mkdir(parents=True, exist_ok=True)
+        self.logger.info(f"Watchdog Publisher 初始化完成，监控目录: {self._queue_dir.absolute().as_posix()}")
+
+    def _publish_impl(self, msg: str):
+        """
+        watchdog 作为broker时候，不需要手动发布消息，但是任然支持。
+        发消息也是funboost来写入文件，watchdog监听到文件变更后，自动触发消费者运行函数。
+        """
+        # raise NotImplementedError("Watchdog Broker 是事件驱动的，不支持手动 push 消息。请直接在监控目录下操作文件。")
+        task_id = get_task_id(msg)
+        file = self._queue_dir.joinpath(f'{task_id}.json')
+        # 发布就是把消息写入文件，自动触发消费者运行函数。 
+        file.write_text(msg)
+        
+    def clear(self):
+        """清空监控目录下的所有消息文件"""
+        # 注意：这可能会删除监控目录下的所有文件，需谨慎
+        pass
+
+    def get_message_count(self) -> int:
+        """统计待处理文件数量"""
+        if not self._queue_dir.exists():
+            return 0
+        # 简单统计文件数量，不递归
+        return len([f for f in self._queue_dir.iterdir() if f.is_file()])
+
+    def close(self):
+        pass
+
+
+# ============================================================================
+# Consumer 实现
+# ============================================================================
+
+class FunboostEventHandler(PatternMatchingEventHandler):
+    """
+    Funboost 专用的文件事件处理器
+    
+    当文件事件发生时，将事件信息封装为消息并提交给消费者处理
+    """
+    
+    def __init__(self, consumer: 'WatchdogConsumer', event_types: List[str], 
+                 read_file_content: bool = False, debounce_seconds: Optional[float] = None, **kwargs):
+        super().__init__(**kwargs)
+        self._consumer = consumer
+        self._event_types = set(event_types)
+        self._read_file_content = read_file_content
+        self._debounce_seconds = debounce_seconds
+        # 防抖相关：存储每个文件路径对应的 Timer 和最新事件信息
+        self._debounce_timers = {}  # {file_path: Timer}
+        self._debounce_lock = threading.Lock()
+    
+    def _should_handle(self, event_type: str) -> bool:
+        """检查是否应该处理此类型的事件"""
+        return event_type in self._event_types
+    
+    def _handle_event(self, event, event_type: str):
+        """统一的事件处理逻辑"""
+        if not self._should_handle(event_type):
+            return
+        
+        # 统一转换为绝对路径的 POSIX 格式（Linux 风格正斜杠）
+        src_path = Path(event.src_path).absolute().as_posix()
+        
+        # dest_path 也统一转换
+        dest_path = getattr(event, 'dest_path', None)
+        if dest_path:
+            dest_path = Path(dest_path).absolute().as_posix()
+        
+        # 构建消息体
+        body = {
+            'event_type': event_type,
+            'src_path': src_path,
+            'dest_path': dest_path,
+            'is_directory': event.is_directory,
+            'timestamp': time.time(),
+            'file_content': None,
+        }
+        
+        # 确定用于 ack 操作的文件路径：
+        # - moved 事件：文件已移动到 dest_path，应使用 dest_path
+        # - deleted 事件：文件已删除，file_path 仅作记录，ack 时会跳过
+        # - 其他事件：使用 src_path
+        if event_type == 'moved' and dest_path:
+            file_path_for_ack = dest_path
+        else:
+            file_path_for_ack = src_path
+        
+        # 如果启用防抖，延迟提交任务
+        if self._debounce_seconds is not None and self._debounce_seconds > 0:
+            self._debounce_submit(file_path_for_ack, body, event_type)
+        else:
+            # 无防抖，直接提交
+            self._do_submit(file_path_for_ack, body, event_type)
+    
+    def _do_submit(self, file_path: str, body: dict, event_type: str):
+        """
+        实际提交任务
+        
+        Args:
+            file_path: 用于 ack 操作的文件路径（moved 事件时是 dest_path，其他事件是 src_path）
+            body: 消息体
+            event_type: 事件类型
+        """
+        # 可选：读取文件内容（仅小文件，且仅对文件仍存在的事件类型）
+        # - created/modified/moved：文件存在，可以读取
+        # - deleted：文件已删除，不读取
+        if self._read_file_content and event_type in ('created', 'modified', 'moved'):
+            try:
+                if os.path.isfile(file_path) and os.path.getsize(file_path) < 1024 * 1024:  # < 1MB
+                    body['file_content'] = Path(file_path).read_text(encoding='utf-8')
+            except Exception:
+                pass
+        
+        # 封装为 kw 字典并提交
+        kw = {
+            'body': body,
+            'file_path': file_path,
+        }
+        self._consumer._submit_task(kw)
+        self._consumer.logger.debug(f"捕获文件事件: {event_type} - {file_path}")
+    
+    def _debounce_submit(self, file_path: str, body: dict, event_type: str):
+        """
+        防抖提交：在指定时间内如果有新事件，取消旧的定时器，重新计时
+        
+        Args:
+            file_path: 用于 ack 操作的文件路径（也用作防抖 key）
+            body: 消息体
+            event_type: 事件类型
+        """
+        with self._debounce_lock:
+            # 取消该文件路径已有的定时器
+            if file_path in self._debounce_timers:
+                old_timer = self._debounce_timers[file_path]
+                old_timer.cancel()
+                self._consumer.logger.debug(f"防抖: 取消旧定时器 - {file_path}")
+            
+            # 创建新的定时器，延迟执行提交
+            def delayed_submit():
+                with self._debounce_lock:
+                    self._debounce_timers.pop(file_path, None)
+                self._do_submit(file_path, body, event_type)
+                self._consumer.logger.debug(f"防抖: 定时器触发提交 - {file_path}")
+            
+            timer = threading.Timer(self._debounce_seconds, delayed_submit)
+            self._debounce_timers[file_path] = timer
+            timer.start()
+            self._consumer.logger.debug(f"防抖: 设置新定时器 {self._debounce_seconds}s - {file_path}")
+    
+    def on_created(self, event):
+        self._handle_event(event, 'created')
+    
+    def on_modified(self, event):
+        self._handle_event(event, 'modified')
+    
+    def on_deleted(self, event):
+        self._handle_event(event, 'deleted')
+    
+    def on_moved(self, event):
+        self._handle_event(event, 'moved')
+
+
+class WatchdogConsumer(AbstractConsumer):
+    """
+    Watchdog 消费者
+    
+    监听文件系统事件，将事件作为消息自动消费
+    这是一种事件驱动型 broker，无需用户手动发布消息
+    """
+    
+    BROKER_KIND = None  # 会被框架自动设置
+
+    def custom_init(self):
+        # 从 broker_exclusive_config 获取配置
+        config = self.consumer_params.broker_exclusive_config
+        
+        # 用户必须要在装饰器的 broker_exclusive_config 中配置以下字段，否则会报错。
+        watch_path = config['watch_path']  
+        self._patterns = config['patterns']
+        self._ignore_patterns = config['ignore_patterns']
+        self._ignore_directories = config['ignore_directories']
+        self._case_sensitive = config['case_sensitive']
+        self._event_types = config['event_types']
+        self._recursive = config['recursive']
+        # ack_action: 'delete' | 'archive' | 'none'
+        self._ack_action = config['ack_action']
+        self._read_file_content = config['read_file_content']
+        # 防抖时间（秒），None 或 0 表示不防抖
+        self._debounce_seconds = config['debounce_seconds']
+        
+        # 确定监控目录：直接使用 watch_path，queue_name 仅作标识
+        self._queue_dir = Path(watch_path).absolute()
+        self._queue_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 归档目录配置（仅 archive 模式需要）
+        self._archive_dir = None
+        if self._ack_action == 'archive':
+            archive_path = config['archive_path']
+            if not archive_path:
+                raise ValueError("ack_action='archive' 时必须配置 archive_path 归档目录")
+            
+            self._archive_dir = Path(archive_path).absolute()
+            
+            # 验证：归档目录不能是监控目录的子目录（否则会触发重复事件）
+            if self._is_subpath(self._archive_dir, self._queue_dir):
+                raise ValueError(
+                    f"archive_path 不能是 watch_path 的子目录！\n"
+                    f"  watch_path: {self._queue_dir.as_posix()}\n"
+                    f"  archive_path: {self._archive_dir.as_posix()}\n"
+                    f"请将 archive_path 设置为监控目录外部的路径。"
+                )
+            
+            self._archive_dir.mkdir(parents=True, exist_ok=True)
+            self.logger.info(f"归档目录: {self._archive_dir.as_posix()}")
+        
+        self._observer = None
+        
+        self.logger.info(
+            f"Watchdog Consumer 初始化完成，监控目录: {self._queue_dir.as_posix()}, "
+            f"事件类型: {self._event_types}, 文件模式: {self._patterns}"
+        )
+
+    def _dispatch_task(self):
+        """
+        核心调度方法
+        启动 watchdog Observer 监听文件系统事件
+        """
+        # 先处理目录中已存在的文件
+        self._process_existing_files()
+        
+        # 创建事件处理器
+        event_handler = FunboostEventHandler(
+            consumer=self,
+            event_types=self._event_types,
+            read_file_content=self._read_file_content,
+            debounce_seconds=self._debounce_seconds,
+            patterns=self._patterns,
+            ignore_patterns=self._ignore_patterns,
+            ignore_directories=self._ignore_directories,
+            case_sensitive=self._case_sensitive,
+        )
+        
+        # 创建并启动 Observer
+        self._observer = Observer()
+        self._observer.schedule(event_handler, self._queue_dir.as_posix(), recursive=self._recursive)
+        self._observer.start()
+        
+        self.logger.info(f"Watchdog Observer 已启动，正在监听: {self._queue_dir.as_posix()}")
+        
+        # 保持运行，不退出 ，因为_dispatch_task是会被父类死循环调用
+        while True:
+            time.sleep(100)
+      
+    
+    def _process_existing_files(self):
+        """处理启动时已存在的待处理文件"""
+        # 如果 event_types 不包含 'existing'，跳过处理已存在的文件
+        if 'existing' not in self._event_types:
+            return
+        
+        if not self._queue_dir.exists():
+            return
+        
+        if self._recursive:
+            all_items = list(self._queue_dir.rglob('*'))
+        else:
+            all_items = list(self._queue_dir.glob('*'))
+        
+        # 过滤：只保留文件，且匹配文件模式
+        existing_files = []
+        for file_path in all_items:
+            # 排除目录
+            if not file_path.is_file():
+                continue
+            # 检查是否匹配模式（使用完整路径，与 PatternMatchingEventHandler 行为一致）
+            if not self._match_patterns(file_path.absolute().as_posix()):
+                continue
+            existing_files.append(file_path)
+            
+        if existing_files:
+            self.logger.info(f"发现 {len(existing_files)} 个待处理文件")
+        
+        for file_path in existing_files:
+            body = {
+                'event_type': 'existing',
+                'src_path': file_path.absolute().as_posix(),
+                'dest_path': None,
+                'is_directory': False,
+                'timestamp': time.time(),
+                'file_content': None,
+            }
+            
+            if self._read_file_content:
+                try:
+                    if file_path.stat().st_size < 1024 * 1024:
+                        body['file_content'] = file_path.read_text(encoding='utf-8')
+                except Exception:
+                    pass
+            
+            kw = {
+                'body': body,
+                'file_path': file_path.absolute().as_posix(),
+            }
+            self._submit_task(kw)
+    
+    @staticmethod
+    def _is_subpath(child: Path, parent: Path) -> bool:
+        """检查 child 是否是 parent 的子目录"""
+        try:
+            child.relative_to(parent)
+            return True
+        except ValueError:
+            return False
+
+    def _match_patterns(self, file_path: str) -> bool:
+        """
+        检查文件路径是否匹配模式（与 PatternMatchingEventHandler 行为一致）
+        
+        Args:
+            file_path: 文件的完整路径（POSIX 格式）
+        """
+        # 如果不区分大小写，统一转为小写比较
+        if not self._case_sensitive:
+            path_cmp = file_path.lower()
+            patterns = [p.lower() for p in self._patterns]
+            ignore_patterns = [p.lower() for p in self._ignore_patterns]
+        else:
+            path_cmp = file_path
+            patterns = self._patterns
+            ignore_patterns = self._ignore_patterns
+        
+        # 先检查是否匹配忽略模式
+        for pattern in ignore_patterns:
+            if fnmatch(path_cmp, pattern):
+                return False
+        
+        # 再检查是否匹配包含模式
+        if patterns == ['*']:
+            return True
+        for pattern in patterns:
+            if fnmatch(path_cmp, pattern):
+                return True
+        return False
+
+    def _confirm_consume(self, kw):
+        """
+        确认消费成功
+        根据配置决定删除文件还是移动到归档目录
+        """
+        file_path = kw.get('file_path')
+        if not file_path or not os.path.exists(file_path):
+            return
+        
+        try:
+            if self._ack_action == 'delete':
+                os.unlink(file_path)
+                self.logger.debug(f"消费确认，已删除文件: {file_path}")
+            elif self._ack_action == 'archive':
+                # 移动到归档目录，保持相对路径结构
+                file_path_obj = Path(file_path)
+                # 计算文件相对于监控目录的相对路径
+                relative_path = file_path_obj.relative_to(self._queue_dir)
+                # 在归档目录中保持相同的相对路径
+                dest = self._archive_dir / relative_path
+                # 确保目标目录存在
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(file_path, dest.as_posix())
+                self.logger.debug(f"消费确认，已归档文件到: {dest.as_posix()}")
+            else:
+                # ack_action == 'none'，纯监控模式
+                self.logger.debug(f"消费确认，纯监控模式，文件保持原位: {file_path}")
+        except Exception as e:
+            self.logger.warning(f"确认消费时处理文件失败: {e}")
+
+    def _requeue(self, kw):
+        """
+        消息重入队（仅 archive 模式有效）
+        将归档目录中的文件移回监控目录，触发重新消费
+        """
+        if self._ack_action != 'archive' or not self._archive_dir:
+            self.logger.warning("requeue 仅在 ack_action='archive' 模式下有效")
+            return
+        
+        file_path = kw.get('file_path')
+        if not file_path:
+            return
+        
+        # 计算文件相对于监控目录的相对路径
+        file_path_obj = Path(file_path)
+        try:
+            relative_path = file_path_obj.relative_to(self._queue_dir)
+        except ValueError:
+            # 如果无法计算相对路径，使用文件名
+            relative_path = file_path_obj.name
+        
+        # 检查归档目录中对应位置的文件
+        archived_path = self._archive_dir / relative_path
+        if archived_path.exists():
+            try:
+                # 移回监控目录，保持相对路径结构
+                dest = self._queue_dir / relative_path
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(archived_path.as_posix(), dest.as_posix())
+                self.logger.info(f"消息重入队，已移动文件回: {dest.as_posix()}")
+            except Exception as e:
+                self.logger.warning(f"重入队时移动文件失败: {e}")
+
+
+# ============================================================================
+# 注册 Broker
+# ============================================================================
+
+BROKER_KIND_WATCHDOG = 'WATCHDOG'
+
+
+register_broker_exclusive_config_default(
+    BROKER_KIND_WATCHDOG,
+    {
+        'watch_path': './watchdog_queues',      # 监控根目录
+        'patterns': ['*'],                       # 匹配的文件模式
+        'ignore_patterns': [],                   # 忽略的文件模式
+        'ignore_directories': True,              # 是否忽略目录事件
+        'case_sensitive': False,                 # 是否区分大小写
+        
+         # event_types 枚举大全: ['created', 'modified', 'deleted', 'moved', 'existing']
+         # created: 文件新建; modified: 文件修改; deleted: 文件删除; moved: 文件移动; 
+         # existing: 启动时已存在的文件是否触发funboost消费,原生的watchdog不支持，funboost支持，完美解决funboost服务重启后，停机期间堆积的文件
+        'event_types': ['created', 'modified'],  
+        # 监听的事件类型，如果是一次性写入文件，只监听modified就好，不然每次写入一个新的文件会触发created 和 modified总计2次。
+        
+        'recursive': False,                      # 是否递归监控子目录
+        
+        # ack_action 枚举: 'delete' | 'archive' | 'none'
+        # delete: 消费后删除文件; archive: 消费后归档到 archive_path; none: 纯监控模式，什么都不做
+        'ack_action': 'delete',              # 消费后操作
+        
+        # 归档目录路径（仅 ack_action='archive' 时需要）
+        # 重要：archive_path 不能是 watch_path 的子目录，否则会触发重复事件！
+        'archive_path': None,
+        
+        'read_file_content': True,               # 是否读取文件内容（小于1MB的文件）
+        
+        # 防抖时间（秒）：None 表示不防抖，设置数值则在该时间内对同一文件的多次事件只触发一次消费
+        # 例如：debounce_seconds=2，则第0秒创建文件、第1秒修改、第2秒又修改，只会在最后一次修改后2秒触发一次消费
+        'debounce_seconds': 0.5,
+    }
+)
+
+register_custom_broker(BROKER_KIND_WATCHDOG, WatchdogPublisher, WatchdogConsumer)
+
+
+# ============================================================================
+# 测试代码
+# ============================================================================
+
+
+
+`````
+
+--- **end of file: funboost/contrib/register_custom_broker_contrib/watchdog_broker.py** (project: funboost) --- 
+
+---
+
+
+--- **start of file: funboost/contrib/register_custom_broker_contrib/websocket_broker.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `funboost/contrib/register_custom_broker_contrib/websocket_broker.py`
+
+#### 📝 Module Docstring
+
+`````
+WebSocket Broker - 基于 WebSocket 的消息队列
+
+设计理念：
+    - 使用 WebSocket 连接进行消息发布和消费
+    - 支持实时双向通信
+    - 适用于轻量级、实时性要求高的场景
+
+使用方式：
+    from websocket_broker import BROKER_KIND_WEBSOCKET
+    
+    @boost(BoosterParams(
+        queue_name='ws_queue',
+        broker_kind=BROKER_KIND_WEBSOCKET,
+        broker_exclusive_config={
+            'ws_url': 'ws://localhost:8765',
+        }
+    ))
+    def process_message(x, y):
+        return x + y
+    
+    if __name__ == '__main__':
+        # 需要先启动 WebSocket 服务器
+        process_message.consume()
+
+依赖：
+    pip install websocket-client
+`````
+
+#### 📦 Imports
+
+- `import json`
+- `import threading`
+- `import time`
+- `import queue as queue_module`
+- `from typing import Optional`
+- `import logging`
+- `import re`
+- `import socket`
+- `from funboost import register_custom_broker`
+- `from funboost import AbstractConsumer`
+- `from funboost import AbstractPublisher`
+- `from funboost.core.broker_kind__exclusive_config_default_define import register_broker_exclusive_config_default`
+- `from funboost.core.loggers import get_funboost_file_logger`
+- `import websocket`
+- `import asyncio`
+- `import websockets`
+
+#### 🏛️ Classes (2)
+
+##### 📌 `class WebSocketPublisher(AbstractPublisher)`
+*Line: 55*
+
+**Docstring:**
+`````
+WebSocket 发布者
+
+通过 WebSocket 连接向服务器发送消息
+`````
+
+**Public Methods (4):**
+- `def custom_init(self)`
+- `def clear(self)`
+  - *清空队列（WebSocket 不支持，发送清空命令给服务器）*
+- `def get_message_count(self) -> int`
+  - *获取队列消息数量（需要服务器支持）*
+- `def close(self)`
+  - *关闭连接*
+
+##### 📌 `class WebSocketConsumer(AbstractConsumer)`
+*Line: 131*
+
+**Docstring:**
+`````
+WebSocket 消费者
+
+通过 WebSocket 连接接收消息并消费
+`````
+
+**Class Variables (3):**
+- `BROKER_KIND = None`
+- `_server_started = False`
+- `_server_lock = threading.Lock()`
+
+#### 🔧 Public Functions (3)
+
+- `def start_simple_ws_server(host = 'localhost', port = 8765)`
+  - *Line: 334*
+  - **Docstring:**
+  `````
+  启动一个简单的 WebSocket 服务器用于测试
+  
+  需要安装：pip install websockets
+  `````
+
+- `async def handler(ws)`
+  - *Line: 349*
+
+- `async def main()`
+  - *Line: 410*
+
+
+---
+
+`````python
+# -*- coding: utf-8 -*-
+# @Author  : AI Assistant
+# @Time    : 2026/1/26
+"""
+WebSocket Broker - 基于 WebSocket 的消息队列
+
+设计理念：
+    - 使用 WebSocket 连接进行消息发布和消费
+    - 支持实时双向通信
+    - 适用于轻量级、实时性要求高的场景
+
+使用方式：
+    from websocket_broker import BROKER_KIND_WEBSOCKET
+    
+    @boost(BoosterParams(
+        queue_name='ws_queue',
+        broker_kind=BROKER_KIND_WEBSOCKET,
+        broker_exclusive_config={
+            'ws_url': 'ws://localhost:8765',
+        }
+    ))
+    def process_message(x, y):
+        return x + y
+    
+    if __name__ == '__main__':
+        # 需要先启动 WebSocket 服务器
+        process_message.consume()
+
+依赖：
+    pip install websocket-client
+"""
+
+import json
+import threading
+import time
+import queue as queue_module
+from typing import Optional
+import logging
+import re
+import socket
+
+try:
+    import websocket
+except ImportError:
+    raise ImportError("请安装 websocket-client: pip install websocket-client")
+
+from funboost import register_custom_broker, AbstractConsumer, AbstractPublisher
+from funboost.core.broker_kind__exclusive_config_default_define import register_broker_exclusive_config_default
+from funboost.core.loggers import get_funboost_file_logger
+
+# ============================================================================
+# Publisher 实现
+# ============================================================================
+
+class WebSocketPublisher(AbstractPublisher):
+    """
+    WebSocket 发布者
+    
+    通过 WebSocket 连接向服务器发送消息
+    """
+    
+    def custom_init(self):
+        config = self.publisher_params.broker_exclusive_config
+        self._ws_url = config['ws_url']
+        self._reconnect_interval = config['reconnect_interval']
+        self._ws = None
+        self._lock = threading.Lock()
+        self._connect()
+        self.logger.info(f"WebSocket Publisher 初始化完成，连接: {self._ws_url}")
+    
+    def _connect(self):
+        """建立 WebSocket 连接"""
+        try:
+            self._ws = websocket.create_connection(
+                self._ws_url,
+                timeout=10,
+            )
+            self.logger.debug(f"WebSocket 连接成功: {self._ws_url}")
+        except Exception as e:
+            self.logger.warning(f"WebSocket 连接失败: {e}")
+            self._ws = None
+    
+    def _ensure_connection(self):
+        """确保连接有效"""
+        with self._lock:
+            if self._ws is None or not self._ws.connected:
+                self._connect()
+    
+    def _publish_impl(self, msg: str):
+        """
+        发布消息：通过 WebSocket 发送
+        """
+        self._ensure_connection()
+        if self._ws is None:
+            raise ConnectionError("WebSocket 连接不可用")
+        
+        # 封装消息，添加队列名称
+        envelope = {
+            'command': 'publish',
+            'queue': self._queue_name,
+            'body': msg,
+        }
+        self._ws.send(json.dumps(envelope))
+    
+    def clear(self):
+        """清空队列（WebSocket 不支持，发送清空命令给服务器）"""
+        self._ensure_connection()
+        if self._ws:
+            cmd = {'command': 'clear', 'queue': self._queue_name}
+            self._ws.send(json.dumps(cmd))
+    
+    def get_message_count(self) -> int:
+        """获取队列消息数量（需要服务器支持）"""
+        # WebSocket 本身不支持获取消息数量，返回 -1 表示未知
+        return -1
+    
+    def close(self):
+        """关闭连接"""
+        if self._ws:
+            try:
+                self._ws.close()
+            except Exception:
+                pass
+            self._ws = None
+
+
+# ============================================================================
+# Consumer 实现
+# ============================================================================
+
+class WebSocketConsumer(AbstractConsumer):
+    """
+    WebSocket 消费者
+    
+    通过 WebSocket 连接接收消息并消费
+    """
+    
+    BROKER_KIND = None  # 会被框架自动设置
+    _server_started = False  # 类变量，标记服务器是否已启动
+    _server_lock = threading.Lock()
+    
+    def _before_start_consuming_message_hook(self):
+        config = self.consumer_params.broker_exclusive_config
+        self._ws_url = config['ws_url']
+        self._reconnect_interval = config['reconnect_interval']
+        self._ws = None
+        self._running = False
+        self._message_queue = queue_module.Queue()
+        
+        # 自动启动 WebSocket 服务器（如果尚未启动）
+        self._ensure_server_started()
+        
+        self.logger.info(f"WebSocket Consumer 初始化完成，连接: {self._ws_url}")
+    
+    def _ensure_server_started(self):
+        """确保 WebSocket 服务器已启动"""
+        with WebSocketConsumer._server_lock:
+            if WebSocketConsumer._server_started:
+                return
+            
+            # 解析 URL 获取 host 和 port
+            
+            match = re.match(r'ws://([^:]+):(\d+)', self._ws_url)
+            if not match:
+                self.logger.warning(f"无法解析 WebSocket URL: {self._ws_url}")
+                return
+            
+            host = match.group(1)
+            port = int(match.group(2))
+            
+            # 检查端口是否已被占用
+            
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                sock.bind((host, port))
+                sock.close()
+                # 端口可用，启动服务器
+                self._start_server_in_background(host, port)
+                WebSocketConsumer._server_started = True
+            except OSError:
+                # 端口已被占用，可能服务器已启动
+                self.logger.info(f"WebSocket 服务器可能已在运行: {self._ws_url}")
+                WebSocketConsumer._server_started = True
+            finally:
+                try:
+                    sock.close()
+                except Exception:
+                    pass
+    
+    def _start_server_in_background(self, host, port):
+        """在后台线程启动 WebSocket 服务器"""
+        def _run():
+            try:
+                start_simple_ws_server(host=host, port=port)
+            except Exception as e:
+                self.logger.error(f"WebSocket 服务器异常: {e}")
+        
+        thread = threading.Thread(target=_run, daemon=True)
+        thread.start()
+        time.sleep(0.5)  # 等待服务器启动
+        self.logger.info(f"WebSocket 服务器已在后台启动: ws://{host}:{port}")
+    
+    def _connect(self):
+        """建立 WebSocket 连接"""
+        try:
+            self._ws = websocket.create_connection(
+                self._ws_url,
+                timeout=30,
+            )
+            # 发送订阅命令
+            subscribe_cmd = {
+                'command': 'subscribe',
+                'queue': self._queue_name,
+            }
+            self._ws.send(json.dumps(subscribe_cmd))
+            self.logger.info(f"WebSocket 连接成功并订阅队列: {self._queue_name}")
+            return True
+        except Exception as e:
+            self.logger.warning(f"WebSocket 连接失败: {e}")
+            self._ws = None
+            return False
+    
+    def _dispatch_task(self):
+        """
+        核心调度方法
+        接收 WebSocket 消息并提交任务
+        """
+        self._running = True
+        
+        while self._running:
+            # 确保连接
+            if self._ws is None or not self._ws.connected:
+                if not self._connect():
+                    time.sleep(self._reconnect_interval)
+                    continue
+            
+            try:
+                # 接收消息（阻塞）
+                raw_message = self._ws.recv()
+                if not raw_message:
+                    continue
+                
+                # 解析消息
+                envelope = json.loads(raw_message)
+                
+                # 检查是否是目标队列的消息
+                if envelope.get('queue') != self._queue_name:
+                    continue
+                
+                body = envelope.get('body')
+                if body is None:
+                    continue
+                
+                # 如果 body 是字符串，解析为字典
+                if isinstance(body, str):
+                    body = json.loads(body)
+                
+                # 封装为 kw 并提交任务
+                kw = {
+                    'body': body,
+                    'message_id': envelope.get('message_id'),
+                }
+                self._submit_task(kw)
+                
+            except websocket.WebSocketTimeoutException:
+                # 超时是正常的，继续循环
+                continue
+            except websocket.WebSocketConnectionClosedException:
+                self.logger.warning("WebSocket 连接已关闭，尝试重连...")
+                self._ws = None
+                time.sleep(self._reconnect_interval)
+          
+    
+    def _confirm_consume(self, kw):
+        """
+        确认消费成功
+        WebSocket 通常不需要 ACK，但可以发送确认命令给服务器
+        """
+        message_id = kw.get('message_id')
+        if message_id and self._ws and self._ws.connected:
+            try:
+                ack_cmd = {
+                    'command': 'ack',
+                    'queue': self._queue_name,
+                    'message_id': message_id,
+                }
+                self._ws.send(json.dumps(ack_cmd))
+            except Exception as e:
+                self.logger.debug(f"发送 ACK 失败: {e}")
+    
+    def _requeue(self, kw):
+        """
+        消息重入队
+        发送重入队命令给服务器
+        """
+        message_id = kw.get('message_id')
+        body = kw.get('body')
+        if self._ws and self._ws.connected:
+            try:
+                requeue_cmd = {
+                    'command': 'requeue',
+                    'queue': self._queue_name,
+                    'message_id': message_id,
+                    'body': body,
+                }
+                self._ws.send(json.dumps(requeue_cmd))
+            except Exception as e:
+                self.logger.warning(f"重入队失败: {e}")
+
+
+# ============================================================================
+# 注册 Broker
+# ============================================================================
+
+BROKER_KIND_WEBSOCKET = 'WEBSOCKET'
+
+register_broker_exclusive_config_default(
+    BROKER_KIND_WEBSOCKET,
+    {
+        'ws_url': 'ws://localhost:8765',         # WebSocket 服务器地址
+        'reconnect_interval': 5,                  # 重连间隔（秒）
+    }
+)
+
+register_custom_broker(BROKER_KIND_WEBSOCKET, WebSocketPublisher, WebSocketConsumer)
+
+
+# ============================================================================
+# 简单的 WebSocket 服务器（用于测试）
+# ============================================================================
+
+logger_ws_server = get_funboost_file_logger('websocket_server',log_level_int=logging.INFO)
+
+def start_simple_ws_server(host='localhost', port=8765):
+    """
+    启动一个简单的 WebSocket 服务器用于测试
+    
+    需要安装：pip install websockets
+    """
+    try:
+        import asyncio
+        import websockets
+    except ImportError:
+        raise ImportError("请安装 websockets: pip install websockets")
+    
+    # 存储订阅者（不缓存消息，WebSocket 是实时的）
+    subscribers = {}  # {queue_name: [websocket]}
+    
+    async def handler(ws):
+        logger_ws_server.info(f"新连接: {ws.remote_address}")
+        subscribed_queue = None
+        
+        try:
+            async for message in ws:
+                data = json.loads(message)
+                command = data.get('command')
+                queue_name = data.get('queue')
+                
+                if command == 'subscribe':
+                    # 订阅队列
+                    subscribed_queue = queue_name
+                    if queue_name not in subscribers:
+                        subscribers[queue_name] = []
+                    subscribers[queue_name].append(ws)
+                    logger_ws_server.info(f"客户端订阅队列: {queue_name}")
+                        
+                elif command == 'clear':
+                    # 清空（WebSocket 无缓存，无需处理）
+                    pass
+                    
+                elif command == 'ack':
+                    # ACK（WebSocket 模式不需要 ACK）
+                    pass
+                    
+                elif command == 'requeue':
+                    # 重入队：直接再次发送给订阅者
+                    body = data.get('body')
+                    if queue_name in subscribers:
+                        requeue_msg = json.dumps({
+                            'queue': queue_name,
+                            'body': body,
+                            'message_id': data.get('message_id'),
+                        })
+                        for subscriber in subscribers[queue_name]:
+                            try:
+                                await subscriber.send(requeue_msg)
+                            except Exception as e:
+                                logger_ws_server.error(f"重入队发送失败: {e}")
+                    
+                elif command == 'publish' or command is None:
+                    # 发布消息：分发给订阅者，没有订阅者就丢弃
+                    if queue_name in subscribers and subscribers[queue_name]:
+                        for subscriber in subscribers[queue_name]:
+                            try:
+                                await subscriber.send(message)
+                            except Exception as e:
+                                print(f"发送失败（连接可能已关闭）: {e}")
+                        logger_ws_server.debug(f"消息已分发: {queue_name}")
+                    else:
+                        logger_ws_server.warning(f"消息已丢弃（无订阅者）: {queue_name}")
+                    
+        except websockets.ConnectionClosed:
+            logger_ws_server.info(f"连接正常关闭: {ws.remote_address}")
+        finally:
+            # 移除订阅者
+            if subscribed_queue and subscribed_queue in subscribers:
+                if ws in subscribers[subscribed_queue]:
+                    subscribers[subscribed_queue].remove(ws)
+    
+    async def main():
+        async with websockets.serve(handler, host, port):
+            logger_ws_server.info(f"WebSocket 服务器启动: ws://{host}:{port}")
+            await asyncio.Future()  # 永远运行
+    
+    asyncio.run(main())
+
+
+if __name__ == '__main__':
+    pass
+`````
+
+--- **end of file: funboost/contrib/register_custom_broker_contrib/websocket_broker.py** (project: funboost) --- 
 
 ---
 
@@ -42102,7 +44617,7 @@ care_project_name 的作用是：
 - `def get_queues_history_run_fail_count(self)`
 - `def get_queues_params_and_active_consumers(self)`
   - *获取所有队列的参数和活跃消费者*
-- `def cycle_get_queues_params_and_active_consumers_and_report(self, daemon = False)`
+- `def cycle_get_queues_params_and_active_consumers_and_report(self, daemon = True)`
 
 ##### 📌 `class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin, FunboostFileLoggerMixin)`
 *Line: 405*
@@ -42616,7 +45131,7 @@ class QueuesConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Funboost
             }
         return queue_params_and_active_consumers
     
-    def cycle_get_queues_params_and_active_consumers_and_report(self,daemon=False):
+    def cycle_get_queues_params_and_active_consumers_and_report(self,daemon=True):
         time_interval = 10
         report_uuid = str(uuid.uuid4()) 
         def _inner():
@@ -44118,6 +46633,36 @@ register_broker_exclusive_config_default(
 )
 
 
+# 内存队列(MEMORY_QUEUE/LOCAL_PYTHON_QUEUE)专有配置
+# maxsize: 队列最大容量，0表示无界队列（默认），正整数表示有界队列
+#   当队列已满时，put操作会阻塞直到有空位
+register_broker_exclusive_config_default(
+    BrokerEnum.MEMORY_QUEUE,
+    {
+        "maxsize": 0,  # 队列最大容量，0表示无界队列
+    },
+)
+
+
+# RocketMQ 5.x 专有配置
+# 使用 rocketmq-python-client 包（pip install rocketmq-python-client）
+# 基于 gRPC 协议，纯 Python 实现，支持 Windows/Linux/macOS
+# SimpleConsumer 模式：支持单条消息乱序 ACK，不依赖 offset
+register_broker_exclusive_config_default(
+    BrokerEnum.ROCKETMQ5,
+    {
+        "endpoints": "127.0.0.1:8081",  # RocketMQ 5.x gRPC Proxy 端点地址
+        "consumer_group": "funboost_consumer_group",  # 消费者组名
+        "access_key": None,  # 访问密钥（可选，阿里云等需要）
+        "secret_key": None,  # 密钥（可选）
+        "namespace": None,  # 命名空间（可选）
+        "invisible_duration": 15,  # 消息不可见时间（秒），消息取出后在此时间内对其他消费者不可见
+        "max_message_num": 32,  # 每次拉取的最大消息数
+        "tag": "*",  # 消息过滤 tag，'*' 表示不过滤
+        "namesrv_addr": None,  # NameServer 地址，用于自动创建 Topic，默认从 endpoints 推断
+        "cluster_name": "DefaultCluster",  # 集群名称，用于自动创建 Topic
+    },
+)
 `````
 
 --- **end of file: funboost/core/broker_kind__exclusive_config_default_define.py** (project: funboost) --- 
@@ -45785,7 +48330,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 **Public Methods (1):**
 - `def check_values(self)` `compatible_root_validator(skip_on_failure=True)`
 
-**Class Variables (52):**
+**Class Variables (51):**
 - `queue_name: str`
 - `broker_kind: str = BrokerEnum.SQLITE_QUEUE`
 - `project_name: typing.Optional[str] = None`
@@ -45820,8 +48365,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `rpc_result_expire_seconds: int = 1800`
 - `rpc_timeout: int = 1800`
 - `delay_task_apscheduler_jobstores_kind: Literal['redis', 'memory'] = 'redis'`
-- `is_do_not_run_by_specify_time_effect: bool = False`
-- `do_not_run_by_specify_time: typing.List[str] = ['10:00:00', '22:00:00']`
+- `allow_run_time_cron: typing.Optional[str] = None`
 - `schedule_tasks_on_main_thread: bool = False`
 - `is_auto_start_consuming_message: bool = False`
 - `booster_group: typing.Union[str, None] = None`
@@ -45840,7 +48384,7 @@ pydatinc pycharm编程代码补全,请安装 pydantic插件, 在pycharm的  file
 - `booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT`
 
 ##### 📌 `class BoosterParamsComplete(BoosterParams)`
-*Line: 269*
+*Line: 277*
 
 **Docstring:**
 `````
@@ -45862,7 +48406,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `specify_concurrent_pool: FunboostBaseConcurrentPool = Field(default_factory=functools.partial(ConcurrentPoolBuilder.get_pool, FlexibleThreadPool, 500))`
 
 ##### 📌 `class TaskOptions(BaseJsonAbleModel)`
-*Line: 289*
+*Line: 297*
 
 **Docstring:**
 `````
@@ -45874,7 +48418,7 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 **Public Methods (1):**
 - `def cehck_values(self)` `compatible_root_validator(skip_on_failure=True)`
 
-**Class Variables (16):**
+**Class Variables (17):**
 - `task_id: str = None`
 - `publish_time: float = None`
 - `publish_time_format: str = None`
@@ -45888,12 +48432,13 @@ specify_concurrent_pool 同一个进程的不同booster函数,共用一个线程
 - `misfire_grace_time: typing.Union[int, None] = None`
 - `user_extra_info: typing.Optional[dict] = None`
 - `other_extra_params: typing.Optional[dict] = None`
+- `do_task_filtering: typing.Optional[bool] = None`
 - `filter_str: typing.Optional[str] = None`
 - `can_not_json_serializable_keys: typing.List[str] = None`
 - `otel_context: typing.Optional[dict] = None`
 
 ##### 📌 `class PublisherParams(BaseJsonAbleModel)`
-*Line: 342*
+*Line: 352*
 
 **Class Variables (21):**
 - `queue_name: str`
@@ -46066,8 +48611,16 @@ class BoosterParams(BaseJsonAbleModel):
     delay_task_apscheduler_jobstores_kind :Literal[ 'redis', 'memory'] = 'redis'  # 延时任务的aspcheduler对象使用哪种jobstores ，可以为 redis memory 两种作为jobstore
 
     
-    is_do_not_run_by_specify_time_effect: bool = False  # 是否使不运行的时间段生效
-    do_not_run_by_specify_time: typing.List[str] = ['10:00:00', '22:00:00']  # 不运行的时间段,在这个时间段自动不运行函数.
+    """
+    allow_run_time_cron:
+    只允许在规定的crontab表达式时间内运行。
+
+    例如 '* 23,0-2 * * *' 表示只在23点到2点运行。
+    allow_run_time_cron='* 9-17 * * 1-5', 表示只在周一到周五的9点到17:59:59运行。
+    为None则不限制运行时间。
+    语法是知名 croniter 包的语法，不是funboost创造的特殊语法，用户自己去google或者ai学习语法。
+    """
+    allow_run_time_cron: typing.Optional[str] = None
 
     schedule_tasks_on_main_thread: bool = False  # 直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
 
@@ -46239,6 +48792,8 @@ class TaskOptions(BaseJsonAbleModel):
 
     other_extra_params: typing.Optional[dict] = None  # 其他参数，某些中间件独有的, 例如消息优先级 , task_options=TaskOptions(other_extra_params={'priroty': priorityxx})，
     
+
+    do_task_filtering: typing.Optional[bool] = None # 是否开启任务入参过滤
     """filter_str:
     用户指定过滤字符串， 例如函数入参是 def fun(userid,username,sex，user_description),
     默认是所有入参一起组成json来过滤，但其实只把userid的值来过滤就好了。所以如果需要精准的按照什么过滤，用户来灵活指定一个字符串就好了
@@ -46323,6 +48878,8 @@ if __name__ == '__main__':
 #### 📦 Imports
 
 - `import time`
+- `import typing`
+- `from funboost.core.serialization import Serialization`
 - `from funboost.utils import uuid7`
 - `from funboost.core.funboost_time import FunboostTime`
 - `from funboost.core.funboost_time import fast_get_now_time_str`
@@ -46331,7 +48888,7 @@ if __name__ == '__main__':
 #### 🏛️ Classes (1)
 
 ##### 📌 `class MsgGenerater`
-*Line: 58*
+*Line: 62*
 
 **Public Methods (4):**
 - `def generate_task_id(queue_name: str) -> str` `staticmethod`
@@ -46345,10 +48902,10 @@ if __name__ == '__main__':
 - `def generate_publish_time_format() -> str` `staticmethod`
 - `def generate_pulish_time_and_task_id(cls, queue_name: str, task_id = None)` `classmethod`
 
-#### 🔧 Public Functions (5)
+#### 🔧 Public Functions (6)
 
 - `def get_publish_time(paramsx: dict)`
-  - *Line: 6*
+  - *Line: 8*
   - **Docstring:**
   `````
   :param paramsx:
@@ -46356,15 +48913,18 @@ if __name__ == '__main__':
   `````
 
 - `def get_publish_time_format(paramsx: dict)`
-  - *Line: 14*
+  - *Line: 16*
   - **Docstring:**
   `````
   :param paramsx:
   :return:
   `````
 
+- `def get_task_id(msg: typing.Union[dict, str])`
+  - *Line: 23*
+
 - `def delete_keys_and_return_new_dict(dictx: dict, exclude_keys: list)`
-  - *Line: 26*
+  - *Line: 28*
   - **Docstring:**
   `````
   返回一个不包含extra字段的新字典,也即是真正的函数入参字典。
@@ -46372,7 +48932,7 @@ if __name__ == '__main__':
   `````
 
 - `def get_func_only_params(dictx: dict) -> dict`
-  - *Line: 35*
+  - *Line: 37*
   - **Docstring:**
   `````
   消息中剔除 extra 字段，返回真正的函数入参字典。
@@ -46381,7 +48941,7 @@ if __name__ == '__main__':
   `````
 
 - `def block_python_main_thread_exit()`
-  - *Line: 43*
+  - *Line: 47*
   - **Docstring:**
   `````
   https://funboost.readthedocs.io/zh-cn/latest/articles/c10.html#runtimeerror-cannot-schedule-new-futures-after-interpreter-shutdown
@@ -46395,6 +48955,8 @@ if __name__ == '__main__':
 
 `````python
 import time
+import typing
+from funboost.core.serialization import Serialization
 from funboost.utils import uuid7 
 from funboost.core.funboost_time import FunboostTime, fast_get_now_time_str
 
@@ -46414,9 +48976,9 @@ def get_publish_time_format(paramsx: dict):
     """
     return paramsx.get('extra', {}).get('publish_time_format', None)
 
-
-
-
+def get_task_id(msg:typing.Union[dict,str]):
+    msg_dict = Serialization.to_dict(msg)
+    return msg_dict.get('extra', {}).get('task_id', None)
 
 
 def delete_keys_and_return_new_dict(dictx: dict, exclude_keys: list ):
@@ -46435,6 +48997,8 @@ def get_func_only_params(dictx: dict)->dict:
     :return:
     """
     return {k: v for k, v in dictx.items() if k not in _DEFAULT_EXCLUDE_KEYS}
+
+
 
 def block_python_main_thread_exit():
     """
@@ -52205,11 +54769,12 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
 - `from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter`
 - `from funboost.core.active_cousumer_info_getter import QueuesConusmerParamsGetter`
 - `from funboost.core.active_cousumer_info_getter import CareProjectNameEnv`
+- `from funboost.core.active_cousumer_info_getter import ActiveCousumerProcessInfoGetter`
 - `from funboost.faas.faas_util import gen_aps_job_adder`
 - `from funboost.core.loggers import get_funboost_file_logger`
 - `from flask import Flask`
 
-#### 🔧 Public Functions (23)
+#### 🔧 Public Functions (29)
 
 - `def publish_msg()` `flask_blueprint.route('/publish', methods=['POST'])`
   - *Line: 34*
@@ -52562,8 +55127,78 @@ Flask 开箱即用，作者自带贡献，只需要用户的 app.register_bluepr
       }
   `````
 
+- `def hearbeat_info_by_queue_name()` `flask_blueprint.route('/running_consumer/hearbeat_info_by_queue_name', methods=['GET'])`
+  - *Line: 1272*
+  - **Docstring:**
+  `````
+  按队列名获取消费者心跳信息
+  
+  查询参数:
+      queue_name: 队列名称（可选，不传或传"所有"则返回所有消费者）
+  
+  返回:
+      消费者心跳信息列表
+  `````
+
+- `def hearbeat_info_by_ip()` `flask_blueprint.route('/running_consumer/hearbeat_info_by_ip', methods=['GET'])`
+  - *Line: 1311*
+  - **Docstring:**
+  `````
+  按 IP 获取消费者心跳信息
+  
+  查询参数:
+      ip: IP 地址（可选，不传或传"所有"则返回所有消费者）
+  
+  返回:
+      消费者心跳信息列表
+  `````
+
+- `def hearbeat_info_partion_by_queue_name()` `flask_blueprint.route('/running_consumer/hearbeat_info_partion_by_queue_name', methods=['GET'])`
+  - *Line: 1350*
+  - **Docstring:**
+  `````
+  按队列名分组统计消费者数量
+  
+  返回:
+      队列名列表及每个队列的消费者数量，第一项为"所有"表示总数
+  `````
+
+- `def hearbeat_info_partion_by_ip()` `flask_blueprint.route('/running_consumer/hearbeat_info_partion_by_ip', methods=['GET'])`
+  - *Line: 1381*
+  - **Docstring:**
+  `````
+  按 IP 分组统计消费者数量
+  
+  返回:
+      IP 列表及每个 IP 的消费者数量，第一项为"所有"表示总数
+  `````
+
+- `def get_queues_params_and_active_consumers()` `flask_blueprint.route('/queues_params_and_active_consumers', methods=['GET'])`
+  - *Line: 1412*
+  - **Docstring:**
+  `````
+  获取所有队列的参数配置和活跃消费者信息
+  
+  返回:
+      所有队列的配置参数及其活跃消费者列表
+  `````
+
+- `def get_msg_num_all_queues()` `flask_blueprint.route('/get_msg_num_all_queues', methods=['GET'])`
+  - *Line: 1436*
+  - **Docstring:**
+  `````
+  批量获取所有队列的消息数量
+  
+  说明:
+      这个是通过消费者周期每隔10秒上报到redis的，性能好。
+      不需要实时获取每个消息队列，直接从redis读取所有队列的消息数量。
+  
+  返回:
+      {queue_name: msg_count, ...}
+  `````
+
 - `def index()` `app.route('/')`
-  - *Line: 1280*
+  - *Line: 1474*
 
 
 ---
@@ -52588,7 +55223,7 @@ import traceback
 from flask import Blueprint, request, jsonify
 
 from funboost import AsyncResult, TaskOptions
-from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter, QueuesConusmerParamsGetter, CareProjectNameEnv
+from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter, QueuesConusmerParamsGetter, CareProjectNameEnv, ActiveCousumerProcessInfoGetter
 from funboost.faas.faas_util import gen_aps_job_adder
 from funboost.core.loggers import get_funboost_file_logger
 
@@ -53837,6 +56472,200 @@ def get_all_project_names():
         }), 500
 
 
+# ==================== 运行中消费者信息接口 ====================
+
+@flask_blueprint.route("/running_consumer/hearbeat_info_by_queue_name", methods=['GET'])
+def hearbeat_info_by_queue_name():
+    """
+    按队列名获取消费者心跳信息
+    
+    查询参数:
+        queue_name: 队列名称（可选，不传或传"所有"则返回所有消费者）
+    
+    返回:
+        消费者心跳信息列表
+    """
+    try:
+        queue_name = request.args.get("queue_name")
+        if queue_name in ("所有", None, ""):
+            info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
+            ret_list = []
+            for q_name, dic in info_map.items():
+                ret_list.extend(dic)
+            return jsonify({
+                "succ": True,
+                "msg": "获取成功",
+                "data": ret_list
+            })
+        else:
+            data = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_queue_name(queue_name)
+            return jsonify({
+                "succ": True,
+                "msg": "获取成功",
+                "data": data
+            })
+    except Exception as e:
+        logger.exception(f'获取消费者心跳信息失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"获取消费者心跳信息失败: {str(e)}",
+            "data": []
+        }), 500
+
+
+@flask_blueprint.route("/running_consumer/hearbeat_info_by_ip", methods=['GET'])
+def hearbeat_info_by_ip():
+    """
+    按 IP 获取消费者心跳信息
+    
+    查询参数:
+        ip: IP 地址（可选，不传或传"所有"则返回所有消费者）
+    
+    返回:
+        消费者心跳信息列表
+    """
+    try:
+        ip = request.args.get("ip")
+        if ip in ("所有", None, ""):
+            info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_ip()
+            ret_list = []
+            for q_name, dic in info_map.items():
+                ret_list.extend(dic)
+            return jsonify({
+                "succ": True,
+                "msg": "获取成功",
+                "data": ret_list
+            })
+        else:
+            data = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_ip(ip)
+            return jsonify({
+                "succ": True,
+                "msg": "获取成功",
+                "data": data
+            })
+    except Exception as e:
+        logger.exception(f'获取消费者心跳信息失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"获取消费者心跳信息失败: {str(e)}",
+            "data": []
+        }), 500
+
+
+@flask_blueprint.route("/running_consumer/hearbeat_info_partion_by_queue_name", methods=['GET'])
+def hearbeat_info_partion_by_queue_name():
+    """
+    按队列名分组统计消费者数量
+    
+    返回:
+        队列名列表及每个队列的消费者数量，第一项为"所有"表示总数
+    """
+    try:
+        info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
+        ret_list = []
+        total_count = 0
+        for k, v in info_map.items():
+            ret_list.append({"collection_name": k, "count": len(v)})
+            total_count += len(v)
+        ret_list = sorted(ret_list, key=lambda x: x["collection_name"])
+        ret_list.insert(0, {"collection_name": "所有", "count": total_count})
+        return jsonify({
+            "succ": True,
+            "msg": "获取成功",
+            "data": ret_list
+        })
+    except Exception as e:
+        logger.exception(f'获取消费者分组统计失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"获取消费者分组统计失败: {str(e)}",
+            "data": []
+        }), 500
+
+
+@flask_blueprint.route("/running_consumer/hearbeat_info_partion_by_ip", methods=['GET'])
+def hearbeat_info_partion_by_ip():
+    """
+    按 IP 分组统计消费者数量
+    
+    返回:
+        IP 列表及每个 IP 的消费者数量，第一项为"所有"表示总数
+    """
+    try:
+        info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_ip()
+        ret_list = []
+        total_count = 0
+        for k, v in info_map.items():
+            ret_list.append({"collection_name": k, "count": len(v)})
+            total_count += len(v)
+        ret_list = sorted(ret_list, key=lambda x: x["collection_name"])
+        ret_list.insert(0, {"collection_name": "所有", "count": total_count})
+        return jsonify({
+            "succ": True,
+            "msg": "获取成功",
+            "data": ret_list
+        })
+    except Exception as e:
+        logger.exception(f'获取消费者分组统计失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"获取消费者分组统计失败: {str(e)}",
+            "data": []
+        }), 500
+
+
+@flask_blueprint.route("/queues_params_and_active_consumers", methods=['GET'])
+def get_queues_params_and_active_consumers():
+    """
+    获取所有队列的参数配置和活跃消费者信息
+    
+    返回:
+        所有队列的配置参数及其活跃消费者列表
+    """
+    try:
+        data = QueuesConusmerParamsGetter().get_queues_params_and_active_consumers()
+        return jsonify({
+            "succ": True,
+            "msg": "获取成功",
+            "data": data
+        })
+    except Exception as e:
+        logger.exception(f'获取队列参数和活跃消费者失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"获取队列参数和活跃消费者失败: {str(e)}",
+            "data": {}
+        }), 500
+
+
+@flask_blueprint.route("/get_msg_num_all_queues", methods=['GET'])
+def get_msg_num_all_queues():
+    """
+    批量获取所有队列的消息数量
+    
+    说明:
+        这个是通过消费者周期每隔10秒上报到redis的，性能好。
+        不需要实时获取每个消息队列，直接从redis读取所有队列的消息数量。
+    
+    返回:
+        {queue_name: msg_count, ...}
+    """
+    try:
+        data = QueuesConusmerParamsGetter().get_msg_num(ignore_report_ts=True)
+        return jsonify({
+            "succ": True,
+            "msg": "获取成功",
+            "data": data
+        })
+    except Exception as e:
+        logger.exception(f'获取所有队列消息数量失败: {str(e)}')
+        return jsonify({
+            "succ": False,
+            "msg": f"获取所有队列消息数量失败: {str(e)}",
+            "data": {}
+        }), 500
+
+
 # 运行应用 (仅在作为主脚本运行时创建 app)
 if __name__ == "__main__":
     from flask import Flask
@@ -54056,7 +56885,6 @@ if typing.TYPE_CHECKING:
 - `from funboost.publishers.persist_queue_publisher import PersistQueuePublisher`
 - `from funboost.publishers.rabbitmq_pika_publisher import RabbitmqPublisher`
 - `from funboost.publishers.redis_publisher import RedisPublisher`
-- `from funboost.publishers.rocketmq_publisher import RocketmqPublisher`
 - `from funboost.publishers.redis_stream_publisher import RedisStreamPublisher`
 - `from funboost.publishers.mqtt_publisher import MqttPublisher`
 - `from funboost.publishers.httpsqs_publisher import HttpsqsPublisher`
@@ -54074,7 +56902,6 @@ if typing.TYPE_CHECKING:
 - `from funboost.consumers.redis_brpoplpush_consumer import RedisBrpopLpushConsumer`
 - `from funboost.consumers.redis_consumer import RedisConsumer`
 - `from funboost.consumers.redis_consumer_ack_able import RedisConsumerAckAble`
-- `from funboost.consumers.rocketmq_consumer import RocketmqConsumer`
 - `from funboost.consumers.redis_stream_consumer import RedisStreamConsumer`
 - `from funboost.consumers.tcp_consumer import TCPConsumer`
 - `from funboost.consumers.txt_file_consumer import TxtFileConsumer`
@@ -54127,6 +56954,12 @@ if typing.TYPE_CHECKING:
 - `from funboost.consumers.rabbitmq_amqp_consumer import RabbitmqAmqpConsumer`
 - `from funboost.publishers.postgres_publisher import PostgresPublisher`
 - `from funboost.consumers.postgres_consumer import PostgresConsumer`
+- `from funboost.publishers.rocketmq_publisher import RocketmqPublisher`
+- `from funboost.consumers.rocketmq_consumer import RocketmqConsumer`
+- `from funboost.publishers.rocketmq5_publisher import Rocketmq5Publisher`
+- `from funboost.consumers.rocketmq5_consumer import Rocketmq5Consumer`
+- `from funboost.contrib.register_custom_broker_contrib import watchdog_broker`
+- `from funboost.contrib.register_custom_broker_contrib import websocket_broker`
 
 #### 🔧 Public Functions (2)
 
@@ -54177,7 +57010,7 @@ from funboost.publishers.persist_queue_publisher import PersistQueuePublisher
 from funboost.publishers.rabbitmq_pika_publisher import RabbitmqPublisher
 
 from funboost.publishers.redis_publisher import RedisPublisher
-from funboost.publishers.rocketmq_publisher import RocketmqPublisher
+
 from funboost.publishers.redis_stream_publisher import RedisStreamPublisher
 from funboost.publishers.mqtt_publisher import MqttPublisher
 from funboost.publishers.httpsqs_publisher import HttpsqsPublisher
@@ -54199,7 +57032,7 @@ from funboost.consumers.rabbitmq_pika_consumer import RabbitmqConsumer
 from funboost.consumers.redis_brpoplpush_consumer import RedisBrpopLpushConsumer
 from funboost.consumers.redis_consumer import RedisConsumer
 from funboost.consumers.redis_consumer_ack_able import RedisConsumerAckAble
-from funboost.consumers.rocketmq_consumer import RocketmqConsumer
+
 from funboost.consumers.redis_stream_consumer import RedisStreamConsumer
 from funboost.consumers.tcp_consumer import TCPConsumer
 from funboost.consumers.txt_file_consumer import TxtFileConsumer
@@ -54225,7 +57058,7 @@ broker_kind__publsiher_consumer_type_map = {
     BrokerEnum.KAFKA: (KafkaPublisher, KafkaConsumer),
     BrokerEnum.REDIS_ACK_ABLE: (RedisPublisher, RedisConsumerAckAble),
     BrokerEnum.REDIS_PRIORITY: (RedisPriorityPublisher, RedisPriorityConsumer),
-    BrokerEnum.ROCKETMQ: (RocketmqPublisher, RocketmqConsumer),
+
     BrokerEnum.REDIS_STREAM: (RedisStreamPublisher, RedisStreamConsumer),
     BrokerEnum.ZEROMQ: (ZeroMqPublisher, ZeroMqConsumer),
     BrokerEnum.REDIS_BRPOP_LPUSH: (RedisPublisherLpush, RedisBrpopLpushConsumer),
@@ -54368,13 +57201,31 @@ def regist_to_funboost(broker_kind: str):
         from funboost.publishers.postgres_publisher import PostgresPublisher
         from funboost.consumers.postgres_consumer import PostgresConsumer
         register_custom_broker(BrokerEnum.POSTGRES, PostgresPublisher, PostgresConsumer)
-
+        
+    if broker_kind == BrokerEnum.ROCKETMQ:
+        from funboost.publishers.rocketmq_publisher import RocketmqPublisher
+        from funboost.consumers.rocketmq_consumer import RocketmqConsumer
+        register_custom_broker(BrokerEnum.ROCKETMQ, RocketmqPublisher, RocketmqConsumer)
+    if broker_kind == BrokerEnum.ROCKETMQ5:
+        from funboost.publishers.rocketmq5_publisher import Rocketmq5Publisher
+        from funboost.consumers.rocketmq5_consumer import Rocketmq5Consumer
+        register_custom_broker(BrokerEnum.ROCKETMQ5, Rocketmq5Publisher, Rocketmq5Consumer)
+        
+    if broker_kind == BrokerEnum.WATCHDOG:
+        from funboost.contrib.register_custom_broker_contrib  import watchdog_broker
+        # 无需调用 register_custom_broker ，已经在 watchdog_broker.py 中注册了
+        
+    if broker_kind == BrokerEnum.WEBSOCKET:
+        from funboost.contrib.register_custom_broker_contrib import websocket_broker
+        # 无需调用 register_custom_broker ，已经在 websocket_broker.py 中注册了
+        
+        
 
 if __name__ == '__main__':
     import sys
 
     print(sys.modules)
-
+    
 `````
 
 --- **end of file: funboost/factories/broker_kind__publsiher_consumer_type_map.py** (project: funboost) --- 
@@ -54685,7 +57536,6 @@ class PublisherCacheProxy:
 - `from flask_login import UserMixin`
 - `import nb_log`
 - `from funboost import nb_print`
-- `from funboost import ActiveCousumerProcessInfoGetter`
 - `from funboost.funboost_web_manager.functions import get_cols`
 - `from funboost.funboost_web_manager.functions import query_result`
 - `from funboost.funboost_web_manager.functions import get_speed`
@@ -54710,7 +57560,7 @@ class PublisherCacheProxy:
 - `password = PasswordField('密码', validators=[DataRequired(), Length(3, 64)])`
 - `remember_me = BooleanField('记住我')`
 
-#### 🔧 Public Functions (18)
+#### 🔧 Public Functions (12)
 
 - `def query_user(user_name)`
   - *Line: 84*
@@ -54737,33 +57587,14 @@ class PublisherCacheProxy:
   - *Line: 170*
 
 - `def consume_speed_curve()` `app.route('/consume_speed_curve')` `login_required`
-  - *Line: 185*
+  - *Line: 177*
   - *获取消费速率曲线数据*
 
 - `def serve_template(template)` `app.route('/tpl/<template>')` `login_required`
-  - *Line: 206*
-
-- `def hearbeat_info_by_queue_name()` `app.route('/running_consumer/hearbeat_info_by_queue_name')`
-  - *Line: 217*
-
-- `def hearbeat_info_by_ip()` `app.route('/running_consumer/hearbeat_info_by_ip')`
-  - *Line: 232*
-
-- `def hearbeat_info_partion_by_queue_name()` `app.route('/running_consumer/hearbeat_info_partion_by_queue_name')`
-  - *Line: 249*
-
-- `def hearbeat_info_partion_by_ip()` `app.route('/running_consumer/hearbeat_info_partion_by_ip')`
-  - *Line: 262*
-
-- `def get_queues_params_and_active_consumers()` `app.route('/queue/params_and_active_consumers')`
-  - *Line: 276*
-
-- `def get_msg_num_all_queues()` `app.route('/queue/get_msg_num_all_queues', methods=['GET'])`
-  - *Line: 299*
-  - *这个是通过消费者周期每隔10秒上报到redis的，性能好。不需要实时获取每个消息队列，直接从redis读取所有队列的消息数量*
+  - *Line: 198*
 
 - `def get_time_series_data_by_queue_name(queue_name)` `app.route('/queue/get_time_series_data/<queue_name>', methods=['GET'])`
-  - *Line: 306*
+  - *Line: 209*
   - **Docstring:**
   `````
   _summary_
@@ -54778,7 +57609,7 @@ class PublisherCacheProxy:
   `````
 
 - `def start_funboost_web_manager(host = '0.0.0.0', port = 27018, block = False, debug = False, care_project_name: typing.Optional[str] = None)`
-  - *Line: 347*
+  - *Line: 250*
 
 
 ---
@@ -54815,7 +57646,7 @@ from flask_login import login_user, logout_user, login_required, LoginManager, U
 import nb_log
 from funboost import (
     nb_print,
-    ActiveCousumerProcessInfoGetter,
+    # ActiveCousumerProcessInfoGetter,  # 已迁移到 faas/flask_adapter.py
     # BoostersManager,  # 未使用
     # PublisherParams,  # 未使用
     # RedisMixin,  # 已废弃的 pause/resume 路由使用，现已注释
@@ -54942,7 +57773,7 @@ def index():
 @login_required
 def query_cols_view():
     nb_print(request.args)
-    return jsonify(get_cols(request.args.get("col_name_search")))
+    return jsonify(get_cols(request.args.get("queue_name_search")))
 
 
 @app.route("/query_result")
@@ -54957,30 +57788,22 @@ def speed_stats():
     return jsonify(get_speed(**request.values.to_dict()))
 
 
-# 以下路由已废弃，功能已迁移到 consume_speed_curve，前端不再使用
-# @app.route("/speed_statistic_for_echarts")
-# @login_required
-# def speed_statistic_for_echarts():
-#     stat = Statistic(request.args.get("col_name"))
-#     stat.build_result()
-#     return jsonify(stat.result)
-
 
 @app.route("/consume_speed_curve")
 @login_required
 def consume_speed_curve():
     """获取消费速率曲线数据"""
     from funboost.funboost_web_manager.functions import get_consume_speed_curve
-    col_name = request.args.get("col_name")
+    queue_name = request.args.get("queue_name")
     start_time = request.args.get("start_time")
     end_time = request.args.get("end_time")
     granularity = request.args.get("granularity", "auto")
     
-    if not col_name or not start_time or not end_time:
-        return jsonify({"error": "缺少必要参数: col_name, start_time, end_time"})
+    if not queue_name or not start_time or not end_time:
+        return jsonify({"error": "缺少必要参数: queue_name, start_time, end_time"})
     
     try:
-        result = get_consume_speed_curve(col_name, start_time, end_time, granularity)
+        result = get_consume_speed_curve(queue_name, start_time, end_time, granularity)
         return jsonify(result)
     except Exception as e:
         import traceback
@@ -54997,95 +57820,6 @@ def serve_template(template):
         return render_template(template)
     except Exception as e:
         return f"Template not found: {template}", 404
-
-
-@app.route("/running_consumer/hearbeat_info_by_queue_name")
-def hearbeat_info_by_queue_name():
-    queue_name = request.args.get("queue_name")
-    if queue_name in ("所有", None, ""):
-        info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
-        ret_list = []
-        for queue_name, dic in info_map.items():
-            ret_list.extend(dic)
-        return jsonify(ret_list)
-    else:
-        return jsonify(
-            ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_queue_name(queue_name)
-        )
-
-
-@app.route("/running_consumer/hearbeat_info_by_ip")
-def hearbeat_info_by_ip():
-    ip = request.args.get("ip")
-    if ip in ("所有", None, ""):
-        info_map = (
-            ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_ip()
-        )
-        ret_list = []
-        for queue_name, dic in info_map.items():
-            ret_list.extend(dic)
-        return jsonify(ret_list)
-    else:
-        return jsonify(
-            ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_by_ip(ip)
-        )
-
-
-@app.route("/running_consumer/hearbeat_info_partion_by_queue_name")
-def hearbeat_info_partion_by_queue_name():
-    info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_queue_name()
-    ret_list = []
-    total_count = 0
-    for k, v in info_map.items():
-        ret_list.append({"collection_name": k, "count": len(v)})
-        total_count += len(v)
-    ret_list = sorted(ret_list, key=lambda x: x["collection_name"])
-    ret_list.insert(0, {"collection_name": "所有", "count": total_count})
-    return jsonify(ret_list)
-
-
-@app.route("/running_consumer/hearbeat_info_partion_by_ip")
-def hearbeat_info_partion_by_ip():
-    info_map = ActiveCousumerProcessInfoGetter().get_all_hearbeat_info_partition_by_ip()
-    ret_list = []
-    total_count = 0
-    for k, v in info_map.items():
-        ret_list.append({"collection_name": k, "count": len(v)})
-        total_count += len(v)
-    ret_list = sorted(ret_list, key=lambda x: x["collection_name"])
-    ret_list.insert(0, {"collection_name": "所有", "count": total_count})
-    print(ret_list)
-    return jsonify(ret_list)
-
-
-@app.route("/queue/params_and_active_consumers")
-def get_queues_params_and_active_consumers():
-    return jsonify(
-        QueuesConusmerParamsGetter().get_queues_params_and_active_consumers()
-    )
-
-
-
-
-
-# 以下两个路由已废弃，前端没有使用（暂停/恢复消费功能可能在其他地方实现）
-# @app.route("/queue/pause/<queue_name>", methods=["POST"])
-# def pause_cousume(queue_name):
-#     RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name, "1")
-#     return jsonify({"success": True})
-
-
-# @app.route("/queue/resume/<queue_name>", methods=["POST"])
-# def resume_consume(queue_name):
-#     RedisMixin().redis_db_frame.hset(RedisKeys.REDIS_KEY_PAUSE_FLAG, queue_name, "0")
-#     return jsonify({"success": True})
-
-
-@app.route("/queue/get_msg_num_all_queues", methods=["GET"])
-def get_msg_num_all_queues():
-    """这个是通过消费者周期每隔10秒上报到redis的，性能好。不需要实时获取每个消息队列，直接从redis读取所有队列的消息数量"""
-    return jsonify(QueuesConusmerParamsGetter().get_msg_num(ignore_report_ts=True))
-
 
 
 @app.route("/queue/get_time_series_data/<queue_name>", methods=["GET"])
@@ -55204,6 +57938,9 @@ if __name__ == "__main__":
 #### 📦 Imports
 
 - `from funboost.funboost_web_manager.app import start_funboost_web_manager`
+- `from funboost.funboost_web_manager.app import app`
+- `from funboost.funboost_web_manager.app import CareProjectNameEnv`
+- `from funboost.funboost_web_manager.app import QueuesConusmerParamsGetter`
 
 
 ---
@@ -55212,15 +57949,32 @@ if __name__ == "__main__":
 
 
 
-from funboost.funboost_web_manager.app import start_funboost_web_manager
+from funboost.funboost_web_manager.app import (
+    start_funboost_web_manager,
+    app,
+    CareProjectNameEnv,
+    QueuesConusmerParamsGetter,
+)
+
+
+
+CareProjectNameEnv.set('test_project1')
+
+
+a=4
 
 if __name__ == '__main__':
-    start_funboost_web_manager(
-        port=27011,
-        debug=True,
-        care_project_name='test_project1',
-        block=True
-        )
+    QueuesConusmerParamsGetter().cycle_get_queues_params_and_active_consumers_and_report(daemon=True)
+    # 关闭 use_reloader，使用外部 watchdog 重载器 (flask_realod.py)
+    app.run(debug=True, use_reloader=False, threaded=True, host='0.0.0.0', port=27011)
+    
+    """
+    test_frame/test_watchdog_broker/flask_realod.py 中去自动重新启动flask
+    
+    自带的use_reloader老是代码改到一半，就重启了报错，导致之后无法自动重启和恢复。
+    """
+
+
    
 
 `````
@@ -55275,7 +58029,7 @@ if __name__ == '__main__':
   `````
 
 - `def get_all_queue_table_info() -> dict`
-  - *Line: 54*
+  - *Line: 45*
   - **Docstring:**
   `````
   获取所有队列及其对应的 MongoDB 表名映射
@@ -55284,8 +58038,8 @@ if __name__ == '__main__':
       {queue_name: table_name, ...}
   `````
 
-- `def get_cols(col_name_search: str)`
-  - *Line: 73*
+- `def get_cols(queue_name_search: str)`
+  - *Line: 61*
   - **Docstring:**
   `````
   获取队列列表，并返回每个队列对应的 MongoDB 表的记录数
@@ -55294,38 +58048,38 @@ if __name__ == '__main__':
   注意：因为多个队列可能共享同一个表，所以查询时必须加上 queue_name 条件
   `````
 
-- `def query_result(col_name, start_time, end_time, is_success, function_params: str, page, task_id: str = '')`
-  - *Line: 106*
+- `def query_result(queue_name, start_time, end_time, is_success, function_params: str, page, task_id: str = '')`
+  - *Line: 94*
   - **Docstring:**
   `````
   查询函数执行结果
   
   Args:
-      col_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
+      queue_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
   
   注意：因为多个队列可能共享同一个表，所以查询时必须加上 queue_name 条件
   `````
 
-- `def get_speed(col_name, start_time, end_time)`
-  - *Line: 153*
+- `def get_speed(queue_name, start_time, end_time)`
+  - *Line: 141*
   - **Docstring:**
   `````
   获取指定时间范围内的消费速率统计
   
   Args:
-      col_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
+      queue_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
   
   注意：因为多个队列可能共享同一个表，所以查询时必须加上 queue_name 条件
   `````
 
-- `def get_consume_speed_curve(col_name: str, start_time: str, end_time: str, granularity: str = 'auto')`
-  - *Line: 188*
+- `def get_consume_speed_curve(queue_name: str, start_time: str, end_time: str, granularity: str = 'auto')`
+  - *Line: 176*
   - **Docstring:**
   `````
   获取消费速率曲线数据
   
   Args:
-      col_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
+      queue_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
       start_time: 开始时间，格式 'YYYY-MM-DD HH:MM:SS'
       end_time: 结束时间，格式 'YYYY-MM-DD HH:MM:SS'
       granularity: 时间粒度，'second', 'minute', 'hour', 'day' 或 'auto'
@@ -55383,19 +58137,10 @@ def get_mongo_table_name_by_queue_name(queue_name: str) -> str:
     Returns:
         MongoDB 表名
     """
-    try:
-        queue_params = SingleQueueConusmerParamsGetter(queue_name).get_one_queue_params_use_cache()
-        # print(queue_params,type(queue_params))
-        if queue_params:
-            persistance_conf = queue_params.get('function_result_status_persistance_conf', {})
-            # print(persistance_conf,type(persistance_conf))
-            table_name = persistance_conf.get('table_name')
-            if table_name:
-                return table_name
-    except Exception as e:
-        nb_print(f'获取队列 {queue_name} 的表名失败: {e}')
-    # 默认使用 queue_name 作为表名
-    return queue_name
+    queue_params = SingleQueueConusmerParamsGetter(queue_name).get_one_queue_params_use_cache()
+    persistance_conf = queue_params['function_result_status_persistance_conf']
+    table_name = persistance_conf['table_name'] or queue_name
+    return table_name 
 
 
 def get_all_queue_table_info() -> dict:
@@ -55406,18 +58151,15 @@ def get_all_queue_table_info() -> dict:
         {queue_name: table_name, ...}
     """
     result = {}
-    try:
-        queues_config = QueuesConusmerParamsGetter().get_queues_params()
-        for queue_name, params in queues_config.items():
-            persistance_conf = params.get('function_result_status_persistance_conf', {})
-            table_name = persistance_conf.get('table_name') or queue_name
-            result[queue_name] = table_name
-    except Exception as e:
-        nb_print(f'获取所有队列表名映射失败: {e}')
+    queues_config = QueuesConusmerParamsGetter().get_queues_params()
+    for queue_name, params in queues_config.items():
+        persistance_conf = params['function_result_status_persistance_conf']
+        table_name = persistance_conf['table_name'] or queue_name
+        result[queue_name] = table_name 
     return result
 
 
-def get_cols(col_name_search: str):
+def get_cols(queue_name_search: str):
     """
     获取队列列表，并返回每个队列对应的 MongoDB 表的记录数
     
@@ -55432,7 +58174,7 @@ def get_cols(col_name_search: str):
     result = []
     for queue_name, table_name in queue_table_map.items():
         # 根据搜索条件过滤
-        if col_name_search and col_name_search not in queue_name:
+        if queue_name_search and queue_name_search not in queue_name:
             continue
         
         try:
@@ -55450,26 +58192,26 @@ def get_cols(col_name_search: str):
     return result
 
 
-def query_result(col_name, start_time, end_time, is_success, function_params: str, page, task_id: str = ''):
+def query_result(queue_name, start_time, end_time, is_success, function_params: str, page, task_id: str = ''):
     """
     查询函数执行结果
     
     Args:
-        col_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
+        queue_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
     
     注意：因为多个队列可能共享同一个表，所以查询时必须加上 queue_name 条件
     """
     query_kw = copy.copy(locals())
     t0 = time.time()
-    if not col_name:
+    if not queue_name:
         return []
     db = MongoMixin().mongo_db_task_status
     
     # 根据队列名获取实际的 MongoDB 表名
-    table_name = get_mongo_table_name_by_queue_name(col_name)
+    table_name = get_mongo_table_name_by_queue_name(queue_name)
     
     # 基础条件：必须加上 queue_name，因为多个队列可能共享同一个表
-    condition = {'queue_name': col_name}
+    condition = {'queue_name': queue_name}
     
     # 如果传了 task_id，忽略其他条件（时间、运行状态等），直接根据 task_id 查询
     if task_id and task_id.strip():
@@ -55497,23 +58239,23 @@ def query_result(col_name, start_time, end_time, is_success, function_params: st
     return results
 
 
-def get_speed(col_name, start_time, end_time):
+def get_speed(queue_name, start_time, end_time):
     """
     获取指定时间范围内的消费速率统计
     
     Args:
-        col_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
+        queue_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
     
     注意：因为多个队列可能共享同一个表，所以查询时必须加上 queue_name 条件
     """
     db = MongoMixin().mongo_db_task_status
     
     # 根据队列名获取实际的 MongoDB 表名
-    table_name = get_mongo_table_name_by_queue_name(col_name)
+    table_name = get_mongo_table_name_by_queue_name(queue_name)
     
     # 基础条件：必须加上 queue_name，因为多个队列可能共享同一个表
     condition = {
-        'queue_name': col_name,
+        'queue_name': queue_name,
         'insert_time': {'$gt': time_util.DatetimeConverter(start_time).datetime_obj,
                         '$lt': time_util.DatetimeConverter(end_time).datetime_obj},
     }
@@ -55532,12 +58274,12 @@ def get_speed(col_name, start_time, end_time):
 
 
 
-def get_consume_speed_curve(col_name: str, start_time: str, end_time: str, granularity: str = 'auto'):
+def get_consume_speed_curve(queue_name: str, start_time: str, end_time: str, granularity: str = 'auto'):
     """
     获取消费速率曲线数据
     
     Args:
-        col_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
+        queue_name: 队列名称（不是表名，会自动转换为对应的 MongoDB 表名）
         start_time: 开始时间，格式 'YYYY-MM-DD HH:MM:SS'
         end_time: 结束时间，格式 'YYYY-MM-DD HH:MM:SS'
         granularity: 时间粒度，'second', 'minute', 'hour', 'day' 或 'auto'
@@ -55555,7 +58297,7 @@ def get_consume_speed_curve(col_name: str, start_time: str, end_time: str, granu
     db = MongoMixin().mongo_db_task_status
     
     # 根据队列名获取实际的 MongoDB 表名
-    table_name = get_mongo_table_name_by_queue_name(col_name)
+    table_name = get_mongo_table_name_by_queue_name(queue_name)
     
     start_dt = time_util.DatetimeConverter(start_time).datetime_obj
     end_dt = time_util.DatetimeConverter(end_time).datetime_obj
@@ -55613,7 +58355,7 @@ def get_consume_speed_curve(col_name: str, start_time: str, end_time: str, granu
         
         # 基础条件：必须加上 queue_name，因为多个队列可能共享同一个表
         condition_base = {
-            'queue_name': col_name,
+            'queue_name': queue_name,
             'insert_time': {'$gte': current, '$lt': next_time}
         }
         
@@ -55646,20 +58388,33 @@ def get_consume_speed_curve(col_name: str, start_time: str, end_time: str, granu
 
 if __name__ == '__main__':
     pass
-    # print(get_cols('4'))
-    # pprint(query_result('queue_test54_task_status', '2019-09-15 00:00:00', '2019-09-25 00:00:00', True, '999', 0))
-    # print(json.dumps(query_result(**{'col_name': 'queue_test56', 'start_time': '2019-09-18 16:03:29', 'end_time': '2019-09-21 16:03:29', 'is_success': '1', 'function_params': '', 'page': '0'}))[:1000])
-    # nb_print(get_speed_last_minute('queue_test54'))
 
-    # nb_print(get_speed('queue_test56', '2019-09-18 16:03:29', '2019-09-23 16:03:29'))
-    # stat = Statistic('queue_test_f01t')
-    # stat.build_result()
-    # nb_print(stat.result)
-    
-    # res = rpc_call('queue_test_g02t',{'x':1,'y':2},True,60)
 `````
 
 --- **end of file: funboost/funboost_web_manager/functions.py** (project: funboost) --- 
+
+---
+
+
+--- **start of file: funboost/funboost_web_manager/README.md** (project: funboost) --- 
+
+`````markdown
+
+
+
+
+最开始的的 funboost web manager 是直接基于 flask 开发的，
+并且以前是什么队列名字，就保存到什么mongo的collection中，而且以前的 只有查询函数结果表的功能，没有查询redis的那些队列的统计信息的功能
+所以前端和接口很多col_name参数，
+
+
+现在因为 FunctionResultStatusPersistanceConfig 可以设置table_name 就是mongo的collection名字，所以不一定queue_name就是col_name，
+所以我希望很多后端和前端的col_name传参改成queue_name
+
+你帮我详细指定一个计划可能修改的地方很多。
+`````
+
+--- **end of file: funboost/funboost_web_manager/README.md** (project: funboost) --- 
 
 ---
 
@@ -57643,7 +60398,7 @@ class KombuPublisher(AbstractPublisher, ):
 - `@property local_python_queue -> Queue`
 
 ##### 📌 `class LocalPythonQueuePublisherSimpleQueue(AbstractPublisher)`
-*Line: 41*
+*Line: 42*
 
 **Docstring:**
 `````
@@ -57657,7 +60412,7 @@ class KombuPublisher(AbstractPublisher, ):
 - `def close(self)`
 
 ##### 📌 `class LocalPythonQueuePublisherDeque(AbstractPublisher)`
-*Line: 69*
+*Line: 70*
 
 **Docstring:**
 `````
@@ -57695,7 +60450,8 @@ class LocalPythonQueuePublisher(AbstractPublisher):
 
     @property
     def local_python_queue(self) -> Queue:
-        return PythonQueues.get_queue(self._queue_name)
+        maxsize = self.publisher_params.broker_exclusive_config['maxsize']
+        return PythonQueues.get_queue(self._queue_name, maxsize=maxsize)
 
     def _publish_impl(self, msg):
         # noinspection PyTypeChecker
@@ -59902,6 +62658,246 @@ class RedisStreamPublisher(AbstractPublisher,RedisMixin):
 ---
 
 
+--- **start of file: funboost/publishers/rocketmq5_publisher.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `funboost/publishers/rocketmq5_publisher.py`
+
+#### 📝 Module Docstring
+
+`````
+RocketMQ 5.x 发布者实现，使用最新版 rocketmq-python-client SDK
+pip install rocketmq-python-client
+
+支持 RocketMQ 5.x 版本，基于 gRPC 协议
+支持 Windows / Linux / macOS
+`````
+
+#### 📦 Imports
+
+- `import time`
+- `from funboost.publishers.base_publisher import AbstractPublisher`
+- `from rocketmq import ClientConfiguration`
+- `from rocketmq import Credentials`
+- `from rocketmq import Producer`
+- `from rocketmq import Message`
+- `import urllib.request`
+- `import urllib.parse`
+- `import json`
+
+#### 🏛️ Classes (1)
+
+##### 📌 `class RocketmqPublisher(AbstractPublisher)`
+*Line: 24*
+
+**Docstring:**
+`````
+RocketMQ 5.x 发布者，使用 rocketmq-python-client 包
+
+安装方式:
+    pip install rocketmq-python-client
+    
+特性: 
+    - 基于 gRPC 协议，纯 Python 实现
+    - 支持 Windows / Linux / macOS
+    - 支持 RocketMQ 5.x 版本
+    - 支持自动创建 Topic
+`````
+
+**Public Methods (4):**
+- `def custom_init(self)`
+- `def clear(self)`
+  - *清空队列 - RocketMQ 不支持通过 Python SDK 删除消息*
+- `def get_message_count(self)`
+  - *获取队列消息数量 - RocketMQ Python SDK 不直接支持此功能*
+- `def close(self)`
+  - *关闭生产者连接*
+
+**Class Variables (2):**
+- `_topic__rocketmq_producer = {}`
+- `_created_topics = set()`
+
+
+---
+
+`````python
+# -*- coding: utf-8 -*-
+# @Author  : ydf
+# @Time    : 2026
+"""
+RocketMQ 5.x 发布者实现，使用最新版 rocketmq-python-client SDK
+pip install rocketmq-python-client
+
+支持 RocketMQ 5.x 版本，基于 gRPC 协议
+支持 Windows / Linux / macOS
+"""
+
+"""
+ai写得，等有时间需要测试
+"""
+
+import time
+
+from funboost.publishers.base_publisher import AbstractPublisher
+
+# pip install rocketmq-python-client
+from rocketmq import ClientConfiguration, Credentials, Producer, Message
+
+
+class RocketmqPublisher(AbstractPublisher):
+    """
+    RocketMQ 5.x 发布者，使用 rocketmq-python-client 包
+    
+    安装方式:
+        pip install rocketmq-python-client
+        
+    特性: 
+        - 基于 gRPC 协议，纯 Python 实现
+        - 支持 Windows / Linux / macOS
+        - 支持 RocketMQ 5.x 版本
+        - 支持自动创建 Topic
+    """
+
+    _topic__rocketmq_producer = {}
+    _created_topics = set()  # 记录已创建的 topic
+
+    def custom_init(self):
+        if self._queue_name not in self.__class__._topic__rocketmq_producer:
+            # 获取配置
+            endpoints = self.publisher_params.broker_exclusive_config['endpoints']
+            access_key = self.publisher_params.broker_exclusive_config['access_key']
+            secret_key = self.publisher_params.broker_exclusive_config['secret_key']
+            namespace = self.publisher_params.broker_exclusive_config['namespace']
+            
+            # 自动创建 Topic
+            self._auto_create_topic(endpoints)
+            
+            # 创建凭证
+            if access_key and secret_key:
+                credentials = Credentials(access_key, secret_key)
+            else:
+                credentials = Credentials()
+            
+            # 创建客户端配置
+            if namespace:
+                config = ClientConfiguration(endpoints, credentials, namespace)
+            else:
+                config = ClientConfiguration(endpoints, credentials)
+            
+            # 创建 Producer
+            producer = Producer(config, [self._queue_name])
+            producer.startup()
+            
+            self.__class__._topic__rocketmq_producer[self._queue_name] = producer
+            self.logger.info(f'RocketMQ 5.x Producer 已启动，topic: {self._queue_name}, endpoints: {endpoints}')
+        
+        self._producer = self.__class__._topic__rocketmq_producer[self._queue_name]
+
+    def _auto_create_topic(self, endpoints: str):
+        """
+        自动创建 Topic - 通过 HTTP API
+        """
+        if self._queue_name in self.__class__._created_topics:
+            return
+        
+        host = endpoints.split(':')[0]
+        namesrv_addr = self.publisher_params.broker_exclusive_config.get('namesrv_addr') or f'{host}:9876'
+        cluster_name = self.publisher_params.broker_exclusive_config.get('cluster_name', 'DefaultCluster')
+        
+        try:
+            self._create_topic_via_http(host, namesrv_addr, cluster_name)
+        except Exception as e:
+            self.logger.warning(
+                f'自动创建 Topic 失败: {e}\n'
+                f'请手动创建: docker exec -it rmq-broker sh mqadmin updateTopic -n localhost:9876 -t {self._queue_name} -c {cluster_name}'
+            )
+
+    def _create_topic_via_http(self, host: str, namesrv_addr: str, cluster_name: str):
+        """通过 HTTP API 创建 Topic"""
+        import urllib.request
+        import urllib.parse
+        import json
+        
+        # 尝试多个可能的端口和 API
+        apis_to_try = [
+            # RocketMQ Dashboard API
+            (8080, '/topic/createOrUpdate', 'form'),
+            # Broker HTTP API  
+            (10911, '/topic/createOrUpdate', 'form'),
+        ]
+        
+        for port, path, content_type in apis_to_try:
+            try:
+                url = f'http://{host}:{port}{path}'
+                
+                if content_type == 'form':
+                    data = urllib.parse.urlencode({
+                        'topic': self._queue_name,
+                        'clusterName': cluster_name,
+                        'readQueueNums': 8,
+                        'writeQueueNums': 8,
+                    }).encode()
+                    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+                else:
+                    data = json.dumps({
+                        'topic': self._queue_name,
+                        'clusterName': cluster_name,
+                        'readQueueNums': 8,
+                        'writeQueueNums': 8,
+                    }).encode()
+                    headers = {'Content-Type': 'application/json'}
+                
+                req = urllib.request.Request(url, data=data, method='POST', headers=headers)
+                
+                with urllib.request.urlopen(req, timeout=5) as response:
+                    if response.status == 200:
+                        self.logger.info(f'通过 HTTP API ({host}:{port}) 创建 Topic 成功: {self._queue_name}')
+                        self.__class__._created_topics.add(self._queue_name)
+                        return
+            except Exception:
+                continue
+        
+        # 所有方式都失败
+        self.logger.warning(
+            f'无法自动创建 Topic: {self._queue_name}\n'
+            f'请手动执行: docker exec -it <container> sh mqadmin updateTopic -n {namesrv_addr} -t {self._queue_name} -c {cluster_name}'
+        )
+
+    def _publish_impl(self, msg: str):
+        """发布消息到 RocketMQ Topic"""
+        message = Message()
+        message.topic = self._queue_name
+        message.body = msg.encode('utf-8') if isinstance(msg, str) else msg
+        self._producer.send(message)
+
+    def clear(self):
+        """清空队列 - RocketMQ 不支持通过 Python SDK 删除消息"""
+        self.logger.warning(
+            'RocketMQ Python SDK 不支持清空队列/删除消息功能，'
+            '如需清空请通过 RocketMQ Console 或 Admin API 操作'
+        )
+
+    def get_message_count(self):
+        """获取队列消息数量 - RocketMQ Python SDK 不直接支持此功能"""
+        if time.time() - getattr(self, '_last_warning_count', 0) > 300:
+            setattr(self, '_last_warning_count', time.time())
+            self.logger.debug(
+                'RocketMQ Python SDK 暂不支持获取队列消息数量，'
+                '如需查看请使用 RocketMQ Console'
+            )
+        return -1
+
+    def close(self):
+        """关闭生产者连接"""
+        pass
+
+`````
+
+--- **end of file: funboost/publishers/rocketmq5_publisher.py** (project: funboost) --- 
+
+---
+
+
 --- **start of file: funboost/publishers/rocketmq_publisher.py** (project: funboost) --- 
 
 
@@ -59913,13 +62909,14 @@ class RedisStreamPublisher(AbstractPublisher,RedisMixin):
 - `import time`
 - `from funboost.funboost_config_deafult import BrokerConnConfig`
 - `from funboost.publishers.base_publisher import AbstractPublisher`
+- `from funboost.utils import system_util`
 - `from rocketmq.client import Producer`
 - `from rocketmq.client import Message`
 
 #### 🏛️ Classes (1)
 
 ##### 📌 `class RocketmqPublisher(AbstractPublisher)`
-*Line: 12*
+*Line: 16*
 
 **Public Methods (4):**
 - `def custom_init(self)`
@@ -59941,10 +62938,14 @@ class RedisStreamPublisher(AbstractPublisher,RedisMixin):
 import threading
 import time
 from funboost.funboost_config_deafult import BrokerConnConfig
-
 from funboost.publishers.base_publisher import AbstractPublisher
 
+from funboost.utils import system_util
 
+if system_util.is_windows():
+    raise ImportError('rocketmq包 只支持linux和mac')
+
+from rocketmq.client import Producer,Message
 
 class RocketmqPublisher(AbstractPublisher, ):
     _group_id__rocketmq_producer = {}
@@ -59952,12 +62953,6 @@ class RocketmqPublisher(AbstractPublisher, ):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
-        try:
-            from rocketmq.client import Producer
-        except BaseException as e:
-            # print(traceback.format_exc())
-            raise ImportError(f'rocketmq包 只支持linux和mac {str(e)}')
-
         group_id = f'g-{self._queue_name}'
         with self._lock_for_create_producer:
             if group_id not in self.__class__._group_id__rocketmq_producer:  # 同一个进程中创建多个同组消费者会报错。
@@ -59970,11 +62965,6 @@ class RocketmqPublisher(AbstractPublisher, ):
             self._producer = producer
 
     def _publish_impl(self, msg):
-        try:
-            from rocketmq.client import Message
-        except BaseException as e:
-            # print(traceback.format_exc())
-            raise ImportError(f'rocketmq包 只支持linux和mac {str(e)}')
         rocket_msg = Message(self._queue_name)
         # rocket_msg.set_keys(msg)  # 利于检索
         # rocket_msg.set_tags('XXX')
@@ -60670,173 +63660,6 @@ class ZeroMqPublisher(AbstractPublisher):
 ---
 
 
---- **start of file: funboost/queues/bounded_simple_queue.py** (project: funboost) --- 
-
-
-### 📄 Python File Metadata: `funboost/queues/bounded_simple_queue.py`
-
-#### 📝 Module Docstring
-
-`````
-有界 SimpleQueue：SimpleQueue + 信号量
-`````
-
-#### 📦 Imports
-
-- `import threading`
-- `from queue import SimpleQueue`
-- `from queue import Empty as QueueEmpty`
-- `import time`
-
-#### 🏛️ Classes (4)
-
-##### 📌 `class BoundedSimpleQueue`
-*Line: 10*
-
-**Docstring:**
-`````
-有界 SimpleQueue，信号量实现背压
-`````
-
-**🔧 Constructor (`__init__`):**
-- `def __init__(self, maxsize: int = 0)`
-  - **Parameters:**
-    - `self`
-    - `maxsize: int = 0`
-
-**Public Methods (4):**
-- `def put(self, item, block = True, timeout = None)`
-  - *放入消息，队列满时阻塞*
-- `def get(self, block = True, timeout = None)`
-  - *获取消息*
-- `def qsize(self)`
-- `def empty(self)`
-
-**Class Variables (1):**
-- `__slots__ = ('_queue', '_semaphore', '_maxsize')`
-
-##### 📌 `class Empty(Exception)`
-*Line: 51*
-
-##### 📌 `class Full(Exception)`
-*Line: 55*
-
-##### 📌 `class BoundedSimpleQueues`
-*Line: 59*
-
-**Docstring:**
-`````
-有界 SimpleQueue 管理器
-`````
-
-**Public Methods (1):**
-- `def get_queue(cls, queue_name: str, maxsize: int = 10000)` `classmethod`
-
-**Class Variables (2):**
-- `_queues = {}`
-- `_lock = threading.Lock()`
-
-
----
-
-`````python
-# -*- coding: utf-8 -*-
-"""
-有界 SimpleQueue：SimpleQueue + 信号量
-"""
-
-import threading
-from queue import SimpleQueue, Empty as QueueEmpty
-
-
-class BoundedSimpleQueue:
-    """有界 SimpleQueue，信号量实现背压"""
-    
-    __slots__ = ('_queue', '_semaphore', '_maxsize')
-    
-    def __init__(self, maxsize: int = 0):
-        self._queue = SimpleQueue()
-        self._maxsize = maxsize if maxsize > 0 else 0
-        self._semaphore = threading.Semaphore(maxsize) if maxsize > 0 else None
-    
-    def put(self, item, block=True, timeout=None):
-        """放入消息，队列满时阻塞"""
-        if self._semaphore is not None:
-            acquired = self._semaphore.acquire(blocking=block, timeout=timeout)
-            if not acquired:
-                raise Full()
-            try:
-                self._queue.put(item)
-            except:
-                self._semaphore.release()
-                raise
-        else:
-            self._queue.put(item)
-    
-    def get(self, block=True, timeout=None):
-        """获取消息"""
-        try:
-            item = self._queue.get(block=block, timeout=timeout)
-        except QueueEmpty:
-            raise Empty()
-        if self._semaphore is not None:
-            self._semaphore.release()
-        return item
-    
-    def qsize(self):
-        return self._queue.qsize()
-    
-    def empty(self):
-        return self._queue.empty()
-
-
-class Empty(Exception):
-    pass
-
-
-class Full(Exception):
-    pass
-
-
-class BoundedSimpleQueues:
-    """有界 SimpleQueue 管理器"""
-    
-    _queues = {}
-    _lock = threading.Lock()
-    
-    @classmethod
-    def get_queue(cls, queue_name: str, maxsize: int = 10000):
-        if queue_name not in cls._queues:
-            with cls._lock:
-                if queue_name not in cls._queues:
-                    cls._queues[queue_name] = BoundedSimpleQueue(maxsize=maxsize)
-        return cls._queues[queue_name]
-
-
-if __name__ == '__main__':
-    import time
-    
-    n = 1000000
-    print(f"测试 {n:,} 次 put + get:")
-    
-    q = BoundedSimpleQueue(maxsize=n)
-    t0 = time.time()
-    for i in range(n):
-        q.put(i)
-    print(f"  put: {time.time()-t0:.3f}s, {n/(time.time()-t0):,.0f} ops/sec")
-    
-    t0 = time.time()
-    for i in range(n):
-        q.get()
-    print(f"  get: {time.time()-t0:.3f}s, {n/(time.time()-t0):,.0f} ops/sec")
-
-`````
-
---- **end of file: funboost/queues/bounded_simple_queue.py** (project: funboost) --- 
-
----
-
-
 --- **start of file: funboost/queues/fastest_mem_queue.py** (project: funboost) --- 
 
 
@@ -61203,7 +64026,16 @@ if __name__ == '__main__':
 *Line: 4*
 
 **Public Methods (1):**
-- `def get_queue(cls, queue_name)` `classmethod`
+- `def get_queue(cls, queue_name, maxsize = 0)` `classmethod`
+  - **Docstring:**
+  `````
+  获取或创建一个内存队列
+  
+  :param queue_name: 队列名称
+  :param maxsize: 队列最大容量，0表示无界队列（默认），正整数表示有界队列
+                 当队列已满时，put操作会阻塞直到有空位
+  :return: queue.Queue 对象
+  `````
 
 **Class Variables (1):**
 - `local_pyhton_queue_name__local_pyhton_queue_obj_map = {}`
@@ -61219,9 +64051,17 @@ class PythonQueues:
     local_pyhton_queue_name__local_pyhton_queue_obj_map  = {}
 
     @classmethod
-    def get_queue(cls,queue_name):
+    def get_queue(cls, queue_name, maxsize=0):
+        """
+        获取或创建一个内存队列
+        
+        :param queue_name: 队列名称
+        :param maxsize: 队列最大容量，0表示无界队列（默认），正整数表示有界队列
+                       当队列已满时，put操作会阻塞直到有空位
+        :return: queue.Queue 对象
+        """
         if queue_name not in cls.local_pyhton_queue_name__local_pyhton_queue_obj_map:
-            cls.local_pyhton_queue_name__local_pyhton_queue_obj_map[queue_name] = queue.Queue()
+            cls.local_pyhton_queue_name__local_pyhton_queue_obj_map[queue_name] = queue.Queue(maxsize=maxsize)
         return cls.local_pyhton_queue_name__local_pyhton_queue_obj_map[queue_name]
 `````
 
@@ -67107,10 +69947,15 @@ if __name__ == '__main__':
   1. URI 格式: protocol://user:password@host:port
   2. libpq DSN 格式: host=xxx port=xxx password=xxx
   `````
-- `def enc_pwd(pwd: str, plain_len = 3)` `staticmethod`
+- `def enc_pwd(pwd: str, hide_prefix = 3, hide_suffix = 3)` `staticmethod`
+  - **Docstring:**
+  `````
+  密码脱敏：前N位隐藏为***，后N位隐藏为***，中间显示
+  例如: abc12345def -> ***12345***
+  `````
 
 ##### 📌 `class StrHelper`
-*Line: 61*
+*Line: 65*
 
 **🔧 Constructor (`__init__`):**
 - `def __init__(self, strx: str)`
@@ -67178,11 +70023,15 @@ class PwdEnc:
         return re.sub(pattern, replace_pwd, dsn, flags=re.IGNORECASE)
 
     @staticmethod
-    def enc_pwd(pwd: str, plain_len=3):
-        pwd_enc = pwd
-        if len(pwd_enc) > plain_len:
-            pwd_enc = f'{pwd_enc[:plain_len]}{"*" * (len(pwd_enc) - plain_len)}'
-        return pwd_enc
+    def enc_pwd(pwd: str, hide_prefix=3, hide_suffix=3):
+        """
+        密码脱敏：前N位隐藏为***，后N位隐藏为***，中间显示
+        例如: abc12345def -> ***12345***
+        """
+        if len(pwd) <= hide_prefix + hide_suffix:
+            return '***'  # 太短则全部隐藏
+        middle = pwd[hide_prefix:-hide_suffix] if hide_suffix > 0 else pwd[hide_prefix:]
+        return f'***{middle}***'
 
 
 class StrHelper:
@@ -67222,6 +70071,148 @@ if __name__ == '__main__':
 `````
 
 --- **end of file: funboost/utils/str_utils.py** (project: funboost) --- 
+
+---
+
+
+--- **start of file: funboost/utils/system_util.py** (project: funboost) --- 
+
+
+### 📄 Python File Metadata: `funboost/utils/system_util.py`
+
+#### 📦 Imports
+
+- `import os`
+- `import sys`
+- `import platform`
+- `import socket`
+- `import threading`
+- `import uuid`
+- `import multiprocessing`
+- `import inspect`
+
+#### 🔧 Public Functions (14)
+
+- `def is_windows()`
+  - *Line: 11*
+
+- `def is_linux()`
+  - *Line: 14*
+
+- `def is_mac()`
+  - *Line: 17*
+
+- `def get_os_str()`
+  - *Line: 20*
+
+- `def get_hostname()`
+  - *Line: 23*
+
+- `def get_host_ip()`
+  - *Line: 26*
+  - *获取本机ip*
+
+- `def get_mac_address()`
+  - *Line: 40*
+  - *获取mac地址*
+
+- `def get_pid()`
+  - *Line: 45*
+
+- `def get_thread_id()`
+  - *Line: 48*
+
+- `def get_process_name()`
+  - *Line: 51*
+
+- `def get_current_thread_name()`
+  - *Line: 54*
+
+- `def get_cpu_count()`
+  - *Line: 57*
+
+- `def get_python_version()`
+  - *Line: 63*
+
+- `def get_current_function_name()`
+  - *Line: 66*
+  - *获取当前函数名*
+
+
+---
+
+`````python
+
+import os
+import sys
+import platform
+import socket
+import threading
+import uuid
+import multiprocessing
+import inspect
+
+def is_windows():
+    return os.name == 'nt'
+
+def is_linux():
+    return os.name == 'posix' and platform.system() == 'Linux'
+
+def is_mac():
+    return platform.system() == 'Darwin'
+
+def get_os_str():
+    return platform.system()
+
+def get_hostname():
+    return socket.gethostname()
+
+def get_host_ip():
+    """获取本机ip"""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        try:
+            return socket.gethostbyname(socket.gethostname())
+        except Exception:
+            return '127.0.0.1'
+
+def get_mac_address():
+    """获取mac地址"""
+    mac = uuid.UUID(int=uuid.getnode()).hex[-12:]
+    return ":".join([mac[e:e + 2] for e in range(0, 11, 2)])
+
+def get_pid():
+    return os.getpid()
+
+def get_thread_id():
+    return threading.get_ident()
+
+def get_process_name():
+    return multiprocessing.current_process().name
+
+def get_current_thread_name():
+    return threading.current_thread().name
+
+def get_cpu_count():
+    try:
+        return multiprocessing.cpu_count()
+    except Exception:
+        return 1
+
+def get_python_version():
+    return platform.python_version()
+
+def get_current_function_name():
+    """获取当前函数名"""
+    return inspect.stack()[1][3]
+`````
+
+--- **end of file: funboost/utils/system_util.py** (project: funboost) --- 
 
 ---
 

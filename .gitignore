@@ -61,3 +61,6 @@ AGENTS.md
 .envrc
 package-lock.json
 package.json
+
+# ReCode local database
+.recode

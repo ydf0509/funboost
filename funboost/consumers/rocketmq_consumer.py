@@ -9,6 +9,14 @@ from funboost.funboost_config_deafult import BrokerConnConfig
 from funboost.publishers.rocketmq_publisher import RocketmqPublisher
 from funboost.core.func_params_model import PublisherParams
 
+from funboost.utils import system_util
+
+if system_util.is_windows():
+    raise ImportError('rocketmq包 只支持linux和mac')
+
+from rocketmq.client import PushConsumer
+
+
 class RocketmqConsumer(AbstractConsumer):
     """
     安装
@@ -17,11 +25,6 @@ class RocketmqConsumer(AbstractConsumer):
     GROUP_ID = 'g_funboost'
 
     def _dispatch_task(self):
-        try:
-            from rocketmq.client import PushConsumer
-        except BaseException as e:
-            # print(traceback.format_exc())
-            raise ImportError(f'rocketmq包 只支持linux和mac {e}')
         consumer = PushConsumer(f'{self.GROUP_ID}_{self._queue_name}')
         consumer.set_namesrv_addr(BrokerConnConfig.ROCKETMQ_NAMESRV_ADDR)
         consumer.set_thread_count(1)

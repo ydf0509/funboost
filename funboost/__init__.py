@@ -13,7 +13,7 @@ set_frame_config这个模块的 use_config_form_funboost_config_module() 是核�
 这段注释说明和使用的用户无关,只和框架开发人员有关.
 '''
 
-__version__ = "53.8"
+__version__ = "53.9"
 
 from funboost.set_frame_config import show_frame_config
 
@@ -39,6 +39,7 @@ from funboost.publishers.base_publisher import (TaskOptions,
                                                 AbstractPublisher, AsyncResult, AioAsyncResult)
 from funboost.publishers.empty_publisher import EmptyPublisher
 from funboost.factories.broker_kind__publsiher_consumer_type_map import register_custom_broker
+from funboost.core.broker_kind__exclusive_config_default_define import register_broker_exclusive_config_default
 from funboost.factories.publisher_factotry import get_publisher
 from funboost.factories.consumer_factory import get_consumer
 

@@ -71,7 +71,14 @@ class BrokerConnConfig(DataClassBase):
 
     TXT_FILE_PATH = Path(__file__).parent / 'txt_queues'  # 不建议使用这个txt模拟消息队列中间件，本地持久化优先选择 PERSIST_QUQUE 中间件。
 
+    # RocketMQ 4.x 旧版配置（已废弃，仅兼容旧代码）
     ROCKETMQ_NAMESRV_ADDR = '192.168.199.202:9876'
+    
+    # RocketMQ 5.x 新版配置（推荐）
+    # 使用 gRPC 协议，默认端口 8081
+    ROCKETMQ_ENDPOINTS = '127.0.0.1:8081'
+    ROCKETMQ_ACCESS_KEY = ''  # 阿里云等需要 AK/SK 认证时使用
+    ROCKETMQ_SECRET_KEY = ''
 
     MQTT_HOST = '127.0.0.1'
     MQTT_TCP_PORT = 1883

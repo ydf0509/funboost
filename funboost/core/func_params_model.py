@@ -140,8 +140,16 @@ class BoosterParams(BaseJsonAbleModel):
     delay_task_apscheduler_jobstores_kind :Literal[ 'redis', 'memory'] = 'redis'  # 延时任务的aspcheduler对象使用哪种jobstores ，可以为 redis memory 两种作为jobstore
 
     
-    is_do_not_run_by_specify_time_effect: bool = False  # 是否使不运行的时间段生效
-    do_not_run_by_specify_time: typing.List[str] = ['10:00:00', '22:00:00']  # 不运行的时间段,在这个时间段自动不运行函数.
+    """
+    allow_run_time_cron:
+    只允许在规定的crontab表达式时间内运行。
+
+    例如 '* 23,0-2 * * *' 表示只在23点到2点运行。
+    allow_run_time_cron='* 9-17 * * 1-5', 表示只在周一到周五的9点到17:59:59运行。
+    为None则不限制运行时间。
+    语法是知名 croniter 包的语法，不是funboost创造的特殊语法，用户自己去google或者ai学习语法。
+    """
+    allow_run_time_cron: typing.Optional[str] = None
 
     schedule_tasks_on_main_thread: bool = False  # 直接在主线程调度任务，意味着不能直接在当前主线程同时开启两个消费者。
 
@@ -307,6 +315,8 @@ class TaskOptions(BaseJsonAbleModel):
 
     other_extra_params: typing.Optional[dict] = None  # 其他参数，某些中间件独有的, 例如消息优先级 , task_options=TaskOptions(other_extra_params={'priroty': priorityxx})，
     
+
+    do_task_filtering: typing.Optional[bool] = None # 是否开启任务入参过滤
     """filter_str:
     用户指定过滤字符串， 例如函数入参是 def fun(userid,username,sex，user_description),
     默认是所有入参一起组成json来过滤，但其实只把userid的值来过滤就好了。所以如果需要精准的按照什么过滤，用户来灵活指定一个字符串就好了

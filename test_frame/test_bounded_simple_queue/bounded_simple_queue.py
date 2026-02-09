@@ -73,11 +73,13 @@ class BoundedSimpleQueues:
 
 if __name__ == '__main__':
     import time
+    import queue
     
     n = 1000000
     print(f"测试 {n:,} 次 put + get:")
     
-    q = BoundedSimpleQueue(maxsize=n)
+    # q = BoundedSimpleQueue(maxsize=n)
+    q = queue.Queue(maxsize=n)
     t0 = time.time()
     for i in range(n):
         q.put(i)

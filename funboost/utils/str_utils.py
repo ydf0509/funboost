@@ -51,11 +51,15 @@ class PwdEnc:
         return re.sub(pattern, replace_pwd, dsn, flags=re.IGNORECASE)
 
     @staticmethod
-    def enc_pwd(pwd: str, plain_len=3):
-        pwd_enc = pwd
-        if len(pwd_enc) > plain_len:
-            pwd_enc = f'{pwd_enc[:plain_len]}{"*" * (len(pwd_enc) - plain_len)}'
-        return pwd_enc
+    def enc_pwd(pwd: str, hide_prefix=3, hide_suffix=3):
+        """
+        密码脱敏：前N位隐藏为***，后N位隐藏为***，中间显示
+        例如: abc12345def -> ***12345***
+        """
+        if len(pwd) <= hide_prefix + hide_suffix:
+            return '***'  # 太短则全部隐藏
+        middle = pwd[hide_prefix:-hide_suffix] if hide_suffix > 0 else pwd[hide_prefix:]
+        return f'***{middle}***'
 
 
 class StrHelper:

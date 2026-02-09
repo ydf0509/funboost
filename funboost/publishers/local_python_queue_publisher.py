@@ -19,7 +19,8 @@ class LocalPythonQueuePublisher(AbstractPublisher):
 
     @property
     def local_python_queue(self) -> Queue:
-        return PythonQueues.get_queue(self._queue_name)
+        maxsize = self.publisher_params.broker_exclusive_config['maxsize']
+        return PythonQueues.get_queue(self._queue_name, maxsize=maxsize)
 
     def _publish_impl(self, msg):
         # noinspection PyTypeChecker

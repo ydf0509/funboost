@@ -17,7 +17,7 @@ import traceback
 from flask import Blueprint, request, jsonify
 
 from funboost import AsyncResult, TaskOptions
-from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter, QueuesConusmerParamsGetter, CareProjectNameEnv
+from funboost.core.active_cousumer_info_getter import SingleQueueConusmerParamsGetter, QueuesConusmerParamsGetter, CareProjectNameEnv, ActiveCousumerProcessInfoGetter
 from funboost.faas.faas_util import gen_aps_job_adder
 from funboost.core.loggers import get_funboost_file_logger
 

@@ -11,4 +11,6 @@ class Project1BoosterParams(BoosterParams):
     booster_group : str = 'test_group1' # 方便按分组启动消费
     should_check_publish_func_params:bool = True # 发布消息时，是否检查消息内容是否正确，不正确的消息格式立刻从接口返回报错消息内容不正确。
     function_result_status_persistance_conf: FunctionResultStatusPersistanceConfig = FunctionResultStatusPersistanceConfig(
-        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False) 
+        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False,
+        table_name='test_project1_function_result_status'
+        ) 

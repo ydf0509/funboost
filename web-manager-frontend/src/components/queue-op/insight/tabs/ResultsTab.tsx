@@ -163,12 +163,9 @@ export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }
       return;
     }
     try {
-      const response = await apiFetch<{
-        success: boolean;
-        data?: { task_id?: string };
-        error?: string;
-        message?: string;
-      }>("/queue/publish", {
+      const response = await funboostFetch<{
+        task_id?: string;
+      }>("/funboost/publish", {
         method: "POST",
         json: {
           queue_name: queueName,
@@ -177,9 +174,6 @@ export function ResultsTab({ queueName, projectId, canOperateQueue, onOpenJson }
           project_id: projectId,
         },
       });
-      if (!response.success) {
-        throw new Error(response.error || response.message || "重试失败。");
-      }
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "重试失败。");
     }

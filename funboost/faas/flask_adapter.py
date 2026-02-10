@@ -76,10 +76,10 @@ def publish_msg():
                 }
             }), 400
         
-        if not msg_body or not isinstance(msg_body, dict):
+        if not isinstance(msg_body, dict):
             return jsonify({
                 "succ": False,
-                "msg": "msg_body 字段必填且必须是字典类型",
+                "msg": "msg_body 字段必须是字典类型",
                 "data": {
                     "task_id": None,
                     "status_and_result": None

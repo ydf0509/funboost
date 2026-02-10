@@ -114,6 +114,165 @@ def create_app():
         # 页面请求重定向到登录页
         return redirect(url_for('auth.login'))
     
+    # 为 FaaS blueprint 添加权限检查钩子
+    # 使用 hasattr 检查避免重复注册（在测试环境中 create_app 可能被多次调用）
+    if not hasattr(flask_blueprint, '_faas_hooks_registered'):
+        flask_blueprint._faas_hooks_registered = True
+        
+        @flask_blueprint.before_request
+        def check_faas_permission():
+            """
+            为 FaaS blueprint 添加权限检查
+            
+            权限映射：
+            - /funboost/publish -> queue:execute
+            - /funboost/clear_queue -> queue:execute
+            - /funboost/deprecate_queue -> queue:execute
+            - /funboost/get_* -> queue:read
+            - /funboost/*_timing_job* -> queue:execute
+            - /funboost/*_scheduler* -> queue:execute
+            - /funboost/set_care_project_name -> config:update
+            - /funboost/remove_project_name -> config:update
+            
+            Requirements:
+                - 检查用户是否已登录
+                - 根据请求路径判断所需权限
+                - 检查用户是否有对应权限
+                - 提取并验证 project_id，检查项目权限
+                - 将 project_code 注入到请求上下文供 FaaS 接口使用
+            """
+            from flask import request, jsonify, g
+            from flask_login import current_user
+            from funboost.funboost_web_manager.services.permission_service import PermissionService
+            from funboost.funboost_web_manager.services.project_service import ProjectService
+            
+            # CORS 预检请求（OPTIONS）不携带 Cookie/Session，直接放行
+            if request.method == 'OPTIONS':
+                return
+            
+            # 检查登录状态
+            if not current_user.is_authenticated:
+                return jsonify({
+                    "succ": False,
+                    "msg": "未登录或会话已过期，请重新登录",
+                    "data": None
+                }), 401
+            
+            # 根据路径判断所需权限
+            path = request.path
+            required_permission = None
+            
+            # 配置更新权限（优先级最高，需要先检查）
+            if any(p in path for p in ['/set_care_project_name', '/remove_project_name']):
+                required_permission = 'config:update'
+            
+            # 写操作权限
+            elif any(p in path for p in ['/publish', '/clear_queue', '/deprecate_queue',
+                                         '/add_timing_job', '/delete_timing_job', '/delete_all_timing_jobs',
+                                         '/pause_timing_job', '/resume_timing_job',
+                                         '/pause_scheduler', '/resume_scheduler']):
+                required_permission = 'queue:execute'
+            
+            # 读操作权限
+            elif any(p in path for p in ['/get_', '/timing_job']):
+                required_permission = 'queue:read'
+            
+            # 检查角色权限
+            if required_permission:
+                permission_service = PermissionService()
+                user_name = current_user.id
+                
+                if not permission_service.check_permission(user_name, required_permission):
+                    return jsonify({
+                        "succ": False,
+                        "msg": f"您没有 {required_permission} 权限",
+                        "data": None
+                    }), 403
+            
+            # 项目过滤：从请求中提取 project_id 并转换为 care_project_name
+            project_id = request.args.get('project_id')
+            if not project_id and request.is_json:
+                data = request.get_json(silent=True) or {}
+                project_id = data.get('project_id')
+            
+            if project_id:
+                try:
+                    project_id_int = int(project_id)
+                    project_service = ProjectService()
+                    
+                    # 检查项目访问权限
+                    required_level = 'write' if required_permission == 'queue:execute' else 'read'
+                    if not project_service.check_project_permission(
+                        current_user.id, project_id_int, required_level
+                    ):
+                        return jsonify({
+                            "succ": False,
+                            "msg": f"您在此项目中没有 {required_level} 权限",
+                            "data": None
+                        }), 403
+                    
+                    # 获取项目代码并注入到请求上下文
+                    project_code = project_service.get_project_code_by_id(project_id_int)
+                    if project_code:
+                        g.care_project_name = project_code
+                    
+                except (ValueError, TypeError):
+                    return jsonify({
+                        "succ": False,
+                        "msg": "无效的项目ID",
+                        "data": None
+                    }), 400
+        
+        @flask_blueprint.before_request
+        def inject_project_filter():
+            """
+            注入项目过滤参数到 CareProjectNameEnv
+            
+            此函数在 check_faas_permission() 之后执行，读取 g.care_project_name
+            并将其设置到 CareProjectNameEnv 中，以便 FaaS 接口可以使用项目过滤。
+            
+            Requirements:
+                - 读取 g.care_project_name（由 check_faas_permission() 设置）
+                - 保存原始的 CareProjectNameEnv 值
+                - 设置新的项目过滤值
+            """
+            from flask import g
+            
+            # 检查是否有项目过滤需求
+            if hasattr(g, 'care_project_name') and g.care_project_name:
+                # 保存原始值以便后续恢复
+                g._original_care_project_name = CareProjectNameEnv.get()
+                # 设置新的项目过滤值
+                CareProjectNameEnv.set(g.care_project_name)
+        
+        @flask_blueprint.after_request
+        def restore_project_filter(response):
+            """
+            恢复项目过滤参数
+            
+            此函数在 FaaS 接口请求完成后执行，恢复原始的 CareProjectNameEnv 值。
+            这确保了项目过滤只在当前请求的生命周期内有效，不会影响其他请求。
+            
+            Requirements:
+                - 读取 g._original_care_project_name（由 inject_project_filter() 保存）
+                - 恢复原始的 CareProjectNameEnv 值
+                - 返回响应对象
+            
+            Args:
+                response: Flask 响应对象
+                
+            Returns:
+                Flask 响应对象（必须返回以继续响应流程）
+            """
+            from flask import g
+            
+            # 检查是否保存了原始值
+            if hasattr(g, '_original_care_project_name'):
+                # 恢复原始的项目过滤值
+                CareProjectNameEnv.set(g._original_care_project_name)
+            
+            return response
+    
     # 注册蓝图
     app.register_blueprint(flask_blueprint)  # FAAS 蓝图
     register_blueprints(app, enable_frontend=config.FRONTEND_ENABLED)  # 注册所有模块化的蓝图

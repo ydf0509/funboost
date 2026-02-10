@@ -719,7 +719,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
              # 关键：指定 registry，这样实例化时会自动注册到 booster_registry_for_faas，覆盖旧的 key
              booster_params['booster_registry_name'] = 'booster_registry_for_faas'
 
-             booster_params_model = BoosterParams(**booster_params)
+             booster_params_model = BoosterParams(**{k: v for k, v in booster_params.items() if k in BoosterParams.model_fields})
              
              booster = Booster(booster_params_model)(booster_params_model.consuming_function)
              

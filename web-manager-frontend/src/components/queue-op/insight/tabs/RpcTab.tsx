@@ -92,19 +92,17 @@ export function RpcTab({ queueName, projectId, canOperateQueue }: RpcTabProps) {
       setPayloadError("JSON 解析失败，请检查格式。");
       return;
     }
-    if (!msgBody || typeof msgBody !== "object" || Array.isArray(msgBody)) {
+    if (msgBody === null || typeof msgBody !== "object" || Array.isArray(msgBody)) {
       setPayloadError("msg_body 必须是 JSON 对象。");
       return;
     }
     try {
       setSending(true);
       setResult(null);
-      const response = await apiFetch<{
-        success: boolean;
-        data?: { task_id?: string; status_and_result?: Record<string, unknown> };
-        error?: string;
-        message?: string;
-      }>("/queue/publish", {
+      const response = await funboostFetch<{
+        task_id?: string;
+        status_and_result?: Record<string, unknown>;
+      }>("/funboost/publish", {
         method: "POST",
         json: {
           queue_name: queueName,
@@ -114,11 +112,8 @@ export function RpcTab({ queueName, projectId, canOperateQueue }: RpcTabProps) {
           project_id: projectId,
         },
       });
-      if (!response.success) {
-        throw new Error(response.error || response.message || "发送失败。");
-      }
-      const taskId = response.data?.task_id || "";
-      setResult({ task_id: taskId, ...(response.data?.status_and_result || {}) });
+      const taskId = response.task_id || "";
+      setResult({ task_id: taskId, ...(response.status_and_result || {}) });
       if (taskId) setTaskQuery(taskId);
     } catch (err) {
       setSendError(err instanceof Error ? err.message : "发送失败。");

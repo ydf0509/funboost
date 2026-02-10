@@ -21,7 +21,7 @@ Requirements:
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
 
-from funboost import ActiveCousumerProcessInfoGetter, AsyncResult, TaskOptions
+from funboost import ActiveCousumerProcessInfoGetter
 from funboost.core.active_cousumer_info_getter import (
     QueuesConusmerParamsGetter,
     SingleQueueConusmerParamsGetter,
@@ -236,8 +236,12 @@ def _get_realtime_msg_count(queue_name: str, broker_kind) -> int:
     Get realtime msg count from broker, with ack-able redis unack补偿.
     Returns -1 if broker doesn't support counting and no unack data is available.
     """
-    publisher = SingleQueueConusmerParamsGetter(queue_name).gen_publisher_for_faas()
-    count = publisher.get_message_count()
+    try:
+        publisher = SingleQueueConusmerParamsGetter(queue_name).gen_publisher_for_faas()
+        count = publisher.get_message_count()
+    except Exception as e:
+        logger.warning(f"获取队列 {queue_name} 实时消息数失败: {e}")
+        return -1
     ackable_kinds = {
         BrokerEnum.REDIS_ACK_ABLE,
         BrokerEnum.REDIS_BRPOP_LPUSH,
@@ -752,81 +756,6 @@ def get_msg_num_by_queue_names():
             logger.debug(f"get_message_count failed for queue={qn_str}", exc_info=True)
 
     return jsonify(ret)
-
-
-@queue_bp.route("/queue/publish", methods=["POST"])
-@login_required
-@require_permission("queue:execute")
-def publish_msg():
-    """
-    发布消息接口（Web Manager 版）
-
-    请求体示例:
-    {
-        "queue_name": "test_queue",
-        "msg_body": {"x": 1, "y": 2},
-        "need_result": true,
-        "timeout": 60,
-        "task_id": "optional",
-        "project_id": 1
-    }
-
-    说明:
-    - msg_body 必须是 dict，但允许空对象 {}（适配无参函数）。
-    - need_result=true 时启用 RPC 模式并阻塞等待结果。
-    """
-    status_and_result = None
-    task_id = None
-    try:
-        data = request.get_json(silent=True) or {}
-        project_id = request.args.get("project_id") or data.get("project_id")
-
-        has_access, error_response = _check_project_access(
-            project_id, required_level="write"
-        )
-        if not has_access:
-            return error_response
-
-        queue_name = data.get("queue_name")
-        msg_body = data.get("msg_body")
-        need_result = data.get("need_result", False)
-        timeout = data.get("timeout", 60)
-        task_id_param = data.get("task_id")
-
-        if not queue_name:
-            return jsonify({"success": False, "error": "queue_name 字段必填"}), 400
-
-        project_code = _get_project_code(project_id)
-        has_queue_access, queue_error = _check_queue_in_project(queue_name, project_code)
-        if not has_queue_access:
-            return queue_error
-
-        if msg_body is None or not isinstance(msg_body, dict):
-            return jsonify({"success": False, "error": "msg_body 必须是字典类型"}), 400
-
-        publisher = SingleQueueConusmerParamsGetter(queue_name).gen_publisher_for_faas()
-
-        if need_result:
-            async_result = publisher.publish(
-                msg_body,
-                task_id=task_id_param,
-                task_options=TaskOptions(is_using_rpc_mode=True),
-            )
-            task_id = async_result.task_id
-            status_and_result = AsyncResult(task_id, timeout=timeout).status_and_result
-        else:
-            async_result = publisher.publish(msg_body, task_id=task_id_param)
-            task_id = async_result.task_id
-
-        return jsonify(
-            {
-                "success": True,
-                "message": f"{queue_name} 队列,消息发布成功",
-                "data": {"task_id": task_id, "status_and_result": status_and_result},
-            }
-        )
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @queue_bp.route("/queue/get_time_series_data/<queue_name>", methods=["GET"])

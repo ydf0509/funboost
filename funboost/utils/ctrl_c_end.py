@@ -10,7 +10,7 @@ def signal_handler(signum, frame):
     os._exit(44)
 
 
-def ctrl_c_recv():
+def ctrl_c_recv(confirmation_count=3):
     """ 
     主要目的就是阻止主线程退出而已。 因为funboost为了方便用户连续启动多个consume都是子线程运行循环调度的。
     apscheduler background 类型必须有主线程在运行，否则会很快结束。所以需要阻止主线程退出。
@@ -23,7 +23,7 @@ def ctrl_c_recv():
     """
     # signal.signal(signal.SIGTERM, signal_handler)
     
-    for i in range(3):
+    for i in range(confirmation_count):
         while 1:
             try:
                 time.sleep(2)

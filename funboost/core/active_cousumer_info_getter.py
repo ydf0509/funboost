@@ -450,7 +450,7 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
   "is_using_distributed_frequency_control": false,
   "is_send_consumer_heartbeat_to_redis": true,
   "max_retry_times": 3,
-  "retry_interval": 0,
+
   "is_push_to_dlx_queue_when_retry_max_times": false,
   "consuming_function_decorator": null,
   "function_timeout": null,

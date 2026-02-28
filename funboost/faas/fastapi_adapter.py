@@ -685,7 +685,8 @@ class QueueParams(BaseAllowExtraModel):
     
     # 重试配置
     max_retry_times: int  # 最大自动重试次数
-    retry_interval: typing.Union[float, int]  # 重试间隔（秒）
+    is_using_advanced_retry: bool  # 是否使用高级重试
+    advanced_retry_config: typing.Dict[str, typing.Any]  # 高级重试配置
     is_push_to_dlx_queue_when_retry_max_times: bool  # 达到最大重试次数后是否推送到死信队列
     
     # 函数装饰与超时

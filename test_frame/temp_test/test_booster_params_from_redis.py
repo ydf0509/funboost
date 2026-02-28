@@ -46,7 +46,7 @@ def demo():
         publisher_override_cls=MyPublisherCls,
         # 传入特殊类型但可序列化的字段
         delay_task_apscheduler_jobstores_kind='memory',
-        retry_interval=5.0
+    
     )
     
     print(f"   [原始] specify_concurrent_pool 类型: {type(bp_original.specify_concurrent_pool)}")

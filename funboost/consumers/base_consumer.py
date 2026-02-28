@@ -8,6 +8,7 @@
 框架做主要的功能都是在这个文件里面实现的.
 """
 import functools
+import random
 import sys
 import typing
 import abc
@@ -46,7 +47,7 @@ from funboost.core.loggers import develop_logger
 from funboost.core.func_params_model import BoosterParams, PublisherParams, BaseJsonAbleModel
 from funboost.core.serialization import PickleHelper, Serialization
 from funboost.core.task_id_logger import TaskIdLogger
-from funboost.constant import FunctionKind
+from funboost.constant import FunctionKind, StrConst
 
 from nb_libs.path_helper import PathHelper
 from nb_log import (get_logger, LoggerLevelSetterMixin, LogManager, is_main_process,
@@ -256,6 +257,7 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
         #                                         broker_exclusive_config=self.consumer_params.broker_exclusive_config)
         self.publisher_params = BaseJsonAbleModel.init_by_another_model(PublisherParams, self.consumer_params)
         # print(self.publisher_params)
+        self._init_advanced_retry_config()
         self.custom_init()
         if is_main_process:
             self.logger.info(f'{self.queue_name} consumer 的消费者配置:\n {self.consumer_params.json_str_value()}')
@@ -326,6 +328,25 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
 
     def custom_init(self):
         pass
+
+    def _init_advanced_retry_config(self):
+        if not self.consumer_params.is_using_advanced_retry:
+            return
+        cfg = self.consumer_params.advanced_retry_config
+        self._adv_retry_mode = cfg['retry_mode']
+        self._adv_retry_base_interval = cfg['retry_base_interval']
+        self._adv_retry_multiplier = cfg['retry_multiplier']
+        self._adv_retry_max_interval = cfg['retry_max_interval']
+        self._adv_retry_jitter = cfg['retry_jitter']
+        if self._adv_retry_mode not in ('sleep', 'requeue'):
+            raise ValueError(f"advanced_retry_config 的 retry_mode 必须为 'sleep' 或 'requeue'，当前值为 '{self._adv_retry_mode}'")
+        self.logger.info(
+            f"高级重试已启用: mode={self._adv_retry_mode}, "
+            f"base_interval={self._adv_retry_base_interval}s, multiplier={self._adv_retry_multiplier}, "
+            f"max_interval={self._adv_retry_max_interval}s, jitter={self._adv_retry_jitter}"
+        )
+
+    
 
     def keep_circulating(self, time_sleep=0.001, exit_if_function_run_sucsess=False, is_display_detail_exception=True,
                          block=True, daemon=False):
@@ -526,11 +547,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             return
         function_only_params = get_func_only_params(kw['body'], )
         kw['function_only_params'] = function_only_params
-        if self._get_priority_conf(kw, 'do_task_filtering') and self._redis_filter.check_value_exists(
-                function_only_params, self._get_priority_conf(kw, 'filter_str')):  # 对函数的参数进行检查，过滤已经执行过并且成功的任务。
-            self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
-            self._confirm_consume(kw)  # 不运行就必须确认消费，否则会发不能确认消费，导致消息队列中间件认为消息没有被消费。
-            return
         publish_time = get_publish_time(kw['body'])
         msg_expire_seconds_priority = self._get_priority_conf(kw, 'msg_expire_seconds')
         if msg_expire_seconds_priority:
@@ -603,17 +619,17 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
             else:
                 break
 
-    def __delete_eta_countdown(self, msg_body: dict):
-        self.__dict_pop(msg_body.get('extra', {}), 'eta')
-        self.__dict_pop(msg_body.get('extra', {}), 'countdown')
-        self.__dict_pop(msg_body.get('extra', {}), 'misfire_grace_time')
+    # def __delete_eta_countdown(self, msg_body: dict):
+    #     self.__dict_pop(msg_body.get('extra', {}), 'eta')
+    #     self.__dict_pop(msg_body.get('extra', {}), 'countdown')
+    #     self.__dict_pop(msg_body.get('extra', {}), 'misfire_grace_time')
 
-    @staticmethod
-    def __dict_pop(dictx, key):
-        try:
-            dictx.pop(key)
-        except KeyError:
-            pass
+    # @staticmethod
+    # def __dict_pop(dictx, key):
+    #     try:
+    #         dictx.pop(key)
+    #     except KeyError:
+    #         pass
 
     def _frequency_control(self, qpsx: float, msg_schedule_time_intercalx: float):
         # 以下是消费函数qps控制代码。无论是单个消费者空频还是分布式消费控频，都是基于直接计算的，没有依赖redis inrc计数，使得控频性能好。
@@ -748,6 +764,105 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                             self.logger.critical(err_msg, exc_info=True)
                         else:
                             self.logger.error(err_msg, exc_info=True)
+    
+    @staticmethod
+    def _calculate_exponential_backoff(current_retry_times, base_interval, multiplier, max_interval, jitter):
+        """计算指数退避的重试间隔"""
+        interval = base_interval * (multiplier ** current_retry_times)
+        interval = min(interval, max_interval)
+        if jitter:
+            interval = interval * (0.5 + random.random())
+            interval = min(interval, max_interval)
+        return interval
+    
+    def _get_retry_range(self, kw, max_retry_times):
+        """返回重试的迭代 range。
+        非高级重试：从 0 到 max_retry_times 完整循环。
+        高级重试 requeue 模式：每次消费只尝试一次（从消息记录的重试次数开始）。
+        """
+        if self.consumer_params.is_using_advanced_retry and self._adv_retry_mode == 'requeue':
+            adv_count = kw['body'].get('extra', {}).get(StrConst._ADVANCED_RETRY_COUNT, 0)
+            return range(adv_count, adv_count + 1)
+        return range(max_retry_times + 1)
+
+    def _get_retry_interval(self, kw, current_retry_times):
+        """计算重试间隔（秒）。
+        非高级重试：返回 0（立即重试）。
+        高级重试：指数退避计算。
+        """
+        if not self.consumer_params.is_using_advanced_retry:
+            return 0
+        return self._calculate_exponential_backoff(
+            current_retry_times,
+            self._adv_retry_base_interval,
+            self._adv_retry_multiplier,
+            self._adv_retry_max_interval,
+            self._adv_retry_jitter,
+        )
+
+    def _wait_before_retry(self, kw, current_retry_times, interval):
+        """重试前的等待行为。返回 True 继续重试循环，False 跳出循环。
+        高级重试 requeue 模式：将消息发回队列后立即释放线程。
+        高级重试 sleep 模式 / 非高级重试：在当前线程 sleep。
+        """
+        if self.consumer_params.is_using_advanced_retry and self._adv_retry_mode == 'requeue':
+            self._republish_with_countdown(kw, current_retry_times + 1, interval)
+            return False
+        self.logger.info(
+            f"函数 {self.consuming_function.__name__} "
+            f"第{current_retry_times + 1}次执行失败，等待 {interval:.1f}s 后重试"
+        )
+        time.sleep(interval)
+        return True
+
+    async def _async_wait_before_retry(self, kw, current_retry_times, interval):
+        """异步版重试前的等待行为。返回 True 继续重试循环，False 跳出循环。
+        高级重试 requeue 模式：将消息发回队列后立即释放协程。
+        高级重试 sleep 模式 / 非高级重试：在当前协程 sleep。
+        """
+        if self.consumer_params.is_using_advanced_retry and self._adv_retry_mode == 'requeue':
+            await simple_run_in_executor(self._republish_with_countdown, kw, current_retry_times + 1, interval)
+            return False
+        self.logger.info(
+            f"函数 {self.consuming_function.__name__} "
+            f"第{current_retry_times + 1}次执行失败，等待 {interval:.1f}s 后重试"
+        )
+        await asyncio.sleep(interval)
+        return True
+
+    def _republish_with_countdown(self, kw, next_retry_count, countdown_seconds):
+        """将消息带 countdown 延迟重新发布到同一队列，释放线程/协程"""
+        body = kw['body']
+        if isinstance(body, str):
+            body = Serialization.to_dict(body)
+        new_body = dict(body)
+        new_extra = dict(new_body.get('extra', {}))
+        new_extra[StrConst._ADVANCED_RETRY_COUNT] = next_retry_count
+        new_extra.pop('eta', None)
+        new_extra.pop('countdown', None)
+        new_extra['countdown'] = countdown_seconds
+        new_extra['publish_time'] = round(time.time(), 4)
+        new_extra['publish_time_format'] = time.strftime('%Y-%m-%d %H:%M:%S')
+        new_body['extra'] = new_extra
+        self.publisher_of_same_queue.publish(new_body)
+        self.logger.info(
+            f"[重试-requeue] 函数 {self.consuming_function.__name__} "
+            f"第{next_retry_count}次重试，消息已发回队列，延迟 {countdown_seconds:.1f}s 后重新消费"
+        )
+
+    def _should_filter_task(self, kw, function_only_params):
+        """判断任务是否应被过滤（相同入参已成功执行过）。
+        高级重试 requeue 模式下，尚未耗尽重试次数的重试消息不会被过滤。
+        """
+        if not self._get_priority_conf(kw, 'do_task_filtering'):
+            return False
+        if not self._redis_filter.check_value_exists(function_only_params, self._get_priority_conf(kw, 'filter_str')):
+            return False
+        if self.consumer_params.is_using_advanced_retry and self._adv_retry_mode == 'requeue':
+            adv_count = kw['body'].get('extra', {}).get(StrConst._ADVANCED_RETRY_COUNT, 0)
+            if 0 < adv_count <= self._get_priority_conf(kw, 'max_retry_times'):
+                return False
+        return True
 
     # noinspection PyProtectedMember
     def _run(self, kw: dict, ):
@@ -759,12 +874,17 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                  logger=self.logger, )
         set_fct_context(fct_context)
         task_id = kw['body']['extra']['task_id']
+        if self._should_filter_task(kw, function_only_params):
+            self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
+            self._confirm_consume(kw)
+            set_fct_context(None)
+            return current_function_result_status
         try:
             
             t_start_run_fun = time.time()
             max_retry_times = self._get_priority_conf(kw, 'max_retry_times')
             current_retry_times = 0
-            for current_retry_times in range(max_retry_times + 1):
+            for current_retry_times in self._get_retry_range(kw, max_retry_times):
                 current_function_result_status.run_times = current_retry_times + 1
                 current_function_result_status.run_status = RunStatus.running
                 self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
@@ -776,8 +896,10 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                         or current_function_result_status._has_kill_task):
                     break
                 else:
-                    if self.consumer_params.retry_interval:
-                        time.sleep(self.consumer_params.retry_interval)
+                    interval = self._get_retry_interval(kw, current_retry_times)
+                    if interval:
+                        if not self._wait_before_retry(kw, current_retry_times, interval):
+                            break
             if not (current_function_result_status._has_requeue and self.BROKER_KIND in [BrokerEnum.RABBITMQ_AMQPSTORM, BrokerEnum.RABBITMQ_PIKA, BrokerEnum.RABBITMQ_RABBITPY]):  # 已经nack了，不能ack，否则rabbitmq delevar tag 报错
                 self._confirm_consume(kw)
             current_function_result_status.run_status = RunStatus.finish
@@ -923,23 +1045,30 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                  logger=self.logger, )
         set_fct_context(fct_context)
         task_id = kw['body']['extra']['task_id']
+        if await simple_run_in_executor(self._should_filter_task, kw, function_only_params):
+            self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
+            await simple_run_in_executor(self._confirm_consume, kw)
+            set_fct_context(None)
+            return current_function_result_status
         try:
             self._gen_asyncio_objects()
             t_start_run_fun = time.time()
             max_retry_times = self._get_priority_conf(kw, 'max_retry_times')
             current_retry_times = 0
             function_only_params = kw['function_only_params']
-            for current_retry_times in range(max_retry_times + 1):
+            for current_retry_times in self._get_retry_range(kw, max_retry_times):
                 current_function_result_status.run_times = current_retry_times + 1
                 current_function_result_status.run_status = RunStatus.running
                 self._result_persistence_helper.save_function_result_to_mongo(current_function_result_status)
                 current_function_result_status = await self._async_run_consuming_function_with_confirm_and_retry(kw, current_retry_times=current_retry_times,
-                                                                                                                 function_result_status=current_function_result_status)
+                                                                                                                  function_result_status=current_function_result_status)
                 if current_function_result_status.success is True or current_retry_times == max_retry_times or current_function_result_status._has_requeue:
                     break
                 else:
-                    if self.consumer_params.retry_interval:
-                        await asyncio.sleep(self.consumer_params.retry_interval)
+                    interval = self._get_retry_interval(kw, current_retry_times)
+                    if interval:
+                        if not await self._async_wait_before_retry(kw, current_retry_times, interval):
+                            break
 
             if not (current_function_result_status._has_requeue and self.BROKER_KIND in [BrokerEnum.RABBITMQ_AMQPSTORM, BrokerEnum.RABBITMQ_PIKA, BrokerEnum.RABBITMQ_RABBITPY]):
                 await simple_run_in_executor(self._confirm_consume, kw)

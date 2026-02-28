@@ -9,6 +9,7 @@ from funboost.queues.memory_queues_map import PythonQueues
 class LocalPythonQueueConsumer(AbstractConsumer):
     """
     python 内置queue对象作为消息队列，这个要求发布和消费必须在同一python解释器内部运行，不支持分布式。
+    但是重要性是sss级别，高性能 不担心有的对象无法pickele序列化，
     """
 
     @property

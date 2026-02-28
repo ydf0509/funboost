@@ -79,16 +79,38 @@ class BoosterParams(BaseJsonAbleModel):
     is_using_distributed_frequency_control: bool = False
 
     is_send_consumer_heartbeat_to_redis: bool = False  # 是否将发布者的心跳发送到redis，有些功能的实现需要统计活跃消费者。因为有的中间件不是真mq。这个功能,需要安装redis.
-
+    
+    # --------------- 重试配置 开始
     """max_retry_times:
     最大自动重试次数，当函数发生错误，立即自动重试运行n次，对一些特殊不稳定情况会有效果。
     可以在函数中主动抛出重试的异常ExceptionForRetry，框架也会立即自动重试。
     主动抛出ExceptionForRequeue异常，则当前 消息会重返中间件，
     主动抛出 ExceptionForPushToDlxqueue  异常，可以使消息发送到单独的死信队列中，死信队列的名字是 队列名字 + _dlx。"""
     max_retry_times: int = 3
-    retry_interval: typing.Union[float, int] = 0  # 函数出错后间隔多少秒再重试.
-    is_push_to_dlx_queue_when_retry_max_times: bool = False  # 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
+    
+    """
+    is_using_advanced_retry:
+    是否使用高级重试，高级重试支持指数退避重试。is_using_advanced_retry=True 时候，is_using_advanced_retry参数才能生效。
 
+
+    重试间隔有2种模式，requeue 模式 和 sleep 模式。
+    requeue模式: 将消息发回队列带延迟重试，立即释放线程,适合重试间隔大，防止长时间sleep占用线程导致降低了系统吞吐量。
+    sleep模式: 在当前线程/协程 sleep 重试，适合重试间隔小，并且消息数量少执行不频繁。此模式的sleep时候会占用工作线程/协程
+    
+    如果retry_base_interval= 1.0,retry_multiplier=2.0,retry_max_interval=60.0,则重试间隔为：
+    1s,2s,4s,8s,16s,32s,60s,60s,60s...
+    """
+    is_using_advanced_retry: bool = False  
+    advanced_retry_config :dict =  { 
+        'retry_mode': 'sleep', # 可以是 'sleep' 或 'requeue'，如果重试间隔大并且指数退避倍数大，那么应该使用requeue模式。
+        'retry_base_interval': 1.0, # 基础重试间隔（秒）  1s,2s,4s,8s,16s,30s,30s,30s...
+        'retry_multiplier': 2.0, # 指数退避倍数 ，如果你想固定重试间隔，则设置为1.0
+        'retry_max_interval': 60.0, # 最大重试间隔上限（秒）
+        'retry_jitter': False, # 是否添加随机抖动
+    }
+    
+    is_push_to_dlx_queue_when_retry_max_times: bool = False  # 函数达到最大重试次数仍然没成功，是否发送到死信队列,死信队列的名字是 队列名字 + _dlx。
+    # --------------- 重试配置 结束
 
     consuming_function_decorator: typing.Optional[typing.Callable[..., typing.Any]] = None  # 函数的装饰器。因为此框架做参数自动转指点，需要获取精准的入参名称，不支持在消费函数上叠加 @ *args  **kwargs的装饰器，如果想用装饰器可以这里指定。
     
@@ -107,7 +129,7 @@ class BoosterParams(BaseJsonAbleModel):
     (是把函数放在单独的线程中实现的,随时准备线程被远程命令杀死,所以性能会降低)
     """
     is_support_remote_kill_task: bool = False  
-   
+    
     """
     log_level:
         logger_name 对应的 日志级别

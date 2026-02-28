@@ -45,7 +45,7 @@ def task_basic(x, y):
     queue_name="demo_queue_retry",
     broker_kind=BrokerEnum.MEMORY_QUEUE,  # 使用内存队列
     max_retry_times=3,                    # 最大重试 3 次
-    retry_interval=1,                     # 重试间隔 1 秒
+
     is_print_detail_exception=False       # 不打印详细堆栈，保持控制台整洁
 ))
 def task_retry(n):

@@ -69,6 +69,10 @@ class BrokerEnum:
     5.celery为什么不推荐把memory作为broker？因为celery worker通常在控制台用命令行单独启动，和普通的python脚本中发布任务压根是跨进程跨python解释器了，无法跨程序共享内存队列任务。
       而funboost启动消费就是普通的python程序，业务脚本发送消息和启动消费就是处在一个进程中，所以可以共享一个内存queue。
       由于2个框架启动消费方式的区别，memory queue在 celery中是六等公民，但在 funboost 中是超一等公民。
+    6.特殊功能支持
+     - 支持RPC模式下的结果获取，不依赖Redis等外部存储
+     - 可以通过 get_future() 和 get_aio_future() 方法实现同步结果获取
+     - 高性能配合微批处理模式，提高吞吐量
     """
     MEMORY_QUEUE = 'MEMORY_QUEUE'  # 使用python queue.Queue实现的基于当前python进程的消息队列，不支持跨进程 跨脚本 跨机器共享任务，不支持持久化，适合一次性短期简单任务。
     LOCAL_PYTHON_QUEUE = MEMORY_QUEUE  # 别名，python本地queue就是基于python自带的语言的queue.Queue，消息存在python程序的内存中，不支持重启断点接续。
@@ -306,6 +310,7 @@ class MongoDbName:
 class StrConst:
     BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'
     NO_RESULT = 'no_result'
+    _ADVANCED_RETRY_COUNT = '_advanced_retry_count'
 
 class EnvConst:
     FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'

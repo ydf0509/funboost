@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 from funboost.utils.simple_data_class import DataClassBase
 from nb_log import nb_log_config_default
+from urllib.parse import quote_plus
 
 '''
 funboost_config.py 文件是第一次运行框架自动生成到你的项目根目录的，不需要用由户手动创建。
@@ -33,7 +34,7 @@ class BrokerConnConfig(DataClassBase):
     RABBITMQ_HOST = '127.0.0.1'
     RABBITMQ_PORT = 5672
     RABBITMQ_VIRTUAL_HOST = '/'  # my_host # 这个是rabbitmq的虚拟子host用户自己创建的，如果你想直接用rabbitmq的根host而不是使用虚拟子host，这里写 空字符串 即可。
-    RABBITMQ_URL = f'amqp://{RABBITMQ_USER}:{RABBITMQ_PASS}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VIRTUAL_HOST}'
+    RABBITMQ_URL = f'amqp://{RABBITMQ_USER}:{quote_plus(RABBITMQ_PASS)}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VIRTUAL_HOST}'
 
     REDIS_HOST = '127.0.0.1'
     REDIS_USERNAME = ''
@@ -42,7 +43,7 @@ class BrokerConnConfig(DataClassBase):
     REDIS_DB = 7  # redis消息队列所在db，请不要在这个db放太多其他键值对，以及方便你自己可视化查看你的redis db，使用单独的db。
     REDIS_DB_FILTER_AND_RPC_RESULT = 8  # 如果函数做任务参数过滤 或者使用rpc获取结果，使用这个db，因为这个db的键值对多，和redis消息队列db分开
     REDIS_SSL = False # 是否使用ssl加密,默认是False
-    REDIS_URL = f'{"rediss" if REDIS_SSL else "redis"}://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+    REDIS_URL = f'{"rediss" if REDIS_SSL else "redis"}://{REDIS_USERNAME}:{quote_plus(REDIS_PASSWORD)}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
 
     NSQD_TCP_ADDRESSES = ['127.0.0.1:4150']
     NSQD_HTTP_CLIENT_HOST = '127.0.0.1'

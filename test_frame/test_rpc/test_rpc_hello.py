@@ -5,7 +5,10 @@ from funboost import boost, BrokerEnum, BoosterParamsComplete, AsyncResult
 from funboost.concurrent_pool.bounded_threadpoolexcutor import BoundedThreadPoolExecutor
 
 
-@boost(BoosterParamsComplete(queue_name='test_rpc_hello',is_using_rpc_mode=True,broker_kind=BrokerEnum.REDIS_ACK_ABLE))
+@boost(BoosterParamsComplete(queue_name='test_rpc_hello',
+do_task_filtering=True,
+
+is_using_rpc_mode=True,broker_kind=BrokerEnum.REDIS_ACK_ABLE))
 def fun(x):
     time.sleep(2)
     print(x)
@@ -27,8 +30,15 @@ def wait_msg_result(async_result:AsyncResult):
 if __name__ == '__main__':
     fun.consume()
 
-    for i in range(100):
-        async_result = fun.push(i)
-        print(async_result.result) # print(async_result.get()) 用法相等
+    async_result = fun.push(10)
+    print(async_result.result)
 
-        async_result.set_callback(show_result) # thread_pool.submit(wait_msg_result,async_result) 等效
+    async_result = fun.push(10)
+    print(async_result.result)
+
+
+    # for i in range(100):
+    #     async_result = fun.push(i)
+    #     print(async_result.result) # print(async_result.get()) 用法相等
+
+    #     async_result.set_callback(show_result) # thread_pool.submit(wait_msg_result,async_result) 等效

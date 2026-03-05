@@ -12,7 +12,7 @@ import asyncio
 import logging
 import datetime
 from pydantic.fields import Field
-from typing_extensions import Literal
+
 
 from funboost.concurrent_pool.pool_commons import ConcurrentPoolBuilder
 from funboost.concurrent_pool.flexible_thread_pool import FlexibleThreadPool
@@ -102,7 +102,7 @@ class BoosterParams(BaseJsonAbleModel):
     """
     is_using_advanced_retry: bool = False  
     advanced_retry_config :dict =  { 
-        'retry_mode': 'sleep', # 可以是 'sleep' 或 'requeue'，如果重试间隔大并且指数退避倍数大，那么应该使用requeue模式。
+        'retry_mode': 'sleep', # 可以是 'sleep' 或 'requeue'，如果重试间隔大并且指数退避倍数大，那么应该使用requeue模式，因为sleep原地占用线程/协程降低服务吞吐量。
         'retry_base_interval': 1.0, # 基础重试间隔（秒）  1s,2s,4s,8s,16s,30s,30s,30s...
         'retry_multiplier': 2.0, # 指数退避倍数 ，如果你想固定重试间隔，则设置为1.0
         'retry_max_interval': 60.0, # 最大重试间隔上限（秒）
@@ -161,7 +161,7 @@ class BoosterParams(BaseJsonAbleModel):
     rpc_result_expire_seconds: int = 1800  # redis保存rpc结果的过期时间.
     rpc_timeout:int = 1800 # rpc模式下，等待rpc结果返回的超时时间
 
-    delay_task_apscheduler_jobstores_kind :Literal[ 'redis', 'memory'] = 'redis'  # 延时任务的aspcheduler对象使用哪种jobstores ，可以为 redis memory 两种作为jobstore
+    delay_task_apscheduler_jobstores_kind :str = 'redis'  # 延时任务的aspcheduler对象使用哪种jobstores ，可以为 redis memory 两种作为jobstore
 
     
     """

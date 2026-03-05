@@ -71,7 +71,7 @@ class BrokerEnum:
       由于2个框架启动消费方式的区别，memory queue在 celery中是六等公民，但在 funboost 中是超一等公民。
     6.特殊功能支持
      - 支持RPC模式下的结果获取，不依赖Redis等外部存储
-     - 可以通过 get_future() 和 get_aio_future() 方法实现同步结果获取
+     - 可以通过 get_future() 和 get_aio_future() 方法实现结果获取，不依赖redis rpc获取结果
      - 高性能配合微批处理模式，提高吞吐量
     """
     MEMORY_QUEUE = 'MEMORY_QUEUE'  # 使用python queue.Queue实现的基于当前python进程的消息队列，不支持跨进程 跨脚本 跨机器共享任务，不支持持久化，适合一次性短期简单任务。
@@ -311,6 +311,7 @@ class StrConst:
     BOOSTER_REGISTRY_NAME_DEFAULT = 'booster_registry_default'
     NO_RESULT = 'no_result'
     _ADVANCED_RETRY_COUNT = '_advanced_retry_count'
+    FILTERED_TASK_RESULT = 'filtered_task_result'
 
 class EnvConst:
     FUNBOOST_FAAS_CARE_PROJECT_NAME = 'funboost.faas.care_project_name'

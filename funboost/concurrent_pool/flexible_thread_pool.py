@@ -116,7 +116,8 @@ class _KeepAliveTimeThread(threading.Thread, metaclass=FunboostMetaTypeFileLogge
                 with self.pool._lock_for_judge_threads_free_count:
                     # print(self.pool.threads_free_count)
                     if self.pool.threads_free_count > self.pool.MIN_WORKERS:
-                        # 可以设置 LogManager('_KeepAliveTimeThread').preset_log_level(logging.INFO) 来屏蔽下面的话,见文档6.17.b
+                  
+                        # 你如果不喜欢这条日志，对funboost的自适应伸缩线程池没有兴趣，可以在你的 funboost_config.py 的 FunboostCommonConfig 设置 FUNBOOST_PROMPT_LOG_LEVEL = logging.INFO
                         self.logger.debug(f'停止线程 {self._ident}, 触发条件是 {self.pool.pool_ident} 线程池中的 {self.ident} 线程 超过 {self.pool.KEEP_ALIVE_TIME} 秒没有任务，线程池中不在工作状态中的线程数量是 {self.pool.threads_free_count}，超过了指定的最小核心数量 {self.pool.MIN_WORKERS}')  # noqa
                         self.pool._change_threads_free_count(-1)
                         self.pool._change_threads_start_count(-1)

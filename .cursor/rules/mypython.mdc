@@ -1,9 +1,6 @@
----
-description:
-globs:
----
 
-# Your rule content
 
-- You can @ files here
-- You can use markdown but dont have to
+
+你复用项目根目录下的 .agent 目录下的 rules 目录下的所有rules和skills
+
+你要利用 .agent\rules\ai-read.md 作为ai的阅读规则

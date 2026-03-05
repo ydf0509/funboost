@@ -20,7 +20,7 @@ from funboost.assist.celery_helper import CeleryHelper,Task
                             'retry_base_interval': 10.0,       # 初始 10s
                             'retry_multiplier': 2.0,          # 每次翻倍：10s -> 20s -> 40s ...
                             'retry_max_interval': 300.0,      # 重试间隔最高等待 5 分钟，不会无限制往上翻倍
-                            'retry_jitter': False,            # 是否添加随机抖动，随机添加一个 0.5秒 - 1.5秒的间隔
+                            'retry_jitter': False,            # 是否添加随机抖动，随机乘以 0.5 - 1.5 倍数
                         },  
 
                      broker_exclusive_config= {

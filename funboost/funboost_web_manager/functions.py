@@ -38,7 +38,7 @@ def get_mongo_table_name_by_queue_name(queue_name: str) -> str:
     """
     queue_params = SingleQueueConusmerParamsGetter(queue_name).get_one_queue_params_use_cache()
     persistance_conf = queue_params['function_result_status_persistance_conf']
-    table_name = persistance_conf['table_name'] or queue_name
+    table_name = persistance_conf.get('table_name') or queue_name
     return table_name 
 
 
@@ -53,7 +53,7 @@ def get_all_queue_table_info() -> dict:
     queues_config = QueuesConusmerParamsGetter().get_queues_params()
     for queue_name, params in queues_config.items():
         persistance_conf = params['function_result_status_persistance_conf']
-        table_name = persistance_conf['table_name'] or queue_name
+        table_name = persistance_conf.get('table_name') or queue_name
         result[queue_name] = table_name 
     return result
 

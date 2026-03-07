@@ -413,5 +413,14 @@ if __name__ == '__main__':
     #
     # print(TaskOptions().get_str_dict())
 
-    print(BoosterParams(queue_name='3213', specify_concurrent_pool=FlexibleThreadPool(100)).json_pre())
+    print(BoosterParams(queue_name='3213', 
+                         function_result_status_persistance_conf= {
+        "is_save_status": False,
+        "is_save_result": False,
+        "expire_seconds": 604800,
+        "is_use_bulk_insert": False,
+        "table_name": "3213"
+    },
+                        
+                        specify_concurrent_pool=FlexibleThreadPool(100)).json_pre())
     # print(PublisherParams.schema_json())  # 注释掉，因为 PublisherParams 包含 Callable 类型字段，无法生成 JSON Schema

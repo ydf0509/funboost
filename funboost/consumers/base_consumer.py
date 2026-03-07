@@ -98,7 +98,7 @@ class GlobalVars:
 
 
 # noinspection DuplicatedCode
-class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
+class AbstractConsumer(metaclass=abc.ABCMeta, ):
     _time_interval_for_check_allow_run_by_cron = 60
     BROKER_KIND = None
 
@@ -559,6 +559,13 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 self._confirm_consume(kw)
                 return
 
+        if self._should_filter_task(kw, function_only_params):
+            task_id = kw['body']['extra']['task_id']
+            current_function_result_status = FunctionResultStatus(
+                self.queue_name, self.consuming_function.__name__, kw['body'], function_only_params)
+            self._handle_filtered_task(kw, task_id, current_function_result_status)
+            return
+
         msg_eta = self._get_priority_conf(kw, 'eta')
         msg_countdown = self._get_priority_conf(kw, 'countdown')
         misfire_grace_time = self._get_priority_conf(kw, 'misfire_grace_time')
@@ -864,6 +871,14 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                 return False
         return True
 
+    def _handle_filtered_task(self, kw, task_id, current_function_result_status:FunctionResultStatus):
+        """处理被过滤的任务：确认消费并设置 RPC 结果，使发布端不会死等。"""
+        self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
+        self._confirm_consume(kw)
+        current_function_result_status.success = False # 函数入参被过滤，消息并没有运行，给个False。
+        current_function_result_status.result = StrConst.FILTERED_TASK_RESULT # 函数入参被过滤，消息没有运行。
+        self._set_rpc_result(task_id, kw, current_function_result_status, 0)
+
     # noinspection PyProtectedMember
     def _run(self, kw: dict, ):
         # print(kw)
@@ -874,11 +889,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                  logger=self.logger, )
         set_fct_context(fct_context)
         task_id = kw['body']['extra']['task_id']
-        if self._should_filter_task(kw, function_only_params):
-            self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
-            self._confirm_consume(kw)
-            set_fct_context(None)
-            return current_function_result_status
         try:
             
             t_start_run_fun = time.time()
@@ -1045,11 +1055,6 @@ class AbstractConsumer(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
                                  logger=self.logger, )
         set_fct_context(fct_context)
         task_id = kw['body']['extra']['task_id']
-        if await simple_run_in_executor(self._should_filter_task, kw, function_only_params):
-            self.logger.warning(f'redis的 [{self._redis_filter_key_name}] 键 中 过滤任务 {kw["body"]}')
-            await simple_run_in_executor(self._confirm_consume, kw)
-            set_fct_context(None)
-            return current_function_result_status
         try:
             self._gen_asyncio_objects()
             t_start_run_fun = time.time()

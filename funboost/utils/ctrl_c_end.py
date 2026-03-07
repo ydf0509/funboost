@@ -10,16 +10,20 @@ def signal_handler(signum, frame):
     os._exit(44)
 
 
-def ctrl_c_recv(confirmation_count=3):
+
+def ctrl_c_recv(confirmation_count=1):
     """ 
-    主要目的就是阻止主线程退出而已。 因为funboost为了方便用户连续启动多个consume都是子线程运行循环调度的。
-    apscheduler background 类型必须有主线程在运行，否则会很快结束。所以需要阻止主线程退出。
-    在代码最最末尾加上 ctrl_c_recv() 就可以阻止主线程退出。
+    程序最末尾加 ctrl_c_recv() 主要是为了主线程持续在运行，方便你敲击键盘 ctrl + c 可以停止程序而已。  
+    你即使程序最末尾不加 ctrl_c_recv(),funboost消费程序也会永久持续运行，控制台也会不断打印日志和 `print` 输出。
+    
+    
+    加与不加的详细区别，可以看教程6.25b章节 `## 6.25b `ctrl_c_recv` 到底要不要加？—— 直接看效果`
+    
     
     你也可以不用ctrl_c_recv(),  直接在你的启动脚本文件的最末尾加上：
     while 1:
         time.sleep(100) 
-    来达到阻止主线程退出的目的。
+    来达到主线程在持续运行的目的。
     """
     # signal.signal(signal.SIGTERM, signal_handler)
     

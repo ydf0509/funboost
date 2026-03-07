@@ -157,10 +157,9 @@ class FunboostBackgroundScheduler(BackgroundScheduler):
 
         # if block_exit:
         #     atexit.register(_when_exit)
-        self._daemon = False   # 这里强制默认改成非守护线程。默认是守护线程，主线程退出会报错。
+        self._daemon = False   # 这里魔改了BackgroundScheduler的daemon的_daemon属性，强制默认改成非守护线程。默认是守护线程，主线程退出会报错 RuntimeError: cannot schedule new futures after interpreter shutdown。
         super().start(paused=paused, )
-        # _block_exit()   # python3.9 判断守护线程结束必须主线程在运行。你自己在你的运行代碼的最末尾加上 while 1： time.sleep(100)  ,来阻止主线程退出。
-
+        # _block_exit() 
     def _main_loop00000(self):
         """
         原来的代码是这，动态添加任务不友好。

@@ -40,7 +40,7 @@ RedisAsyncResult = AsyncResult  # 别名
 RedisAioAsyncResult = AioAsyncResult  # 别名
 
 
-class AbstractPublisher(LoggerLevelSetterMixin, metaclass=abc.ABCMeta, ):
+class AbstractPublisher(metaclass=abc.ABCMeta, ):
     """
     发布消息到消息队列
     同步编程，最重要的方法有 push publish，

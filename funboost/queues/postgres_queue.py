@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : AI Assistant
-# @Time    : 2026/1/16
+# @Time    : 2026/1/18
 """
 原生 PostgreSQL 消息队列实现
 充分利用 PostgreSQL 相比 MySQL 的独特优势：

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : AI Assistant
-# @Time    : 2026/1/16
+# @Time    : 2026/1/18
 """
 PostgreSQL 原生消息队列 Broker 测试
 

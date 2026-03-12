@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : AI Assistant
-# @Time    : 2026/1/2
+# @Time    : 2026/1/4
 """
 此文件最重要的目的是演示 register_custom_broker 来如何扩展一个全新的broker中间件。
 

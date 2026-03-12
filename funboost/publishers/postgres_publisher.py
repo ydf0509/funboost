@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : AI Assistant
-# @Time    : 2026/1/16
+# @Time    : 2026/1/18
 """
 PostgreSQL Publisher - 原生高性能实现
 利用 PostgreSQL 的 RETURNING 和 NOTIFY 特性

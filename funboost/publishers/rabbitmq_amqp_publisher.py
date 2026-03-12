@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2026/1/14
+# @Time    : 2026/1/11
 """
 使用 amqp 包实现的高性能 RabbitMQ Publisher。
 amqp 是 Celery/Kombu 底层使用的 AMQP 客户端，性能比 pika 更好。

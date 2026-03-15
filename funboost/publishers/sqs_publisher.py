@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2026/1/12
+# @Time    : 2026/1/11
 """
 使用 AWS SQS 作为消息队列中间件的发布者实现。
 使用 boto3 SDK 操作 SQS。

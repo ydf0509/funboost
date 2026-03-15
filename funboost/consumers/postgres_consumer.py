@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : AI Assistant
-# @Time    : 2026/1/16
+# @Time    : 2026/1/18
 """
 PostgreSQL Consumer - 原生高性能实现
 充分利用 PostgreSQL 独有特性：

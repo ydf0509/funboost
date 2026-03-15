@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Author  : AI Assistant
-# @Time    : 2026/1/30
+# @Time    : 2026/2/1
 """
 周期配额控频消费者 Mixin (Periodic Quota Rate Limiter Consumer Mixin)
 

@@ -17,7 +17,7 @@ from funboost.contrib.override_publisher_consumer_cls.funboost_micro_batch_mixin
 
 @boost(MicroBatchBoosterParams(
     queue_name='test_micro_batch_queue',
-    broker_kind=BrokerEnum.MEM_QUEUE,
+    broker_kind=BrokerEnum.MEMORY_QUEUE,
     user_options={
         'micro_batch_size': 10,        # 每批10条强制触发用户函数
         'micro_batch_timeout': 3.0,    # 如果不足n条，3秒超时强制触发用户函数

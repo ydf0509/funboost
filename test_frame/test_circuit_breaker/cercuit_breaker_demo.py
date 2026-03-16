@@ -21,11 +21,13 @@ class CircuitBreakerConsumerWithAlertMixin(CircuitBreakerConsumerMixin):
         max_retry_times=0,
         consumer_override_cls=CircuitBreakerConsumerWithAlertMixin,
         user_options={
-            'counter_backend': 'redis',
-            'strategy': 'consecutive',
-            'failure_threshold': 3,
-            'recovery_timeout': 5,
-            'half_open_max_calls': 2,
+            'circuit_breaker_options': {
+                'counter_backend': 'redis',
+                'strategy': 'consecutive',
+                'failure_threshold': 3,
+                'recovery_timeout': 5,
+                'half_open_max_calls': 2,
+            },
         },
     ))
 def task_block(x):

@@ -132,6 +132,7 @@ class PrometheusPublisherMixin(AbstractPublisher):
         发布消息后的钩子方法，记录 Prometheus 发布指标
         """
         PUBLISH_TOTAL.labels(queue=self.queue_name).inc()
+        super()._after_publish(msg, msg_function_kw, task_id)
 
 
 # ============================================================
@@ -147,15 +148,16 @@ class PrometheusConsumerMixin(AbstractConsumer):
     - 任务执行耗时
     - 重试次数
     
-    通过框架提供的 _sync_and_aio_frame_custom_record_process_info_func 钩子方法实现，
+    通过框架提供的 _both_sync_and_aio_frame_custom_record_process_info_func 钩子方法实现，
     同步和异步任务都会调用此方法，无需分别实现。
     """
     
-    def _sync_and_aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
+    def _both_sync_and_aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
         """
         框架回调方法，同步和异步任务执行后都会调用此方法采集 Prometheus 指标
         """
         self._record_prometheus_metrics(current_function_result_status)
+        super()._both_sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
     
     def _record_prometheus_metrics(self, function_result_status: FunctionResultStatus):
         """

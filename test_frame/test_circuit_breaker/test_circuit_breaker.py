@@ -287,10 +287,12 @@ def run_integration_test_block_mode():
         max_retry_times=0,
         consumer_override_cls=CircuitBreakerConsumerMixin,
         user_options={
-            'strategy': 'consecutive',
-            'failure_threshold': 3,
-            'recovery_timeout': 2.0,
-            'half_open_max_calls': 2,
+            'circuit_breaker_options': {
+                'strategy': 'consecutive',
+                'failure_threshold': 3,
+                'recovery_timeout': 2.0,
+                'half_open_max_calls': 2,
+            },
         },
     ))
     def task_block(x):
@@ -367,10 +369,12 @@ def run_integration_test_fallback_mode():
         max_retry_times=0,
         consumer_override_cls=CircuitBreakerConsumerMixin,
         user_options={
-            'failure_threshold': 3,
-            'recovery_timeout': 2.0,
-            'half_open_max_calls': 2,
-            'circuit_breaker_fallback': my_fallback,
+            'circuit_breaker_options': {
+                'failure_threshold': 3,
+                'recovery_timeout': 2.0,
+                'half_open_max_calls': 2,
+                'fallback': my_fallback,
+            },
         },
     ))
     def task_fb(x):
@@ -449,13 +453,15 @@ def run_integration_test_rate_with_exceptions():
         max_retry_times=0,
         consumer_override_cls=CircuitBreakerConsumerMixin,
         user_options={
-            'strategy': 'rate',
-            'errors_rate': 0.5,
-            'period': 30.0,
-            'min_calls': 3,
-            'recovery_timeout': 2.0,
-            'half_open_max_calls': 2,
-            'exceptions': (ConnectionError,),
+            'circuit_breaker_options': {
+                'strategy': 'rate',
+                'errors_rate': 0.5,
+                'period': 30.0,
+                'min_calls': 3,
+                'recovery_timeout': 2.0,
+                'half_open_max_calls': 2,
+                'exceptions': (ConnectionError,),
+            },
         },
     ))
     def task_rate(x):

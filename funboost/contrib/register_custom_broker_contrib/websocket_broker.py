@@ -60,6 +60,7 @@ class WebSocketPublisher(AbstractPublisher):
     """
     
     def custom_init(self):
+        super().custom_init()
         config = self.publisher_params.broker_exclusive_config
         self._ws_url = config['ws_url']
         self._reconnect_interval = config['reconnect_interval']
@@ -140,6 +141,7 @@ class WebSocketConsumer(AbstractConsumer):
     _server_lock = threading.Lock()
     
     def _before_start_consuming_message_hook(self):
+        super()._before_start_consuming_message_hook()
         config = self.consumer_params.broker_exclusive_config
         self._ws_url = config['ws_url']
         self._reconnect_interval = config['reconnect_interval']

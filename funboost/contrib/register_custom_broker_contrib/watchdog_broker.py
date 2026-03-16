@@ -81,6 +81,7 @@ class WatchdogPublisher(AbstractPublisher):
     """
     
     def custom_init(self):
+        super().custom_init()
         watch_path = self.publisher_params.broker_exclusive_config['watch_path']
         self._queue_dir = Path(watch_path)
         self._queue_dir.mkdir(parents=True, exist_ok=True)
@@ -257,6 +258,7 @@ class WatchdogConsumer(AbstractConsumer):
     BROKER_KIND = None  # 会被框架自动设置
 
     def custom_init(self):
+        super().custom_init()
         # 从 broker_exclusive_config 获取配置
         config = self.consumer_params.broker_exclusive_config
         

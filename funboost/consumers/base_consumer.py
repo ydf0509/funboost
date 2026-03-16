@@ -702,7 +702,7 @@ class AbstractConsumer(metaclass=abc.ABCMeta, ):
     async def _aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
         pass
 
-    def _sync_and_aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
+    def _both_sync_and_aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
         pass
 
     def user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, ):  # 这个可以继承
@@ -931,7 +931,7 @@ class AbstractConsumer(metaclass=abc.ABCMeta, ):
 
             with self._lock_for_count_execute_task_times_every_unit_time:
                 self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
-            self._sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
+            self._both_sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
             self._frame_custom_record_process_info_func(current_function_result_status, kw)
             self.user_custom_record_process_info_func(current_function_result_status, )  # 两种方式都可以自定义,记录结果,建议继承方式,不使用boost中指定 user_custom_record_process_info_func
             if self.consumer_params.user_custom_record_process_info_func:
@@ -1098,7 +1098,7 @@ class AbstractConsumer(metaclass=abc.ABCMeta, ):
             async with self._async_lock_for_count_execute_task_times_every_unit_time:
                 self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
 
-            self._sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
+            self._both_sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
             await self._aio_frame_custom_record_process_info_func(current_function_result_status, kw)
             await self.aio_user_custom_record_process_info_func(current_function_result_status, )
             if self.consumer_params.user_custom_record_process_info_func:

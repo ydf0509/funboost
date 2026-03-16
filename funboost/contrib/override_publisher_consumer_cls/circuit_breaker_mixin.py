@@ -36,10 +36,13 @@ HALF_OPEN → 超过 half_open_ttl → OPEN（可选）
 1. 阻塞模式（默认，无 fallback）：
    熔断期间阻塞 _submit_task，消息留在中间件中等待恢复。
 
-2. Fallback 模式（指定 circuit_breaker_fallback）：
+2. Fallback 模式（指定 fallback）：
    熔断期间用 fallback 函数替代原函数执行。
 
-=== user_options 参数说明 ===
+=== user_options['circuit_breaker_options'] 参数说明 ===
+
+所有熔断器参数放在 user_options 的 'circuit_breaker_options' 字典中，
+避免与其他 mixin 的 user_options 一级 key 冲突（例如 period 可能与 PeriodicQuotaConsumerMixin 冲突）。
 
     strategy:               'consecutive'(连续失败计数) 或 'rate'(错误率滑动窗口)，默认 'consecutive'
     counter_backend:        'local'(本地内存) 或 'redis'(Redis 分布式)，默认 'local'
@@ -54,7 +57,7 @@ HALF_OPEN → 超过 half_open_ttl → OPEN（可选）
     half_open_ttl:          半开状态超时秒数，超时后重新进入 OPEN（None 则不超时），默认 None
 
     exceptions:             要跟踪的异常类型元组（None 跟踪所有），默认 None
-    circuit_breaker_fallback: 降级函数（None 则阻塞模式），默认 None
+    fallback:               降级函数（None 则阻塞模式），默认 None
 
 === 钩子方法（子类重写） ===
 
@@ -74,8 +77,10 @@ HALF_OPEN → 超过 half_open_ttl → OPEN（可选）
         queue_name='my_task',
         broker_kind=BrokerEnum.REDIS,
         user_options={
-            'failure_threshold': 5,
-            'recovery_timeout': 60,
+            'circuit_breaker_options': {
+                'failure_threshold': 5,
+                'recovery_timeout': 60,
+            },
         },
     ))
     def my_task(x):
@@ -87,13 +92,15 @@ HALF_OPEN → 超过 half_open_ttl → OPEN（可选）
         broker_kind=BrokerEnum.REDIS,
         consumer_override_cls=CircuitBreakerConsumerMixin,
         user_options={
-            'strategy': 'rate',
-            'counter_backend': 'redis',
-            'errors_rate': 0.5,
-            'period': 60,
-            'min_calls': 10,
-            'recovery_timeout': 30,
-            'exceptions': (ConnectionError, TimeoutError),
+            'circuit_breaker_options': {
+                'strategy': 'rate',
+                'counter_backend': 'redis',
+                'errors_rate': 0.5,
+                'period': 60,
+                'min_calls': 10,
+                'recovery_timeout': 30,
+                'exceptions': (ConnectionError, TimeoutError),
+            },
         },
     ))
     def my_task_rate(x):
@@ -112,8 +119,10 @@ HALF_OPEN → 超过 half_open_ttl → OPEN（可选）
         broker_kind=BrokerEnum.REDIS,
         consumer_override_cls=MyAlertCircuitBreakerMixin,
         user_options={
-            'failure_threshold': 5,
-            'recovery_timeout': 60,
+            'circuit_breaker_options': {
+                'failure_threshold': 5,
+                'recovery_timeout': 60,
+            },
         },
     ))
     def my_task_alert(x):
@@ -128,9 +137,11 @@ HALF_OPEN → 超过 half_open_ttl → OPEN（可选）
         broker_kind=BrokerEnum.REDIS,
         consumer_override_cls=CircuitBreakerConsumerMixin,
         user_options={
-            'failure_threshold': 3,
-            'recovery_timeout': 30,
-            'circuit_breaker_fallback': my_fallback,
+            'circuit_breaker_options': {
+                'failure_threshold': 3,
+                'recovery_timeout': 30,
+                'fallback': my_fallback,
+            },
         },
     ))
     def my_task_fb(x):
@@ -543,25 +554,26 @@ class CircuitBreakerConsumerMixin(AbstractConsumer):
     """
     熔断器消费者 Mixin
 
-    通过 user_options 配置所有参数，详见模块文档。
+    通过 user_options['circuit_breaker_options'] 配置所有参数，详见模块文档。
     """
 
     def custom_init(self):
         super().custom_init()
 
-        user_options = self.consumer_params.user_options or {}
-        strategy = user_options.get('strategy', 'consecutive')
-        counter_backend = user_options.get('counter_backend', 'local')
+        user_options = self.consumer_params.user_options
+        cb_options = user_options['circuit_breaker_options']
+        strategy = cb_options.get('strategy', 'consecutive')
+        counter_backend = cb_options.get('counter_backend', 'local')
 
         common_kwargs = dict(
             strategy=strategy,
-            failure_threshold=user_options.get('failure_threshold', 5),
-            errors_rate=user_options.get('errors_rate', 0.5),
-            period=user_options.get('period', 60.0),
-            min_calls=user_options.get('min_calls', 5),
-            recovery_timeout=user_options.get('recovery_timeout', 60.0),
-            half_open_max_calls=user_options.get('half_open_max_calls', 3),
-            half_open_ttl=user_options.get('half_open_ttl', None),
+            failure_threshold=cb_options.get('failure_threshold', 5),
+            errors_rate=cb_options.get('errors_rate', 0.5),
+            period=cb_options.get('period', 60.0),
+            min_calls=cb_options.get('min_calls', 5),
+            recovery_timeout=cb_options.get('recovery_timeout', 60.0),
+            half_open_max_calls=cb_options.get('half_open_max_calls', 3),
+            half_open_ttl=cb_options.get('half_open_ttl', None),
         )
 
         if counter_backend == 'redis':
@@ -571,9 +583,9 @@ class CircuitBreakerConsumerMixin(AbstractConsumer):
         else:
             self._circuit_breaker = CircuitBreaker(**common_kwargs)
 
-        self._circuit_breaker_fallback = user_options.get('circuit_breaker_fallback', None)
+        self._circuit_breaker_fallback = cb_options.get('fallback', None)
         self._tracked_exception_names = _parse_exception_names(
-            user_options.get('exceptions', None)
+            cb_options.get('exceptions', None)
         )
 
         self.logger.info(
@@ -702,13 +714,13 @@ class CircuitBreakerConsumerMixin(AbstractConsumer):
             return True
         return function_result_status.exception_type in self._tracked_exception_names
 
-    def _sync_and_aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
+    def _both_sync_and_aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
         """
         任务执行完成后（含重试耗尽），根据最终结果更新熔断器状态。
         - fallback 执行的成功不计入恢复统计
         - 不在 exceptions 列表中的异常不计入熔断器
         """
-        super()._sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
+        super()._both_sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
 
         if (current_function_result_status._has_requeue
                 or current_function_result_status._has_to_dlx_queue
@@ -772,8 +784,10 @@ class CircuitBreakerBoosterParams(BoosterParams):
             queue_name='my_task',
             broker_kind=BrokerEnum.REDIS,
             user_options={
-                'failure_threshold': 5,
-                'recovery_timeout': 60,
+                'circuit_breaker_options': {
+                    'failure_threshold': 5,
+                    'recovery_timeout': 60,
+                },
             },
         ))
         def my_task(x):
@@ -784,12 +798,14 @@ class CircuitBreakerBoosterParams(BoosterParams):
             queue_name='my_task',
             broker_kind=BrokerEnum.REDIS,
             user_options={
-                'strategy': 'rate',
-                'counter_backend': 'redis',
-                'errors_rate': 0.5,
-                'period': 60,
-                'min_calls': 10,
-                'recovery_timeout': 30,
+                'circuit_breaker_options': {
+                    'strategy': 'rate',
+                    'counter_backend': 'redis',
+                    'errors_rate': 0.5,
+                    'period': 60,
+                    'min_calls': 10,
+                    'recovery_timeout': 30,
+                },
             },
         ))
         def my_task(x):
@@ -797,11 +813,13 @@ class CircuitBreakerBoosterParams(BoosterParams):
     """
     consumer_override_cls: typing.Optional[typing.Type] = CircuitBreakerConsumerMixin
     user_options: dict = {
-        'strategy': 'consecutive',
-        'counter_backend': 'local',
-        'failure_threshold': 5,
-        'recovery_timeout': 60.0,
-        'half_open_max_calls': 3,
+        'circuit_breaker_options': {
+            'strategy': 'consecutive',
+            'counter_backend': 'local',
+            'failure_threshold': 5,
+            'recovery_timeout': 60.0,
+            'half_open_max_calls': 3,
+        },
     }
 
 

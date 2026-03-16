@@ -1354,7 +1354,18 @@ class BoosterParams(BaseJsonAbleModel):
   行1564: ## 4b.12 funboost的周期额度功能
   行1600: ### 4b.12.2 周期额度用法例子
   行1622: ## 4b.13 使用内存队列 broker_kind=BrokerEnum.MEMORY_QUEUE 时候，用 get_future 获取消费函数的运行结果
-  行1705: ## 4b.14 funboost 支持熔断降级，智能自动熔断、探测、恢复 （高级功能）
+  行1705: ## 4b.14 funboost 支持自动熔断，智能自动熔断、半开、恢复 （高级功能）
+  行1715: ### 4b.14.0 funboost 支持自动熔断管理和手动熔断管理
+  行1719: #### 4b.14.0.1 手动熔断管理
+  行1733: #### 4b.14.0.2 自动熔断管理
+  行1740: ### 4b.14.1 funboost 自动熔断，CircuitBreakerConsumerMixin
+  行1754: #### 4b.14.1.1 三态状态机
+  行1792: #### 4b.14.1.2 两种触发策略
+  行1801: #### 4b.14.1.3 两种计数后端
+  行1810: #### 4b.14.1.4 两种熔断行为
+  行1819: #### 4b.14.1.5 user_options的 circuit_breaker_options 参数说明
+  行1859: #### 4b.14.1.6 钩子方法（子类重写）
+  行1868: #### 4b.14.1.7 用法示例
 
 ============================================================
 文件: c6.md
@@ -1454,6 +1465,13 @@ class BoosterParams(BaseJsonAbleModel):
   行1760: ### 6.26.2 演示 aiomysql 连接池在funboost使用,解决 `attached to a different loop`
   行1936: ### 6.26.3 演示子线程怎么正确的使用aiomysql连接池的本质(和funboost无关但原理相通)
   行2016: ## 6.28 日志提示 是掉线或关闭消费者的 和 重新放入掉线消费者未消费确认的任务 ,是正常的提示.
+  行2049: ## 6.29 funboost 推荐用户使用什么并发模式？
+  行2053: ### 6.29.1 默认推荐：当前进程内 + 多线程模式 (最省心、最稳定、最好用)
+  行2069: ### 6.29.2 高性能推荐：多进程叠加并发模式 (性能炸裂)
+  行2087: #### 6.29.2.2 ⚠️ 极度重要：多进程在 Linux 上建议显式设置 spawn 模式，抛弃默认的 fork 模式
+  行2128: ### 6.29.3 极客推荐：纯 Asyncio 协程模式 (高手的玩具)
+  行2152: ### 6.29.4 特殊场景：单线程串行模式 (Single Thread)
+  行2178: ### 6.29.5 至于 gevent 和 eventlet 并发模式，直接忽略就好
 
 ============================================================
 文件: c7.md
@@ -16360,133 +16378,242 @@ if __name__ == '__main__':
 ```
 
 
-## 4b.14 funboost 支持熔断降级，智能自动熔断、探测、恢复 （高级功能）
+## 4b.14 funboost 支持自动熔断，智能自动熔断、半开、恢复 （高级功能）
+
+Funboost 的熔断器的实现遵循了业界顶流熔断器框架的规范：
+
+- **遵循业界通用三态状态机模型**（Closed / Open / Half-Open）
+- **支持两种触发策略**（错误率阈值、连续错误数阈值）
+- **提供完善的配置项和扩展钩子**
+- **额外支持分布式计数**，非常适合构建高可用的分布式系统
+- **配置方式清晰直观**，开发者可以像使用 Hystrix 或 resilience4j 一样轻松驾驭它 
+
+### 4b.14.0 funboost 支持自动熔断管理和手动熔断管理
+
+funboost 支持**自动熔断管理**和**手动熔断管理**两种方式：
+
+#### 4b.14.0.1 手动熔断管理
+
+由开发者人工判断并手动操作暂停/恢复消费，适用于以下场景：
+- 主动发现大规模报错
+- 通过 Prometheus 告警发现异常
+
+**操作方式：**
+
+| 方式 | 操作说明 |
+| :--- | :--- |
+| Redis 标志 | 对 `queue_name` 设置暂停标志， `HSET funboost_pause_flag my_task_queue 1或0` |
+| FaaS 接口 | 调用 `/funboost/pause_consume` 和 `/funboost/resume_consume` |
+| Web 管理界面 | 通过 Funboost Web Manager 网页操作 |
+
+#### 4b.14.0.2 自动熔断管理
+
+通过 `CircuitBreakerConsumerMixin` 实现，**智能自动**进入三种状态：
+- **CLOSED**（正常）
+- **OPEN**（熔断）
+- **HALF_OPEN**（半开试探）
+
+### 4b.14.1 funboost 自动熔断，CircuitBreakerConsumerMixin
 
 **自动熔断降级是属于生产环境服务的高可用的功能。**        
+
 **三态状态机**：`CLOSED`（正常）→ `OPEN`（熔断）→ `HALF_OPEN`（半开试探）→ `CLOSED` 或回退到 `OPEN`。
 
 实现源码在 `funboost/contrib/override_publisher_consumer_cls/circuit_breaker_mixin.py`
 
 使用方式,在装饰器设置 `consumer_override_cls=CircuitBreakerConsumerMixin` ，然后在 `user_options` 中设置合理的值。
 
-```shell
-功能：当消费函数失败达到阈值时自动熔断，熔断期间阻塞等待恢复或执行 fallback 降级函数。
+**功能说明**：当消费函数失败达到阈值时自动熔断，熔断期间阻塞等待恢复或执行 fallback 降级函数。
 
-=== 三态状态机 ===
+---
 
-CLOSED（关闭/正常）→ 触发条件满足 → OPEN（打开/熔断）
-OPEN → 经过 recovery_timeout 秒 → HALF_OPEN（半开/试探）
-HALF_OPEN → 连续成功 >= half_open_max_calls → CLOSED
-HALF_OPEN → 任意一次失败 → OPEN
-HALF_OPEN → 超过 half_open_ttl → OPEN（可选）
+#### 4b.14.1.1 三态状态机
 
-=== 两种触发策略 ===
-
-1. consecutive（连续失败计数，默认）：
-   连续失败 >= failure_threshold 时触发熔断，任何一次成功重置计数。
-
-2. rate（错误率滑动窗口）：
-   在 period 秒的滑动窗口内，当调用次数 >= min_calls 且
-   错误率 >= errors_rate 时触发熔断。
-
-=== 两种计数后端 ===
-
-1. local（本地内存，默认）：
-   单进程内有效，使用 threading.Lock 保证线程安全。
-
-2. redis（Redis 分布式）：
-   多进程/多机器共享熔断状态，同一队列的所有消费者共享计数。
-
-=== 两种熔断行为 ===
-
-1. 阻塞模式（默认，无 fallback）：
-   熔断期间阻塞 _submit_task，消息留在中间件中等待恢复。
-
-2. Fallback 模式（指定 circuit_breaker_fallback）：
-   熔断期间用 fallback 函数替代原函数执行。
-
-=== user_options 参数说明 ===
-
-    strategy:               'consecutive'(连续失败计数) 或 'rate'(错误率滑动窗口)，默认 'consecutive'
-    counter_backend:        'local'(本地内存) 或 'redis'(Redis 分布式)，默认 'local'
-
-    failure_threshold:      连续失败次数阈值（consecutive 策略），默认 5
-    errors_rate:            错误率阈值 0.0~1.0（rate 策略），默认 0.5
-    period:                 统计窗口秒数（rate 策略），默认 60.0
-    min_calls:              窗口内最少调用数才评估（rate 策略），默认 5
-
-    recovery_timeout:       熔断后等待恢复秒数（= cashews 的 ttl），默认 60.0
-    half_open_max_calls:    半开状态需连续成功次数，默认 3
-    half_open_ttl:          半开状态超时秒数，超时后重新进入 OPEN（None 则不超时），默认 None
-
-    exceptions:             要跟踪的异常类型元组（None 跟踪所有），默认 None
-    circuit_breaker_fallback: 降级函数（None 则阻塞模式），默认 None
-
-=== 钩子方法（子类重写） ===
-
-    _on_circuit_open(info_dict):   熔断触发时调用，可发送微信/钉钉/邮件告警
-    _on_circuit_close(info_dict):  熔断恢复时调用，可发送微信/钉钉/邮件恢复通知
-
-=== 用法示例 ===
 ```
+┌─────────┐   触发条件满足    ┌─────────┐
+│ CLOSED  │ ───────────────→ │  OPEN   │
+│ (正常)  │                  │ (熔断)  │
+└─────────┘                  └────┬────┘
+     ↑                            │
+     │     recovery_timeout 秒    │
+     └────────────────────────────┘
+                                  ↓
+                           ┌─────────────┐
+                           │ HALF_OPEN   │
+                           │ (半开/试探) │
+                           └──────┬──────┘
+                                  │
+           ┌──────────────────────┼──────────────────────┐
+           │                      │                      │
+    连续成功 >=              任意一次失败          超过 half_open_ttl
+    half_open_max_calls           │                      │
+           │                      │                      │
+           ↓                      ↓                      ↓
+      ┌─────────┐           ┌─────────┐           ┌─────────┐
+      │ CLOSED  │           │  OPEN   │           │  OPEN   │
+      └─────────┘           └─────────┘           └─────────┘
+```
+
+**状态流转说明：**
+
+| 流转路径 | 触发条件 |
+| :--- | :--- |
+| `CLOSED` → `OPEN` | 触发策略条件满足（连续失败或错误率超标） |
+| `OPEN` → `HALF_OPEN` | 经过 `recovery_timeout` 秒 |
+| `HALF_OPEN` → `CLOSED` | 连续成功次数 >= `half_open_max_calls` |
+| `HALF_OPEN` → `OPEN` | 任意一次失败 或 超过 `half_open_ttl` |
+
+---
+
+#### 4b.14.1.2 两种触发策略
+
+| 策略 | 说明 | 适用场景 |
+| :--- | :--- | :--- |
+| **`consecutive`**（默认） | 连续失败 >= `failure_threshold` 时触发熔断，任何一次成功重置计数 | 对偶发错误敏感，希望快速熔断 |
+| **`rate`** | 在 `period` 秒滑动窗口内，调用次数 >= `min_calls` 且错误率 >= `errors_rate` 时触发 | 需要基于错误率统计，避免误伤 |
+
+---
+
+#### 4b.14.1.3 两种计数后端
+
+| 后端 | 说明 | 适用场景 |
+| :--- | :--- | :--- |
+| **`local`**（默认） | 单进程内有效，使用 `threading.Lock` 保证线程安全 | 单机部署 |
+| **`redis`** | 多进程/多机器共享熔断状态，同一队列的所有消费者共享计数 | 分布式部署 |
+
+---
+
+#### 4b.14.1.4 两种熔断行为
+
+| 模式 | 说明 | 配置方式 |
+| :--- | :--- | :--- |
+| **阻塞模式**（默认） | 熔断期间阻塞 `_submit_task`，消息留在中间件中等待恢复 | `circuit_breaker_fallback=None` |
+| **Fallback 模式** | 熔断期间用 fallback 函数替代原函数执行 | 指定 `circuit_breaker_fallback` 函数 |
+
+---
+
+#### 4b.14.1.5 user_options的 circuit_breaker_options 参数说明
+
+**策略相关：**
+
+| 参数 | 类型 | 默认值 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `strategy` | str | `'consecutive'` | 触发策略：`'consecutive'` 或 `'rate'` |
+| `counter_backend` | str | `'local'` | 计数后端：`'local'` 或 `'redis'` |
+
+**consecutive 策略参数：**
+
+| 参数 | 类型 | 默认值 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `failure_threshold` | int | `5` | 连续失败次数阈值 |
+
+**rate 策略参数：**
+
+| 参数 | 类型 | 默认值 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `errors_rate` | float | `0.5` | 错误率阈值（0.0~1.0） |
+| `period` | float | `60.0` | 统计窗口秒数 |
+| `min_calls` | int | `5` | 窗口内最少调用数才评估 |
+
+**状态机参数：**
+
+| 参数 | 类型 | 默认值 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `recovery_timeout` | float | `60.0` | 熔断后等待恢复秒数 |
+| `half_open_max_calls` | int | `3` | 半开状态需连续成功次数 |
+| `half_open_ttl` | float / None | `None` | 半开状态超时秒数，超时后重新进入 OPEN |
+
+**其他参数：**
+
+| 参数 | 类型 | 默认值 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `exceptions` | tuple / None | `None` | 要跟踪的异常类型元组，`None` 表示跟踪所有异常 |
+| `circuit_breaker_fallback` | callable / None | `None` | 降级函数，`None` 则为阻塞模式 |
+
+---
+
+#### 4b.14.1.6 钩子方法（子类重写）
+
+| 方法 | 触发时机 | 用途 |
+| :--- | :--- | :--- |
+| `_on_circuit_open(self,info_dict)` | 熔断触发时 | 可发送微信/钉钉/邮件告警 |
+| `_on_circuit_close(self,info_dict)` | 熔断恢复时 | 可发送微信/钉钉/邮件恢复通知 |
+
+---
+
+#### 4b.14.1.7 用法示例
 
 
 ```python
-
-
 from funboost import boost, BoosterParams, BrokerEnum
 from funboost.contrib.override_publisher_consumer_cls.circuit_breaker_mixin import (
     CircuitBreakerConsumerMixin,
     CircuitBreakerBoosterParams,
 )
 
+
+# ========================================
 # 方式1：连续失败策略 + 本地计数（最简用法）
+# ========================================
 @boost(CircuitBreakerBoosterParams(
     queue_name='my_task',
     broker_kind=BrokerEnum.REDIS,
     user_options={
-        'failure_threshold': 5,
-        'recovery_timeout': 60,
+        'circuit_breaker_options': {
+            'failure_threshold': 5,      # 连续失败5次触发熔断
+            'recovery_timeout': 60,      # 熔断后等待60秒恢复
+        }
     },
 ))
 def my_task(x):
     return call_external_api(x)
 
+
+# ========================================
 # 方式2：错误率策略 + Redis 分布式计数
+# ========================================
 @boost(BoosterParams(
     queue_name='my_task_rate',
     broker_kind=BrokerEnum.REDIS,
     consumer_override_cls=CircuitBreakerConsumerMixin,
     user_options={
-        'strategy': 'rate',
-        'counter_backend': 'redis',
-        'errors_rate': 0.5,
-        'period': 60,
-        'min_calls': 10,
-        'recovery_timeout': 30,
-        'exceptions': (ConnectionError, TimeoutError),
+        'circuit_breaker_options': {
+            'strategy': 'rate',              # 使用错误率策略
+            'counter_backend': 'redis',      # Redis分布式计数
+            'errors_rate': 0.5,              # 错误率阈值50%
+            'period': 60,                    # 统计窗口60秒
+            'min_calls': 10,                 # 最少调用10次才评估
+            'recovery_timeout': 30,          # 熔断后等待30秒恢复
+            'exceptions': (ConnectionError, TimeoutError),  # 只跟踪这些异常
+        }
     },
 ))
 def my_task_rate(x):
     return call_external_api(x)
 
-# 方式3：Fallback 降级
+
+# ========================================
+# 方式3：Fallback 降级模式
+# ========================================
 def my_fallback(x):
+    """熔断期间的降级函数"""
     return {'status': 'degraded', 'x': x}
+
 
 @boost(BoosterParams(
     queue_name='my_task_fb',
     broker_kind=BrokerEnum.REDIS,
     consumer_override_cls=CircuitBreakerConsumerMixin,
     user_options={
-        'failure_threshold': 3,
-        'recovery_timeout': 30,
-        'circuit_breaker_fallback': my_fallback,
+        'circuit_breaker_options': {
+            'failure_threshold': 3,              # 连续失败3次触发熔断
+            'recovery_timeout': 30,              # 熔断后等待30秒恢复
+            'circuit_breaker_fallback': my_fallback,  # 指定降级函数
+        }
     },
 ))
 def my_task_fb(x):
     return call_external_api(x)
-
 ```
 
 
@@ -18563,7 +18690,148 @@ RedisBrpopLpush
 ```  
 
 
+## 6.29 funboost 推荐用户使用什么并发模式？
 
+在 Funboost 中，并发模式的选择并非一道选择题，而是一套层层递进的“性能方程式”。框架提供了多种模式，但在 99% 的情况下，你只需要遵循以下推荐原则即可。
+
+### 6.29.1 默认推荐：当前进程内 + 多线程模式 (最省心、最稳定、最好用)
+
+**适用场景**：绝大多数的常规后端任务，如 API 请求、爬虫、写数据库、发送邮件等 IO 密集型操作。
+
+**使用方式**：什么都不用改。`@boost` 的 `concurrent_mode` 默认就是 `ConcurrentModeEnum.THREADING`，直接 `task_fun.consume()` 启动即可。
+
+**为什么这是最推荐的模式？**
+因为在这个模式下，支撑并发的底层**不是** Python 官方自带的 `concurrent.futures.ThreadPoolExecutor`，而是 Funboost 作者纯手工打造的神级线程池：**`FlexibleThreadPool`（智能弹性线程池）**。
+
+它吊打官方原生线程池的核心优势在于：
+1.  **自动智能缩容**：官方线程池是“只进不出”的貔貅，无论任务多么稀疏，官方线程池会盲目增加到最大线程数；并且后来长期没啥任务了，线程也一直挂在内存里。而 `FlexibleThreadPool` 引入了 `KeepAliveTime` 机制，在任务稀疏时会自动销毁多余线程，释放系统资源。
+2.  **极度克制的扩张**：哪怕你配置了 `concurrent_num=500`，如果你的任务很稀疏，它就绝对不会去新开不必要的线程。
+3.  **兼容 `async def` 函数**：你可以直接把 `@boost(concurrent_mode=THREADING)` 加在异步函数上！框架会自动在线程池的每个线程里启动临时的 event loop 来运行协程，免去了你手动改写同步包装函数的痛苦（这一点完爆 Celery）。
+
+**一句话总结**：这是兼顾了“极低心智负担”与“极高 IO 吞吐”的王牌模式。
+
+### 6.29.2 高性能推荐：多进程叠加并发模式 (性能炸裂)
+
+**适用场景**：
+1.  **CPU 密集型任务**（如视频转码、图像处理、复杂数学计算），需要突破 Python 的 GIL 锁。
+2.  **超高并发的 IO 任务**，单进程的线程数开到极限依然无法满足吞吐需求。
+
+**使用方式**：
+**不要**去修改 `@boost` 装饰器里的 `concurrent_mode`（依然保持默认的多线程）。而是在启动消费时，使用 **`task_fun.multi_process_consume(n)`** （可简写为 `task_fun.mp_consume(n)`）。
+
+**核心原理**：
+这是 Funboost 的特色“叠加态”并发。例如执行 `task_fun.mp_consume(4)`：
+*   框架会先利用操作系统的多进程（Process）开出 4 个独立的 Worker 进程（完美利用 4 核 CPU）。
+*   在每个进程内部，依然使用 `FlexibleThreadPool` 开启比如 100 个多线程。
+*   总并发能力 = 4 进程 × 100 线程 = 400 个并发单元。
+
+**为什么不直接用纯多进程模式？**
+如果不开线程，纯靠开 400 个进程去应对并发，操作系统的内存会瞬间被撑爆，而且进程切换的开销极大。Funboost 的“少量进程 + 海量线程”模式，是用最低廉的内存代价，榨干机器性能的最佳实践。
+
+#### 6.29.2.2 ⚠️ 极度重要：多进程在 Linux 上建议显式设置 spawn 模式，抛弃默认的 fork 模式
+
+**多进程下，spawn 模式相比 fork 模式，在“环境一致性”和“避免内存污染”上有巨大优势。**
+
+如果你使用了多进程叠加并发，强烈建议在你的启动脚本**最顶端**加上以下代码：
+```python
+import multiprocessing
+multiprocessing.set_start_method('spawn', force=True)
+```
+
+**为什么 Funboost 强烈推崇 `spawn` 而嫌弃 `fork`？**
+
+| 优势 | 核心要点 |
+| :--- | :--- |
+| **环境一致性** | Windows 只有 `spawn`，Linux 默认 `fork`，显式设置 `spawn` 可避免"在我电脑上明明跑得好好的"困境 |
+| **架构先进性** | Funboost "少量进程 + 海量线程"理念，不需要为了启动快而牺牲安全性 |
+| **内存纯粹性** | `spawn` 干净独立，消灭 `MySQL Server has gone away` 等僵尸连接问题 |
+| **开发体验** | 消灭 `@worker_process_init` 等反人类钩子，无需手动重新初始化连接 |
+| **调试友好** | `spawn` 每次启动都是干净的 Python 进程，错误堆栈清晰可溯，不会被父进程"遗传病"干扰 |
+
+**详细说明：**
+
+1. **抹平开发与生产的环境差异**
+   Windows 只有 `spawn` 模式，而 Linux 默认是 `fork`。如果你在 Linux 不显式设置 `spawn`，你的代码在 Windows 开发机和 Linux 生产机上的行为将不一致，极易让新手陷入"在我电脑上明明跑得好好的"的懵逼困境。
+
+2. **拒绝 Celery 的历史包袱**
+   Celery 默认是纯多进程模式，且无法叠加细粒度并发（不能进程套线程），所以它为了启动快而依赖 `fork`。但 Funboost 理念是"少量进程 + 海量线程"，进程启动的极小开销完全可以忽略，根本不需要为了图快去用 `fork`。
+
+3. **保持内存纯粹，消灭僵尸连接**
+   `fork` 是"克隆"父进程的内存（包括父进程已经建立的数据库连接池、线程锁等）。这会导致子进程在查询数据库时发生经典的 `MySQL Server has gone away` 报错或死锁。
+   
+   > 💡 **一句话理解**：用 `spawn` 启动 4 个进程，就等于你在控制台手动敲了 4 次 `python xx.py`。每个进程重新执行一遍初始化代码，互不干扰。
+
+4. **消灭反人类的钩子函数**
+   正因为 Celery 饱受 `fork` 内存污染的折磨，才被迫发明了 `@worker_process_init` 这种极其操蛋的钩子，强迫小白去学习"如何在这个钩子里重新初始化数据库连接"。**在 Funboost + `spawn` 的世界里，这种恶心的问题从物理层面上就被消灭了。**
+
+5. **更好的错误追踪和调试体验**
+   `fork` 的子进程会继承父进程的所有内存状态，包括异常状态、信号处理器等。当子进程出现问题时，你很难定位是父进程继承来的"遗传病"还是子进程自己产生的"新病"。
+   而 `spawn` 是全新的 Python 解释器进程，**每次启动都是干净的 slate**，错误堆栈清晰可溯，调试时不会被父进程的"历史包袱"干扰。
+
+
+### 6.29.3 极客推荐：纯 Asyncio 协程模式 (高手的玩具)
+
+**适用场景**：
+你是一个重度的 `asyncio` 玩家，你的项目已经全面拥抱了异步生态（如使用 FastAPI），并且你在消费函数中必须使用 `aiohttp`、`aiomysql`、`aioredis` 等异步连接池。
+
+**使用方式**：
+必须在 `@boost` 中显式指定：
+```python
+@boost(BoosterParams(
+    queue_name='my_queue', 
+    concurrent_mode=ConcurrentModeEnum.ASYNC,
+    specify_async_loop=my_main_loop  # 强烈建议阅读 6.26 章节，懂这个参数的才是真懂 asyncio
+))
+async def my_task(x):
+    pass
+```
+
+**为什么普通人不推荐用纯 ASYNC 模式？**
+因为 asyncio 在 Python 中是一把“双刃剑”。
+*   一旦你选择了 ASYNC 模式，你的函数里就**绝对不能**出现任何阻塞的同步代码（比如普通的 `requests.get` 或 `time.sleep`），否则整个 Event Loop 都会被卡死，并发瞬间变成串行，引发灭顶之灾。
+*   更要命的是“跨线程使用 Loop”的经典大坑（即抛出 `attached to a different loop` 错误）。如果你不懂得如何把主线程的数据库连接池通过 `specify_async_loop` 传递给 Funboost 子线程的 Loop（详见文档 6.26 章节），你会死得很惨。
+
+**总结**：如果你没经过系统的 asyncio 毒打，老老实实用 6.29.1 的多线程模式就好。
+
+### 6.29.4 特殊场景：单线程串行模式 (Single Thread)
+
+**适用场景**：
+1.  **极度排斥并发冲突的任务**：你的任务绝对不能并发执行，比如按严格顺序更新某一行数据库记录，或者操作某个不支持并发的本地文件/老旧系统。
+2.  **要求“绝对公平”的跨机器负载均衡**：你的服务绝对不能容忍“预先从 Broker 抢一堆消息缓冲在内存里”，必须保证多台机器公平、按需地抢夺消费机会。
+
+**使用方式**：
+```python
+@boost(BoosterParams(
+    queue_name='my_queue', 
+    concurrent_mode=ConcurrentModeEnum.SINGLE_THREAD
+))
+def my_task(x):
+    pass
+```
+
+**⚠️ 深度辨析：`SINGLE_THREAD` 和 `THREADING + concurrent_num=1` 是一回事吗？**
+**绝对不是！这是两个完全不同的物种。**
+
+*   **`THREADING` 模式（即使你设置了 `concurrent_num=1`）**：
+    底层依然会启动 `FlexibleThreadPool`。只要有线程池，就会存在一个内存缓冲队列（`_work_queue`）。这意味着主消费线程会**贪婪地从 Broker（如 Redis）中疯狂拉取几十上百条消息，囤积到自己进程的内存里**，然后再由那 1 个工作线程慢慢消化。
+    **后果**：如果你部署了 A、B 两台机器，A 机器可能瞬间把队列里的 50 条消息全抢到了自己的内存里，导致 B 机器在一旁无所事事（闲死），而 A 机器却要花很久才处理完（忙死），彻底破坏了多机的负载均衡。
+*   **`SINGLE_THREAD` 模式**：
+    框架**没有**线程池缓冲队列！它会极其克制、死板地执行：去 Broker 拉取 **1 条**消息 -> 执行完毕 ->再去 Broker 拉取下 **1 条**消息。
+    **后果**：无论你部署多少台机器，大家全凭手速，做完一个拿一个，绝不超售囤货，实现了**绝对公平的分布式多机负载均衡**。稳如老狗。
+
+### 6.29.5 至于 gevent 和 eventlet 并发模式，直接忽略就好
+
+虽然 funboost 并发模式支持了 `gevent` 和 `eventlet`，但**不推荐**使用，你没有必要研究它们。
+
+**简单选择指南：**
+
+| 场景 | 推荐模式 | 说明 |
+| :--- | :--- | :--- |
+| 需要异步 | **`asyncio`** | Python 原生异步，生态完善 |
+| 需要同步 | **`threading`** | 简单直观，调试方便 |
+| **不要选** | `gevent` / `eventlet` | 不上不下，增加复杂度 |
+
+> 💡 **一句话总结**：非 `asyncio` 即 `threading`，`gevent` 和 `eventlet` 直接忽略。
 
 
 <div> </div> 
@@ -32145,7 +32413,7 @@ class AbstractConsumer(metaclass=abc.ABCMeta, ):
     async def _aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
         pass
 
-    def _sync_and_aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
+    def _both_sync_and_aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
         pass
 
     def user_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, ):  # 这个可以继承
@@ -32374,7 +32642,7 @@ class AbstractConsumer(metaclass=abc.ABCMeta, ):
 
             with self._lock_for_count_execute_task_times_every_unit_time:
                 self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
-            self._sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
+            self._both_sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
             self._frame_custom_record_process_info_func(current_function_result_status, kw)
             self.user_custom_record_process_info_func(current_function_result_status, )  # 两种方式都可以自定义,记录结果,建议继承方式,不使用boost中指定 user_custom_record_process_info_func
             if self.consumer_params.user_custom_record_process_info_func:
@@ -32541,7 +32809,7 @@ class AbstractConsumer(metaclass=abc.ABCMeta, ):
             async with self._async_lock_for_count_execute_task_times_every_unit_time:
                 self.metric_calculation.cal(t_start_run_fun, current_function_result_status)
 
-            self._sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
+            self._both_sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
             await self._aio_frame_custom_record_process_info_func(current_function_result_status, kw)
             await self.aio_user_custom_record_process_info_func(current_function_result_status, )
             if self.consumer_params.user_custom_record_process_info_func:
@@ -33444,7 +33712,7 @@ class DramatiqConsumer(AbstractConsumer):
 `````python
 ﻿# -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2023/8/8 0008 13:32
+# @Time    : 2023/8/6 0006 13:32
 
 import abc
 from funboost.consumers.base_consumer import AbstractConsumer
@@ -33685,7 +33953,7 @@ class FastStreamConsumer(EmptyConsumer):
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2023/8/8 0008 13:32
+# @Time    : 2023/8/6 0006 13:32
 
 import abc
 import threading
@@ -34876,7 +35144,7 @@ class MysqlCdcConsumer(AbstractConsumer):
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2023/8/8 0008 13:32
+# @Time    : 2023/8/6 0006 13:32
 from multiprocessing import Process
 
 import threading
@@ -35142,7 +35410,7 @@ class PersistQueueConsumer(AbstractConsumer):
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : AI Assistant
-# @Time    : 2026/1/16
+# @Time    : 2026/1/18
 """
 PostgreSQL Consumer - 原生高性能实现
 充分利用 PostgreSQL 独有特性：
@@ -35391,7 +35659,7 @@ class RabbitmqConsumerAmqpStorm(AbstractConsumer):
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2026/1/14
+# @Time    : 2026/1/11
 """
 使用 amqp 包实现的高性能 RabbitMQ Consumer。
 amqp 是 Celery/Kombu 底层使用的 AMQP 客户端，性能比 pika 更好。
@@ -36027,7 +36295,7 @@ class RedisConsumerAckAble(ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat, Abs
 `````python
 ﻿# -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2024/8/8 0008 13:32
+# @Time    : 2024/8/11 0011 13:32
 import json
 import time
 from funboost.consumers.base_consumer import AbstractConsumer
@@ -36215,7 +36483,7 @@ class RedisPriorityConsumer(RedisConsumerAckAble):
 `````python
 ﻿# -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2023/8/8 0008 13:32
+# @Time    : 2023/8/6 0006 13:32
 import json
 from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
@@ -36828,7 +37096,7 @@ class RocketmqConsumer(AbstractConsumer):
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2023/8/8 0008 13:32
+# @Time    : 2023/8/6 0006 13:32
 
 import time
 from funboost.assist.rq_helper import RqHelper
@@ -36913,7 +37181,7 @@ class SqlachemyConsumer(AbstractConsumer):
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2026/1/12
+# @Time    : 2026/1/11
 """
 使用 AWS SQS 作为消息队列中间件的消费者实现。
 使用 boto3 SDK 操作 SQS。
@@ -37723,8 +37991,8 @@ class MySql2Mysql:
 
 `````python
 # -*- coding: utf-8 -*-
-# @Author  : AI Assistant
-# @Time    : 2026/3/9
+# @Author  : ydf
+# @Time    : 2026/3/8
 """
 熔断器消费者 Mixin (Circuit Breaker Consumer Mixin)
 
@@ -37760,10 +38028,13 @@ HALF_OPEN → 超过 half_open_ttl → OPEN（可选）
 1. 阻塞模式（默认，无 fallback）：
    熔断期间阻塞 _submit_task，消息留在中间件中等待恢复。
 
-2. Fallback 模式（指定 circuit_breaker_fallback）：
+2. Fallback 模式（指定 fallback）：
    熔断期间用 fallback 函数替代原函数执行。
 
-=== user_options 参数说明 ===
+=== user_options['circuit_breaker_options'] 参数说明 ===
+
+所有熔断器参数放在 user_options 的 'circuit_breaker_options' 字典中，
+避免与其他 mixin 的 user_options 一级 key 冲突（例如 period 可能与 PeriodicQuotaConsumerMixin 冲突）。
 
     strategy:               'consecutive'(连续失败计数) 或 'rate'(错误率滑动窗口)，默认 'consecutive'
     counter_backend:        'local'(本地内存) 或 'redis'(Redis 分布式)，默认 'local'
@@ -37778,12 +38049,12 @@ HALF_OPEN → 超过 half_open_ttl → OPEN（可选）
     half_open_ttl:          半开状态超时秒数，超时后重新进入 OPEN（None 则不超时），默认 None
 
     exceptions:             要跟踪的异常类型元组（None 跟踪所有），默认 None
-    circuit_breaker_fallback: 降级函数（None 则阻塞模式），默认 None
+    fallback:               降级函数（None 则阻塞模式），默认 None
 
 === 钩子方法（子类重写） ===
 
-    _on_circuit_open(info_dict):   熔断触发时调用，可发送微信/钉钉/邮件告警
-    _on_circuit_close(info_dict):  熔断恢复时调用，可发送恢复通知
+    _on_circuit_open(self,info_dict):   熔断触发时调用，可发送微信/钉钉/邮件告警
+    _on_circuit_close(self,info_dict):  熔断恢复时调用，可发送恢复通知
 
 === 用法示例 ===
 
@@ -37798,8 +38069,10 @@ HALF_OPEN → 超过 half_open_ttl → OPEN（可选）
         queue_name='my_task',
         broker_kind=BrokerEnum.REDIS,
         user_options={
-            'failure_threshold': 5,
-            'recovery_timeout': 60,
+            'circuit_breaker_options': {
+                'failure_threshold': 5,
+                'recovery_timeout': 60,
+            },
         },
     ))
     def my_task(x):
@@ -37811,13 +38084,15 @@ HALF_OPEN → 超过 half_open_ttl → OPEN（可选）
         broker_kind=BrokerEnum.REDIS,
         consumer_override_cls=CircuitBreakerConsumerMixin,
         user_options={
-            'strategy': 'rate',
-            'counter_backend': 'redis',
-            'errors_rate': 0.5,
-            'period': 60,
-            'min_calls': 10,
-            'recovery_timeout': 30,
-            'exceptions': (ConnectionError, TimeoutError),
+            'circuit_breaker_options': {
+                'strategy': 'rate',
+                'counter_backend': 'redis',
+                'errors_rate': 0.5,
+                'period': 60,
+                'min_calls': 10,
+                'recovery_timeout': 30,
+                'exceptions': (ConnectionError, TimeoutError),
+            },
         },
     ))
     def my_task_rate(x):
@@ -37836,8 +38111,10 @@ HALF_OPEN → 超过 half_open_ttl → OPEN（可选）
         broker_kind=BrokerEnum.REDIS,
         consumer_override_cls=MyAlertCircuitBreakerMixin,
         user_options={
-            'failure_threshold': 5,
-            'recovery_timeout': 60,
+            'circuit_breaker_options': {
+                'failure_threshold': 5,
+                'recovery_timeout': 60,
+            },
         },
     ))
     def my_task_alert(x):
@@ -37852,14 +38129,38 @@ HALF_OPEN → 超过 half_open_ttl → OPEN（可选）
         broker_kind=BrokerEnum.REDIS,
         consumer_override_cls=CircuitBreakerConsumerMixin,
         user_options={
-            'failure_threshold': 3,
-            'recovery_timeout': 30,
-            'circuit_breaker_fallback': my_fallback,
+            'circuit_breaker_options': {
+                'failure_threshold': 3,
+                'recovery_timeout': 30,
+                'fallback': my_fallback,
+            },
         },
     ))
     def my_task_fb(x):
         return call_external_api(x)
 """
+
+"""
+Funboost 的熔断器实现达到了顶流熔断器框架的水平，它遵循了业界通用的三态状态机模型，支持两种触发策略，
+提供了完善的配置项和扩展钩子，并且额外支持分布式计数，非常适合构建高可用的分布式系统。
+配置方式清晰直观，开发者可以像使用 Hystrix 或 resilience4j 一样轻松驾驭它。
+"""
+
+"""
+funboost 支持自动熔断管理，也支持手动熔断管理
+
+手动熔断管理:
+由你自己人工判断并且手动操作是需要否暂停和恢复消费。
+你主动发现大规模报错 或者通过promethus告警发现 大规模报错后，可以人工暂停某个队列的消费。
+- 就是可以通过对 redis的queue_name 设置 pause 标志，
+- 也可以通过faas接口 /funboost/pause_consume 和 /funboost/resume_consume 来暂停和恢复拉取消息
+- 也可以通过 funboost web manager 网页来设置暂停和恢复
+
+自动熔断管理：
+通过 CircuitBreakerConsumerMixin，智能自动进进入熔断和半开和恢复三种状态。
+"""
+
+
 
 import asyncio
 import collections
@@ -38245,25 +38546,26 @@ class CircuitBreakerConsumerMixin(AbstractConsumer):
     """
     熔断器消费者 Mixin
 
-    通过 user_options 配置所有参数，详见模块文档。
+    通过 user_options['circuit_breaker_options'] 配置所有参数，详见模块文档。
     """
 
     def custom_init(self):
         super().custom_init()
 
-        user_options = self.consumer_params.user_options or {}
-        strategy = user_options.get('strategy', 'consecutive')
-        counter_backend = user_options.get('counter_backend', 'local')
+        user_options = self.consumer_params.user_options
+        cb_options = user_options['circuit_breaker_options']
+        strategy = cb_options.get('strategy', 'consecutive')
+        counter_backend = cb_options.get('counter_backend', 'local')
 
         common_kwargs = dict(
             strategy=strategy,
-            failure_threshold=user_options.get('failure_threshold', 5),
-            errors_rate=user_options.get('errors_rate', 0.5),
-            period=user_options.get('period', 60.0),
-            min_calls=user_options.get('min_calls', 5),
-            recovery_timeout=user_options.get('recovery_timeout', 60.0),
-            half_open_max_calls=user_options.get('half_open_max_calls', 3),
-            half_open_ttl=user_options.get('half_open_ttl', None),
+            failure_threshold=cb_options.get('failure_threshold', 5),
+            errors_rate=cb_options.get('errors_rate', 0.5),
+            period=cb_options.get('period', 60.0),
+            min_calls=cb_options.get('min_calls', 5),
+            recovery_timeout=cb_options.get('recovery_timeout', 60.0),
+            half_open_max_calls=cb_options.get('half_open_max_calls', 3),
+            half_open_ttl=cb_options.get('half_open_ttl', None),
         )
 
         if counter_backend == 'redis':
@@ -38273,9 +38575,9 @@ class CircuitBreakerConsumerMixin(AbstractConsumer):
         else:
             self._circuit_breaker = CircuitBreaker(**common_kwargs)
 
-        self._circuit_breaker_fallback = user_options.get('circuit_breaker_fallback', None)
+        self._circuit_breaker_fallback = cb_options.get('fallback', None)
         self._tracked_exception_names = _parse_exception_names(
-            user_options.get('exceptions', None)
+            cb_options.get('exceptions', None)
         )
 
         self.logger.info(
@@ -38404,13 +38706,13 @@ class CircuitBreakerConsumerMixin(AbstractConsumer):
             return True
         return function_result_status.exception_type in self._tracked_exception_names
 
-    def _sync_and_aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
+    def _both_sync_and_aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
         """
         任务执行完成后（含重试耗尽），根据最终结果更新熔断器状态。
         - fallback 执行的成功不计入恢复统计
         - 不在 exceptions 列表中的异常不计入熔断器
         """
-        super()._sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
+        super()._both_sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
 
         if (current_function_result_status._has_requeue
                 or current_function_result_status._has_to_dlx_queue
@@ -38474,8 +38776,10 @@ class CircuitBreakerBoosterParams(BoosterParams):
             queue_name='my_task',
             broker_kind=BrokerEnum.REDIS,
             user_options={
-                'failure_threshold': 5,
-                'recovery_timeout': 60,
+                'circuit_breaker_options': {
+                    'failure_threshold': 5,
+                    'recovery_timeout': 60,
+                },
             },
         ))
         def my_task(x):
@@ -38486,12 +38790,14 @@ class CircuitBreakerBoosterParams(BoosterParams):
             queue_name='my_task',
             broker_kind=BrokerEnum.REDIS,
             user_options={
-                'strategy': 'rate',
-                'counter_backend': 'redis',
-                'errors_rate': 0.5,
-                'period': 60,
-                'min_calls': 10,
-                'recovery_timeout': 30,
+                'circuit_breaker_options': {
+                    'strategy': 'rate',
+                    'counter_backend': 'redis',
+                    'errors_rate': 0.5,
+                    'period': 60,
+                    'min_calls': 10,
+                    'recovery_timeout': 30,
+                },
             },
         ))
         def my_task(x):
@@ -38499,11 +38805,13 @@ class CircuitBreakerBoosterParams(BoosterParams):
     """
     consumer_override_cls: typing.Optional[typing.Type] = CircuitBreakerConsumerMixin
     user_options: dict = {
-        'strategy': 'consecutive',
-        'counter_backend': 'local',
-        'failure_threshold': 5,
-        'recovery_timeout': 60.0,
-        'half_open_max_calls': 3,
+        'circuit_breaker_options': {
+            'strategy': 'consecutive',
+            'counter_backend': 'local',
+            'failure_threshold': 5,
+            'recovery_timeout': 60.0,
+            'half_open_max_calls': 3,
+        },
     }
 
 
@@ -38527,7 +38835,7 @@ __all__ = [
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : AI Assistant
-# @Time    : 2026/1/16
+# @Time    : 2026/1/18
 """
 微批消费者 Mixin (Micro-Batch Consumer Mixin)
 
@@ -39161,6 +39469,7 @@ class PrometheusPublisherMixin(AbstractPublisher):
         发布消息后的钩子方法，记录 Prometheus 发布指标
         """
         PUBLISH_TOTAL.labels(queue=self.queue_name).inc()
+        super()._after_publish(msg, msg_function_kw, task_id)
 
 
 # ============================================================
@@ -39176,15 +39485,16 @@ class PrometheusConsumerMixin(AbstractConsumer):
     - 任务执行耗时
     - 重试次数
     
-    通过框架提供的 _sync_and_aio_frame_custom_record_process_info_func 钩子方法实现，
+    通过框架提供的 _both_sync_and_aio_frame_custom_record_process_info_func 钩子方法实现，
     同步和异步任务都会调用此方法，无需分别实现。
     """
     
-    def _sync_and_aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
+    def _both_sync_and_aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
         """
         框架回调方法，同步和异步任务执行后都会调用此方法采集 Prometheus 指标
         """
         self._record_prometheus_metrics(current_function_result_status)
+        super()._both_sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
     
     def _record_prometheus_metrics(self, function_result_status: FunctionResultStatus):
         """
@@ -39700,7 +40010,7 @@ def print_trace_tree() -> None:
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : AI Assistant
-# @Time    : 2026/1/30
+# @Time    : 2026/2/1
 """
 周期配额控频消费者 Mixin (Periodic Quota Rate Limiter Consumer Mixin)
 
@@ -40212,6 +40522,7 @@ class WatchdogPublisher(AbstractPublisher):
     """
     
     def custom_init(self):
+        super().custom_init()
         watch_path = self.publisher_params.broker_exclusive_config['watch_path']
         self._queue_dir = Path(watch_path)
         self._queue_dir.mkdir(parents=True, exist_ok=True)
@@ -40388,6 +40699,7 @@ class WatchdogConsumer(AbstractConsumer):
     BROKER_KIND = None  # 会被框架自动设置
 
     def custom_init(self):
+        super().custom_init()
         # 从 broker_exclusive_config 获取配置
         config = self.consumer_params.broker_exclusive_config
         
@@ -40684,7 +40996,7 @@ register_custom_broker(BROKER_KIND_WATCHDOG, WatchdogPublisher, WatchdogConsumer
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : AI Assistant
-# @Time    : 2026/1/26
+# @Time    : 2026/1/25
 """
 WebSocket Broker - 基于 WebSocket 的消息队列
 
@@ -40744,6 +41056,7 @@ class WebSocketPublisher(AbstractPublisher):
     """
     
     def custom_init(self):
+        super().custom_init()
         config = self.publisher_params.broker_exclusive_config
         self._ws_url = config['ws_url']
         self._reconnect_interval = config['reconnect_interval']
@@ -40824,6 +41137,7 @@ class WebSocketConsumer(AbstractConsumer):
     _server_lock = threading.Lock()
     
     def _before_start_consuming_message_hook(self):
+        super()._before_start_consuming_message_hook()
         config = self.consumer_params.broker_exclusive_config
         self._ws_url = config['ws_url']
         self._reconnect_interval = config['reconnect_interval']
@@ -44436,7 +44750,16 @@ if __name__ == '__main__':
     #
     # print(TaskOptions().get_str_dict())
 
-    print(BoosterParams(queue_name='3213', specify_concurrent_pool=FlexibleThreadPool(100)).json_pre())
+    print(BoosterParams(queue_name='3213', 
+                         function_result_status_persistance_conf= {
+        "is_save_status": False,
+        "is_save_result": False,
+        "expire_seconds": 604800,
+        "is_use_bulk_insert": False,
+        "table_name": "3213"
+    },
+                        
+                        specify_concurrent_pool=FlexibleThreadPool(100)).json_pre())
     # print(PublisherParams.schema_json())  # 注释掉，因为 PublisherParams 包含 Callable 类型字段，无法生成 JSON Schema
 
 `````
@@ -51866,6 +52189,53 @@ override_cls采用mixin混入，框架自动将新的中间件类混入到父类
 - `_requeue(kw)` - **必须实现**，消息重入队
 - 如果涉及到函数控制修改的，确保要兼容 _run 和 _async_run 同步和异步两个方法
 
+## 重写父类方法时，不要忘了调用 super().xx()
+
+### 规则
+
+- 重写 AbstractPublisher / AbstractConsumer 的同名方法时，**必须调用 super().xx()**
+
+- 即使父类方法是 `pass` 的空方法，为了未来扩展，也必须调用。
+  例如虽然 `AbstractConsumer` 没有具体实现 `_both_sync_and_aio_frame_custom_record_process_info_func` 方法（只是 pass），
+  但 `PrometheusConsumerMixin` 和 `CircuitBreakerConsumerMixin` 都重写了这个方法，
+  用户可能需要组合多个 mixin，例如 `class MyCombinedMixin(CircuitBreakerConsumerMixin,PrometheusConsumerMixin)`，
+  正是因为两者都调用了 `super()._both_sync_and_aio_frame_custom_record_process_info_func()`，MRO 链才不会断，两个 mixin 的逻辑才都能执行。
+
+- 以下两种情况**可以不调用** super()：
+  1. 父类方法抛出了 `raise NotImplementedError`（纯抽象方法），例如 `_publish_impl`、`_dispatch_task`、`_confirm_consume`、`_requeue` 等
+  2. 确实需要完全替换父类逻辑，不能让父类代码执行（如 `MicroBatchConsumerMixin` 完全重写 `_submit_task`）
+
+### super() 的调用位置
+
+- **初始化类方法**（`custom_init`、`_before_start_consuming_message_hook`）：先调 `super()`，再执行自己的初始化
+- **前置拦截类方法**（`_submit_task` 加配额检查、熔断阻塞）：先执行自己的逻辑，再调 `super()`
+- **后置记录类方法**（`_after_publish`、`_both_sync_and_aio_frame_custom_record_process_info_func`）：先调或后调 `super()` 均可，因为父类目前是 `pass`
+- **前后都有自己逻辑的方法**（如 `_run`、`_async_run` 加链路追踪）：在自己的逻辑中间调 `super()`，例如 `AutoOtelConsumerMixin._run` 先开启 span，然后在 span 激活状态下调 `super()._run(kw)`，捕获异常后记录到 span，`super()` 夹在自己逻辑的中间
+
+### 正确示例 vs 错误示例
+
+```python
+# 正确 —— 初始化时先调 super()
+def custom_init(self):
+    super().custom_init()
+    self._my_config = self.consumer_params.user_options.get('my_key', 10)
+
+# 正确 —— 前置拦截后调 super()
+def _submit_task(self, kw):
+    self._check_something()       # 自己的前置逻辑
+    super()._submit_task(kw)      # 再走父类流程
+
+# 正确 —— 包裹父类调用
+def _run(self, kw: dict):
+    with some_context():
+        return super()._run(kw)   # 在上下文中调父类
+
+# 错误 —— 忘记调用 super()
+def custom_init(self):
+    self._my_config = self.consumer_params.user_options.get('my_key', 10)
+    # 缺少 super().custom_init()，父类未来的初始化逻辑会被跳过
+```
+
 ##  consumer的 _submit_task(kw) 方法的kw 字典必须包含的字段：
 
 ```python
@@ -51878,6 +52248,11 @@ kw = {
 }
 self._submit_task(kw)
 ```
+
+## ai使用 override_cls 扩展mixin类的时候，最好是将新增的多个配置入参放在 user_options字典的 某个key中
+
+例如 CircuitBreakerConsumerMixin 的熔断器配置，可以放在 user_options字典的 'circuit_breaker_options' 这个key中。
+因为可以防止 user_options 字典中其他key和熔断器配置key冲突。
 
 ## broker特有独有配置访问规范：
 
@@ -52595,7 +52970,7 @@ class DramatiqPublisher(AbstractPublisher, ):
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2023/8/8 0008 12:12
+# @Time    : 2023/8/6 0006 12:12
 
 import abc
 from funboost.publishers.base_publisher import AbstractPublisher
@@ -52739,7 +53114,7 @@ class FastestMemQueuePublisher(AbstractPublisher):
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2023/8/8 0008 12:12
+# @Time    : 2023/8/6 0006 12:12
 
 import abc
 import asyncio
@@ -53617,7 +53992,7 @@ class MysqlCdcPublisher(AbstractPublisher):
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2023/8/8 0008 12:12
+# @Time    : 2023/8/6 0006 12:12
 import copy
 import json
 import time
@@ -53874,7 +54249,7 @@ class PersistQueuePublisher(AbstractPublisher):
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : AI Assistant
-# @Time    : 2026/1/16
+# @Time    : 2026/1/18
 """
 PostgreSQL Publisher - 原生高性能实现
 利用 PostgreSQL 的 RETURNING 和 NOTIFY 特性
@@ -54077,7 +54452,7 @@ class RabbitmqPublisherUsingAmqpStorm(AbstractPublisher):
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2026/1/14
+# @Time    : 2026/1/11
 """
 使用 amqp 包实现的高性能 RabbitMQ Publisher。
 amqp 是 Celery/Kombu 底层使用的 AMQP 客户端，性能比 pika 更好。
@@ -54582,7 +54957,7 @@ class RedisPriorityPublisher(FlushRedisQueueMixin,AbstractPublisher, RedisMixin,
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2023/8/8 0008 12:12
+# @Time    : 2023/8/6 0006 12:12
 from funboost.publishers.base_publisher import AbstractPublisher
 from funboost.publishers.redis_queue_flush_mixin import FlushRedisQueueMixin
 from funboost.utils.redis_manager import RedisMixin
@@ -55075,7 +55450,7 @@ class SqlachemyQueuePublisher(AbstractPublisher):
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : ydf
-# @Time    : 2026/1/12
+# @Time    : 2026/1/11
 """
 使用 AWS SQS 作为消息队列中间件的发布者实现。
 使用 boto3 SDK 操作 SQS。
@@ -55818,7 +56193,7 @@ if __name__ == '__main__':
 `````python
 # -*- coding: utf-8 -*-
 # @Author  : AI Assistant
-# @Time    : 2026/1/16
+# @Time    : 2026/1/18
 """
 原生 PostgreSQL 消息队列实现
 充分利用 PostgreSQL 相比 MySQL 的独特优势：

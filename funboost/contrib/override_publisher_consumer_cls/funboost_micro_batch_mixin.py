@@ -110,9 +110,15 @@ class MicroBatchConsumerMixin(AbstractConsumer):
         self._print_message_get_from_broker(kw['body'])
         
         # 暂停消费检查
-        if self._judge_is_daylight():
+        # if self._judge_is_daylight():
+        #     self._requeue(kw)
+        #     time.sleep(self.time_interval_for_check_do_not_run_time)
+        #     return
+        
+        self._judge_is_allow_run_by_cron()
+        if self._last_judge_is_allow_run_by_cron_result is False:
             self._requeue(kw)
-            time.sleep(self.time_interval_for_check_do_not_run_time)
+            time.sleep(self._time_interval_for_check_allow_run_by_cron)
             return
         
         # 提取函数参数

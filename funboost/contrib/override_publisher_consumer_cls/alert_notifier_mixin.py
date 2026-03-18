@@ -18,11 +18,12 @@
 
 === 告警通道 ===
 
-支持四种告警通道（选其一）：
+支持五种告警通道（选其一）：
 - dingtalk:  钉钉机器人
 - wechat:    企业微信机器人
 - feishu:    飞书机器人
 - webhook:   自定义 Webhook（POST JSON: {"content": "消息内容"}）
+- custom:    用户自定义，继承 AlertNotifierConsumerMixin 并重写 custom_send_notification 方法
 
 === 去重与恢复 ===
 
@@ -38,7 +39,8 @@
     period:             统计窗口秒数（rate 策略），默认 60.0
     min_calls:          窗口内最少调用数才评估（rate 策略），默认 5
 
-    alert_app:          告警通道，可选值: 'dingtalk', 'wechat', 'feishu', 'webhook'，默认 'wechat'
+    alert_app:          告警通道，可选值: 'dingtalk', 'wechat', 'feishu', 'webhook', 'custom'，默认 'wechat'
+                        设为 'custom' 时需继承 AlertNotifierConsumerMixin 并重写 custom_send_notification 方法
     webhook_url:        对应告警通道的 Webhook 地址（必填）
 
     alert_interval:     告警去重间隔秒数，同一队列在此时间内不重复发送告警，默认 300（5分钟）
@@ -324,6 +326,28 @@ class AlertNotifierConsumerMixin(AbstractConsumer):
         ]
         return '\n'.join(msg_lines)
 
+    def custom_send_notification(self, message: str):
+        """
+        用户自定义告警发送钩子，当 alert_app='custom' 时自动调用。
+        继承 AlertNotifierConsumerMixin 并重写此方法，可实现任意告警方式（邮件、短信、企业内部系统等）。
+
+        示例：
+            class EmailAlertConsumer(AlertNotifierConsumerMixin):
+                def custom_send_notification(self, message: str):
+                    send_email(to='ops@example.com', subject='任务告警', body=message)
+
+            @boost(BoosterParams(
+                queue_name='my_task',
+                consumer_override_cls=EmailAlertConsumer,
+                user_options={'alert_options': {'alert_app': 'custom', 'failure_threshold': 5}},
+            ))
+            def my_task(x):
+                ...
+        """
+        raise NotImplementedError(
+            "alert_app='custom' 时需要继承 AlertNotifierConsumerMixin 并重写 custom_send_notification 方法"
+        )
+
     def _send_notification(self, message: str):
         """通过配置的告警通道发送通知"""
         try:
@@ -343,8 +367,10 @@ class AlertNotifierConsumerMixin(AbstractConsumer):
                         data=json.dumps({'content': message}),
                         timeout=10,
                     )
+            elif self._alert_app == 'custom':
+                self.custom_send_notification(message)
             else:
-                self.logger.warning(f"Unknown alert_app: {self._alert_app}, supported: dingtalk, wechat, feishu, webhook")
+                self.logger.warning(f"Unknown alert_app: {self._alert_app}, supported: dingtalk, wechat, feishu, webhook, custom")
         except Exception as e:
             self.logger.error(f"Failed to send alert via {self._alert_app}: {type(e).__name__} {e}")
 

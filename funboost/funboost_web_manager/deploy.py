@@ -428,90 +428,146 @@ def _parse_log_time(line):
 
 
 def _do_git_pull(project_dir, target_branch=None):
-    """执行 git pull，可选切换分支。返回 (success, output, current_branch)"""
-    current_result = subprocess.run(
-        ['git', '-C', project_dir, 'rev-parse', '--abbrev-ref', 'HEAD'],
-        capture_output=True, text=True, timeout=10
-    )
-    current_branch = current_result.stdout.strip() if current_result.returncode == 0 else ''
+    """执行 git pull，可选切换分支。
+    返回 dict:
+      steps      - list of {cmd, output, ok, summary}  每一步操作
+      success    - bool 整体是否成功
+      current_branch - 最终所在分支
+      summary    - 最终中文总结文本
+    """
+    steps = []
 
+    def run_step(args, summary_ok='', summary_fail='', **kw):
+        cmd_str = 'git ' + ' '.join(args[args.index('-C') + 2:]) if '-C' in args else 'git ' + ' '.join(args[1:])
+        r = subprocess.run(args, capture_output=True, text=True, **kw)
+        out = (r.stdout + r.stderr).strip()
+        ok = r.returncode == 0
+        steps.append({'cmd': '$ ' + cmd_str, 'output': out, 'ok': ok,
+                      'summary': summary_ok if ok else summary_fail})
+        return r, ok, out
+
+    # 获取当前分支（内部查询，不加入 steps）
+    cr = subprocess.run(['git', '-C', project_dir, 'rev-parse', '--abbrev-ref', 'HEAD'],
+                        capture_output=True, text=True, timeout=10)
+    current_branch = cr.stdout.strip() if cr.returncode == 0 else ''
+
+    # 获取 remote 名称（内部查询）
+    rr = subprocess.run(['git', '-C', project_dir, 'remote'],
+                        capture_output=True, text=True, timeout=10)
+    remotes = [r.strip() for r in rr.stdout.strip().split('\n') if r.strip()]
+    remote = remotes[0] if remotes else 'origin'
+
+    # 切换分支
+    switched = False
     if target_branch and target_branch != current_branch:
         local_branch = target_branch
         if '/' in target_branch:
             local_branch = target_branch.split('/', 1)[-1]
 
-        checkout_result = subprocess.run(
+        r, ok, out = run_step(
             ['git', '-C', project_dir, 'checkout', local_branch],
-            capture_output=True, text=True, timeout=30
+            summary_ok=f'✓ 已切换到分支 "{local_branch}"',
+            summary_fail='',
+            timeout=30,
         )
-        if checkout_result.returncode != 0:
-            checkout_result = subprocess.run(
+        if not ok:
+            # 本地不存在，从远程创建
+            steps.pop()
+            r, ok, out = run_step(
                 ['git', '-C', project_dir, 'checkout', '-b', local_branch, target_branch],
-                capture_output=True, text=True, timeout=30
+                summary_ok=f'✓ 已从 "{target_branch}" 创建并切换到本地分支 "{local_branch}"',
+                summary_fail=f'✗ 切换分支失败：无法检出 "{local_branch}"',
+                timeout=30,
             )
-            if checkout_result.returncode != 0:
-                return False, f'切换分支失败:\n{checkout_result.stdout}{checkout_result.stderr}', current_branch
+            if not ok:
+                return {'steps': steps, 'success': False, 'current_branch': current_branch,
+                        'summary': f'✗ 切换分支失败，已终止。\n{out}'}
         current_branch = local_branch
+        switched = True
 
-    tracking_result = subprocess.run(
+    # 检查 upstream tracking
+    tr = subprocess.run(
         ['git', '-C', project_dir, 'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'],
         capture_output=True, text=True, timeout=10
     )
 
-    result = None
-    if tracking_result.returncode == 0:
-        result = subprocess.run(
-            ['git', '-C', project_dir, 'pull'],
-            capture_output=True, text=True, timeout=60
-        )
+    if tr.returncode == 0:
+        pull_args = ['git', '-C', project_dir, 'pull']
     else:
-        remote_result = subprocess.run(
-            ['git', '-C', project_dir, 'remote'],
-            capture_output=True, text=True, timeout=10
+        if not current_branch:
+            return {'steps': steps, 'success': False, 'current_branch': current_branch,
+                    'summary': '✗ 无法检测当前 Git 分支，pull 终止。'}
+        ls_r = subprocess.run(
+            ['git', '-C', project_dir, 'ls-remote', '--heads', remote, current_branch],
+            capture_output=True, text=True, timeout=15
         )
-        remotes = [r.strip() for r in remote_result.stdout.strip().split('\n') if r.strip()]
-        remote = remotes[0] if remotes else 'origin'
-
-        branch = current_branch
-        if branch:
-            ls_result = subprocess.run(
-                ['git', '-C', project_dir, 'ls-remote', '--heads', remote, branch],
-                capture_output=True, text=True, timeout=15
-            )
-            if ls_result.stdout.strip():
-                result = subprocess.run(
-                    ['git', '-C', project_dir, 'pull', remote, branch],
-                    capture_output=True, text=True, timeout=60
-                )
-                if result.returncode == 0:
-                    subprocess.run(
-                        ['git', '-C', project_dir, 'branch', '--set-upstream-to', f'{remote}/{branch}', branch],
-                        capture_output=True, text=True, timeout=10
-                    )
-            else:
-                for default_branch in ['main', 'master']:
-                    ls_default = subprocess.run(
-                        ['git', '-C', project_dir, 'ls-remote', '--heads', remote, default_branch],
-                        capture_output=True, text=True, timeout=15
-                    )
-                    if ls_default.stdout.strip():
-                        result = subprocess.run(
-                            ['git', '-C', project_dir, 'pull', remote, default_branch],
-                            capture_output=True, text=True, timeout=60
-                        )
-                        break
-                else:
-                    return False, (
-                        f'当前分支 "{branch}" 在远程 "{remote}" 上不存在，'
-                        f'且未找到 main/master 分支。\n'
-                        f'请手动设置 tracking:\n'
-                        f'  git branch --set-upstream-to={remote}/<远程分支名> {branch}'
-                    ), current_branch
+        if ls_r.stdout.strip():
+            pull_args = ['git', '-C', project_dir, 'pull', remote, current_branch]
         else:
-            return False, '无法检测当前 Git 分支', current_branch
+            found_default = None
+            for db in ['main', 'master']:
+                ls_d = subprocess.run(
+                    ['git', '-C', project_dir, 'ls-remote', '--heads', remote, db],
+                    capture_output=True, text=True, timeout=15
+                )
+                if ls_d.stdout.strip():
+                    found_default = db
+                    break
+            if found_default:
+                pull_args = ['git', '-C', project_dir, 'pull', remote, found_default]
+            else:
+                return {'steps': steps, 'success': False, 'current_branch': current_branch,
+                        'summary': (f'✗ 分支 "{current_branch}" 在远程 "{remote}" 上不存在，'
+                                    f'且未找到 main/master，pull 终止。\n'
+                                    f'请手动执行: git branch --set-upstream-to={remote}/<分支名> {current_branch}')}
 
-    output = result.stdout + result.stderr
-    return result.returncode == 0, output, current_branch
+    r, ok, out = run_step(
+        pull_args,
+        summary_ok='',  # 下面根据 output 内容精细判断
+        summary_fail='',
+        timeout=60,
+    )
+
+    # 精细判断 pull 结果
+    pull_out_lower = out.lower()
+    if ok:
+        if 'already up to date' in pull_out_lower or 'already up-to-date' in pull_out_lower:
+            pull_summary = f'✓ 分支 "{current_branch}" 已是最新，无需更新。'
+        elif 'conflict' in pull_out_lower or 'merge conflict' in pull_out_lower:
+            pull_summary = '⚠ 拉取时发生合并冲突，请手动解决后再操作。'
+            ok = False
+        else:
+            pull_summary = f'✓ 成功拉取分支 "{current_branch}" 的最新代码。'
+        if ok and tr.returncode != 0 and current_branch:
+            subprocess.run(
+                ['git', '-C', project_dir, 'branch', '--set-upstream-to',
+                 f'{remote}/{current_branch}', current_branch],
+                capture_output=True, text=True, timeout=10
+            )
+    else:
+        if 'conflict' in pull_out_lower:
+            pull_summary = '✗ 拉取失败：存在合并冲突，请手动处理。'
+        elif 'rejected' in pull_out_lower:
+            pull_summary = '✗ 拉取被拒绝（可能本地有超前提交），建议先检查本地状态。'
+        elif 'could not read' in pull_out_lower or 'authentication' in pull_out_lower:
+            pull_summary = '✗ 拉取失败：认证或网络问题。'
+        else:
+            pull_summary = '✗ 拉取失败。'
+
+    steps[-1]['ok'] = ok
+    steps[-1]['summary'] = pull_summary
+
+    # 整体总结
+    parts = []
+    if switched:
+        switch_step = next((s for s in steps if 'checkout' in s['cmd']), None)
+        if switch_step:
+            parts.append(switch_step['summary'])
+    parts.append(pull_summary)
+    final_summary = '\n'.join(parts)
+
+    return {'steps': steps, 'success': ok, 'current_branch': current_branch,
+            'summary': final_summary}
 
 
 # ======================== 路由 ========================
@@ -753,17 +809,17 @@ def deploy_git_pull(name):
     target_branch = data.get('branch', '').strip()
 
     try:
-        success, output, current_branch = _do_git_pull(project_dir, target_branch or None)
+        res = _do_git_pull(project_dir, target_branch or None)
         return jsonify({
-            'succ': success,
-            'msg': '拉取成功' if success else '拉取失败',
-            'output': output,
-            'current_branch': current_branch,
+            'succ': res['success'],
+            'msg': res['summary'],
+            'steps': res['steps'],
+            'current_branch': res['current_branch'],
         })
     except subprocess.TimeoutExpired:
-        return jsonify({'succ': False, 'msg': 'Git pull 超时（60秒）', 'output': ''})
+        return jsonify({'succ': False, 'msg': '✗ Git pull 超时（60秒）', 'steps': [], 'current_branch': ''})
     except Exception as e:
-        return jsonify({'succ': False, 'msg': f'Git pull 异常: {e}', 'output': traceback.format_exc()})
+        return jsonify({'succ': False, 'msg': f'✗ Git pull 异常: {e}', 'steps': [], 'current_branch': ''})
 
 
 @deploy_bp.route('/deploy/<name>/logs', methods=['GET'])

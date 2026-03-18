@@ -6,8 +6,10 @@
     <title>部署详情</title>
     <link href="{{ url_for('static',filename='css_cdn/twitter-bootstrap/3.3.7/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='css_cdn/select2/4.0.13/css/select2.min.css') }}" rel="stylesheet">
     <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}"></script>
     <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/select2.min.js') }}"></script>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -150,6 +152,32 @@
             color: #e0e0e0; border-radius: 8px; padding: 6px 10px; font-size: 13px; min-width: 200px;
         }
         .git-branch-bar select:focus { border-color: #6366f1; outline: none; }
+        /* select2 深色主题覆盖 */
+        .select2-container--default .select2-selection--single {
+            background: rgba(15,12,41,0.8); border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 8px; height: 34px; min-width: 220px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #e0e0e0; line-height: 32px; padding-left: 10px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 32px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow b {
+            border-color: #a78bfa transparent transparent transparent;
+        }
+        .select2-dropdown {
+            background: #1e1e3f; border: 1px solid rgba(99,102,241,0.4); border-radius: 8px;
+        }
+        .select2-search--dropdown .select2-search__field {
+            background: rgba(15,12,41,0.8); border: 1px solid rgba(99,102,241,0.3);
+            color: #e0e0e0; border-radius: 6px; padding: 4px 8px;
+        }
+        .select2-results__option { color: #e0e0e0; padding: 6px 12px; }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: rgba(99,102,241,0.4); color: #fff;
+        }
+        .select2-results__option[aria-selected=true] { background: rgba(99,102,241,0.2); color: #a78bfa; }
         .btn-git-sm {
             background: rgba(99,102,241,0.2); color: #a78bfa; border: none;
             border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px;
@@ -605,7 +633,6 @@ function doUpdateRestart() {
     $('#btnUpdateRestart').prop('disabled', true);
 
     urLog($c, '步骤 1/2: 执行 Git Pull', 'step');
-    urLog($c, '$ git pull', 'cmd');
     urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在拉取代码...', 'loading');
 
     var branch = $('#gitBranchSelect').val() || '';
@@ -616,16 +643,19 @@ function doUpdateRestart() {
         data: JSON.stringify({ branch: branch }),
         success: function(resp) {
             $c.find('.ur-loading:last').remove();
-            var output = (resp.output || resp.msg || '').trim();
-            if (output) urLog($c, output, resp.succ ? 'success' : 'error');
+            (resp.steps || []).forEach(function(s) {
+                urLog($c, s.cmd, 'cmd');
+                if (s.output) urLog($c, s.output, s.ok ? 'success' : 'error');
+                if (s.summary) urLog($c, s.summary, s.ok ? 'ok' : 'fail');
+            });
+            if (resp.msg) urLog($c, '── 总结 ── ' + resp.msg, resp.succ ? 'ok' : 'fail');
 
             if (!resp.succ) {
-                urLog($c, '\u2717 Git Pull 失败，已取消重启', 'fail');
+                urLog($c, '\u2717 Git 操作失败，已取消重启', 'fail');
                 $('#btnUpdateRestart').prop('disabled', false);
                 if (resp.current_branch) $('#gitCurrentBranch').text(resp.current_branch);
                 return;
             }
-            urLog($c, '\u2713 Git Pull 成功', 'ok');
             if (resp.current_branch) { $('#gitCurrentBranch').text(resp.current_branch); loadGitBranches(); }
 
             urLog($c, '步骤 2/2: 重启进程', 'step');
@@ -676,22 +706,36 @@ function loadGitBranches() {
         var localSet = {};
         (resp.local || []).forEach(function(b) {
             localSet[b] = true;
-            var label = (b === resp.current) ? b + ' (当前)' : b;
+            var label = (b === resp.current) ? b + ' ★ 当前' : b;
             $sel.append('<option value="' + b + '">' + label + '</option>');
         });
         (resp.remote || []).forEach(function(b) {
             var localName = b.indexOf('/') > -1 ? b.split('/').slice(1).join('/') : b;
             if (!localSet[localName]) {
-                $sel.append('<option value="' + b + '">' + b + '</option>');
+                $sel.append('<option value="' + b + '">[远程] ' + b + '</option>');
             }
         });
+        // 刷新 select2
+        if ($sel.data('select2')) { $sel.trigger('change'); }
     });
+}
+
+function renderGitSteps(steps, summary) {
+    var lines = [];
+    (steps || []).forEach(function(s) {
+        lines.push(s.cmd);
+        if (s.output) lines.push(s.output);
+        if (s.summary) lines.push(s.summary);
+        lines.push('');
+    });
+    if (summary) lines.push('── 总结 ──\n' + summary);
+    return lines.join('\n');
 }
 
 function doGitPull() {
     var branch = $('#gitBranchSelect').val() || '';
     $('#btnGitPull').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> 拉取中...');
-    $('#gitOutput').show().removeClass('git-success git-fail').text('正在执行 git pull ...');
+    $('#gitOutput').show().removeClass('git-success git-fail').text(branch ? ('切换分支: ' + branch + '\n正在执行 git pull ...') : '正在执行 git pull ...');
     $.ajax({
         url: '/deploy/' + encodeURIComponent(deployName) + '/git_pull',
         method: 'POST',
@@ -700,10 +744,9 @@ function doGitPull() {
         success: function(resp) {
             $('#btnGitPull').prop('disabled', false).html('<i class="fa fa-download"></i> Git Pull');
             var cls = resp.succ ? 'git-success' : 'git-fail';
-            $('#gitOutput').removeClass('git-success git-fail').addClass(cls).text(resp.output || resp.msg);
-            if (resp.current_branch) {
-                $('#gitCurrentBranch').text(resp.current_branch);
-            }
+            var text = renderGitSteps(resp.steps, resp.msg);
+            $('#gitOutput').removeClass('git-success git-fail').addClass(cls).text(text);
+            if (resp.current_branch) $('#gitCurrentBranch').text(resp.current_branch);
             loadGitBranches();
         },
         error: function() {
@@ -832,6 +875,16 @@ $(document).ready(function() {
     if (!getUrlParam('name')) {
         var newUrl = window.location.pathname + '?name=' + encodeURIComponent(deployName);
         history.replaceState(null, '', newUrl);
+    }
+
+    // 初始化 select2 分支搜索下拉
+    if ($.fn.select2) {
+        $('#gitBranchSelect').select2({
+            placeholder: '-- 保持当前分支 --',
+            allowClear: true,
+            width: 'auto',
+            language: { noResults: function() { return '无匹配分支'; } }
+        });
     }
 
     loadConfig();

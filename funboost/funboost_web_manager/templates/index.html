@@ -677,10 +677,22 @@
 
             // 检查URL参数是否指定了页面
             var urlParams = new URLSearchParams(window.location.search);
+            var iframeSrc = urlParams.get('iframe');  // 完整 iframe src（含参数，刷新恢复用）
             var pageName = urlParams.get('page');
 
             // 初始加载页面
-            if (pageName) {
+            if (iframeSrc) {
+                // 刷新恢复：直接使用完整 src（可能含 ?name=xxx 之类的参数）
+                $('#content').attr('src', iframeSrc);
+                // 高亮匹配的侧边栏项
+                var baseIframeSrc = iframeSrc.split('?')[0];
+                $('.sidebar .nav-link').each(function() {
+                    var target = $(this).data('target') || '';
+                    if (target && baseIframeSrc.indexOf(target.split('?')[0]) >= 0) {
+                        $(this).addClass('active');
+                    }
+                });
+            } else if (pageName) {
                 loadPage('/tpl/' + pageName + '.html');
                 $('.sidebar .nav-link').removeClass('active');
                 $('.sidebar .nav-link[href="/?page=' + pageName + '"]').addClass('active');
@@ -703,12 +715,17 @@
                     method: 'GET',
                     success: function (data) {
                         $('#content').attr('src', page);
+                        // 同步外层 URL，使 F5 刷新可以还原当前 iframe 内容
+                        history.replaceState(null, '', '/?iframe=' + encodeURIComponent(page));
                     },
                     error: function () {
                         $('#content').html('<p>Error loading page.</p>');
                     }
                 });
             }
+
+            // 供 iframe 内部调用，导航到指定页面并同步外层 URL
+            window.navigateTo = function(page) { loadPage(page); };
 
             // 退出登录确认
             $('#logoutBtn').click(function(e) {

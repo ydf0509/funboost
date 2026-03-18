@@ -18,7 +18,6 @@
         }
         .main-container { padding: 20px 25px; max-width: 100%; }
 
-        /* 顶部导航 */
         .top-bar {
             display: flex; align-items: center; gap: 15px;
             margin-bottom: 20px; padding: 14px 20px;
@@ -38,7 +37,6 @@
         .badge-running { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
         .badge-stopped { background: rgba(107,114,128,0.2); color: #9ca3af; border: 1px solid rgba(107,114,128,0.3); }
 
-        /* 卡片 */
         .card {
             background: linear-gradient(135deg, rgba(30,30,63,0.85) 0%, rgba(42,42,74,0.8) 100%);
             border-radius: 14px; border: 1px solid rgba(99,102,241,0.2);
@@ -52,7 +50,6 @@
         .card-header i { color: #a78bfa; }
         .card-body { padding: 18px 20px; }
 
-        /* 表单 */
         .form-group { margin-bottom: 14px; }
         .form-group label { color: #a78bfa; font-weight: 600; font-size: 13px; margin-bottom: 4px; display: block; }
         .form-control {
@@ -64,10 +61,22 @@
             box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
             background: rgba(15,12,41,0.8); color: #fff;
         }
+        .form-control:disabled, .form-control[disabled] {
+            background: rgba(99,102,241,0.15); color: #fff;
+            border-color: rgba(99,102,241,0.3); opacity: 1;
+            -webkit-text-fill-color: #fff;
+        }
+
+        .cmd-detail-box {
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 8px; padding: 12px; margin-top: 10px;
+            font-family: 'Consolas','Courier New',monospace; font-size: 12px;
+            white-space: pre-wrap; word-break: break-all; color: #a78bfa;
+            max-height: 300px; overflow-y: auto; display: none;
+        }
         .form-row { display: flex; gap: 15px; }
         .form-row .form-group { flex: 1; }
 
-        /* 环境变量 */
         .env-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
         .env-row input { flex: 1; }
         .btn-env-remove {
@@ -88,7 +97,6 @@
         }
         .btn-save-config:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,102,241,0.4); }
 
-        /* 进程控制 */
         .process-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .btn-ctrl {
             padding: 8px 20px; border-radius: 8px; font-size: 13px;
@@ -107,8 +115,16 @@
         .process-info-item { font-size: 13px; }
         .process-info-item .label { color: rgba(255,255,255,0.5); margin-right: 6px; }
         .process-info-item .value { color: #fff; font-weight: 600; }
+        .poll-ctrl {
+            margin-left: auto; display: flex; align-items: center; gap: 6px;
+            font-size: 12px; color: rgba(255,255,255,0.5);
+        }
+        .poll-ctrl select {
+            background: rgba(15,12,41,0.6); border: 1px solid rgba(99,102,241,0.3);
+            color: #e0e0e0; border-radius: 6px; padding: 2px 6px; font-size: 12px;
+        }
+        .poll-ctrl select:focus { border-color: #6366f1; outline: none; }
 
-        /* Git */
         .btn-git {
             background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
             border: none; color: #fff; padding: 8px 20px;
@@ -122,12 +138,25 @@
             font-family: 'Consolas', 'Courier New', monospace; font-size: 13px;
             max-height: 200px; overflow-y: auto; white-space: pre-wrap; display: none;
         }
-        .git-success { border-color: rgba(16,185,129,0.3); }
+        .git-success { border-color: rgba(16,185,129,0.3); color: #34d399; }
         .git-fail { border-color: rgba(239,68,68,0.3); color: #f87171; }
+        .git-branch-bar {
+            display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px;
+        }
+        .git-branch-bar select {
+            background: rgba(15,12,41,0.6); border: 1px solid rgba(99,102,241,0.3);
+            color: #e0e0e0; border-radius: 8px; padding: 6px 10px; font-size: 13px; min-width: 200px;
+        }
+        .git-branch-bar select:focus { border-color: #6366f1; outline: none; }
+        .btn-git-sm {
+            background: rgba(99,102,241,0.2); color: #a78bfa; border: none;
+            border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px;
+            transition: all .2s ease;
+        }
+        .btn-git-sm:hover { background: rgba(99,102,241,0.4); color: #fff; }
 
-        /* 日志 */
         .log-toolbar {
-            display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;
+            display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;
         }
         .log-toolbar input, .log-toolbar select {
             background: rgba(15,12,41,0.6); border: 1px solid rgba(99,102,241,0.3);
@@ -136,14 +165,31 @@
         .log-toolbar input:focus, .log-toolbar select:focus {
             border-color: #6366f1; outline: none;
         }
-        .log-search { flex: 1; min-width: 200px; }
+        .log-search { min-width: 180px; flex: 1; }
+        .log-toolbar-label { font-size: 12px; color: rgba(255,255,255,0.5); white-space: nowrap; }
         .btn-log {
             background: rgba(99,102,241,0.2); color: #a78bfa; border: none;
             border-radius: 8px; padding: 6px 14px; cursor: pointer;
-            font-size: 13px; transition: all .2s ease;
+            font-size: 13px; transition: all .2s ease; white-space: nowrap;
         }
         .btn-log:hover { background: rgba(99,102,241,0.4); color: #fff; }
         .btn-log.active { background: rgba(16,185,129,0.3); color: #34d399; }
+
+        .log-time-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+        .log-time-row input[type="datetime-local"] {
+            background: rgba(15,12,41,0.6); border: 1px solid rgba(99,102,241,0.3);
+            color: #e0e0e0; border-radius: 8px; padding: 5px 8px; font-size: 12px;
+        }
+        .log-time-row input[type="datetime-local"]:focus { border-color: #6366f1; outline: none; }
+
+        .log-quick-btns { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
+        .btn-quick {
+            background: rgba(99,102,241,0.12); color: #a78bfa; border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 12px;
+            transition: all .2s ease;
+        }
+        .btn-quick:hover, .btn-quick.active { background: rgba(99,102,241,0.3); color: #fff; border-color: rgba(99,102,241,0.4); }
+
         .log-viewer {
             background: rgba(0,0,0,0.5); border: 1px solid rgba(99,102,241,0.15);
             border-radius: 10px; padding: 14px;
@@ -158,30 +204,51 @@
         .log-meta {
             display: flex; gap: 15px; margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.4);
         }
+
+        /* 操作弹框实时日志样式 */
+        .modal-content {
+            background: linear-gradient(135deg, #1e1e3f 0%, #2a2a4a 100%);
+            border: 1px solid rgba(99,102,241,0.3); border-radius: 16px; color: #e0e0e0;
+        }
+        .modal-header { border-bottom: 1px solid rgba(99,102,241,0.2); padding: 20px; }
+        .modal-title { color: #fff; font-weight: 600; }
+        .modal-footer { border-top: 1px solid rgba(99,102,241,0.2); padding: 15px 20px; }
+        .close { color: #a78bfa; opacity: 1; font-size: 24px; }
+        .close:hover { color: #fff; }
+        .modal-footer .btn-default { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+        .cmd-modal-box {
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 8px; padding: 14px;
+            font-family: 'Consolas','Courier New',monospace; font-size: 12px;
+            max-height: 500px; overflow-y: auto;
+        }
+        .ur-line { padding: 2px 0; font-size: 13px; line-height: 1.6; }
+        .ur-step { color: #a78bfa; font-weight: 700; margin-top: 10px; margin-bottom: 4px; border-bottom: 1px solid rgba(99,102,241,0.2); padding-bottom: 4px; }
+        .ur-step:first-child { margin-top: 0; }
+        .ur-cmd { color: #60a5fa; }
+        .ur-loading { color: rgba(255,255,255,0.5); padding: 4px 0; }
+        .ur-success { color: #34d399; white-space: pre-wrap; }
+        .ur-error { color: #f87171; white-space: pre-wrap; }
+        .ur-ok { color: #34d399; font-weight: 600; margin-top: 6px; padding: 4px 8px; background: rgba(52,211,153,0.1); border-radius: 4px; }
+        .ur-fail { color: #f87171; font-weight: 600; margin-top: 6px; padding: 4px 8px; background: rgba(248,113,113,0.1); border-radius: 4px; }
+        .ur-info { color: #e0e0e0; }
     </style>
 </head>
 <body>
 <div class="main-container">
-    <!-- 顶部 -->
     <div class="top-bar">
         <button class="btn-back" onclick="goBack()"><i class="fa fa-arrow-left"></i> 返回列表</button>
         <h3 id="deployTitle">部署详情</h3>
         <span class="status-badge badge-stopped" id="statusBadge"><i class="fa fa-circle"></i> 已停止</span>
     </div>
 
-    <!-- 基本信息 & 配置 -->
+    <!-- 基本配置 -->
     <div class="card">
         <div class="card-header"><i class="fa fa-cog"></i> 基本配置</div>
         <div class="card-body">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>部署名称</label>
-                    <input type="text" class="form-control" id="cfgName" disabled>
-                </div>
-                <div class="form-group">
-                    <label>日志标识 (SYS_STD_FILE_NAME)</label>
-                    <input type="text" class="form-control" id="cfgSysStd" placeholder="留空则使用部署名称">
-                </div>
+            <div class="form-group">
+                <label>部署名称</label>
+                <input type="text" class="form-control" id="cfgName" disabled>
             </div>
             <div class="form-group">
                 <label>项目根目录</label>
@@ -208,12 +275,23 @@
                 <button class="btn-ctrl btn-start" id="btnStart" onclick="doStart()"><i class="fa fa-play"></i> 启动</button>
                 <button class="btn-ctrl btn-stop" id="btnStop" onclick="doStop()" disabled><i class="fa fa-stop"></i> 停止</button>
                 <button class="btn-ctrl btn-restart" id="btnRestart" onclick="doRestart()"><i class="fa fa-refresh"></i> 重启</button>
+                <span class="poll-ctrl">
+                    <i class="fa fa-clock-o"></i> 状态轮询:
+                    <select id="statusInterval" onchange="updateStatusInterval()">
+                        <option value="0">关闭</option>
+                        <option value="3">3秒</option>
+                        <option value="5" selected>5秒</option>
+                        <option value="10">10秒</option>
+                        <option value="30">30秒</option>
+                    </select>
+                </span>
             </div>
             <div class="process-info">
                 <div class="process-info-item"><span class="label">PID:</span><span class="value" id="infoPid">-</span></div>
                 <div class="process-info-item"><span class="label">启动时间:</span><span class="value" id="infoStartTime">-</span></div>
                 <div class="process-info-item"><span class="label">deploy_flag:</span><span class="value" id="infoFlag" style="font-size:11px;color:#6b7280;">-</span></div>
             </div>
+            <div class="cmd-detail-box" id="processCmd"></div>
         </div>
     </div>
 
@@ -221,7 +299,18 @@
     <div class="card">
         <div class="card-header"><i class="fa fa-git"></i> Git 操作</div>
         <div class="card-body">
-            <button class="btn-git" id="btnGitPull" onclick="doGitPull()"><i class="fa fa-download"></i> Git Pull</button>
+            <div class="git-branch-bar">
+                <span class="log-toolbar-label">当前分支:</span>
+                <strong id="gitCurrentBranch" style="color:#34d399;">-</strong>
+                <span class="log-toolbar-label" style="margin-left:20px;">切换分支:</span>
+                <select id="gitBranchSelect">
+                    <option value="">-- 保持当前分支 --</option>
+                </select>
+                <button class="btn-git-sm" onclick="loadGitBranches()" title="刷新分支列表"><i class="fa fa-refresh"></i></button>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;">
+                <button class="btn-git" id="btnGitPull" onclick="doGitPull()"><i class="fa fa-download"></i> Git Pull</button>
+            </div>
             <div class="git-output" id="gitOutput"></div>
         </div>
     </div>
@@ -230,18 +319,48 @@
     <div class="card">
         <div class="card-header"><i class="fa fa-file-text-o"></i> 日志查看</div>
         <div class="card-body">
+            <div class="log-quick-btns">
+                <button class="btn-quick" data-range="1m">近1分钟</button>
+                <button class="btn-quick" data-range="5m">近5分钟</button>
+                <button class="btn-quick active" data-range="1h">近1小时</button>
+                <button class="btn-quick" data-range="6h">近6小时</button>
+                <button class="btn-quick" data-range="1d">近1天</button>
+                <button class="btn-quick" data-range="3d">近3天</button>
+                <button class="btn-quick" data-range="7d">近7天</button>
+                <button class="btn-quick" data-range="30d">近30天</button>
+                <button class="btn-quick" data-range="all">全部</button>
+            </div>
+
+            <div class="log-time-row">
+                <span class="log-toolbar-label">自定义范围:</span>
+                <input type="datetime-local" id="logTimeStart" step="1">
+                <span class="log-toolbar-label">~</span>
+                <input type="datetime-local" id="logTimeEnd" step="1">
+                <button class="btn-log" onclick="applyCustomTime()" style="padding:5px 10px;font-size:12px;"><i class="fa fa-check"></i> 应用</button>
+            </div>
+
             <div class="log-toolbar">
                 <input type="text" class="log-search" id="logKeyword" placeholder="输入关键字搜索日志...">
-                <select id="logTimeRange">
-                    <option value="">全部时间</option>
-                    <option value="1h" selected>最近 1 小时</option>
-                    <option value="6h">最近 6 小时</option>
-                    <option value="1d">最近 1 天</option>
-                    <option value="3d">最近 3 天</option>
+                <span class="log-toolbar-label">条数:</span>
+                <select id="logLines">
+                    <option value="100">100</option>
+                    <option value="200" selected>200</option>
+                    <option value="500">500</option>
+                    <option value="1000">1000</option>
+                    <option value="5000">5000</option>
+                    <option value="10000">10000</option>
                 </select>
                 <button class="btn-log" onclick="loadLogs()"><i class="fa fa-refresh"></i> 刷新</button>
-                <button class="btn-log" id="btnAutoRefresh" onclick="toggleAutoRefresh()"><i class="fa fa-clock-o"></i> 自动刷新</button>
+                <span class="log-toolbar-label">自动刷新:</span>
+                <select id="logAutoInterval">
+                    <option value="0">关闭</option>
+                    <option value="5">5秒</option>
+                    <option value="10" selected>10秒</option>
+                    <option value="30">30秒</option>
+                </select>
+                <button class="btn-log" id="btnAutoRefresh" onclick="toggleAutoRefresh()"><i class="fa fa-clock-o"></i> 开启自动刷新</button>
             </div>
+
             <div class="log-viewer" id="logViewer">加载中...</div>
             <div class="log-meta">
                 <span>日志文件: <span id="logFiles">-</span></span>
@@ -251,11 +370,24 @@
     </div>
 </div>
 
+<!-- 操作详情模态框 -->
+<div class="modal fade" id="cmdModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            <h4 class="modal-title" id="cmdModalTitle"><i class="fa fa-terminal" style="color:#a78bfa;margin-right:8px;"></i>执行详情</h4>
+        </div>
+        <div class="modal-body"><div class="cmd-modal-box" id="cmdModalContent"></div></div>
+        <div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">关闭</button></div>
+    </div></div>
+</div>
+
 <script>
 var deployName = '';
 var statusTimer = null;
 var autoRefreshTimer = null;
 var autoRefreshOn = false;
+var currentTimeRange = '1h';
 
 function getUrlParam(key) {
     var params = new URLSearchParams(window.location.search);
@@ -263,7 +395,11 @@ function getUrlParam(key) {
 }
 
 function goBack() {
-    window.location.href = '/tpl/deploy_list.html';
+    if (window.parent && window.parent.navigateTo) {
+        window.parent.navigateTo('/tpl/deploy_list.html');
+    } else {
+        window.location.href = '/tpl/deploy_list.html';
+    }
 }
 
 function addEnvRow(key, val) {
@@ -293,7 +429,6 @@ function loadConfig() {
         $('#cfgName').val(d.name);
         $('#cfgProjectDir').val(d.project_dir || '');
         $('#cfgStartCmd').val(d.start_cmd || '');
-        $('#cfgSysStd').val(d.sys_std_file_name || '');
         $('#cfgEnvVars').empty();
         try {
             var envObj = JSON.parse(d.env_vars || '{}');
@@ -308,7 +443,6 @@ function saveConfig() {
         name: deployName,
         project_dir: $('#cfgProjectDir').val().trim(),
         start_cmd: $('#cfgStartCmd').val().trim(),
-        sys_std_file_name: $('#cfgSysStd').val().trim(),
         env_vars: collectEnvVars()
     };
     $.ajax({
@@ -344,59 +478,197 @@ function pollStatus() {
     });
 }
 
+function updateStatusInterval() {
+    clearInterval(statusTimer);
+    var sec = parseInt($('#statusInterval').val()) || 0;
+    if (sec > 0) {
+        statusTimer = setInterval(pollStatus, sec * 1000);
+    }
+}
+
+function urLog($el, text, type) {
+    var cls = 'ur-line';
+    switch(type) {
+        case 'step': cls += ' ur-step'; break;
+        case 'cmd': cls += ' ur-cmd'; break;
+        case 'loading': cls += ' ur-loading'; break;
+        case 'success': cls += ' ur-success'; break;
+        case 'error': cls += ' ur-error'; break;
+        case 'ok': cls += ' ur-ok'; break;
+        case 'fail': cls += ' ur-fail'; break;
+        case 'info': cls += ' ur-info'; break;
+    }
+    var $div = $('<div>').addClass(cls);
+    if (type === 'loading') { $div.html(text); } else { $div.text(text); }
+    $el.append($div);
+    $el[0].scrollTop = $el[0].scrollHeight;
+}
+
+function renderStartDetail($c, d) {
+    if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
+    if (d.env_vars && d.env_vars.length) {
+        urLog($c, '环境变量:', 'info');
+        d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); });
+    }
+    if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
+    if (d.log_file) urLog($c, '日志文件: ' + d.log_file, 'info');
+    if (d.start_time) urLog($c, '启动时间: ' + d.start_time, 'info');
+    if (d.pid) urLog($c, '新 PID: ' + d.pid, 'info');
+}
+
 function doStart() {
+    $('#cmdModalTitle').html('<i class="fa fa-play" style="color:#34d399;margin-right:8px;"></i>启动 - ' + deployName);
+    var $c = $('#cmdModalContent').html('');
+    $('#cmdModal').modal('show');
+    urLog($c, '启动进程', 'step');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在启动...', 'loading');
     $('#btnStart').prop('disabled', true);
     $.post('/deploy/' + encodeURIComponent(deployName) + '/start', function(resp) {
-        alert(resp.msg);
-        pollStatus();
+        $c.find('.ur-loading:last').remove();
+        if (resp.cmd_detail) renderStartDetail($c, resp.cmd_detail);
+        urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 ' + resp.msg), resp.succ ? 'ok' : 'fail');
+        setTimeout(pollStatus, 2000);
     });
 }
 
 function doStop() {
+    $('#cmdModalTitle').html('<i class="fa fa-stop" style="color:#f87171;margin-right:8px;"></i>停止 - ' + deployName);
+    var $c = $('#cmdModalContent').html('');
+    $('#cmdModal').modal('show');
+    urLog($c, '停止进程', 'step');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止...', 'loading');
     $('#btnStop').prop('disabled', true);
     $.post('/deploy/' + encodeURIComponent(deployName) + '/stop', function(resp) {
-        alert(resp.msg);
-        pollStatus();
+        $c.find('.ur-loading:last').remove();
+        if (resp.cmd_detail) {
+            var d = resp.cmd_detail;
+            if (d.pid) urLog($c, '旧 PID: ' + d.pid, 'info');
+            if (d.old_start_time) urLog($c, '旧启动时间: ' + d.old_start_time, 'info');
+            if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
+        }
+        urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 ' + resp.msg), resp.succ ? 'ok' : 'fail');
+        setTimeout(pollStatus, 2000);
     });
 }
 
 function doRestart() {
+    $('#cmdModalTitle').html('<i class="fa fa-refresh" style="color:#fbbf24;margin-right:8px;"></i>重启 - ' + deployName);
+    var $c = $('#cmdModalContent').html('');
+    $('#cmdModal').modal('show');
+    urLog($c, '重启进程', 'step');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程...', 'loading');
     $('#btnRestart').prop('disabled', true);
     $.post('/deploy/' + encodeURIComponent(deployName) + '/restart', function(resp) {
-        alert(resp.msg);
+        $c.find('.ur-loading:last').remove();
+        if (resp.cmd_detail) {
+            var d = resp.cmd_detail;
+            if (d.old_pid) urLog($c, '旧 PID: ' + d.old_pid, 'info');
+            if (d.old_start_time) urLog($c, '旧启动时间: ' + d.old_start_time, 'info');
+            if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
+            if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
+            if (d.env_vars && d.env_vars.length) {
+                urLog($c, '环境变量:', 'info');
+                d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); });
+            }
+            if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
+            if (d.log_file) urLog($c, '日志文件: ' + d.log_file, 'info');
+            if (d.start_time) urLog($c, '启动时间: ' + d.start_time, 'info');
+            if (d.pid) urLog($c, '新 PID: ' + d.pid, 'info');
+        }
+        urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 ' + resp.msg), resp.succ ? 'ok' : 'fail');
         $('#btnRestart').prop('disabled', false);
-        pollStatus();
+        setTimeout(pollStatus, 2000);
+    });
+}
+
+/* ======== Git 分支 ======== */
+function loadGitBranches() {
+    $.get('/deploy/' + encodeURIComponent(deployName) + '/git_branches', function(resp) {
+        if (!resp.succ) return;
+        $('#gitCurrentBranch').text(resp.current || '-');
+        var $sel = $('#gitBranchSelect');
+        $sel.empty().append('<option value="">-- 保持当前分支 --</option>');
+        var localSet = {};
+        (resp.local || []).forEach(function(b) {
+            localSet[b] = true;
+            var label = (b === resp.current) ? b + ' (当前)' : b;
+            $sel.append('<option value="' + b + '">' + label + '</option>');
+        });
+        (resp.remote || []).forEach(function(b) {
+            var localName = b.indexOf('/') > -1 ? b.split('/').slice(1).join('/') : b;
+            if (!localSet[localName]) {
+                $sel.append('<option value="' + b + '">' + b + '</option>');
+            }
+        });
     });
 }
 
 function doGitPull() {
+    var branch = $('#gitBranchSelect').val() || '';
     $('#btnGitPull').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> 拉取中...');
     $('#gitOutput').show().removeClass('git-success git-fail').text('正在执行 git pull ...');
-    $.post('/deploy/' + encodeURIComponent(deployName) + '/git_pull', function(resp) {
-        $('#btnGitPull').prop('disabled', false).html('<i class="fa fa-download"></i> Git Pull');
-        var cls = resp.succ ? 'git-success' : 'git-fail';
-        $('#gitOutput').removeClass('git-success git-fail').addClass(cls).text(resp.output || resp.msg);
-    }).fail(function() {
-        $('#btnGitPull').prop('disabled', false).html('<i class="fa fa-download"></i> Git Pull');
-        $('#gitOutput').addClass('git-fail').text('请求失败');
+    $.ajax({
+        url: '/deploy/' + encodeURIComponent(deployName) + '/git_pull',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ branch: branch }),
+        success: function(resp) {
+            $('#btnGitPull').prop('disabled', false).html('<i class="fa fa-download"></i> Git Pull');
+            var cls = resp.succ ? 'git-success' : 'git-fail';
+            $('#gitOutput').removeClass('git-success git-fail').addClass(cls).text(resp.output || resp.msg);
+            if (resp.current_branch) {
+                $('#gitCurrentBranch').text(resp.current_branch);
+            }
+            loadGitBranches();
+        },
+        error: function() {
+            $('#btnGitPull').prop('disabled', false).html('<i class="fa fa-download"></i> Git Pull');
+            $('#gitOutput').addClass('git-fail').text('请求失败');
+        }
     });
 }
 
+/* ======== 日志时间范围 ======== */
+function fmt(d) {
+    return d.getFullYear() + '-' +
+        String(d.getMonth()+1).padStart(2,'0') + '-' +
+        String(d.getDate()).padStart(2,'0') + ' ' +
+        String(d.getHours()).padStart(2,'0') + ':' +
+        String(d.getMinutes()).padStart(2,'0') + ':' +
+        String(d.getSeconds()).padStart(2,'0');
+}
+
+var rangeMs = {
+    '1m': 60000, '5m': 300000, '1h': 3600000, '6h': 21600000,
+    '1d': 86400000, '3d': 259200000, '7d': 604800000, '30d': 2592000000
+};
+
+function parseDatetimeLocal(s) {
+    if (!s) return null;
+    var d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+}
+
 function getTimeRange() {
-    var val = $('#logTimeRange').val();
-    if (!val) return { time_start: '', time_end: '' };
-    var now = new Date();
-    var ms = { '1h': 3600000, '6h': 21600000, '1d': 86400000, '3d': 259200000 };
-    var start = new Date(now.getTime() - (ms[val] || 3600000));
-    function fmt(d) {
-        return d.getFullYear() + '-' +
-            String(d.getMonth()+1).padStart(2,'0') + '-' +
-            String(d.getDate()).padStart(2,'0') + ' ' +
-            String(d.getHours()).padStart(2,'0') + ':' +
-            String(d.getMinutes()).padStart(2,'0') + ':' +
-            String(d.getSeconds()).padStart(2,'0');
+    if (currentTimeRange === 'all') return { time_start: '', time_end: '' };
+    if (currentTimeRange === 'custom') {
+        var ds = parseDatetimeLocal($('#logTimeStart').val());
+        var de = parseDatetimeLocal($('#logTimeEnd').val());
+        return {
+            time_start: ds ? fmt(ds) : '',
+            time_end: de ? fmt(de) : ''
+        };
     }
+    var now = new Date();
+    var ms = rangeMs[currentTimeRange] || 3600000;
+    var start = new Date(now.getTime() - ms);
     return { time_start: fmt(start), time_end: fmt(now) };
+}
+
+function applyCustomTime() {
+    currentTimeRange = 'custom';
+    $('.btn-quick').removeClass('active');
+    loadLogs();
 }
 
 function escapeHtml(s) {
@@ -413,7 +685,8 @@ function highlightKeyword(html, keyword) {
 function loadLogs() {
     var keyword = $('#logKeyword').val().trim();
     var tr = getTimeRange();
-    var params = { lines: 1000 };
+    var maxLines = parseInt($('#logLines').val()) || 200;
+    var params = { lines: maxLines };
     if (keyword) params.keyword = keyword;
     if (tr.time_start) params.time_start = tr.time_start;
     if (tr.time_end) params.time_end = tr.time_end;
@@ -447,26 +720,58 @@ function loadLogs() {
 
 function toggleAutoRefresh() {
     autoRefreshOn = !autoRefreshOn;
+    clearInterval(autoRefreshTimer);
     if (autoRefreshOn) {
-        $('#btnAutoRefresh').addClass('active').html('<i class="fa fa-clock-o"></i> 自动刷新中 (3s)');
-        autoRefreshTimer = setInterval(loadLogs, 3000);
+        var sec = parseInt($('#logAutoInterval').val()) || 10;
+        if (sec === 0) { autoRefreshOn = false; return; }
+        $('#btnAutoRefresh').addClass('active').html('<i class="fa fa-clock-o"></i> 自动刷新中 (' + sec + 's)');
+        autoRefreshTimer = setInterval(loadLogs, sec * 1000);
     } else {
-        $('#btnAutoRefresh').removeClass('active').html('<i class="fa fa-clock-o"></i> 自动刷新');
-        clearInterval(autoRefreshTimer);
+        $('#btnAutoRefresh').removeClass('active').html('<i class="fa fa-clock-o"></i> 开启自动刷新');
     }
 }
 
 $(document).ready(function() {
     deployName = getUrlParam('name');
+    if (!deployName) {
+        // 尝试从 parent frame 的 URL 里读取（嵌入 iframe 时）
+        try {
+            var parentSearch = window.parent.location.search;
+            var parentParams = new URLSearchParams(parentSearch);
+            deployName = parentParams.get('name') || '';
+        } catch(e) {}
+    }
     if (!deployName) { alert('缺少部署名称参数'); return; }
+
+    // 确保当前 URL 带上 name 参数，避免刷新丢失
+    if (!getUrlParam('name')) {
+        var newUrl = window.location.pathname + '?name=' + encodeURIComponent(deployName);
+        history.replaceState(null, '', newUrl);
+    }
+
     loadConfig();
     loadLogs();
-    statusTimer = setInterval(pollStatus, 5000);
+    loadGitBranches();
+    updateStatusInterval();
 
     $('#logKeyword').on('keyup', function(e) {
         if (e.keyCode === 13) loadLogs();
     });
-    $('#logTimeRange').on('change', function() { loadLogs(); });
+    $('#logLines').on('change', function() { loadLogs(); });
+
+    $('.btn-quick').on('click', function() {
+        currentTimeRange = $(this).data('range');
+        $('.btn-quick').removeClass('active');
+        $(this).addClass('active');
+        loadLogs();
+    });
+
+    $('#logAutoInterval').on('change', function() {
+        if (autoRefreshOn) {
+            autoRefreshOn = false;
+            toggleAutoRefresh();
+        }
+    });
 });
 </script>
 </body>

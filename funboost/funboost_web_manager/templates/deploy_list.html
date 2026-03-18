@@ -35,25 +35,27 @@
             border-radius: 8px; font-size: 14px; font-weight: 600;
             cursor: pointer; transition: all .3s ease;
         }
-        .btn-create:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(99,102,241,0.4);
-            color: #fff;
-        }
-        .info-bar {
-            display: flex; gap: 15px; margin-bottom: 18px; flex-wrap: wrap;
-        }
+        .btn-create:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,102,241,0.4); color: #fff; }
+        .info-bar { display: flex; gap: 15px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
         .info-badge {
             padding: 8px 16px; border-radius: 10px; font-size: 13px;
             background: rgba(30,30,63,0.8); border: 1px solid rgba(99,102,241,0.15);
         }
         .info-badge i { margin-right: 6px; color: #a78bfa; }
+        .refresh-ctrl {
+            margin-left: auto; display: flex; align-items: center; gap: 8px;
+            padding: 8px 16px; border-radius: 10px; font-size: 13px;
+            background: rgba(30,30,63,0.8); border: 1px solid rgba(99,102,241,0.15);
+        }
+        .refresh-ctrl select {
+            background: rgba(15,12,41,0.6); border: 1px solid rgba(99,102,241,0.3);
+            color: #e0e0e0; border-radius: 6px; padding: 2px 8px; font-size: 12px;
+        }
+        .refresh-ctrl select:focus { border-color: #6366f1; outline: none; }
 
-        /* 表格 */
         .deploy-table-wrap {
             background: linear-gradient(135deg, rgba(30,30,63,0.85) 0%, rgba(42,42,74,0.8) 100%);
-            border-radius: 14px; border: 1px solid rgba(99,102,241,0.2);
-            overflow: hidden;
+            border-radius: 14px; border: 1px solid rgba(99,102,241,0.2); overflow: hidden;
         }
         .deploy-table { width: 100%; border-collapse: collapse; }
         .deploy-table thead th {
@@ -62,40 +64,43 @@
             text-transform: uppercase; letter-spacing: .5px;
             border-bottom: 1px solid rgba(99,102,241,0.2);
         }
-        .deploy-table tbody tr {
-            border-bottom: 1px solid rgba(99,102,241,0.08);
-            transition: background .2s ease;
-        }
+        .deploy-table tbody tr { border-bottom: 1px solid rgba(99,102,241,0.08); transition: background .2s ease; }
         .deploy-table tbody tr:hover { background: rgba(99,102,241,0.06); }
         .deploy-table td { padding: 12px 16px; font-size: 14px; vertical-align: middle; }
 
-        .status-dot {
-            display: inline-block; width: 10px; height: 10px;
-            border-radius: 50%; margin-right: 6px;
-        }
+        .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
         .status-running { background: #34d399; box-shadow: 0 0 8px rgba(52,211,153,0.5); }
         .status-stopped { background: #6b7280; }
 
         .btn-action {
             padding: 5px 12px; border-radius: 6px; font-size: 12px;
-            border: none; cursor: pointer; margin-right: 4px;
-            transition: all .2s ease; font-weight: 500;
+            border: none; cursor: pointer; margin-right: 4px; transition: all .2s ease; font-weight: 500;
         }
+        .btn-action:disabled { opacity: 0.3; cursor: not-allowed; }
         .btn-detail { background: rgba(99,102,241,0.2); color: #a78bfa; }
         .btn-detail:hover { background: rgba(99,102,241,0.4); color: #fff; }
         .btn-start-sm { background: rgba(16,185,129,0.2); color: #34d399; }
         .btn-start-sm:hover { background: rgba(16,185,129,0.4); color: #fff; }
         .btn-stop-sm { background: rgba(239,68,68,0.2); color: #f87171; }
         .btn-stop-sm:hover { background: rgba(239,68,68,0.4); color: #fff; }
+        .btn-clone-sm { background: rgba(59,130,246,0.2); color: #60a5fa; }
+        .btn-clone-sm:hover { background: rgba(59,130,246,0.4); color: #fff; }
+        .btn-update-restart { background: rgba(217,119,6,0.2); color: #fbbf24; }
+        .btn-update-restart:hover { background: rgba(217,119,6,0.4); color: #fff; }
         .btn-del { background: rgba(239,68,68,0.15); color: #f87171; }
-        .btn-del:hover { background: rgba(239,68,68,0.35); color: #fff; }
+        .btn-del:hover:not(:disabled) { background: rgba(239,68,68,0.35); color: #fff; }
 
-        .empty-state {
-            text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.4);
-        }
+        .empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.4); }
         .empty-state i { font-size: 48px; margin-bottom: 15px; display: block; color: rgba(99,102,241,0.3); }
 
-        /* 模态框 */
+        .action-toast {
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600;
+            color: #fff; display: none;
+        }
+        .toast-success { background: linear-gradient(135deg, #059669 0%, #34d399 100%); }
+        .toast-error { background: linear-gradient(135deg, #dc2626 0%, #f87171 100%); }
+
         .modal-content {
             background: linear-gradient(135deg, #1e1e3f 0%, #2a2a4a 100%);
             border: 1px solid rgba(99,102,241,0.3); border-radius: 16px; color: #e0e0e0;
@@ -106,38 +111,39 @@
         .modal-footer { border-top: 1px solid rgba(99,102,241,0.2); padding: 15px 20px; }
         .close { color: #a78bfa; opacity: 1; font-size: 24px; }
         .close:hover { color: #fff; }
-        .modal-footer .btn-default {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff;
-        }
-        .modal-footer .btn-primary {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border: none; color: #fff;
-        }
-        .modal-footer .btn-danger {
-            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); border: none; color: #fff;
-        }
+        .modal-footer .btn-default { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+        .modal-footer .btn-primary { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border: none; color: #fff; }
+        .modal-footer .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); border: none; color: #fff; }
         .form-group label { color: #a78bfa; font-weight: 600; font-size: 13px; }
         .form-control {
             background: rgba(15,12,41,0.6); border: 1px solid rgba(99,102,241,0.3);
             color: #e0e0e0; border-radius: 8px; padding: 8px 12px;
         }
-        .form-control:focus {
-            border-color: #6366f1; outline: none;
-            box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
-            background: rgba(15,12,41,0.8); color: #fff;
-        }
+        .form-control:focus { border-color: #6366f1; outline: none; box-shadow: 0 0 0 2px rgba(99,102,241,0.2); background: rgba(15,12,41,0.8); color: #fff; }
 
-        /* 环境变量 */
         .env-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
         .env-row input { flex: 1; }
-        .btn-env-remove {
-            background: rgba(239,68,68,0.2); color: #f87171; border: none;
-            border-radius: 6px; width: 30px; height: 30px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
+        .btn-env-remove { background: rgba(239,68,68,0.2); color: #f87171; border: none; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-env-add { background: rgba(16,185,129,0.2); color: #34d399; border: none; border-radius: 6px; padding: 4px 12px; cursor: pointer; font-size: 12px; }
+
+        .cmd-detail-box {
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 8px; padding: 12px; margin-top: 10px;
+            font-family: 'Consolas', 'Courier New', monospace; font-size: 12px;
+            white-space: pre-wrap; word-break: break-all; color: #a78bfa;
+            max-height: 500px; overflow-y: auto;
         }
-        .btn-env-add {
-            background: rgba(16,185,129,0.2); color: #34d399; border: none;
-            border-radius: 6px; padding: 4px 12px; cursor: pointer; font-size: 12px;
-        }
+
+        .ur-line { padding: 2px 0; font-size: 13px; line-height: 1.6; }
+        .ur-step { color: #a78bfa; font-weight: 700; margin-top: 10px; margin-bottom: 4px; border-bottom: 1px solid rgba(99,102,241,0.2); padding-bottom: 4px; }
+        .ur-step:first-child { margin-top: 0; }
+        .ur-cmd { color: #60a5fa; }
+        .ur-loading { color: rgba(255,255,255,0.5); padding: 4px 0; }
+        .ur-success { color: #34d399; white-space: pre-wrap; }
+        .ur-error { color: #f87171; white-space: pre-wrap; }
+        .ur-ok { color: #34d399; font-weight: 600; margin-top: 6px; padding: 4px 8px; background: rgba(52,211,153,0.1); border-radius: 4px; }
+        .ur-fail { color: #f87171; font-weight: 600; margin-top: 6px; padding: 4px 8px; background: rgba(248,113,113,0.1); border-radius: 4px; }
+        .ur-info { color: #e0e0e0; }
     </style>
 </head>
 <body>
@@ -146,93 +152,125 @@
         <h3><i class="fa fa-cloud-upload"></i> 脚本部署管理</h3>
         <button class="btn-create" onclick="showCreateModal()"><i class="fa fa-plus"></i> 新建部署</button>
     </div>
-
     <div class="info-bar">
         <span class="info-badge"><i class="fa fa-server"></i>本机 IP: <strong id="localIp">-</strong></span>
         <span class="info-badge"><i class="fa fa-list"></i>部署数: <strong id="deployCount">0</strong></span>
         <span class="info-badge"><i class="fa fa-check-circle"></i>运行中: <strong id="runningCount" style="color:#34d399">0</strong></span>
+        <span class="refresh-ctrl">
+            <i class="fa fa-refresh" style="color:#a78bfa;"></i>
+            <span>自动刷新:</span>
+            <select id="listRefreshInterval" onchange="updateListRefreshInterval()">
+                <option value="0">关闭</option>
+                <option value="5" selected>5秒</option>
+                <option value="10">10秒</option>
+                <option value="30">30秒</option>
+                <option value="60">60秒</option>
+            </select>
+        </span>
     </div>
-
     <div class="deploy-table-wrap">
         <table class="deploy-table">
-            <thead>
-                <tr>
-                    <th>部署名称</th>
-                    <th>项目路径</th>
-                    <th>启动命令</th>
-                    <th>状态</th>
-                    <th>启动时间</th>
-                    <th>PID</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="deployTableBody">
-                <tr><td colspan="7" class="empty-state"><i class="fa fa-inbox"></i>加载中...</td></tr>
-            </tbody>
+            <thead><tr><th>部署名称</th><th>项目路径</th><th>启动命令</th><th>状态</th><th>启动时间</th><th>PID</th><th>操作</th></tr></thead>
+            <tbody id="deployTableBody"><tr><td colspan="7" class="empty-state"><i class="fa fa-inbox"></i>加载中...</td></tr></tbody>
         </table>
     </div>
 </div>
 
-<!-- 新建/编辑部署模态框 -->
+<div class="action-toast" id="actionToast"></div>
+
+<!-- 新建部署模态框 -->
 <div class="modal fade" id="createModal" tabindex="-1">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                <h4 class="modal-title" id="createModalTitle"><i class="fa fa-plus-circle" style="color:#6366f1;margin-right:8px;"></i>新建部署</h4>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="editMode" value="create">
-                <div class="form-group">
-                    <label>部署名称</label>
-                    <input type="text" class="form-control" id="inputName" placeholder="唯一标识，例如 my_spider">
-                </div>
-                <div class="form-group">
-                    <label>项目根目录</label>
-                    <input type="text" class="form-control" id="inputProjectDir" placeholder="本地绝对路径，例如 D:\projects\my_spider">
-                </div>
-                <div class="form-group">
-                    <label>启动命令</label>
-                    <input type="text" class="form-control" id="inputStartCmd" placeholder="例如 python main.py">
-                </div>
-                <div class="form-group">
-                    <label>日志标识 (SYS_STD_FILE_NAME)</label>
-                    <input type="text" class="form-control" id="inputSysStd" placeholder="留空则使用部署名称">
-                </div>
-                <div class="form-group">
-                    <label>环境变量</label>
-                    <div id="envVarsContainer"></div>
-                    <button class="btn-env-add" onclick="addEnvRow()"><i class="fa fa-plus"></i> 添加环境变量</button>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-primary" onclick="saveDeploy()">保存</button>
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            <h4 class="modal-title" id="createModalTitle"><i class="fa fa-plus-circle" style="color:#6366f1;margin-right:8px;"></i>新建部署</h4>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editMode" value="create">
+            <div class="form-group"><label>部署名称</label><input type="text" class="form-control" id="inputName" placeholder="唯一标识"></div>
+            <div class="form-group"><label>项目根目录</label><input type="text" class="form-control" id="inputProjectDir" placeholder="本地绝对路径"></div>
+            <div class="form-group"><label>启动命令</label><input type="text" class="form-control" id="inputStartCmd" placeholder="例如 python main.py"></div>
+            <div class="form-group"><label>环境变量</label><div id="envVarsContainer"></div>
+                <button class="btn-env-add" onclick="addEnvRow()"><i class="fa fa-plus"></i> 添加环境变量</button>
             </div>
         </div>
-    </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" onclick="saveDeploy()">保存</button>
+        </div>
+    </div></div>
+</div>
+
+<!-- 复制部署模态框 -->
+<div class="modal fade" id="cloneModal" tabindex="-1">
+    <div class="modal-dialog modal-sm"><div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            <h4 class="modal-title"><i class="fa fa-copy" style="color:#60a5fa;margin-right:8px;"></i>复制部署</h4>
+        </div>
+        <div class="modal-body">
+            <p>从 <strong id="cloneSourceName"></strong> 复制配置</p>
+            <div class="form-group"><label>新部署名称</label><input type="text" class="form-control" id="cloneNewName" placeholder="输入新名称"></div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" onclick="confirmClone()">确认复制</button>
+        </div>
+    </div></div>
 </div>
 
 <!-- 删除确认模态框 -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-sm" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                <h4 class="modal-title"><i class="fa fa-exclamation-triangle" style="color:#ef4444;margin-right:8px;"></i>确认删除</h4>
-            </div>
-            <div class="modal-body">确定要删除部署 <strong id="deleteTargetName"></strong> 吗？此操作不可恢复。</div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-danger" onclick="confirmDelete()">确认删除</button>
-            </div>
+    <div class="modal-dialog modal-sm"><div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            <h4 class="modal-title"><i class="fa fa-exclamation-triangle" style="color:#ef4444;margin-right:8px;"></i>确认删除</h4>
         </div>
-    </div>
+        <div class="modal-body">确定要删除部署 <strong id="deleteTargetName"></strong> 吗？</div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-danger" onclick="confirmDelete()">确认删除</button>
+        </div>
+    </div></div>
+</div>
+
+<!-- 命令详情模态框 -->
+<div class="modal fade" id="cmdModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            <h4 class="modal-title" id="cmdModalTitle"><i class="fa fa-terminal" style="color:#a78bfa;margin-right:8px;"></i>执行详情</h4>
+        </div>
+        <div class="modal-body"><div class="cmd-detail-box" id="cmdDetailContent"></div></div>
+        <div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">关闭</button></div>
+    </div></div>
 </div>
 
 <script>
 var refreshTimer = null;
 var deleteTarget = '';
+var cloneSource = '';
+
+function showToast(msg, ok) {
+    var $t = $('#actionToast');
+    $t.stop(true).text(msg).removeClass('toast-success toast-error')
+      .addClass(ok ? 'toast-success' : 'toast-error').css('display','block');
+    setTimeout(function(){ $t.fadeOut(); }, 3000);
+}
+
+function showCmdDetail(title, detail) {
+    var lines = [];
+    if (detail.cwd) lines.push('工作目录: ' + detail.cwd);
+    if (detail.env_vars && detail.env_vars.length) lines.push('环境变量:\n  ' + detail.env_vars.join('\n  '));
+    if (detail.full_cmd) lines.push('启动命令: ' + detail.full_cmd);
+    if (detail.log_file) lines.push('日志文件: ' + detail.log_file);
+    if (detail.stop_cmd) lines.push('停止命令: ' + detail.stop_cmd);
+    if (detail.old_pid) lines.push('旧 PID: ' + detail.old_pid);
+    if (detail.pid) lines.push('PID: ' + detail.pid);
+    $('#cmdModalTitle').html('<i class="fa fa-terminal" style="color:#a78bfa;margin-right:8px;"></i>' + title);
+    $('#cmdDetailContent').text(lines.join('\n'));
+    $('#cmdModal').modal('show');
+}
 
 function loadDeployList() {
     $.get('/deploy/list', function(resp) {
@@ -245,9 +283,7 @@ function loadDeployList() {
         $('#runningCount').text(runCount);
 
         if (list.length === 0) {
-            $('#deployTableBody').html(
-                '<tr><td colspan="7" class="empty-state"><i class="fa fa-inbox"></i>暂无部署，点击右上角"新建部署"开始</td></tr>'
-            );
+            $('#deployTableBody').html('<tr><td colspan="7" class="empty-state"><i class="fa fa-inbox"></i>暂无部署</td></tr>');
             return;
         }
 
@@ -256,13 +292,19 @@ function loadDeployList() {
             var statusHtml = d.running
                 ? '<span class="status-dot status-running"></span>运行中'
                 : '<span class="status-dot status-stopped"></span>已停止';
-            var actionsHtml = '<button class="btn-action btn-detail" onclick="goDetail(\'' + d.name + '\')"><i class="fa fa-eye"></i> 详情</button>';
+            var a = '<button class="btn-action btn-detail" onclick="goDetail(\'' + d.name + '\')"><i class="fa fa-eye"></i> 详情</button>';
             if (d.running) {
-                actionsHtml += '<button class="btn-action btn-stop-sm" onclick="quickStop(\'' + d.name + '\')"><i class="fa fa-stop"></i> 停止</button>';
+                a += '<button class="btn-action btn-stop-sm" onclick="quickStop(\'' + d.name + '\')"><i class="fa fa-stop"></i> 停止</button>';
             } else {
-                actionsHtml += '<button class="btn-action btn-start-sm" onclick="quickStart(\'' + d.name + '\')"><i class="fa fa-play"></i> 启动</button>';
+                a += '<button class="btn-action btn-start-sm" onclick="quickStart(\'' + d.name + '\')"><i class="fa fa-play"></i> 启动</button>';
             }
-            actionsHtml += '<button class="btn-action btn-del" onclick="showDeleteModal(\'' + d.name + '\')"><i class="fa fa-trash"></i></button>';
+            a += '<button class="btn-action btn-update-restart" onclick="quickUpdateRestart(\'' + d.name + '\')"><i class="fa fa-cloud-download"></i> 更新重启</button>';
+            a += '<button class="btn-action btn-clone-sm" onclick="showCloneModal(\'' + d.name + '\')"><i class="fa fa-copy"></i> 复制</button>';
+            if (d.running) {
+                a += '<button class="btn-action btn-del" disabled title="请先停止再删除"><i class="fa fa-trash"></i></button>';
+            } else {
+                a += '<button class="btn-action btn-del" onclick="showDeleteModal(\'' + d.name + '\')"><i class="fa fa-trash"></i></button>';
+            }
 
             html += '<tr>' +
                 '<td><strong>' + d.name + '</strong></td>' +
@@ -271,127 +313,191 @@ function loadDeployList() {
                 '<td>' + statusHtml + '</td>' +
                 '<td>' + (d.start_time||'-') + '</td>' +
                 '<td>' + (d.pid||'-') + '</td>' +
-                '<td>' + actionsHtml + '</td>' +
-                '</tr>';
+                '<td style="white-space:nowrap;">' + a + '</td></tr>';
         });
         $('#deployTableBody').html(html);
     });
 }
 
 function goDetail(name) {
-    window.location.href = '/tpl/deploy_detail.html?name=' + encodeURIComponent(name);
+    var detailUrl = '/tpl/deploy_detail.html?name=' + encodeURIComponent(name);
+    if (window.parent && window.parent.navigateTo) {
+        window.parent.navigateTo(detailUrl);
+    } else {
+        window.location.href = detailUrl;
+    }
 }
-
 function showCreateModal() {
     $('#editMode').val('create');
     $('#createModalTitle').html('<i class="fa fa-plus-circle" style="color:#6366f1;margin-right:8px;"></i>新建部署');
     $('#inputName').val('').prop('disabled', false);
-    $('#inputProjectDir').val('');
-    $('#inputStartCmd').val('');
-    $('#inputSysStd').val('');
+    $('#inputProjectDir').val(''); $('#inputStartCmd').val('');
     $('#envVarsContainer').empty();
     $('#createModal').modal('show');
 }
-
-function showEditModal(name) {
-    $.get('/deploy/' + encodeURIComponent(name) + '/config', function(resp) {
-        if (!resp.succ) { alert(resp.msg); return; }
-        var d = resp.data;
-        $('#editMode').val('edit');
-        $('#createModalTitle').html('<i class="fa fa-edit" style="color:#6366f1;margin-right:8px;"></i>编辑部署');
-        $('#inputName').val(d.name).prop('disabled', true);
-        $('#inputProjectDir').val(d.project_dir || '');
-        $('#inputStartCmd').val(d.start_cmd || '');
-        $('#inputSysStd').val(d.sys_std_file_name || '');
-        $('#envVarsContainer').empty();
-        try {
-            var envObj = JSON.parse(d.env_vars || '{}');
-            for (var k in envObj) { addEnvRow(k, envObj[k]); }
-        } catch(e) {}
-        $('#createModal').modal('show');
-    });
-}
-
 function addEnvRow(key, val) {
-    var html = '<div class="env-row">' +
-        '<input type="text" class="form-control env-key" placeholder="KEY" value="' + (key||'') + '">' +
-        '<input type="text" class="form-control env-val" placeholder="VALUE" value="' + (val||'') + '">' +
-        '<button class="btn-env-remove" onclick="$(this).parent().remove()"><i class="fa fa-times"></i></button>' +
-        '</div>';
-    $('#envVarsContainer').append(html);
+    $('#envVarsContainer').append('<div class="env-row"><input type="text" class="form-control env-key" placeholder="KEY" value="' + (key||'') + '"><input type="text" class="form-control env-val" placeholder="VALUE" value="' + (val||'') + '"><button class="btn-env-remove" onclick="$(this).parent().remove()"><i class="fa fa-times"></i></button></div>');
 }
-
 function collectEnvVars() {
     var env = {};
-    $('#envVarsContainer .env-row').each(function() {
-        var k = $(this).find('.env-key').val().trim();
-        var v = $(this).find('.env-val').val().trim();
-        if (k) env[k] = v;
-    });
+    $('#envVarsContainer .env-row').each(function() { var k=$(this).find('.env-key').val().trim(), v=$(this).find('.env-val').val().trim(); if(k) env[k]=v; });
     return env;
 }
-
 function saveDeploy() {
     var name = $('#inputName').val().trim();
-    if (!name) { alert('部署名称不能为空'); return; }
-    var payload = {
-        name: name,
-        project_dir: $('#inputProjectDir').val().trim(),
-        start_cmd: $('#inputStartCmd').val().trim(),
-        sys_std_file_name: $('#inputSysStd').val().trim(),
-        env_vars: collectEnvVars()
-    };
-    $.ajax({
-        url: '/deploy/save',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(payload),
-        success: function(resp) {
-            if (resp.succ) {
-                $('#createModal').modal('hide');
-                loadDeployList();
-            } else {
-                alert(resp.msg);
-            }
-        }
+    if (!name) { showToast('部署名称不能为空', false); return; }
+    $.ajax({ url: '/deploy/save', method: 'POST', contentType: 'application/json',
+        data: JSON.stringify({ name:name, project_dir:$('#inputProjectDir').val().trim(), start_cmd:$('#inputStartCmd').val().trim(), env_vars:collectEnvVars() }),
+        success: function(resp) { if(resp.succ){ $('#createModal').modal('hide'); showToast('保存成功',true); loadDeployList(); } else showToast(resp.msg,false); }
     });
 }
 
 function quickStart(name) {
+    $('#cmdModalTitle').html('<i class="fa fa-play" style="color:#34d399;margin-right:8px;"></i>启动 - ' + name);
+    var $c = $('#cmdDetailContent').html('');
+    $('#cmdModal').modal('show');
+    urLog($c, '启动进程', 'step');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在启动...', 'loading');
     $.post('/deploy/' + encodeURIComponent(name) + '/start', function(resp) {
-        alert(resp.msg);
-        loadDeployList();
+        $c.find('.ur-loading:last').remove();
+        if (resp.cmd_detail) {
+            var d = resp.cmd_detail;
+            if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
+            if (d.env_vars && d.env_vars.length) { urLog($c, '环境变量:', 'info'); d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); }); }
+            if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
+            if (d.log_file) urLog($c, '日志文件: ' + d.log_file, 'info');
+            if (d.start_time) urLog($c, '启动时间: ' + d.start_time, 'info');
+            if (d.pid) urLog($c, '新 PID: ' + d.pid, 'info');
+        }
+        urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 ' + resp.msg), resp.succ ? 'ok' : 'fail');
+        setTimeout(loadDeployList, 2000);
     });
 }
-
 function quickStop(name) {
+    $('#cmdModalTitle').html('<i class="fa fa-stop" style="color:#f87171;margin-right:8px;"></i>停止 - ' + name);
+    var $c = $('#cmdDetailContent').html('');
+    $('#cmdModal').modal('show');
+    urLog($c, '停止进程', 'step');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止...', 'loading');
     $.post('/deploy/' + encodeURIComponent(name) + '/stop', function(resp) {
-        alert(resp.msg);
-        loadDeployList();
+        $c.find('.ur-loading:last').remove();
+        if (resp.cmd_detail) {
+            var d = resp.cmd_detail;
+            if (d.pid) urLog($c, '旧 PID: ' + d.pid, 'info');
+            if (d.old_start_time) urLog($c, '旧启动时间: ' + d.old_start_time, 'info');
+            if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
+        }
+        urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 ' + resp.msg), resp.succ ? 'ok' : 'fail');
+        setTimeout(loadDeployList, 2000);
     });
 }
 
-function showDeleteModal(name) {
-    deleteTarget = name;
-    $('#deleteTargetName').text(name);
-    $('#deleteModal').modal('show');
+function urLog($el, text, type) {
+    var cls = 'ur-line';
+    switch(type) {
+        case 'step': cls += ' ur-step'; break;
+        case 'cmd': cls += ' ur-cmd'; break;
+        case 'loading': cls += ' ur-loading'; break;
+        case 'success': cls += ' ur-success'; break;
+        case 'error': cls += ' ur-error'; break;
+        case 'ok': cls += ' ur-ok'; break;
+        case 'fail': cls += ' ur-fail'; break;
+        case 'info': cls += ' ur-info'; break;
+    }
+    var $div = $('<div>').addClass(cls);
+    if (type === 'loading') { $div.html(text); } else { $div.text(text); }
+    $el.append($div);
+    $el[0].scrollTop = $el[0].scrollHeight;
 }
 
-function confirmDelete() {
+function quickUpdateRestart(name) {
+    $('#cmdModalTitle').html('<i class="fa fa-cloud-download" style="color:#fbbf24;margin-right:8px;"></i>更新并重启 - ' + name);
+    var $c = $('#cmdDetailContent').html('');
+    $('#cmdModal').modal('show');
+
+    urLog($c, '步骤 1/2: 执行 Git Pull', 'step');
+    urLog($c, '$ git pull', 'cmd');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在拉取代码...', 'loading');
+
     $.ajax({
-        url: '/deploy/' + encodeURIComponent(deleteTarget) + '/delete',
-        method: 'DELETE',
+        url: '/deploy/' + encodeURIComponent(name) + '/git_pull',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({}),
         success: function(resp) {
-            $('#deleteModal').modal('hide');
-            if (resp.succ) { loadDeployList(); }
-            else { alert(resp.msg); }
+            $c.find('.ur-loading:last').remove();
+            var output = (resp.output || resp.msg || '').trim();
+            if (output) urLog($c, output, resp.succ ? 'success' : 'error');
+
+            if (!resp.succ) {
+                urLog($c, '\u2717 Git Pull 失败，已取消重启', 'fail');
+                return;
+            }
+            urLog($c, '\u2713 Git Pull 成功', 'ok');
+
+            urLog($c, '步骤 2/2: 重启进程', 'step');
+            urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程...', 'loading');
+
+            $.post('/deploy/' + encodeURIComponent(name) + '/restart', function(resp2) {
+                $c.find('.ur-loading:last').remove();
+                if (resp2.cmd_detail) {
+                    var d = resp2.cmd_detail;
+                    if (d.old_pid) urLog($c, '旧 PID: ' + d.old_pid, 'info');
+                    if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
+                    if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
+                    if (d.env_vars && d.env_vars.length) {
+                        urLog($c, '环境变量:', 'info');
+                        d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); });
+                    }
+                    if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
+                    if (d.log_file) urLog($c, '日志文件: ' + d.log_file, 'info');
+                }
+                if (resp2.pid) urLog($c, '新 PID: ' + resp2.pid, 'info');
+                urLog($c, resp2.succ ? ('\u2713 ' + resp2.msg) : ('\u2717 ' + resp2.msg), resp2.succ ? 'ok' : 'fail');
+                setTimeout(loadDeployList, 2000);
+            });
+        },
+        error: function() {
+            $c.find('.ur-loading:last').remove();
+            urLog($c, '网络请求失败', 'error');
+            urLog($c, '\u2717 操作中断', 'fail');
         }
     });
 }
 
+function showCloneModal(name) {
+    cloneSource = name;
+    $('#cloneSourceName').text(name);
+    $('#cloneNewName').val(name + '_copy');
+    $('#cloneModal').modal('show');
+}
+function confirmClone() {
+    var newName = $('#cloneNewName').val().trim();
+    if (!newName) { showToast('名称不能为空', false); return; }
+    $.ajax({ url: '/deploy/' + encodeURIComponent(cloneSource) + '/clone', method: 'POST', contentType: 'application/json',
+        data: JSON.stringify({ new_name: newName }),
+        success: function(resp) { $('#cloneModal').modal('hide'); showToast(resp.msg, resp.succ); if(resp.succ) loadDeployList(); }
+    });
+}
+
+function showDeleteModal(name) { deleteTarget=name; $('#deleteTargetName').text(name); $('#deleteModal').modal('show'); }
+function confirmDelete() {
+    $.ajax({ url: '/deploy/' + encodeURIComponent(deleteTarget) + '/delete', method: 'DELETE',
+        success: function(resp) { $('#deleteModal').modal('hide'); showToast(resp.msg,resp.succ); if(resp.succ) loadDeployList(); }
+    });
+}
+
+function updateListRefreshInterval() {
+    clearInterval(refreshTimer);
+    var sec = parseInt($('#listRefreshInterval').val()) || 0;
+    if (sec > 0) {
+        refreshTimer = setInterval(loadDeployList, sec * 1000);
+    }
+}
+
 $(document).ready(function() {
     loadDeployList();
-    refreshTimer = setInterval(loadDeployList, 5000);
+    updateListRefreshInterval();
 });
 </script>
 </body>

@@ -167,7 +167,7 @@ class Booster:
 
             self.start_consuming_message = self.consume = self.start = (
                 consumer.start_consuming_message
-            )
+            ) # consume 是前台线程，非阻塞
             self.clear_filter_tasks = consumer.clear_filter_tasks
             self.wait_for_possible_has_finish_all_tasks = (
                 consumer.wait_for_possible_has_finish_all_tasks
@@ -329,8 +329,11 @@ class BoosterRegistry:
             queues.append(pid_queue_name[1])
             flogger.debug(f"booster: {pid_queue_name[1]}  {booster}")
 
-    def get_all_queues(self) -> list:
+    def get_all_queues(self) -> list[str]:
         return list(self.queue_name__boost_params_map.keys())
+
+    def get_all_boosters(self) -> list[Booster]:
+        return [self.get_or_create_booster_by_queue_name(q) for q in self.get_all_queues()]
 
     def get_all_queue_name__boost_params_unstrict_dict(self):
         """

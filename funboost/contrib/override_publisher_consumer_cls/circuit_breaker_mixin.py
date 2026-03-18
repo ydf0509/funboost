@@ -181,6 +181,7 @@ import uuid
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.core.func_params_model import BoosterParams
 from funboost.core.function_result_status_saver import FunctionResultStatus
+from funboost.concurrent_pool.async_helper import simple_run_in_executor
 
 
 class CircuitState:
@@ -714,13 +715,13 @@ class CircuitBreakerConsumerMixin(AbstractConsumer):
             return True
         return function_result_status.exception_type in self._tracked_exception_names
 
-    def _both_sync_and_aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
+    def _frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
         """
         任务执行完成后（含重试耗尽），根据最终结果更新熔断器状态。
         - fallback 执行的成功不计入恢复统计
         - 不在 exceptions 列表中的异常不计入熔断器
         """
-        super()._both_sync_and_aio_frame_custom_record_process_info_func(current_function_result_status, kw)
+        super()._frame_custom_record_process_info_func(current_function_result_status, kw)
 
         if (current_function_result_status._has_requeue
                 or current_function_result_status._has_to_dlx_queue
@@ -767,6 +768,10 @@ class CircuitBreakerConsumerMixin(AbstractConsumer):
                     self._on_circuit_close(info_dict)
             except Exception as e:
                 self.logger.error(f"circuit breaker hook error: {type(e).__name__} {e}")
+
+    async def _aio_frame_custom_record_process_info_func(self, current_function_result_status: FunctionResultStatus, kw: dict):
+        await super()._aio_frame_custom_record_process_info_func(current_function_result_status, kw)
+        await simple_run_in_executor(self._frame_custom_record_process_info_func, current_function_result_status, kw)
 
 
 # ================================================================

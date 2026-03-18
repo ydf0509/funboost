@@ -202,6 +202,7 @@ FsdfBackgroundScheduler = FunboostBackgroundScheduler  # 兼容一下名字，fs
 建议不要亲自使用这个 funboost_aps_scheduler 对象，而是 ApsJobAdder来添加定时任务，自动多个apscheduler对象实例，
 尤其是redis作为jobstores时候，使用不同的jobstores，每个消费函数使用各自单独的jobs_key和 run_times_key
 """
+# funboost_aps_scheduler是使用内存作为 job_store
 funboost_aps_scheduler = FunboostBackgroundScheduler(timezone=FunboostCommonConfig.TIMEZONE, daemon=False, )
 fsdf_background_scheduler = funboost_aps_scheduler  # 兼容一下老名字。
 

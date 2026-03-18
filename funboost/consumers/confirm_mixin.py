@@ -22,6 +22,7 @@ class ConsumerConfirmMixinWithTheHelpOfRedisByHearbeat(RedisMixin):
 
     # noinspection PyAttributeOutsideInit
     def custom_init(self):
+        super().custom_init()
         self._unack_zset_name = f'{self._queue_name}__unack_id_{self.consumer_identification}'
         self._unack_registry_key = RedisKeys.gen_funboost_unack_registry_key_by_queue_name(self._queue_name)
         self.consumer_params.is_send_consumer_heartbeat_to_redis = True

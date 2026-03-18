@@ -25,8 +25,8 @@ from funboost.constant import BrokerEnum, ConcurrentModeEnum, StrConst
 from funboost.concurrent_pool import FunboostBaseConcurrentPool
 
 class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
-    is_save_status: bool  # 是否保存函数的运行状态信息
-    is_save_result: bool  # 是否保存函数的运行结果
+    is_save_status: bool = False # 是否保存函数的运行状态信息
+    is_save_result: bool = False  # 是否保存函数的运行结果
     expire_seconds: int = 7 * 24 * 3600  # mongo中的函数运行状态保存多久时间,自动过期
     is_use_bulk_insert: bool = False  # 是否使用批量插入来保存结果，批量插入是每隔0.5秒钟保存一次最近0.5秒内的所有的函数消费状态结果，始终会出现最后0.5秒内的执行结果没及时插入mongo。为False则，每完成一次函数就实时写入一次到mongo。
     table_name:typing.Optional[str] = None # 表名，用于指定保存函数运行状态和结果的表名，默认使用队列名作为表名。   
@@ -40,6 +40,35 @@ class FunctionResultStatusPersistanceConfig(BaseJsonAbleModel):
             raise ValueError(f'你设置的是不保存函数运行状态但保存函数运行结果。不允许你这么设置')
         return self
 
+
+booster_params_has_been_deleted_fields = [
+    # 功能删除的字段
+    'retry_interval',
+    'is_do_not_run_by_specify_time_effect',
+    'do_not_run_by_specify_time',
+    # 字段名拼写错误修正：旧版拼写有误，新版已修正，旧 redis 元信息里存的是错误拼写的 key
+    'is_send_consumer_hearbeat_to_redis',  # 正确拼写: is_send_consumer_heartbeat_to_redis
+    'consumin_function_decorator',         # 正确拼写: consuming_function_decorator
+    'msg_expire_senconds',                 # 正确拼写: msg_expire_seconds
+]
+
+
+class BoosterParamsFieldsAssit:
+    # 已经删除的字段，被别的字段功能替代了。
+    has_been_deleted_fields = [
+        'retry_interval',
+        'is_do_not_run_by_specify_time_effect',
+        'do_not_run_by_specify_time',
+    ]
+    
+    # 以前错误拼写的字段，后来修正了，需要把旧的key映射到新的key。
+    rename_fields = {
+        # 'old_name':'new_name',
+        'is_send_consumer_hearbeat_to_redis': 'is_send_consumer_heartbeat_to_redis',
+        'consumin_function_decorator': 'consuming_function_decorator',
+        'msg_expire_senconds': 'msg_expire_seconds',
+    }
+
 class BoosterParams(BaseJsonAbleModel):
     """
     掌握funboost 的精华就是知道 BoosterParams 的入参有哪些，如果知道有哪些入参字段，就掌握了funboost的 90% 用法。
@@ -49,6 +78,7 @@ class BoosterParams(BaseJsonAbleModel):
     @boost的传参必须是此类或者继承此类,如果你不想每个装饰器入参都很多,你可以写一个子类继承BoosterParams, 传参这个子类,例如下面的 BoosterParamsComplete
     """
 
+    
     queue_name: str  # 队列名字,必传项,每个函数要使用不同的队列名字.
     broker_kind: str = BrokerEnum.SQLITE_QUEUE  # 中间件选型见3.1章节 https://funboost.readthedocs.io/zh-cn/latest/articles/c3.html
 
@@ -243,11 +273,20 @@ class BoosterParams(BaseJsonAbleModel):
     # 如果你是想分组启动部分booster，那你应该用的是 booster_group 参数。
     booster_registry_name: str = StrConst.BOOSTER_REGISTRY_NAME_DEFAULT  
 
-    
+
+    def __init__(self, **data):
+        # 在 Pydantic 校验之前先剔除已废弃的旧字段，防止 extra="forbid" 在 __init__ 阶段就抛出 ValidationError。
+        # 主要场景：从 Redis 元信息恢复 BoosterParams 时，元信息里可能含有旧版本已删除的字段。
+        for old_field in BoosterParamsFieldsAssit.has_been_deleted_fields:
+            data.pop(old_field, None)
+        for old_field, new_field in BoosterParamsFieldsAssit.rename_fields.items():
+            if old_field in data:
+                data[new_field] = data.pop(old_field)
+        super().__init__(**data)
 
     @compatible_root_validator(skip_on_failure=True, )
     def check_values(self):
-       
+
         # 如果设置了qps，并且cocurrent_num是默认的50，会自动开了500并发，由于是采用的智能线程池任务少时候不会真开那么多线程而且会自动缩小线程数量。具体看ThreadPoolExecutorShrinkAble的说明
         # 由于有很好用的qps控制运行频率和智能扩大缩小的线程池，此框架建议不需要理会和设置并发数量只需要关心qps就行了，框架的并发是自适应并发数量，这一点很强很好用。
         if self.qps and self.concurrent_num == 50:
@@ -421,6 +460,8 @@ if __name__ == '__main__':
         "is_use_bulk_insert": False,
         "table_name": "3213"
     },
+    is_fake_booster=True,
+    is_do_not_run_by_specify_time_effect=False,
                         
                         specify_concurrent_pool=FlexibleThreadPool(100)).json_pre())
     # print(PublisherParams.schema_json())  # 注释掉，因为 PublisherParams 包含 Callable 类型字段，无法生成 JSON Schema

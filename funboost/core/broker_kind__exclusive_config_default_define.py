@@ -191,7 +191,12 @@ register_broker_exclusive_config_default(
 
 
 register_broker_exclusive_config_default(
-    BrokerEnum.REDIS_ACK_ABLE, {"pull_msg_batch_size": 100}
+    BrokerEnum.REDIS_ACK_ABLE, {
+    "pull_msg_batch_size": 100,  # redis_ack_able 中间件可以设置每次批量拉取的消息数量
+
+    "pull_base_interval": 0.01, # 如果上一次没消息，那么下次拉取消息的初始间隔时间，每次都乘以2，指数退避
+    "pull_max_interval": 2, # 如果上一次没消息，那么下次拉取消息的间隔时间最大值，使指数退避不无限加大。 这比固定休眠0.1秒，对redis压力小。
+    }
 )
 
 # RedisConsumerAckUsingTimeout的ack timeot 是代表消息取出后过了多少秒还未ack，就自动重回队列。这个配置一定要大于函数消耗时间，否则不停的重回队列。

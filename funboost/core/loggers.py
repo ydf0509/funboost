@@ -46,8 +46,11 @@ flogger = get_funboost_file_logger('funboost', )
 # print(_try_get_user_funboost_common_config('FUNBOOST_PROMPT_LOG_LEVEL'))
 logger_prompt = get_funboost_file_logger('funboost.prompt', log_level_int=_try_get_user_funboost_common_config('FUNBOOST_PROMPT_LOG_LEVEL') or logging.DEBUG)
 
+logger_notify = get_funboost_file_logger('funboost.notify', log_filename='funboost_notify.log')
+
 # 开发时候的调试日志，比print方便通过级别一键屏蔽。
-develop_logger = get_logger('funboost_develop', log_level_int=logging.WARNING, log_filename='funboost_develop.log')
+develop_logger = get_logger('funboost.develop', log_level_int=logging.WARNING, log_filename='funboost_develop.log')
+
 
 if __name__ == '__main__':
     logger1 = get_funboost_file_logger('name1')

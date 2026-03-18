@@ -477,11 +477,11 @@ class SingleQueueConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Fun
   "rpc_result_expire_seconds": 1800,
   "rpc_timeout": 1800,
   "delay_task_apscheduler_jobstores_kind": "redis",
-  "is_do_not_run_by_specify_time_effect": false,
-  "do_not_run_by_specify_time": [
-    "10:00:00",
-    "22:00:00"
-  ],
+#   "is_do_not_run_by_specify_time_effect": false,
+#   "do_not_run_by_specify_time": [
+#     "10:00:00",
+#     "22:00:00"
+#   ],
   "schedule_tasks_on_main_thread": false,
   "is_auto_start_consuming_message": false,
   "booster_group": "test_group1",

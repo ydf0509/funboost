@@ -253,6 +253,32 @@ def _format_env_summary(config):
     return lines
 
 
+def _wait_process_alive(proc, deploy_flag, create_time, max_wait=30):
+    """启动后轮询进程是否存活，最多等待 max_wait 秒。
+    返回 (survived_secs, exit_code):
+      survived_secs >= 0  表示存活了这么多秒（成功）
+      survived_secs < 0   表示进程在 abs(survived_secs) 秒内死亡（失败）
+    """
+    create_time_str = str(create_time) if create_time else ''
+    pid = proc.pid
+    for elapsed in range(1, max_wait + 1):
+        time.sleep(1)
+        if not _check_process_alive(pid, deploy_flag, create_time_str):
+            exit_code = None
+            try:
+                exit_code = proc.poll()
+            except Exception:
+                pass
+            return -elapsed, exit_code
+    return max_wait, None
+
+
+def _read_log_tail_str(log_file, max_lines=30):
+    """读取日志文件末尾若干行，返回字符串，用于启动失败诊断"""
+    lines = _read_log_tail(log_file, max_lines)
+    return ''.join(lines).strip()
+
+
 def _start_process(name, config):
     project_dir = config.get('project_dir', '')
     start_cmd = config.get('start_cmd', '')
@@ -308,6 +334,23 @@ def _start_process(name, config):
         })
         cmd_detail['start_time'] = now_str
         cmd_detail['pid'] = str(proc.pid)
+
+        # 等待最多 30 秒，确认进程持续存活（防止启动即崩溃）
+        survived_secs, exit_code_hint = _wait_process_alive(proc, deploy_flag, create_time, max_wait=30)
+        cmd_detail['survived_secs'] = survived_secs
+        if survived_secs < 0:
+            # 进程已死亡，读取日志尾部辅助诊断
+            log_tail = _read_log_tail_str(log_file, 30)
+            _redis.hset(_runtime_key(name), mapping={
+                'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': ''
+            })
+            err_msg = f'进程在启动后 {abs(survived_secs)} 秒内退出'
+            if exit_code_hint is not None:
+                err_msg += f'（退出码: {exit_code_hint}）'
+            if log_tail:
+                err_msg += f'\n\n--- 日志尾部 ---\n{log_tail}'
+            return proc, err_msg, cmd_detail
+
         return proc, None, cmd_detail
     except Exception as e:
         return None, f'{e}\n{traceback.format_exc()}', cmd_detail

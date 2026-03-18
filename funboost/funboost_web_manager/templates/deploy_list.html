@@ -85,8 +85,10 @@
         .btn-stop-sm:hover { background: rgba(239,68,68,0.4); color: #fff; }
         .btn-clone-sm { background: rgba(59,130,246,0.2); color: #60a5fa; }
         .btn-clone-sm:hover { background: rgba(59,130,246,0.4); color: #fff; }
-        .btn-update-restart { background: rgba(217,119,6,0.2); color: #fbbf24; }
-        .btn-update-restart:hover { background: rgba(217,119,6,0.4); color: #fff; }
+        .btn-restart-sm { background: rgba(217,119,6,0.2); color: #fbbf24; }
+        .btn-restart-sm:hover { background: rgba(217,119,6,0.4); color: #fff; }
+        .btn-update-restart { background: rgba(139,92,246,0.2); color: #c4b5fd; }
+        .btn-update-restart:hover { background: rgba(139,92,246,0.4); color: #fff; }
         .btn-del { background: rgba(239,68,68,0.15); color: #f87171; }
         .btn-del:hover:not(:disabled) { background: rgba(239,68,68,0.35); color: #fff; }
 
@@ -298,6 +300,7 @@ function loadDeployList() {
             } else {
                 a += '<button class="btn-action btn-start-sm" onclick="quickStart(\'' + d.name + '\')"><i class="fa fa-play"></i> 启动</button>';
             }
+            a += '<button class="btn-action btn-restart-sm" onclick="quickRestart(\'' + d.name + '\')"><i class="fa fa-refresh"></i> 重启</button>';
             a += '<button class="btn-action btn-update-restart" onclick="quickUpdateRestart(\'' + d.name + '\')"><i class="fa fa-cloud-download"></i> 更新重启</button>';
             a += '<button class="btn-action btn-clone-sm" onclick="showCloneModal(\'' + d.name + '\')"><i class="fa fa-copy"></i> 复制</button>';
             if (d.running) {
@@ -352,25 +355,64 @@ function saveDeploy() {
     });
 }
 
+function quickRestart(name) {
+    $('#cmdModalTitle').html('<i class="fa fa-refresh" style="color:#fbbf24;margin-right:8px;"></i>重启 - ' + name);
+    var $c = $('#cmdDetailContent').html('');
+    $('#cmdModal').modal('show');
+    urLog($c, '重启进程', 'step');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证（最长 30 秒）...', 'loading');
+    $.ajax({
+        url: '/deploy/' + encodeURIComponent(name) + '/restart',
+        method: 'POST',
+        timeout: 45000,
+        success: function(resp) {
+            $c.find('.ur-loading:last').remove();
+            if (resp.cmd_detail) {
+                var d = resp.cmd_detail;
+                if (d.old_pid) urLog($c, '旧 PID: ' + d.old_pid, 'info');
+                if (d.old_start_time) urLog($c, '旧启动时间: ' + d.old_start_time, 'info');
+                if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
+                if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
+                if (d.env_vars && d.env_vars.length) { urLog($c, '环境变量:', 'info'); d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); }); }
+                if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
+                if (d.log_file) urLog($c, '日志文件: ' + d.log_file, 'info');
+                if (d.start_time) urLog($c, '启动时间: ' + d.start_time, 'info');
+                if (d.pid) urLog($c, '新 PID: ' + d.pid, 'info');
+                if (d.survived_secs != null && d.survived_secs >= 0) urLog($c, '存活验证: 稳定运行 ' + d.survived_secs + ' 秒 ✓', 'info');
+            }
+            if (!resp.succ && resp.msg) urLog($c, resp.msg, 'error');
+            urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 启动失败'), resp.succ ? 'ok' : 'fail');
+            setTimeout(loadDeployList, 2000);
+        }
+    });
+}
+
 function quickStart(name) {
     $('#cmdModalTitle').html('<i class="fa fa-play" style="color:#34d399;margin-right:8px;"></i>启动 - ' + name);
     var $c = $('#cmdDetailContent').html('');
     $('#cmdModal').modal('show');
     urLog($c, '启动进程', 'step');
-    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在启动...', 'loading');
-    $.post('/deploy/' + encodeURIComponent(name) + '/start', function(resp) {
-        $c.find('.ur-loading:last').remove();
-        if (resp.cmd_detail) {
-            var d = resp.cmd_detail;
-            if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
-            if (d.env_vars && d.env_vars.length) { urLog($c, '环境变量:', 'info'); d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); }); }
-            if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
-            if (d.log_file) urLog($c, '日志文件: ' + d.log_file, 'info');
-            if (d.start_time) urLog($c, '启动时间: ' + d.start_time, 'info');
-            if (d.pid) urLog($c, '新 PID: ' + d.pid, 'info');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在启动，并等待存活验证（最长 30 秒）...', 'loading');
+    $.ajax({
+        url: '/deploy/' + encodeURIComponent(name) + '/start',
+        method: 'POST',
+        timeout: 45000,
+        success: function(resp) {
+            $c.find('.ur-loading:last').remove();
+            if (resp.cmd_detail) {
+                var d = resp.cmd_detail;
+                if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
+                if (d.env_vars && d.env_vars.length) { urLog($c, '环境变量:', 'info'); d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); }); }
+                if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
+                if (d.log_file) urLog($c, '日志文件: ' + d.log_file, 'info');
+                if (d.start_time) urLog($c, '启动时间: ' + d.start_time, 'info');
+                if (d.pid) urLog($c, 'PID: ' + d.pid, 'info');
+                if (d.survived_secs != null && d.survived_secs >= 0) urLog($c, '存活验证: 稳定运行 ' + d.survived_secs + ' 秒 ✓', 'info');
+            }
+            if (!resp.succ && resp.msg) urLog($c, resp.msg, 'error');
+            urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 启动失败'), resp.succ ? 'ok' : 'fail');
+            setTimeout(loadDeployList, 2000);
         }
-        urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 ' + resp.msg), resp.succ ? 'ok' : 'fail');
-        setTimeout(loadDeployList, 2000);
     });
 }
 function quickStop(name) {
@@ -436,25 +478,33 @@ function quickUpdateRestart(name) {
             urLog($c, '\u2713 Git Pull 成功', 'ok');
 
             urLog($c, '步骤 2/2: 重启进程', 'step');
-            urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程...', 'loading');
+            urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证（最长 30 秒）...', 'loading');
 
-            $.post('/deploy/' + encodeURIComponent(name) + '/restart', function(resp2) {
-                $c.find('.ur-loading:last').remove();
-                if (resp2.cmd_detail) {
-                    var d = resp2.cmd_detail;
-                    if (d.old_pid) urLog($c, '旧 PID: ' + d.old_pid, 'info');
-                    if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
-                    if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
-                    if (d.env_vars && d.env_vars.length) {
-                        urLog($c, '环境变量:', 'info');
-                        d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); });
+            $.ajax({
+                url: '/deploy/' + encodeURIComponent(name) + '/restart',
+                method: 'POST',
+                timeout: 45000,
+                success: function(resp2) {
+                    $c.find('.ur-loading:last').remove();
+                    if (resp2.cmd_detail) {
+                        var d = resp2.cmd_detail;
+                        if (d.old_pid) urLog($c, '旧 PID: ' + d.old_pid, 'info');
+                        if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
+                        if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
+                        if (d.env_vars && d.env_vars.length) {
+                            urLog($c, '环境变量:', 'info');
+                            d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); });
+                        }
+                        if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
+                        if (d.log_file) urLog($c, '日志文件: ' + d.log_file, 'info');
+                        if (d.start_time) urLog($c, '启动时间: ' + d.start_time, 'info');
+                        if (d.pid) urLog($c, '新 PID: ' + d.pid, 'info');
+                        if (d.survived_secs != null && d.survived_secs >= 0) urLog($c, '存活验证: 稳定运行 ' + d.survived_secs + ' 秒 ✓', 'info');
                     }
-                    if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
-                    if (d.log_file) urLog($c, '日志文件: ' + d.log_file, 'info');
+                    if (!resp2.succ && resp2.msg) urLog($c, resp2.msg, 'error');
+                    urLog($c, resp2.succ ? ('\u2713 ' + resp2.msg) : ('\u2717 启动失败'), resp2.succ ? 'ok' : 'fail');
+                    setTimeout(loadDeployList, 2000);
                 }
-                if (resp2.pid) urLog($c, '新 PID: ' + resp2.pid, 'info');
-                urLog($c, resp2.succ ? ('\u2713 ' + resp2.msg) : ('\u2717 ' + resp2.msg), resp2.succ ? 'ok' : 'fail');
-                setTimeout(loadDeployList, 2000);
             });
         },
         error: function() {

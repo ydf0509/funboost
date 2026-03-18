@@ -10,6 +10,7 @@ import nb_log
 import threading
 
 
+
 # 示例1: 最简单的任务函数
 @boost(BoosterParams(
     queue_name="demo_queue_2b2",

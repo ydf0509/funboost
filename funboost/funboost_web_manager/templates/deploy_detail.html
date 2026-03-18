@@ -111,6 +111,8 @@
         .btn-stop:hover { box-shadow: 0 6px 20px rgba(220,38,38,0.4); }
         .btn-restart { background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%); color: #fff; }
         .btn-restart:hover { box-shadow: 0 6px 20px rgba(217,119,6,0.4); }
+        .btn-update-restart-ctrl { background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%); color: #fff; }
+        .btn-update-restart-ctrl:hover { box-shadow: 0 6px 20px rgba(109,40,217,0.4); }
         .process-info { display: flex; gap: 20px; margin-top: 12px; flex-wrap: wrap; }
         .process-info-item { font-size: 13px; }
         .process-info-item .label { color: rgba(255,255,255,0.5); margin-right: 6px; }
@@ -267,34 +269,6 @@
         </div>
     </div>
 
-    <!-- 进程控制 -->
-    <div class="card">
-        <div class="card-header"><i class="fa fa-play-circle"></i> 进程控制</div>
-        <div class="card-body">
-            <div class="process-controls">
-                <button class="btn-ctrl btn-start" id="btnStart" onclick="doStart()"><i class="fa fa-play"></i> 启动</button>
-                <button class="btn-ctrl btn-stop" id="btnStop" onclick="doStop()" disabled><i class="fa fa-stop"></i> 停止</button>
-                <button class="btn-ctrl btn-restart" id="btnRestart" onclick="doRestart()"><i class="fa fa-refresh"></i> 重启</button>
-                <span class="poll-ctrl">
-                    <i class="fa fa-clock-o"></i> 状态轮询:
-                    <select id="statusInterval" onchange="updateStatusInterval()">
-                        <option value="0">关闭</option>
-                        <option value="3">3秒</option>
-                        <option value="5" selected>5秒</option>
-                        <option value="10">10秒</option>
-                        <option value="30">30秒</option>
-                    </select>
-                </span>
-            </div>
-            <div class="process-info">
-                <div class="process-info-item"><span class="label">PID:</span><span class="value" id="infoPid">-</span></div>
-                <div class="process-info-item"><span class="label">启动时间:</span><span class="value" id="infoStartTime">-</span></div>
-                <div class="process-info-item"><span class="label">deploy_flag:</span><span class="value" id="infoFlag" style="font-size:11px;color:#6b7280;">-</span></div>
-            </div>
-            <div class="cmd-detail-box" id="processCmd"></div>
-        </div>
-    </div>
-
     <!-- Git 操作 -->
     <div class="card">
         <div class="card-header"><i class="fa fa-git"></i> Git 操作</div>
@@ -312,6 +286,35 @@
                 <button class="btn-git" id="btnGitPull" onclick="doGitPull()"><i class="fa fa-download"></i> Git Pull</button>
             </div>
             <div class="git-output" id="gitOutput"></div>
+        </div>
+    </div>
+
+    <!-- 进程控制 -->
+    <div class="card">
+        <div class="card-header"><i class="fa fa-play-circle"></i> 进程控制</div>
+        <div class="card-body">
+            <div class="process-controls">
+                <button class="btn-ctrl btn-start" id="btnStart" onclick="doStart()"><i class="fa fa-play"></i> 启动</button>
+                <button class="btn-ctrl btn-stop" id="btnStop" onclick="doStop()" disabled><i class="fa fa-stop"></i> 停止</button>
+                <button class="btn-ctrl btn-restart" id="btnRestart" onclick="doRestart()"><i class="fa fa-refresh"></i> 重启</button>
+                <button class="btn-ctrl btn-update-restart-ctrl" id="btnUpdateRestart" onclick="doUpdateRestart()"><i class="fa fa-cloud-download"></i> 更新重启</button>
+                <span class="poll-ctrl">
+                    <i class="fa fa-clock-o"></i> 状态轮询:
+                    <select id="statusInterval" onchange="updateStatusInterval()">
+                        <option value="0">关闭</option>
+                        <option value="3">3秒</option>
+                        <option value="5" selected>5秒</option>
+                        <option value="10">10秒</option>
+                        <option value="30">30秒</option>
+                    </select>
+                </span>
+            </div>
+            <div class="process-info">
+                <div class="process-info-item"><span class="label">PID:</span><span class="value" id="infoPid">-</span></div>
+                <div class="process-info-item"><span class="label">启动时间:</span><span class="value" id="infoStartTime">-</span></div>
+                <div class="process-info-item"><span class="label">deploy_flag:</span><span class="value" id="infoFlag" style="font-size:11px;color:#6b7280;">-</span></div>
+            </div>
+            <div class="cmd-detail-box" id="processCmd"></div>
         </div>
     </div>
 
@@ -513,7 +516,8 @@ function renderStartDetail($c, d) {
     if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
     if (d.log_file) urLog($c, '日志文件: ' + d.log_file, 'info');
     if (d.start_time) urLog($c, '启动时间: ' + d.start_time, 'info');
-    if (d.pid) urLog($c, '新 PID: ' + d.pid, 'info');
+    if (d.pid) urLog($c, 'PID: ' + d.pid, 'info');
+    if (d.survived_secs != null && d.survived_secs >= 0) urLog($c, '存活验证: 稳定运行 ' + d.survived_secs + ' 秒 ✓', 'info');
 }
 
 function doStart() {
@@ -521,13 +525,19 @@ function doStart() {
     var $c = $('#cmdModalContent').html('');
     $('#cmdModal').modal('show');
     urLog($c, '启动进程', 'step');
-    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在启动...', 'loading');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在启动，并等待存活验证（最长 30 秒）...', 'loading');
     $('#btnStart').prop('disabled', true);
-    $.post('/deploy/' + encodeURIComponent(deployName) + '/start', function(resp) {
-        $c.find('.ur-loading:last').remove();
-        if (resp.cmd_detail) renderStartDetail($c, resp.cmd_detail);
-        urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 ' + resp.msg), resp.succ ? 'ok' : 'fail');
-        setTimeout(pollStatus, 2000);
+    $.ajax({
+        url: '/deploy/' + encodeURIComponent(deployName) + '/start',
+        method: 'POST',
+        timeout: 45000,
+        success: function(resp) {
+            $c.find('.ur-loading:last').remove();
+            if (resp.cmd_detail) renderStartDetail($c, resp.cmd_detail);
+            if (!resp.succ && resp.msg) urLog($c, resp.msg, 'error');
+            urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 启动失败'), resp.succ ? 'ok' : 'fail');
+            setTimeout(pollStatus, 2000);
+        }
     });
 }
 
@@ -556,28 +566,103 @@ function doRestart() {
     var $c = $('#cmdModalContent').html('');
     $('#cmdModal').modal('show');
     urLog($c, '重启进程', 'step');
-    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程...', 'loading');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证（最长 30 秒）...', 'loading');
     $('#btnRestart').prop('disabled', true);
-    $.post('/deploy/' + encodeURIComponent(deployName) + '/restart', function(resp) {
-        $c.find('.ur-loading:last').remove();
-        if (resp.cmd_detail) {
-            var d = resp.cmd_detail;
-            if (d.old_pid) urLog($c, '旧 PID: ' + d.old_pid, 'info');
-            if (d.old_start_time) urLog($c, '旧启动时间: ' + d.old_start_time, 'info');
-            if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
-            if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
-            if (d.env_vars && d.env_vars.length) {
-                urLog($c, '环境变量:', 'info');
-                d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); });
+    $.ajax({
+        url: '/deploy/' + encodeURIComponent(deployName) + '/restart',
+        method: 'POST',
+        timeout: 45000,
+        success: function(resp) {
+            $c.find('.ur-loading:last').remove();
+            if (resp.cmd_detail) {
+                var d = resp.cmd_detail;
+                if (d.old_pid) urLog($c, '旧 PID: ' + d.old_pid, 'info');
+                if (d.old_start_time) urLog($c, '旧启动时间: ' + d.old_start_time, 'info');
+                if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
+                if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
+                if (d.env_vars && d.env_vars.length) {
+                    urLog($c, '环境变量:', 'info');
+                    d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); });
+                }
+                if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
+                if (d.log_file) urLog($c, '日志文件: ' + d.log_file, 'info');
+                if (d.start_time) urLog($c, '启动时间: ' + d.start_time, 'info');
+                if (d.pid) urLog($c, '新 PID: ' + d.pid, 'info');
+                if (d.survived_secs != null && d.survived_secs >= 0) urLog($c, '存活验证: 稳定运行 ' + d.survived_secs + ' 秒 ✓', 'info');
             }
-            if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
-            if (d.log_file) urLog($c, '日志文件: ' + d.log_file, 'info');
-            if (d.start_time) urLog($c, '启动时间: ' + d.start_time, 'info');
-            if (d.pid) urLog($c, '新 PID: ' + d.pid, 'info');
+            if (!resp.succ && resp.msg) urLog($c, resp.msg, 'error');
+            urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 启动失败'), resp.succ ? 'ok' : 'fail');
+            $('#btnRestart').prop('disabled', false);
+            setTimeout(pollStatus, 2000);
         }
-        urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 ' + resp.msg), resp.succ ? 'ok' : 'fail');
-        $('#btnRestart').prop('disabled', false);
-        setTimeout(pollStatus, 2000);
+    });
+}
+
+function doUpdateRestart() {
+    $('#cmdModalTitle').html('<i class="fa fa-cloud-download" style="color:#c4b5fd;margin-right:8px;"></i>更新并重启 - ' + deployName);
+    var $c = $('#cmdModalContent').html('');
+    $('#cmdModal').modal('show');
+    $('#btnUpdateRestart').prop('disabled', true);
+
+    urLog($c, '步骤 1/2: 执行 Git Pull', 'step');
+    urLog($c, '$ git pull', 'cmd');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在拉取代码...', 'loading');
+
+    var branch = $('#gitBranchSelect').val() || '';
+    $.ajax({
+        url: '/deploy/' + encodeURIComponent(deployName) + '/git_pull',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ branch: branch }),
+        success: function(resp) {
+            $c.find('.ur-loading:last').remove();
+            var output = (resp.output || resp.msg || '').trim();
+            if (output) urLog($c, output, resp.succ ? 'success' : 'error');
+
+            if (!resp.succ) {
+                urLog($c, '\u2717 Git Pull 失败，已取消重启', 'fail');
+                $('#btnUpdateRestart').prop('disabled', false);
+                if (resp.current_branch) $('#gitCurrentBranch').text(resp.current_branch);
+                return;
+            }
+            urLog($c, '\u2713 Git Pull 成功', 'ok');
+            if (resp.current_branch) { $('#gitCurrentBranch').text(resp.current_branch); loadGitBranches(); }
+
+            urLog($c, '步骤 2/2: 重启进程', 'step');
+            urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证（最长 30 秒）...', 'loading');
+
+            $.ajax({
+                url: '/deploy/' + encodeURIComponent(deployName) + '/restart',
+                method: 'POST',
+                timeout: 45000,
+                success: function(resp2) {
+                    $c.find('.ur-loading:last').remove();
+                    if (resp2.cmd_detail) {
+                        var d = resp2.cmd_detail;
+                        if (d.old_pid) urLog($c, '旧 PID: ' + d.old_pid, 'info');
+                        if (d.old_start_time) urLog($c, '旧启动时间: ' + d.old_start_time, 'info');
+                        if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
+                        if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
+                        if (d.env_vars && d.env_vars.length) { urLog($c, '环境变量:', 'info'); d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); }); }
+                        if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
+                        if (d.log_file) urLog($c, '日志文件: ' + d.log_file, 'info');
+                        if (d.start_time) urLog($c, '启动时间: ' + d.start_time, 'info');
+                        if (d.pid) urLog($c, '新 PID: ' + d.pid, 'info');
+                        if (d.survived_secs != null && d.survived_secs >= 0) urLog($c, '存活验证: 稳定运行 ' + d.survived_secs + ' 秒 ✓', 'info');
+                    }
+                    if (!resp2.succ && resp2.msg) urLog($c, resp2.msg, 'error');
+                    urLog($c, resp2.succ ? ('\u2713 ' + resp2.msg) : ('\u2717 启动失败'), resp2.succ ? 'ok' : 'fail');
+                    $('#btnUpdateRestart').prop('disabled', false);
+                    setTimeout(pollStatus, 2000);
+                }
+            });
+        },
+        error: function() {
+            $c.find('.ur-loading:last').remove();
+            urLog($c, '网络请求失败', 'error');
+            urLog($c, '\u2717 操作中断', 'fail');
+            $('#btnUpdateRestart').prop('disabled', false);
+        }
     });
 }
 

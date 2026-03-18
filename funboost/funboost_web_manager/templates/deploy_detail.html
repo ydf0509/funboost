@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>部署详情</title>
+    <link href="{{ url_for('static',filename='css_cdn/twitter-bootstrap/3.3.7/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            color: #e0e0e0; margin: 0; padding: 0;
+        }
+        .main-container { padding: 20px 25px; max-width: 100%; }
+
+        /* 顶部导航 */
+        .top-bar {
+            display: flex; align-items: center; gap: 15px;
+            margin-bottom: 20px; padding: 14px 20px;
+            background: linear-gradient(135deg, rgba(30,30,63,0.9) 0%, rgba(42,42,74,0.85) 100%);
+            border-radius: 14px; border: 1px solid rgba(99,102,241,0.2);
+        }
+        .btn-back {
+            background: rgba(99,102,241,0.2); color: #a78bfa; border: none;
+            border-radius: 8px; padding: 6px 14px; cursor: pointer;
+            font-size: 13px; transition: all .3s ease;
+        }
+        .btn-back:hover { background: rgba(99,102,241,0.4); color: #fff; }
+        .top-bar h3 { margin: 0; color: #fff; font-weight: 700; flex: 1; }
+        .top-bar .status-badge {
+            padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+        }
+        .badge-running { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+        .badge-stopped { background: rgba(107,114,128,0.2); color: #9ca3af; border: 1px solid rgba(107,114,128,0.3); }
+
+        /* 卡片 */
+        .card {
+            background: linear-gradient(135deg, rgba(30,30,63,0.85) 0%, rgba(42,42,74,0.8) 100%);
+            border-radius: 14px; border: 1px solid rgba(99,102,241,0.2);
+            margin-bottom: 18px; overflow: hidden;
+        }
+        .card-header {
+            padding: 14px 20px; border-bottom: 1px solid rgba(99,102,241,0.15);
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 600; font-size: 15px; color: #fff;
+        }
+        .card-header i { color: #a78bfa; }
+        .card-body { padding: 18px 20px; }
+
+        /* 表单 */
+        .form-group { margin-bottom: 14px; }
+        .form-group label { color: #a78bfa; font-weight: 600; font-size: 13px; margin-bottom: 4px; display: block; }
+        .form-control {
+            background: rgba(15,12,41,0.6); border: 1px solid rgba(99,102,241,0.3);
+            color: #e0e0e0; border-radius: 8px; padding: 8px 12px; width: 100%;
+        }
+        .form-control:focus {
+            border-color: #6366f1; outline: none;
+            box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+            background: rgba(15,12,41,0.8); color: #fff;
+        }
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
+
+        /* 环境变量 */
+        .env-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
+        .env-row input { flex: 1; }
+        .btn-env-remove {
+            background: rgba(239,68,68,0.2); color: #f87171; border: none;
+            border-radius: 6px; width: 30px; height: 30px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-env-add {
+            background: rgba(16,185,129,0.2); color: #34d399; border: none;
+            border-radius: 6px; padding: 4px 12px; cursor: pointer; font-size: 12px;
+            margin-top: 4px;
+        }
+        .btn-save-config {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border: none; color: #fff; padding: 8px 24px;
+            border-radius: 8px; font-weight: 600; cursor: pointer;
+            transition: all .3s ease; margin-top: 8px;
+        }
+        .btn-save-config:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,102,241,0.4); }
+
+        /* 进程控制 */
+        .process-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .btn-ctrl {
+            padding: 8px 20px; border-radius: 8px; font-size: 13px;
+            border: none; cursor: pointer; font-weight: 600;
+            transition: all .3s ease; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-ctrl:hover { transform: translateY(-2px); }
+        .btn-ctrl:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .btn-start { background: linear-gradient(135deg, #059669 0%, #34d399 100%); color: #fff; }
+        .btn-start:hover { box-shadow: 0 6px 20px rgba(5,150,105,0.4); }
+        .btn-stop { background: linear-gradient(135deg, #dc2626 0%, #f87171 100%); color: #fff; }
+        .btn-stop:hover { box-shadow: 0 6px 20px rgba(220,38,38,0.4); }
+        .btn-restart { background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%); color: #fff; }
+        .btn-restart:hover { box-shadow: 0 6px 20px rgba(217,119,6,0.4); }
+        .process-info { display: flex; gap: 20px; margin-top: 12px; flex-wrap: wrap; }
+        .process-info-item { font-size: 13px; }
+        .process-info-item .label { color: rgba(255,255,255,0.5); margin-right: 6px; }
+        .process-info-item .value { color: #fff; font-weight: 600; }
+
+        /* Git */
+        .btn-git {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            border: none; color: #fff; padding: 8px 20px;
+            border-radius: 8px; font-weight: 600; cursor: pointer;
+            transition: all .3s ease; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-git:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,130,246,0.4); }
+        .git-output {
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(99,102,241,0.15);
+            border-radius: 8px; padding: 12px; margin-top: 12px;
+            font-family: 'Consolas', 'Courier New', monospace; font-size: 13px;
+            max-height: 200px; overflow-y: auto; white-space: pre-wrap; display: none;
+        }
+        .git-success { border-color: rgba(16,185,129,0.3); }
+        .git-fail { border-color: rgba(239,68,68,0.3); color: #f87171; }
+
+        /* 日志 */
+        .log-toolbar {
+            display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;
+        }
+        .log-toolbar input, .log-toolbar select {
+            background: rgba(15,12,41,0.6); border: 1px solid rgba(99,102,241,0.3);
+            color: #e0e0e0; border-radius: 8px; padding: 6px 10px; font-size: 13px;
+        }
+        .log-toolbar input:focus, .log-toolbar select:focus {
+            border-color: #6366f1; outline: none;
+        }
+        .log-search { flex: 1; min-width: 200px; }
+        .btn-log {
+            background: rgba(99,102,241,0.2); color: #a78bfa; border: none;
+            border-radius: 8px; padding: 6px 14px; cursor: pointer;
+            font-size: 13px; transition: all .2s ease;
+        }
+        .btn-log:hover { background: rgba(99,102,241,0.4); color: #fff; }
+        .btn-log.active { background: rgba(16,185,129,0.3); color: #34d399; }
+        .log-viewer {
+            background: rgba(0,0,0,0.5); border: 1px solid rgba(99,102,241,0.15);
+            border-radius: 10px; padding: 14px;
+            font-family: 'Consolas', 'Courier New', monospace; font-size: 12.5px;
+            line-height: 1.6; max-height: 600px; overflow-y: auto;
+            white-space: pre-wrap; word-break: break-all;
+        }
+        .log-viewer .log-line { padding: 1px 0; }
+        .log-line-error { color: #f87171; }
+        .log-line-warning { color: #fbbf24; }
+        .log-line-highlight { background: rgba(251,191,36,0.2); border-radius: 3px; }
+        .log-meta {
+            display: flex; gap: 15px; margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.4);
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <!-- 顶部 -->
+    <div class="top-bar">
+        <button class="btn-back" onclick="goBack()"><i class="fa fa-arrow-left"></i> 返回列表</button>
+        <h3 id="deployTitle">部署详情</h3>
+        <span class="status-badge badge-stopped" id="statusBadge"><i class="fa fa-circle"></i> 已停止</span>
+    </div>
+
+    <!-- 基本信息 & 配置 -->
+    <div class="card">
+        <div class="card-header"><i class="fa fa-cog"></i> 基本配置</div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>部署名称</label>
+                    <input type="text" class="form-control" id="cfgName" disabled>
+                </div>
+                <div class="form-group">
+                    <label>日志标识 (SYS_STD_FILE_NAME)</label>
+                    <input type="text" class="form-control" id="cfgSysStd" placeholder="留空则使用部署名称">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>项目根目录</label>
+                <input type="text" class="form-control" id="cfgProjectDir" placeholder="本地绝对路径">
+            </div>
+            <div class="form-group">
+                <label>启动命令</label>
+                <input type="text" class="form-control" id="cfgStartCmd" placeholder="例如 python main.py">
+            </div>
+            <div class="form-group">
+                <label>环境变量</label>
+                <div id="cfgEnvVars"></div>
+                <button class="btn-env-add" onclick="addEnvRow()"><i class="fa fa-plus"></i> 添加</button>
+            </div>
+            <button class="btn-save-config" onclick="saveConfig()"><i class="fa fa-save"></i> 保存配置</button>
+        </div>
+    </div>
+
+    <!-- 进程控制 -->
+    <div class="card">
+        <div class="card-header"><i class="fa fa-play-circle"></i> 进程控制</div>
+        <div class="card-body">
+            <div class="process-controls">
+                <button class="btn-ctrl btn-start" id="btnStart" onclick="doStart()"><i class="fa fa-play"></i> 启动</button>
+                <button class="btn-ctrl btn-stop" id="btnStop" onclick="doStop()" disabled><i class="fa fa-stop"></i> 停止</button>
+                <button class="btn-ctrl btn-restart" id="btnRestart" onclick="doRestart()"><i class="fa fa-refresh"></i> 重启</button>
+            </div>
+            <div class="process-info">
+                <div class="process-info-item"><span class="label">PID:</span><span class="value" id="infoPid">-</span></div>
+                <div class="process-info-item"><span class="label">启动时间:</span><span class="value" id="infoStartTime">-</span></div>
+                <div class="process-info-item"><span class="label">deploy_flag:</span><span class="value" id="infoFlag" style="font-size:11px;color:#6b7280;">-</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Git 操作 -->
+    <div class="card">
+        <div class="card-header"><i class="fa fa-git"></i> Git 操作</div>
+        <div class="card-body">
+            <button class="btn-git" id="btnGitPull" onclick="doGitPull()"><i class="fa fa-download"></i> Git Pull</button>
+            <div class="git-output" id="gitOutput"></div>
+        </div>
+    </div>
+
+    <!-- 日志查看 -->
+    <div class="card">
+        <div class="card-header"><i class="fa fa-file-text-o"></i> 日志查看</div>
+        <div class="card-body">
+            <div class="log-toolbar">
+                <input type="text" class="log-search" id="logKeyword" placeholder="输入关键字搜索日志...">
+                <select id="logTimeRange">
+                    <option value="">全部时间</option>
+                    <option value="1h" selected>最近 1 小时</option>
+                    <option value="6h">最近 6 小时</option>
+                    <option value="1d">最近 1 天</option>
+                    <option value="3d">最近 3 天</option>
+                </select>
+                <button class="btn-log" onclick="loadLogs()"><i class="fa fa-refresh"></i> 刷新</button>
+                <button class="btn-log" id="btnAutoRefresh" onclick="toggleAutoRefresh()"><i class="fa fa-clock-o"></i> 自动刷新</button>
+            </div>
+            <div class="log-viewer" id="logViewer">加载中...</div>
+            <div class="log-meta">
+                <span>日志文件: <span id="logFiles">-</span></span>
+                <span>显示行数: <span id="logTotal">0</span></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var deployName = '';
+var statusTimer = null;
+var autoRefreshTimer = null;
+var autoRefreshOn = false;
+
+function getUrlParam(key) {
+    var params = new URLSearchParams(window.location.search);
+    return params.get(key) || '';
+}
+
+function goBack() {
+    window.location.href = '/tpl/deploy_list.html';
+}
+
+function addEnvRow(key, val) {
+    var html = '<div class="env-row">' +
+        '<input type="text" class="form-control env-key" placeholder="KEY" value="' + (key||'') + '">' +
+        '<input type="text" class="form-control env-val" placeholder="VALUE" value="' + (val||'') + '">' +
+        '<button class="btn-env-remove" onclick="$(this).parent().remove()"><i class="fa fa-times"></i></button>' +
+        '</div>';
+    $('#cfgEnvVars').append(html);
+}
+
+function collectEnvVars() {
+    var env = {};
+    $('#cfgEnvVars .env-row').each(function() {
+        var k = $(this).find('.env-key').val().trim();
+        var v = $(this).find('.env-val').val().trim();
+        if (k) env[k] = v;
+    });
+    return env;
+}
+
+function loadConfig() {
+    $.get('/deploy/' + encodeURIComponent(deployName) + '/config', function(resp) {
+        if (!resp.succ) { alert(resp.msg); return; }
+        var d = resp.data;
+        $('#deployTitle').text('部署详情 - ' + d.name);
+        $('#cfgName').val(d.name);
+        $('#cfgProjectDir').val(d.project_dir || '');
+        $('#cfgStartCmd').val(d.start_cmd || '');
+        $('#cfgSysStd').val(d.sys_std_file_name || '');
+        $('#cfgEnvVars').empty();
+        try {
+            var envObj = JSON.parse(d.env_vars || '{}');
+            for (var k in envObj) { addEnvRow(k, envObj[k]); }
+        } catch(e) {}
+        updateStatusUI(d);
+    });
+}
+
+function saveConfig() {
+    var payload = {
+        name: deployName,
+        project_dir: $('#cfgProjectDir').val().trim(),
+        start_cmd: $('#cfgStartCmd').val().trim(),
+        sys_std_file_name: $('#cfgSysStd').val().trim(),
+        env_vars: collectEnvVars()
+    };
+    $.ajax({
+        url: '/deploy/save',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        success: function(resp) { alert(resp.msg); }
+    });
+}
+
+function updateStatusUI(d) {
+    var running = d.running;
+    $('#infoPid').text(d.pid || '-');
+    $('#infoStartTime').text(d.start_time || '-');
+    $('#infoFlag').text(d.deploy_flag || '-');
+    if (running) {
+        $('#statusBadge').removeClass('badge-stopped').addClass('badge-running')
+            .html('<i class="fa fa-circle"></i> 运行中');
+        $('#btnStart').prop('disabled', true);
+        $('#btnStop').prop('disabled', false);
+    } else {
+        $('#statusBadge').removeClass('badge-running').addClass('badge-stopped')
+            .html('<i class="fa fa-circle"></i> 已停止');
+        $('#btnStart').prop('disabled', false);
+        $('#btnStop').prop('disabled', true);
+    }
+}
+
+function pollStatus() {
+    $.get('/deploy/' + encodeURIComponent(deployName) + '/status', function(resp) {
+        if (resp.succ) updateStatusUI(resp.data);
+    });
+}
+
+function doStart() {
+    $('#btnStart').prop('disabled', true);
+    $.post('/deploy/' + encodeURIComponent(deployName) + '/start', function(resp) {
+        alert(resp.msg);
+        pollStatus();
+    });
+}
+
+function doStop() {
+    $('#btnStop').prop('disabled', true);
+    $.post('/deploy/' + encodeURIComponent(deployName) + '/stop', function(resp) {
+        alert(resp.msg);
+        pollStatus();
+    });
+}
+
+function doRestart() {
+    $('#btnRestart').prop('disabled', true);
+    $.post('/deploy/' + encodeURIComponent(deployName) + '/restart', function(resp) {
+        alert(resp.msg);
+        $('#btnRestart').prop('disabled', false);
+        pollStatus();
+    });
+}
+
+function doGitPull() {
+    $('#btnGitPull').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> 拉取中...');
+    $('#gitOutput').show().removeClass('git-success git-fail').text('正在执行 git pull ...');
+    $.post('/deploy/' + encodeURIComponent(deployName) + '/git_pull', function(resp) {
+        $('#btnGitPull').prop('disabled', false).html('<i class="fa fa-download"></i> Git Pull');
+        var cls = resp.succ ? 'git-success' : 'git-fail';
+        $('#gitOutput').removeClass('git-success git-fail').addClass(cls).text(resp.output || resp.msg);
+    }).fail(function() {
+        $('#btnGitPull').prop('disabled', false).html('<i class="fa fa-download"></i> Git Pull');
+        $('#gitOutput').addClass('git-fail').text('请求失败');
+    });
+}
+
+function getTimeRange() {
+    var val = $('#logTimeRange').val();
+    if (!val) return { time_start: '', time_end: '' };
+    var now = new Date();
+    var ms = { '1h': 3600000, '6h': 21600000, '1d': 86400000, '3d': 259200000 };
+    var start = new Date(now.getTime() - (ms[val] || 3600000));
+    function fmt(d) {
+        return d.getFullYear() + '-' +
+            String(d.getMonth()+1).padStart(2,'0') + '-' +
+            String(d.getDate()).padStart(2,'0') + ' ' +
+            String(d.getHours()).padStart(2,'0') + ':' +
+            String(d.getMinutes()).padStart(2,'0') + ':' +
+            String(d.getSeconds()).padStart(2,'0');
+    }
+    return { time_start: fmt(start), time_end: fmt(now) };
+}
+
+function escapeHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function highlightKeyword(html, keyword) {
+    if (!keyword) return html;
+    var escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var re = new RegExp('(' + escaped + ')', 'gi');
+    return html.replace(re, '<span class="log-line-highlight">$1</span>');
+}
+
+function loadLogs() {
+    var keyword = $('#logKeyword').val().trim();
+    var tr = getTimeRange();
+    var params = { lines: 1000 };
+    if (keyword) params.keyword = keyword;
+    if (tr.time_start) params.time_start = tr.time_start;
+    if (tr.time_end) params.time_end = tr.time_end;
+
+    $.get('/deploy/' + encodeURIComponent(deployName) + '/logs', params, function(resp) {
+        if (!resp.succ) { $('#logViewer').text('加载失败'); return; }
+        var lines = resp.data;
+        $('#logFiles').text(resp.files.join(', ') || '-');
+        $('#logTotal').text(resp.total);
+        if (lines.length === 0) {
+            $('#logViewer').html('<span style="color:rgba(255,255,255,0.3)">暂无日志</span>');
+            return;
+        }
+        var html = '';
+        for (var i = 0; i < lines.length; i++) {
+            var line = escapeHtml(lines[i]);
+            var cls = 'log-line';
+            if (/\bERROR\b/i.test(line) || /\bCRITICAL\b/i.test(line) || /Traceback/i.test(line)) {
+                cls += ' log-line-error';
+            } else if (/\bWARNING\b/i.test(line) || /\bWARN\b/i.test(line)) {
+                cls += ' log-line-warning';
+            }
+            line = highlightKeyword(line, keyword);
+            html += '<div class="' + cls + '">' + line + '</div>';
+        }
+        $('#logViewer').html(html);
+        var viewer = document.getElementById('logViewer');
+        viewer.scrollTop = viewer.scrollHeight;
+    });
+}
+
+function toggleAutoRefresh() {
+    autoRefreshOn = !autoRefreshOn;
+    if (autoRefreshOn) {
+        $('#btnAutoRefresh').addClass('active').html('<i class="fa fa-clock-o"></i> 自动刷新中 (3s)');
+        autoRefreshTimer = setInterval(loadLogs, 3000);
+    } else {
+        $('#btnAutoRefresh').removeClass('active').html('<i class="fa fa-clock-o"></i> 自动刷新');
+        clearInterval(autoRefreshTimer);
+    }
+}
+
+$(document).ready(function() {
+    deployName = getUrlParam('name');
+    if (!deployName) { alert('缺少部署名称参数'); return; }
+    loadConfig();
+    loadLogs();
+    statusTimer = setInterval(pollStatus, 5000);
+
+    $('#logKeyword').on('keyup', function(e) {
+        if (e.keyCode === 13) loadLogs();
+    });
+    $('#logTimeRange').on('change', function() { loadLogs(); });
+});
+</script>
+</body>
+</html>

@@ -48,6 +48,7 @@ from funboost.core.active_cousumer_info_getter import (
 )
 # from funboost.constant import RedisKeys  # 已废弃的 pause/resume 路由使用，现已注释
 from funboost.faas import flask_blueprint
+from funboost.funboost_web_manager.deploy import deploy_bp
 
 app = Flask(__name__)
 app.secret_key = "mtfy54321"
@@ -63,6 +64,7 @@ login_manager.init_app(app)
 # 大部分路由用faas这里面自带的flask蓝图，因为通用的faas接口是2025年12月才有的功能，
 # 一些老的flask接口是在这里单独开发的。
 app.register_blueprint(flask_blueprint)  
+app.register_blueprint(deploy_bp)
 
 
 

@@ -146,6 +146,9 @@
         .ur-ok { color: #34d399; font-weight: 600; margin-top: 6px; padding: 4px 8px; background: rgba(52,211,153,0.1); border-radius: 4px; }
         .ur-fail { color: #f87171; font-weight: 600; margin-top: 6px; padding: 4px 8px; background: rgba(248,113,113,0.1); border-radius: 4px; }
         .ur-info { color: #e0e0e0; }
+        .ur-log  { color: #94a3b8; font-size: 11.5px; }
+        .ur-warn { color: #fbbf24; font-size: 11.5px; }
+        .ur-critical { color: #dc2626; font-weight: 600; font-size: 11.5px; }
     </style>
 </head>
 <body>
@@ -378,6 +381,7 @@ function collectEnvVars() {
 function saveDeploy() {
     var name = $('#inputName').val().trim();
     if (!name) { showToast('部署名称不能为空', false); return; }
+    if (!/^[a-zA-Z0-9_-]+$/.test(name)) { showToast('部署名称只能包含字母、数字、下划线和连字符，不能有空格等特殊符号', false); return; }
     $.ajax({ url: '/deploy/save', method: 'POST', contentType: 'application/json',
         data: JSON.stringify({
             name: name,
@@ -421,6 +425,7 @@ function quickRestart(name) {
             }
             if (!resp.succ && resp.msg) urLog($c, resp.msg, 'error');
             urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 启动失败'), resp.succ ? 'ok' : 'fail');
+            appendLogTail($c, name);
             setTimeout(loadDeployList, 2000);
         }
     });
@@ -450,6 +455,7 @@ function quickStart(name) {
             }
             if (!resp.succ && resp.msg) urLog($c, resp.msg, 'error');
             urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 启动失败'), resp.succ ? 'ok' : 'fail');
+            appendLogTail($c, name);
             setTimeout(loadDeployList, 2000);
         }
     });
@@ -470,6 +476,37 @@ function quickStop(name) {
         }
         urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 ' + resp.msg), resp.succ ? 'ok' : 'fail');
         setTimeout(loadDeployList, 2000);
+    });
+}
+
+function appendLogTail($c, name) {
+    urLog($c, '── 近期日志（最新200行）──', 'step');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>加载日志中...', 'loading');
+    $.get('/deploy/' + encodeURIComponent(name) + '/logs', { lines: 200 }, function(resp) {
+        $c.find('.ur-loading:last').remove();
+        if (!resp.succ || !resp.data || resp.data.length === 0) {
+            urLog($c, '（暂无日志）', 'info');
+            return;
+        }
+        var lines = resp.data;
+        var lastCls = 'ur-info';
+        for (var i = 0; i < lines.length; i++) {
+            var raw = lines[i];
+            if (!raw.trim()) continue;
+            var hasTs = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(raw);
+            var cls;
+            if (hasTs) {
+                if (/- CRITICAL -/.test(raw))      cls = 'ur-critical';
+                else if (/- ERROR -/.test(raw) || /\bTraceback\b/.test(raw)) cls = 'ur-error';
+                else if (/- WARNING -/.test(raw))  cls = 'ur-warn';
+                else                               cls = 'ur-log';
+                lastCls = cls;
+            } else {
+                cls = lastCls;
+            }
+            $c.append($('<div>').addClass('ur-line ' + cls).text(raw));
+        }
+        $c[0].scrollTop = $c[0].scrollHeight;
     });
 }
 
@@ -542,6 +579,7 @@ function quickUpdateRestart(name) {
                     }
                     if (!resp2.succ && resp2.msg) urLog($c, resp2.msg, 'error');
                     urLog($c, resp2.succ ? ('\u2713 ' + resp2.msg) : ('\u2717 启动失败'), resp2.succ ? 'ok' : 'fail');
+                    appendLogTail($c, name);
                     setTimeout(loadDeployList, 2000);
                 }
             });
@@ -563,6 +601,7 @@ function showCloneModal(name) {
 function confirmClone() {
     var newName = $('#cloneNewName').val().trim();
     if (!newName) { showToast('名称不能为空', false); return; }
+    if (!/^[a-zA-Z0-9_-]+$/.test(newName)) { showToast('部署名称只能包含字母、数字、下划线和连字符，不能有空格等特殊符号', false); return; }
     $.ajax({ url: '/deploy/' + encodeURIComponent(cloneSource) + '/clone', method: 'POST', contentType: 'application/json',
         data: JSON.stringify({ new_name: newName }),
         success: function(resp) { $('#cloneModal').modal('hide'); showToast(resp.msg, resp.succ); if(resp.succ) loadDeployList(); }

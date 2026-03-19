@@ -1079,7 +1079,9 @@ def deploy_logs(name):
 
     # 将行按"日志条目"分组：以时间戳开头的行为新条目起点，
     # 后续无时间戳的行属于同一条目（如 traceback、多行 error 消息）。
-    entries = []  # [(entry_time, [line1, line2, ...])]
+    # 若整个文件都没有时间戳（如 make/sphinx 等构建工具输出），则将每行视为独立条目，时间为 None。
+    entries = []  # [(entry_time_or_None, [line1, line2, ...])]
+    has_any_timestamp = False
     last_time = None
     for line in all_lines:
         if not line.strip():
@@ -1087,6 +1089,7 @@ def deploy_logs(name):
         clean_line = _strip_ansi(line)
         lt = _parse_log_time(clean_line)
         if lt:
+            has_any_timestamp = True
             last_time = lt
             entries.append((lt, [clean_line]))
         else:
@@ -1094,18 +1097,23 @@ def deploy_logs(name):
                 entries[-1][1].append(clean_line)
             elif last_time:
                 entries.append((last_time, [clean_line]))
+            else:
+                # 无时间戳且尚无任何条目，暂存为 None 时间的独立行
+                entries.append((None, [clean_line]))
 
     keyword_lower = keyword.lower() if keyword else ''
     filtered = []
     for entry_time, entry_lines in entries:
         if dt_start or dt_end:
-            if entry_time:
+            if entry_time is not None:
                 if dt_start and entry_time < dt_start:
                     continue
                 if dt_end and entry_time > dt_end:
                     continue
-            else:
+            elif has_any_timestamp:
+                # 文件有时间戳，但此条目没有（附属行），跟随上一条过滤，已在分组时归入上一条，此处理论不会出现
                 continue
+            # 如果整个文件都没有时间戳，时间过滤不适用，照常显示
 
         if keyword_lower:
             entry_text = '\n'.join(entry_lines).lower()

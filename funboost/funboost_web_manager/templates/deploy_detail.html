@@ -271,6 +271,9 @@
         .ur-ok { color: #34d399; font-weight: 600; margin-top: 6px; padding: 4px 8px; background: rgba(52,211,153,0.1); border-radius: 4px; }
         .ur-fail { color: #f87171; font-weight: 600; margin-top: 6px; padding: 4px 8px; background: rgba(248,113,113,0.1); border-radius: 4px; }
         .ur-info { color: #e0e0e0; }
+        .ur-log  { color: #94a3b8; font-size: 11.5px; }
+        .ur-warn { color: #fbbf24; font-size: 11.5px; }
+        .ur-critical { color: #dc2626; font-weight: 600; font-size: 11.5px; }
     </style>
 </head>
 <body>
@@ -384,13 +387,13 @@
             <div class="log-quick-btns">
                 <button class="btn-quick" data-range="1m">近1分钟</button>
                 <button class="btn-quick" data-range="5m">近5分钟</button>
-                <button class="btn-quick active" data-range="1h">近1小时</button>
+                <button class="btn-quick" data-range="1h">近1小时</button>
                 <button class="btn-quick" data-range="6h">近6小时</button>
                 <button class="btn-quick" data-range="1d">近1天</button>
                 <button class="btn-quick" data-range="3d">近3天</button>
                 <button class="btn-quick" data-range="7d">近7天</button>
                 <button class="btn-quick" data-range="30d">近30天</button>
-                <button class="btn-quick" data-range="all">全部</button>
+                <button class="btn-quick active" data-range="all">全部</button>
             </div>
 
             <div class="log-time-row">
@@ -449,7 +452,7 @@ var deployName = '';
 var statusTimer = null;
 var autoRefreshTimer = null;
 var autoRefreshOn = false;
-var currentTimeRange = '1h';
+var currentTimeRange = 'all';
 
 function getUrlParam(key) {
     var params = new URLSearchParams(window.location.search);
@@ -576,6 +579,38 @@ function urLog($el, text, type) {
     $el[0].scrollTop = $el[0].scrollHeight;
 }
 
+function appendLogTail($c, name) {
+    urLog($c, '── 近期日志（最新200行）──', 'step');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>加载日志中...', 'loading');
+    $.get('/deploy/' + encodeURIComponent(name) + '/logs', { lines: 200 }, function(resp) {
+        $c.find('.ur-loading:last').remove();
+        if (!resp.succ || !resp.data || resp.data.length === 0) {
+            urLog($c, '（暂无日志）', 'info');
+            return;
+        }
+        var lines = resp.data;
+        var lastCls = 'ur-info';
+        for (var i = 0; i < lines.length; i++) {
+            var raw = lines[i];
+            if (!raw.trim()) continue;
+            var hasTs = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(raw);
+            var cls;
+            if (hasTs) {
+                if (/- CRITICAL -/.test(raw))      cls = 'ur-critical';
+                else if (/- ERROR -/.test(raw) || /\bTraceback\b/.test(raw)) cls = 'ur-error';
+                else if (/- WARNING -/.test(raw))  cls = 'ur-warn';
+                else                               cls = 'ur-log';
+                lastCls = cls;
+            } else {
+                cls = lastCls;
+            }
+            var $d = $('<div>').addClass('ur-line ' + cls).text(raw);
+            $c.append($d);
+        }
+        $c[0].scrollTop = $c[0].scrollHeight;
+    });
+}
+
 function renderStartDetail($c, d) {
     if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
     if (d.env_vars && d.env_vars.length) {
@@ -607,6 +642,7 @@ function doStart() {
             if (resp.cmd_detail) renderStartDetail($c, resp.cmd_detail);
             if (!resp.succ && resp.msg) urLog($c, resp.msg, 'error');
             urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 启动失败'), resp.succ ? 'ok' : 'fail');
+            appendLogTail($c, deployName);
             setTimeout(pollStatus, 2000);
         }
     });
@@ -664,6 +700,7 @@ function doRestart() {
             }
             if (!resp.succ && resp.msg) urLog($c, resp.msg, 'error');
             urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 启动失败'), resp.succ ? 'ok' : 'fail');
+            appendLogTail($c, deployName);
             $('#btnRestart').prop('disabled', false);
             setTimeout(pollStatus, 2000);
         }
@@ -727,6 +764,7 @@ function doUpdateRestart() {
                     }
                     if (!resp2.succ && resp2.msg) urLog($c, resp2.msg, 'error');
                     urLog($c, resp2.succ ? ('\u2713 ' + resp2.msg) : ('\u2717 启动失败'), resp2.succ ? 'ok' : 'fail');
+                    appendLogTail($c, deployName);
                     $('#btnUpdateRestart').prop('disabled', false);
                     setTimeout(pollStatus, 2000);
                 }

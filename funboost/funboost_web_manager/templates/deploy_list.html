@@ -195,6 +195,30 @@
             <div class="form-group"><label>环境变量</label><div id="envVarsContainer"></div>
                 <button class="btn-env-add" onclick="addEnvRow()"><i class="fa fa-plus"></i> 添加环境变量</button>
             </div>
+            <hr style="border-color:rgba(99,102,241,0.15);margin:15px 0;">
+            <div style="font-size:13px;color:#a78bfa;font-weight:600;margin-bottom:10px;">高级设置</div>
+            <div style="display:flex;gap:15px;flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#e0e0e0;">
+                    <input type="checkbox" id="inputAutoStart"> 自动启动 (服务启动时)
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#e0e0e0;">
+                    <input type="checkbox" id="inputAutoRestart"> 自动重启 (崩溃后)
+                </label>
+            </div>
+            <div style="display:flex;gap:15px;margin-top:10px;flex-wrap:wrap;">
+                <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0;">
+                    <label>最大连续重试次数</label>
+                    <input type="number" class="form-control" id="inputMaxRetry" value="3" min="1" max="100">
+                </div>
+                <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0;">
+                    <label>存活检查秒数</label>
+                    <input type="number" class="form-control" id="inputHealthSecs" value="10" min="1" max="300">
+                </div>
+                <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0;">
+                    <label>进程数量</label>
+                    <input type="number" class="form-control" id="inputNumProcesses" value="1" min="1" max="100">
+                </div>
+            </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
@@ -336,6 +360,11 @@ function showCreateModal() {
     $('#inputName').val('').prop('disabled', false);
     $('#inputProjectDir').val(''); $('#inputStartCmd').val('');
     $('#envVarsContainer').empty();
+    $('#inputAutoStart').prop('checked', false);
+    $('#inputAutoRestart').prop('checked', false);
+    $('#inputMaxRetry').val(3);
+    $('#inputHealthSecs').val(10);
+    $('#inputNumProcesses').val(1);
     $('#createModal').modal('show');
 }
 function addEnvRow(key, val) {
@@ -350,7 +379,17 @@ function saveDeploy() {
     var name = $('#inputName').val().trim();
     if (!name) { showToast('部署名称不能为空', false); return; }
     $.ajax({ url: '/deploy/save', method: 'POST', contentType: 'application/json',
-        data: JSON.stringify({ name:name, project_dir:$('#inputProjectDir').val().trim(), start_cmd:$('#inputStartCmd').val().trim(), env_vars:collectEnvVars() }),
+        data: JSON.stringify({
+            name: name,
+            project_dir: $('#inputProjectDir').val().trim(),
+            start_cmd: $('#inputStartCmd').val().trim(),
+            env_vars: collectEnvVars(),
+            auto_start: $('#inputAutoStart').is(':checked'),
+            auto_restart: $('#inputAutoRestart').is(':checked'),
+            max_retry: parseInt($('#inputMaxRetry').val()) || 3,
+            health_check_secs: parseInt($('#inputHealthSecs').val()) || 10,
+            num_processes: parseInt($('#inputNumProcesses').val()) || 1
+        }),
         success: function(resp) { if(resp.succ){ $('#createModal').modal('hide'); showToast('保存成功',true); loadDeployList(); } else showToast(resp.msg,false); }
     });
 }
@@ -360,11 +399,11 @@ function quickRestart(name) {
     var $c = $('#cmdDetailContent').html('');
     $('#cmdModal').modal('show');
     urLog($c, '重启进程', 'step');
-    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证（最长 30 秒）...', 'loading');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证...', 'loading');
     $.ajax({
         url: '/deploy/' + encodeURIComponent(name) + '/restart',
         method: 'POST',
-        timeout: 45000,
+        timeout: 120000,
         success: function(resp) {
             $c.find('.ur-loading:last').remove();
             if (resp.cmd_detail) {
@@ -392,11 +431,11 @@ function quickStart(name) {
     var $c = $('#cmdDetailContent').html('');
     $('#cmdModal').modal('show');
     urLog($c, '启动进程', 'step');
-    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在启动，并等待存活验证（最长 30 秒）...', 'loading');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在启动，等待存活验证...', 'loading');
     $.ajax({
         url: '/deploy/' + encodeURIComponent(name) + '/start',
         method: 'POST',
-        timeout: 45000,
+        timeout: 120000,
         success: function(resp) {
             $c.find('.ur-loading:last').remove();
             if (resp.cmd_detail) {
@@ -478,12 +517,12 @@ function quickUpdateRestart(name) {
             urLog($c, '\u2713 Git Pull 成功', 'ok');
 
             urLog($c, '步骤 2/2: 重启进程', 'step');
-            urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证（最长 30 秒）...', 'loading');
+            urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证...', 'loading');
 
             $.ajax({
                 url: '/deploy/' + encodeURIComponent(name) + '/restart',
                 method: 'POST',
-                timeout: 45000,
+                timeout: 120000,
                 success: function(resp2) {
                     $c.find('.ur-loading:last').remove();
                     if (resp2.cmd_detail) {

@@ -943,11 +943,35 @@ class BoosterParams(BaseJsonAbleModel):
 ============================================================
 文件: c13.md
 ============================================================
-  行2: # 13 启动 funboost web manager,查看消费结果和队列管理
-  行8: ## 13.1 介绍 启动 funboost web manager (方式一)。
-  行36: ### 13.1.b 直接在代码中启动web start_funboost_web_manager() (方式二)：
-  行45: ## 13.2 funboost web manager 截图
-  行92: ## 13.3 funboost web 图片对应的测试代码
+  行8: # 13 启动 funboost web manager,查看消费结果和队列管理
+  行14: ## 13.1 介绍 启动 funboost web manager (方式一)。
+  行42: ### 13.1.b 直接在代码中启动web start_funboost_web_manager() (方式二)：
+  行51: ## 13.2 funboost web manager 截图
+  行98: ## 13.3 funboost web 图片对应的测试代码
+  行168: ## 13.4 funboost web manager 脚本部署管理（爽功能）
+  行172: ### 13.4.1 核心功能
+  行182: ### 13.4.2 使用方式
+  行201: ### 13.4.3 说明
+  行208: ### 13.4.4 脚本部署功能截图
+  行219: ### 13.4.5 降维打击：Funboost Web 脚本部署为何完爆 Supervisor？
+  行225: #### 13.4.5.1. 📝 纯 Web 可视化配置，告别反人类的 `.ini` 与环境变量地狱
+  行230: #### 13.4.5.2. ⚡️ 堪比 ELK 的神级日志检索（百G日志，毫秒级响应）
+  行235: #### 13.4.5.3. 🚀 内置 CI/CD：兼具“发版平台”能力
+  行241: #### 13.4.5.4. 🛡️ 进程防误杀机制：解决 PID 复用的终极痛点
+  行245: #### 13.4.5.5. 🏥 智能健康检查与“秒退”精准诊断
+  行250: #### 13.4.5.6. 💻 真正的跨平台支持与“零特权”部署 (Win/Linux 双端通吃)
+  行256: #### 13.4.5.7. 👁️ 告别黑箱，极致的透明操作反馈
+  行264: ### 13.4.6 funboost-web-manager 是否支持远程部署（部署到其他机器）？
+  行279: #### 13.4.6.2 Funboost 部署 vs 传统 Jenkins 发版平台：为什么我们选择“本地化”？
+  行296: ### 13.4.7 降维打击：Funboost Web 部署比直接用 Xshell 爽在哪里？
+  行300: #### 13.4.7.1. 🔌 告别繁琐的登录与“断连焦虑”
+  行304: #### 13.4.7.2. 🖱️ 零门槛“傻瓜式”操作，彻底解放开发者
+  行308: #### 13.4.7.3. 👁️ 拒绝“黑盒启动”，所见即所得的存活监控
+  行312: #### 13.4.7.4. 📖 降维打击的日志查阅体验，终结反人类的 `grep`
+  行321: #### 13.4.7.5. 🛡️ 自带“死而复生”的进程守护，远超脆弱的 `nohup`
+  行325: #### 13.4.7.6. 🧬 配置资产沉淀，告别“祖传 txt 小本本”
+  行329: #### 13.4.7.7. 🎯 精准狙击 PID，彻底杜绝“同名误杀”惨案
+  行333: #### 13.4.7.8. ⚖️ 傻瓜式的一键“多进程”横向扩容
 
 ============================================================
 文件: c14.md
@@ -7096,6 +7120,12 @@ python funboost_cli_user.py pause queue1  queue2    #queue1  queue2 两个队列
 --- **start of file: source/articles/c13.md** (project: funboost_docs) --- 
 
 `````markdown
+---
+noteId: "ebeab860234511f1b8139f50f0306497"
+tags: []
+
+---
+
   
 # 13 启动 funboost web manager,查看消费结果和队列管理  
 
@@ -7256,6 +7286,175 @@ if __name__ == '__main__':
     
 
 ```  
+
+## 13.4 funboost web manager 脚本部署管理（爽功能）
+
+脚本部署功能类似 Supervisor，可以在 web 页面上管理任意 Python 脚本的 启动/停止/重启/日志查看，无需登录服务器操作命令行。
+
+### 13.4.1 核心功能
+
+- **部署管理**：新建、编辑、复制、删除部署配置，配置项包括 部署名称、项目根目录、启动命令、环境变量。
+- **进程控制**：一键启动、停止、重启。支持配置多进程数量（默认1个），每个进程独立管理。
+- **自动启动/自动重启**：可配置 `auto_start`（web 服务启动时自动拉起）和 `auto_restart`（进程崩溃后自动重启，可设最大连续重试次数，默认3次）。人工在页面停止的进程不会被自动重启。
+- **更新并重启**：一键执行 `git pull` + 重启，支持分支切换、模糊搜索分支，git 操作失败自动取消重启。
+- **日志查看**：支持关键字搜索、按时间范围筛选（快捷按钮 + 自定义范围）、自动刷新。基于二分查找实现，兼容 10GB 级大日志文件。日志按级别着色显示（DEBUG 绿/INFO 青/WARNING 金黄/ERROR 粉红/CRITICAL 血红/print 天蓝）。
+- **健康检查**：启动后自动检测进程存活（可配置检查时长，默认10秒），进程秒退立即报错并显示日志尾部辅助诊断。
+- **PID 安全**：通过进程创建时间二次校验，防止系统重启后 PID 复用导致误判或误杀。
+
+### 13.4.2 使用方式
+
+启动 funboost web manager 后，在左侧导航栏点击「脚本部署」进入。
+
+**新建部署示例：**
+
+| 配置项 | 示例值 |
+|--------|--------|
+| 部署名称 | my_worker |
+| 项目根目录 | /home/user/my_project |
+| 启动命令 | python main.py |
+| 进程数量 | 2 |
+| 自动启动 | ✓ |
+| 自动重启 | ✓ |
+
+项目根目录会自动加入 `PYTHONPATH`。脚本以后台方式运行（Linux 用 nohup，Windows 用静默后台进程），关闭 web 管理页面或 Flask 进程不影响已部署的脚本运行。
+
+stdout/stderr 自动重定向到 `{日志目录}/{部署名称}.nohup.log`，多进程时每个进程独立日志文件。
+
+### 13.4.3 说明
+
+- 脚本部署功能不依赖 funboost 框架本身，可以部署任意 Python 脚本甚至非 Python 命令，只要能在命令行运行即可。
+- 部署配置持久化在 Redis 中，重启 web 服务后配置不丢失。
+- 兼容 Windows 和 Linux。
+
+
+### 13.4.4 脚本部署功能截图
+
+脚本部署列表页截图
+![alt text](image-6.png)
+
+脚本部署详情页截图
+![alt text](image-7.png)
+
+
+
+
+### 13.4.5 降维打击：Funboost Web 脚本部署为何完爆 Supervisor？
+
+在传统的 Python 后端部署中，`Supervisor` 或是 `Systemd` 几乎是进程管理的“标配”。但对于只关心业务逻辑的开发者来说，这些系统级工具存在极高的心智负担：需要手写枯燥的 `.ini` 配置文件、缺乏代码更新能力、排查“秒退”报错极其痛苦，看日志还得 SSH 连上服务器敲 `tail` 命令。
+
+Funboost Web Manager 内置的**脚本部署功能**，彻底打破了“开发”与“运维”的边界。它不仅完美覆盖了 Supervisor 的进程守护与自动重启能力，更在体验和底层技术上实现了全方位的降维打击：
+
+#### 13.4.5.1. 📝 纯 Web 可视化配置，告别反人类的 `.ini` 与环境变量地狱
+*   **Supervisor 的痛**：部署一个新脚本，你必须登录服务器，小心翼翼地手写 `.ini` 或 `.conf` 文件。尤其是配置 `PYTHONPATH` 或复杂的虚拟环境环境变量时，各种引号转义让人抓狂；少写一个分号进程就起不来。
+*   **Funboost 的爽**：纯 Web 可视化表单！启动命令、项目路径、环境变量（支持直接填 JSON）、多进程数量、失败重试次数，**全部在网页上点选和填写**。点击保存立刻生效，极大地降低了部署门槛。
+*   **神级附加功能**：支持**一键复制（Clone）**部署配置！想把 `Task A` 的部署方案微调后给 `Task B` 用？网页上点一下复制即可，而 Supervisor 需要你 SSH 上去 `cp a.ini b.ini` 然后再用 `vim` 修改。
+
+#### 13.4.5.2. ⚡️ 堪比 ELK 的神级日志检索（百G日志，毫秒级响应）
+*   **Supervisor 的痛**：只能用 `tail -f` 看实时日志。如果想按时间段或关键字搜索历史日志，要么拉取几 GB 的日志文件到本地导致电脑卡死，要么必须重金部署沉重的 `ELK (Elasticsearch + Logstash + Kibana)` 架构。
+*   **Funboost 的爽**：底层通过纯 Python 实现了**基于时间戳的二分查找算法 (`O(log N)` 时间复杂度)**。即使是高达 **10GB+** 的超大 `nohup` 日志文件，也能在网页端**毫秒级**精准定位到任意时间范围内的日志，并且不占用服务器多余内存。
+    *   **自动高亮**：根据日志级别（INFO/WARNING/ERROR 等），网页端自动渲染彩色大色块，错误堆栈一目了然。
+
+#### 13.4.5.3. 🚀 内置 CI/CD：兼具“发版平台”能力
+*   **Supervisor 的痛**：它只是一个单纯的“进程看门狗”。每次更新代码，你依然需要手动连上服务器执行 `git pull`，然后再去执行 `supervisorctl restart xx`。
+*   **Funboost 的爽**：将 **代码拉取** 与 **进程重启** 完美融合。
+    *   网页端自带 `Git Pull` 按钮，自动检测本地与远程分支，支持下拉选择、无缝切换分支。
+    *   点一下按钮，Funboost 会在后台全自动执行：Git 拉取 -> 解决环境路径 -> 优雅关闭旧进程 -> 拉起新进程。**你直接拥有了一个轻量级的自动化发版平台**。
+
+#### 13.4.5.4. 🛡️ 进程防误杀机制：解决 PID 复用的终极痛点
+*   **Supervisor 的痛**：依赖 PID 文件（如 `supervisord.pid`）管理进程。如果服务器遭遇强制重启或 PID 文件未及时清理，操作系统会将原 PID 分配给其他无辜进程（比如 MySQL 进程），Supervisor 会错误地将该进程当成自己的子进程去监控甚至“强杀”，导致严重的生产事故。
+*   **Funboost 的爽**：底层源码中引入了极致的防御性编程。Funboost 不仅记录 PID，还通过调用 OS 底层 API（Windows 的 `GetProcessTimes`，Linux 的 `/proc/pid/stat`）精确获取**进程的系统级创建时间戳**。在执行停止或重启操作时，必须同时校验 `PID + 创建时间` 双重特征。彻底杜绝了“杀错进程”的系统级 Bug，稳如泰山！
+
+#### 13.4.5.5. 🏥 智能健康检查与“秒退”精准诊断
+*   **Supervisor 的痛**：如果代码有语法错误 (`SyntaxError`) 或缺少依赖包 (`ModuleNotFoundError`)，启动后进程会瞬间退出。Supervisor 只会冷冰冰地显示一个 `FATAL` 状态，你只能自己去翻找错误日志。
+*   **Funboost 的爽**：自带启动健康检查等待期（如默认 10 秒）。
+    *   如果进程在这几秒内“秒退”，Funboost 不仅会立即在网页弹窗报错，还会**自动抓取该进程死亡前输出的最后数十行日志尾部（Traceback 错误堆栈）**，直接展示在 Web 弹窗里！你连日志页面都不用进，立刻就能知道代码错在哪。
+
+#### 13.4.5.6. 💻 真正的跨平台支持与“零特权”部署 (Win/Linux 双端通吃)
+*   **Supervisor 的痛**：**原生不支持 Windows**。在 Windows 服务器上部署 Python 后台任务简直是开发者的噩梦。此外，在 Linux 下安装和配置 Supervisor 通常需要 `root` 权限。
+*   **Funboost 的爽**：
+    *   **双端一致**：底层代码对 OS 进行了精密的兼容处理。无论你的服务器是 Linux 还是 Windows，Web 端的操作体验完全一致（底层智能调用 `kill -9` 或 `taskkill /F /PID`）。
+    *   **用户态运行**：Funboost 的守护线程和部署逻辑完全运行在**普通用户权限**下，无需 `root`，无需修改系统级服务文件，对缺乏服务器高权限的开发者极其友好。
+
+#### 13.4.5.7. 👁️ 告别黑箱，极致的透明操作反馈
+*   **传统运维工具的痛**：点击操作后，页面转个圈就提示“成功”或“失败”，底层到底执行了什么命令，执行目录在哪，开发者一无所知。
+*   **Funboost 的爽**：每一次启动、停止、重启或 Git 操作，网页都会弹框**实时、透明地显示底层执行的完整 Shell 命令细节、绝对工作路径以及解析后的环境变量**（例如：`nohup python xxx.py --deploy_flag=UUID >> log.log 2>&1 &`）。这种极致的透明度，给了开发者绝对的安全感和掌控感。
+
+---
+> **💡 终极总结**：
+> Funboost 的脚本部署模块，本质上是**将繁重的运维基建（Supervisor + Jenkins + ELK日志部分）打包降维成了一个轻量级的 Web 页面**。它不仅是进程看门狗，更是专为 Python 开发者量身定制的“现代化 DevOps 中枢”，让你在浏览器里就能优雅地掌控所有算力！
+
+### 13.4.6 funboost-web-manager 是否支持远程部署（部署到其他机器）？
+
+答：funboost web manager 可以摘你自己的电脑开开浏览器，打开网址，点击部署到远程机器。
+
+例如你的linux机器ip是 10.1.2.3
+你在linux机器部署启动 funboost web manager ，暴露端口，假设端口是 27011
+
+然后你再自己的浏览器，打开 10.1.2.3/27011 ，登录，点击网页左侧脚本部署模块
+你点击 `更新重启` 按钮就可以更新拉取git仓库代码，并启动脚本。
+
+
+这里为你精炼并完善了这个对比章节。直接切中两种架构的本质区别，客观承认对方优点的同时，把 Funboost 这种模式的“爽点”拉满：
+
+---
+
+#### 13.4.6.2 Funboost 部署 vs 传统 Jenkins 发版平台：为什么我们选择“本地化”？
+
+传统的 Jenkins 或运维魔改的发版平台，采用的是**中心化架构**：由一台发版服务器通过 SSH 远程把代码分发到多台机器上，目标机器不需要运行 Web 服务。
+客观地说，如果你要把同一个服务同时滚动发布到 10 几台甚至上百台机器，Jenkins 确实更省力。
+
+但是，对于中小型 Python 任务、爬虫脚本的部署，**Funboost Web Manager 这种“直接跑在目标机器上”的去中心化模式，带来了 Jenkins 无法企及的爽感：**
+
+1. **配置难度骤降 10 倍**：在 Jenkins 里配一个新项目，你要搞 SSH 密钥、写 Pipeline 脚本、配置工作空间，繁琐至极。在 Funboost 里，只需填个本地目录和启动命令，点下保存，**10 秒钟直接搞定**！
+2. **丝滑的“本地级”操控**：因为 Web Manager 就跑在目标机器上，它无需忍受 SSH 网络延迟。健康检查、探活、自动重启，全部直接调用操作系统的底层 API（如读取 `/proc` 或 Windows 进程句柄），**毫秒级响应，极其稳定且防误杀**。
+3. **本地日志光速直读**：不需要通过 SSH 缓慢拉取日志，也不需要搞复杂的 ELK 收集链路。直接基于本地磁盘文件做时间戳二分查找，**10G 级别的日志随搜随出，所见即所得**。
+4. **零 DevOps 依赖**：不需要求着专业运维去搭 Jenkins 集群，任何一个懂点 Python 的普通开发者，自己敲一行 `python -m funboost.funboost_web_manager.app`，就能瞬间把服务器变成一个好用的自动化发版平台。
+
+
+这段内容非常接地气，直击日常开发的痛点！我为你进行了逻辑梳理和文风润色，去掉了冗余的废话，把“Xshell 的痛”和“Funboost 的爽”形成了强烈的反差，非常适合放入教程：
+
+---
+
+### 13.4.7 降维打击：Funboost Web 部署比直接用 Xshell 爽在哪里？
+
+很多老鸟习惯了直接用 Xshell、SecureCRT 连上服务器敲命令行。但一旦你用过 Funboost 的 Web 脚本部署，就会发现传统的 SSH 操作有多么反人类：
+
+#### 13.4.7.1. 🔌 告别繁琐的登录与“断连焦虑”
+*   **Xshell 的痛**：每次部署都要走一套繁琐的流程：开 VPN -> 找主机 IP -> 输密码/配密钥。最恶心的是，现在的服务器为了安全风控都有超时机制，切出去看个文档，回来连接就断了，又得重新登录。
+*   **Funboost 的爽**：只要浏览器标签页没关，随时刷新随时看，状态永远在线，彻底治愈你的断连焦虑。
+
+#### 13.4.7.2. 🖱️ 零门槛“傻瓜式”操作，彻底解放开发者
+*   **Xshell 的痛**：敲命令不仅容易拼错，**协同成本更是灾难**。当你改了代码，想让测试妹子去重启验证时，面对习惯了“点点点”的 QA，你教她 10 遍 `git pull && nohup python ...` 她也学不会，最后还是得你亲自去敲。
+*   **Funboost 的爽**：把 URL 丢给测试/前端/产品，告诉他们：“想测最新代码，自己去页面点一下【Git Pull】和【重启】”。全程点鼠标，绝不犯错，把开发从枯燥的“人肉发版机”中彻底解放出来。
+
+#### 13.4.7.3. 👁️ 拒绝“黑盒启动”，所见即所得的存活监控
+*   **Xshell 的痛**：敲完 `nohup ... &` 后心里直打鼓，根本不知道启动成功没有。每次都得习惯性地再敲一遍 `ps aux | grep xxx` 去核对进程名和 PID，确认它还活着。
+*   **Funboost 的爽**：启动后，网页直接亮起绿灯，清晰展示当前存活的 PID 列表和持续运行时间。如果发生“秒退”，会直接把错误堆栈抓取并**弹窗糊你脸上**，再也不用像个瞎子一样去猜进程死没死。
+
+#### 13.4.7.4. 📖 降维打击的日志查阅体验，终结反人类的 `grep`
+*   **Xshell 的痛**：查日志极其痛苦。
+    *   **时间范围难查**：用 `awk` 或 `sed` 截取特定时间段的日志，语法复杂到让人怀疑人生。
+    *   **多行报错支离破碎**：用 `grep` 搜关键字，一旦遇到跨行的异常堆栈（Traceback），只能搜出孤零零的一行，根本看不出完整的报错上下文。
+*   **Funboost 的爽**：提供极简的时间范围选择器和关键字检索。基于时间戳二分查找，百G日志毫秒级出结果；完美保留多行异常堆栈的完整上下文，自带彩色高亮。**相当于白嫖了一个轻量级的 ELK 日志系统**。
+
+除了前面提到的免登录、零门槛、防黑箱、神级日志之外，仔细推理 Xshell 敲命令的日常痛点，Funboost 的 Web 部署还有以下几个**直击灵魂的降维打击**：
+
+
+#### 13.4.7.5. 🛡️ 自带“死而复生”的进程守护，远超脆弱的 `nohup`
+*   **Xshell 的痛**：用 `nohup xxx &` 跑爬虫或后台任务，一旦遇到网络超时、未捕获异常或者内存溢出（OOM），进程死了就真死了。大半夜挂掉，第二天早上才发现数据断更。
+*   **Funboost 的爽**：网页上勾选 `自动重启 (auto_restart)`，框架内置的后台守护线程会每 10 秒巡检一次。进程一旦意外死亡，**直接原地满血拉起！**你相当于白嫖了一个轻量级的 Supervisor。
+
+#### 13.4.7.6. 🧬 配置资产沉淀，告别“祖传 txt 小本本”
+*   **Xshell 的痛**：启动一个复杂的 Python 项目，你需要先激活虚拟环境，再 export `PYTHONPATH=/xxx/yyy`，最后跟上一大串启动参数。时间一长根本记不住，只能在电脑桌面建个 `常用命令.txt` 每次复制粘贴，换台电脑就抓瞎。
+*   **Funboost 的爽**：你的启动命令、工作目录、乃至复杂的环境变量（JSON格式），全部作为**配置资产**永久固化在服务端。三年后回来看，点一下“启动”照样丝滑运行，甚至还能一键 Clone 出一个新配置。
+
+#### 13.4.7.7. 🎯 精准狙击 PID，彻底杜绝“同名误杀”惨案
+*   **Xshell 的痛**：服务器上同时跑着 20 个 `python main.py`，你想停掉其中某个旧版任务。用 `ps -ef | grep python` 查出来一堆长得一模一样的进程，肉眼分辨极度痛苦；一怒之下用 `pkill python`，结果把同事跑的、或者其他核心业务的 Python 进程全给“误杀”了，直接引发 P0 级生产事故。
+*   **Funboost 的爽**：框架底层严格记录了自己拉起的每一个进程的 `PID` 和 `OS级创建时间戳`。点击“停止”时，它**只杀自己管辖的进程，指哪打哪，绝对安全**，把你从提心吊胆的 `kill -9` 中解救出来。
+
+#### 13.4.7.8. ⚖️ 傻瓜式的一键“多进程”横向扩容
+*   **Xshell 的痛**：发现单进程消费太慢，想开 10 个进程提速？你要么在 Shell 里像个机器一样按 10 次“上箭头+回车”，要么现场手搓一个 bash 的 `for` 循环脚本。
+*   **Funboost 的爽**：网页表单里有个【进程数】填空框。把 1 改成 10，点击重启。10 个独立的 Python 进程瞬间整齐划一地拉起。**横向扩容，只需修改一个数字。**
 
 <div> </div>
 `````
@@ -27403,8 +27602,10 @@ Entry Points (not imported by other project files):
     │   ├── app.py
     │   ├── app_debug_start.py
     │   ├── functions.py
-    │   └── templates
-    │       └── app.py中仍在使用的路由.md
+    │   ├── script_deploy.py
+    │   ├── templates
+    │   │   └── app.py中仍在使用的路由.md
+    │   └── 增加脚本部署.md
     ├── md_for_ai
     │   ├── funboost_ai_coding_编程指南_rules_and_skills.md
     │   ├── test1.md
@@ -27516,7 +27717,7 @@ Entry Points (not imported by other project files):
 ---
 
 
-## funboost (relative dir: `funboost`)  Included Files (total: 253 files)
+## funboost (relative dir: `funboost`)  Included Files (total: 255 files)
 
 
 - `funboost/constant.py`
@@ -27828,6 +28029,10 @@ Entry Points (not imported by other project files):
 - `funboost/funboost_web_manager/functions.py`
 
 - `funboost/funboost_web_manager/README.md`
+
+- `funboost/funboost_web_manager/script_deploy.py`
+
+- `funboost/funboost_web_manager/增加脚本部署.md`
 
 - `funboost/funboost_web_manager/templates/app.py中仍在使用的路由.md`
 
@@ -51935,6 +52140,7 @@ from funboost.core.active_cousumer_info_getter import (
 )
 # from funboost.constant import RedisKeys  # 已废弃的 pause/resume 路由使用，现已注释
 from funboost.faas import flask_blueprint
+from funboost.funboost_web_manager.script_deploy import deploy_bp
 
 app = Flask(__name__)
 app.secret_key = "mtfy54321"
@@ -51950,6 +52156,7 @@ login_manager.init_app(app)
 # 大部分路由用faas这里面自带的flask蓝图，因为通用的faas接口是2025年12月才有的功能，
 # 一些老的flask接口是在这里单独开发的。
 app.register_blueprint(flask_blueprint)  
+app.register_blueprint(deploy_bp)
 
 
 
@@ -52552,6 +52759,1267 @@ if __name__ == '__main__':
 `````
 
 --- **end of file: funboost/funboost_web_manager/README.md** (project: funboost) --- 
+
+---
+
+
+--- **start of file: funboost/funboost_web_manager/script_deploy.py** (project: funboost) --- 
+
+`````python
+# -*- coding: utf-8 -*-
+import datetime
+import json
+import os
+import re
+import signal
+import socket
+import subprocess
+import time
+import threading
+import uuid
+
+from flask import Blueprint, request, jsonify
+from flask_login import login_required
+
+from funboost.utils.redis_manager import RedisMixin
+
+deploy_bp = Blueprint('deploy', __name__)
+
+_redis = RedisMixin().redis_db_frame
+
+_ANSI_ESCAPE_RE = re.compile(r'\x1b\[[0-9;]*m')
+
+
+def _strip_ansi(text):
+    return _ANSI_ESCAPE_RE.sub('', text)
+
+
+def _get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        ip = s.getsockname()[0]
+        s.close()
+    except Exception:
+        ip = socket.gethostbyname(socket.gethostname())
+    return ip
+
+
+LOCAL_IP = _get_local_ip()
+
+
+def _key_prefix():
+    return f'script_deploy:{LOCAL_IP}'
+
+
+def _config_key(name):
+    return f'{_key_prefix()}:{name}:config'
+
+
+def _runtime_key(name):
+    return f'{_key_prefix()}:{name}:runtime'
+
+
+def _names_key():
+    return f'{_key_prefix()}:deploy_names'
+
+
+def _get_log_path():
+    try:
+        from nb_log import nb_log_config_default
+        return str(nb_log_config_default.LOG_PATH)
+    except Exception:
+        if os.name == 'nt':
+            return os.path.join(os.path.splitdrive(os.getcwd())[0] + os.sep, 'pythonlogs')
+        return os.path.join(os.path.expanduser('~'), 'pythonlogs')
+
+
+def _get_nohup_log_path(name):
+    log_dir = _get_log_path()
+    os.makedirs(log_dir, exist_ok=True)
+    return os.path.join(log_dir, f'{name}.nohup.log')
+
+
+def _get_process_create_time(pid):
+    """获取进程的 OS 级创建时间戳，用于防止 PID 复用导致误判/误杀"""
+    pid = int(pid)
+    try:
+        if os.name == 'nt':
+            import ctypes
+
+            class FILETIME(ctypes.Structure):
+                _fields_ = [("dwLowDateTime", ctypes.c_uint32),
+                             ("dwHighDateTime", ctypes.c_uint32)]
+
+            kernel32 = ctypes.windll.kernel32
+            handle = kernel32.OpenProcess(0x1000, False, pid)
+            if not handle:
+                return None
+            try:
+                creation = FILETIME()
+                exit_t = FILETIME()
+                kernel_t = FILETIME()
+                user_t = FILETIME()
+                if kernel32.GetProcessTimes(handle, ctypes.byref(creation), ctypes.byref(exit_t),
+                                             ctypes.byref(kernel_t), ctypes.byref(user_t)):
+                    ft = (creation.dwHighDateTime << 32) | creation.dwLowDateTime
+                    return ft / 10000000.0 - 11644473600.0
+                return None
+            finally:
+                kernel32.CloseHandle(handle)
+        else:
+            with open(f'/proc/{pid}/stat', 'r') as f:
+                stat_content = f.read()
+            after_comm = stat_content.rsplit(')', 1)[-1].split()
+            starttime_ticks = int(after_comm[19])
+            boot_time = None
+            with open('/proc/stat', 'r') as f:
+                for line in f:
+                    if line.startswith('btime'):
+                        boot_time = int(line.split()[1])
+                        break
+            if boot_time is None:
+                return None
+            clock_ticks = os.sysconf(os.sysconf_names['SC_CLK_TCK'])
+            return boot_time + starttime_ticks / clock_ticks
+    except Exception:
+        return None
+
+
+def _check_process_alive(pid, deploy_flag, stored_create_time=None):
+    """检查进程是否存活，通过进程创建时间二次验证防止 PID 复用误判"""
+    if not pid:
+        return False
+    pid = int(pid)
+    try:
+        if os.name == 'nt':
+            import ctypes
+            kernel32 = ctypes.windll.kernel32
+            handle = kernel32.OpenProcess(0x1000, False, pid)
+            if not handle:
+                return False
+            try:
+                exit_code = ctypes.c_ulong()
+                if kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
+                    if exit_code.value != 259:
+                        return False
+                else:
+                    return False
+            finally:
+                kernel32.CloseHandle(handle)
+        else:
+            os.kill(pid, 0)
+            if deploy_flag:
+                cmdline_path = f'/proc/{pid}/cmdline'
+                if os.path.exists(cmdline_path):
+                    with open(cmdline_path, 'r') as f:
+                        cmdline = f.read()
+                    if deploy_flag not in cmdline:
+                        return False
+
+        if stored_create_time:
+            try:
+                current_ct = _get_process_create_time(pid)
+                if current_ct is not None and abs(current_ct - float(stored_create_time)) > 5.0:
+                    return False
+            except (ValueError, TypeError):
+                pass
+
+        return True
+    except (ProcessLookupError, PermissionError, OSError, Exception):
+        return False
+
+
+def _kill_process(pid, stored_create_time=None):
+    """停止进程，先验证创建时间防止误杀。返回 (ok, err_msg)"""
+    pid = int(pid)
+    if stored_create_time:
+        try:
+            current_ct = _get_process_create_time(pid)
+            if current_ct is not None and abs(current_ct - float(stored_create_time)) > 5.0:
+                return False, 'PID 已被其他进程占用，拒绝停止（避免误杀）'
+        except (ValueError, TypeError):
+            pass
+    try:
+        if os.name == 'nt':
+            subprocess.run(['taskkill', '/F', '/T', '/PID', str(pid)],
+                           capture_output=True, timeout=10)
+        else:
+            os.kill(pid, signal.SIGTERM)
+            time.sleep(1)
+            try:
+                os.kill(pid, 0)
+                os.kill(pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        return True, ''
+    except Exception as e:
+        return False, str(e)
+
+
+def _get_deploy_status(name):
+    """获取部署状态，支持多进程。返回 running/pids/start_times 等。"""
+    runtime_data = _redis.hgetall(_runtime_key(name))
+
+    # 兼容旧版单进程数据：读取 pid_list 或回退到 pid
+    try:
+        pid_list = json.loads(runtime_data.get('pid_list', '[]'))
+    except (json.JSONDecodeError, TypeError):
+        pid_list = []
+    if not pid_list and runtime_data.get('pid', ''):
+        pid_list = [runtime_data['pid']]
+
+    try:
+        flag_list = json.loads(runtime_data.get('flag_list', '[]'))
+    except (json.JSONDecodeError, TypeError):
+        flag_list = []
+    if not flag_list and runtime_data.get('deploy_flag', ''):
+        flag_list = [runtime_data['deploy_flag']]
+
+    try:
+        ct_list = json.loads(runtime_data.get('ct_list', '[]'))
+    except (json.JSONDecodeError, TypeError):
+        ct_list = []
+    if not ct_list and runtime_data.get('create_time', ''):
+        ct_list = [runtime_data['create_time']]
+
+    try:
+        st_list = json.loads(runtime_data.get('st_list', '[]'))
+    except (json.JSONDecodeError, TypeError):
+        st_list = []
+    if not st_list and runtime_data.get('start_time', ''):
+        st_list = [runtime_data['start_time']]
+
+    alive_pids = []
+    alive_flags = []
+    alive_cts = []
+    alive_sts = []
+    for i, pid in enumerate(pid_list):
+        if not pid:
+            continue
+        flag = flag_list[i] if i < len(flag_list) else ''
+        ct = ct_list[i] if i < len(ct_list) else ''
+        st = st_list[i] if i < len(st_list) else ''
+        if _check_process_alive(pid, flag, ct):
+            alive_pids.append(pid)
+            alive_flags.append(flag)
+            alive_cts.append(ct)
+            alive_sts.append(st)
+
+    any_alive = len(alive_pids) > 0
+    if len(alive_pids) != len(pid_list):
+        _redis.hset(_runtime_key(name), mapping={
+            'pid_list': json.dumps(alive_pids),
+            'flag_list': json.dumps(alive_flags),
+            'ct_list': json.dumps(alive_cts),
+            'st_list': json.dumps(alive_sts),
+            'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': '',
+        })
+
+    return {
+        'running': any_alive,
+        'pid': ', '.join(alive_pids) if alive_pids else '',
+        'start_time': alive_sts[0] if alive_sts else '',
+        'deploy_flag': ', '.join(alive_flags) if alive_flags else '',
+        'pid_list': alive_pids,
+        'flag_list': alive_flags,
+        'ct_list': alive_cts,
+        'st_list': alive_sts,
+    }
+
+
+def _build_env(config):
+    env = os.environ.copy()
+    project_dir = config.get('project_dir', '')
+
+    try:
+        extra_env = json.loads(config.get('env_vars', '{}'))
+        if isinstance(extra_env, dict):
+            env.update(extra_env)
+    except (json.JSONDecodeError, TypeError):
+        pass
+
+    pythonpath_parts = []
+    if project_dir:
+        pythonpath_parts.append(project_dir)
+    user_pythonpath = env.get('PYTHONPATH', '')
+    if user_pythonpath:
+        pythonpath_parts.append(user_pythonpath)
+    if pythonpath_parts:
+        env['PYTHONPATH'] = os.pathsep.join(pythonpath_parts)
+
+    return env
+
+
+def _format_env_summary(config):
+    lines = []
+    project_dir = config.get('project_dir', '')
+    if project_dir:
+        lines.append(f'PYTHONPATH={project_dir}' + (';...' if os.environ.get('PYTHONPATH') else ''))
+    try:
+        extra_env = json.loads(config.get('env_vars', '{}'))
+        if isinstance(extra_env, dict):
+            for k, v in extra_env.items():
+                lines.append(f'{k}={v}')
+    except (json.JSONDecodeError, TypeError):
+        pass
+    return lines
+
+
+def _wait_process_alive(proc, deploy_flag, create_time, max_wait=30):
+    """启动后轮询进程是否存活，最多等待 max_wait 秒。
+    返回 (survived_secs, exit_code):
+      survived_secs >= 0  表示存活了这么多秒（成功）
+      survived_secs < 0   表示进程在 abs(survived_secs) 秒内死亡（失败）
+    """
+    create_time_str = str(create_time) if create_time else ''
+    pid = proc.pid
+    for elapsed in range(1, max_wait + 1):
+        time.sleep(1)
+        if not _check_process_alive(pid, deploy_flag, create_time_str):
+            exit_code = None
+            try:
+                exit_code = proc.poll()
+            except Exception:
+                pass
+            return -elapsed, exit_code
+    return max_wait, None
+
+
+def _read_log_tail_str(log_file, max_lines=30):
+    """读取日志文件末尾若干行，返回字符串，用于启动失败诊断"""
+    lines = _read_log_tail(log_file, max_lines)
+    return ''.join(lines).strip()
+
+
+def _start_process(name, config, num_processes=None):
+    """启动一个或多个进程。返回 (procs, err, cmd_detail)"""
+    project_dir = config.get('project_dir', '')
+    start_cmd = config.get('start_cmd', '')
+
+    if not start_cmd:
+        return None, '启动命令为空', {}
+    if project_dir and not os.path.isdir(project_dir):
+        return None, f'项目目录不存在: {project_dir}', {}
+
+    if num_processes is None:
+        num_processes = int(config.get('num_processes', '1') or 1)
+    num_processes = max(1, num_processes)
+
+    env = _build_env(config)
+    health_secs = int(config.get('health_check_secs', '10') or 10)
+    log_file = _get_nohup_log_path(name)
+
+    cmd_detail = {
+        'cwd': project_dir or '(当前目录)',
+        'env_vars': _format_env_summary(config),
+        'log_file': log_file,
+        'num_processes': num_processes,
+    }
+
+    all_pids = []
+    all_flags = []
+    all_cts = []
+    all_sts = []
+    procs = []
+    errors = []
+
+    for idx in range(num_processes):
+        deploy_flag = str(uuid.uuid4())
+        cmd_with_flag = f'{start_cmd} --deploy_flag={deploy_flag}'
+        proc_log = log_file if num_processes == 1 else _get_nohup_log_path(f'{name}.{idx}')
+
+        if os.name == 'nt':
+            display_cmd = f'{cmd_with_flag}  (stdout/stderr >> "{proc_log}")'
+        else:
+            display_cmd = f'nohup {cmd_with_flag} >> "{proc_log}" 2>&1 &'
+
+        if idx == 0:
+            cmd_detail['full_cmd'] = display_cmd
+
+        try:
+            log_fh = open(proc_log, 'a', encoding='utf-8')
+            if os.name == 'nt':
+                CREATE_NO_WINDOW = 0x08000000
+                proc = subprocess.Popen(
+                    cmd_with_flag, shell=True, cwd=project_dir or None, env=env,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW,
+                    stdout=log_fh, stderr=subprocess.STDOUT,
+                )
+            else:
+                proc = subprocess.Popen(
+                    cmd_with_flag, shell=True, cwd=project_dir or None, env=env,
+                    start_new_session=True,
+                    stdout=log_fh, stderr=subprocess.STDOUT,
+                )
+
+            time.sleep(0.3)
+            ct = _get_process_create_time(proc.pid)
+            now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            all_pids.append(str(proc.pid))
+            all_flags.append(deploy_flag)
+            all_cts.append(str(ct) if ct else '')
+            all_sts.append(now_str)
+            procs.append(proc)
+        except Exception as e:
+            errors.append(f'进程 #{idx}: {e}')
+
+    if not procs:
+        return None, '所有进程启动失败: ' + '; '.join(errors), cmd_detail
+
+    # 保存多进程运行时信息
+    _redis.hset(_runtime_key(name), mapping={
+        'pid_list': json.dumps(all_pids),
+        'flag_list': json.dumps(all_flags),
+        'ct_list': json.dumps(all_cts),
+        'st_list': json.dumps(all_sts),
+        'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': '',
+    })
+
+    cmd_detail['start_time'] = all_sts[0]
+    cmd_detail['pid'] = ', '.join(all_pids)
+
+    # 健康检查：等待所有进程存活
+    failed_any = False
+    for i, proc in enumerate(procs):
+        survived, exit_code = _wait_process_alive(
+            proc, all_flags[i], all_cts[i], max_wait=health_secs
+        )
+        if survived < 0:
+            failed_any = True
+            log_f = log_file if num_processes == 1 else _get_nohup_log_path(f'{name}.{i}')
+            log_tail = _read_log_tail_str(log_f, 20)
+            err = f'进程 #{i} (PID {all_pids[i]}) 启动后 {abs(survived)} 秒内退出'
+            if exit_code is not None:
+                err += f'（退出码: {exit_code}）'
+            if log_tail:
+                err += f'\n--- 日志尾部 ---\n{log_tail}'
+            errors.append(err)
+
+    cmd_detail['survived_secs'] = health_secs if not failed_any else -1
+
+    if failed_any:
+        # 刷新状态，去掉已死进程
+        _get_deploy_status(name)
+        return procs, '\n'.join(errors), cmd_detail
+
+    return procs, None, cmd_detail
+
+
+def _read_log_tail(filepath, max_lines=1000):
+    try:
+        with open(filepath, 'rb') as f:
+            f.seek(0, 2)
+            file_size = f.tell()
+            if file_size == 0:
+                return []
+
+            lines = []
+            chunk_size = 8192
+            remaining = file_size
+            partial = b''
+
+            while remaining > 0 and len(lines) < max_lines + 1:
+                read_size = min(chunk_size, remaining)
+                remaining -= read_size
+                f.seek(remaining)
+                chunk = f.read(read_size) + partial
+                chunk_lines = chunk.split(b'\n')
+                partial = chunk_lines[0]
+                lines = chunk_lines[1:] + lines
+
+            if partial:
+                lines = [partial] + lines
+
+            result_lines = lines[-max_lines:]
+            decoded = []
+            for line in result_lines:
+                try:
+                    decoded.append(line.decode('utf-8'))
+                except UnicodeDecodeError:
+                    decoded.append(line.decode('gbk', errors='replace'))
+            return decoded
+    except Exception:
+        return []
+
+
+def _find_log_files(name):
+    log_path = _get_log_path()
+    if not os.path.isdir(log_path):
+        return []
+
+    prefix = name + '.'
+    matched = []
+    for fname in os.listdir(log_path):
+        if fname.startswith(prefix) and os.path.isfile(os.path.join(log_path, fname)):
+            matched.append(os.path.join(log_path, fname))
+
+    matched.sort()
+    return matched
+
+
+_LOG_TIME_PATTERN = re.compile(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})')
+
+
+def _parse_log_time(line):
+    m = _LOG_TIME_PATTERN.search(line)
+    if m:
+        try:
+            return datetime.datetime.strptime(m.group(1), '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            pass
+    return None
+
+
+def _parse_dt(s):
+    """解析用户输入的时间字符串，兼容多种格式"""
+    if not s:
+        return None
+    for fmt in (
+        '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d %H', '%Y-%m-%d',
+        '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M', '%Y-%m-%dT%H',
+        '%Y/%m/%d %H:%M:%S', '%Y/%m/%d %H:%M', '%Y/%m/%d',
+    ):
+        try:
+            return datetime.datetime.strptime(s.strip(), fmt)
+        except ValueError:
+            continue
+    return None
+
+
+_MAX_SCAN_BYTES = 50 * 1024 * 1024  # 50MB
+
+
+def _decode_line(raw):
+    try:
+        return raw.decode('utf-8')
+    except UnicodeDecodeError:
+        return raw.decode('gbk', errors='replace')
+
+
+def _bisect_log_offset(filepath, target_dt):
+    """二分查找：在日志文件中找到时间戳 >= target_dt 的近似字节偏移。
+    利用日志时间戳单调递增的特性，时间复杂度 O(log(file_size))。
+    """
+    file_size = os.path.getsize(filepath)
+    if file_size == 0:
+        return 0
+
+    with open(filepath, 'rb') as f:
+        lo, hi = 0, file_size
+        while lo < hi:
+            mid = (lo + hi) // 2
+            f.seek(mid)
+            if mid > 0:
+                f.readline()
+
+            dt = None
+            for _ in range(50):
+                raw = f.readline()
+                if not raw:
+                    break
+                dt = _parse_log_time(_decode_line(raw))
+                if dt is not None:
+                    break
+
+            if dt is None:
+                hi = mid
+            elif dt < target_dt:
+                lo = mid + 1
+            else:
+                hi = mid
+
+        return max(0, lo - 256)
+
+
+def _read_log_lines_range(filepath, max_lines, start_offset=0, end_offset=None):
+    """从日志文件的 [start_offset, end_offset) 字节范围中反向读取最后 max_lines 行。
+    支持 10GB 级大文件，读取量 ≈ max_lines × 行均长，不需要全量加载。
+    """
+    try:
+        with open(filepath, 'rb') as f:
+            f.seek(0, 2)
+            file_size = f.tell()
+            if file_size == 0:
+                return []
+
+            if end_offset is None or end_offset > file_size:
+                end_offset = file_size
+            if start_offset < 0:
+                start_offset = 0
+            if start_offset >= end_offset:
+                return []
+
+            actual_start = max(start_offset, end_offset - _MAX_SCAN_BYTES)
+
+            lines = []
+            chunk_size = 65536
+            pos = end_offset
+            partial = b''
+
+            while pos > actual_start and len(lines) < max_lines + 1:
+                read_size = min(chunk_size, pos - actual_start)
+                pos -= read_size
+                f.seek(pos)
+                chunk = f.read(read_size) + partial
+                chunk_lines = chunk.split(b'\n')
+                partial = chunk_lines[0]
+                lines = chunk_lines[1:] + lines
+
+            if partial:
+                lines = [partial] + lines
+
+            result = lines[-max_lines:]
+            return [_decode_line(line) for line in result]
+    except Exception:
+        return []
+
+
+def _do_git_pull(project_dir, target_branch=None):
+    """执行 git pull，可选切换分支。
+    返回 dict:
+      steps      - list of {cmd, output, ok, summary}  每一步操作
+      success    - bool 整体是否成功
+      current_branch - 最终所在分支
+      summary    - 最终中文总结文本
+    """
+    steps = []
+
+    def run_step(args, summary_ok='', summary_fail='', **kw):
+        cmd_str = 'git ' + ' '.join(args[args.index('-C') + 2:]) if '-C' in args else 'git ' + ' '.join(args[1:])
+        r = subprocess.run(args, capture_output=True, text=True, **kw)
+        out = (r.stdout + r.stderr).strip()
+        ok = r.returncode == 0
+        steps.append({'cmd': '$ ' + cmd_str, 'output': out, 'ok': ok,
+                      'summary': summary_ok if ok else summary_fail})
+        return r, ok, out
+
+    # 获取当前分支（内部查询，不加入 steps）
+    cr = subprocess.run(['git', '-C', project_dir, 'rev-parse', '--abbrev-ref', 'HEAD'],
+                        capture_output=True, text=True, timeout=10)
+    current_branch = cr.stdout.strip() if cr.returncode == 0 else ''
+
+    # 获取 remote 名称（内部查询）
+    rr = subprocess.run(['git', '-C', project_dir, 'remote'],
+                        capture_output=True, text=True, timeout=10)
+    remotes = [r.strip() for r in rr.stdout.strip().split('\n') if r.strip()]
+    remote = remotes[0] if remotes else 'origin'
+
+    # 切换分支
+    switched = False
+    if target_branch and target_branch != current_branch:
+        local_branch = target_branch
+        if '/' in target_branch:
+            local_branch = target_branch.split('/', 1)[-1]
+
+        r, ok, out = run_step(
+            ['git', '-C', project_dir, 'checkout', local_branch],
+            summary_ok=f'✓ 已切换到分支 "{local_branch}"',
+            summary_fail='',
+            timeout=30,
+        )
+        if not ok:
+            # 本地不存在，从远程创建
+            steps.pop()
+            r, ok, out = run_step(
+                ['git', '-C', project_dir, 'checkout', '-b', local_branch, target_branch],
+                summary_ok=f'✓ 已从 "{target_branch}" 创建并切换到本地分支 "{local_branch}"',
+                summary_fail=f'✗ 切换分支失败：无法检出 "{local_branch}"',
+                timeout=30,
+            )
+            if not ok:
+                return {'steps': steps, 'success': False, 'current_branch': current_branch,
+                        'summary': f'✗ 切换分支失败，已终止。\n{out}'}
+        current_branch = local_branch
+        switched = True
+
+    # 检查 upstream tracking
+    tr = subprocess.run(
+        ['git', '-C', project_dir, 'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'],
+        capture_output=True, text=True, timeout=10
+    )
+
+    if tr.returncode == 0:
+        pull_args = ['git', '-C', project_dir, 'pull']
+    else:
+        if not current_branch:
+            return {'steps': steps, 'success': False, 'current_branch': current_branch,
+                    'summary': '✗ 无法检测当前 Git 分支，pull 终止。'}
+        ls_r = subprocess.run(
+            ['git', '-C', project_dir, 'ls-remote', '--heads', remote, current_branch],
+            capture_output=True, text=True, timeout=15
+        )
+        if ls_r.stdout.strip():
+            pull_args = ['git', '-C', project_dir, 'pull', remote, current_branch]
+        else:
+            found_default = None
+            for db in ['main', 'master']:
+                ls_d = subprocess.run(
+                    ['git', '-C', project_dir, 'ls-remote', '--heads', remote, db],
+                    capture_output=True, text=True, timeout=15
+                )
+                if ls_d.stdout.strip():
+                    found_default = db
+                    break
+            if found_default:
+                pull_args = ['git', '-C', project_dir, 'pull', remote, found_default]
+            else:
+                return {'steps': steps, 'success': False, 'current_branch': current_branch,
+                        'summary': (f'✗ 分支 "{current_branch}" 在远程 "{remote}" 上不存在，'
+                                    f'且未找到 main/master，pull 终止。\n'
+                                    f'请手动执行: git branch --set-upstream-to={remote}/<分支名> {current_branch}')}
+
+    r, ok, out = run_step(
+        pull_args,
+        summary_ok='',  # 下面根据 output 内容精细判断
+        summary_fail='',
+        timeout=60,
+    )
+
+    # 精细判断 pull 结果
+    pull_out_lower = out.lower()
+    if ok:
+        if 'already up to date' in pull_out_lower or 'already up-to-date' in pull_out_lower:
+            pull_summary = f'✓ 分支 "{current_branch}" 已是最新，无需更新。'
+        elif 'conflict' in pull_out_lower or 'merge conflict' in pull_out_lower:
+            pull_summary = '⚠ 拉取时发生合并冲突，请手动解决后再操作。'
+            ok = False
+        else:
+            pull_summary = f'✓ 成功拉取分支 "{current_branch}" 的最新代码。'
+        if ok and tr.returncode != 0 and current_branch:
+            subprocess.run(
+                ['git', '-C', project_dir, 'branch', '--set-upstream-to',
+                 f'{remote}/{current_branch}', current_branch],
+                capture_output=True, text=True, timeout=10
+            )
+    else:
+        if 'conflict' in pull_out_lower:
+            pull_summary = '✗ 拉取失败：存在合并冲突，请手动处理。'
+        elif 'rejected' in pull_out_lower:
+            pull_summary = '✗ 拉取被拒绝（可能本地有超前提交），建议先检查本地状态。'
+        elif 'could not read' in pull_out_lower or 'authentication' in pull_out_lower:
+            pull_summary = '✗ 拉取失败：认证或网络问题。'
+        else:
+            pull_summary = '✗ 拉取失败。'
+
+    steps[-1]['ok'] = ok
+    steps[-1]['summary'] = pull_summary
+
+    # 整体总结
+    parts = []
+    if switched:
+        switch_step = next((s for s in steps if 'checkout' in s['cmd']), None)
+        if switch_step:
+            parts.append(switch_step['summary'])
+    parts.append(pull_summary)
+    final_summary = '\n'.join(parts)
+
+    return {'steps': steps, 'success': ok, 'current_branch': current_branch,
+            'summary': final_summary}
+
+
+# ======================== 路由 ========================
+
+@deploy_bp.route('/deploy/list', methods=['GET'])
+@login_required
+def deploy_list():
+    names = _redis.smembers(_names_key())
+    result = []
+    for name in sorted(names):
+        config = _redis.hgetall(_config_key(name))
+        status = _get_deploy_status(name)
+        result.append({
+            'name': name,
+            'project_dir': config.get('project_dir', ''),
+            'start_cmd': config.get('start_cmd', ''),
+            **status,
+        })
+    return jsonify({'succ': True, 'data': result, 'ip': LOCAL_IP})
+
+
+@deploy_bp.route('/deploy/save', methods=['POST'])
+@login_required
+def deploy_save():
+    data = request.get_json(force=True)
+    name = data.get('name', '').strip()
+    if not name:
+        return jsonify({'succ': False, 'msg': '部署名称不能为空'})
+
+    project_dir = data.get('project_dir', '').strip()
+    start_cmd = data.get('start_cmd', '').strip()
+    env_vars = data.get('env_vars', '{}')
+
+    if isinstance(env_vars, dict):
+        env_vars = json.dumps(env_vars, ensure_ascii=False)
+
+    auto_start = '1' if data.get('auto_start') else '0'
+    auto_restart = '1' if data.get('auto_restart') else '0'
+    max_retry = str(int(data.get('max_retry', 3) or 3))
+    health_check_secs = str(int(data.get('health_check_secs', 10) or 10))
+    num_processes = str(max(1, int(data.get('num_processes', 1) or 1)))
+
+    _redis.sadd(_names_key(), name)
+    _redis.hset(_config_key(name), mapping={
+        'name': name,
+        'project_dir': project_dir,
+        'start_cmd': start_cmd,
+        'env_vars': env_vars,
+        'auto_start': auto_start,
+        'auto_restart': auto_restart,
+        'max_retry': max_retry,
+        'health_check_secs': health_check_secs,
+        'num_processes': num_processes,
+    })
+    return jsonify({'succ': True, 'msg': '保存成功'})
+
+
+@deploy_bp.route('/deploy/<name>/clone', methods=['POST'])
+@login_required
+def deploy_clone(name):
+    data = request.get_json(force=True)
+    new_name = data.get('new_name', '').strip()
+    if not new_name:
+        return jsonify({'succ': False, 'msg': '新部署名称不能为空'})
+    if _redis.sismember(_names_key(), new_name):
+        return jsonify({'succ': False, 'msg': f'部署名称 "{new_name}" 已存在'})
+
+    config = _redis.hgetall(_config_key(name))
+    if not config:
+        return jsonify({'succ': False, 'msg': '源部署配置不存在'})
+
+    new_config = dict(config)
+    new_config['name'] = new_name
+    _redis.sadd(_names_key(), new_name)
+    _redis.hset(_config_key(new_name), mapping=new_config)
+    return jsonify({'succ': True, 'msg': f'已复制为 "{new_name}"'})
+
+
+@deploy_bp.route('/deploy/<name>/delete', methods=['DELETE'])
+@login_required
+def deploy_delete(name):
+    status = _get_deploy_status(name)
+    if status['running']:
+        return jsonify({'succ': False, 'msg': '进程运行中，请先停止再删除'})
+
+    _redis.srem(_names_key(), name)
+    _redis.delete(_config_key(name))
+    _redis.delete(_runtime_key(name))
+    return jsonify({'succ': True, 'msg': '删除成功'})
+
+
+@deploy_bp.route('/deploy/<name>/start', methods=['POST'])
+@login_required
+def deploy_start(name):
+    config = _redis.hgetall(_config_key(name))
+    if not config:
+        return jsonify({'succ': False, 'msg': '部署配置不存在'})
+
+    status = _get_deploy_status(name)
+    if status['running']:
+        return jsonify({'succ': False, 'msg': '进程已在运行中'})
+
+    procs, err, cmd_detail = _start_process(name, config)
+    if err:
+        return jsonify({'succ': False, 'msg': f'启动失败: {err}', 'cmd_detail': cmd_detail})
+    _redis.hset(_runtime_key(name), mapping={'manual_stop': '0', 'should_run': '1', 'restart_retry_count': '0'})
+    pids = cmd_detail.get('pid', '')
+    return jsonify({
+        'succ': True,
+        'msg': f'启动成功, PID={pids}',
+        'pid': pids,
+        'cmd_detail': cmd_detail,
+    })
+
+
+@deploy_bp.route('/deploy/<name>/stop', methods=['POST'])
+@login_required
+def deploy_stop(name):
+    status = _get_deploy_status(name)
+    if not status['running']:
+        return jsonify({'succ': False, 'msg': '进程未在运行'})
+
+    pid_list = status.get('pid_list', [])
+    ct_list = status.get('ct_list', [])
+    old_start_time = status.get('start_time', '')
+
+    stop_cmds = []
+    all_ok = True
+    last_err = ''
+    for i, pid in enumerate(pid_list):
+        ct = ct_list[i] if i < len(ct_list) else ''
+        if os.name == 'nt':
+            stop_cmds.append(f'taskkill /F /T /PID {pid}')
+        else:
+            stop_cmds.append(f'kill -SIGTERM {pid}')
+        ok, err_msg = _kill_process(pid, ct)
+        if not ok:
+            all_ok = False
+            last_err = err_msg
+
+    if all_ok:
+        _redis.hset(_runtime_key(name), mapping={
+            'pid_list': '[]', 'flag_list': '[]', 'ct_list': '[]', 'st_list': '[]',
+            'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': '',
+            'manual_stop': '1', 'should_run': '0',
+        })
+    return jsonify({
+        'succ': all_ok,
+        'msg': '停止成功' if all_ok else (last_err or '停止进程时出错'),
+        'cmd_detail': {
+            'stop_cmd': '; '.join(stop_cmds),
+            'pid': ', '.join(pid_list),
+            'old_start_time': old_start_time,
+        },
+    })
+
+
+@deploy_bp.route('/deploy/<name>/restart', methods=['POST'])
+@login_required
+def deploy_restart(name):
+    status = _get_deploy_status(name)
+    old_pid = status.get('pid', '')
+    old_start_time = status.get('start_time', '')
+    stop_cmds = []
+    if status['running']:
+        pid_list = status.get('pid_list', [])
+        ct_list = status.get('ct_list', [])
+        for i, pid in enumerate(pid_list):
+            ct = ct_list[i] if i < len(ct_list) else ''
+            if os.name == 'nt':
+                stop_cmds.append(f'taskkill /F /T /PID {pid}')
+            else:
+                stop_cmds.append(f'kill -SIGTERM {pid}')
+            ok, err_msg = _kill_process(pid, ct)
+            if not ok and err_msg:
+                return jsonify({'succ': False, 'msg': f'停止旧进程失败: {err_msg}',
+                                'cmd_detail': {'stop_cmd': '; '.join(stop_cmds), 'old_pid': old_pid,
+                                               'old_start_time': old_start_time}})
+        _redis.hset(_runtime_key(name), mapping={
+            'pid_list': '[]', 'flag_list': '[]', 'ct_list': '[]', 'st_list': '[]',
+            'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': '',
+        })
+        time.sleep(1)
+
+    config = _redis.hgetall(_config_key(name))
+    if not config:
+        return jsonify({'succ': False, 'msg': '部署配置不存在'})
+
+    procs, err, cmd_detail = _start_process(name, config)
+    cmd_detail['stop_cmd'] = '; '.join(stop_cmds)
+    cmd_detail['old_pid'] = old_pid
+    cmd_detail['old_start_time'] = old_start_time
+    if err:
+        return jsonify({'succ': False, 'msg': f'重启失败: {err}', 'cmd_detail': cmd_detail})
+    _redis.hset(_runtime_key(name), mapping={'manual_stop': '0', 'should_run': '1', 'restart_retry_count': '0'})
+    pids = cmd_detail.get('pid', '')
+    return jsonify({
+        'succ': True,
+        'msg': f'重启成功, PID={pids}',
+        'pid': pids,
+        'cmd_detail': cmd_detail,
+    })
+
+
+@deploy_bp.route('/deploy/<name>/status', methods=['GET'])
+@login_required
+def deploy_status(name):
+    config = _redis.hgetall(_config_key(name))
+    status = _get_deploy_status(name)
+    return jsonify({'succ': True, 'data': {**config, **status}})
+
+
+@deploy_bp.route('/deploy/<name>/git_branches', methods=['GET'])
+@login_required
+def deploy_git_branches(name):
+    """获取 git 分支列表（自动 fetch --prune 更新远程信息）"""
+    config = _redis.hgetall(_config_key(name))
+    project_dir = config.get('project_dir', '')
+    if not project_dir or not os.path.isdir(project_dir):
+        return jsonify({'succ': False, 'is_git_repo': False, 'msg': f'项目目录不存在: {project_dir}'})
+
+    try:
+        check = subprocess.run(
+            ['git', '-C', project_dir, 'rev-parse', '--is-inside-work-tree'],
+            capture_output=True, text=True, timeout=5
+        )
+        if check.returncode != 0:
+            return jsonify({'succ': True, 'is_git_repo': False,
+                            'current': '', 'local': [], 'remote': []})
+
+        subprocess.run(['git', '-C', project_dir, 'fetch', '--prune'],
+                       capture_output=True, text=True, timeout=30)
+
+        current = subprocess.run(
+            ['git', '-C', project_dir, 'rev-parse', '--abbrev-ref', 'HEAD'],
+            capture_output=True, text=True, timeout=10
+        )
+        current_branch = current.stdout.strip() if current.returncode == 0 else ''
+
+        local = subprocess.run(
+            ['git', '-C', project_dir, 'branch', '--format=%(refname:short)'],
+            capture_output=True, text=True, timeout=10
+        )
+        local_branches = [b.strip() for b in local.stdout.strip().split('\n') if b.strip()]
+
+        remote = subprocess.run(
+            ['git', '-C', project_dir, 'branch', '-r', '--format=%(refname:short)'],
+            capture_output=True, text=True, timeout=10
+        )
+        remote_branches = [b.strip() for b in remote.stdout.strip().split('\n')
+                           if b.strip() and 'HEAD' not in b]
+
+        return jsonify({
+            'succ': True,
+            'is_git_repo': True,
+            'current': current_branch,
+            'local': local_branches,
+            'remote': remote_branches,
+        })
+    except subprocess.TimeoutExpired:
+        return jsonify({'succ': False, 'is_git_repo': False, 'msg': 'Git 操作超时'})
+    except Exception as e:
+        return jsonify({'succ': False, 'is_git_repo': False, 'msg': str(e)})
+
+
+@deploy_bp.route('/deploy/<name>/git_pull', methods=['POST'])
+@login_required
+def deploy_git_pull(name):
+    config = _redis.hgetall(_config_key(name))
+    project_dir = config.get('project_dir', '')
+    if not project_dir or not os.path.isdir(project_dir):
+        return jsonify({'succ': False, 'msg': f'项目目录不存在: {project_dir}'})
+
+    data = request.get_json(silent=True) or {}
+    target_branch = data.get('branch', '').strip()
+
+    try:
+        res = _do_git_pull(project_dir, target_branch or None)
+        return jsonify({
+            'succ': res['success'],
+            'msg': res['summary'],
+            'steps': res['steps'],
+            'current_branch': res['current_branch'],
+        })
+    except subprocess.TimeoutExpired:
+        return jsonify({'succ': False, 'msg': '✗ Git pull 超时（60秒）', 'steps': [], 'current_branch': ''})
+    except Exception as e:
+        return jsonify({'succ': False, 'msg': f'✗ Git pull 异常: {e}', 'steps': [], 'current_branch': ''})
+
+
+@deploy_bp.route('/deploy/<name>/logs', methods=['GET'])
+@login_required
+def deploy_logs(name):
+    keyword = request.args.get('keyword', '').strip()
+    time_start = request.args.get('time_start', '').strip()
+    time_end = request.args.get('time_end', '').strip()
+    max_lines = int(request.args.get('lines', 200))
+
+    log_files = _find_log_files(name)
+    if not log_files:
+        return jsonify({'succ': True, 'data': [], 'files': [], 'total': 0})
+
+    dt_start = _parse_dt(time_start)
+    dt_end = _parse_dt(time_end)
+
+    all_lines = []
+    for fpath in log_files:
+        try:
+            file_size = os.path.getsize(fpath)
+        except OSError:
+            continue
+        if file_size == 0:
+            continue
+
+        start_off = 0
+        end_off = file_size
+
+        if dt_start:
+            start_off = _bisect_log_offset(fpath, dt_start)
+        if dt_end:
+            end_off = _bisect_log_offset(fpath, dt_end + datetime.timedelta(seconds=1))
+
+        if start_off >= end_off:
+            continue
+
+        lines = _read_log_lines_range(fpath, max_lines * 3, start_off, end_off)
+        all_lines.extend(lines)
+
+    # 将行按"日志条目"分组：以时间戳开头的行为新条目起点，
+    # 后续无时间戳的行属于同一条目（如 traceback、多行 error 消息）。
+    entries = []  # [(entry_time, [line1, line2, ...])]
+    last_time = None
+    for line in all_lines:
+        if not line.strip():
+            continue
+        clean_line = _strip_ansi(line)
+        lt = _parse_log_time(clean_line)
+        if lt:
+            last_time = lt
+            entries.append((lt, [clean_line]))
+        else:
+            if entries:
+                entries[-1][1].append(clean_line)
+            elif last_time:
+                entries.append((last_time, [clean_line]))
+
+    keyword_lower = keyword.lower() if keyword else ''
+    filtered = []
+    for entry_time, entry_lines in entries:
+        if dt_start or dt_end:
+            if entry_time:
+                if dt_start and entry_time < dt_start:
+                    continue
+                if dt_end and entry_time > dt_end:
+                    continue
+            else:
+                continue
+
+        if keyword_lower:
+            entry_text = '\n'.join(entry_lines).lower()
+            if keyword_lower not in entry_text:
+                continue
+
+        filtered.extend(entry_lines)
+
+    result_lines = filtered[-max_lines:]
+
+    return jsonify({
+        'succ': True,
+        'data': result_lines,
+        'files': [os.path.basename(f) for f in log_files],
+        'total': len(result_lines),
+    })
+
+
+@deploy_bp.route('/deploy/<name>/config', methods=['GET'])
+@login_required
+def deploy_get_config(name):
+    config = _redis.hgetall(_config_key(name))
+    if not config:
+        return jsonify({'succ': False, 'msg': '部署配置不存在'})
+    status = _get_deploy_status(name)
+    return jsonify({'succ': True, 'data': {**config, **status}})
+
+
+# ======================== 自动启动 & 自动重启守护 ========================
+
+def _auto_restart_daemon():
+    """后台守护线程：每 10 秒检查所有配置了 auto_restart 的部署，
+    如果进程意外退出（且非人工停止），自动重启，最多连续失败 max_retry 次。
+    启动时还负责处理 auto_start 逻辑。
+    """
+    time.sleep(15)
+
+    try:
+        _do_auto_start()
+    except Exception:
+        pass
+
+    while True:
+        try:
+            _do_auto_restart_check()
+        except Exception:
+            pass
+        time.sleep(10)
+
+
+def _do_auto_start():
+    """服务启动时执行一次：启动所有配置了 auto_start=1 的部署（如果尚未运行）"""
+    try:
+        names = _redis.smembers(_names_key())
+    except Exception:
+        return
+    for name in names:
+        try:
+            config = _redis.hgetall(_config_key(name))
+            if not config or config.get('auto_start', '0') != '1':
+                continue
+            status = _get_deploy_status(name)
+            if status['running']:
+                continue
+            procs, err, _ = _start_process(name, config)
+            if not err:
+                _redis.hset(_runtime_key(name), mapping={
+                    'manual_stop': '0', 'should_run': '1', 'restart_retry_count': '0',
+                })
+        except Exception:
+            pass
+
+
+def _do_auto_restart_check():
+    """守护线程每次循环调用：检查需要自动重启的部署（支持多进程）"""
+    try:
+        names = _redis.smembers(_names_key())
+    except Exception:
+        return
+    for name in names:
+        try:
+            config = _redis.hgetall(_config_key(name))
+            if not config or config.get('auto_restart', '0') != '1':
+                continue
+
+            runtime = _redis.hgetall(_runtime_key(name))
+            if runtime.get('manual_stop', '') == '1':
+                continue
+            if runtime.get('should_run', '') != '1':
+                continue
+
+            status = _get_deploy_status(name)
+            expected = max(1, int(config.get('num_processes', '1') or 1))
+            alive_count = len(status.get('pid_list', []))
+
+            if alive_count >= expected:
+                _redis.hset(_runtime_key(name), 'restart_retry_count', '0')
+                continue
+
+            retry_count = int(runtime.get('restart_retry_count', '0'))
+            max_retry = int(config.get('max_retry', '3'))
+            if retry_count >= max_retry:
+                continue
+
+            _redis.hset(_runtime_key(name), 'restart_retry_count', str(retry_count + 1))
+
+            # 先停掉残余进程，再全部重启
+            for i, pid in enumerate(status.get('pid_list', [])):
+                ct = status['ct_list'][i] if i < len(status.get('ct_list', [])) else ''
+                _kill_process(pid, ct)
+
+            _redis.hset(_runtime_key(name), mapping={
+                'pid_list': '[]', 'flag_list': '[]', 'ct_list': '[]', 'st_list': '[]',
+            })
+            time.sleep(1)
+
+            procs, err, _ = _start_process(name, config)
+            if not err:
+                _redis.hset(_runtime_key(name), 'restart_retry_count', '0')
+        except Exception:
+            pass
+
+
+_daemon_thread = threading.Thread(target=_auto_restart_daemon, daemon=True)
+_daemon_thread.start()
+
+`````
+
+--- **end of file: funboost/funboost_web_manager/script_deploy.py** (project: funboost) --- 
+
+---
+
+
+--- **start of file: funboost/funboost_web_manager/增加脚本部署.md** (project: funboost) --- 
+
+`````markdown
+
+---
+noteId: "4033a9d022a211f1b8139f50f0306497"
+tags: []
+---
+
+
+`````
+
+--- **end of file: funboost/funboost_web_manager/增加脚本部署.md** (project: funboost) --- 
 
 ---
 

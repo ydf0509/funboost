@@ -7,7 +7,7 @@ import signal
 import socket
 import subprocess
 import time
-import traceback
+import threading
 import uuid
 
 from flask import Blueprint, request, jsonify
@@ -190,28 +190,73 @@ def _kill_process(pid, stored_create_time=None):
 
 
 def _get_deploy_status(name):
+    """获取部署状态，支持多进程。返回 running/pids/start_times 等。"""
     runtime_data = _redis.hgetall(_runtime_key(name))
-    pid = runtime_data.get('pid', '')
-    deploy_flag = runtime_data.get('deploy_flag', '')
-    start_time = runtime_data.get('start_time', '')
-    create_time = runtime_data.get('create_time', '')
 
-    alive = False
-    if pid:
-        alive = _check_process_alive(pid, deploy_flag, create_time)
-        if not alive:
-            _redis.hset(_runtime_key(name), mapping={
-                'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': ''
-            })
-            pid = ''
-            start_time = ''
-            deploy_flag = ''
+    # 兼容旧版单进程数据：读取 pid_list 或回退到 pid
+    try:
+        pid_list = json.loads(runtime_data.get('pid_list', '[]'))
+    except (json.JSONDecodeError, TypeError):
+        pid_list = []
+    if not pid_list and runtime_data.get('pid', ''):
+        pid_list = [runtime_data['pid']]
+
+    try:
+        flag_list = json.loads(runtime_data.get('flag_list', '[]'))
+    except (json.JSONDecodeError, TypeError):
+        flag_list = []
+    if not flag_list and runtime_data.get('deploy_flag', ''):
+        flag_list = [runtime_data['deploy_flag']]
+
+    try:
+        ct_list = json.loads(runtime_data.get('ct_list', '[]'))
+    except (json.JSONDecodeError, TypeError):
+        ct_list = []
+    if not ct_list and runtime_data.get('create_time', ''):
+        ct_list = [runtime_data['create_time']]
+
+    try:
+        st_list = json.loads(runtime_data.get('st_list', '[]'))
+    except (json.JSONDecodeError, TypeError):
+        st_list = []
+    if not st_list and runtime_data.get('start_time', ''):
+        st_list = [runtime_data['start_time']]
+
+    alive_pids = []
+    alive_flags = []
+    alive_cts = []
+    alive_sts = []
+    for i, pid in enumerate(pid_list):
+        if not pid:
+            continue
+        flag = flag_list[i] if i < len(flag_list) else ''
+        ct = ct_list[i] if i < len(ct_list) else ''
+        st = st_list[i] if i < len(st_list) else ''
+        if _check_process_alive(pid, flag, ct):
+            alive_pids.append(pid)
+            alive_flags.append(flag)
+            alive_cts.append(ct)
+            alive_sts.append(st)
+
+    any_alive = len(alive_pids) > 0
+    if len(alive_pids) != len(pid_list):
+        _redis.hset(_runtime_key(name), mapping={
+            'pid_list': json.dumps(alive_pids),
+            'flag_list': json.dumps(alive_flags),
+            'ct_list': json.dumps(alive_cts),
+            'st_list': json.dumps(alive_sts),
+            'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': '',
+        })
 
     return {
-        'running': alive,
-        'pid': pid,
-        'start_time': start_time,
-        'deploy_flag': deploy_flag,
+        'running': any_alive,
+        'pid': ', '.join(alive_pids) if alive_pids else '',
+        'start_time': alive_sts[0] if alive_sts else '',
+        'deploy_flag': ', '.join(alive_flags) if alive_flags else '',
+        'pid_list': alive_pids,
+        'flag_list': alive_flags,
+        'ct_list': alive_cts,
+        'st_list': alive_sts,
     }
 
 
@@ -279,7 +324,8 @@ def _read_log_tail_str(log_file, max_lines=30):
     return ''.join(lines).strip()
 
 
-def _start_process(name, config):
+def _start_process(name, config, num_processes=None):
+    """启动一个或多个进程。返回 (procs, err, cmd_detail)"""
     project_dir = config.get('project_dir', '')
     start_cmd = config.get('start_cmd', '')
 
@@ -288,72 +334,109 @@ def _start_process(name, config):
     if project_dir and not os.path.isdir(project_dir):
         return None, f'项目目录不存在: {project_dir}', {}
 
-    deploy_flag = str(uuid.uuid4())
-    log_file = _get_nohup_log_path(name)
-    env = _build_env(config)
-    cmd_with_flag = f'{start_cmd} --deploy_flag={deploy_flag}'
+    if num_processes is None:
+        num_processes = int(config.get('num_processes', '1') or 1)
+    num_processes = max(1, num_processes)
 
-    if os.name == 'nt':
-        display_cmd = f'{cmd_with_flag}  (stdout/stderr >> "{log_file}")'
-    else:
-        display_cmd = f'nohup {cmd_with_flag} >> "{log_file}" 2>&1 &'
+    env = _build_env(config)
+    health_secs = int(config.get('health_check_secs', '10') or 10)
+    log_file = _get_nohup_log_path(name)
 
     cmd_detail = {
         'cwd': project_dir or '(当前目录)',
-        'full_cmd': display_cmd,
-        'log_file': log_file,
         'env_vars': _format_env_summary(config),
+        'log_file': log_file,
+        'num_processes': num_processes,
     }
 
-    try:
-        log_fh = open(log_file, 'a', encoding='utf-8')
+    all_pids = []
+    all_flags = []
+    all_cts = []
+    all_sts = []
+    procs = []
+    errors = []
+
+    for idx in range(num_processes):
+        deploy_flag = str(uuid.uuid4())
+        cmd_with_flag = f'{start_cmd} --deploy_flag={deploy_flag}'
+        proc_log = log_file if num_processes == 1 else _get_nohup_log_path(f'{name}.{idx}')
+
         if os.name == 'nt':
-            CREATE_NO_WINDOW = 0x08000000
-            proc = subprocess.Popen(
-                cmd_with_flag, shell=True, cwd=project_dir or None, env=env,
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW,
-                stdout=log_fh, stderr=subprocess.STDOUT,
-            )
+            display_cmd = f'{cmd_with_flag}  (stdout/stderr >> "{proc_log}")'
         else:
-            proc = subprocess.Popen(
-                cmd_with_flag, shell=True, cwd=project_dir or None, env=env,
-                start_new_session=True,
-                stdout=log_fh, stderr=subprocess.STDOUT,
-            )
+            display_cmd = f'nohup {cmd_with_flag} >> "{proc_log}" 2>&1 &'
 
-        time.sleep(0.3)
-        create_time = _get_process_create_time(proc.pid)
+        if idx == 0:
+            cmd_detail['full_cmd'] = display_cmd
 
-        now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        _redis.hset(_runtime_key(name), mapping={
-            'pid': str(proc.pid),
-            'start_time': now_str,
-            'deploy_flag': deploy_flag,
-            'log_file': log_file,
-            'create_time': str(create_time) if create_time else '',
-        })
-        cmd_detail['start_time'] = now_str
-        cmd_detail['pid'] = str(proc.pid)
+        try:
+            log_fh = open(proc_log, 'a', encoding='utf-8')
+            if os.name == 'nt':
+                CREATE_NO_WINDOW = 0x08000000
+                proc = subprocess.Popen(
+                    cmd_with_flag, shell=True, cwd=project_dir or None, env=env,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW,
+                    stdout=log_fh, stderr=subprocess.STDOUT,
+                )
+            else:
+                proc = subprocess.Popen(
+                    cmd_with_flag, shell=True, cwd=project_dir or None, env=env,
+                    start_new_session=True,
+                    stdout=log_fh, stderr=subprocess.STDOUT,
+                )
 
-        # 等待最多 30 秒，确认进程持续存活（防止启动即崩溃）
-        survived_secs, exit_code_hint = _wait_process_alive(proc, deploy_flag, create_time, max_wait=30)
-        cmd_detail['survived_secs'] = survived_secs
-        if survived_secs < 0:
-            # 进程已死亡，读取日志尾部辅助诊断
-            log_tail = _read_log_tail_str(log_file, 30)
-            _redis.hset(_runtime_key(name), mapping={
-                'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': ''
-            })
-            err_msg = f'进程在启动后 {abs(survived_secs)} 秒内退出'
-            if exit_code_hint is not None:
-                err_msg += f'（退出码: {exit_code_hint}）'
+            time.sleep(0.3)
+            ct = _get_process_create_time(proc.pid)
+            now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            all_pids.append(str(proc.pid))
+            all_flags.append(deploy_flag)
+            all_cts.append(str(ct) if ct else '')
+            all_sts.append(now_str)
+            procs.append(proc)
+        except Exception as e:
+            errors.append(f'进程 #{idx}: {e}')
+
+    if not procs:
+        return None, '所有进程启动失败: ' + '; '.join(errors), cmd_detail
+
+    # 保存多进程运行时信息
+    _redis.hset(_runtime_key(name), mapping={
+        'pid_list': json.dumps(all_pids),
+        'flag_list': json.dumps(all_flags),
+        'ct_list': json.dumps(all_cts),
+        'st_list': json.dumps(all_sts),
+        'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': '',
+    })
+
+    cmd_detail['start_time'] = all_sts[0]
+    cmd_detail['pid'] = ', '.join(all_pids)
+
+    # 健康检查：等待所有进程存活
+    failed_any = False
+    for i, proc in enumerate(procs):
+        survived, exit_code = _wait_process_alive(
+            proc, all_flags[i], all_cts[i], max_wait=health_secs
+        )
+        if survived < 0:
+            failed_any = True
+            log_f = log_file if num_processes == 1 else _get_nohup_log_path(f'{name}.{i}')
+            log_tail = _read_log_tail_str(log_f, 20)
+            err = f'进程 #{i} (PID {all_pids[i]}) 启动后 {abs(survived)} 秒内退出'
+            if exit_code is not None:
+                err += f'（退出码: {exit_code}）'
             if log_tail:
-                err_msg += f'\n\n--- 日志尾部 ---\n{log_tail}'
-            return proc, err_msg, cmd_detail
+                err += f'\n--- 日志尾部 ---\n{log_tail}'
+            errors.append(err)
 
-        return proc, None, cmd_detail
-    except Exception as e:
-        return None, f'{e}\n{traceback.format_exc()}', cmd_detail
+    cmd_detail['survived_secs'] = health_secs if not failed_any else -1
+
+    if failed_any:
+        # 刷新状态，去掉已死进程
+        _get_deploy_status(name)
+        return procs, '\n'.join(errors), cmd_detail
+
+    return procs, None, cmd_detail
 
 
 def _read_log_tail(filepath, max_lines=1000):
@@ -398,17 +481,11 @@ def _find_log_files(name):
     if not os.path.isdir(log_path):
         return []
 
-    nohup_file = os.path.join(log_path, f'{name}.nohup.log')
+    prefix = name + '.'
     matched = []
-    if os.path.isfile(nohup_file):
-        matched.append(nohup_file)
-
     for fname in os.listdir(log_path):
-        full_path = os.path.join(log_path, fname)
-        if full_path in matched:
-            continue
-        if name in fname and os.path.isfile(full_path):
-            matched.append(full_path)
+        if fname.startswith(prefix) and os.path.isfile(os.path.join(log_path, fname)):
+            matched.append(os.path.join(log_path, fname))
 
     matched.sort()
     return matched
@@ -425,6 +502,110 @@ def _parse_log_time(line):
         except ValueError:
             pass
     return None
+
+
+def _parse_dt(s):
+    """解析用户输入的时间字符串，兼容多种格式"""
+    if not s:
+        return None
+    for fmt in (
+        '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d %H', '%Y-%m-%d',
+        '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M', '%Y-%m-%dT%H',
+        '%Y/%m/%d %H:%M:%S', '%Y/%m/%d %H:%M', '%Y/%m/%d',
+    ):
+        try:
+            return datetime.datetime.strptime(s.strip(), fmt)
+        except ValueError:
+            continue
+    return None
+
+
+_MAX_SCAN_BYTES = 50 * 1024 * 1024  # 50MB
+
+
+def _decode_line(raw):
+    try:
+        return raw.decode('utf-8')
+    except UnicodeDecodeError:
+        return raw.decode('gbk', errors='replace')
+
+
+def _bisect_log_offset(filepath, target_dt):
+    """二分查找：在日志文件中找到时间戳 >= target_dt 的近似字节偏移。
+    利用日志时间戳单调递增的特性，时间复杂度 O(log(file_size))。
+    """
+    file_size = os.path.getsize(filepath)
+    if file_size == 0:
+        return 0
+
+    with open(filepath, 'rb') as f:
+        lo, hi = 0, file_size
+        while lo < hi:
+            mid = (lo + hi) // 2
+            f.seek(mid)
+            if mid > 0:
+                f.readline()
+
+            dt = None
+            for _ in range(50):
+                raw = f.readline()
+                if not raw:
+                    break
+                dt = _parse_log_time(_decode_line(raw))
+                if dt is not None:
+                    break
+
+            if dt is None:
+                hi = mid
+            elif dt < target_dt:
+                lo = mid + 1
+            else:
+                hi = mid
+
+        return max(0, lo - 256)
+
+
+def _read_log_lines_range(filepath, max_lines, start_offset=0, end_offset=None):
+    """从日志文件的 [start_offset, end_offset) 字节范围中反向读取最后 max_lines 行。
+    支持 10GB 级大文件，读取量 ≈ max_lines × 行均长，不需要全量加载。
+    """
+    try:
+        with open(filepath, 'rb') as f:
+            f.seek(0, 2)
+            file_size = f.tell()
+            if file_size == 0:
+                return []
+
+            if end_offset is None or end_offset > file_size:
+                end_offset = file_size
+            if start_offset < 0:
+                start_offset = 0
+            if start_offset >= end_offset:
+                return []
+
+            actual_start = max(start_offset, end_offset - _MAX_SCAN_BYTES)
+
+            lines = []
+            chunk_size = 65536
+            pos = end_offset
+            partial = b''
+
+            while pos > actual_start and len(lines) < max_lines + 1:
+                read_size = min(chunk_size, pos - actual_start)
+                pos -= read_size
+                f.seek(pos)
+                chunk = f.read(read_size) + partial
+                chunk_lines = chunk.split(b'\n')
+                partial = chunk_lines[0]
+                lines = chunk_lines[1:] + lines
+
+            if partial:
+                lines = [partial] + lines
+
+            result = lines[-max_lines:]
+            return [_decode_line(line) for line in result]
+    except Exception:
+        return []
 
 
 def _do_git_pull(project_dir, target_branch=None):
@@ -604,12 +785,23 @@ def deploy_save():
     if isinstance(env_vars, dict):
         env_vars = json.dumps(env_vars, ensure_ascii=False)
 
+    auto_start = '1' if data.get('auto_start') else '0'
+    auto_restart = '1' if data.get('auto_restart') else '0'
+    max_retry = str(int(data.get('max_retry', 3) or 3))
+    health_check_secs = str(int(data.get('health_check_secs', 10) or 10))
+    num_processes = str(max(1, int(data.get('num_processes', 1) or 1)))
+
     _redis.sadd(_names_key(), name)
     _redis.hset(_config_key(name), mapping={
         'name': name,
         'project_dir': project_dir,
         'start_cmd': start_cmd,
         'env_vars': env_vars,
+        'auto_start': auto_start,
+        'auto_restart': auto_restart,
+        'max_retry': max_retry,
+        'health_check_secs': health_check_secs,
+        'num_processes': num_processes,
     })
     return jsonify({'succ': True, 'msg': '保存成功'})
 
@@ -628,13 +820,10 @@ def deploy_clone(name):
     if not config:
         return jsonify({'succ': False, 'msg': '源部署配置不存在'})
 
+    new_config = dict(config)
+    new_config['name'] = new_name
     _redis.sadd(_names_key(), new_name)
-    _redis.hset(_config_key(new_name), mapping={
-        'name': new_name,
-        'project_dir': config.get('project_dir', ''),
-        'start_cmd': config.get('start_cmd', ''),
-        'env_vars': config.get('env_vars', '{}'),
-    })
+    _redis.hset(_config_key(new_name), mapping=new_config)
     return jsonify({'succ': True, 'msg': f'已复制为 "{new_name}"'})
 
 
@@ -662,13 +851,15 @@ def deploy_start(name):
     if status['running']:
         return jsonify({'succ': False, 'msg': '进程已在运行中'})
 
-    proc, err, cmd_detail = _start_process(name, config)
+    procs, err, cmd_detail = _start_process(name, config)
     if err:
         return jsonify({'succ': False, 'msg': f'启动失败: {err}', 'cmd_detail': cmd_detail})
+    _redis.hset(_runtime_key(name), mapping={'manual_stop': '0', 'should_run': '1', 'restart_retry_count': '0'})
+    pids = cmd_detail.get('pid', '')
     return jsonify({
         'succ': True,
-        'msg': f'启动成功, PID={proc.pid}',
-        'pid': proc.pid,
+        'msg': f'启动成功, PID={pids}',
+        'pid': pids,
         'cmd_detail': cmd_detail,
     })
 
@@ -680,26 +871,38 @@ def deploy_stop(name):
     if not status['running']:
         return jsonify({'succ': False, 'msg': '进程未在运行'})
 
-    pid = status['pid']
-    runtime_data = _redis.hgetall(_runtime_key(name))
-    stored_create_time = runtime_data.get('create_time', '')
-
-    if os.name == 'nt':
-        stop_cmd = f'taskkill /F /T /PID {pid}'
-    else:
-        stop_cmd = f'kill -SIGTERM {pid}'
-
+    pid_list = status.get('pid_list', [])
+    ct_list = status.get('ct_list', [])
     old_start_time = status.get('start_time', '')
 
-    ok, err_msg = _kill_process(pid, stored_create_time)
-    if ok:
+    stop_cmds = []
+    all_ok = True
+    last_err = ''
+    for i, pid in enumerate(pid_list):
+        ct = ct_list[i] if i < len(ct_list) else ''
+        if os.name == 'nt':
+            stop_cmds.append(f'taskkill /F /T /PID {pid}')
+        else:
+            stop_cmds.append(f'kill -SIGTERM {pid}')
+        ok, err_msg = _kill_process(pid, ct)
+        if not ok:
+            all_ok = False
+            last_err = err_msg
+
+    if all_ok:
         _redis.hset(_runtime_key(name), mapping={
-            'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': ''
+            'pid_list': '[]', 'flag_list': '[]', 'ct_list': '[]', 'st_list': '[]',
+            'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': '',
+            'manual_stop': '1', 'should_run': '0',
         })
     return jsonify({
-        'succ': ok,
-        'msg': '停止成功' if ok else (err_msg or '停止进程时出错'),
-        'cmd_detail': {'stop_cmd': stop_cmd, 'pid': pid, 'old_start_time': old_start_time},
+        'succ': all_ok,
+        'msg': '停止成功' if all_ok else (last_err or '停止进程时出错'),
+        'cmd_detail': {
+            'stop_cmd': '; '.join(stop_cmds),
+            'pid': ', '.join(pid_list),
+            'old_start_time': old_start_time,
+        },
     })
 
 
@@ -709,21 +912,24 @@ def deploy_restart(name):
     status = _get_deploy_status(name)
     old_pid = status.get('pid', '')
     old_start_time = status.get('start_time', '')
-    stop_cmd = ''
+    stop_cmds = []
     if status['running']:
-        if os.name == 'nt':
-            stop_cmd = f'taskkill /F /T /PID {old_pid}'
-        else:
-            stop_cmd = f'kill -SIGTERM {old_pid}'
-        runtime_data = _redis.hgetall(_runtime_key(name))
-        stored_create_time = runtime_data.get('create_time', '')
-        ok, err_msg = _kill_process(old_pid, stored_create_time)
-        if not ok and err_msg:
-            return jsonify({'succ': False, 'msg': f'停止旧进程失败: {err_msg}',
-                            'cmd_detail': {'stop_cmd': stop_cmd, 'old_pid': old_pid,
-                                           'old_start_time': old_start_time}})
+        pid_list = status.get('pid_list', [])
+        ct_list = status.get('ct_list', [])
+        for i, pid in enumerate(pid_list):
+            ct = ct_list[i] if i < len(ct_list) else ''
+            if os.name == 'nt':
+                stop_cmds.append(f'taskkill /F /T /PID {pid}')
+            else:
+                stop_cmds.append(f'kill -SIGTERM {pid}')
+            ok, err_msg = _kill_process(pid, ct)
+            if not ok and err_msg:
+                return jsonify({'succ': False, 'msg': f'停止旧进程失败: {err_msg}',
+                                'cmd_detail': {'stop_cmd': '; '.join(stop_cmds), 'old_pid': old_pid,
+                                               'old_start_time': old_start_time}})
         _redis.hset(_runtime_key(name), mapping={
-            'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': ''
+            'pid_list': '[]', 'flag_list': '[]', 'ct_list': '[]', 'st_list': '[]',
+            'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': '',
         })
         time.sleep(1)
 
@@ -731,16 +937,18 @@ def deploy_restart(name):
     if not config:
         return jsonify({'succ': False, 'msg': '部署配置不存在'})
 
-    proc, err, cmd_detail = _start_process(name, config)
-    cmd_detail['stop_cmd'] = stop_cmd
+    procs, err, cmd_detail = _start_process(name, config)
+    cmd_detail['stop_cmd'] = '; '.join(stop_cmds)
     cmd_detail['old_pid'] = old_pid
     cmd_detail['old_start_time'] = old_start_time
     if err:
         return jsonify({'succ': False, 'msg': f'重启失败: {err}', 'cmd_detail': cmd_detail})
+    _redis.hset(_runtime_key(name), mapping={'manual_stop': '0', 'should_run': '1', 'restart_retry_count': '0'})
+    pids = cmd_detail.get('pid', '')
     return jsonify({
         'succ': True,
-        'msg': f'重启成功, PID={proc.pid}',
-        'pid': proc.pid,
+        'msg': f'重启成功, PID={pids}',
+        'pid': pids,
         'cmd_detail': cmd_detail,
     })
 
@@ -760,9 +968,17 @@ def deploy_git_branches(name):
     config = _redis.hgetall(_config_key(name))
     project_dir = config.get('project_dir', '')
     if not project_dir or not os.path.isdir(project_dir):
-        return jsonify({'succ': False, 'msg': f'项目目录不存在: {project_dir}'})
+        return jsonify({'succ': False, 'is_git_repo': False, 'msg': f'项目目录不存在: {project_dir}'})
 
     try:
+        check = subprocess.run(
+            ['git', '-C', project_dir, 'rev-parse', '--is-inside-work-tree'],
+            capture_output=True, text=True, timeout=5
+        )
+        if check.returncode != 0:
+            return jsonify({'succ': True, 'is_git_repo': False,
+                            'current': '', 'local': [], 'remote': []})
+
         subprocess.run(['git', '-C', project_dir, 'fetch', '--prune'],
                        capture_output=True, text=True, timeout=30)
 
@@ -787,14 +1003,15 @@ def deploy_git_branches(name):
 
         return jsonify({
             'succ': True,
+            'is_git_repo': True,
             'current': current_branch,
             'local': local_branches,
             'remote': remote_branches,
         })
     except subprocess.TimeoutExpired:
-        return jsonify({'succ': False, 'msg': 'Git 操作超时'})
+        return jsonify({'succ': False, 'is_git_repo': False, 'msg': 'Git 操作超时'})
     except Exception as e:
-        return jsonify({'succ': False, 'msg': str(e)})
+        return jsonify({'succ': False, 'is_git_repo': False, 'msg': str(e)})
 
 
 @deploy_bp.route('/deploy/<name>/git_pull', methods=['POST'])
@@ -834,58 +1051,68 @@ def deploy_logs(name):
     if not log_files:
         return jsonify({'succ': True, 'data': [], 'files': [], 'total': 0})
 
-    def _parse_dt(s):
-        for fmt in (
-            '%Y-%m-%d %H:%M:%S',
-            '%Y-%m-%d %H:%M',
-            '%Y-%m-%d %H',
-            '%Y-%m-%d',
-            '%Y-%m-%dT%H:%M:%S',
-            '%Y-%m-%dT%H:%M',
-            '%Y-%m-%dT%H',
-            '%Y/%m/%d %H:%M:%S',
-            '%Y/%m/%d %H:%M',
-            '%Y/%m/%d',
-        ):
-            try:
-                return datetime.datetime.strptime(s.strip(), fmt)
-            except ValueError:
-                continue
-        return None
-
-    dt_start = _parse_dt(time_start) if time_start else None
-    dt_end = _parse_dt(time_end) if time_end else None
+    dt_start = _parse_dt(time_start)
+    dt_end = _parse_dt(time_end)
 
     all_lines = []
     for fpath in log_files:
-        lines = _read_log_tail(fpath, max_lines=max_lines * 2)
+        try:
+            file_size = os.path.getsize(fpath)
+        except OSError:
+            continue
+        if file_size == 0:
+            continue
+
+        start_off = 0
+        end_off = file_size
+
+        if dt_start:
+            start_off = _bisect_log_offset(fpath, dt_start)
+        if dt_end:
+            end_off = _bisect_log_offset(fpath, dt_end + datetime.timedelta(seconds=1))
+
+        if start_off >= end_off:
+            continue
+
+        lines = _read_log_lines_range(fpath, max_lines * 3, start_off, end_off)
         all_lines.extend(lines)
 
-    filtered = []
+    # 将行按"日志条目"分组：以时间戳开头的行为新条目起点，
+    # 后续无时间戳的行属于同一条目（如 traceback、多行 error 消息）。
+    entries = []  # [(entry_time, [line1, line2, ...])]
     last_time = None
     for line in all_lines:
         if not line.strip():
             continue
-
         clean_line = _strip_ansi(line)
         lt = _parse_log_time(clean_line)
         if lt:
             last_time = lt
+            entries.append((lt, [clean_line]))
+        else:
+            if entries:
+                entries[-1][1].append(clean_line)
+            elif last_time:
+                entries.append((last_time, [clean_line]))
 
+    keyword_lower = keyword.lower() if keyword else ''
+    filtered = []
+    for entry_time, entry_lines in entries:
         if dt_start or dt_end:
-            effective_time = lt or last_time
-            if effective_time:
-                if dt_start and effective_time < dt_start:
+            if entry_time:
+                if dt_start and entry_time < dt_start:
                     continue
-                if dt_end and effective_time > dt_end:
+                if dt_end and entry_time > dt_end:
                     continue
             else:
                 continue
 
-        if keyword and keyword.lower() not in clean_line.lower():
-            continue
+        if keyword_lower:
+            entry_text = '\n'.join(entry_lines).lower()
+            if keyword_lower not in entry_text:
+                continue
 
-        filtered.append(clean_line)
+        filtered.extend(entry_lines)
 
     result_lines = filtered[-max_lines:]
 
@@ -905,3 +1132,102 @@ def deploy_get_config(name):
         return jsonify({'succ': False, 'msg': '部署配置不存在'})
     status = _get_deploy_status(name)
     return jsonify({'succ': True, 'data': {**config, **status}})
+
+
+# ======================== 自动启动 & 自动重启守护 ========================
+
+def _auto_restart_daemon():
+    """后台守护线程：每 10 秒检查所有配置了 auto_restart 的部署，
+    如果进程意外退出（且非人工停止），自动重启，最多连续失败 max_retry 次。
+    启动时还负责处理 auto_start 逻辑。
+    """
+    time.sleep(15)
+
+    try:
+        _do_auto_start()
+    except Exception:
+        pass
+
+    while True:
+        try:
+            _do_auto_restart_check()
+        except Exception:
+            pass
+        time.sleep(10)
+
+
+def _do_auto_start():
+    """服务启动时执行一次：启动所有配置了 auto_start=1 的部署（如果尚未运行）"""
+    try:
+        names = _redis.smembers(_names_key())
+    except Exception:
+        return
+    for name in names:
+        try:
+            config = _redis.hgetall(_config_key(name))
+            if not config or config.get('auto_start', '0') != '1':
+                continue
+            status = _get_deploy_status(name)
+            if status['running']:
+                continue
+            procs, err, _ = _start_process(name, config)
+            if not err:
+                _redis.hset(_runtime_key(name), mapping={
+                    'manual_stop': '0', 'should_run': '1', 'restart_retry_count': '0',
+                })
+        except Exception:
+            pass
+
+
+def _do_auto_restart_check():
+    """守护线程每次循环调用：检查需要自动重启的部署（支持多进程）"""
+    try:
+        names = _redis.smembers(_names_key())
+    except Exception:
+        return
+    for name in names:
+        try:
+            config = _redis.hgetall(_config_key(name))
+            if not config or config.get('auto_restart', '0') != '1':
+                continue
+
+            runtime = _redis.hgetall(_runtime_key(name))
+            if runtime.get('manual_stop', '') == '1':
+                continue
+            if runtime.get('should_run', '') != '1':
+                continue
+
+            status = _get_deploy_status(name)
+            expected = max(1, int(config.get('num_processes', '1') or 1))
+            alive_count = len(status.get('pid_list', []))
+
+            if alive_count >= expected:
+                _redis.hset(_runtime_key(name), 'restart_retry_count', '0')
+                continue
+
+            retry_count = int(runtime.get('restart_retry_count', '0'))
+            max_retry = int(config.get('max_retry', '3'))
+            if retry_count >= max_retry:
+                continue
+
+            _redis.hset(_runtime_key(name), 'restart_retry_count', str(retry_count + 1))
+
+            # 先停掉残余进程，再全部重启
+            for i, pid in enumerate(status.get('pid_list', [])):
+                ct = status['ct_list'][i] if i < len(status.get('ct_list', [])) else ''
+                _kill_process(pid, ct)
+
+            _redis.hset(_runtime_key(name), mapping={
+                'pid_list': '[]', 'flag_list': '[]', 'ct_list': '[]', 'st_list': '[]',
+            })
+            time.sleep(1)
+
+            procs, err, _ = _start_process(name, config)
+            if not err:
+                _redis.hset(_runtime_key(name), 'restart_retry_count', '0')
+        except Exception:
+            pass
+
+
+_daemon_thread = threading.Thread(target=_auto_restart_daemon, daemon=True)
+_daemon_thread.start()

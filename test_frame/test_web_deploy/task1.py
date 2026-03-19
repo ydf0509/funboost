@@ -33,9 +33,22 @@ def test_thread():
         print('test_thread')
         nb_log.debug('debug')
         nb_log.info('info')
-        nb_log.warning('warning')
-        nb_log.error('error')
-        nb_log.critical('critical')
+        nb_log.warning('''warning
+        warning第1行
+        warning第2行
+        warning第3行
+    
+        ''')
+        nb_log.error('''error
+        err第1行
+        err第2行
+        err第3行
+        ''')
+        nb_log.critical('''critical
+        critical第1行
+        critical第2行
+        critical第3行
+        ''')
 
 
 if __name__ == '__main__':

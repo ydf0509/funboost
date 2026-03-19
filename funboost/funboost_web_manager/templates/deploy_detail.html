@@ -64,9 +64,14 @@
             background: rgba(15,12,41,0.8); color: #fff;
         }
         .form-control:disabled, .form-control[disabled] {
-            background: rgba(99,102,241,0.15); color: #fff;
-            border-color: rgba(99,102,241,0.3); opacity: 1;
-            -webkit-text-fill-color: #fff;
+            background: rgba(99,102,241,0.15) !important; color: #e0e0e0 !important;
+            border-color: rgba(99,102,241,0.3) !important; opacity: 1 !important;
+            -webkit-text-fill-color: #e0e0e0 !important;
+        }
+        .deploy-name-input {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            font-weight: 600 !important;
         }
 
         .cmd-detail-box {
@@ -228,8 +233,12 @@
             white-space: pre-wrap; word-break: break-all;
         }
         .log-viewer .log-line { padding: 1px 0; }
-        .log-line-error { color: #f87171; }
-        .log-line-warning { color: #fbbf24; }
+        .log-line-print    { color: #3b82f6; }
+        .log-line-debug    { color: #10b981; }
+        .log-line-info     { color: #06b6d4; }
+        .log-line-warning  { color: #f59e0b; }
+        .log-line-error    { color: #ec4899; }
+        .log-line-critical { color: #ef4444; font-weight: 600; }
         .log-line-highlight { background: rgba(251,191,36,0.2); border-radius: 3px; }
         .log-meta {
             display: flex; gap: 15px; margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.4);
@@ -278,7 +287,7 @@
         <div class="card-body">
             <div class="form-group">
                 <label>部署名称</label>
-                <input type="text" class="form-control" id="cfgName" disabled>
+                <input type="text" class="form-control deploy-name-input" id="cfgName" disabled>
             </div>
             <div class="form-group">
                 <label>项目根目录</label>
@@ -293,12 +302,34 @@
                 <div id="cfgEnvVars"></div>
                 <button class="btn-env-add" onclick="addEnvRow()"><i class="fa fa-plus"></i> 添加</button>
             </div>
-            <button class="btn-save-config" onclick="saveConfig()"><i class="fa fa-save"></i> 保存配置</button>
+            <hr style="border-color:rgba(99,102,241,0.15);margin:15px 0;">
+            <div style="font-size:13px;color:#a78bfa;font-weight:600;margin-bottom:10px;">高级设置</div>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#e0e0e0;">
+                    <input type="checkbox" id="cfgAutoStart"> 自动启动 (服务启动时)
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#e0e0e0;">
+                    <input type="checkbox" id="cfgAutoRestart"> 自动重启 (崩溃后)
+                </label>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <label style="font-size:13px;color:#a78bfa;margin:0;">最大重试:</label>
+                    <input type="number" class="form-control" id="cfgMaxRetry" value="3" min="1" max="100" style="width:70px;padding:4px 8px;">
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <label style="font-size:13px;color:#a78bfa;margin:0;">存活检查(秒):</label>
+                    <input type="number" class="form-control" id="cfgHealthSecs" value="10" min="1" max="300" style="width:70px;padding:4px 8px;">
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <label style="font-size:13px;color:#a78bfa;margin:0;">进程数量:</label>
+                    <input type="number" class="form-control" id="cfgNumProcesses" value="1" min="1" max="100" style="width:70px;padding:4px 8px;">
+                </div>
+            </div>
+            <button class="btn-save-config" onclick="saveConfig()" style="margin-top:14px;"><i class="fa fa-save"></i> 保存配置</button>
         </div>
     </div>
 
     <!-- Git 操作 -->
-    <div class="card">
+    <div class="card" id="gitCard" style="display:none;">
         <div class="card-header"><i class="fa fa-git"></i> Git 操作</div>
         <div class="card-body">
             <div class="git-branch-bar">
@@ -465,6 +496,11 @@ function loadConfig() {
             var envObj = JSON.parse(d.env_vars || '{}');
             for (var k in envObj) { addEnvRow(k, envObj[k]); }
         } catch(e) {}
+        $('#cfgAutoStart').prop('checked', d.auto_start === '1');
+        $('#cfgAutoRestart').prop('checked', d.auto_restart === '1');
+        $('#cfgMaxRetry').val(d.max_retry || 3);
+        $('#cfgHealthSecs').val(d.health_check_secs || 10);
+        $('#cfgNumProcesses').val(d.num_processes || 1);
         updateStatusUI(d);
     });
 }
@@ -474,7 +510,12 @@ function saveConfig() {
         name: deployName,
         project_dir: $('#cfgProjectDir').val().trim(),
         start_cmd: $('#cfgStartCmd').val().trim(),
-        env_vars: collectEnvVars()
+        env_vars: collectEnvVars(),
+        auto_start: $('#cfgAutoStart').is(':checked'),
+        auto_restart: $('#cfgAutoRestart').is(':checked'),
+        max_retry: parseInt($('#cfgMaxRetry').val()) || 3,
+        health_check_secs: parseInt($('#cfgHealthSecs').val()) || 10,
+        num_processes: parseInt($('#cfgNumProcesses').val()) || 1
     };
     $.ajax({
         url: '/deploy/save',
@@ -541,6 +582,7 @@ function renderStartDetail($c, d) {
         urLog($c, '环境变量:', 'info');
         d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); });
     }
+    if (d.num_processes && d.num_processes > 1) urLog($c, '进程数量: ' + d.num_processes, 'info');
     if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
     if (d.log_file) urLog($c, '日志文件: ' + d.log_file, 'info');
     if (d.start_time) urLog($c, '启动时间: ' + d.start_time, 'info');
@@ -553,12 +595,13 @@ function doStart() {
     var $c = $('#cmdModalContent').html('');
     $('#cmdModal').modal('show');
     urLog($c, '启动进程', 'step');
-    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在启动，并等待存活验证（最长 30 秒）...', 'loading');
+    var hSecs = parseInt($('#cfgHealthSecs').val()) || 10;
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在启动，并等待存活验证（最长 ' + hSecs + ' 秒）...', 'loading');
     $('#btnStart').prop('disabled', true);
     $.ajax({
         url: '/deploy/' + encodeURIComponent(deployName) + '/start',
         method: 'POST',
-        timeout: 45000,
+        timeout: (hSecs + 15) * 1000,
         success: function(resp) {
             $c.find('.ur-loading:last').remove();
             if (resp.cmd_detail) renderStartDetail($c, resp.cmd_detail);
@@ -594,12 +637,13 @@ function doRestart() {
     var $c = $('#cmdModalContent').html('');
     $('#cmdModal').modal('show');
     urLog($c, '重启进程', 'step');
-    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证（最长 30 秒）...', 'loading');
+    var hSecs = parseInt($('#cfgHealthSecs').val()) || 10;
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证（最长 ' + hSecs + ' 秒）...', 'loading');
     $('#btnRestart').prop('disabled', true);
     $.ajax({
         url: '/deploy/' + encodeURIComponent(deployName) + '/restart',
         method: 'POST',
-        timeout: 45000,
+        timeout: (hSecs + 15) * 1000,
         success: function(resp) {
             $c.find('.ur-loading:last').remove();
             if (resp.cmd_detail) {
@@ -659,12 +703,13 @@ function doUpdateRestart() {
             if (resp.current_branch) { $('#gitCurrentBranch').text(resp.current_branch); loadGitBranches(); }
 
             urLog($c, '步骤 2/2: 重启进程', 'step');
-            urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证（最长 30 秒）...', 'loading');
+            var hSecs2 = parseInt($('#cfgHealthSecs').val()) || 10;
+            urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证（最长 ' + hSecs2 + ' 秒）...', 'loading');
 
             $.ajax({
                 url: '/deploy/' + encodeURIComponent(deployName) + '/restart',
                 method: 'POST',
-                timeout: 45000,
+                timeout: (hSecs2 + 15) * 1000,
                 success: function(resp2) {
                     $c.find('.ur-loading:last').remove();
                     if (resp2.cmd_detail) {
@@ -699,6 +744,8 @@ function doUpdateRestart() {
 /* ======== Git 分支 ======== */
 function loadGitBranches() {
     $.get('/deploy/' + encodeURIComponent(deployName) + '/git_branches', function(resp) {
+        if (resp.is_git_repo === false) { $('#gitCard').hide(); return; }
+        $('#gitCard').show();
         if (!resp.succ) return;
         $('#gitCurrentBranch').text(resp.current || '-');
         var $sel = $('#gitBranchSelect');
@@ -829,13 +876,22 @@ function loadLogs() {
             return;
         }
         var html = '';
+        var lastCls = 'log-line';
         for (var i = 0; i < lines.length; i++) {
             var line = escapeHtml(lines[i]);
+            var raw = lines[i];
+            var hasTimestamp = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(raw);
             var cls = 'log-line';
-            if (/\bERROR\b/i.test(line) || /\bCRITICAL\b/i.test(line) || /Traceback/i.test(line)) {
-                cls += ' log-line-error';
-            } else if (/\bWARNING\b/i.test(line) || /\bWARN\b/i.test(line)) {
-                cls += ' log-line-warning';
+            if (hasTimestamp) {
+                if (/- CRITICAL -/.test(raw) || /\bCRITICAL\b/.test(raw))     cls += ' log-line-critical';
+                else if (/- ERROR -/.test(raw) || /\bTraceback\b/.test(raw))   cls += ' log-line-error';
+                else if (/- WARNING -/.test(raw))                              cls += ' log-line-warning';
+                else if (/- INFO -/.test(raw))                                 cls += ' log-line-info';
+                else if (/- DEBUG -/.test(raw))                                cls += ' log-line-debug';
+                else if (/\[print\]/.test(raw))                                cls += ' log-line-print';
+                lastCls = cls;
+            } else {
+                cls = lastCls;
             }
             line = highlightKeyword(line, keyword);
             html += '<div class="' + cls + '">' + line + '</div>';
@@ -886,6 +942,22 @@ $(document).ready(function() {
             language: { noResults: function() { return '无匹配分支'; } }
         });
     }
+
+    // 默认填充自定义时间范围输入框（当前时间 -60分钟 ~ 当前时间），但不触发应用
+    (function() {
+        var now = new Date();
+        var ago = new Date(now.getTime() - 3600000);
+        function toLocal(d) {
+            return d.getFullYear() + '-' +
+                String(d.getMonth()+1).padStart(2,'0') + '-' +
+                String(d.getDate()).padStart(2,'0') + 'T' +
+                String(d.getHours()).padStart(2,'0') + ':' +
+                String(d.getMinutes()).padStart(2,'0') + ':' +
+                String(d.getSeconds()).padStart(2,'0');
+        }
+        $('#logTimeStart').val(toLocal(ago));
+        $('#logTimeEnd').val(toLocal(now));
+    })();
 
     loadConfig();
     loadLogs();

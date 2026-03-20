@@ -166,10 +166,8 @@
             <span>自动刷新:</span>
             <select id="listRefreshInterval" onchange="updateListRefreshInterval()">
                 <option value="0">关闭</option>
-                <option value="5" selected>5秒</option>
-                <option value="10">10秒</option>
-                <option value="30">30秒</option>
-                <option value="60">60秒</option>
+                <option value="60" selected>60秒</option>
+                <option value="300">300秒</option>
             </select>
         </span>
     </div>
@@ -265,7 +263,7 @@
 </div>
 
 <!-- 命令详情模态框 -->
-<div class="modal fade" id="cmdModal" tabindex="-1">
+<div class="modal fade" id="cmdModal" tabindex="-1" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog"><div class="modal-content">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
@@ -294,6 +292,8 @@ function showCmdDetail(title, detail) {
     if (detail.env_vars && detail.env_vars.length) lines.push('环境变量:\n  ' + detail.env_vars.join('\n  '));
     if (detail.full_cmd) lines.push('启动命令: ' + detail.full_cmd);
     if (detail.log_file) lines.push('日志文件: ' + detail.log_file);
+    if (detail.search_cmd) lines.push('搜索命令: ' + detail.search_cmd);
+    if (detail.found_pids && detail.found_pids.length) lines.push('找到进程: ' + detail.found_pids.join(', '));
     if (detail.stop_cmd) lines.push('停止命令: ' + detail.stop_cmd);
     if (detail.old_pid) lines.push('旧 PID: ' + detail.old_pid);
     if (detail.pid) lines.push('PID: ' + detail.pid);
@@ -416,9 +416,10 @@ function quickRestart(name) {
             $c.find('.ur-loading:last').remove();
             if (resp.cmd_detail) {
                 var d = resp.cmd_detail;
-                if (d.old_pid) urLog($c, '旧 PID: ' + d.old_pid, 'info');
+                if (d.search_cmd) urLog($c, '搜索命令: ' + d.search_cmd, 'cmd');
+                if (d.found_pids && d.found_pids.length) urLog($c, '找到旧进程 PID: ' + d.found_pids.join(', '), 'info');
                 if (d.old_start_time) urLog($c, '旧启动时间: ' + d.old_start_time, 'info');
-                if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
+                if (d.kill_details && d.kill_details.length) { d.kill_details.forEach(function(k) { urLog($c, '杀死 PID ' + k.pid + ': ' + k.cmd + (k.ok ? ' ✓' : ' ✗'), k.ok ? 'cmd' : 'error'); }); }
                 if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
                 if (d.env_vars && d.env_vars.length) { urLog($c, '环境变量:', 'info'); d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); }); }
                 if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');
@@ -474,9 +475,10 @@ function quickStop(name) {
         $c.find('.ur-loading:last').remove();
         if (resp.cmd_detail) {
             var d = resp.cmd_detail;
-            if (d.pid) urLog($c, '旧 PID: ' + d.pid, 'info');
+            if (d.search_cmd) urLog($c, '搜索命令: ' + d.search_cmd, 'cmd');
+            if (d.found_pids && d.found_pids.length) urLog($c, '找到进程 PID: ' + d.found_pids.join(', '), 'info');
             if (d.old_start_time) urLog($c, '旧启动时间: ' + d.old_start_time, 'info');
-            if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
+            if (d.kill_cmds && d.kill_cmds.length) { d.kill_cmds.forEach(function(c) { urLog($c, '执行: ' + c, 'cmd'); }); }
         }
         urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 ' + resp.msg), resp.succ ? 'ok' : 'fail');
         setTimeout(loadDeployList, 2000);
@@ -568,8 +570,9 @@ function quickUpdateRestart(name) {
                     $c.find('.ur-loading:last').remove();
                     if (resp2.cmd_detail) {
                         var d = resp2.cmd_detail;
-                        if (d.old_pid) urLog($c, '旧 PID: ' + d.old_pid, 'info');
-                        if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
+                        if (d.search_cmd) urLog($c, '搜索命令: ' + d.search_cmd, 'cmd');
+                        if (d.found_pids && d.found_pids.length) urLog($c, '找到旧进程 PID: ' + d.found_pids.join(', '), 'info');
+                        if (d.kill_details && d.kill_details.length) { d.kill_details.forEach(function(k) { urLog($c, '杀死 PID ' + k.pid + ': ' + k.cmd + (k.ok ? ' ✓' : ' ✗'), k.ok ? 'cmd' : 'error'); }); }
                         if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
                         if (d.env_vars && d.env_vars.length) {
                             urLog($c, '环境变量:', 'info');

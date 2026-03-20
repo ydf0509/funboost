@@ -50,6 +50,7 @@ from funboost.core.active_cousumer_info_getter import (
 from funboost.faas import flask_blueprint
 from funboost.funweb.script_deploy import deploy_bp
 from funboost.funweb.system_monitor import monitor_bp
+from funboost.funweb.log_viewer import log_bp
 
 app = Flask(__name__)
 app.secret_key = "mtfy54321"
@@ -67,6 +68,7 @@ login_manager.init_app(app)
 app.register_blueprint(flask_blueprint)  
 app.register_blueprint(deploy_bp)
 app.register_blueprint(monitor_bp)
+app.register_blueprint(log_bp)
 
 
 

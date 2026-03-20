@@ -8,7 +8,8 @@ import socket
 import subprocess
 import time
 import threading
-import uuid
+
+import psutil
 
 from flask import Blueprint, request, jsonify
 from flask_login import login_required
@@ -72,191 +73,118 @@ def _get_nohup_log_path(name):
     return os.path.join(log_dir, f'{name}.nohup.log')
 
 
-def _get_process_create_time(pid):
-    """获取进程的 OS 级创建时间戳，用于防止 PID 复用导致误判/误杀"""
-    pid = int(pid)
+def _check_pid_alive(pid, stored_ct=None):
+    """极速验证 PID 是否存活 + create_time 防 PID 复用。
+    仅调用 is_running() 和 create_time()，毫秒级，不读环境变量/命令行。
+    """
     try:
-        if os.name == 'nt':
-            import ctypes
-
-            class FILETIME(ctypes.Structure):
-                _fields_ = [("dwLowDateTime", ctypes.c_uint32),
-                             ("dwHighDateTime", ctypes.c_uint32)]
-
-            kernel32 = ctypes.windll.kernel32
-            handle = kernel32.OpenProcess(0x1000, False, pid)
-            if not handle:
-                return None
+        p = psutil.Process(int(pid))
+        if not p.is_running():
+            return False
+        if stored_ct:
             try:
-                creation = FILETIME()
-                exit_t = FILETIME()
-                kernel_t = FILETIME()
-                user_t = FILETIME()
-                if kernel32.GetProcessTimes(handle, ctypes.byref(creation), ctypes.byref(exit_t),
-                                             ctypes.byref(kernel_t), ctypes.byref(user_t)):
-                    ft = (creation.dwHighDateTime << 32) | creation.dwLowDateTime
-                    return ft / 10000000.0 - 11644473600.0
-                return None
-            finally:
-                kernel32.CloseHandle(handle)
-        else:
-            with open(f'/proc/{pid}/stat', 'r') as f:
-                stat_content = f.read()
-            after_comm = stat_content.rsplit(')', 1)[-1].split()
-            starttime_ticks = int(after_comm[19])
-            boot_time = None
-            with open('/proc/stat', 'r') as f:
-                for line in f:
-                    if line.startswith('btime'):
-                        boot_time = int(line.split()[1])
-                        break
-            if boot_time is None:
-                return None
-            clock_ticks = os.sysconf(os.sysconf_names['SC_CLK_TCK'])
-            return boot_time + starttime_ticks / clock_ticks
-    except Exception:
-        return None
-
-
-def _check_process_alive(pid, deploy_flag, stored_create_time=None):
-    """检查进程是否存活，通过进程创建时间二次验证防止 PID 复用误判"""
-    if not pid:
-        return False
-    pid = int(pid)
-    try:
-        if os.name == 'nt':
-            import ctypes
-            kernel32 = ctypes.windll.kernel32
-            handle = kernel32.OpenProcess(0x1000, False, pid)
-            if not handle:
-                return False
-            try:
-                exit_code = ctypes.c_ulong()
-                if kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
-                    if exit_code.value != 259:
-                        return False
-                else:
+                if abs(p.create_time() - float(stored_ct)) > 3.0:
                     return False
-            finally:
-                kernel32.CloseHandle(handle)
-        else:
-            os.kill(pid, 0)
-            if deploy_flag:
-                cmdline_path = f'/proc/{pid}/cmdline'
-                if os.path.exists(cmdline_path):
-                    with open(cmdline_path, 'r') as f:
-                        cmdline = f.read()
-                    if deploy_flag not in cmdline:
-                        return False
-
-        if stored_create_time:
-            try:
-                current_ct = _get_process_create_time(pid)
-                if current_ct is not None and abs(current_ct - float(stored_create_time)) > 5.0:
-                    return False
-            except (ValueError, TypeError):
+            except (psutil.AccessDenied, ValueError):
                 pass
-
         return True
-    except (ProcessLookupError, PermissionError, OSError, Exception):
+    except (psutil.NoSuchProcess, psutil.AccessDenied, ValueError, OSError):
         return False
 
 
-def _kill_process(pid, stored_create_time=None):
-    """停止进程，先验证创建时间防止误杀。返回 (ok, err_msg)"""
-    pid = int(pid)
-    if stored_create_time:
+def _find_child_pids(parent_pid, timeout=3.0):
+    """找到壳进程（cmd.exe/sh）的所有子进程 PID 和 create_time。
+    返回 [(pid, create_time), ...]
+    """
+    found = []
+    deadline = time.time() + timeout
+    while time.time() < deadline:
         try:
-            current_ct = _get_process_create_time(pid)
-            if current_ct is not None and abs(current_ct - float(stored_create_time)) > 5.0:
-                return False, 'PID 已被其他进程占用，拒绝停止（避免误杀）'
-        except (ValueError, TypeError):
-            pass
+            parent = psutil.Process(parent_pid)
+            children = parent.children(recursive=True)
+            for c in children:
+                try:
+                    found.append((c.pid, c.create_time()))
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+            if found:
+                break
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            break
+        time.sleep(0.3)
+    return found
+
+
+def _find_deploy_pids(name):
+    """从 Redis 读取 PID + create_time 列表，逐一验证存活。
+    仅调用 is_running() 和 create_time()，不读环境变量/命令行，毫秒级。
+    返回 (alive_pid_list, search_cmd_display)
+    """
+    if os.name == 'nt':
+        display = 'Redis pid_list + psutil.Process(pid).is_running()'
+    else:
+        display = 'Redis pid_list + psutil / kill -0'
+
     try:
+        raw_pids = _redis.hget(_runtime_key(name), 'pid_list')
+        pid_list = json.loads(raw_pids) if raw_pids else []
+    except Exception:
+        pid_list = []
+    try:
+        raw_cts = _redis.hget(_runtime_key(name), 'ct_list')
+        ct_list = json.loads(raw_cts) if raw_cts else []
+    except Exception:
+        ct_list = []
+
+    alive = []
+    for i, pid_str in enumerate(pid_list):
+        if not pid_str:
+            continue
+        ct = ct_list[i] if i < len(ct_list) else None
+        if _check_pid_alive(int(pid_str), ct):
+            alive.append(int(pid_str))
+    return alive, display
+
+
+def _kill_pids(pids):
+    """杀死一组 PID。返回 [(pid, ok, err_msg, kill_cmd), ...]"""
+    results = []
+    for pid in pids:
+        pid = int(pid)
         if os.name == 'nt':
-            subprocess.run(['taskkill', '/F', '/T', '/PID', str(pid)],
-                           capture_output=True, timeout=10)
+            kill_cmd = f'taskkill /F /T /PID {pid}'
         else:
-            os.kill(pid, signal.SIGTERM)
-            time.sleep(1)
-            try:
-                os.kill(pid, 0)
-                os.kill(pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-        return True, ''
-    except Exception as e:
-        return False, str(e)
+            kill_cmd = f'kill -SIGTERM {pid} && sleep 1 && kill -SIGKILL {pid}'
+        try:
+            if os.name == 'nt':
+                subprocess.run(['taskkill', '/F', '/T', '/PID', str(pid)],
+                               capture_output=True, timeout=10)
+            else:
+                os.kill(pid, signal.SIGTERM)
+                time.sleep(1)
+                try:
+                    os.kill(pid, 0)
+                    os.kill(pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            results.append((pid, True, '', kill_cmd))
+        except Exception as e:
+            results.append((pid, False, str(e), kill_cmd))
+    return results
 
 
 def _get_deploy_status(name):
-    """获取部署状态，支持多进程。返回 running/pids/start_times 等。"""
+    """获取部署状态：Redis 读 PID + create_time → psutil 快速验证存活。毫秒级。"""
+    alive_pids, search_cmd = _find_deploy_pids(name)
     runtime_data = _redis.hgetall(_runtime_key(name))
-
-    # 兼容旧版单进程数据：读取 pid_list 或回退到 pid
-    try:
-        pid_list = json.loads(runtime_data.get('pid_list', '[]'))
-    except (json.JSONDecodeError, TypeError):
-        pid_list = []
-    if not pid_list and runtime_data.get('pid', ''):
-        pid_list = [runtime_data['pid']]
-
-    try:
-        flag_list = json.loads(runtime_data.get('flag_list', '[]'))
-    except (json.JSONDecodeError, TypeError):
-        flag_list = []
-    if not flag_list and runtime_data.get('deploy_flag', ''):
-        flag_list = [runtime_data['deploy_flag']]
-
-    try:
-        ct_list = json.loads(runtime_data.get('ct_list', '[]'))
-    except (json.JSONDecodeError, TypeError):
-        ct_list = []
-    if not ct_list and runtime_data.get('create_time', ''):
-        ct_list = [runtime_data['create_time']]
-
-    try:
-        st_list = json.loads(runtime_data.get('st_list', '[]'))
-    except (json.JSONDecodeError, TypeError):
-        st_list = []
-    if not st_list and runtime_data.get('start_time', ''):
-        st_list = [runtime_data['start_time']]
-
-    alive_pids = []
-    alive_flags = []
-    alive_cts = []
-    alive_sts = []
-    for i, pid in enumerate(pid_list):
-        if not pid:
-            continue
-        flag = flag_list[i] if i < len(flag_list) else ''
-        ct = ct_list[i] if i < len(ct_list) else ''
-        st = st_list[i] if i < len(st_list) else ''
-        if _check_process_alive(pid, flag, ct):
-            alive_pids.append(pid)
-            alive_flags.append(flag)
-            alive_cts.append(ct)
-            alive_sts.append(st)
-
-    any_alive = len(alive_pids) > 0
-    if len(alive_pids) != len(pid_list):
-        _redis.hset(_runtime_key(name), mapping={
-            'pid_list': json.dumps(alive_pids),
-            'flag_list': json.dumps(alive_flags),
-            'ct_list': json.dumps(alive_cts),
-            'st_list': json.dumps(alive_sts),
-            'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': '',
-        })
+    start_time = runtime_data.get('start_time', '')
 
     return {
-        'running': any_alive,
-        'pid': ', '.join(alive_pids) if alive_pids else '',
-        'start_time': alive_sts[0] if alive_sts else '',
-        'deploy_flag': ', '.join(alive_flags) if alive_flags else '',
-        'pid_list': alive_pids,
-        'flag_list': alive_flags,
-        'ct_list': alive_cts,
-        'st_list': alive_sts,
+        'running': len(alive_pids) > 0,
+        'pid': ', '.join(str(p) for p in alive_pids) if alive_pids else '',
+        'start_time': start_time,
+        'pid_list': [str(p) for p in alive_pids],
+        'search_cmd': search_cmd,
     }
 
 
@@ -283,8 +211,10 @@ def _build_env(config):
     return env
 
 
-def _format_env_summary(config):
+def _format_env_summary(config, name=''):
     lines = []
+    if name:
+        lines.append(f'FUNWEB_DEPLOY={name}')
     project_dir = config.get('project_dir', '')
     if project_dir:
         lines.append(f'PYTHONPATH={project_dir}' + (';...' if os.environ.get('PYTHONPATH') else ''))
@@ -298,24 +228,14 @@ def _format_env_summary(config):
     return lines
 
 
-def _wait_process_alive(proc, deploy_flag, create_time, max_wait=30):
-    """启动后轮询进程是否存活，最多等待 max_wait 秒。
-    返回 (survived_secs, exit_code):
-      survived_secs >= 0  表示存活了这么多秒（成功）
-      survived_secs < 0   表示进程在 abs(survived_secs) 秒内死亡（失败）
-    """
-    create_time_str = str(create_time) if create_time else ''
-    pid = proc.pid
-    for elapsed in range(1, max_wait + 1):
-        time.sleep(1)
-        if not _check_process_alive(pid, deploy_flag, create_time_str):
-            exit_code = None
-            try:
-                exit_code = proc.poll()
-            except Exception:
-                pass
-            return -elapsed, exit_code
-    return max_wait, None
+def _check_pids_still_alive(pid_list, ct_list):
+    """检查一批已知 PID 是否仍存活，返回存活的 PID 列表。"""
+    alive = []
+    for i, pid in enumerate(pid_list):
+        ct = ct_list[i] if i < len(ct_list) else None
+        if _check_pid_alive(pid, ct):
+            alive.append(pid)
+    return alive
 
 
 def _read_log_tail_str(log_file, max_lines=30):
@@ -339,33 +259,27 @@ def _start_process(name, config, num_processes=None):
     num_processes = max(1, num_processes)
 
     env = _build_env(config)
+    env['FUNWEB_DEPLOY'] = name
     health_secs = int(config.get('health_check_secs', '10') or 10)
     log_file = _get_nohup_log_path(name)
 
     cmd_detail = {
         'cwd': project_dir or '(当前目录)',
-        'env_vars': _format_env_summary(config),
+        'env_vars': _format_env_summary(config, name),
         'log_file': log_file,
         'num_processes': num_processes,
     }
 
-    all_pids = []
-    all_flags = []
-    all_cts = []
-    all_sts = []
-    procs = []
+    shell_procs = []
     errors = []
 
     for idx in range(num_processes):
-        deploy_flag = str(uuid.uuid4())
-        cmd_with_flag = f'{start_cmd} --deploy_flag={deploy_flag}'
-        # 所有进程共用同一个日志文件，追加模式写入互不覆盖
         proc_log = log_file
 
         if os.name == 'nt':
-            display_cmd = f'{cmd_with_flag}  (stdout/stderr >> "{proc_log}")'
+            display_cmd = f'{start_cmd}  (stdout/stderr >> "{proc_log}")'
         else:
-            display_cmd = f'nohup {cmd_with_flag} >> "{proc_log}" 2>&1 &'
+            display_cmd = f'nohup {start_cmd} >> "{proc_log}" 2>&1 &'
 
         if idx == 0:
             cmd_detail['full_cmd'] = display_cmd
@@ -375,69 +289,69 @@ def _start_process(name, config, num_processes=None):
             if os.name == 'nt':
                 CREATE_NO_WINDOW = 0x08000000
                 proc = subprocess.Popen(
-                    cmd_with_flag, shell=True, cwd=project_dir or None, env=env,
+                    start_cmd, shell=True, cwd=project_dir or None, env=env,
                     creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW,
                     stdout=log_fh, stderr=subprocess.STDOUT,
                 )
             else:
                 proc = subprocess.Popen(
-                    cmd_with_flag, shell=True, cwd=project_dir or None, env=env,
+                    start_cmd, shell=True, cwd=project_dir or None, env=env,
                     start_new_session=True,
                     stdout=log_fh, stderr=subprocess.STDOUT,
                 )
-
-            time.sleep(0.3)
-            ct = _get_process_create_time(proc.pid)
-            now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-            all_pids.append(str(proc.pid))
-            all_flags.append(deploy_flag)
-            all_cts.append(str(ct) if ct else '')
-            all_sts.append(now_str)
-            procs.append(proc)
+            shell_procs.append(proc)
         except Exception as e:
             errors.append(f'进程 #{idx}: {e}')
 
-    if not procs:
+    if not shell_procs:
         return None, '所有进程启动失败: ' + '; '.join(errors), cmd_detail
 
-    # 保存多进程运行时信息
+    now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    # 找真实子进程 PID + create_time（python.exe 而非 cmd.exe 壳进程）
+    all_real_pids = []
+    all_real_cts = []
+    failed_any = False
+
+    for i, proc in enumerate(shell_procs):
+        child_info = _find_child_pids(proc.pid, timeout=min(health_secs, 5))
+        if child_info:
+            for cpid, cct in child_info:
+                all_real_pids.append(str(cpid))
+                all_real_cts.append(str(cct))
+        else:
+            exit_code = proc.poll()
+            if exit_code is not None and exit_code != 0:
+                failed_any = True
+                log_tail = _read_log_tail_str(log_file, 20)
+                err = f'进程 #{i} 启动后退出（退出码: {exit_code}）'
+                if log_tail:
+                    err += f'\n--- 日志尾部 ---\n{log_tail}'
+                errors.append(err)
+            else:
+                # 壳进程还活着但子进程找不到，用壳进程 PID 兜底
+                try:
+                    shell_ct = psutil.Process(proc.pid).create_time()
+                except Exception:
+                    shell_ct = 0
+                all_real_pids.append(str(proc.pid))
+                all_real_cts.append(str(shell_ct))
+
+    # PID + create_time 写入 Redis
     _redis.hset(_runtime_key(name), mapping={
-        'pid_list': json.dumps(all_pids),
-        'flag_list': json.dumps(all_flags),
-        'ct_list': json.dumps(all_cts),
-        'st_list': json.dumps(all_sts),
-        'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': '',
+        'start_time': now_str,
+        'pid_list': json.dumps(all_real_pids),
+        'ct_list': json.dumps(all_real_cts),
     })
 
-    cmd_detail['start_time'] = all_sts[0]
-    cmd_detail['pid'] = ', '.join(all_pids)
-
-    # 健康检查：等待所有进程存活
-    failed_any = False
-    for i, proc in enumerate(procs):
-        survived, exit_code = _wait_process_alive(
-            proc, all_flags[i], all_cts[i], max_wait=health_secs
-        )
-        if survived < 0:
-            failed_any = True
-            log_f = log_file
-            log_tail = _read_log_tail_str(log_f, 20)
-            err = f'进程 #{i} (PID {all_pids[i]}) 启动后 {abs(survived)} 秒内退出'
-            if exit_code is not None:
-                err += f'（退出码: {exit_code}）'
-            if log_tail:
-                err += f'\n--- 日志尾部 ---\n{log_tail}'
-            errors.append(err)
-
+    cmd_detail['start_time'] = now_str
+    cmd_detail['pid'] = ', '.join(all_real_pids)
     cmd_detail['survived_secs'] = health_secs if not failed_any else -1
 
     if failed_any:
-        # 刷新状态，去掉已死进程
-        _get_deploy_status(name)
-        return procs, '\n'.join(errors), cmd_detail
+        return shell_procs, '\n'.join(errors), cmd_detail
 
-    return procs, None, cmd_detail
+    return shell_procs, None, cmd_detail
 
 
 def _read_log_tail(filepath, max_lines=1000):
@@ -761,7 +675,7 @@ def deploy_list():
     result = []
     for name in sorted(names):
         config = _redis.hgetall(_config_key(name))
-        status = _get_deploy_status(name)
+        status = _get_deploy_status(name)  # 从 Redis 读 PID，单进程验证，无全量扫描
         result.append({
             'name': name,
             'description': config.get('description', ''),
@@ -871,40 +785,30 @@ def deploy_start(name):
 @deploy_bp.route('/deploy/<name>/stop', methods=['POST'])
 @login_required
 def deploy_stop(name):
-    status = _get_deploy_status(name)
-    if not status['running']:
+    alive_pids, search_cmd = _find_deploy_pids(name)
+    if not alive_pids:
         return jsonify({'succ': False, 'msg': '进程未在运行'})
 
-    pid_list = status.get('pid_list', [])
-    ct_list = status.get('ct_list', [])
-    old_start_time = status.get('start_time', '')
+    runtime_data = _redis.hgetall(_runtime_key(name))
+    old_start_time = runtime_data.get('start_time', '')
 
-    stop_cmds = []
-    all_ok = True
-    last_err = ''
-    for i, pid in enumerate(pid_list):
-        ct = ct_list[i] if i < len(ct_list) else ''
-        if os.name == 'nt':
-            stop_cmds.append(f'taskkill /F /T /PID {pid}')
-        else:
-            stop_cmds.append(f'kill -SIGTERM {pid}')
-        ok, err_msg = _kill_process(pid, ct)
-        if not ok:
-            all_ok = False
-            last_err = err_msg
+    kill_results = _kill_pids(alive_pids)
+    all_ok = all(r[1] for r in kill_results)
+    last_err = next((r[2] for r in kill_results if not r[1]), '')
 
     if all_ok:
         _redis.hset(_runtime_key(name), mapping={
-            'pid_list': '[]', 'flag_list': '[]', 'ct_list': '[]', 'st_list': '[]',
-            'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': '',
-            'manual_stop': '1', 'should_run': '0',
+            'manual_stop': '1', 'should_run': '0', 'pid_list': '[]', 'ct_list': '[]',
         })
     return jsonify({
         'succ': all_ok,
         'msg': '停止成功' if all_ok else (last_err or '停止进程时出错'),
         'cmd_detail': {
-            'stop_cmd': '; '.join(stop_cmds),
-            'pid': ', '.join(pid_list),
+            'search_cmd': search_cmd,
+            'found_pids': [str(p) for p in alive_pids],
+            'kill_cmds': [r[3] for r in kill_results],
+            'stop_cmd': '; '.join(r[3] for r in kill_results),
+            'pid': ', '.join(str(p) for p in alive_pids),
             'old_start_time': old_start_time,
         },
     })
@@ -913,28 +817,26 @@ def deploy_stop(name):
 @deploy_bp.route('/deploy/<name>/restart', methods=['POST'])
 @login_required
 def deploy_restart(name):
-    status = _get_deploy_status(name)
-    old_pid = status.get('pid', '')
-    old_start_time = status.get('start_time', '')
+    alive_pids, search_cmd = _find_deploy_pids(name)
+    runtime_data = _redis.hgetall(_runtime_key(name))
+    old_pid = ', '.join(str(p) for p in alive_pids) if alive_pids else ''
+    old_start_time = runtime_data.get('start_time', '')
     stop_cmds = []
-    if status['running']:
-        pid_list = status.get('pid_list', [])
-        ct_list = status.get('ct_list', [])
-        for i, pid in enumerate(pid_list):
-            ct = ct_list[i] if i < len(ct_list) else ''
-            if os.name == 'nt':
-                stop_cmds.append(f'taskkill /F /T /PID {pid}')
-            else:
-                stop_cmds.append(f'kill -SIGTERM {pid}')
-            ok, err_msg = _kill_process(pid, ct)
+    kill_details = []
+
+    if alive_pids:
+        kill_results = _kill_pids(alive_pids)
+        for pid, ok, err_msg, kill_cmd in kill_results:
+            stop_cmds.append(kill_cmd)
             if not ok and err_msg:
                 return jsonify({'succ': False, 'msg': f'停止旧进程失败: {err_msg}',
-                                'cmd_detail': {'stop_cmd': '; '.join(stop_cmds), 'old_pid': old_pid,
+                                'cmd_detail': {'search_cmd': search_cmd,
+                                               'found_pids': [str(p) for p in alive_pids],
+                                               'stop_cmd': '; '.join(stop_cmds),
+                                               'old_pid': old_pid,
                                                'old_start_time': old_start_time}})
-        _redis.hset(_runtime_key(name), mapping={
-            'pid_list': '[]', 'flag_list': '[]', 'ct_list': '[]', 'st_list': '[]',
-            'pid': '', 'start_time': '', 'deploy_flag': '', 'create_time': '',
-        })
+        kill_details = [{'pid': r[0], 'ok': r[1], 'cmd': r[3]} for r in kill_results]
+        _redis.hset(_runtime_key(name), mapping={'pid_list': '[]', 'ct_list': '[]'})
         time.sleep(1)
 
     config = _redis.hgetall(_config_key(name))
@@ -942,6 +844,9 @@ def deploy_restart(name):
         return jsonify({'succ': False, 'msg': '部署配置不存在'})
 
     procs, err, cmd_detail = _start_process(name, config)
+    cmd_detail['search_cmd'] = search_cmd
+    cmd_detail['found_pids'] = [str(p) for p in alive_pids]
+    cmd_detail['kill_details'] = kill_details
     cmd_detail['stop_cmd'] = '; '.join(stop_cmds)
     cmd_detail['old_pid'] = old_pid
     cmd_detail['old_start_time'] = old_start_time
@@ -1209,11 +1114,11 @@ def _do_auto_restart_check():
             if runtime.get('should_run', '') != '1':
                 continue
 
-            status = _get_deploy_status(name)
+            # 从 Redis 读取 PID 列表，逐一验证，不全量扫描
+            alive_pids, _ = _find_deploy_pids(name)
             expected = max(1, int(config.get('num_processes', '1') or 1))
-            alive_count = len(status.get('pid_list', []))
 
-            if alive_count >= expected:
+            if len(alive_pids) >= expected:
                 _redis.hset(_runtime_key(name), 'restart_retry_count', '0')
                 continue
 
@@ -1224,15 +1129,9 @@ def _do_auto_restart_check():
 
             _redis.hset(_runtime_key(name), 'restart_retry_count', str(retry_count + 1))
 
-            # 先停掉残余进程，再全部重启
-            for i, pid in enumerate(status.get('pid_list', [])):
-                ct = status['ct_list'][i] if i < len(status.get('ct_list', [])) else ''
-                _kill_process(pid, ct)
-
-            _redis.hset(_runtime_key(name), mapping={
-                'pid_list': '[]', 'flag_list': '[]', 'ct_list': '[]', 'st_list': '[]',
-            })
-            time.sleep(1)
+            if alive_pids:
+                _kill_pids(alive_pids)
+                time.sleep(1)
 
             procs, err, _ = _start_process(name, config)
             if not err:

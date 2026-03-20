@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>通用日志查看器</title>
+<link href="{{ url_for('static', filename='css_cdn/twitter-bootstrap/3.3.7/css/bootstrap.min.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css_cdn/select2/4.0.13/css/select2.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='js/jquery-1.11.0.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/select2.min.js') }}"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+    background: linear-gradient(135deg, #0f0c29 0%, #16213e 50%, #0f0c29 100%);
+    color: #e0e0e0;
+    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    font-size: 13px;
+}
+
+.lv-wrap { display: flex; height: 100vh; }
+
+/* ============ 左侧面板 ============ */
+.lv-sidebar {
+    width: 320px; min-width: 320px;
+    display: flex; flex-direction: column;
+    background: rgba(15, 12, 41, 0.85);
+    border-right: 1px solid rgba(99,102,241,0.18);
+    overflow: hidden;
+}
+.lv-panel { padding: 12px 14px; border-bottom: 1px solid rgba(99,102,241,0.12); }
+.lv-panel-title {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; font-weight: 700; color: #a78bfa;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+}
+
+/* Select2 dark theme */
+.select2-container--default .select2-selection--single {
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(99,102,241,0.25) !important;
+    border-radius: 6px !important; height: 34px !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #e0e0e0 !important; line-height: 34px !important; padding-left: 10px !important; font-size: 12px;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow { height: 34px !important; }
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: rgba(255,255,255,0.4) transparent transparent transparent !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__placeholder { color: rgba(255,255,255,0.35) !important; }
+.select2-dropdown {
+    background: #1a1a2e !important; border: 1px solid rgba(99,102,241,0.35) !important;
+    border-radius: 6px !important; overflow: hidden;
+}
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    background: rgba(255,255,255,0.08) !important; color: #e0e0e0 !important;
+    border: 1px solid rgba(99,102,241,0.25) !important; border-radius: 4px !important;
+}
+.select2-container--default .select2-results__option { color: #e0e0e0 !important; font-size: 12px; }
+.select2-container--default .select2-results__option--highlighted[aria-selected] { background: rgba(99,102,241,0.35) !important; }
+.select2-container--default .select2-results__option[aria-selected=true] { background: rgba(99,102,241,0.15) !important; }
+
+/* 文件夹操作按钮 */
+.lv-folder-btns {
+    display: flex; gap: 6px; margin-top: 8px;
+}
+.btn-folder {
+    flex: 1; padding: 5px 0; border: 1px solid rgba(99,102,241,0.25); border-radius: 6px;
+    background: none; color: rgba(255,255,255,0.6); font-size: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s;
+}
+.btn-folder:hover { background: rgba(99,102,241,0.15); color: #fff; }
+.btn-folder.btn-del { border-color: rgba(239,68,68,0.25); color: rgba(239,68,68,0.6); }
+.btn-folder.btn-del:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
+
+/* 添加文件夹 */
+.lv-add-row { display: flex; gap: 6px; margin-top: 8px; }
+.lv-add-row input {
+    flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 6px; padding: 5px 10px; color: #e0e0e0; font-size: 12px; outline: none;
+}
+.lv-add-row input:focus { border-color: #6366f1; }
+.lv-add-row button {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;
+    color: #fff; border-radius: 6px; padding: 5px 12px; cursor: pointer; font-size: 12px; white-space: nowrap;
+}
+.lv-add-row button:hover { opacity: 0.9; }
+
+/* 文件浏览器 */
+.lv-files-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.lv-breadcrumb {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 2px;
+    padding: 8px 14px; font-size: 12px; color: rgba(255,255,255,0.5);
+    border-bottom: 1px solid rgba(99,102,241,0.08); min-height: 32px;
+}
+.lv-breadcrumb a { color: #818cf8; text-decoration: none; cursor: pointer; }
+.lv-breadcrumb a:hover { color: #a78bfa; text-decoration: underline; }
+.lv-breadcrumb .sep { margin: 0 3px; color: rgba(255,255,255,0.25); }
+
+.lv-search-row { padding: 8px 14px; position: relative; }
+.lv-search-row input {
+    width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 6px; padding: 6px 10px 6px 30px; color: #e0e0e0; font-size: 12px; outline: none;
+}
+.lv-search-row input:focus { border-color: #6366f1; }
+.lv-search-row .search-icon {
+    position: absolute; left: 24px; top: 50%; transform: translateY(-50%);
+    color: rgba(255,255,255,0.3); font-size: 12px;
+}
+
+/* 排序栏 */
+.lv-sort-bar {
+    display: flex; align-items: center; gap: 2px; padding: 4px 14px;
+    border-bottom: 1px solid rgba(99,102,241,0.08); font-size: 11px; flex-wrap: wrap;
+}
+.lv-sort-bar .sort-label { color: rgba(255,255,255,0.35); margin-right: 4px; white-space: nowrap; }
+.btn-sort {
+    background: none; border: 1px solid transparent; color: rgba(255,255,255,0.45);
+    border-radius: 3px; padding: 2px 7px; cursor: pointer; font-size: 11px;
+    transition: all 0.15s; white-space: nowrap;
+}
+.btn-sort:hover { color: #a78bfa; border-color: rgba(99,102,241,0.2); }
+.btn-sort.active { color: #fff; background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.3); }
+.btn-sort .fa { font-size: 9px; margin-left: 2px; }
+.btn-load-more {
+    display: block; width: 100%; padding: 8px; margin-top: 4px;
+    background: rgba(99,102,241,0.08); border: 1px dashed rgba(99,102,241,0.2);
+    border-radius: 6px; color: #818cf8; font-size: 12px; cursor: pointer;
+    text-align: center; transition: all 0.15s;
+}
+.btn-load-more:hover { background: rgba(99,102,241,0.15); color: #a78bfa; }
+
+.lv-file-list { flex: 1; overflow-y: auto; padding: 4px 8px; }
+.lv-file-item {
+    display: flex; align-items: center; padding: 7px 10px; border-radius: 6px;
+    cursor: pointer; transition: background 0.15s; gap: 8px;
+}
+.lv-file-item:hover { background: rgba(99,102,241,0.1); }
+.lv-file-item.active { background: rgba(99,102,241,0.2); }
+.lv-file-item .fi-icon { width: 18px; text-align: center; flex-shrink: 0; }
+.lv-file-item .fi-icon.dir { color: #fbbf24; }
+.lv-file-item .fi-icon.file { color: rgba(255,255,255,0.4); }
+.lv-file-item .fi-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.lv-file-item .fi-meta { font-size: 11px; color: rgba(255,255,255,0.3); white-space: nowrap; }
+
+.lv-file-list::-webkit-scrollbar { width: 4px; }
+.lv-file-list::-webkit-scrollbar-track { background: transparent; }
+.lv-file-list::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.25); border-radius: 4px; }
+
+.lv-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.25); padding: 40px 20px; text-align: center;
+}
+.lv-empty i { font-size: 36px; margin-bottom: 10px; }
+
+/* ============ 右侧主区域 ============ */
+.lv-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.lv-toolbar {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+    padding: 10px 16px; background: rgba(30,30,63,0.6);
+    border-bottom: 1px solid rgba(99,102,241,0.12); backdrop-filter: blur(8px);
+}
+.lv-toolbar input, .lv-toolbar select {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 6px; padding: 5px 10px; color: #e0e0e0; font-size: 12px; outline: none;
+}
+.lv-toolbar input:focus, .lv-toolbar select:focus { border-color: #6366f1; }
+.lv-toolbar select { cursor: pointer; }
+.lv-toolbar select option { background: #1e1e3f; color: #e0e0e0; }
+.lv-toolbar .tb-sep { color: rgba(255,255,255,0.2); font-size: 11px; }
+.lv-toolbar .tb-group { display: flex; align-items: center; gap: 6px; }
+#kwInput { width: 180px; }
+#tsStart, #tsEnd { width: 170px; font-size: 11px; }
+
+.btn-tb {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;
+    color: #fff; border-radius: 6px; padding: 5px 14px; cursor: pointer; font-size: 12px;
+    display: flex; align-items: center; gap: 5px; white-space: nowrap; transition: opacity 0.2s;
+}
+.btn-tb:hover { opacity: 0.85; }
+.btn-tb.btn-outline {
+    background: none; border: 1px solid rgba(99,102,241,0.3); color: #a78bfa;
+}
+.btn-tb.btn-outline:hover { background: rgba(99,102,241,0.15); color: #fff; }
+.btn-tb.btn-stream-on {
+    background: linear-gradient(135deg, #10b981, #059669); animation: pulse-stream 1.5s infinite;
+}
+@keyframes pulse-stream {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+}
+.tb-spacer { flex: 1; }
+
+/* 快捷时间按钮 — 高亮绿色 */
+.lv-quick-times {
+    display: flex; gap: 4px; padding: 6px 16px 8px 16px;
+    background: rgba(30,30,63,0.6);
+    border-bottom: 1px solid rgba(99,102,241,0.08);
+}
+.btn-qt {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(99,102,241,0.15);
+    color: rgba(255,255,255,0.55); border-radius: 5px; padding: 4px 12px;
+    font-size: 12px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.btn-qt:hover { border-color: #34d399; color: #34d399; background: rgba(16,185,129,0.08); }
+.btn-qt.active {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    border-color: #10b981 !important; color: #fff !important;
+    font-weight: 600; box-shadow: 0 0 10px rgba(16,185,129,0.35);
+}
+
+/* 文件信息条 */
+.lv-file-bar {
+    display: flex; align-items: center; gap: 16px;
+    padding: 6px 16px; font-size: 12px;
+    background: rgba(99,102,241,0.06);
+    border-bottom: 1px solid rgba(99,102,241,0.08);
+    color: rgba(255,255,255,0.5);
+}
+.lv-file-bar .fb-name { color: #a78bfa; font-weight: 600; }
+.lv-file-bar .fb-badge {
+    background: rgba(99,102,241,0.15); border-radius: 4px; padding: 1px 8px; font-size: 11px;
+}
+
+/* 日志内容区域 */
+.lv-log-area {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    background: rgba(0,0,0,0.35); position: relative;
+}
+.lv-log-area::-webkit-scrollbar { width: 8px; }
+.lv-log-area::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+.lv-log-area::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 4px; }
+
+.lv-log-table {
+    width: 100%; border-collapse: collapse;
+    font-family: 'Consolas', 'Courier New', 'Microsoft YaHei', monospace;
+    font-size: 12.5px; line-height: 1.65;
+}
+.lv-log-table tr:hover { background: rgba(99,102,241,0.06); }
+.lv-log-table .ln-num {
+    width: 50px; text-align: right; padding: 0 10px 0 6px;
+    color: rgba(255,255,255,0.15); user-select: none;
+    font-size: 11px; vertical-align: top; border-right: 1px solid rgba(99,102,241,0.08);
+}
+.lv-log-table .ln-text { padding: 0 12px; white-space: pre-wrap; word-break: break-all; }
+
+.ll-print    { color: #3b82f6; }
+.ll-debug    { color: #10b981; }
+.ll-info     { color: #06b6d4; }
+.ll-warning  { color: #f59e0b; }
+.ll-error    { color: #ec4899; }
+.ll-critical { color: #ef4444; font-weight: 600; }
+.ll-default  { color: rgba(255,255,255,0.72); }
+
+mark { background: rgba(251,191,36,0.35); color: #fff; border-radius: 2px; padding: 0 2px; }
+
+.lv-placeholder {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; color: rgba(255,255,255,0.18);
+}
+.lv-placeholder i { font-size: 64px; margin-bottom: 16px; }
+.lv-placeholder p { font-size: 15px; }
+
+.lv-status-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 5px 16px; font-size: 11px; color: rgba(255,255,255,0.4);
+    background: rgba(15,12,41,0.7); border-top: 1px solid rgba(99,102,241,0.1);
+}
+.stream-indicator { display: inline-flex; align-items: center; gap: 5px; color: #34d399; font-weight: 600; }
+.stream-dot {
+    width: 7px; height: 7px; background: #34d399; border-radius: 50%; animation: blink-dot 1s infinite;
+}
+@keyframes blink-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.btn-scroll-bottom {
+    position: absolute; bottom: 20px; right: 24px; z-index: 10;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none; color: #fff; font-size: 16px;
+    cursor: pointer; display: none; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(99,102,241,0.5); transition: transform 0.2s;
+}
+.btn-scroll-bottom:hover { transform: scale(1.1); }
+
+.lv-toast {
+    position: fixed; top: 16px; right: 16px; z-index: 9999;
+    padding: 10px 18px; border-radius: 8px; font-size: 13px; color: #fff; max-width: 360px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.3); animation: toast-in 0.3s ease-out;
+}
+.lv-toast.success { background: linear-gradient(135deg, #10b981, #059669); }
+.lv-toast.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.lv-toast.info { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+.lv-resizer { width: 4px; cursor: col-resize; background: transparent; transition: background 0.2s; flex-shrink: 0; }
+.lv-resizer:hover, .lv-resizer.dragging { background: rgba(99,102,241,0.5); }
+
+.lv-loading {
+    position: absolute; inset: 0; background: rgba(15,12,41,0.7);
+    display: none; align-items: center; justify-content: center; z-index: 5;
+}
+.lv-loading.show { display: flex; }
+.lv-spinner {
+    width: 36px; height: 36px; border: 3px solid rgba(99,102,241,0.2);
+    border-top-color: #6366f1; border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="lv-wrap">
+    <!-- 左侧面板 -->
+    <div class="lv-sidebar" id="sidebar">
+        <!-- 文件夹管理 -->
+        <div class="lv-panel">
+            <div class="lv-panel-title">
+                <span><i class="fa fa-database"></i> 日志文件夹</span>
+            </div>
+            <select id="folderSelect" style="width:100%">
+                <option value="">-- 选择或搜索文件夹 --</option>
+            </select>
+            <div class="lv-folder-btns">
+                <button class="btn-folder" onclick="toggleAddFolder()"><i class="fa fa-plus"></i> 添加</button>
+                <button class="btn-folder btn-del" onclick="removeSelectedFolder()"><i class="fa fa-trash-o"></i> 移除当前</button>
+            </div>
+            <div id="addFolderBox" style="display:none;">
+                <div class="lv-add-row">
+                    <input type="text" id="newFolderInput" placeholder="输入文件夹绝对路径…" onkeydown="if(event.key==='Enter')addFolder()">
+                    <button onclick="addFolder()"><i class="fa fa-check"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文件浏览器 -->
+        <div class="lv-files-panel">
+            <div class="lv-breadcrumb" id="breadcrumb">
+                <span style="color:rgba(255,255,255,0.25)">选择一个文件夹开始浏览</span>
+            </div>
+            <div class="lv-search-row">
+                <i class="fa fa-search search-icon"></i>
+                <input type="text" id="fileSearchInput" placeholder="输入文件名关键字搜索…" onkeydown="if(event.key==='Enter')searchFiles()">
+            </div>
+            <div class="lv-sort-bar" id="sortBar">
+                <span class="sort-label">排序:</span>
+                <button class="btn-sort" data-sort="name">文件名</button>
+                <button class="btn-sort active" data-sort="mtime">修改时间 <i class="fa fa-caret-down"></i></button>
+                <button class="btn-sort" data-sort="ctime">创建时间</button>
+                <button class="btn-sort" data-sort="size">大小</button>
+                <button class="btn-sort" data-sort="ext">类型</button>
+            </div>
+            <div id="fileListArea" class="lv-file-list">
+                <div class="lv-empty"><i class="fa fa-folder-open-o"></i><p>暂无文件</p></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="lv-resizer" id="resizer"></div>
+
+    <!-- 右侧主区域 -->
+    <div class="lv-main">
+        <div class="lv-toolbar">
+            <div class="tb-group">
+                <input type="text" id="kwInput" placeholder="关键字搜索…" onkeydown="if(event.key==='Enter')doSearch()">
+            </div>
+            <span class="tb-sep">|</span>
+            <div class="tb-group">
+                <input type="datetime-local" id="tsStart" step="60">
+                <span class="tb-sep">至</span>
+                <input type="datetime-local" id="tsEnd" step="60">
+            </div>
+            <span class="tb-sep">|</span>
+            <div class="tb-group">
+                <select id="selLines">
+                    <option value="100">100 行</option>
+                    <option value="200" selected>200 行</option>
+                    <option value="500">500 行</option>
+                    <option value="1000">1000 行</option>
+                    <option value="5000">5000 行</option>
+                    <option value="10000">10000 行</option>
+                </select>
+            </div>
+            <button class="btn-tb" onclick="doSearch()"><i class="fa fa-search"></i> 查询</button>
+            <div class="tb-spacer"></div>
+            <button class="btn-tb btn-outline" id="btnStream" onclick="toggleStream()"><i class="fa fa-play"></i> 实时</button>
+            <button class="btn-tb btn-outline" onclick="doSearch()" title="刷新"><i class="fa fa-refresh"></i></button>
+        </div>
+
+        <div class="lv-quick-times">
+            <button class="btn-qt active" data-range="all">全部</button>
+            <button class="btn-qt" data-range="1m">近1分钟</button>
+            <button class="btn-qt" data-range="5m">近5分钟</button>
+            <button class="btn-qt" data-range="30m">近30分钟</button>
+            <button class="btn-qt" data-range="1h">近1小时</button>
+            <button class="btn-qt" data-range="6h">近6小时</button>
+            <button class="btn-qt" data-range="24h">近24小时</button>
+        </div>
+
+        <div class="lv-file-bar" id="fileBar" style="display:none;">
+            <span class="fb-name" id="fbName"></span>
+            <span class="fb-badge" id="fbSize"></span>
+            <span class="fb-badge" id="fbMtime"></span>
+            <span id="fbTotal"></span>
+        </div>
+
+        <div class="lv-log-area" id="logArea">
+            <div class="lv-loading" id="logLoading"><div class="lv-spinner"></div></div>
+            <div class="lv-placeholder" id="logPlaceholder">
+                <i class="fa fa-file-text-o"></i>
+                <p>选择一个日志文件开始查看</p>
+            </div>
+            <table class="lv-log-table" id="logTable" style="display:none;">
+                <tbody id="logBody"></tbody>
+            </table>
+            <button class="btn-scroll-bottom" id="btnScrollBottom" onclick="scrollToBottom()"><i class="fa fa-arrow-down"></i></button>
+        </div>
+
+        <div class="lv-status-bar">
+            <span id="statusText">就绪</span>
+            <span id="streamStatusBox" style="display:none;" class="stream-indicator">
+                <span class="stream-dot"></span> 实时监听中
+            </span>
+        </div>
+    </div>
+</div>
+
+<script>
+var currentFolder = '';
+var currentFile = '';
+var evtSource = null;
+var isStreaming = false;
+var streamLineNum = 0;
+var searchKeyword = '';
+var currentQuickTime = 'all';
+var fileOffset = 0;
+var fileLimit = 100;
+var currentSort = 'mtime';
+var currentOrder = 'desc';
+var fileTotalCount = 0;
+
+// ===================== Toast =====================
+function showToast(msg, type) {
+    type = type || 'info';
+    var $t = $('<div class="lv-toast ' + type + '">' + msg + '</div>');
+    $('body').append($t);
+    setTimeout(function(){ $t.fadeOut(300, function(){ $t.remove(); }); }, 3000);
+}
+
+// ===================== 文件夹管理 (select2) =====================
+function toggleAddFolder() {
+    var $box = $('#addFolderBox');
+    $box.toggle();
+    if ($box.is(':visible')) $('#newFolderInput').focus();
+}
+
+function loadFolders(selectPath) {
+    $.get('/logview/folders', function(resp) {
+        if (!resp.succ) return;
+        var $sel = $('#folderSelect');
+        var prev = selectPath || $sel.val() || '';
+        $sel.empty().append('<option value="">-- 选择或搜索文件夹 --</option>');
+        $.each(resp.data, function(i, f) {
+            var label = f.path + (f.exists ? '' : ' (不存在)');
+            $sel.append('<option value="' + escHtml(f.path) + '"' + (f.exists ? '' : ' disabled') + '>' + escHtml(label) + '</option>');
+        });
+        if (prev) {
+            $sel.val(prev).trigger('change.select2');
+        }
+    });
+}
+
+function addFolder() {
+    var path = $.trim($('#newFolderInput').val());
+    if (!path) return;
+    $.ajax({
+        url: '/logview/folders/add', method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({path: path}),
+        success: function(resp) {
+            if (resp.succ) {
+                showToast('文件夹添加成功', 'success');
+                $('#newFolderInput').val('');
+                $('#addFolderBox').hide();
+                currentFolder = path;
+                loadFolders(path);
+                browseFolder(path);
+            } else {
+                showToast(resp.msg, 'error');
+            }
+        }
+    });
+}
+
+function removeSelectedFolder() {
+    var path = $('#folderSelect').val();
+    if (!path) { showToast('请先选择一个文件夹', 'info'); return; }
+    $.ajax({
+        url: '/logview/folders/remove', method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({path: path}),
+        success: function(resp) {
+            showToast('已移除: ' + path, 'info');
+            if (currentFolder === path) {
+                currentFolder = '';
+                $('#fileListArea').html('<div class="lv-empty"><i class="fa fa-folder-open-o"></i><p>暂无文件</p></div>');
+                $('#breadcrumb').html('<span style="color:rgba(255,255,255,0.25)">选择一个文件夹开始浏览</span>');
+            }
+            loadFolders();
+        }
+    });
+}
+
+// ===================== 文件浏览 =====================
+function browseFolder(folderPath, append) {
+    if (!append) {
+        fileOffset = 0;
+    }
+    var search = $.trim($('#fileSearchInput').val());
+    var params = {
+        folder: folderPath, sort: currentSort, order: currentOrder,
+        offset: fileOffset, limit: fileLimit
+    };
+    if (search) params.search = search;
+
+    $.get('/logview/files', params, function(resp) {
+        if (!resp.succ) { showToast(resp.msg, 'error'); return; }
+        if (!append) renderBreadcrumb(resp.folder);
+        var $area = append ? $('#fileListArea') : $('#fileListArea').empty();
+        fileTotalCount = resp.total;
+
+        $area.find('.btn-load-more').remove();
+
+        if (resp.data.length === 0 && !append) {
+            $area.html('<div class="lv-empty"><i class="fa fa-folder-open-o"></i><p>无匹配文件</p></div>');
+            return;
+        }
+        $.each(resp.data, function(i, f) {
+            var iconCls, icon;
+            if (f.is_dir) { iconCls = 'dir'; icon = 'fa-folder'; }
+            else { iconCls = 'file'; icon = /\.log/i.test(f.name) ? 'fa-file-text-o' : 'fa-file-o'; }
+            var meta = f.is_dir ? '' : f.size_str;
+            var $item = $(
+                '<div class="lv-file-item" data-path="' + escHtml(f.path) + '">' +
+                    '<span class="fi-icon ' + iconCls + '"><i class="fa ' + icon + '"></i></span>' +
+                    '<span class="fi-name" title="' + escHtml(f.name) + '">' + escHtml(f.name) + '</span>' +
+                    '<span class="fi-meta">' + escHtml(meta) + '</span>' +
+                '</div>'
+            );
+            $item.click(function() {
+                if (f.is_dir) {
+                    currentFolder = f.path;
+                    $('#folderSelect').val('').trigger('change.select2');
+                    browseFolder(f.path);
+                } else {
+                    openFile(f.path);
+                    $('.lv-file-item').removeClass('active');
+                    $item.addClass('active');
+                }
+            });
+            $area.append($item);
+        });
+
+        var loaded = fileOffset + resp.data.length;
+        if (loaded < resp.total) {
+            var $more = $('<button class="btn-load-more">加载更多 (' + loaded + ' / ' + resp.total + ')</button>');
+            $more.click(function() { fileOffset += fileLimit; browseFolder(currentFolder, true); });
+            $area.append($more);
+        }
+    });
+}
+
+function renderBreadcrumb(folderPath) {
+    var $bc = $('#breadcrumb').empty();
+    var norm = folderPath.replace(/\\/g, '/');
+    var parts, base;
+    if (/^[A-Za-z]:/.test(norm)) { base = norm.substring(0, 2); parts = norm.substring(3).split('/').filter(Boolean); }
+    else { base = ''; parts = norm.split('/').filter(Boolean); }
+    var accumulated = base;
+    var $root = $('<a>' + (base || '/') + '</a>');
+    $root.click(function() { browseFolder(base ? base + '\\' : '/'); });
+    $bc.append($root);
+    $.each(parts, function(i, p) {
+        accumulated += '/' + p;
+        var fullPath = accumulated;
+        $bc.append('<span class="sep">/</span>');
+        if (i === parts.length - 1) {
+            $bc.append('<span style="color:rgba(255,255,255,0.7)">' + escHtml(p) + '</span>');
+        } else {
+            var $a = $('<a>' + escHtml(p) + '</a>');
+            $a.click(function() { browseFolder(fullPath); });
+            $bc.append($a);
+        }
+    });
+}
+
+function searchFiles() {
+    fileOffset = 0;
+    if (currentFolder) browseFolder(currentFolder);
+}
+
+function changeSort(sortField) {
+    if (currentSort === sortField) {
+        currentOrder = (currentOrder === 'asc') ? 'desc' : 'asc';
+    } else {
+        currentSort = sortField;
+        currentOrder = (sortField === 'name' || sortField === 'ext') ? 'asc' : 'desc';
+    }
+    updateSortButtons();
+    if (currentFolder) browseFolder(currentFolder);
+}
+
+function updateSortButtons() {
+    $('.btn-sort').removeClass('active').each(function() {
+        $(this).html($(this).text().replace(/\s*$/, ''));
+    });
+    var $a = $('.btn-sort[data-sort="' + currentSort + '"]');
+    $a.addClass('active');
+    var arrow = currentOrder === 'asc' ? ' <i class="fa fa-caret-up"></i>' : ' <i class="fa fa-caret-down"></i>';
+    $a.append(arrow);
+}
+
+// ===================== 日志查看 =====================
+function openFile(filepath) {
+    stopStream();
+    currentFile = filepath;
+    setQuickTime('all');
+    doSearch();
+}
+
+function doSearch() {
+    if (!currentFile) { showToast('请先选择一个日志文件', 'info'); return; }
+    searchKeyword = $.trim($('#kwInput').val());
+    var sendTime = (currentQuickTime !== 'all');
+    var params = {
+        file: currentFile, lines: $('#selLines').val(), keyword: searchKeyword,
+        time_start: sendTime && $('#tsStart').val() ? $('#tsStart').val().replace('T', ' ') : '',
+        time_end: sendTime && $('#tsEnd').val() ? $('#tsEnd').val().replace('T', ' ') : '',
+    };
+    $('#logLoading').addClass('show');
+    $('#logPlaceholder').hide();
+    $('#logTable').show();
+    $('#statusText').text('正在加载…');
+    $.get('/logview/content', params, function(resp) {
+        $('#logLoading').removeClass('show');
+        if (!resp.succ) { showToast(resp.msg, 'error'); $('#statusText').text('加载失败'); return; }
+        $('#fileBar').show();
+        $('#fbName').text(currentFile.replace(/\\/g, '/').split('/').pop());
+        $('#fbSize').text(resp.file_size_str);
+        $('#fbMtime').text('修改: ' + resp.file_mtime);
+        $('#fbTotal').text('显示 ' + resp.total + ' 行');
+        renderLines(resp.data);
+        streamLineNum = resp.total;
+        $('#statusText').text('已加载 ' + resp.total + ' 行');
+        scrollToBottom();
+    }).fail(function() {
+        $('#logLoading').removeClass('show');
+        showToast('请求失败', 'error');
+        $('#statusText').text('请求失败');
+    });
+}
+
+function renderLines(lines) {
+    var $body = $('#logBody').empty();
+    if (!lines || lines.length === 0) {
+        $body.append('<tr><td colspan="2" style="text-align:center;color:rgba(255,255,255,0.2);padding:40px;">无匹配日志</td></tr>');
+        return;
+    }
+    var html = '';
+    for (var i = 0; i < lines.length; i++) {
+        var raw = lines[i];
+        var cls = detectLevel(raw);
+        var escaped = escHtml(raw);
+        if (searchKeyword) escaped = highlightKw(escaped, searchKeyword);
+        html += '<tr><td class="ln-num">' + (i + 1) + '</td><td class="ln-text ' + cls + '">' + escaped + '</td></tr>';
+    }
+    $body.append(html);
+}
+
+function detectLevel(line) {
+    var upper = line.toUpperCase();
+    if (/\[CRITICAL\]|CRITICAL\s/.test(upper)) return 'll-critical';
+    if (/\[ERROR\]|ERROR\s|Traceback/i.test(line)) return 'll-error';
+    if (/\[WARNING\]|WARNING\s|\[WARN\]|WARN\s/.test(upper)) return 'll-warning';
+    if (/\[INFO\]|INFO\s/.test(upper)) return 'll-info';
+    if (/\[DEBUG\]|DEBUG\s/.test(upper)) return 'll-debug';
+    if (/\[print\]/i.test(line)) return 'll-print';
+    return 'll-default';
+}
+
+function highlightKw(html, kw) {
+    if (!kw) return html;
+    var escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    try { return html.replace(new RegExp('(' + escaped + ')', 'gi'), '<mark>$1</mark>'); }
+    catch(e) { return html; }
+}
+
+function escHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ===================== 实时模式 (SSE) =====================
+function toggleStream() { isStreaming ? stopStream() : startStream(); }
+
+function startStream() {
+    if (!currentFile) { showToast('请先选择一个日志文件', 'info'); return; }
+    if (isStreaming) return;
+    evtSource = new EventSource('/logview/stream?file=' + encodeURIComponent(currentFile));
+    isStreaming = true;
+    $('#btnStream').html('<i class="fa fa-stop"></i> 停止').removeClass('btn-outline').addClass('btn-stream-on');
+    $('#streamStatusBox').show();
+    $('#statusText').text('实时监听中…');
+    evtSource.onmessage = function(e) {
+        try {
+            var data = JSON.parse(e.data);
+            if (data.error) { showToast(data.error, 'error'); stopStream(); return; }
+            if (data.event === 'truncated') { $('#logBody').empty(); streamLineNum = 0; showToast('文件已被截断/轮转', 'info'); return; }
+            if (data.line !== undefined) appendLine(data.line);
+        } catch(ex) {}
+    };
+    evtSource.onerror = function() { stopStream(); showToast('实时连接中断', 'error'); };
+}
+
+function stopStream() {
+    if (evtSource) { evtSource.close(); evtSource = null; }
+    isStreaming = false;
+    $('#btnStream').html('<i class="fa fa-play"></i> 实时').addClass('btn-outline').removeClass('btn-stream-on');
+    $('#streamStatusBox').hide();
+    if (currentFile) { $('#statusText').text('已加载 ' + $('#logBody tr').length + ' 行'); }
+}
+
+function appendLine(text) {
+    streamLineNum++;
+    var cls = detectLevel(text);
+    var escaped = escHtml(text);
+    if (searchKeyword) {
+        if (text.toLowerCase().indexOf(searchKeyword.toLowerCase()) === -1) return;
+        escaped = highlightKw(escaped, searchKeyword);
+    }
+    $('#logBody').append('<tr><td class="ln-num">' + streamLineNum + '</td><td class="ln-text ' + cls + '">' + escaped + '</td></tr>');
+    var maxRows = parseInt($('#selLines').val()) * 2;
+    var $rows = $('#logBody tr');
+    if ($rows.length > maxRows) $rows.slice(0, $rows.length - maxRows).remove();
+    var area = document.getElementById('logArea');
+    if (area.scrollHeight - area.scrollTop - area.clientHeight < 100) scrollToBottom();
+    $('#fbTotal').text('显示 ' + $('#logBody tr').length + ' 行');
+}
+
+// ===================== 快捷时间 =====================
+function setQuickTime(range) {
+    currentQuickTime = range;
+    $('.btn-qt').removeClass('active');
+    $('.btn-qt[data-range="' + range + '"]').addClass('active');
+    if (range !== 'all') {
+        var now = new Date();
+        var mins = { '1m': 1, '5m': 5, '30m': 30, '1h': 60, '6h': 360, '24h': 1440 };
+        var m = mins[range] || 60;
+        var start = new Date(now.getTime() - m * 60000);
+        $('#tsStart').val(formatDTLocal(start));
+        $('#tsEnd').val(formatDTLocal(now));
+    }
+}
+
+function prefillTimeDefaults() {
+    var now = new Date();
+    var start = new Date(now.getTime() - 60 * 60000);
+    $('#tsStart').val(formatDTLocal(start));
+    $('#tsEnd').val(formatDTLocal(now));
+}
+
+function formatDTLocal(d) {
+    var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' +
+           pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+
+// ===================== 滚动控制 =====================
+function scrollToBottom() { var a = document.getElementById('logArea'); a.scrollTop = a.scrollHeight; }
+
+$('#logArea').on('scroll', function() {
+    var far = this.scrollHeight - this.scrollTop - this.clientHeight > 200;
+    $('#btnScrollBottom').css('display', far ? 'flex' : 'none');
+});
+
+// ===================== 拖拽调整宽度 =====================
+(function() {
+    var resizer = document.getElementById('resizer');
+    var sidebar = document.getElementById('sidebar');
+    var startX, startW;
+    resizer.addEventListener('mousedown', function(e) {
+        startX = e.clientX; startW = sidebar.offsetWidth;
+        resizer.classList.add('dragging');
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+        e.preventDefault();
+    });
+    function onMove(e) { var w = Math.max(200, Math.min(600, startW + e.clientX - startX)); sidebar.style.width = w + 'px'; sidebar.style.minWidth = w + 'px'; }
+    function onUp() { resizer.classList.remove('dragging'); document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
+})();
+
+// ===================== 初始化 =====================
+$(document).ready(function() {
+    // select2 初始化
+    $('#folderSelect').select2({ placeholder: '选择或搜索文件夹', allowClear: true, width: '100%' });
+    $('#folderSelect').on('select2:select', function() {
+        var path = $(this).val();
+        if (path) { currentFolder = path; browseFolder(path); }
+    });
+    $('#folderSelect').on('select2:unselect', function() {
+        currentFolder = '';
+        $('#fileListArea').html('<div class="lv-empty"><i class="fa fa-folder-open-o"></i><p>暂无文件</p></div>');
+        $('#breadcrumb').html('<span style="color:rgba(255,255,255,0.25)">选择一个文件夹开始浏览</span>');
+    });
+
+    loadFolders();
+    prefillTimeDefaults();
+    updateSortButtons();
+
+    // 快捷时间按钮点击
+    $(document).on('click', '.btn-qt', function() {
+        setQuickTime($(this).data('range'));
+        if (currentFile) doSearch();
+    });
+
+    // 手动改时间 → 切换自定义模式
+    $('#tsStart, #tsEnd').on('input change', function() {
+        currentQuickTime = 'custom';
+        $('.btn-qt').removeClass('active');
+    });
+
+    // 排序按钮点击
+    $(document).on('click', '.btn-sort', function() {
+        changeSort($(this).data('sort'));
+    });
+
+    // 文件搜索输入
+    var searchTimer;
+    $('#fileSearchInput').on('input', function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function() { searchFiles(); }, 400);
+    });
+});
+</script>
+</body>
+</html>

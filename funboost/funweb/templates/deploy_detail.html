@@ -208,7 +208,7 @@
             font-size: 13px; transition: all .2s ease; white-space: nowrap;
         }
         .btn-log:hover { background: rgba(99,102,241,0.4); color: #fff; }
-        .btn-log.active { background: rgba(16,185,129,0.3); color: #34d399; }
+        .btn-log.active { background: linear-gradient(135deg, #10b981, #059669) !important; border-color: #10b981 !important; color: #fff !important; font-weight: 600; box-shadow: 0 0 10px rgba(16,185,129,0.35); }
 
         .log-time-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
         .log-time-row input[type="datetime-local"] {
@@ -223,7 +223,8 @@
             border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 12px;
             transition: all .2s ease;
         }
-        .btn-quick:hover, .btn-quick.active { background: rgba(99,102,241,0.3); color: #fff; border-color: rgba(99,102,241,0.4); }
+        .btn-quick:hover { background: rgba(99,102,241,0.3); color: #fff; border-color: rgba(99,102,241,0.4); }
+        .btn-quick.active { background: linear-gradient(135deg, #10b981, #059669) !important; border-color: #10b981 !important; color: #fff !important; font-weight: 600; box-shadow: 0 0 10px rgba(16,185,129,0.35); }
 
         .log-viewer {
             background: rgba(0,0,0,0.5); border: 1px solid rgba(99,102,241,0.15);
@@ -368,17 +369,15 @@
                     <i class="fa fa-clock-o"></i> 状态轮询:
                     <select id="statusInterval" onchange="updateStatusInterval()">
                         <option value="0">关闭</option>
-                        <option value="3">3秒</option>
-                        <option value="5" selected>5秒</option>
-                        <option value="10">10秒</option>
-                        <option value="30">30秒</option>
+                        <option value="60" selected>60秒</option>
+                        <option value="300">300秒</option>
                     </select>
                 </span>
             </div>
             <div class="process-info">
                 <div class="process-info-item"><span class="label">PID:</span><span class="value" id="infoPid">-</span></div>
                 <div class="process-info-item"><span class="label">启动时间:</span><span class="value" id="infoStartTime">-</span></div>
-                <div class="process-info-item"><span class="label">deploy_flag:</span><span class="value" id="infoFlag" style="font-size:11px;color:#6b7280;">-</span></div>
+                <div class="process-info-item"><span class="label">搜索命令:</span><span class="value" id="infoSearchCmd" style="font-size:11px;color:#6b7280;">-</span></div>
             </div>
             <div class="cmd-detail-box" id="processCmd"></div>
         </div>
@@ -440,7 +439,7 @@
 </div>
 
 <!-- 操作详情模态框 -->
-<div class="modal fade" id="cmdModal" tabindex="-1">
+<div class="modal fade" id="cmdModal" tabindex="-1" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog"><div class="modal-content">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
@@ -539,7 +538,7 @@ function updateStatusUI(d) {
     var running = d.running;
     $('#infoPid').text(d.pid || '-');
     $('#infoStartTime').text(d.start_time || '-');
-    $('#infoFlag').text(d.deploy_flag || '-');
+    $('#infoSearchCmd').text(d.search_cmd || '-');
     if (running) {
         $('#statusBadge').removeClass('badge-stopped').addClass('badge-running')
             .html('<i class="fa fa-circle"></i> 运行中');
@@ -665,9 +664,10 @@ function doStop() {
         $c.find('.ur-loading:last').remove();
         if (resp.cmd_detail) {
             var d = resp.cmd_detail;
-            if (d.pid) urLog($c, '旧 PID: ' + d.pid, 'info');
+            if (d.search_cmd) urLog($c, '搜索命令: ' + d.search_cmd, 'cmd');
+            if (d.found_pids && d.found_pids.length) urLog($c, '找到进程 PID: ' + d.found_pids.join(', '), 'info');
             if (d.old_start_time) urLog($c, '旧启动时间: ' + d.old_start_time, 'info');
-            if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
+            if (d.kill_cmds && d.kill_cmds.length) { d.kill_cmds.forEach(function(c) { urLog($c, '执行: ' + c, 'cmd'); }); }
         }
         urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 ' + resp.msg), resp.succ ? 'ok' : 'fail');
         setTimeout(pollStatus, 2000);
@@ -690,9 +690,10 @@ function doRestart() {
             $c.find('.ur-loading:last').remove();
             if (resp.cmd_detail) {
                 var d = resp.cmd_detail;
-                if (d.old_pid) urLog($c, '旧 PID: ' + d.old_pid, 'info');
+                if (d.search_cmd) urLog($c, '搜索命令: ' + d.search_cmd, 'cmd');
+                if (d.found_pids && d.found_pids.length) urLog($c, '找到旧进程 PID: ' + d.found_pids.join(', '), 'info');
                 if (d.old_start_time) urLog($c, '旧启动时间: ' + d.old_start_time, 'info');
-                if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
+                if (d.kill_details && d.kill_details.length) { d.kill_details.forEach(function(k) { urLog($c, '杀死 PID ' + k.pid + ': ' + k.cmd + (k.ok ? ' ✓' : ' ✗'), k.ok ? 'cmd' : 'error'); }); }
                 if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
                 if (d.env_vars && d.env_vars.length) {
                     urLog($c, '环境变量:', 'info');
@@ -757,9 +758,10 @@ function doUpdateRestart() {
                     $c.find('.ur-loading:last').remove();
                     if (resp2.cmd_detail) {
                         var d = resp2.cmd_detail;
-                        if (d.old_pid) urLog($c, '旧 PID: ' + d.old_pid, 'info');
+                        if (d.search_cmd) urLog($c, '搜索命令: ' + d.search_cmd, 'cmd');
+                        if (d.found_pids && d.found_pids.length) urLog($c, '找到旧进程 PID: ' + d.found_pids.join(', '), 'info');
                         if (d.old_start_time) urLog($c, '旧启动时间: ' + d.old_start_time, 'info');
-                        if (d.stop_cmd) urLog($c, '停止命令: ' + d.stop_cmd, 'cmd');
+                        if (d.kill_details && d.kill_details.length) { d.kill_details.forEach(function(k) { urLog($c, '杀死 PID ' + k.pid + ': ' + k.cmd + (k.ok ? ' ✓' : ' ✗'), k.ok ? 'cmd' : 'error'); }); }
                         if (d.cwd) urLog($c, '工作目录: ' + d.cwd, 'info');
                         if (d.env_vars && d.env_vars.length) { urLog($c, '环境变量:', 'info'); d.env_vars.forEach(function(v) { urLog($c, '  ' + v, 'info'); }); }
                         if (d.full_cmd) urLog($c, '启动命令: ' + d.full_cmd, 'cmd');

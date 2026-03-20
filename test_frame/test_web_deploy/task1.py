@@ -13,23 +13,24 @@ import threading
 
 # 示例1: 最简单的任务函数
 @boost(BoosterParams(
-    queue_name="demo_queue_2b2",
+    queue_name="demo_queue_2b4",
     broker_kind=BrokerEnum.SQLITE_QUEUE,  # 使用 SQLite 作为消息队列，无需额外安装中间件
     qps=5,  # 每秒执行5次
     concurrent_num=1,  # 并发数为10
 ))
 def add_task(x, y):
     """简单的加法任务"""
-    print(f'计算: {x} + {y} = {x + y}')
+    
     time.sleep(1)  # 模拟耗时操作
-    if random.random() < 0.5:
-        raise Exception('随机异常')
+    # if random.random() < 0.1:
+    #     raise Exception('随机异常')
+    print(f'计算: {x} + {y} = {x + y}')
     return x + y
 
 
 def test_thread():
     while True:
-        time.sleep(10)
+        time.sleep(30)
         print('test_thread')
         nb_log.debug('debug')
         nb_log.info('info')
@@ -52,9 +53,13 @@ def test_thread():
 
 
 if __name__ == '__main__':
-    for i in range(10):
-        add_task.push(i, i * 2)
-    add_task.consume()
     threading.Thread(target=test_thread).start()
+    
+    add_task.consume()
+
+    for i in range(1000,2000000):
+        time.sleep(1)
+        add_task.push(i, i * 2)
+    
     ctrl_c_recv()
 

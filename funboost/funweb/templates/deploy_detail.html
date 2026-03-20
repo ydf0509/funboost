@@ -420,7 +420,7 @@
                 </select>
                 <button class="btn-log" onclick="refreshDeployLogsKeepStream()"><i class="fa fa-refresh"></i> 刷新</button>
                 <button class="btn-log" id="btnDeployLogStream" onclick="toggleDeployLogStream()"><i class="fa fa-play"></i> 实时</button>
-                <span class="log-toolbar-label" id="deployStreamHint" style="display:none;color:#34d399;">实时中（最多 5 分钟）</span>
+                <span class="log-toolbar-label" id="deployStreamHint" style="display:none;color:#34d399;">实时中</span>
             </div>
 
             <div class="log-viewer" id="logViewer">加载中...</div>
@@ -452,6 +452,9 @@ var currentTimeRange = 'all';
 var deployLogES = null;
 var deployLogStreaming = false;
 var deployStreamAutoStopTimer = null;
+/** 与后端 log_stream_limits.LOG_STREAM_MAX_SECONDS 一致（秒×1000） */
+var LOG_STREAM_MAX_MS = 300 * 1000;
+var LOG_STREAM_MAX_MIN = Math.max(1, Math.floor(LOG_STREAM_MAX_MS / 60000));
 var deployLogLastCls = 'log-line';
 
 function getUrlParam(key) {
@@ -989,12 +992,15 @@ function startDeployLogStream() {
     deployLogES = new EventSource('/deploy/' + encodeURIComponent(deployName) + '/logs/stream');
     deployLogStreaming = true;
     $('#btnDeployLogStream').addClass('active').html('<i class="fa fa-stop"></i> 停止实时');
-    $('#deployStreamHint').show();
+    $('#deployStreamHint').text('实时中（最多 ' + LOG_STREAM_MAX_MIN + ' 分钟）').show();
     $('#deployStreamStatus').show();
 
     deployStreamAutoStopTimer = setTimeout(function() {
-        stopDeployLogStream();
-    }, 5 * 60 * 1000);
+        if (deployLogStreaming) {
+            stopDeployLogStream();
+            alert('实时已自动关闭（' + LOG_STREAM_MAX_MIN + ' 分钟），需要请再次点击「实时」');
+        }
+    }, LOG_STREAM_MAX_MS);
 
     deployLogES.onmessage = function(e) {
         try {

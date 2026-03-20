@@ -16,6 +16,7 @@ from flask import Blueprint, request, jsonify, Response
 from flask_login import login_required
 
 from funboost.utils.redis_manager import RedisMixin
+from funboost.funweb.log_stream_limits import LOG_STREAM_MAX_SECONDS
 
 deploy_bp = Blueprint('deploy', __name__)
 
@@ -1492,7 +1493,7 @@ def deploy_logs_stream(name):
 
     def generate():
         f = None
-        deadline = time.time() + _DEPLOY_LOG_STREAM_MAX_SEC
+        deadline = time.time() + LOG_STREAM_MAX_SECONDS
         try:
             f = open(log_path, 'rb')
             f.seek(0, 2)
@@ -1525,11 +1526,12 @@ def deploy_logs_stream(name):
                         idle_ticks = 0
 
                 time.sleep(0.5)
+            _m = max(1, LOG_STREAM_MAX_SECONDS // 60)
             yield (
                 'data: '
                 + json.dumps({
                     'event': 'timeout',
-                    'msg': '已持续实时推送 5 分钟，已自动停止。需要请再次开启实时。',
+                    'msg': f'已持续实时推送 {_m} 分钟，已自动停止。需要请再次开启实时。',
                 }, ensure_ascii=False)
                 + '\n\n'
             )

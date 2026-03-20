@@ -435,6 +435,9 @@ var evtSource = null;
 var isStreaming = false;
 var streamLineNum = 0;
 var streamAutoStopTimer = null;
+/** 与后端 log_stream_limits.LOG_STREAM_MAX_SECONDS 一致（秒×1000） */
+var LOG_STREAM_MAX_MS = 300 * 1000;
+var LOG_STREAM_MAX_MIN = Math.max(1, Math.floor(LOG_STREAM_MAX_MS / 60000));
 var pendingOpenAutoStream = false;
 var searchKeyword = '';
 var currentQuickTime = 'all';
@@ -725,14 +728,14 @@ function startStream() {
     isStreaming = true;
     $('#btnStream').html('<i class="fa fa-stop"></i> 停止').removeClass('btn-outline').addClass('btn-stream-on');
     $('#streamStatusBox').show();
-    $('#statusText').text('实时监听中（最多 5 分钟）…');
+    $('#statusText').text('实时监听中（最多 ' + LOG_STREAM_MAX_MIN + ' 分钟）…');
 
     streamAutoStopTimer = setTimeout(function() {
         if (isStreaming) {
             stopStream();
-            showToast('实时已自动关闭（5 分钟），需要请再次点击「实时」', 'info');
+            showToast('实时已自动关闭（' + LOG_STREAM_MAX_MIN + ' 分钟），需要请再次点击「实时」', 'info');
         }
-    }, 5 * 60 * 1000);
+    }, LOG_STREAM_MAX_MS);
 
     evtSource.onmessage = function(e) {
         try {

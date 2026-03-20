@@ -359,7 +359,8 @@ def _start_process(name, config, num_processes=None):
     for idx in range(num_processes):
         deploy_flag = str(uuid.uuid4())
         cmd_with_flag = f'{start_cmd} --deploy_flag={deploy_flag}'
-        proc_log = log_file if num_processes == 1 else _get_nohup_log_path(f'{name}.{idx}')
+        # 所有进程共用同一个日志文件，追加模式写入互不覆盖
+        proc_log = log_file
 
         if os.name == 'nt':
             display_cmd = f'{cmd_with_flag}  (stdout/stderr >> "{proc_log}")'
@@ -420,7 +421,7 @@ def _start_process(name, config, num_processes=None):
         )
         if survived < 0:
             failed_any = True
-            log_f = log_file if num_processes == 1 else _get_nohup_log_path(f'{name}.{i}')
+            log_f = log_file
             log_tail = _read_log_tail_str(log_f, 20)
             err = f'进程 #{i} (PID {all_pids[i]}) 启动后 {abs(survived)} 秒内退出'
             if exit_code is not None:
@@ -763,6 +764,7 @@ def deploy_list():
         status = _get_deploy_status(name)
         result.append({
             'name': name,
+            'description': config.get('description', ''),
             'project_dir': config.get('project_dir', ''),
             'start_cmd': config.get('start_cmd', ''),
             **status,
@@ -780,6 +782,7 @@ def deploy_save():
 
     project_dir = data.get('project_dir', '').strip()
     start_cmd = data.get('start_cmd', '').strip()
+    description = data.get('description', '').strip()
     env_vars = data.get('env_vars', '{}')
 
     if isinstance(env_vars, dict):
@@ -794,6 +797,7 @@ def deploy_save():
     _redis.sadd(_names_key(), name)
     _redis.hset(_config_key(name), mapping={
         'name': name,
+        'description': description,
         'project_dir': project_dir,
         'start_cmd': start_cmd,
         'env_vars': env_vars,

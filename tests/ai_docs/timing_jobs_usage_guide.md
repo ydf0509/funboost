@@ -21,7 +21,7 @@
 你已经在 `app.py` 中注册了 `flask_blueprint`，所以直接启动 Flask 服务即可：
 
 ```python
-from funboost.funboost_web_manager.app import start_funboost_web_manager
+from funboost.funweb.app import start_funboost_web_manager
 
 start_funboost_web_manager(
     host="0.0.0.0",
@@ -32,7 +32,7 @@ start_funboost_web_manager(
 
 或者直接运行：
 ```bash
-python -m funboost.funboost_web_manager.app
+python -m funboost.funweb.app
 ```
 
 ### 访问界面

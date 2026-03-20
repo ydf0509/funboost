@@ -520,12 +520,12 @@ set PYTHONPATH=C:\path\to\your\project
 $env:PYTHONPATH = "C:\path\to\your\project"
 
 # 启动 Web 管理器
-python -m funboost.funboost_web_manager.app
+python -m funboost.funweb.app
 ```
 
 #### 方式2：代码中启动
 ```python
-from funboost.funboost_web_manager.app import start_funboost_web_manager
+from funboost.funweb.app import start_funboost_web_manager
 
 # 基础启动（默认端口 27018）
 start_funboost_web_manager()

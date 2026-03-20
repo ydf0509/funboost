@@ -392,7 +392,7 @@ class QueuesConusmerParamsGetter(RedisMixin, RedisReportInfoGetterMixin,Funboost
                         RedisKeys.gen_funboost_queue_time_series_data_key_by_queue_name(queue),
                         0, report_ts - 86400
                     )
-                self.logger.info(f'采集上报时序数据耗时 {time.time() - t_start} 秒')
+                # self.logger.info(f'采集上报时序数据耗时 {time.time() - t_start} 秒')
 
                 time.sleep(time_interval)
         threading.Thread(target=_inner, daemon=daemon).start()

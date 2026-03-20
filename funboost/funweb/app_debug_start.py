@@ -1,7 +1,7 @@
 
 
 
-from funboost.funboost_web_manager.app import (
+from funboost.funweb.app import (
     start_funboost_web_manager,
     app,
     CareProjectNameEnv,

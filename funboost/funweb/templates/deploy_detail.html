@@ -293,6 +293,10 @@
                 <input type="text" class="form-control deploy-name-input" id="cfgName" disabled>
             </div>
             <div class="form-group">
+                <label>项目说明 <small style="font-weight:normal;color:rgba(255,255,255,0.45);">（可选）</small></label>
+                <textarea class="form-control" id="cfgDescription" rows="2" placeholder="描述该部署的用途，可填写多行" style="resize:vertical;"></textarea>
+            </div>
+            <div class="form-group">
                 <label>项目根目录</label>
                 <input type="text" class="form-control" id="cfgProjectDir" placeholder="本地绝对路径">
             </div>
@@ -492,6 +496,7 @@ function loadConfig() {
         var d = resp.data;
         $('#deployTitle').text('部署详情 - ' + d.name);
         $('#cfgName').val(d.name);
+        $('#cfgDescription').val(d.description || '');
         $('#cfgProjectDir').val(d.project_dir || '');
         $('#cfgStartCmd').val(d.start_cmd || '');
         $('#cfgEnvVars').empty();
@@ -511,6 +516,7 @@ function loadConfig() {
 function saveConfig() {
     var payload = {
         name: deployName,
+        description: $('#cfgDescription').val().trim(),
         project_dir: $('#cfgProjectDir').val().trim(),
         start_cmd: $('#cfgStartCmd').val().trim(),
         env_vars: collectEnvVars(),

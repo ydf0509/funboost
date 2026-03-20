@@ -40,7 +40,7 @@ extra_brokers = ['confluent_kafka==1.7.0',
                     'waitress',
                  ]
 
-extra_flask = ['flask', 'flask_bootstrap', 'flask_wtf', 'wtforms', 'flask_login']
+extra_flask = ['flask', 'flask_bootstrap', 'flask_wtf', 'wtforms', 'flask_login','psutil']
 setup(
     name='funboost',  #
     version=__version__,

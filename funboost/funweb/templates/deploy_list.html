@@ -193,6 +193,7 @@
         <div class="modal-body">
             <input type="hidden" id="editMode" value="create">
             <div class="form-group"><label>部署名称</label><input type="text" class="form-control" id="inputName" placeholder="唯一标识"></div>
+            <div class="form-group"><label>项目说明 <small style="font-weight:normal;color:rgba(255,255,255,0.45);">（可选）</small></label><textarea class="form-control" id="inputDescription" rows="2" placeholder="描述该部署的用途，可填写多行" style="resize:vertical;"></textarea></div>
             <div class="form-group"><label>项目根目录</label><input type="text" class="form-control" id="inputProjectDir" placeholder="本地绝对路径"></div>
             <div class="form-group"><label>启动命令</label><input type="text" class="form-control" id="inputStartCmd" placeholder="例如 python main.py"></div>
             <div class="form-group"><label>环境变量</label><div id="envVarsContainer"></div>
@@ -336,8 +337,9 @@ function loadDeployList() {
                 a += '<button class="btn-action btn-del" onclick="showDeleteModal(\'' + d.name + '\')"><i class="fa fa-trash"></i></button>';
             }
 
+            var descSnippet = d.description ? '<br><small style="color:rgba(255,255,255,0.38);font-size:11px;">' + d.description.substring(0,50) + (d.description.length>50?'…':'') + '</small>' : '';
             html += '<tr>' +
-                '<td><strong>' + d.name + '</strong></td>' +
+                '<td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + d.name + (d.description ? '\n' + d.description : '') + '"><strong>' + d.name + '</strong>' + descSnippet + '</td>' +
                 '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + (d.project_dir||'') + '">' + (d.project_dir||'-') + '</td>' +
                 '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + (d.start_cmd||'') + '">' + (d.start_cmd||'-') + '</td>' +
                 '<td>' + statusHtml + '</td>' +
@@ -361,6 +363,7 @@ function showCreateModal() {
     $('#editMode').val('create');
     $('#createModalTitle').html('<i class="fa fa-plus-circle" style="color:#6366f1;margin-right:8px;"></i>新建部署');
     $('#inputName').val('').prop('disabled', false);
+    $('#inputDescription').val('');
     $('#inputProjectDir').val(''); $('#inputStartCmd').val('');
     $('#envVarsContainer').empty();
     $('#inputAutoStart').prop('checked', false);
@@ -385,6 +388,7 @@ function saveDeploy() {
     $.ajax({ url: '/deploy/save', method: 'POST', contentType: 'application/json',
         data: JSON.stringify({
             name: name,
+            description: $('#inputDescription').val().trim(),
             project_dir: $('#inputProjectDir').val().trim(),
             start_cmd: $('#inputStartCmd').val().trim(),
             env_vars: collectEnvVars(),

@@ -1,7 +1,7 @@
 import asyncio
 
 from funboost import boost, FunctionResultStatusPersistanceConfig, BoosterParams,BrokerEnum,ctrl_c_recv,ConcurrentModeEnum
-from funboost.funboost_web_manager.app import start_funboost_web_manager
+from funboost.funweb.app import start_funboost_web_manager
 import time
 import random
 

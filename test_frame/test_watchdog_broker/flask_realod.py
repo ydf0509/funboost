@@ -172,12 +172,12 @@ if __name__ == '__main__':
     PROJECT_ROOT = Path(__file__).parent.parent.parent
     
     # Flask 启动脚本
-    FLASK_SCRIPT = str(PROJECT_ROOT / 'funboost' / 'funboost_web_manager' / 'app_debug_start.py')
+    FLASK_SCRIPT = str(PROJECT_ROOT / 'funboost' / 'funweb' / 'app_debug_start.py')
     
     # 要监控的目录（目录下所有 .py 文件变化都会触发重启）
     WATCH_DIRS = [
         PROJECT_ROOT / 'funboost' / 'faas',
-        PROJECT_ROOT / 'funboost' / 'funboost_web_manager',
+        PROJECT_ROOT / 'funboost' / 'funweb',
     ]
     
     # 要监控的单个文件（精确匹配，只有这些文件变化才会触发重启）

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资源监控</title>
+    <link href="{{ url_for('static',filename='css_cdn/twitter-bootstrap/3.3.7/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='css_cdn/font-awesome/4.7.0/css/font-awesome.min.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static',filename='js/jquery-1.11.0.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js_cdn/bootstrap/3.3.7/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/echarts.min.js') }}"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e0e0e0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .ctrl-bar {
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            background: rgba(30, 30, 63, 0.85);
+            border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 14px; padding: 14px 20px;
+            margin-bottom: 18px;
+            backdrop-filter: blur(10px);
+        }
+        .ctrl-bar label { font-size: 13px; color: rgba(255,255,255,0.6); margin: 0; }
+        .ctrl-bar select {
+            background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3);
+            color: #fff; border-radius: 8px; padding: 6px 10px; font-size: 13px; outline: none;
+        }
+        .ctrl-bar select:focus { border-color: #6366f1; }
+        .ctrl-bar select option { background: #1e1e3f; color: #e0e0e0; }
+
+        .range-btns { display: flex; gap: 4px; }
+        .range-btns button {
+            background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25);
+            color: rgba(255,255,255,0.7); border-radius: 8px; padding: 6px 14px;
+            font-size: 13px; cursor: pointer; transition: all 0.2s;
+        }
+        .range-btns button:hover { background: rgba(99,102,241,0.3); color: #fff; }
+        .range-btns button.active {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: #fff; border-color: transparent;
+            box-shadow: 0 4px 15px rgba(99,102,241,0.4);
+        }
+
+        .gauge-row {
+            display: flex; gap: 18px; margin-bottom: 18px; flex-wrap: wrap;
+        }
+        .gauge-card {
+            flex: 1; min-width: 240px;
+            background: rgba(30, 30, 63, 0.85);
+            border: 1px solid rgba(99,102,241,0.15);
+            border-radius: 16px; padding: 0;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+        .gauge-card:hover {
+            border-color: rgba(99,102,241,0.4);
+            box-shadow: 0 8px 30px rgba(99,102,241,0.15);
+            transform: translateY(-2px);
+        }
+        .gauge-chart { width: 100%; height: 220px; }
+
+        .chart-card {
+            background: rgba(30, 30, 63, 0.85);
+            border: 1px solid rgba(99,102,241,0.15);
+            border-radius: 16px; padding: 16px;
+            backdrop-filter: blur(10px);
+        }
+        .chart-card:hover {
+            border-color: rgba(99,102,241,0.4);
+            box-shadow: 0 8px 30px rgba(99,102,241,0.15);
+        }
+        .chart-title {
+            font-size: 15px; font-weight: 600; color: #a78bfa;
+            margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+        }
+        #lineChart { width: 100%; height: 380px; }
+
+        .status-line {
+            display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+            padding: 10px 0 0 0; font-size: 12px; color: rgba(255,255,255,0.45);
+        }
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px;
+        }
+        .dot-ok { background: #34d399; box-shadow: 0 0 8px rgba(52,211,153,0.6); }
+        .dot-warn { background: #fbbf24; }
+        .dot-off { background: #6b7280; }
+    </style>
+</head>
+<body>
+
+<!-- 控制栏 -->
+<div class="ctrl-bar">
+    <label><i class="fa fa-server" style="margin-right:4px;"></i>主机:</label>
+    <select id="hostSelect"></select>
+
+    <div style="width:1px;height:24px;background:rgba(99,102,241,0.2);margin:0 6px;"></div>
+
+    <label>时间范围:</label>
+    <div class="range-btns" id="rangeBtns">
+        <button data-secs="3600" class="active">1 小时</button>
+        <button data-secs="21600">6 小时</button>
+        <button data-secs="86400">24 小时</button>
+        <button data-secs="604800">7 天</button>
+        <button data-secs="2592000">30 天</button>
+    </div>
+
+    <div style="width:1px;height:24px;background:rgba(99,102,241,0.2);margin:0 6px;"></div>
+
+    <label><i class="fa fa-refresh" style="margin-right:4px;"></i>自动刷新:</label>
+    <select id="refreshInterval">
+        <option value="5">5 秒</option>
+        <option value="10" selected>10 秒</option>
+        <option value="30">30 秒</option>
+        <option value="0">关闭</option>
+    </select>
+
+    <span class="status-line" id="statusLine">
+        <span><span class="status-dot dot-off" id="statusDot"></span><span id="statusText">等待数据...</span></span>
+    </span>
+</div>
+
+<!-- 仪表盘 -->
+<div class="gauge-row">
+    <div class="gauge-card"><div class="gauge-chart" id="gaugeCpu"></div></div>
+    <div class="gauge-card"><div class="gauge-chart" id="gaugeMem"></div></div>
+    <div class="gauge-card"><div class="gauge-chart" id="gaugeDisk"></div></div>
+</div>
+
+<!-- 折线图 -->
+<div class="chart-card">
+    <div class="chart-title"><i class="fa fa-line-chart"></i>历史趋势</div>
+    <div id="lineChart"></div>
+</div>
+
+<script>
+var currentHost = '';
+var currentRange = 3600;
+var refreshTimer = null;
+
+// ---- ECharts 实例 ----
+var cpuGauge  = echarts.init(document.getElementById('gaugeCpu'));
+var memGauge  = echarts.init(document.getElementById('gaugeMem'));
+var diskGauge = echarts.init(document.getElementById('gaugeDisk'));
+var lineChart = echarts.init(document.getElementById('lineChart'));
+
+window.addEventListener('resize', function() {
+    cpuGauge.resize(); memGauge.resize(); diskGauge.resize(); lineChart.resize();
+});
+
+// ---- 仪表盘配置（兼容 ECharts 4+）----
+function makeGaugeOption(title, value, mainColor) {
+    var ratio = Math.max(0.001, value / 100);
+    return {
+        series: [{
+            type: 'gauge',
+            startAngle: 220, endAngle: -40,
+            min: 0, max: 100,
+            radius: '88%',
+            axisLine: {
+                lineStyle: {
+                    width: 16,
+                    color: [
+                        [ratio, mainColor],
+                        [1, 'rgba(255,255,255,0.08)']
+                    ]
+                }
+            },
+            axisTick: { show: false },
+            splitLine: { length: 10, lineStyle: { width: 2, color: 'rgba(255,255,255,0.15)' } },
+            splitNumber: 5,
+            axisLabel: { distance: 12, fontSize: 11, color: 'rgba(255,255,255,0.55)' , formatter: '{value}' },
+            pointer: {
+                length: '55%', width: 4,
+                itemStyle: { color: mainColor }
+            },
+            title: {
+                show: true, offsetCenter: [0, '72%'],
+                fontSize: 15, fontWeight: 700, color: '#ffffff',
+                textStyle: { color: '#ffffff', fontSize: 15, fontWeight: 'bold' }
+            },
+            detail: {
+                offsetCenter: [0, '40%'],
+                fontSize: 28, fontWeight: 700,
+                formatter: '{value}%',
+                color: '#fff',
+                textStyle: { color: '#ffffff', fontSize: 28, fontWeight: 'bold' }
+            },
+            data: [{ value: value, name: title }]
+        }]
+    };
+}
+
+function updateGauges(cpu, mem, disk) {
+    cpuGauge.setOption(makeGaugeOption('CPU', cpu, '#818cf8'));
+    memGauge.setOption(makeGaugeOption('内存', mem, '#34d399'));
+    diskGauge.setOption(makeGaugeOption('磁盘', disk, '#fbbf24'));
+}
+updateGauges(0, 0, 0);
+
+// ---- 折线图配置 ----
+function updateLineChart(data) {
+    var times = [], cpuArr = [], memArr = [], diskArr = [];
+    for (var i = 0; i < data.length; i++) {
+        var d = data[i];
+        var dt = new Date(d.ts * 1000);
+        var label = pad2(dt.getMonth()+1) + '-' + pad2(dt.getDate()) + ' ' +
+                    pad2(dt.getHours()) + ':' + pad2(dt.getMinutes()) + ':' + pad2(dt.getSeconds());
+        times.push(label);
+        cpuArr.push(d.cpu);
+        memArr.push(d.mem);
+        diskArr.push(d.disk);
+    }
+
+    lineChart.setOption({
+        color: ['#818cf8', '#34d399', '#fbbf24'],
+        tooltip: {
+            trigger: 'axis',
+            backgroundColor: 'rgba(30,30,63,0.95)',
+            borderColor: 'rgba(99,102,241,0.3)',
+            textStyle: { color: '#e0e0e0', fontSize: 13 },
+            formatter: function(params) {
+                var dotColors = { 'CPU': '#818cf8', '内存': '#34d399', '磁盘': '#fbbf24' };
+                var axisTitle = params[0].axisValueLabel || params[0].axisValue || params[0].name || '-';
+                var s = '<div style="font-weight:600;margin-bottom:6px;">' + axisTitle + '</div>';
+                for (var i = 0; i < params.length; i++) {
+                    var c = dotColors[params[i].seriesName] || '#aaa';
+                    var val = params[i].value !== undefined && params[i].value !== null ? params[i].value : '-';
+                    s += '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' +
+                         c + ';margin-right:6px;"></span>' +
+                         params[i].seriesName + ': <strong>' + val + '%</strong><br>';
+                }
+                return s;
+            }
+        },
+        legend: {
+            data: ['CPU', '内存', '磁盘'],
+            textStyle: {
+                color: '#ffffff',
+                fontSize: 13,
+                fontWeight: 'bold',
+                textShadowColor: 'rgba(0,0,0,0.65)',
+                textShadowBlur: 2
+            },
+            top: 0, right: 10
+        },
+        grid: { left: 60, right: 30, top: 40, bottom: 70 },
+        xAxis: {
+            type: 'category', data: times, boundaryGap: false,
+            axisLine: { lineStyle: { color: 'rgba(220,220,255,0.55)', width: 1 } },
+            axisLabel: {
+                color: '#ffffff',
+                fontSize: 12,
+                fontWeight: 'bold',
+                textShadowColor: 'rgba(0,0,0,0.65)',
+                textShadowBlur: 2,
+                rotate: currentRange > 86400 ? 30 : 0
+            },
+            splitLine: { show: false }
+        },
+        yAxis: {
+            type: 'value', min: 0, max: 100,
+            axisLine: { show: true, lineStyle: { color: 'rgba(200,200,255,0.4)' } },
+            axisLabel: {
+                color: '#facc15',
+                fontSize: 14,
+                fontWeight: 'bold',
+                formatter: '{value}%'
+            },
+            splitLine: { lineStyle: { color: 'rgba(99,102,241,0.15)' } }
+        },
+        dataZoom: [{
+            type: 'slider', bottom: 10, height: 24,
+            borderColor: '#ec4899',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            fillerColor: 'rgba(236,72,153,0.35)',
+            handleStyle: { color: '#ec4899', borderColor: '#ec4899' },
+            dataBackground: {
+                lineStyle: { color: 'rgba(236,72,153,0.4)', width: 1 },
+                areaStyle: { color: 'rgba(236,72,153,0.1)' }
+            },
+            textStyle: { color: '#ec4899', fontSize: 12, fontWeight: 'bold' }
+        }, {
+            type: 'inside'
+        }],
+        series: [
+            {
+                name: 'CPU', type: 'line', data: cpuArr, smooth: true, symbol: 'none',
+                lineStyle: { width: 2, color: '#818cf8' },
+                areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                    colorStops: [{ offset: 0, color: 'rgba(129,140,248,0.25)' }, { offset: 1, color: 'rgba(129,140,248,0)' }]
+                }}
+            },
+            {
+                name: '内存', type: 'line', data: memArr, smooth: true, symbol: 'none',
+                lineStyle: { width: 2, color: '#34d399' },
+                areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                    colorStops: [{ offset: 0, color: 'rgba(52,211,153,0.2)' }, { offset: 1, color: 'rgba(52,211,153,0)' }]
+                }}
+            },
+            {
+                name: '磁盘', type: 'line', data: diskArr, smooth: true, symbol: 'none',
+                lineStyle: { width: 2, color: '#fbbf24' },
+                areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                    colorStops: [{ offset: 0, color: 'rgba(251,191,36,0.15)' }, { offset: 1, color: 'rgba(251,191,36,0)' }]
+                }}
+            }
+        ]
+    }, true);
+}
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+// ---- 数据拉取 ----
+function loadCurrent() {
+    $.get('/monitor/current', { ip: currentHost }, function(resp) {
+        if (!resp.succ || !resp.data) {
+            updateGauges(0, 0, 0);
+            $('#statusDot').attr('class', 'status-dot dot-warn');
+            $('#statusText').text('暂无数据');
+            return;
+        }
+        var d = resp.data;
+        updateGauges(d.cpu, d.mem, d.disk);
+        var dt = new Date(d.ts * 1000);
+        $('#statusDot').attr('class', 'status-dot dot-ok');
+        $('#statusText').text('最后采集: ' + pad2(dt.getHours()) + ':' + pad2(dt.getMinutes()) + ':' + pad2(dt.getSeconds()));
+    });
+}
+
+function loadHistory() {
+    var now = Date.now() / 1000;
+    var samples = 720;
+    if (currentRange <= 3600) samples = 360;
+    else if (currentRange <= 86400) samples = 720;
+    else samples = 1440;
+
+    $.get('/monitor/data', {
+        ip: currentHost,
+        start_ts: now - currentRange,
+        end_ts: now,
+        samples: samples
+    }, function(resp) {
+        if (!resp.succ) return;
+        updateLineChart(resp.data || []);
+    });
+}
+
+function loadHosts() {
+    $.get('/monitor/hosts', function(resp) {
+        if (!resp.succ) return;
+        var $sel = $('#hostSelect').empty();
+        var list = resp.data || [];
+        for (var i = 0; i < list.length; i++) {
+            var opt = $('<option>').val(list[i]).text(list[i]);
+            if (list[i] === (currentHost || resp.current)) opt.prop('selected', true);
+            $sel.append(opt);
+        }
+        if (!currentHost) currentHost = resp.current || (list.length ? list[0] : '');
+    });
+}
+
+function refreshAll() {
+    loadCurrent();
+    loadHistory();
+}
+
+// ---- 事件绑定 ----
+$(document).ready(function() {
+    loadHosts();
+    setTimeout(refreshAll, 300);
+
+    // 时间范围按钮
+    $('#rangeBtns').on('click', 'button', function() {
+        $('#rangeBtns button').removeClass('active');
+        $(this).addClass('active');
+        currentRange = parseInt($(this).data('secs'));
+        loadHistory();
+    });
+
+    // 主机切换
+    $('#hostSelect').on('change', function() {
+        currentHost = $(this).val();
+        refreshAll();
+    });
+
+    // 自动刷新
+    function setupRefresh() {
+        if (refreshTimer) clearInterval(refreshTimer);
+        var secs = parseInt($('#refreshInterval').val());
+        if (secs > 0) {
+            refreshTimer = setInterval(refreshAll, secs * 1000);
+        }
+    }
+    $('#refreshInterval').on('change', setupRefresh);
+    setupRefresh();
+});
+</script>
+</body>
+</html>

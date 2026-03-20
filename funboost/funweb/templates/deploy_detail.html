@@ -418,21 +418,16 @@
                     <option value="5000">5000</option>
                     <option value="10000">10000</option>
                 </select>
-                <button class="btn-log" onclick="loadLogs()"><i class="fa fa-refresh"></i> 刷新</button>
-                <span class="log-toolbar-label">自动刷新:</span>
-                <select id="logAutoInterval">
-                    <option value="0">关闭</option>
-                    <option value="5">5秒</option>
-                    <option value="10" selected>10秒</option>
-                    <option value="30">30秒</option>
-                </select>
-                <button class="btn-log" id="btnAutoRefresh" onclick="toggleAutoRefresh()"><i class="fa fa-clock-o"></i> 开启自动刷新</button>
+                <button class="btn-log" onclick="refreshDeployLogsKeepStream()"><i class="fa fa-refresh"></i> 刷新</button>
+                <button class="btn-log" id="btnDeployLogStream" onclick="toggleDeployLogStream()"><i class="fa fa-play"></i> 实时</button>
+                <span class="log-toolbar-label" id="deployStreamHint" style="display:none;color:#34d399;">实时中（最多 5 分钟）</span>
             </div>
 
             <div class="log-viewer" id="logViewer">加载中...</div>
             <div class="log-meta">
                 <span>日志文件: <span id="logFiles">-</span></span>
                 <span>显示行数: <span id="logTotal">0</span></span>
+                <span id="deployStreamStatus" style="display:none;color:#34d399;"><i class="fa fa-circle" style="font-size:8px;"></i> 实时推送中</span>
             </div>
         </div>
     </div>
@@ -453,9 +448,11 @@
 <script>
 var deployName = '';
 var statusTimer = null;
-var autoRefreshTimer = null;
-var autoRefreshOn = false;
 var currentTimeRange = 'all';
+var deployLogES = null;
+var deployLogStreaming = false;
+var deployStreamAutoStopTimer = null;
+var deployLogLastCls = 'log-line';
 
 function getUrlParam(key) {
     var params = new URLSearchParams(window.location.search);
@@ -649,6 +646,12 @@ function doStart() {
             urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 启动失败'), resp.succ ? 'ok' : 'fail');
             appendLogTail($c, deployName);
             setTimeout(pollStatus, 2000);
+            if (!resp.succ) $('#btnStart').prop('disabled', false);
+        },
+        error: function() {
+            $c.find('.ur-loading:last').remove();
+            urLog($c, '请求失败或超时', 'error');
+            $('#btnStart').prop('disabled', false);
         }
     });
 }
@@ -710,6 +713,11 @@ function doRestart() {
             appendLogTail($c, deployName);
             $('#btnRestart').prop('disabled', false);
             setTimeout(pollStatus, 2000);
+        },
+        error: function() {
+            $c.find('.ur-loading:last').remove();
+            urLog($c, '请求失败或超时', 'error');
+            $('#btnRestart').prop('disabled', false);
         }
     });
 }
@@ -775,6 +783,11 @@ function doUpdateRestart() {
                     appendLogTail($c, deployName);
                     $('#btnUpdateRestart').prop('disabled', false);
                     setTimeout(pollStatus, 2000);
+                },
+                error: function() {
+                    $c.find('.ur-loading:last').remove();
+                    urLog($c, '重启请求失败或超时', 'error');
+                    $('#btnUpdateRestart').prop('disabled', false);
                 }
             });
         },
@@ -889,7 +902,7 @@ function getTimeRange() {
 function applyCustomTime() {
     currentTimeRange = 'custom';
     $('.btn-quick').removeClass('active');
-    loadLogs();
+    refreshDeployLogsKeepStream();
 }
 
 function escapeHtml(s) {
@@ -903,7 +916,7 @@ function highlightKeyword(html, keyword) {
     return html.replace(re, '<span class="log-line-highlight">$1</span>');
 }
 
-function loadLogs() {
+function loadLogs(done) {
     var keyword = $('#logKeyword').val().trim();
     var tr = getTimeRange();
     var maxLines = parseInt($('#logLines').val()) || 200;
@@ -913,12 +926,14 @@ function loadLogs() {
     if (tr.time_end) params.time_end = tr.time_end;
 
     $.get('/deploy/' + encodeURIComponent(deployName) + '/logs', params, function(resp) {
-        if (!resp.succ) { $('#logViewer').text('加载失败'); return; }
+        if (!resp.succ) { $('#logViewer').text('加载失败'); if (typeof done === 'function') done(); return; }
         var lines = resp.data;
         $('#logFiles').text(resp.files.join(', ') || '-');
         $('#logTotal').text(resp.total);
         if (lines.length === 0) {
             $('#logViewer').html('<span style="color:rgba(255,255,255,0.3)">暂无日志</span>');
+            deployLogLastCls = 'log-line';
+            if (typeof done === 'function') done();
             return;
         }
         var html = '';
@@ -942,23 +957,104 @@ function loadLogs() {
             line = highlightKeyword(line, keyword);
             html += '<div class="' + cls + '">' + line + '</div>';
         }
+        deployLogLastCls = lastCls;
         $('#logViewer').html(html);
         var viewer = document.getElementById('logViewer');
         viewer.scrollTop = viewer.scrollHeight;
+        if (typeof done === 'function') done();
+    }).fail(function() {
+        $('#logViewer').text('加载失败');
+        if (typeof done === 'function') done();
     });
 }
 
-function toggleAutoRefresh() {
-    autoRefreshOn = !autoRefreshOn;
-    clearInterval(autoRefreshTimer);
-    if (autoRefreshOn) {
-        var sec = parseInt($('#logAutoInterval').val()) || 10;
-        if (sec === 0) { autoRefreshOn = false; return; }
-        $('#btnAutoRefresh').addClass('active').html('<i class="fa fa-clock-o"></i> 自动刷新中 (' + sec + 's)');
-        autoRefreshTimer = setInterval(loadLogs, sec * 1000);
-    } else {
-        $('#btnAutoRefresh').removeClass('active').html('<i class="fa fa-clock-o"></i> 开启自动刷新');
+function stopDeployLogStream() {
+    if (deployStreamAutoStopTimer) {
+        clearTimeout(deployStreamAutoStopTimer);
+        deployStreamAutoStopTimer = null;
     }
+    if (deployLogES) {
+        deployLogES.close();
+        deployLogES = null;
+    }
+    deployLogStreaming = false;
+    $('#btnDeployLogStream').removeClass('active').html('<i class="fa fa-play"></i> 实时');
+    $('#deployStreamHint').hide();
+    $('#deployStreamStatus').hide();
+}
+
+function startDeployLogStream() {
+    if (!deployName) return;
+    stopDeployLogStream();
+    deployLogES = new EventSource('/deploy/' + encodeURIComponent(deployName) + '/logs/stream');
+    deployLogStreaming = true;
+    $('#btnDeployLogStream').addClass('active').html('<i class="fa fa-stop"></i> 停止实时');
+    $('#deployStreamHint').show();
+    $('#deployStreamStatus').show();
+
+    deployStreamAutoStopTimer = setTimeout(function() {
+        stopDeployLogStream();
+    }, 5 * 60 * 1000);
+
+    deployLogES.onmessage = function(e) {
+        try {
+            var data = JSON.parse(e.data);
+            if (data.error) { stopDeployLogStream(); return; }
+            if (data.event === 'timeout') {
+                stopDeployLogStream();
+                if (data.msg) alert(data.msg);
+                return;
+            }
+            if (data.event === 'truncated') {
+                $('#logViewer').html('<span style="color:rgba(255,255,255,0.3)">日志文件已截断，请点刷新</span>');
+                deployLogLastCls = 'log-line';
+                $('#logTotal').text('0');
+                return;
+            }
+            if (data.line !== undefined) appendDeployLogLine(data.line);
+        } catch (ex) {}
+    };
+    deployLogES.onerror = function() { stopDeployLogStream(); };
+}
+
+function toggleDeployLogStream() {
+    deployLogStreaming ? stopDeployLogStream() : startDeployLogStream();
+}
+
+function refreshDeployLogsKeepStream() {
+    var was = deployLogStreaming;
+    stopDeployLogStream();
+    loadLogs(function() {
+        if (was) startDeployLogStream();
+    });
+}
+
+function appendDeployLogLine(raw) {
+    var keyword = $('#logKeyword').val().trim();
+    if (keyword && raw.toLowerCase().indexOf(keyword.toLowerCase()) === -1) return;
+
+    var hasTimestamp = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(raw);
+    var cls = 'log-line';
+    if (hasTimestamp) {
+        if (/- CRITICAL -/.test(raw) || /\bCRITICAL\b/.test(raw))     cls += ' log-line-critical';
+        else if (/- ERROR -/.test(raw) || /\bTraceback\b/.test(raw))   cls += ' log-line-error';
+        else if (/- WARNING -/.test(raw))                              cls += ' log-line-warning';
+        else if (/- INFO -/.test(raw))                                 cls += ' log-line-info';
+        else if (/- DEBUG -/.test(raw))                                cls += ' log-line-debug';
+        else if (/\[print\]/.test(raw))                                cls += ' log-line-print';
+        deployLogLastCls = cls;
+    } else {
+        cls = deployLogLastCls;
+    }
+    var line = escapeHtml(raw);
+    line = highlightKeyword(line, keyword);
+    var cur = $('#logViewer');
+    if (cur.find('span').length === 1 && cur.text().indexOf('暂无') >= 0) cur.empty();
+    cur.append('<div class="' + cls + '">' + line + '</div>');
+    var t = parseInt($('#logTotal').text(), 10);
+    $('#logTotal').text((isNaN(t) ? 0 : t) + 1);
+    var viewer = document.getElementById('logViewer');
+    viewer.scrollTop = viewer.scrollHeight;
 }
 
 $(document).ready(function() {
@@ -1006,27 +1102,20 @@ $(document).ready(function() {
     })();
 
     loadConfig();
-    loadLogs();
+    loadLogs(function() { startDeployLogStream(); });
     loadGitBranches();
     updateStatusInterval();
 
     $('#logKeyword').on('keyup', function(e) {
-        if (e.keyCode === 13) loadLogs();
+        if (e.keyCode === 13) refreshDeployLogsKeepStream();
     });
-    $('#logLines').on('change', function() { loadLogs(); });
+    $('#logLines').on('change', function() { refreshDeployLogsKeepStream(); });
 
     $('.btn-quick').on('click', function() {
         currentTimeRange = $(this).data('range');
         $('.btn-quick').removeClass('active');
         $(this).addClass('active');
-        loadLogs();
-    });
-
-    $('#logAutoInterval').on('change', function() {
-        if (autoRefreshOn) {
-            autoRefreshOn = false;
-            toggleAutoRefresh();
-        }
+        refreshDeployLogsKeepStream();
     });
 });
 </script>

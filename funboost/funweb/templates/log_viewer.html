@@ -434,6 +434,8 @@ var currentFile = '';
 var evtSource = null;
 var isStreaming = false;
 var streamLineNum = 0;
+var streamAutoStopTimer = null;
+var pendingOpenAutoStream = false;
 var searchKeyword = '';
 var currentQuickTime = 'all';
 var fileOffset = 0;
@@ -632,6 +634,7 @@ function openFile(filepath) {
     stopStream();
     currentFile = filepath;
     setQuickTime('all');
+    pendingOpenAutoStream = true;
     doSearch();
 }
 
@@ -650,6 +653,8 @@ function doSearch() {
     $('#statusText').text('正在加载…');
     $.get('/logview/content', params, function(resp) {
         $('#logLoading').removeClass('show');
+        var armStream = pendingOpenAutoStream;
+        pendingOpenAutoStream = false;
         if (!resp.succ) { showToast(resp.msg, 'error'); $('#statusText').text('加载失败'); return; }
         $('#fileBar').show();
         $('#fbName').text(currentFile.replace(/\\/g, '/').split('/').pop());
@@ -660,7 +665,9 @@ function doSearch() {
         streamLineNum = resp.total;
         $('#statusText').text('已加载 ' + resp.total + ' 行');
         scrollToBottom();
+        if (armStream) startStream();
     }).fail(function() {
+        pendingOpenAutoStream = false;
         $('#logLoading').removeClass('show');
         showToast('请求失败', 'error');
         $('#statusText').text('请求失败');
@@ -713,23 +720,42 @@ function toggleStream() { isStreaming ? stopStream() : startStream(); }
 function startStream() {
     if (!currentFile) { showToast('请先选择一个日志文件', 'info'); return; }
     if (isStreaming) return;
+    if (streamAutoStopTimer) { clearTimeout(streamAutoStopTimer); streamAutoStopTimer = null; }
     evtSource = new EventSource('/logview/stream?file=' + encodeURIComponent(currentFile));
     isStreaming = true;
     $('#btnStream').html('<i class="fa fa-stop"></i> 停止').removeClass('btn-outline').addClass('btn-stream-on');
     $('#streamStatusBox').show();
-    $('#statusText').text('实时监听中…');
+    $('#statusText').text('实时监听中（最多 5 分钟）…');
+
+    streamAutoStopTimer = setTimeout(function() {
+        if (isStreaming) {
+            stopStream();
+            showToast('实时已自动关闭（5 分钟），需要请再次点击「实时」', 'info');
+        }
+    }, 5 * 60 * 1000);
+
     evtSource.onmessage = function(e) {
         try {
             var data = JSON.parse(e.data);
             if (data.error) { showToast(data.error, 'error'); stopStream(); return; }
+            if (data.event === 'timeout') {
+                stopStream();
+                if (data.msg) showToast(data.msg, 'info');
+                return;
+            }
             if (data.event === 'truncated') { $('#logBody').empty(); streamLineNum = 0; showToast('文件已被截断/轮转', 'info'); return; }
             if (data.line !== undefined) appendLine(data.line);
         } catch(ex) {}
     };
-    evtSource.onerror = function() { stopStream(); showToast('实时连接中断', 'error'); };
+    evtSource.onerror = function() {
+        if (!isStreaming) return;
+        stopStream();
+        showToast('实时连接中断', 'error');
+    };
 }
 
 function stopStream() {
+    if (streamAutoStopTimer) { clearTimeout(streamAutoStopTimer); streamAutoStopTimer = null; }
     if (evtSource) { evtSource.close(); evtSource = null; }
     isStreaming = false;
     $('#btnStream').html('<i class="fa fa-play"></i> 实时').addClass('btn-outline').removeClass('btn-stream-on');

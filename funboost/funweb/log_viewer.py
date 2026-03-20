@@ -18,6 +18,7 @@ _redis = RedisMixin().redis_db_frame
 _ANSI_RE = re.compile(r'\x1b\[[0-9;]*m')
 _LOG_TS_RE = re.compile(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})')
 _MAX_SCAN_BYTES = 50 * 1024 * 1024
+_LOG_STREAM_MAX_SEC = 300
 
 
 def _get_local_ip():
@@ -482,13 +483,14 @@ def log_stream():
 
     def generate():
         f = None
+        deadline = time.time() + _LOG_STREAM_MAX_SEC
         try:
             f = open(filepath, 'rb')
             f.seek(0, 2)
             last_pos = f.tell()
             idle_ticks = 0
 
-            while True:
+            while time.time() < deadline:
                 try:
                     cur_size = os.path.getsize(filepath)
                 except OSError:
@@ -515,6 +517,14 @@ def log_stream():
                         idle_ticks = 0
 
                 time.sleep(0.5)
+            yield (
+                'data: '
+                + json.dumps({
+                    'event': 'timeout',
+                    'msg': '已持续实时推送 5 分钟，已自动停止。需要请再次开启实时。',
+                }, ensure_ascii=False)
+                + '\n\n'
+            )
         except GeneratorExit:
             pass
         finally:

@@ -14,7 +14,7 @@ import threading
 # 示例1: 最简单的任务函数
 @boost(BoosterParams(
     queue_name="demo_queue_2b4",
-    broker_kind=BrokerEnum.SQLITE_QUEUE,  # 使用 SQLite 作为消息队列，无需额外安装中间件
+    broker_kind=BrokerEnum.MEMORY_QUEUE,  # 使用 SQLite 作为消息队列，无需额外安装中间件
     qps=5,  # 每秒执行5次
     concurrent_num=1,  # 并发数为10
 ))

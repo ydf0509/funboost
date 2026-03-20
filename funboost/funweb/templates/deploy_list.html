@@ -319,6 +319,8 @@ function loadDeployList() {
 
         var html = '';
         list.forEach(function(d) {
+            var hSec = parseInt(d.health_check_secs, 10);
+            if (isNaN(hSec) || hSec < 1) hSec = 10;
             var statusHtml = d.running
                 ? '<span class="status-dot status-running"></span>运行中'
                 : '<span class="status-dot status-stopped"></span>已停止';
@@ -326,10 +328,10 @@ function loadDeployList() {
             if (d.running) {
                 a += '<button class="btn-action btn-stop-sm" onclick="quickStop(\'' + d.name + '\')"><i class="fa fa-stop"></i> 停止</button>';
             } else {
-                a += '<button class="btn-action btn-start-sm" onclick="quickStart(\'' + d.name + '\')"><i class="fa fa-play"></i> 启动</button>';
+                a += '<button class="btn-action btn-start-sm" onclick="quickStart(\'' + d.name + '\',' + hSec + ')"><i class="fa fa-play"></i> 启动</button>';
             }
-            a += '<button class="btn-action btn-restart-sm" onclick="quickRestart(\'' + d.name + '\')"><i class="fa fa-refresh"></i> 重启</button>';
-            a += '<button class="btn-action btn-update-restart" onclick="quickUpdateRestart(\'' + d.name + '\')"><i class="fa fa-cloud-download"></i> 更新重启</button>';
+            a += '<button class="btn-action btn-restart-sm" onclick="quickRestart(\'' + d.name + '\',' + hSec + ')"><i class="fa fa-refresh"></i> 重启</button>';
+            a += '<button class="btn-action btn-update-restart" onclick="quickUpdateRestart(\'' + d.name + '\',' + hSec + ')"><i class="fa fa-cloud-download"></i> 更新重启</button>';
             a += '<button class="btn-action btn-clone-sm" onclick="showCloneModal(\'' + d.name + '\')"><i class="fa fa-copy"></i> 复制</button>';
             if (d.running) {
                 a += '<button class="btn-action btn-del" disabled title="请先停止再删除"><i class="fa fa-trash"></i></button>';
@@ -402,16 +404,18 @@ function saveDeploy() {
     });
 }
 
-function quickRestart(name) {
+function quickRestart(name, healthSecs) {
+    healthSecs = parseInt(healthSecs, 10) || 10;
+    var ajaxTimeout = (Math.max(healthSecs, 5) + 120) * 1000;
     $('#cmdModalTitle').html('<i class="fa fa-refresh" style="color:#fbbf24;margin-right:8px;"></i>重启 - ' + name);
     var $c = $('#cmdDetailContent').html('');
     $('#cmdModal').modal('show');
     urLog($c, '重启进程', 'step');
-    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证...', 'loading');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证（最长约 ' + healthSecs + ' 秒）...', 'loading');
     $.ajax({
         url: '/deploy/' + encodeURIComponent(name) + '/restart',
         method: 'POST',
-        timeout: 120000,
+        timeout: ajaxTimeout,
         success: function(resp) {
             $c.find('.ur-loading:last').remove();
             if (resp.cmd_detail) {
@@ -432,20 +436,26 @@ function quickRestart(name) {
             urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 启动失败'), resp.succ ? 'ok' : 'fail');
             appendLogTail($c, name);
             setTimeout(loadDeployList, 2000);
+        },
+        error: function() {
+            $c.find('.ur-loading:last').remove();
+            urLog($c, '请求失败或超时', 'error');
         }
     });
 }
 
-function quickStart(name) {
+function quickStart(name, healthSecs) {
+    healthSecs = parseInt(healthSecs, 10) || 10;
+    var ajaxTimeout = (Math.max(healthSecs, 5) + 120) * 1000;
     $('#cmdModalTitle').html('<i class="fa fa-play" style="color:#34d399;margin-right:8px;"></i>启动 - ' + name);
     var $c = $('#cmdDetailContent').html('');
     $('#cmdModal').modal('show');
     urLog($c, '启动进程', 'step');
-    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在启动，等待存活验证...', 'loading');
+    urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在启动，等待存活验证（最长约 ' + healthSecs + ' 秒）...', 'loading');
     $.ajax({
         url: '/deploy/' + encodeURIComponent(name) + '/start',
         method: 'POST',
-        timeout: 120000,
+        timeout: ajaxTimeout,
         success: function(resp) {
             $c.find('.ur-loading:last').remove();
             if (resp.cmd_detail) {
@@ -462,6 +472,10 @@ function quickStart(name) {
             urLog($c, resp.succ ? ('\u2713 ' + resp.msg) : ('\u2717 启动失败'), resp.succ ? 'ok' : 'fail');
             appendLogTail($c, name);
             setTimeout(loadDeployList, 2000);
+        },
+        error: function() {
+            $c.find('.ur-loading:last').remove();
+            urLog($c, '请求失败或超时', 'error');
         }
     });
 }
@@ -534,7 +548,9 @@ function urLog($el, text, type) {
     $el[0].scrollTop = $el[0].scrollHeight;
 }
 
-function quickUpdateRestart(name) {
+function quickUpdateRestart(name, healthSecs) {
+    healthSecs = parseInt(healthSecs, 10) || 10;
+    var restartTimeout = (Math.max(healthSecs, 5) + 120) * 1000;
     $('#cmdModalTitle').html('<i class="fa fa-cloud-download" style="color:#fbbf24;margin-right:8px;"></i>更新并重启 - ' + name);
     var $c = $('#cmdDetailContent').html('');
     $('#cmdModal').modal('show');
@@ -560,12 +576,12 @@ function quickUpdateRestart(name) {
             urLog($c, '\u2713 Git Pull 成功', 'ok');
 
             urLog($c, '步骤 2/2: 重启进程', 'step');
-            urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证...', 'loading');
+            urLog($c, '<i class="fa fa-spinner fa-spin" style="margin-right:6px;"></i>正在停止旧进程并启动新进程，等待存活验证（最长约 ' + healthSecs + ' 秒）...', 'loading');
 
             $.ajax({
                 url: '/deploy/' + encodeURIComponent(name) + '/restart',
                 method: 'POST',
-                timeout: 120000,
+                timeout: restartTimeout,
                 success: function(resp2) {
                     $c.find('.ur-loading:last').remove();
                     if (resp2.cmd_detail) {
@@ -588,6 +604,10 @@ function quickUpdateRestart(name) {
                     urLog($c, resp2.succ ? ('\u2713 ' + resp2.msg) : ('\u2717 启动失败'), resp2.succ ? 'ok' : 'fail');
                     appendLogTail($c, name);
                     setTimeout(loadDeployList, 2000);
+                },
+                error: function() {
+                    $c.find('.ur-loading:last').remove();
+                    urLog($c, '重启请求失败或超时', 'error');
                 }
             });
         },

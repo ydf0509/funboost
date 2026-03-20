@@ -461,7 +461,7 @@ function loadFolders(selectPath) {
     $.get('/logview/folders', function(resp) {
         if (!resp.succ) return;
         var $sel = $('#folderSelect');
-        var prev = selectPath || $sel.val() || '';
+        var prev = selectPath || localStorage.getItem('lv_last_folder') || '';
         $sel.empty().append('<option value="">-- 选择或搜索文件夹 --</option>');
         $.each(resp.data, function(i, f) {
             var label = f.path + (f.exists ? '' : ' (不存在)');
@@ -469,6 +469,8 @@ function loadFolders(selectPath) {
         });
         if (prev) {
             $sel.val(prev).trigger('change.select2');
+            currentFolder = prev;
+            browseFolder(prev);
         }
     });
 }
@@ -506,6 +508,7 @@ function removeSelectedFolder() {
             showToast('已移除: ' + path, 'info');
             if (currentFolder === path) {
                 currentFolder = '';
+                localStorage.removeItem('lv_last_folder');
                 $('#fileListArea').html('<div class="lv-empty"><i class="fa fa-folder-open-o"></i><p>暂无文件</p></div>');
                 $('#breadcrumb').html('<span style="color:rgba(255,255,255,0.25)">选择一个文件夹开始浏览</span>');
             }
@@ -553,6 +556,7 @@ function browseFolder(folderPath, append) {
             $item.click(function() {
                 if (f.is_dir) {
                     currentFolder = f.path;
+                    localStorage.setItem('lv_last_folder', f.path);
                     $('#folderSelect').val('').trigger('change.select2');
                     browseFolder(f.path);
                 } else {
@@ -808,10 +812,15 @@ $(document).ready(function() {
     $('#folderSelect').select2({ placeholder: '选择或搜索文件夹', allowClear: true, width: '100%' });
     $('#folderSelect').on('select2:select', function() {
         var path = $(this).val();
-        if (path) { currentFolder = path; browseFolder(path); }
+        if (path) {
+            currentFolder = path;
+            localStorage.setItem('lv_last_folder', path);
+            browseFolder(path);
+        }
     });
     $('#folderSelect').on('select2:unselect', function() {
         currentFolder = '';
+        localStorage.removeItem('lv_last_folder');
         $('#fileListArea').html('<div class="lv-empty"><i class="fa fa-folder-open-o"></i><p>暂无文件</p></div>');
         $('#breadcrumb').html('<span style="color:rgba(255,255,255,0.25)">选择一个文件夹开始浏览</span>');
     });

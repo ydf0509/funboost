@@ -17,6 +17,7 @@ from flask_login import login_required
 
 from funboost.utils.redis_manager import RedisMixin
 from funboost.funweb.log_stream_limits import LOG_STREAM_MAX_SECONDS
+from funboost.funweb.log_viewer import _grep_fast
 
 deploy_bp = Blueprint('deploy', __name__)
 
@@ -1400,6 +1401,37 @@ def deploy_logs(name):
     dt_start = _parse_dt(time_start)
     dt_end = _parse_dt(time_end)
 
+    # 有关键字时与日志查看器一致：在字节范围内全文扫描匹配行，避免只读尾部 max_lines*3 导致搜不到
+    if keyword:
+        all_matches = []
+        for fpath in log_files:
+            try:
+                file_size = os.path.getsize(fpath)
+            except OSError:
+                continue
+            if file_size == 0:
+                continue
+            start_off = 0
+            end_off = file_size
+            if dt_start:
+                start_off = _bisect_log_offset(fpath, dt_start)
+            if dt_end:
+                end_off = _bisect_log_offset(fpath, dt_end + datetime.timedelta(seconds=1))
+            if start_off >= end_off and (dt_start or dt_end):
+                continue
+            if start_off >= end_off:
+                continue
+            per = max(max_lines * 5, 500)
+            chunk = _grep_fast(fpath, keyword, per, start_off, end_off)
+            all_matches.extend(chunk)
+        result_lines = all_matches[-max_lines:]
+        return jsonify({
+            'succ': True,
+            'data': result_lines,
+            'files': [os.path.basename(f) for f in log_files],
+            'total': len(result_lines),
+        })
+
     all_lines = []
     for fpath in log_files:
         try:
@@ -1478,13 +1510,10 @@ def deploy_logs(name):
     })
 
 
-_DEPLOY_LOG_STREAM_MAX_SEC = 300
-
-
 @deploy_bp.route('/deploy/<name>/logs/stream', methods=['GET'])
 @login_required
 def deploy_logs_stream(name):
-    """SSE：跟踪该部署的 nohup 日志文件（与启动 stdout 一致），最多持续 _DEPLOY_LOG_STREAM_MAX_SEC 秒。"""
+    """SSE：跟踪该部署的 nohup 日志文件（与启动 stdout 一致），最多持续 LOG_STREAM_MAX_SECONDS 秒。"""
     log_path = _get_nohup_log_path(name)
     if not os.path.isfile(log_path):
         return Response(

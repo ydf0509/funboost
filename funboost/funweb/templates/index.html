@@ -187,11 +187,11 @@
             }
         }
 
-        /* 激活状态 */
+        /* 激活状态（仅一项高亮，绿色） */
         .sidebar .nav-link.active {
-            color: #ffffff;
-            background: linear-gradient(90deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.15) 100%);
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            color: #ecfdf5;
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.45) 0%, rgba(5, 150, 105, 0.22) 100%);
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
         }
 
         .sidebar .nav-link.active::before {
@@ -202,9 +202,9 @@
             transform: translateY(-50%);
             width: 4px;
             height: 70%;
-            background: linear-gradient(180deg, #6366f1 0%, #a78bfa 100%);
+            background: linear-gradient(180deg, #10b981 0%, #059669 100%);
             border-radius: 0 4px 4px 0;
-            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.45);
         }
 
         /* 图标样式 */
@@ -227,8 +227,8 @@
         }
 
         .sidebar .nav-link.active i {
-            color: #a78bfa;
-            text-shadow: 0 0 12px rgba(167, 139, 250, 0.6);
+            color: #6ee7b7;
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
         }
 
         /* 折叠时图标居中 */
@@ -593,7 +593,7 @@
             <div class="nav-category">队列操作</div>
 
             <li class="nav-item">
-                <a class="nav-link active" href="/?page=queue_op" data-target="/tpl/queue_op.html" data-title="队列操作">
+                <a class="nav-link" href="/?page=queue_op" data-target="/tpl/queue_op.html" data-title="队列操作">
                     <i class="fa fa-sliders"></i><span>队列操作</span>
                 </a>
             </li>
@@ -690,31 +690,38 @@
             var iframeSrc = urlParams.get('iframe');  // 完整 iframe src（含参数，刷新恢复用）
             var pageName = urlParams.get('page');
 
+            function syncSidebarActiveForPage(pagePath) {
+                var base = (pagePath || '').split('?')[0];
+                try {
+                    if (base.indexOf('%') >= 0) base = decodeURIComponent(base);
+                } catch (e) {}
+                $('.sidebar .nav-link').removeClass('active');
+                $('.sidebar .nav-link').each(function() {
+                    var t = (($(this).data('target') || '') + '').split('?')[0];
+                    if (t && base === t) $(this).addClass('active');
+                });
+            }
+
             // 初始加载页面
             if (iframeSrc) {
-                // 刷新恢复：直接使用完整 src（可能含 ?name=xxx 之类的参数）
-                $('#content').attr('src', iframeSrc);
-                // 高亮匹配的侧边栏项
-                var baseIframeSrc = iframeSrc.split('?')[0];
-                $('.sidebar .nav-link').each(function() {
-                    var target = $(this).data('target') || '';
-                    if (target && baseIframeSrc.indexOf(target.split('?')[0]) >= 0) {
-                        $(this).addClass('active');
-                    }
-                });
+                var decoded = iframeSrc;
+                try { decoded = decodeURIComponent(iframeSrc); } catch (e) {}
+                $('#content').attr('src', decoded);
+                syncSidebarActiveForPage(decoded);
             } else if (pageName) {
                 loadPage('/tpl/' + pageName + '.html');
-                $('.sidebar .nav-link').removeClass('active');
-                $('.sidebar .nav-link[href="/?page=' + pageName + '"]').addClass('active');
             } else {
                 loadPage('/tpl/queue_op.html');
             }
 
-            // 导航栏点击事件
+            // 导航栏点击：必须用 preventDefault，否则 href 会整页跳转到 /?page=xxx，侧栏滚动被重置到顶部
             $('.sidebar .nav-link').click(function (e) {
+                if (e.which !== 1 || e.ctrlKey || e.metaKey) return;
+                var targetPage = $(this).data('target');
+                if (!targetPage) return;
+                e.preventDefault();
                 $('.sidebar .nav-link').removeClass('active');
                 $(this).addClass('active');
-                const targetPage = $(this).data('target');
                 loadPage(targetPage);
             });
 
@@ -725,8 +732,8 @@
                     method: 'GET',
                     success: function (data) {
                         $('#content').attr('src', page);
-                        // 同步外层 URL，使 F5 刷新可以还原当前 iframe 内容
                         history.replaceState(null, '', '/?iframe=' + encodeURIComponent(page));
+                        syncSidebarActiveForPage(page);
                     },
                     error: function () {
                         $('#content').html('<p>Error loading page.</p>');

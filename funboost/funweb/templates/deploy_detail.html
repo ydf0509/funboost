@@ -399,12 +399,17 @@
                 <button class="btn-quick active" data-range="all">全部</button>
             </div>
 
-            <div class="log-time-row">
+            <div class="log-time-row" style="flex-wrap:wrap;align-items:center;gap:8px;">
                 <span class="log-toolbar-label">自定义范围:</span>
                 <input type="datetime-local" id="logTimeStart" step="1">
                 <span class="log-toolbar-label">~</span>
                 <input type="datetime-local" id="logTimeEnd" step="1">
                 <button class="btn-log" onclick="applyCustomTime()" style="padding:5px 10px;font-size:12px;"><i class="fa fa-check"></i> 应用</button>
+                <label class="log-toolbar-label" style="margin:0;font-weight:normal;cursor:pointer;user-select:none;">
+                    <input type="checkbox" id="chkDeployUseTimeFilter" style="margin:0 6px 0 0;vertical-align:middle;">
+                    使用时间段筛选
+                </label>
+                <span style="font-size:11px;color:rgba(255,255,255,0.35);">勾选后仅按上方起止时间；不勾选则按「近X分钟/小时」快捷按钮</span>
             </div>
 
             <div class="log-toolbar">
@@ -887,8 +892,7 @@ function parseDatetimeLocal(s) {
 }
 
 function getTimeRange() {
-    if (currentTimeRange === 'all') return { time_start: '', time_end: '' };
-    if (currentTimeRange === 'custom') {
+    if ($('#chkDeployUseTimeFilter').is(':checked')) {
         var ds = parseDatetimeLocal($('#logTimeStart').val());
         var de = parseDatetimeLocal($('#logTimeEnd').val());
         return {
@@ -896,6 +900,7 @@ function getTimeRange() {
             time_end: de ? fmt(de) : ''
         };
     }
+    if (currentTimeRange === 'all') return { time_start: '', time_end: '' };
     var now = new Date();
     var ms = rangeMs[currentTimeRange] || 3600000;
     var start = new Date(now.getTime() - ms);
@@ -903,6 +908,7 @@ function getTimeRange() {
 }
 
 function applyCustomTime() {
+    $('#chkDeployUseTimeFilter').prop('checked', true);
     currentTimeRange = 'custom';
     $('.btn-quick').removeClass('active');
     refreshDeployLogsKeepStream();
@@ -1118,10 +1124,20 @@ $(document).ready(function() {
     $('#logLines').on('change', function() { refreshDeployLogsKeepStream(); });
 
     $('.btn-quick').on('click', function() {
+        $('#chkDeployUseTimeFilter').prop('checked', false);
         currentTimeRange = $(this).data('range');
         $('.btn-quick').removeClass('active');
         $(this).addClass('active');
         refreshDeployLogsKeepStream();
+    });
+
+    $('#chkDeployUseTimeFilter').on('change', function() {
+        if (!this.checked) {
+            $('.btn-quick').removeClass('active');
+            $('.btn-quick[data-range="all"]').addClass('active');
+            currentTimeRange = 'all';
+            refreshDeployLogsKeepStream();
+        }
     });
 });
 </script>

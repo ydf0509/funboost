@@ -368,10 +368,14 @@ mark { background: rgba(251,191,36,0.35); color: #fff; border-radius: 2px; paddi
                 <input type="text" id="kwInput" placeholder="关键字搜索…" onkeydown="if(event.key==='Enter')doSearch()">
             </div>
             <span class="tb-sep">|</span>
-            <div class="tb-group">
+            <div class="tb-group" style="flex-wrap:wrap;align-items:center;gap:6px;">
                 <input type="datetime-local" id="tsStart" step="60">
                 <span class="tb-sep">至</span>
                 <input type="datetime-local" id="tsEnd" step="60">
+                <label style="margin:0 0 0 8px;font-size:12px;color:rgba(255,255,255,0.75);font-weight:normal;cursor:pointer;user-select:none;white-space:nowrap;">
+                    <input type="checkbox" id="chkLogUseTimeFilter" style="margin:0 4px 0 0;vertical-align:middle;">
+                    使用时间段筛选
+                </label>
             </div>
             <span class="tb-sep">|</span>
             <div class="tb-group">
@@ -641,14 +645,32 @@ function openFile(filepath) {
     doSearch();
 }
 
+function getLogViewTimeParams() {
+    if ($('#chkLogUseTimeFilter').is(':checked')) {
+        return {
+            time_start: $('#tsStart').val() ? $('#tsStart').val().replace('T', ' ') : '',
+            time_end: $('#tsEnd').val() ? $('#tsEnd').val().replace('T', ' ') : ''
+        };
+    }
+    if (currentQuickTime === 'all') return { time_start: '', time_end: '' };
+    var now = new Date();
+    var mins = { '1m': 1, '5m': 5, '30m': 30, '1h': 60, '6h': 360, '24h': 1440 };
+    var m = mins[currentQuickTime] || 60;
+    var start = new Date(now.getTime() - m * 60000);
+    return {
+        time_start: formatDTLocal(start).replace('T', ' '),
+        time_end: formatDTLocal(now).replace('T', ' ')
+    };
+}
+
 function doSearch() {
     if (!currentFile) { showToast('请先选择一个日志文件', 'info'); return; }
     searchKeyword = $.trim($('#kwInput').val());
-    var sendTime = (currentQuickTime !== 'all');
+    var tp = getLogViewTimeParams();
     var params = {
         file: currentFile, lines: $('#selLines').val(), keyword: searchKeyword,
-        time_start: sendTime && $('#tsStart').val() ? $('#tsStart').val().replace('T', ' ') : '',
-        time_end: sendTime && $('#tsEnd').val() ? $('#tsEnd').val().replace('T', ' ') : '',
+        time_start: tp.time_start,
+        time_end: tp.time_end,
     };
     $('#logLoading').addClass('show');
     $('#logPlaceholder').hide();
@@ -785,6 +807,7 @@ function appendLine(text) {
 
 // ===================== 快捷时间 =====================
 function setQuickTime(range) {
+    $('#chkLogUseTimeFilter').prop('checked', false);
     currentQuickTime = range;
     $('.btn-qt').removeClass('active');
     $('.btn-qt[data-range="' + range + '"]').addClass('active');
@@ -864,10 +887,17 @@ $(document).ready(function() {
         if (currentFile) doSearch();
     });
 
-    // 手动改时间 → 切换自定义模式
+    // 手动改起止时间 → 视为使用时间段筛选
     $('#tsStart, #tsEnd').on('input change', function() {
-        currentQuickTime = 'custom';
+        $('#chkLogUseTimeFilter').prop('checked', true);
         $('.btn-qt').removeClass('active');
+    });
+
+    $('#chkLogUseTimeFilter').on('change', function() {
+        if (!this.checked) {
+            setQuickTime('all');
+            if (currentFile) doSearch();
+        }
     });
 
     // 排序按钮点击

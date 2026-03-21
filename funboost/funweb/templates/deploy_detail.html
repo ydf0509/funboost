@@ -404,12 +404,11 @@
                 <input type="datetime-local" id="logTimeStart" step="1">
                 <span class="log-toolbar-label">~</span>
                 <input type="datetime-local" id="logTimeEnd" step="1">
-                <button class="btn-log" onclick="applyCustomTime()" style="padding:5px 10px;font-size:12px;"><i class="fa fa-check"></i> 应用</button>
                 <label class="log-toolbar-label" style="margin:0;font-weight:normal;cursor:pointer;user-select:none;">
                     <input type="checkbox" id="chkDeployUseTimeFilter" style="margin:0 6px 0 0;vertical-align:middle;">
                     使用时间段筛选
                 </label>
-                <span style="font-size:11px;color:rgba(255,255,255,0.35);">勾选后仅按上方起止时间；不勾选则按「近X分钟/小时」快捷按钮</span>
+                <span style="font-size:11px;color:rgba(255,255,255,0.35);">勾选后仅按上方起止时间，点「刷新」生效；不勾选则按快捷按钮时间范围</span>
             </div>
 
             <div class="log-toolbar">
@@ -907,13 +906,6 @@ function getTimeRange() {
     return { time_start: fmt(start), time_end: fmt(now) };
 }
 
-function applyCustomTime() {
-    $('#chkDeployUseTimeFilter').prop('checked', true);
-    currentTimeRange = 'custom';
-    $('.btn-quick').removeClass('active');
-    refreshDeployLogsKeepStream();
-}
-
 function escapeHtml(s) {
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -1132,7 +1124,11 @@ $(document).ready(function() {
     });
 
     $('#chkDeployUseTimeFilter').on('change', function() {
-        if (!this.checked) {
+        if (this.checked) {
+            $('.btn-quick').removeClass('active');
+            currentTimeRange = 'custom';
+            refreshDeployLogsKeepStream();
+        } else {
             $('.btn-quick').removeClass('active');
             $('.btn-quick[data-range="all"]').addClass('active');
             currentTimeRange = 'all';

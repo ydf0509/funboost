@@ -53,7 +53,7 @@ from funboost.funweb.flask_bps.system_monitor import monitor_bp
 from funboost.funweb.flask_bps.log_viewer import log_bp
 
 app = Flask(__name__)
-app.secret_key = "mtfy54321"
+app.secret_key =  os.getenv('FUNWEB_SECRET_KEY', "mtfy54321")
 app.config["JSON_AS_ASCII"] = False
 bootstrap = Bootstrap(app)
 login_manager = LoginManager()
@@ -82,9 +82,11 @@ users = [
     {"id": "admin", "user_name": "admin", "password": "123456"},
 ]
 
+if os.getenv('FUNWEB_USER') and os.getenv('FUNWEB_PASSWORD'):
+    users = [{"id":os.getenv('FUNWEB_USER'),'user_name':os.getenv('FUNWEB_USER'),'password':os.getenv('FUNWEB_PASSWORD')}]
 
-nb_log.get_logger("flask", log_filename="flask.log")
-nb_log.get_logger("werkzeug", log_filename="werkzeug.log")
+nb_log.get_logger("flask", log_filename="funweb_lask.log")
+nb_log.get_logger("werkzeug", log_filename="funweb_werkzeug.log")
 
 
 def query_user(user_name):

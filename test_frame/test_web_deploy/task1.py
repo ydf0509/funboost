@@ -14,9 +14,10 @@ import threading
 # 示例1: 最简单的任务函数
 @boost(BoosterParams(
     queue_name="demo_queue_2b4",
-    broker_kind=BrokerEnum.MEMORY_QUEUE,  # 使用 SQLite 作为消息队列，无需额外安装中间件
+    broker_kind=BrokerEnum.REDIS,  # 使用 SQLite 作为消息队列，无需额外安装中间件
     qps=5,  # 每秒执行5次
     concurrent_num=1,  # 并发数为10
+    project_name="test_project1",
 ))
 def add_task(x, y):
     """简单的加法任务"""

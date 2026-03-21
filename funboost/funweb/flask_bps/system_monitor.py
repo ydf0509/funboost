@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-import socket
+
 import threading
 import time
 import uuid
@@ -10,6 +10,7 @@ from flask import Blueprint, request, jsonify
 from flask_login import login_required
 
 from funboost.utils.redis_manager import RedisMixin
+from funboost.funweb.flask_bps.web_helper import LOCAL_IP
 
 monitor_bp = Blueprint('monitor', __name__)
 
@@ -24,18 +25,7 @@ except ImportError:
     print('[system_monitor] psutil 未安装，资源监控采集功能不可用。pip install psutil 后重启即可。')
 
 
-def _get_local_ip():
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('8.8.8.8', 80))
-        ip = s.getsockname()[0]
-        s.close()
-    except Exception:
-        ip = socket.gethostbyname(socket.gethostname())
-    return ip
 
-
-LOCAL_IP = _get_local_ip()
 
 _RETENTION_SECS = 30 * 24 * 3600   # 30 天
 _TTL_SECS = 40 * 24 * 3600         # 40 天

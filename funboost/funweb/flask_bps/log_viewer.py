@@ -3,14 +3,14 @@ import datetime
 import json
 import os
 import re
-import socket
+
 import time
 
 from flask import Blueprint, request, jsonify, Response
 from flask_login import login_required
 
 from funboost.utils.redis_manager import RedisMixin
-from funboost.funweb.log_stream_limits import LOG_STREAM_MAX_SECONDS
+from funboost.funweb.flask_bps.web_helper import LOG_STREAM_MAX_SECONDS,LOCAL_IP
 
 log_bp = Blueprint('log_viewer', __name__)
 
@@ -21,18 +21,7 @@ _LOG_TS_RE = re.compile(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})')
 _MAX_SCAN_BYTES = 50 * 1024 * 1024
 
 
-def _get_local_ip():
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('8.8.8.8', 80))
-        ip = s.getsockname()[0]
-        s.close()
-    except Exception:
-        ip = socket.gethostbyname(socket.gethostname())
-    return ip
 
-
-LOCAL_IP = _get_local_ip()
 
 
 def _folders_key():

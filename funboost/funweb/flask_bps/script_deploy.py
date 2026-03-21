@@ -4,7 +4,7 @@ import json
 import os
 import re
 import signal
-import socket
+
 import subprocess
 import time
 import threading
@@ -16,8 +16,8 @@ from flask import Blueprint, request, jsonify, Response
 from flask_login import login_required
 
 from funboost.utils.redis_manager import RedisMixin
-from funboost.funweb.log_stream_limits import LOG_STREAM_MAX_SECONDS
-from funboost.funweb.log_viewer import _grep_fast
+from funboost.funweb.flask_bps.web_helper import LOG_STREAM_MAX_SECONDS,LOCAL_IP
+from funboost.funweb.flask_bps.log_viewer import _grep_fast
 
 deploy_bp = Blueprint('deploy', __name__)
 
@@ -30,18 +30,6 @@ def _strip_ansi(text):
     return _ANSI_ESCAPE_RE.sub('', text)
 
 
-def _get_local_ip():
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('8.8.8.8', 80))
-        ip = s.getsockname()[0]
-        s.close()
-    except Exception:
-        ip = socket.gethostbyname(socket.gethostname())
-    return ip
-
-
-LOCAL_IP = _get_local_ip()
 
 
 def _key_prefix():

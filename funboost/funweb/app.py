@@ -48,9 +48,9 @@ from funboost.core.active_cousumer_info_getter import (
 )
 # from funboost.constant import RedisKeys  # 已废弃的 pause/resume 路由使用，现已注释
 from funboost.faas import flask_blueprint
-from funboost.funweb.script_deploy import deploy_bp
-from funboost.funweb.system_monitor import monitor_bp
-from funboost.funweb.log_viewer import log_bp
+from funboost.funweb.flask_bps.script_deploy import deploy_bp
+from funboost.funweb.flask_bps.system_monitor import monitor_bp
+from funboost.funweb.flask_bps.log_viewer import log_bp
 
 app = Flask(__name__)
 app.secret_key = "mtfy54321"

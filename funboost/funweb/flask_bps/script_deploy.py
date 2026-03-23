@@ -671,6 +671,15 @@ def _find_log_files(name):
     return []
 
 
+def _git(project_dir, args, timeout=30):
+    """在 project_dir 下执行 git 命令，兼容不支持 -C 的旧版 git（< 1.8.5）。"""
+    return subprocess.run(
+        ['git'] + args,
+        capture_output=True, text=True,
+        cwd=project_dir, timeout=timeout,
+    )
+
+
 def _do_git_pull(project_dir, target_branch=None):
     """执行 git pull，可选切换分支。
     返回 dict:
@@ -681,9 +690,9 @@ def _do_git_pull(project_dir, target_branch=None):
     """
     steps = []
 
-    def run_step(args, summary_ok='', summary_fail='', **kw):
-        cmd_str = 'git ' + ' '.join(args[args.index('-C') + 2:]) if '-C' in args else 'git ' + ' '.join(args[1:])
-        r = subprocess.run(args, capture_output=True, text=True, **kw)
+    def run_step(git_args, summary_ok='', summary_fail='', timeout=30):
+        cmd_str = 'git ' + ' '.join(git_args)
+        r = _git(project_dir, git_args, timeout=timeout)
         out = (r.stdout + r.stderr).strip()
         ok = r.returncode == 0
         steps.append({'cmd': '$ ' + cmd_str, 'output': out, 'ok': ok,
@@ -691,8 +700,7 @@ def _do_git_pull(project_dir, target_branch=None):
         return r, ok, out
 
     # 获取当前分支（内部查询，不加入 steps）
-    cr = subprocess.run(['git', '-C', project_dir, 'rev-parse', '--abbrev-ref', 'HEAD'],
-                        capture_output=True, text=True, timeout=10)
+    cr = _git(project_dir, ['rev-parse', '--abbrev-ref', 'HEAD'], timeout=10)
     current_branch = cr.stdout.strip() if cr.returncode == 0 else ''
     if not current_branch:
         err_detail = (cr.stdout + cr.stderr).strip()
@@ -700,8 +708,7 @@ def _do_git_pull(project_dir, target_branch=None):
                 'summary': f'✗ 无法检测当前 Git 分支，pull 终止。\n详情: {err_detail or "(无输出，请确认 git 已安装且项目目录是 git 仓库)"}'}
 
     # 获取 remote 名称（内部查询）
-    rr = subprocess.run(['git', '-C', project_dir, 'remote'],
-                        capture_output=True, text=True, timeout=10)
+    rr = _git(project_dir, ['remote'], timeout=10)
     remotes = [r.strip() for r in rr.stdout.strip().split('\n') if r.strip()]
     remote = remotes[0] if remotes else 'origin'
 
@@ -713,7 +720,7 @@ def _do_git_pull(project_dir, target_branch=None):
             local_branch = target_branch.split('/', 1)[-1]
 
         r, ok, out = run_step(
-            ['git', '-C', project_dir, 'checkout', local_branch],
+            ['checkout', local_branch],
             summary_ok=f'✓ 已切换到分支 "{local_branch}"',
             summary_fail='',
             timeout=30,
@@ -722,7 +729,7 @@ def _do_git_pull(project_dir, target_branch=None):
             # 本地不存在，从远程创建
             steps.pop()
             r, ok, out = run_step(
-                ['git', '-C', project_dir, 'checkout', '-b', local_branch, target_branch],
+                ['checkout', '-b', local_branch, target_branch],
                 summary_ok=f'✓ 已从 "{target_branch}" 创建并切换到本地分支 "{local_branch}"',
                 summary_fail=f'✗ 切换分支失败：无法检出 "{local_branch}"',
                 timeout=30,
@@ -734,32 +741,23 @@ def _do_git_pull(project_dir, target_branch=None):
         switched = True
 
     # 检查 upstream tracking
-    tr = subprocess.run(
-        ['git', '-C', project_dir, 'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'],
-        capture_output=True, text=True, timeout=10
-    )
+    tr = _git(project_dir, ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'], timeout=10)
 
     if tr.returncode == 0:
-        pull_args = ['git', '-C', project_dir, 'pull']
+        pull_args = ['pull']
     else:
-        ls_r = subprocess.run(
-            ['git', '-C', project_dir, 'ls-remote', '--heads', remote, current_branch],
-            capture_output=True, text=True, timeout=15
-        )
+        ls_r = _git(project_dir, ['ls-remote', '--heads', remote, current_branch], timeout=15)
         if ls_r.stdout.strip():
-            pull_args = ['git', '-C', project_dir, 'pull', remote, current_branch]
+            pull_args = ['pull', remote, current_branch]
         else:
             found_default = None
             for db in ['main', 'master']:
-                ls_d = subprocess.run(
-                    ['git', '-C', project_dir, 'ls-remote', '--heads', remote, db],
-                    capture_output=True, text=True, timeout=15
-                )
+                ls_d = _git(project_dir, ['ls-remote', '--heads', remote, db], timeout=15)
                 if ls_d.stdout.strip():
                     found_default = db
                     break
             if found_default:
-                pull_args = ['git', '-C', project_dir, 'pull', remote, found_default]
+                pull_args = ['pull', remote, found_default]
             else:
                 return {'steps': steps, 'success': False, 'current_branch': current_branch,
                         'summary': (f'✗ 分支 "{current_branch}" 在远程 "{remote}" 上不存在，'
@@ -784,11 +782,8 @@ def _do_git_pull(project_dir, target_branch=None):
         else:
             pull_summary = f'✓ 成功拉取分支 "{current_branch}" 的最新代码。'
         if ok and tr.returncode != 0 and current_branch:
-            subprocess.run(
-                ['git', '-C', project_dir, 'branch', '--set-upstream-to',
-                 f'{remote}/{current_branch}', current_branch],
-                capture_output=True, text=True, timeout=10
-            )
+            _git(project_dir, ['branch', '--set-upstream-to', f'{remote}/{current_branch}', current_branch],
+                 timeout=10)
     else:
         if 'conflict' in pull_out_lower:
             pull_summary = '✗ 拉取失败：存在合并冲突，请手动处理。'
@@ -1069,35 +1064,29 @@ def deploy_git_branches(name):
         return jsonify({'succ': False, 'is_git_repo': False, 'msg': f'项目目录不存在: {project_dir}'})
 
     try:
-        check = subprocess.run(
-            ['git', '-C', project_dir, 'rev-parse', '--is-inside-work-tree'],
-            capture_output=True, text=True, timeout=5
-        )
+        check = _git(project_dir, ['rev-parse', '--is-inside-work-tree'], timeout=5)
         if check.returncode != 0:
             return jsonify({'succ': True, 'is_git_repo': False,
                             'current': '', 'local': [], 'remote': []})
 
-        subprocess.run(['git', '-C', project_dir, 'fetch', '--prune'],
-                       capture_output=True, text=True, timeout=30)
+        _git(project_dir, ['fetch', '--prune'], timeout=30)
 
-        current = subprocess.run(
-            ['git', '-C', project_dir, 'rev-parse', '--abbrev-ref', 'HEAD'],
-            capture_output=True, text=True, timeout=10
-        )
+        current = _git(project_dir, ['rev-parse', '--abbrev-ref', 'HEAD'], timeout=10)
         current_branch = current.stdout.strip() if current.returncode == 0 else ''
 
-        local = subprocess.run(
-            ['git', '-C', project_dir, 'branch', '--format=%(refname:short)'],
-            capture_output=True, text=True, timeout=10
-        )
-        local_branches = [b.strip() for b in local.stdout.strip().split('\n') if b.strip()]
+        local = _git(project_dir, ['branch'], timeout=10)
+        local_branches = []
+        for b in local.stdout.strip().split('\n'):
+            b = b.strip().lstrip('* ').strip()
+            if b:
+                local_branches.append(b)
 
-        remote = subprocess.run(
-            ['git', '-C', project_dir, 'branch', '-r', '--format=%(refname:short)'],
-            capture_output=True, text=True, timeout=10
-        )
-        remote_branches = [b.strip() for b in remote.stdout.strip().split('\n')
-                           if b.strip() and 'HEAD' not in b]
+        remote_r = _git(project_dir, ['branch', '-r'], timeout=10)
+        remote_branches = []
+        for b in remote_r.stdout.strip().split('\n'):
+            b = b.strip()
+            if b and 'HEAD' not in b:
+                remote_branches.append(b)
 
         return jsonify({
             'succ': True,

@@ -207,17 +207,18 @@ updateGauges(0, 0, 0);
 
 // ---- 折线图配置 ----
 function updateLineChart(data) {
-    var times = [], cpuArr = [], memArr = [], diskArr = [];
+    var cpuArr = [], memArr = [], diskArr = [];
     for (var i = 0; i < data.length; i++) {
         var d = data[i];
-        var dt = new Date(d.ts * 1000);
-        var label = pad2(dt.getMonth()+1) + '-' + pad2(dt.getDate()) + ' ' +
-                    pad2(dt.getHours()) + ':' + pad2(dt.getMinutes()) + ':' + pad2(dt.getSeconds());
-        times.push(label);
-        cpuArr.push(d.cpu);
-        memArr.push(d.mem);
-        diskArr.push(d.disk);
+        var ms = d.ts * 1000;
+        cpuArr.push([ms, d.cpu]);
+        memArr.push([ms, d.mem]);
+        diskArr.push([ms, d.disk]);
     }
+
+    // X 轴范围固定为当前选择的时间窗口（始终显示完整时间范围，无数据的区间显示空白）
+    var nowMs = Date.now();
+    var startMs = nowMs - currentRange * 1000;
 
     lineChart.setOption({
         color: ['#818cf8', '#34d399', '#fbbf24'],
@@ -228,11 +229,15 @@ function updateLineChart(data) {
             textStyle: { color: '#e0e0e0', fontSize: 13 },
             formatter: function(params) {
                 var dotColors = { 'CPU': '#818cf8', '内存': '#34d399', '磁盘': '#fbbf24' };
-                var axisTitle = params[0].axisValueLabel || params[0].axisValue || params[0].name || '-';
+                var ts = params[0] && params[0].value ? params[0].value[0] : null;
+                var dt = ts ? new Date(ts) : null;
+                var axisTitle = dt ? (pad2(dt.getMonth()+1)+'-'+pad2(dt.getDate())+' '+
+                                     pad2(dt.getHours())+':'+pad2(dt.getMinutes())+':'+pad2(dt.getSeconds())) : '-';
                 var s = '<div style="font-weight:600;margin-bottom:6px;">' + axisTitle + '</div>';
                 for (var i = 0; i < params.length; i++) {
                     var c = dotColors[params[i].seriesName] || '#aaa';
-                    var val = params[i].value !== undefined && params[i].value !== null ? params[i].value : '-';
+                    var val = (params[i].value && params[i].value[1] !== undefined && params[i].value[1] !== null)
+                              ? params[i].value[1] : '-';
                     s += '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' +
                          c + ';margin-right:6px;"></span>' +
                          params[i].seriesName + ': <strong>' + val + '%</strong><br>';
@@ -253,7 +258,10 @@ function updateLineChart(data) {
         },
         grid: { left: 60, right: 30, top: 40, bottom: 70 },
         xAxis: {
-            type: 'category', data: times, boundaryGap: false,
+            type: 'time',
+            min: startMs,
+            max: nowMs,
+            boundaryGap: false,
             axisLine: { lineStyle: { color: 'rgba(220,220,255,0.55)', width: 1 } },
             axisLabel: {
                 color: '#ffffff',
@@ -261,7 +269,17 @@ function updateLineChart(data) {
                 fontWeight: 'bold',
                 textShadowColor: 'rgba(0,0,0,0.65)',
                 textShadowBlur: 2,
-                rotate: currentRange > 86400 ? 30 : 0
+                rotate: currentRange > 86400 ? 30 : 0,
+                formatter: function(val) {
+                    var d = new Date(val);
+                    if (currentRange <= 3600) {
+                        return pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+                    } else if (currentRange <= 86400) {
+                        return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+                    } else {
+                        return (d.getMonth()+1) + '/' + pad2(d.getDate()) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+                    }
+                }
             },
             splitLine: { show: false }
         },

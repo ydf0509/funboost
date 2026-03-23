@@ -694,6 +694,10 @@ def _do_git_pull(project_dir, target_branch=None):
     cr = subprocess.run(['git', '-C', project_dir, 'rev-parse', '--abbrev-ref', 'HEAD'],
                         capture_output=True, text=True, timeout=10)
     current_branch = cr.stdout.strip() if cr.returncode == 0 else ''
+    if not current_branch:
+        err_detail = (cr.stdout + cr.stderr).strip()
+        return {'steps': steps, 'success': False, 'current_branch': '',
+                'summary': f'✗ 无法检测当前 Git 分支，pull 终止。\n详情: {err_detail or "(无输出，请确认 git 已安装且项目目录是 git 仓库)"}'}
 
     # 获取 remote 名称（内部查询）
     rr = subprocess.run(['git', '-C', project_dir, 'remote'],
@@ -738,9 +742,6 @@ def _do_git_pull(project_dir, target_branch=None):
     if tr.returncode == 0:
         pull_args = ['git', '-C', project_dir, 'pull']
     else:
-        if not current_branch:
-            return {'steps': steps, 'success': False, 'current_branch': current_branch,
-                    'summary': '✗ 无法检测当前 Git 分支，pull 终止。'}
         ls_r = subprocess.run(
             ['git', '-C', project_dir, 'ls-remote', '--heads', remote, current_branch],
             capture_output=True, text=True, timeout=15

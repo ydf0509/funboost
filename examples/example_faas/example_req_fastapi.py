@@ -163,6 +163,29 @@ def test_get_all_queues():
     except Exception as e:
         print(f"\n❌ Request failed: {e}")
 
+
+def test_get_one_queue_config():
+    """测试获取所有已注册的队列名称"""
+    print("\n" + "=" * 60)
+    print("4. Testing get all queues...")
+    print("=" * 60)
+    
+    url = f"{base_url}/funboost/get_one_queue_config"
+    params = {"queue_name": "test_funboost_faas_queue"}
+    resp = requests.get(url, params=params)
+    print(f"Status Code: {resp.status_code}")
+    print(f"Response: {json.dumps(resp.json(), indent=2, ensure_ascii=False)}")
+    
+    if resp.status_code == 200:
+        result_data = resp.json()
+        if result_data['succ']:
+            print(f"\n✅ Success!")
+            print(f"Queue Config: {result_data['data']}")
+        else:
+            print(f"\n❌ Failed: {result_data['msg']}")
+
+
+
 if __name__ == "__main__":
     print("\n" + "🚀 " * 20)
     print("FastAPI Funboost faas  接口测试")
@@ -173,7 +196,8 @@ if __name__ == "__main__":
     test_get_msg_count()
     test_publish_async_then_get_result()
     test_get_all_queues()
-    
+    test_get_one_queue_config()
+
     print("\n" + "✅ " * 20)
     print("测试完成！")
     print("✅ " * 20 + "\n")

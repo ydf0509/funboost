@@ -898,7 +898,28 @@ $(document).ready(function() {
         $('#breadcrumb').html('<span style="color:rgba(255,255,255,0.25)">选择一个文件夹开始浏览</span>');
     });
 
-    loadFolders();
+    var urlFile = new URLSearchParams(window.location.search).get('file') || '';
+    if (urlFile) {
+        var sep = urlFile.indexOf('/') >= 0 ? '/' : '\\';
+        var lastSep = Math.max(urlFile.lastIndexOf('/'), urlFile.lastIndexOf('\\'));
+        var urlFolder = lastSep > 0 ? urlFile.substring(0, lastSep) : '';
+        if (urlFolder) {
+            localStorage.setItem('lv_last_folder', urlFolder);
+            $.ajax({
+                url: '/logview/folders/add', method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({path: urlFolder}),
+                complete: function() {
+                    loadFolders(urlFolder);
+                    setTimeout(function() { openFile(urlFile); }, 600);
+                }
+            });
+        } else {
+            loadFolders();
+        }
+    } else {
+        loadFolders();
+    }
     prefillTimeDefaults();
     updateSortButtons();
 

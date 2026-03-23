@@ -200,8 +200,14 @@ def _read_log_tail(filepath, max_lines=1000):
         return []
 
 
+_ANSI_RE_B = re.compile(rb'\x1b\[[0-9;]*m')
+
+
 def _grep_fast(filepath, keyword, max_lines=200, start_offset=0, end_offset=None):
-    """Grep-like fast keyword search via binary scan. Only decodes matching lines."""
+    """多行日志感知的关键字搜索。
+    将连续行按日志条目分组（以时间戳开头的行为新条目起点，无时间戳的续行归属上一条目），
+    关键字命中条目中任一行则返回整个条目的所有行。
+    """
     try:
         file_size = os.path.getsize(filepath)
         if end_offset is None or end_offset > file_size:
@@ -230,15 +236,27 @@ def _grep_fast(filepath, keyword, max_lines=200, start_offset=0, end_offset=None
         if not kw_variants:
             return []
 
+        ts_prefix = re.compile(rb'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
+
         raw_lines = data.split(b'\n')
-        matches = []
+        entries = []
         for raw in raw_lines:
             if not raw.strip():
                 continue
-            low = raw.lower()
-            if any(kb in low for kb in kw_variants):
-                decoded = _strip_ansi(_decode_line(raw))
-                matches.append(decoded)
+            cleaned = _ANSI_RE_B.sub(b'', raw).lstrip()
+            if ts_prefix.match(cleaned):
+                entries.append([raw])
+            elif entries:
+                entries[-1].append(raw)
+            else:
+                entries.append([raw])
+
+        matches = []
+        for entry in entries:
+            entry_blob = _ANSI_RE_B.sub(b'', b'\n'.join(entry)).lower()
+            if any(kb in entry_blob for kb in kw_variants):
+                for raw_line in entry:
+                    matches.append(_strip_ansi(_decode_line(raw_line)))
 
         return matches[-max_lines:]
     except Exception:
@@ -260,6 +278,10 @@ def _format_size(size):
 @log_bp.route('/logview/folders', methods=['GET'])
 @login_required
 def list_folders():
+    from nb_log import nb_log_config_default
+    default_log_path = str(nb_log_config_default.LOG_PATH)
+    _redis.sadd(_folders_key(), default_log_path)
+
     folders = _redis.smembers(_folders_key())
     result = []
     for f in sorted(folders):

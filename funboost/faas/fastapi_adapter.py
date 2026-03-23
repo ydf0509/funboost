@@ -44,6 +44,8 @@ from funboost.core.loggers import get_funboost_file_logger
 from funboost.utils.redis_manager import RedisMixin
 from funboost.constant import RedisKeys
 from funboost.faas.faas_util import gen_aps_job_adder
+# from funboost.core.func_params_model import BoosterParams
+from funboost.core.func_params_model import BoosterParamsFieldsAssit
 
 logger = get_funboost_file_logger(__name__)
 
@@ -662,8 +664,18 @@ class QueueParams(BaseAllowExtraModel):
     队列的完整配置参数，
     和BoosterParams不同的是，这里是完全版可json序列化的
     这里的数据是从redis获取的，redis只能存json序列化的数据。
+    所以这里的例如 specify_async_loop 和 specify_concurrent_pool 都改成 typing.Any
     
     """
+    
+    def __init__(self, **data):
+        for old_field in BoosterParamsFieldsAssit.has_been_deleted_fields:
+            data.pop(old_field, None)
+        for old_field, new_field in BoosterParamsFieldsAssit.rename_fields.items():
+            if old_field in data:
+                data[new_field] = data.pop(old_field)
+        super().__init__(**data)
+
     # 基础配置
     queue_name: str  # 队列名字
     broker_kind: str  # 中间件类型，如 REDIS, RABBITMQ 等
@@ -724,8 +736,7 @@ class QueueParams(BaseAllowExtraModel):
     delay_task_apscheduler_jobstores_kind: str  # 延时任务的jobstore类型：redis/memory
     
     # 定时运行控制
-    is_do_not_run_by_specify_time_effect: bool  # 是否使不运行的时间段生效
-    do_not_run_by_specify_time: typing.Tuple[str, str]  # 不运行的时间段
+    allow_run_time_cron: typing.Optional[str] = None  # 只允许在规定的crontab表达式时间内运行，为None则不限制
     
     # 启动控制
     schedule_tasks_on_main_thread: bool  # 是否在主线程调度任务
@@ -758,6 +769,10 @@ class QueueParams(BaseAllowExtraModel):
     
     # 自动生成信息
     auto_generate_info: typing.Dict[str, typing.Any]  # 自动生成的信息,里面有个 final_func_input_params_info 存储了函数入参信息，用户也可以把这当做微服务的接口文档协议，让用户清楚知道消息需要传递哪些入参。
+
+    # faas 相关
+    is_fake_booster: bool = False  # 是否是伪造的booster，用于faas模式下跨项目管理
+    booster_registry_name: str = 'default'  # 用于隔离boosters注册，普通用户不用改
 
     
 

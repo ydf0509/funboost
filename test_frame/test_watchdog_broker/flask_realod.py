@@ -52,9 +52,10 @@ class FlaskReloader:
         print(f"{'='*60}\n")
         
         # 使用当前 Python 解释器启动 Flask
+        # cwd 用调用者的当前目录（项目根），确保相对 import 和路径计算正确
         self.process = subprocess.Popen(
             [sys.executable, self.flask_script],
-            cwd=os.path.dirname(self.flask_script) or '.',
+            cwd=os.getcwd(),
         )
     
     def stop_flask(self):
@@ -168,8 +169,8 @@ class FlaskReloader:
 
 
 if __name__ == '__main__':
-    # 项目根目录
-    PROJECT_ROOT = Path(__file__).parent.parent.parent
+    # 项目根目录（resolve() 确保无论用相对路径还是绝对路径执行脚本，都能得到正确的绝对路径）
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
     
     # Flask 启动脚本
     FLASK_SCRIPT = str(PROJECT_ROOT / 'funboost' / 'funweb' / 'app_debug_start.py')

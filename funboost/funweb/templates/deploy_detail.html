@@ -266,15 +266,15 @@
                 </label>
                 <div style="display:flex;align-items:center;gap:6px;">
                     <label style="font-size:13px;color:#a78bfa;margin:0;">最大重试:</label>
-                    <input type="number" class="form-control" id="cfgMaxRetry" value="3" min="1" max="100" style="width:70px;padding:4px 8px;">
+                    <input type="number" class="form-control" id="cfgMaxRetry" min="1" max="100" style="width:70px;padding:4px 8px;">
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;">
                     <label style="font-size:13px;color:#a78bfa;margin:0;">存活检查(秒):</label>
-                    <input type="number" class="form-control" id="cfgHealthSecs" value="10" min="1" max="300" style="width:70px;padding:4px 8px;">
+                    <input type="number" class="form-control" id="cfgHealthSecs" min="1" max="300" style="width:70px;padding:4px 8px;">
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;">
                     <label style="font-size:13px;color:#a78bfa;margin:0;">进程数量:</label>
-                    <input type="number" class="form-control" id="cfgNumProcesses" value="1" min="1" max="100" style="width:70px;padding:4px 8px;">
+                    <input type="number" class="form-control" id="cfgNumProcesses" min="1" max="100" style="width:70px;padding:4px 8px;">
                 </div>
             </div>
             <button class="btn-save-config" onclick="saveConfig()" style="margin-top:14px;"><i class="fa fa-save"></i> 保存配置</button>
@@ -405,9 +405,9 @@ function loadConfig() {
         } catch(e) {}
         $('#cfgAutoStart').prop('checked', d.auto_start === '1');
         $('#cfgAutoRestart').prop('checked', d.auto_restart === '1');
-        $('#cfgMaxRetry').val(d.max_retry || 3);
-        $('#cfgHealthSecs').val(d.health_check_secs || 10);
-        $('#cfgNumProcesses').val(d.num_processes || 1);
+        $('#cfgMaxRetry').val(d.max_retry !== undefined && d.max_retry !== '' ? d.max_retry : 3);
+        $('#cfgHealthSecs').val(d.health_check_secs !== undefined && d.health_check_secs !== '' ? d.health_check_secs : 10);
+        $('#cfgNumProcesses').val(d.num_processes !== undefined && d.num_processes !== '' ? d.num_processes : 1);
         if (d.log_file) {
             deployLogFile = d.log_file;
             $('#logFilePath').text(d.log_file);

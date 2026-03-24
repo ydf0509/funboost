@@ -23,7 +23,10 @@ def add_task(x, y):
 if __name__ == '__main__':
     for i in range(10):
         add_task.push(i, i * 2)
-        add_task.publish({"x":i, "y": i * 2})
+        add_task.publish({"x":i*10, "y": i * 20})
+        print(add_task.publisher.generate_msg_json_for_push(i, i * 2))
+        print(add_task.publisher.generate_msg_json_for_publish({"x":i*10, "y": i * 20}))
+        
         
     add_task.consume()
     ctrl_c_recv()

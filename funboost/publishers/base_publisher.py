@@ -35,10 +35,18 @@ from funboost.utils import decorators
 from funboost.funboost_config_deafult import BrokerConnConfig, FunboostCommonConfig
 from nb_libs.path_helper import PathHelper
 from funboost.core.consuming_func_iniput_params_check import ConsumingFuncInputParamsChecker
+from dataclasses import dataclass
 
 RedisAsyncResult = AsyncResult  # 别名
 RedisAioAsyncResult = AioAsyncResult  # 别名
 
+@dataclass
+class PublishMsgContext:
+    msg_json: typing.Union[str, dict] # 如果内存队列，则直接是dict，否则是json字符串，所以有两种类型。
+    msg_dict: dict
+    msg_function_kw: dict
+    extra_params: dict
+    task_id: str
 
 class AbstractPublisher(metaclass=abc.ABCMeta, ):
     """
@@ -165,6 +173,8 @@ class AbstractPublisher(metaclass=abc.ABCMeta, ):
         extra_params = new_extra
         return msg, msg_function_kw, extra_params, task_id
 
+    
+
     def publish(self, msg: typing.Union[str, dict], task_id=None,
                 task_options: TaskOptions = None):
         """
@@ -187,38 +197,20 @@ class AbstractPublisher(metaclass=abc.ABCMeta, ):
         java可以这样通过http接口或者funboost.faas  来发布消息 {"user_id":123,"name":"张三","extra": {"task_id":"1234567890","max_retry_times":3}} 
 
         """
-        # 优化：使用浅拷贝代替深拷贝，_convert_msg 内部不再做拷贝
-        # 对于嵌套的 extra 字典，在需要修改时会创建新字典
-        if isinstance(msg, str):
-            msg = Serialization.to_dict(msg)
-        else:
-            msg = dict(msg)  # 浅拷贝，不改变用户传入的原始字典
-        msg, msg_function_kw, extra_params, task_id = self._convert_msg(msg, task_id, task_options)
+        publish_msg_context: PublishMsgContext =  self.generate_msg_json_for_publish(
+            msg,task_id,task_options)
+        return self._execute_publish(publish_msg_context)
+        
+        
+    def _execute_publish(self,publish_msg_context: PublishMsgContext):
         t_start = time.time()
-
-        if self._is_memory_queue: # 内存队列不需要序列化
-            msg_json =msg
-        else:
-            try:
-                msg_json = Serialization.to_json_str(msg)
-            except Exception as e:
-                can_not_json_serializable_keys = Serialization.find_can_not_json_serializable_keys(msg)
-                self.logger.warning(f'msg 中包含不能序列化的键: {can_not_json_serializable_keys}')
-                # raise ValueError(f'msg 中包含不能序列化的键: {can_not_json_serializable_keys}')
-                new_msg = copy.deepcopy(Serialization.to_dict(msg))
-                for key in can_not_json_serializable_keys:
-                    new_msg[key] = PickleHelper.to_str(new_msg[key])
-                new_msg['extra']['can_not_json_serializable_keys'] = can_not_json_serializable_keys
-                msg_json = Serialization.to_json_str(new_msg)
-        # print(msg_json)
-        # 优化：使用缓存的包装方法，避免每次重新应用装饰器
-        self._wrapped_publish_impl(msg_json)
+        self._wrapped_publish_impl(publish_msg_context.msg_json)
 
         # 优化：先获取当前时间用于后续判断，减少 time.time() 调用
         current_time = time.time()
         if self.logger.isEnabledFor(logging.DEBUG):
-            self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(current_time - t_start, 4)}秒  {msg_json if self.publisher_params.publish_msg_log_use_full_msg else msg_function_kw}',
-                              extra={'task_id': task_id})
+            self.logger.debug(f'向{self._queue_name} 队列，推送消息 耗时{round(current_time - t_start, 4)}秒  {publish_msg_context.msg_json if self.publisher_params.publish_msg_log_use_full_msg else publish_msg_context.msg_function_kw}',
+                              extra={'task_id': publish_msg_context.task_id})
         
         # 优化：减少锁内操作，先计数再判断是否需要输出日志
         self.count_per_minute += 1
@@ -231,11 +223,12 @@ class AbstractPublisher(metaclass=abc.ABCMeta, ):
                     self.logger.info(
                         f'10秒内推送了 {self.count_per_minute} 条消息,累计推送了 {self.publish_msg_num_total} 条消息到 {self._queue_name} 队列中')
                     self._init_count()
-        self._after_publish(msg, msg_function_kw, task_id)
+        self._after_publish(publish_msg_context)
         # AsyncResult 本身就是懒加载的，只有访问 result 等属性时才建立 redis 连接
-        return AsyncResult(task_id, timeout=self.publisher_params.rpc_timeout)
+        return AsyncResult(publish_msg_context.task_id, timeout=self.publisher_params.rpc_timeout)
+
     
-    def _after_publish(self, msg: dict, msg_function_kw: dict, task_id: str):
+    def _after_publish(self, publish_msg_context: PublishMsgContext):
         """发布消息后的钩子方法，子类可以覆写此方法来实现自定义逻辑，例如记录指标"""
         pass
 
@@ -252,20 +245,7 @@ class AbstractPublisher(metaclass=abc.ABCMeta, ):
             cls_file = Path(sys.modules[cls.__module__].__file__).resolve().as_posix()
         return cls_file
 
-    def push(self, *func_args, **func_kwargs):
-        """
-        简写，只支持传递消费函数的本身参数，不支持task_options参数。
-        类似于 publish和push的关系类似 apply_async 和 delay的关系。前者更强大，后者更简略。
-
-        例如消费函数是
-        def add(x,y):
-            print(x+y)
-
-        publish({"x":1,'y':2}) 和 push(1,2)是等效的。但前者可以传递task_options参数。后者只能穿add函数所接受的入参。
-        :param func_args:
-        :param func_kwargs:
-        :return:
-        """
+    def generate_msg_json_for_push(self, *func_args, **func_kwargs) -> PublishMsgContext:
         # print(func_args, func_kwargs, self.publish_params_checker.all_arg_name)
         msg_dict = func_kwargs
         # print(msg_dict)
@@ -308,9 +288,56 @@ The first argument of the push method must be the instance of the class.
             # print(index,arg,self.publish_params_checker.position_arg_name_list)
             # msg_dict[self.publish_params_checker.position_arg_name_list[index]] = arg
             msg_dict[self.publish_params_checker.all_arg_name_list[index]] = arg
+        return  self.generate_msg_json_for_publish(msg_dict)
+        
 
+    def generate_msg_json_for_publish(self, msg_raw: typing.Union[str, dict], task_id=None,
+                task_options: TaskOptions = None )-> PublishMsgContext:
+        if isinstance(msg_raw, str):
+            msg_dict = Serialization.to_dict(msg_raw)
+        else:
+            msg_dict = dict(msg_raw)  # 浅拷贝，不改变用户传入的原始字典
+        msg_dict, msg_function_kw, extra_params, task_id = self._convert_msg(msg_dict, task_id, task_options)
+        if self._is_memory_queue: # 内存队列不需要序列化,以便支持不可pickle序列化的复杂对象
+            msg_json =msg_dict
+            return PublishMsgContext(msg_json=msg_json,msg_dict=msg_dict, 
+                msg_function_kw=msg_function_kw, extra_params=extra_params, task_id=task_id)
+        else:
+            try:
+                msg_json = Serialization.to_json_str(msg_dict)
+                return PublishMsgContext(msg_json=msg_json,msg_dict=msg_dict, 
+                    msg_function_kw=msg_function_kw, extra_params=extra_params, task_id=task_id)
+            except Exception as e:
+                can_not_json_serializable_keys = Serialization.find_can_not_json_serializable_keys(msg_dict)
+                self.logger.warning(f'msg 中包含不能序列化的键: {can_not_json_serializable_keys}')
+                # raise ValueError(f'msg 中包含不能序列化的键: {can_not_json_serializable_keys}')
+                new_msg = copy.deepcopy(Serialization.to_dict(msg_dict))
+                for key in can_not_json_serializable_keys:
+                    new_msg[key] = PickleHelper.to_str(new_msg[key])
+                new_msg['extra']['can_not_json_serializable_keys'] = can_not_json_serializable_keys
+                msg_json = Serialization.to_json_str(new_msg)
+                return PublishMsgContext(msg_json=msg_json,msg_dict=new_msg, 
+                    msg_function_kw=msg_function_kw, extra_params=extra_params, task_id=task_id)
+
+
+    def push(self, *func_args, **func_kwargs):
+        """
+        简写，只支持传递消费函数的本身参数，不支持task_options参数。
+        类似于 publish和push的关系类似 apply_async 和 delay的关系。前者更强大，后者更简略。
+
+        例如消费函数是
+        def add(x,y):
+            print(x+y)
+
+        publish({"x":1,'y':2}) 和 push(1,2)是等效的。但前者可以传递task_options参数。后者只能穿add函数所接受的入参。
+        :param func_args:
+        :param func_kwargs:
+        :return:
+        """
         # print(msg_dict)
-        return self.publish(msg_dict)
+        publish_msg_context: PublishMsgContext =  self.generate_msg_json_for_push(
+            *func_args, **func_kwargs)
+        return self._execute_publish(publish_msg_context)
 
     delay = push  # 那就来个别名吧，两者都可以。
 

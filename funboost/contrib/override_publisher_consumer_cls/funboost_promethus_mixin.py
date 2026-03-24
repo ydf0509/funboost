@@ -70,7 +70,7 @@ from prometheus_client import (
 )
 
 from funboost.consumers.base_consumer import AbstractConsumer
-from funboost.publishers.base_publisher import AbstractPublisher
+from funboost.publishers.base_publisher import AbstractPublisher,PublishMsgContext
 from funboost.core.func_params_model import BoosterParams
 from funboost.core.function_result_status_saver import FunctionResultStatus
 
@@ -127,12 +127,12 @@ class PrometheusPublisherMixin(AbstractPublisher):
     自动采集发布消息的数量指标。
     """
     
-    def _after_publish(self, msg: dict, msg_function_kw: dict, task_id: str):
+    def _after_publish(self, publish_msg_context: PublishMsgContext):
         """
         发布消息后的钩子方法，记录 Prometheus 发布指标
         """
         PUBLISH_TOTAL.labels(queue=self.queue_name).inc()
-        super()._after_publish(msg, msg_function_kw, task_id)
+        super()._after_publish(publish_msg_context)
 
 
 # ============================================================

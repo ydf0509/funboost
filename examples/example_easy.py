@@ -23,5 +23,7 @@ def add_task(x, y):
 if __name__ == '__main__':
     for i in range(10):
         add_task.push(i, i * 2)
+        add_task.publish({"x":i, "y": i * 2})
+        
     add_task.consume()
     ctrl_c_recv()

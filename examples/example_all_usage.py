@@ -257,7 +257,5 @@ if __name__ == '__main__':
     loop.run_until_complete(rpc_asyncio())
 
 
-    print("\n=== 所有演示任务已发布，ctrl_c_recv使主线程进入监听状态 (按3次 Ctrl+C 退出) ===\n")
-    # ctrl_c_recv 阻塞主线程，防止主线程结束了，最好是加上，因为这可以阻止由于主线程结束了导致守护线程结束。 
-    # 因为booster.consume() 是在子线程启动的，所以可以连续多个消费函数.consume()而不阻塞主线程
+    
     ctrl_c_recv()

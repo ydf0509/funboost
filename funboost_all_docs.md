@@ -974,7 +974,8 @@ class BoosterParams(BaseJsonAbleModel):
   行350: #### 13.4.7.7. 🎯 精准狙击 PID，彻底杜绝“同名误杀”惨案
   行354: #### 13.4.7.8. ⚖️ 傻瓜式的一键“多进程”横向扩容
   行359: ## 13.5 funweb 系统功能-资源监控
-  行370: ## 13.6 funweb 系统功能，-日志查看器
+  行370: ## 13.6 📖 funweb 系统功能 - 通用日志查看器
+  行374: ### 13.6.2 ✨ 功能亮点
 
 ============================================================
 文件: c14.md
@@ -3053,11 +3054,22 @@ print(ResultFromMongo('test_queue77h6_result:5cdb4386-44cc-452f-97f4-9e5d2882a7c
 - `from funboost.funboost_config_deafult import FunboostCommonConfig`
 - `from nb_libs.path_helper import PathHelper`
 - `from funboost.core.consuming_func_iniput_params_check import ConsumingFuncInputParamsChecker`
+- `from dataclasses import dataclass`
 
-#### 🏛️ Classes (1)
+#### 🏛️ Classes (2)
+
+##### 📌 `class PublishMsgContext`
+*Line: 44*
+
+**Class Variables (5):**
+- `msg_json: typing.Union[str, dict]`
+- `msg_dict: dict`
+- `msg_function_kw: dict`
+- `extra_params: dict`
+- `task_id: str`
 
 ##### 📌 `class AbstractPublisher`
-*Line: 43*
+*Line: 51*
 
 **Docstring:**
 `````
@@ -3076,7 +3088,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
     - `self`
     - `publisher_params: PublisherParams`
 
-**Public Methods (12):**
+**Public Methods (14):**
 - `def custom_init(self)`
 - `def publish(self, msg: typing.Union[str, dict], task_id = None, task_options: TaskOptions = None)`
   - **Docstring:**
@@ -3100,6 +3112,8 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
   `````
 - `def send_msg(self, msg: typing.Union[dict, str])`
   - *直接发送任意原始的消息内容到消息队列,不生成辅助参数,无视函数入参名字,不校验入参个数和键名*
+- `def generate_msg_context_for_push(self, *func_args, **func_kwargs) -> PublishMsgContext`
+- `def generate_msg_context_for_publish(self, msg_raw: typing.Union[str, dict], task_id = None, task_options: TaskOptions = None) -> PublishMsgContext`
 - `def push(self, *func_args, **func_kwargs)`
   - **Docstring:**
   `````
@@ -3152,7 +3166,7 @@ asyncio异步编程，最重要的方法有 aio_push aio_publish，
 #### 🔧 Public Functions (1)
 
 - `def deco_mq_conn_error(f)`
-  - *Line: 393*
+  - *Line: 420*
 
 
 ---
@@ -4331,9 +4345,7 @@ if __name__ == '__main__':
     loop.run_until_complete(rpc_asyncio())
 
 
-    print("\n=== 所有演示任务已发布，ctrl_c_recv使主线程进入监听状态 (按3次 Ctrl+C 退出) ===\n")
-    # ctrl_c_recv 阻塞主线程，防止主线程结束了，最好是加上，因为这可以阻止由于主线程结束了导致守护线程结束。 
-    # 因为booster.consume() 是在子线程启动的，所以可以连续多个消费函数.consume()而不阻塞主线程
+    
     ctrl_c_recv()
 `````
 
@@ -4370,6 +4382,13 @@ def add_task(x, y):
 if __name__ == '__main__':
     for i in range(10):
         add_task.push(i, i * 2)
+        add_task.publish({"x":i*10, "y": i * 20})
+
+        # 可以通过 generate_msg_context_for_push 和 generate_msg_context_for_publish 预览发布消息，即使你不发布，也可以查看最终要发送的消息是什么样。
+        print(add_task.publisher.generate_msg_context_for_push(i, i * 2)) 
+        print(add_task.publisher.generate_msg_context_for_publish({"x":i*10, "y": i * 20},task_id=f'task_{10000+i}'))
+        
+        
     add_task.consume()
     ctrl_c_recv()
 `````
@@ -7517,13 +7536,28 @@ funweb 内置的**脚本部署功能**，彻底打破了“开发”与“运维
 funweb 系统功能-资源监控 截图
 ![alt text](image-8.png)
 
-## 13.6 funweb 系统功能，-日志查看器
+## 13.6 📖 funweb 系统功能 - 通用日志查看器
 
-funweb 系统功能，-日志查看器 可以查看任何语言，无论何种方式部署的程序的日志和nohup输出。
+`funweb` 内置的日志查看器是一个功能强大的系统级组件。它旨在为开发者提供一个**开箱即用、脱离 SSH 终端**的 Web 日志排查方案。
 
-和程序是不是由funweb的`脚本部署`功能部署的没有关系，日志查看器可以查看任何文本文件。
+### 13.6.2 ✨ 功能亮点
 
-funweb 日志查看器支持时间段筛选日志，关键字搜索日志，支持日志毫秒级实时推送到网页来。
+1. **绝对通用的文件读取**
+   * 不限编程语言：支持查看 Python, Java, Go 等任意语言生成的日志文件。
+   * 不限部署方式：完全独立于 `funweb` 的“脚本部署”功能。无论程序是 `nohup` 挂起还是作为系统服务运行，只要是文本文件，皆可查看。
+2. **强大的检索与过滤**
+   * 支持按**精确的时间段**（起止时间）对日志进行截取筛选。
+   * 支持对日志内容进行**关键字搜索**，快速定位异常（Exception/Error）堆栈。
+3. **极致的实时监控 (`tail -f` 体验)**
+   * 底层采用 **SSE (Server-Sent Events)** 单向事件流技术（`mimetype='text/event-stream'`）。
+   * 实现以**毫秒级**极低延迟，将服务器产生的最新日志增量实时推送到网页端，拒绝卡顿与重复加载。
+
+**日志查看器截图**
+
+**眼又极其清晰的“彩色日志”**
+这绝对是排查问题的最大爽点！传统的 tail -f 往往是一坨黑白乱码，看久了眼睛疼。
+
+![alt text](image-9.png)
 
 <div> </div>
 `````

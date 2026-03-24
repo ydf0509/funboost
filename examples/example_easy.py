@@ -24,8 +24,10 @@ if __name__ == '__main__':
     for i in range(10):
         add_task.push(i, i * 2)
         add_task.publish({"x":i*10, "y": i * 20})
-        print(add_task.publisher.generate_msg_json_for_push(i, i * 2))
-        print(add_task.publisher.generate_msg_json_for_publish({"x":i*10, "y": i * 20}))
+
+        # 可以通过 generate_msg_context_for_push 和 generate_msg_context_for_publish 预览发布消息，即使你不发布，也可以查看最终要发送的消息是什么样。
+        print(add_task.publisher.generate_msg_context_for_push(i, i * 2)) 
+        print(add_task.publisher.generate_msg_context_for_publish({"x":i*10, "y": i * 20},task_id=f'task_{10000+i}'))
         
         
     add_task.consume()

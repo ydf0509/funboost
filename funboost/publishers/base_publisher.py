@@ -197,7 +197,7 @@ class AbstractPublisher(metaclass=abc.ABCMeta, ):
         java可以这样通过http接口或者funboost.faas  来发布消息 {"user_id":123,"name":"张三","extra": {"task_id":"1234567890","max_retry_times":3}} 
 
         """
-        publish_msg_context: PublishMsgContext =  self.generate_msg_json_for_publish(
+        publish_msg_context: PublishMsgContext =  self.generate_msg_context_for_publish(
             msg,task_id,task_options)
         return self._execute_publish(publish_msg_context)
         
@@ -245,7 +245,7 @@ class AbstractPublisher(metaclass=abc.ABCMeta, ):
             cls_file = Path(sys.modules[cls.__module__].__file__).resolve().as_posix()
         return cls_file
 
-    def generate_msg_json_for_push(self, *func_args, **func_kwargs) -> PublishMsgContext:
+    def generate_msg_context_for_push(self, *func_args, **func_kwargs) -> PublishMsgContext:
         # print(func_args, func_kwargs, self.publish_params_checker.all_arg_name)
         msg_dict = func_kwargs
         # print(msg_dict)
@@ -288,10 +288,10 @@ The first argument of the push method must be the instance of the class.
             # print(index,arg,self.publish_params_checker.position_arg_name_list)
             # msg_dict[self.publish_params_checker.position_arg_name_list[index]] = arg
             msg_dict[self.publish_params_checker.all_arg_name_list[index]] = arg
-        return  self.generate_msg_json_for_publish(msg_dict)
+        return  self.generate_msg_context_for_publish(msg_dict)
         
 
-    def generate_msg_json_for_publish(self, msg_raw: typing.Union[str, dict], task_id=None,
+    def generate_msg_context_for_publish(self, msg_raw: typing.Union[str, dict], task_id=None,
                 task_options: TaskOptions = None )-> PublishMsgContext:
         if isinstance(msg_raw, str):
             msg_dict = Serialization.to_dict(msg_raw)
@@ -335,7 +335,7 @@ The first argument of the push method must be the instance of the class.
         :return:
         """
         # print(msg_dict)
-        publish_msg_context: PublishMsgContext =  self.generate_msg_json_for_push(
+        publish_msg_context: PublishMsgContext =  self.generate_msg_context_for_push(
             *func_args, **func_kwargs)
         return self._execute_publish(publish_msg_context)
 

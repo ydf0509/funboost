@@ -11,6 +11,8 @@ from collections import OrderedDict
 from pydantic import BaseModel
 import pydantic
 
+from funboost.utils import json_helper
+
 
 def _patch_for_pydantic_field_deepcopy():
     from concurrent.futures import ThreadPoolExecutor
@@ -163,34 +165,37 @@ class BaseJsonAbleModel(CompatibleModel):
     """
 
     def get_str_dict(self):
-        model_dict: dict = self.to_dict()  # noqa
-        model_dict_copy = OrderedDict()
-        for k, v in model_dict.items():
-            if isinstance(v, typing.Callable):
-                model_dict_copy[k] = str(v)
-            # elif k in ['specify_concurrent_pool', 'specify_async_loop'] and v is not None:
-            elif (
-                type(v).__module__ != "builtins"
-            ):  # 自定义类型的对象,json不可序列化,需要转化下.
-                model_dict_copy[k] = str(v)
-            else:
-                model_dict_copy[k] = v
-        return model_dict_copy
+        # model_dict: dict = self.to_dict()  # noqa
+        # model_dict_copy = OrderedDict()
+        # for k, v in model_dict.items():
+        #     if isinstance(v, typing.Callable):
+        #         model_dict_copy[k] = str(v)
+        #     # elif k in ['specify_concurrent_pool', 'specify_async_loop'] and v is not None:
+        #     elif (
+        #         type(v).__module__ != "builtins"
+        #     ):  # 自定义类型的对象,json不可序列化,需要转化下.
+        #         model_dict_copy[k] = str(v)
+        #     else:
+        #         model_dict_copy[k] = v
+        # return model_dict_copy
+        return json_helper.to_un_strict_json_compatible_obj(self.to_dict())
 
-    def json_str_value(self):
-        try:
-            return json.dumps(
-                dict(self.get_str_dict()),
-                ensure_ascii=False,
-            )
-        except TypeError as e:
-            return str(self.get_str_dict())
+    def json_str_value(self,):
+        # try:
+        #     return json.dumps(
+        #         dict(self.get_str_dict()),
+        #         ensure_ascii=False,
+        #     )
+        # except TypeError as e:
+        #     return str(self.get_str_dict())
+        return json_helper.dict_to_un_strict_json_deep(self.to_dict(),indent=None)
 
     def json_pre(self):
-        try:
-            return json.dumps(self.get_str_dict(), ensure_ascii=False, indent=4)
-        except TypeError as e:
-            return str(self.get_str_dict())
+        # try:
+        #     return json.dumps(self.get_str_dict(), ensure_ascii=False, indent=4)
+        # except TypeError as e:
+        #     return str(self.get_str_dict())
+        return json_helper.dict_to_un_strict_json_deep(self.to_dict(),indent=4)
 
     def update_from_dict(self, dictx: dict):
         for k, v in dictx.items():

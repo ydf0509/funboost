@@ -21,6 +21,7 @@ from funboost import (
     BoostersManager,        # 消费者管理器 (用于分组启动)
     AsyncResult,            # 同步编程生态的异步结果对象
     AioAsyncResult,          # asyncio生态的异步结果对象
+    FunctionResultStatusPersistanceConfig,
 )
 
 # ==========================================
@@ -30,6 +31,10 @@ from funboost import (
     queue_name="demo_queue_basic",
     broker_kind=BrokerEnum.SQLITE_QUEUE,  # 使用本地 SQLite 文件作为队列
     concurrent_num=2,                     # 线程并发数量
+    function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(
+        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False,
+        table_name='demo_queue_basic_function_result_status'
+    )
 ))
 def task_basic(x, y):
     print(f"[基础任务] 正在处理: {x} + {y} = {x + y}")

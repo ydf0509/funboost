@@ -3,6 +3,9 @@ import json
 import orjson
 import pickle
 import ast
+import copy
+
+from funboost.utils import json_helper
 
 class Serialization:
     @staticmethod
@@ -11,6 +14,15 @@ class Serialization:
             return dic
         str1 =orjson.dumps(dic)
         return str1.decode('utf8')
+
+    @staticmethod
+    def to_json_str_non_strict(dic:typing.Union[dict,str]):
+        # can_not_json_serializable_keys = Serialization.find_can_not_json_serializable_keys(dic)
+        # new_msg = copy.deepcopy(Serialization.to_dict(dic))
+        # for key in can_not_json_serializable_keys:
+        #     new_msg[key] = PickleHelper.to_str(new_msg[key])
+        # return Serialization.to_json_str(new_msg)
+        return json_helper.dict_to_un_strict_json_deep(dic)
 
     @staticmethod
     def to_dict(strx:typing.Union[str,dict]):

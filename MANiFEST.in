@@ -1,4 +1,5 @@
 include README.md
 recursive-include funboost/funboost_web_manager *
+recursive-include funboost/funweb *
 recursive-include funboost/utils/dependency_packages_in_pythonpath *
 recursive-include funboost *.md

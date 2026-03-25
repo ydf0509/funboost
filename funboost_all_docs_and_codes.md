@@ -1512,6 +1512,9 @@ class BoosterParams(BaseJsonAbleModel):
   行2400: #### 6.30.4.2 MongoAlertMonitor 使用例子，发到自定义的渠道
   行2420: ### 6.30.5 elk + grafana 实现错误告警
   行2426: ### 6.30.6 错误触发警告的方式选择
+  行2432: ## 6.31 怎么知道 Funboost 发布者生成的最终消息内容格式是什么样？
+  行2434: ### 6.31.1 方式一：直接查看 Broker
+  行2438: ### 6.31.2 方式二：预览消息（不真正发送）
 
 ============================================================
 文件: c7.md
@@ -4109,6 +4112,7 @@ from funboost import (
     BoostersManager,        # 消费者管理器 (用于分组启动)
     AsyncResult,            # 同步编程生态的异步结果对象
     AioAsyncResult,          # asyncio生态的异步结果对象
+    FunctionResultStatusPersistanceConfig,
 )
 
 # ==========================================
@@ -4118,6 +4122,10 @@ from funboost import (
     queue_name="demo_queue_basic",
     broker_kind=BrokerEnum.SQLITE_QUEUE,  # 使用本地 SQLite 文件作为队列
     concurrent_num=2,                     # 线程并发数量
+    function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(
+        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False,
+        table_name='demo_queue_basic_function_result_status'
+    )
 ))
 def task_basic(x, y):
     print(f"[基础任务] 正在处理: {x} + {y} = {x + y}")
@@ -4385,7 +4393,7 @@ if __name__ == '__main__':
         add_task.publish({"x":i*10, "y": i * 20})
 
         # 可以通过 generate_msg_context_for_push 和 generate_msg_context_for_publish 预览发布消息，即使你不发布，也可以查看最终要发送的消息是什么样。
-        print(add_task.publisher.generate_msg_context_for_push(i, i * 2)) 
+        print(add_task.publisher.generate_msg_context_for_push(i, i * 2).msg_json) 
         print(add_task.publisher.generate_msg_context_for_publish({"x":i*10, "y": i * 20},task_id=f'task_{10000+i}'))
         
         
@@ -19412,7 +19420,48 @@ EmailAlertMonitor(
 例如你公司没有 promethus ,公司没有运维帮你搭建elk 和 grafana，你只是一名个体用户开发者，可以选择其他不依赖这些高端运维组件的错误告警方式。
 
 
+## 6.31 怎么知道 Funboost 发布者生成的最终消息内容格式是什么样？
 
+### 6.31.1 方式一：直接查看 Broker
+
+先发布消息到 Broker，然后去对应的消息队列（如 Redis、Kafka）查看原始消息内容。
+
+### 6.31.2 方式二：预览消息（不真正发送）
+
+如果不想发布消息到 Broker，可以通过 `publisher` 提供的两个方法**预览**生成的消息内容：
+
+| 方法 | 用途 |
+| :--- | :--- |
+| `generate_msg_context_for_push` | 预览 `push()` 发送的消息 |
+| `generate_msg_context_for_publish` | 预览 `publish()` 发送的消息 |
+
+```python
+# 假设 add_task 是一个 booster 对象
+print(add_task.publisher.generate_msg_context_for_push(i, i * 2))
+print(add_task.publisher.generate_msg_context_for_publish(
+    {"x": i * 10, "y": i * 20},
+    task_id=f'task_{10000 + i}'
+))
+```
+
+**一个最简单的消息，至少包括如下**：
+
+`task_options`的控制入参传递越多，`extra`字段的key就会越多。
+
+```json
+{
+    "extra": {
+        "publish_time": 1774348711.2128,
+        "publish_time_format": "2026-03-24 18:38:31",
+        "task_id": "019d1f6c-b52c-75f7-9bd0-7f1b19becd61"
+    },
+    "x": 9,
+    "y": 18
+}
+```
+
+
+> 💡 **适用场景**：调试消息格式、确认序列化结果、排查消息投递问题。
 
 <div> </div> 
 `````
@@ -45345,10 +45394,10 @@ from pymongo import IndexModel, ReplaceOne
 from funboost.core.func_params_model import FunctionResultStatusPersistanceConfig
 from funboost.core.helper_funs import get_publish_time, delete_keys_and_return_new_dict, get_publish_time_format,get_func_only_params
 from funboost.core.serialization import Serialization
-from funboost.utils import time_util, decorators
+from funboost.utils import json_helper, time_util, decorators
 from funboost.utils.mongo_util import MongoMixin
 # from nb_log import LoggerMixin
-from funboost.core.loggers import FunboostFileLoggerMixin
+from funboost.core.loggers import FunboostFileLoggerMixin,flogger
 from funboost.constant import MongoDbName
 class RunStatus:
     running = 'running'
@@ -45412,7 +45461,11 @@ class FunctionResultStatus():
     def params_str(self):
         """延迟计算 params_str，只在需要时才进行 JSON 序列化"""
         if self._params_str is None:
-            self._params_str = Serialization.to_json_str(self.params)
+            try:
+                self._params_str = Serialization.to_json_str(self.params)
+            except Exception as e:
+                # flogger.warning(f'params 不能序列化: {e}')
+                self._params_str = Serialization.to_json_str_non_strict(self.params)
         return self._params_str
     
     @params_str.setter
@@ -45441,13 +45494,17 @@ class FunctionResultStatus():
             setattr(obj,k,v)
         return obj
 
-    def get_status_dict(self, without_datetime_obj=False):
+    def get_status_dict(self, without_datetime_obj=False,is_return_unstrict_dict=False):
+        """
+        is_return_unstrict_dict: 是否返回非严格json兼容的dict，
+                                 如果为True，则返回的dict中的不可json序列化的值都会被转换为字符串。这是为了方便插入数据库表。
+        """
         item = {}
         for k, v in self.__dict__.items():
             if not k.startswith('_'):
                 item[k] = v
                 
-        item['params_str'] = self.params_str 
+        item['params_str'] = self.params_str # 因为是惰性计算，所以这里必须手动调用。
         item['total_thread'] = self.total_thread
 
         item['host_name'] = self.host_name
@@ -45457,11 +45514,26 @@ class FunctionResultStatus():
         
         # item.pop('time_start')
         datetime_str = time_util.DatetimeConverter().datetime_str
-        try:
-            Serialization.to_json_str(item['result'])
-            # json.dumps(item['result'])  # 不希望存不可json序列化的复杂类型。麻烦。存这种类型的结果是伪需求。
-        except TypeError:
-            item['result'] = str(item['result'])[:1000]
+        # try:
+        #     # Serialization.to_json_str(item['result'])
+        #     Serialization.to_json_str(item['result'])  # 不希望存不可json序列化的复杂类型。麻烦。存这种类型的结果是伪需求。
+        # except TypeError:
+        #     item['result'] = str(item['result'])[:1000]
+        # # item['result'] = Serialization.to_json_str_non_strict(item['result'])
+        # # item['params'] = Serialization.to_dict(Serialization.to_json_str_non_strict(item['params']))
+        # try:
+        #     Serialization.to_json_str(item['params'])
+        # except TypeError:
+        #     params_raw = item['params']
+        #     item['params'] = {}
+        #     for k,v in params_raw.items():
+        #         try:
+        #             Serialization.to_json_str(v)
+        #         except TypeError:
+        #             item['params'][k] = str(v)[:1000]
+        # item = json_helper.to_un_strict_json_compatible_obj(item)
+        if is_return_unstrict_dict:
+            item = json_helper.to_un_strict_json_compatible_obj(item)
         item.update({'insert_time_str': datetime_str,
                      'insert_minutes': datetime_str[:-3],
                      })
@@ -45473,14 +45545,16 @@ class FunctionResultStatus():
             item = delete_keys_and_return_new_dict(item, ['insert_time', 'utime'])
 
         item['_id'] = self.task_id
-   
+        # print(item)
         return item
 
     def __str__(self):
-        return f'''{self.__class__}   {Serialization.to_json_str(self.get_status_dict())}'''
+        # return f'''{self.__class__}   {Serialization.to_json_str(self.get_status_dict())}'''
+        return json_helper.dict_to_un_strict_json_deep(self.get_status_dict(),indent=None)
 
     def to_pretty_json_str(self):
-        return json.dumps(self.get_status_dict(),indent=4,ensure_ascii=False)
+        # return json.dumps(self.get_status_dict(),indent=4,ensure_ascii=False)
+        return json_helper.dict_to_un_strict_json_deep(self.get_status_dict(),indent=4)
 
 
 class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):
@@ -45532,7 +45606,7 @@ class ResultPersistenceHelper(MongoMixin, FunboostFileLoggerMixin):
     def save_function_result_to_mongo(self, function_result_status: FunctionResultStatus):
         if self.function_result_status_persistance_conf.is_save_status:
             task_status_col = self.get_mongo_collection(MongoDbName.TASK_STATUS_DB, self._table_name)  # type: pymongo.collection.Collection
-            item = function_result_status.get_status_dict()
+            item = function_result_status.get_status_dict(is_return_unstrict_dict=True)
             item2 = copy.copy(item)
             if not self.function_result_status_persistance_conf.is_save_result:
                 item2['result'] = '不保存结果'
@@ -47488,6 +47562,8 @@ from collections import OrderedDict
 from pydantic import BaseModel
 import pydantic
 
+from funboost.utils import json_helper
+
 
 def _patch_for_pydantic_field_deepcopy():
     from concurrent.futures import ThreadPoolExecutor
@@ -47640,34 +47716,37 @@ class BaseJsonAbleModel(CompatibleModel):
     """
 
     def get_str_dict(self):
-        model_dict: dict = self.to_dict()  # noqa
-        model_dict_copy = OrderedDict()
-        for k, v in model_dict.items():
-            if isinstance(v, typing.Callable):
-                model_dict_copy[k] = str(v)
-            # elif k in ['specify_concurrent_pool', 'specify_async_loop'] and v is not None:
-            elif (
-                type(v).__module__ != "builtins"
-            ):  # 自定义类型的对象,json不可序列化,需要转化下.
-                model_dict_copy[k] = str(v)
-            else:
-                model_dict_copy[k] = v
-        return model_dict_copy
+        # model_dict: dict = self.to_dict()  # noqa
+        # model_dict_copy = OrderedDict()
+        # for k, v in model_dict.items():
+        #     if isinstance(v, typing.Callable):
+        #         model_dict_copy[k] = str(v)
+        #     # elif k in ['specify_concurrent_pool', 'specify_async_loop'] and v is not None:
+        #     elif (
+        #         type(v).__module__ != "builtins"
+        #     ):  # 自定义类型的对象,json不可序列化,需要转化下.
+        #         model_dict_copy[k] = str(v)
+        #     else:
+        #         model_dict_copy[k] = v
+        # return model_dict_copy
+        return json_helper.to_un_strict_json_compatible_obj(self.to_dict())
 
-    def json_str_value(self):
-        try:
-            return json.dumps(
-                dict(self.get_str_dict()),
-                ensure_ascii=False,
-            )
-        except TypeError as e:
-            return str(self.get_str_dict())
+    def json_str_value(self,):
+        # try:
+        #     return json.dumps(
+        #         dict(self.get_str_dict()),
+        #         ensure_ascii=False,
+        #     )
+        # except TypeError as e:
+        #     return str(self.get_str_dict())
+        return json_helper.dict_to_un_strict_json_deep(self.to_dict(),indent=None)
 
     def json_pre(self):
-        try:
-            return json.dumps(self.get_str_dict(), ensure_ascii=False, indent=4)
-        except TypeError as e:
-            return str(self.get_str_dict())
+        # try:
+        #     return json.dumps(self.get_str_dict(), ensure_ascii=False, indent=4)
+        # except TypeError as e:
+        #     return str(self.get_str_dict())
+        return json_helper.dict_to_un_strict_json_deep(self.to_dict(),indent=4)
 
     def update_from_dict(self, dictx: dict):
         for k, v in dictx.items():
@@ -47800,6 +47879,9 @@ import json
 import orjson
 import pickle
 import ast
+import copy
+
+from funboost.utils import json_helper
 
 class Serialization:
     @staticmethod
@@ -47808,6 +47890,15 @@ class Serialization:
             return dic
         str1 =orjson.dumps(dic)
         return str1.decode('utf8')
+
+    @staticmethod
+    def to_json_str_non_strict(dic:typing.Union[dict,str]):
+        # can_not_json_serializable_keys = Serialization.find_can_not_json_serializable_keys(dic)
+        # new_msg = copy.deepcopy(Serialization.to_dict(dic))
+        # for key in can_not_json_serializable_keys:
+        #     new_msg[key] = PickleHelper.to_str(new_msg[key])
+        # return Serialization.to_json_str(new_msg)
+        return json_helper.dict_to_un_strict_json_deep(dic)
 
     @staticmethod
     def to_dict(strx:typing.Union[str,dict]):
@@ -63079,8 +63170,41 @@ import json
 import typing
 from datetime import datetime as _datetime
 from datetime import date as _date
+import orjson
+
+def to_un_strict_json_compatible_obj(obj: typing.Any,first_call=True):
+    """
+    递归把任意对象转换成可 json.dumps 的结构。
+    对不可序列化对象做 str()，并深度处理 dict/list/tuple/set。
+    """
+    if isinstance(obj, (str, int, float, bool)) or obj is None:
+        return obj
+
+    if isinstance(obj, dict):
+        dict_new = {}
+        for k, v in obj.items():
+            # json 对象键建议使用字符串；复杂对象键转字符串避免 dumps 失败
+            if isinstance(k, (str, int, float, bool)) or k is None:
+                k_new = k
+            else:
+                k_new = str(k)
+            dict_new[k_new] = to_un_strict_json_compatible_obj(v)
+        return dict_new
+
+    if isinstance(obj, (list, tuple, set, frozenset)):
+        return [to_un_strict_json_compatible_obj(i) for i in obj]
+
+    if isinstance(obj, _datetime):
+        return obj.isoformat(sep=' ')
+
+    if isinstance(obj, _date):
+        return obj.isoformat()
+
+    return str(obj)
+
 
 def dict_to_un_strict_json(dictx: dict, indent=4):
+    """字典尽量转json，一级kyes的值无法转就转成str"""
     dict_new = {}
     for k, v in dictx.items():
         # only_print_on_main_process(f'{k} :  {v}')
@@ -63088,6 +63212,12 @@ def dict_to_un_strict_json(dictx: dict, indent=4):
             dict_new[k] = v
         else:
             dict_new[k] = str(v)
+    return json.dumps(dict_new, ensure_ascii=False, indent=indent)
+
+
+def dict_to_un_strict_json_deep(dictx: dict, indent=4):
+    """字典尽量转json，任何深层级kyes的值无法转就转成str"""
+    dict_new = to_un_strict_json_compatible_obj(dictx)
     return json.dumps(dict_new, ensure_ascii=False, indent=indent)
 
 

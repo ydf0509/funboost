@@ -49,6 +49,7 @@ def func1(a:MyClass,b:str,c:MyPydanticModel): # 现在支持这样的自定义�
     print(f'b:{b}')
     print(f'c:{c}')
     print(f'a.x:{a.x},a.y:{a.y}')
+    return MyClass(1,2)
 
 
 if __name__ == '__main__':
@@ -57,12 +58,15 @@ if __name__ == '__main__':
 
     obj1 = MyClass(1,2)
     func1.push(obj1,'hello',MyPydanticModel(str1='hello',num1=1)) # 现在支持发布不可json序列化的对象
+    print(func1.publisher.generate_msg_context_for_push(obj1,'hello',MyPydanticModel(str1='hello',num1=1)))
 
     obj1.change(10)
     func1.push(obj1,'hello',MyPydanticModel(str1='world',num1=100))
+    print(func1.publisher.generate_msg_context_for_push(obj1,'hello',MyPydanticModel(str1='world',num1=100)))
 
     func0.push('hello',100,{'a':1,'b':2},[1,2,3]) # 以前只允许发布这样基本类型入参的消息
-   
+    print(func0.publisher.generate_msg_context_for_push('hello',100,{'a':1,'b':2},[1,2,3]))
+
     ctrl_c_recv()
 
 

@@ -2,8 +2,41 @@ import json
 import typing
 from datetime import datetime as _datetime
 from datetime import date as _date
+import orjson
+
+def to_un_strict_json_compatible_obj(obj: typing.Any,first_call=True):
+    """
+    递归把任意对象转换成可 json.dumps 的结构。
+    对不可序列化对象做 str()，并深度处理 dict/list/tuple/set。
+    """
+    if isinstance(obj, (str, int, float, bool)) or obj is None:
+        return obj
+
+    if isinstance(obj, dict):
+        dict_new = {}
+        for k, v in obj.items():
+            # json 对象键建议使用字符串；复杂对象键转字符串避免 dumps 失败
+            if isinstance(k, (str, int, float, bool)) or k is None:
+                k_new = k
+            else:
+                k_new = str(k)
+            dict_new[k_new] = to_un_strict_json_compatible_obj(v)
+        return dict_new
+
+    if isinstance(obj, (list, tuple, set, frozenset)):
+        return [to_un_strict_json_compatible_obj(i) for i in obj]
+
+    if isinstance(obj, _datetime):
+        return obj.isoformat(sep=' ')
+
+    if isinstance(obj, _date):
+        return obj.isoformat()
+
+    return str(obj)
+
 
 def dict_to_un_strict_json(dictx: dict, indent=4):
+    """字典尽量转json，一级kyes的值无法转就转成str"""
     dict_new = {}
     for k, v in dictx.items():
         # only_print_on_main_process(f'{k} :  {v}')
@@ -11,6 +44,12 @@ def dict_to_un_strict_json(dictx: dict, indent=4):
             dict_new[k] = v
         else:
             dict_new[k] = str(v)
+    return json.dumps(dict_new, ensure_ascii=False, indent=indent)
+
+
+def dict_to_un_strict_json_deep(dictx: dict, indent=4):
+    """字典尽量转json，任何深层级kyes的值无法转就转成str"""
+    dict_new = to_un_strict_json_compatible_obj(dictx)
     return json.dumps(dict_new, ensure_ascii=False, indent=indent)
 
 

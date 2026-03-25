@@ -1512,6 +1512,9 @@ class BoosterParams(BaseJsonAbleModel):
   行2400: #### 6.30.4.2 MongoAlertMonitor 使用例子，发到自定义的渠道
   行2420: ### 6.30.5 elk + grafana 实现错误告警
   行2426: ### 6.30.6 错误触发警告的方式选择
+  行2432: ## 6.31 怎么知道 Funboost 发布者生成的最终消息内容格式是什么样？
+  行2434: ### 6.31.1 方式一：直接查看 Broker
+  行2438: ### 6.31.2 方式二：预览消息（不真正发送）
 
 ============================================================
 文件: c7.md
@@ -4109,6 +4112,7 @@ from funboost import (
     BoostersManager,        # 消费者管理器 (用于分组启动)
     AsyncResult,            # 同步编程生态的异步结果对象
     AioAsyncResult,          # asyncio生态的异步结果对象
+    FunctionResultStatusPersistanceConfig,
 )
 
 # ==========================================
@@ -4118,6 +4122,10 @@ from funboost import (
     queue_name="demo_queue_basic",
     broker_kind=BrokerEnum.SQLITE_QUEUE,  # 使用本地 SQLite 文件作为队列
     concurrent_num=2,                     # 线程并发数量
+    function_result_status_persistance_conf=FunctionResultStatusPersistanceConfig(
+        is_save_result=True, is_save_status=True, expire_seconds=7 * 24 * 3600, is_use_bulk_insert=False,
+        table_name='demo_queue_basic_function_result_status'
+    )
 ))
 def task_basic(x, y):
     print(f"[基础任务] 正在处理: {x} + {y} = {x + y}")
@@ -4385,7 +4393,7 @@ if __name__ == '__main__':
         add_task.publish({"x":i*10, "y": i * 20})
 
         # 可以通过 generate_msg_context_for_push 和 generate_msg_context_for_publish 预览发布消息，即使你不发布，也可以查看最终要发送的消息是什么样。
-        print(add_task.publisher.generate_msg_context_for_push(i, i * 2)) 
+        print(add_task.publisher.generate_msg_context_for_push(i, i * 2).msg_json) 
         print(add_task.publisher.generate_msg_context_for_publish({"x":i*10, "y": i * 20},task_id=f'task_{10000+i}'))
         
         
@@ -19412,7 +19420,48 @@ EmailAlertMonitor(
 例如你公司没有 promethus ,公司没有运维帮你搭建elk 和 grafana，你只是一名个体用户开发者，可以选择其他不依赖这些高端运维组件的错误告警方式。
 
 
+## 6.31 怎么知道 Funboost 发布者生成的最终消息内容格式是什么样？
 
+### 6.31.1 方式一：直接查看 Broker
+
+先发布消息到 Broker，然后去对应的消息队列（如 Redis、Kafka）查看原始消息内容。
+
+### 6.31.2 方式二：预览消息（不真正发送）
+
+如果不想发布消息到 Broker，可以通过 `publisher` 提供的两个方法**预览**生成的消息内容：
+
+| 方法 | 用途 |
+| :--- | :--- |
+| `generate_msg_context_for_push` | 预览 `push()` 发送的消息 |
+| `generate_msg_context_for_publish` | 预览 `publish()` 发送的消息 |
+
+```python
+# 假设 add_task 是一个 booster 对象
+print(add_task.publisher.generate_msg_context_for_push(i, i * 2))
+print(add_task.publisher.generate_msg_context_for_publish(
+    {"x": i * 10, "y": i * 20},
+    task_id=f'task_{10000 + i}'
+))
+```
+
+**一个最简单的消息，至少包括如下**：
+
+`task_options`的控制入参传递越多，`extra`字段的key就会越多。
+
+```json
+{
+    "extra": {
+        "publish_time": 1774348711.2128,
+        "publish_time_format": "2026-03-24 18:38:31",
+        "task_id": "019d1f6c-b52c-75f7-9bd0-7f1b19becd61"
+    },
+    "x": 9,
+    "y": 18
+}
+```
+
+
+> 💡 **适用场景**：调试消息格式、确认序列化结果、排查消息投递问题。
 
 <div> </div> 
 `````

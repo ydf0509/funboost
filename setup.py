@@ -28,8 +28,8 @@ extra_brokers = ['confluent_kafka==1.7.0',
                  'zmq',
                  'pyzmq',
                  'kafka-python==2.0.2',
-                  'eventlet==0.33.3',
-                 'gevent==22.10.2',
+                #   'eventlet==0.33.3', # win太难安装了
+                #  'gevent==22.10.2',
 
                   'mysql-replication==1.0.9',
 
@@ -164,4 +164,10 @@ pip install funboost[all]     # 安装其他所有冷门的中间件操作包。
 pip install git+https://github.com/ydf0509/funboost.git 
 pip install git+https://gitee.com/bfzshen/funboost.git
 
+"""
+
+
+"""
+greenlet 不好安装，这样做
+pip install --only-binary :all: greenlet
 """

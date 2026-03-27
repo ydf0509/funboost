@@ -136,26 +136,27 @@ class FunctionResultStatus():
         
         # item.pop('time_start')
         datetime_str = time_util.DatetimeConverter().datetime_str
-        # try:
-        #     # Serialization.to_json_str(item['result'])
-        #     Serialization.to_json_str(item['result'])  # 不希望存不可json序列化的复杂类型。麻烦。存这种类型的结果是伪需求。
-        # except TypeError:
-        #     item['result'] = str(item['result'])[:1000]
-        # # item['result'] = Serialization.to_json_str_non_strict(item['result'])
-        # # item['params'] = Serialization.to_dict(Serialization.to_json_str_non_strict(item['params']))
-        # try:
-        #     Serialization.to_json_str(item['params'])
-        # except TypeError:
-        #     params_raw = item['params']
-        #     item['params'] = {}
-        #     for k,v in params_raw.items():
-        #         try:
-        #             Serialization.to_json_str(v)
-        #         except TypeError:
-        #             item['params'][k] = str(v)[:1000]
-        # item = json_helper.to_un_strict_json_compatible_obj(item)
+        try:
+            # Serialization.to_json_str(item['result'])
+            Serialization.to_json_str(item['result'])  # 不希望存不可json序列化的复杂类型。麻烦。存这种类型的结果是伪需求。
+        except TypeError:
+            item['result'] = str(item['result'])[:1000]
+        # item['result'] = Serialization.to_json_str_non_strict(item['result'])
+        # item['params'] = Serialization.to_dict(Serialization.to_json_str_non_strict(item['params']))
         if is_return_unstrict_dict:
-            item = json_helper.to_un_strict_json_compatible_obj(item)
+            try:
+                Serialization.to_json_str(item['params'])
+            except TypeError:
+                params_raw = item['params']
+                item['params'] = {}
+                for k,v in params_raw.items():
+                    try:
+                        Serialization.to_json_str(v)
+                    except TypeError:
+                        item['params'][k] = str(v)[:1000]
+        # item = json_helper.to_un_strict_json_compatible_obj(item)
+        # if is_return_unstrict_dict:
+        #     item = json_helper.to_un_strict_json_compatible_obj(item)
         item.update({'insert_time_str': datetime_str,
                      'insert_minutes': datetime_str[:-3],
                      })

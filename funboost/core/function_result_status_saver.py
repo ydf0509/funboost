@@ -136,6 +136,18 @@ class FunctionResultStatus():
         
         # item.pop('time_start')
         datetime_str = time_util.DatetimeConverter().datetime_str
+        item['running'] = 0
+        if self.result:
+            if isinstance(self.result, str):
+                current_dict = eval(copy.deepcopy(self.result))
+            elif isinstance(self.result, dict):
+                current_dict = copy.deepcopy(self.result)
+            else:
+                current_dict = {}
+            if current_dict.get('success'):
+                item['success'] = True if current_dict['status'] == 1 else False
+                item['running'] = 2
+
         # try:
         #     # Serialization.to_json_str(item['result'])
         #     Serialization.to_json_str(item['result'])  # 不希望存不可json序列化的复杂类型。麻烦。存这种类型的结果是伪需求。

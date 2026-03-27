@@ -8,4 +8,6 @@ def f(x):
     print(x)
 
 if __name__ == '__main__':
+    f.push(1)
+    f.consume()
     print(type(f))

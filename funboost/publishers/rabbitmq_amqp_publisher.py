@@ -31,7 +31,7 @@ class RabbitmqAmqpPublisher(AbstractPublisher):
         self._exchange_durable = self.publisher_params.broker_exclusive_config.get('exchange_durable', True)
 
         arguments = {}
-        if self.publisher_params.broker_exclusive_config['x-max-priority']:
+        if self.publisher_params.broker_exclusive_config.get("x-max-priority"):
             arguments['x-max-priority'] = self.publisher_params.broker_exclusive_config['x-max-priority']
         self._arguments = arguments if arguments else None
 

@@ -6,7 +6,7 @@ from funboost.constant import BrokerEnum
 from funboost.consumers.base_consumer import AbstractConsumer
 from funboost.publishers.persist_queue_publisher import PersistQueuePublisher
 from funboost.core.func_params_model import PublisherParams
-from persistqueue import Empty
+from persistqueue.queue import Empty
 
 class PersistQueueConsumer(AbstractConsumer):
     """

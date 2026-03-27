@@ -25,7 +25,11 @@ class RabbitmqAmqpPublisher(AbstractPublisher):
     channel: amqp.Channel
 
     def custom_init(self):
-        self._queue_durable = self.publisher_params.broker_exclusive_config['queue_durable']
+        self._queue_durable = self.publisher_params.broker_exclusive_config.get('queue_durable', True)
+        self._exchange = self.publisher_params.broker_exclusive_config.get('exchange', '')
+        self._exchange_type = self.publisher_params.broker_exclusive_config.get('exchange_type', 'direct')
+        self._exchange_durable = self.publisher_params.broker_exclusive_config.get('exchange_durable', True)
+
         arguments = {}
         if self.publisher_params.broker_exclusive_config['x-max-priority']:
             arguments['x-max-priority'] = self.publisher_params.broker_exclusive_config['x-max-priority']
@@ -44,6 +48,14 @@ class RabbitmqAmqpPublisher(AbstractPublisher):
         )
         self.connection.connect()
         self.channel = self.connection.channel()
+        if self._exchange:
+            self.channel.exchange_declare(
+                exchange=self._exchange,
+                type=self._exchange_type,
+                durable=self._exchange_durable,
+                auto_delete=False,
+            )
+
         self.channel.queue_declare(
             queue=self._queue_name,
             durable=self._queue_durable,
@@ -51,16 +63,29 @@ class RabbitmqAmqpPublisher(AbstractPublisher):
             arguments=self._arguments,
         )
 
+        if self._exchange:
+            routing_key = self.publisher_params.broker_exclusive_config.get('routing_key', self._queue_name)
+            self.channel.queue_bind(
+                queue=self._queue_name,
+                exchange=self._exchange,
+                routing_key=routing_key,
+            )
+
     @deco_mq_conn_error
     def _publish_impl(self, msg: str):
         message = Message(
             body=msg,
             delivery_mode=2,  # persistent message
         )
+        routing_key = self.publisher_params.broker_exclusive_config.get(
+            'routing_key',
+            self._queue_name
+        )
+
         self.channel.basic_publish(
             msg=message,
-            exchange='',
-            routing_key=self._queue_name,
+            exchange=self._exchange,
+            routing_key=routing_key,
         )
 
     @deco_mq_conn_error

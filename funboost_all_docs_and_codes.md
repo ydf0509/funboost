@@ -59796,7 +59796,7 @@ import shutil
 from pathlib import Path
 
 from nb_filelock import FileLock
-from persistqueue import Queue
+from persistqueue.queue import Queue
 from persistqueue.serializers import json as json_serializer
 
 from funboost.funboost_config_deafult import BrokerConnConfig

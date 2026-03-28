@@ -1,7 +1,7 @@
 ﻿from pathlib import Path
 
 from nb_filelock import FileLock
-from persistqueue import Queue
+from persistqueue.queue import Queue
 import json
 from persistqueue.serializers import json as json_serializer
 from funboost.constant import BrokerEnum

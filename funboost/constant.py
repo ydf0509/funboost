@@ -168,8 +168,7 @@ class BrokerEnum:
     日志文件、文件系统变更（inotify）、甚至是硬件传感器的信号，按照4.21章节文档，都可以被封装成一个 funboost 的 Broker。
 
     充分说明 funboost 有能力化身为 通用的、事件驱动的函数调度平台,而非仅仅是celery这种传统的消息驱动.
-    """
-    """
+  
     funboost 有能力消费canal发到kafka的binlog消息,也能不依赖canal,自己捕获cdc数据
     """
     MYSQL_CDC = 'MYSQL_CDC'

@@ -8,4 +8,4 @@ tags: []
 
 2. 新写的代码，要参考之前的html的ui风格
 
-3.要充分利用 RedisMixin 来操作redis，不要直接用pyredis
+3. 要充分利用 RedisMixin 来操作redis，不要直接用pyredis

@@ -5,40 +5,76 @@ from funboost import __version__
 # from logging_tree import printout
 # printout()
 
-extra_brokers = ['confluent_kafka==1.7.0',
-                 "pulsar-client==3.1.0; python_version>='3.7'",
+# extra_brokers = ['confluent_kafka==1.7.0',
+#                  "pulsar-client==3.1.0; python_version>='3.7'",
+#                  'celery',
+#                  'flower',
+#                  'nameko==2.14.1',
+#                  'sqlalchemy==1.4.13',
+#                  'sqlalchemy_utils==0.36.1',
+#                  'dramatiq==1.14.2',
+#                  'huey==2.4.5',
+#                  'rq==1.15.0',
+#                  'kombu',
+                
+#                  'elasticsearch',
+#                  'gnsq==1.0.1',
+#                  'psutil',
+#                  'peewee==3.17.3',
+#                  'nats-python',
+#                  'aiohttp==3.8.3',
+#                  'paho-mqtt',
+#                  'rocketmq',
+#                  'zmq',
+#                  'pyzmq',
+#                  'kafka-python==2.0.2',
+#                 #   'eventlet==0.33.3', # win太难安装了
+#                 #  'gevent==22.10.2',
+
+#                   'mysql-replication==1.0.9',
+
+#                     'grpcio==1.60.0',
+#                     'grpcio-tools==1.60.0',
+#                     'protobuf>=4.24.4',
+
+#                     'waitress',
+#                  ]
+
+extra_brokers = ['confluent_kafka',
+                 "pulsar-client; python_version>='3.7'",
                  'celery',
                  'flower',
-                 'nameko==2.14.1',
-                 'sqlalchemy==1.4.13',
-                 'sqlalchemy_utils==0.36.1',
-                 'dramatiq==1.14.2',
-                 'huey==2.4.5',
-                 'rq==1.15.0',
+                 'nameko',
+                 'sqlalchemy',
+                 'sqlalchemy_utils',
+                 'dramatiq',
+                 'huey',
+                 'rq',
                  'kombu',
                 
                  'elasticsearch',
-                 'gnsq==1.0.1',
+                 'gnsq',
                  'psutil',
-                 'peewee==3.17.3',
+                 'peewee',
                  'nats-python',
-                 'aiohttp==3.8.3',
+                 'aiohttp',
                  'paho-mqtt',
                  'rocketmq',
                  'zmq',
                  'pyzmq',
-                 'kafka-python==2.0.2',
+                 'kafka-python',
                 #   'eventlet==0.33.3', # win太难安装了
                 #  'gevent==22.10.2',
 
-                  'mysql-replication==1.0.9',
+                  'mysql-replication',
 
-                    'grpcio==1.60.0',
-                    'grpcio-tools==1.60.0',
-                    'protobuf==4.25.1',
+                    'grpcio',
+                    'grpcio-tools',
+                    'protobuf',
 
                     'waitress',
                  ]
+
 
 extra_flask = ['flask', 'flask_bootstrap', 'flask_wtf', 'wtforms', 'flask_login','psutil']
 setup(
@@ -120,7 +156,6 @@ setup(
         'orjson',
         'croniter',
         'cron-descriptor',
-        "async-timeout",
         "async-timeout",
         "typing-extensions",
         
